@@ -1,0 +1,9 @@
+# Sccsid:     @(#)verify.rqd	9.1.1.1     12/14/95  15:45:20 
+order.tbl:	454784562
+lineitem.tbl:	1731820874
+customer.tbl:	1075014684
+supplier.tbl:	1065055774
+part.tbl:	1918324065
+partsupp.tbl:	1595819269
+nation.tbl:	254046239
+region.tbl:	1668295234

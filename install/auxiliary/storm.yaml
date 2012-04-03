@@ -1,0 +1,35 @@
+# This file has to be stored on ~/.storm/storm.yaml
+########### These MUST be filled in for a storm configuration
+# NO BLANK SPACES BEFORE KEYS, AFTER : THERE SHOULD BE EXACTLY ONE SPACE
+
+storm.zookeeper.servers:
+     - "icdatasrv2"
+
+nimbus.host: "icdatasrv2"
+ 
+storm.local.dir: "/opt/storm/storm_data"
+
+supervisor.slots.ports:
+    - 6700
+    - 6701
+#    - 6702
+#    - 6703
+ 
+# ##### These may optionally be filled in:
+
+nimbus.task.launch.secs: 240
+supervisor.worker.start.timeout.secs: 240
+supervisor.worker.timeout.secs: 240
+
+java.library.path: "/opt/storm/deps/lib"
+#java.library.path: "/usr/local/lib:/opt/local/lib:/usr/lib"
+
+# the specification in the code will override this
+topology.ackers: 8
+
+#     
+## Map of tokens to a serialization class. tokens less than 32 are reserved by storm.
+## Tokens are written on the wire to identify the field.
+# topology.serializations: 
+#     33: "org.mycompany.MyObjectSerialization"
+#     34: "org.mycompany.MyOtherObjectSerialization"

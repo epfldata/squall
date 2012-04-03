@@ -1,0 +1,549 @@
+{ SCCS: @(#)BUGS	9.1.1.9     5/1/96  11:55:26 }
+The following is a list of the various DBGEN/QGEN bugs that have been
+and are being fixed. Each entry is of the form:
+
+Problem #xx: 	        -- a brief description of the issue or problem, 
+			   followed by a more detailed explanation, if needed
+    SEVERITY:	        -- classification of the bug or issue
+    SPEC FIX: 	        -- details of any change to the spec
+    DBGEN FIX: 	        -- details of any change needed to QGEN/DBGEN
+    ANSWER SETS: 	-- any effect on answer sets
+    STATUS:		-- status of resolution
+    WORKAROUND:         -- temporary fix, if available
+    HELP NEEDED:	-- any work/assistance required
+    AUDITORS NOTIFIED:  -- date auditors were notified, if appropriate
+    OPENED AGAINST:	-- date and effected versions
+    CLOSED IN:		-- date and fixed version
+
+Open BUGS
+==========
+Problem #33: Parallel load doesn't work under NT
+
+Feature Requests
+=================
+Problem #9:  would like to include answer set formatting in query templates
+Problem #37: need way to validate DBGEN without large storage requriement
+
+Complete Bug List
+==================
+Problem #1: Q10 returns no rows
+	Since orders can only be returned (l_returnflag = 'R') after they 
+	have been received, and can't be received in the future, the
+	number of permissible orders for query 10 tails off early in
+	1995. If you are lucky enough to get a parameter substitution
+	after February '95 (allowed in 2.12.3), things can go "quickly".
+    SEVERITY:
+    SPEC FIX: replace 2.12.3 (1) with "DATE is the first day in a
+	rundomly selected month between the first month of 1993 and the
+	last month of 1994"
+    DBGEN FIX: change permisible substitution range for query 10, 
+	parameter 1
+    ANSWER SETS: not effected.
+    STATUS: closed
+    WORKAROUND: use a different seed for qgen parameter substitution
+    HELP NEEDED:
+    AUDITORS NOTIFIED:	
+    OPENED AGAINST: 1.0
+    CLOSED IN:      1.0.1 (dbgen and qgen)
+
+Problem #2: parallelism in load to gen differing data sets
+         the parallel load code was based on extensible data sets; since
+	 each "extension" made an assumption of scale factor, the data
+	 could end up clustered. Further, since the RNG is
+	 self-modifying, different numbers of extension led to different
+	 final data sets.
+    SEVERITY:
+    SPEC FIX: none.
+    DBGEN FIX: remove -E(xtensible) option and implement pure parallel
+               load with a known scale factor; rebuild seed files
+    ANSWER SETS: not effected. (parallelism not implemented for SF <= 1)
+    STATUS: closed
+    WORKAROUND: don't use the parallel load (-C) option to DBGEN
+    HELP NEEDED: testers needed.
+    AUDITORS NOTIFIED:	yes.
+    OPENED AGAINST:     1.0
+    CLOSED IN:          1.0.1
+
+Problem #3: some arithmetic tends to overflow at large SF
+         retailprice tends to SF/10 as SF increases. this can lead to
+	 data corruption in extendedprice and aggregate calculations
+    SEVERITY:
+    SPEC FIX: will need rework of 1.3 wrt retailprice calculation
+    DBGEN FIX: modification to second term of rpb_routine() calcuation
+               to limit contibution of second term to the maximum seen at 
+	       SF=.1
+    ANSWER SETS: not effected
+    STATUS: closed
+    WORKAROUND: code retail/extended price calculations as long long;
+                build smaller data sets
+    HELP NEEDED:
+    AUDITORS NOTIFIED:	
+    OPENED AGAINST: 1.0
+    CLOSED IN:      1.0.1
+
+Problem #4: dbgen not ported to NT
+    SEVERITY:
+    SPEC FIX:  none
+    DBGEN FIX: need to roll in changes supplied by IBM
+    ANSWER SETS: not effected
+    STATUS: closed
+    WORKAROUND: N/A
+    HELP NEEDED: N/A
+    AUDITORS NOTIFIED:	N/A
+    OPENED AGAINST: 1.0
+    CLOSED IN: 1.1.0
+
+Problem #5: QGEN seed init inconsistent
+         A prior fix assured that parameter values were query order
+	 independent when a seed was provided on the command line. need
+	 to make this true when no seed is provided
+    SEVERITY:
+    SPEC FIX: none
+    DBGEN FIX: rework seed init loop in qgen.c
+    ANSWER SETS: not effected
+    STATUS: closed
+    WORKAROUND: supply seeds on command line
+    HELP NEEDED: none
+    AUDITORS NOTIFIED:	N/A
+    OPENED AGAINST: 1.0
+    CLOSED IN: 1.0.1
+
+Problem #6: command line options with abutting arguments mishandled
+    SEVERITY:
+    SPEC FIX:  none
+    DBGEN FIX: minor fix to getopt routine in bm_utils.c
+    ANSWER SETS: not effected
+    STATUS: closed
+    WORKAROUND: separate options and arguments with a space
+    HELP NEEDED: none
+    AUDITORS NOTIFIED:	N/A
+    OPENED AGAINST: 1.0
+    CLOSED IN: 1.0.1
+
+Problem #7:  '-O f' asking for new file names twice
+    SEVERITY:
+    SPEC FIX:  none
+    DBGEN FIX: rework of set_files() in driver.c
+    ANSWER SETS: not effected
+    STATUS: closed
+    WORKAROUND: none
+    HELP NEEDED: none
+    AUDITORS NOTIFIED:	N/A
+    OPENED AGAINST: 1.0
+    CLOSED IN: 1.0.1
+
+Problem #8: Seed generation taking too long
+    SEVERITY:
+    SPEC FIX: N/A
+    DBGEN FIX: implement "skip and trudge" as discussed
+    ANSWER SETS:  not effected
+    STATUS: closed
+    WORKAROUND: none
+    HELP NEEDED: 
+    AUDITORS NOTIFIED:	N/A
+    OPENED AGAINST: 1.0
+    CLOSED IN: 1.0.1
+
+Problem #9: would like to include answer set formatting in query templates
+    SEVERITY: feature request
+    SPEC FIX: none
+    DBGEN FIX: additional flag in qgen()
+    ANSWER SETS: not effected
+    STATUS:
+    WORKAROUND: N/A
+    HELP NEEDED: asked for reproduction info 25 Oct 95
+    AUDITORS NOTIFIED:	 N/A
+    OPENED AGAINST: 1.0
+    CLOSED IN:
+
+Problem #10: need to re-introduce ability to do incremental, flat file builds
+    SEVERITY: feature request
+    SPEC FIX: none
+    DBGEN FIX: add -S(tep) option to build one of many partial data sets
+    ANSWER SETS: not effected
+    STATUS: closed
+    WORKAROUND: N/A
+    HELP NEEDED:
+    AUDITORS NOTIFIED:	 N/A
+    OPENED AGAINST: 1.0
+    CLOSED IN: 1.0.1
+
+Problem #11: Row count for first delete at 10/100 is incorrect
+    SEVERITY: Error
+    SPEC FIX: None
+    DBGEN FIX: 
+    ANSWER SETS: No Effect
+    STATUS: OPEN
+    WORKAROUND: hand edit of first delete file
+    HELP NEEDED:
+    AUDITORS NOTIFIED:	No
+    OPENED AGAINST: 1.0.1
+    CLOSED IN:
+
+Problem #12: Bad default rowcount generated for query 17
+    SEVERITY: Error
+    SPEC FIX: None
+    DBGEN FIX: corrected rowcnt[] entries to be 1-based
+    ANSWER SETS: N/A
+    STATUS: closed
+    WORKAROUND: hand edit query or add explicit row count to template
+    HELP NEEDED:
+    AUDITORS NOTIFIED:	N/A
+    OPENED AGAINST: 1.0.0
+    CLOSED IN: 1.1.0
+
+Problem #13: Bad expansion of SET_OUTPUT for Teradata
+    SEVERITY: Error
+    SPEC FIX: N/A
+    DBGEN FIX: new macro in tpcd.h
+    ANSWER SETS:  N/A
+    STATUS: closed
+    WORKAROUND: Hand edit query or hardcode output directive in templates
+    HELP NEEDED:
+    AUDITORS NOTIFIED:	 N/A
+    OPENED AGAINST: 1.0.1
+    CLOSED IN: 1.1.0
+
+Problem #14: Badly formed range deletes
+    SEVERITY: Error
+    SPEC FIX: N/A
+    DBGEN FIX: TBD
+    ANSWER SETS:  N/A
+    STATUS: OPEN
+    WORKAROUND: hand edit delete files
+    HELP NEEDED: asked for reproduction info 25 Oct 95
+    AUDITORS NOTIFIED:	N/A
+    OPENED AGAINST: 1.0.1
+    CLOSED IN:
+
+Problem #15: in a multi-stage load, parent tables are not properly named 
+             when parent and child are build simultaneously
+    SEVERITY: Error
+    SPEC FIX: N/A
+    DBGEN FIX: reworked tdef[].name in pr_X_Y routines for master/detail
+               tables
+    ANSWER SETS: N/A
+    STATUS: open
+    WORKAROUND: Build master/detail tables separately
+    HELP NEEDED:
+    AUDITORS NOTIFIED:	 N/A
+    OPENED AGAINST: 1.0.1
+    CLOSED IN: 1.1.0
+
+Problem #16: update generation at large scale factors produced the wrong number
+             of rows due to overflow of 32-bit integer
+    SEVERITY: BUG
+    SPEC FIX: N/A
+    DBGEN FIX: corrected order of operations in row count calcuation in 
+               driver.c
+    ANSWER SETS:  N/A
+    STATUS: closed
+    WORKAROUND:  use 64 bit integers
+    HELP NEEDED: None
+    AUDITORS NOTIFIED:	N/A
+    OPENED AGAINST: 1.0.1
+    CLOSED IN: 1.1.0
+
+Problem #17: comment fields may be truncated when using columnar output, due to
+             rounding/truncation in the length calculation
+    SEVERITY: BUG
+    SPEC FIX: N/A
+    DBGEN FIX: add ceil() calls around all PR_VSTR() calls in print.c
+    ANSWER SETS: N/A
+    STATUS: closed
+    WORKAROUND: N/A
+    HELP NEEDED: None
+    AUDITORS NOTIFIED:	N/A
+    OPENED AGAINST: 1.0.1
+    CLOSED IN: 1.1.0
+
+Problem #18: the output format for identifier fields in columnar output is
+             unneccessarily large, and is inconsistant
+    SEVERITY: minor
+    SPEC FIX: N/A
+    DBGEN FIX: revised PR_BCD2 macro
+    ANSWER SETS: N/A
+    STATUS: closed
+    WORKAROUND: avoid columnar output, or rework macro
+    HELP NEEDED: none
+    AUDITORS NOTIFIED:	no
+    OPENED AGAINST: 1.1.0
+    OPENED BY:      jenn@torolab2.vnet.ibm.com
+    CLOSED IN:      1.1.0A
+    CLOSED BY:      jms@informix.com
+
+Problem #19: the case statement used to decipher substitution points in the 
+             query template allowed extraneous :'s to re-initialize the 
+             parameter substitution
+    SEVERITY:     bug
+    SPEC FIX:     N/A
+    DBGEN FIX:    rework flag switch in qgen.c to explicitly call out numerics
+    ANSWER SETS:  N/A
+    STATUS:       closed
+    WORKAROUND:   be sure that there are no "unknown" flags in the template
+    HELP NEEDED:  none
+    AUDITORS NOTIFIED:	yes
+    OPENED AGAINST: 1.0.1
+    OPENED BY:     jenn@torolab2.vnet.ibm.com
+    CLOSED IN:     1.1.0A
+    CLOSED BY:     jms@informix.com 
+
+Problem #20: parameter substitution values were not effected by small changes 
+             in seed values
+    SEVERITY:     bug
+    SPEC FIX:     N/A
+    DBGEN FIX:    add UnifInt() calls to RNG init in qgen.c
+    ANSWER SETS:  N/A
+    STATUS:       closed
+    WORKAROUND:   be sure seed values provide sufficient randomness in EQT
+    HELP NEEDED:  none
+    AUDITORS NOTIFIED:	yes
+    OPENED AGAINST: 1.1.0
+    OPENED BY:     alain_crolotte@elsegundoca.attgis.com
+    CLOSED IN:     1.1.0B
+    CLOSED BY:     jms@informix.com 
+
+Problem #21:  parameter logging doesn't properly handle the variable length of
+              the substitution list
+    SEVERITY:     bug
+    SPEC FIX:     N/A
+    DBGEN FIX:    assure null termination of param list and bound the output
+                  loop that logs parameter usage
+    ANSWER SETS:  N/A
+    STATUS:       closed
+    WORKAROUND:   none
+    HELP NEEDED:  none
+    AUDITORS NOTIFIED:	N/A
+    OPENED AGAINST: 1.1.0B
+    OPENED BY:     
+    CLOSED IN: 1.1.0C
+    CLOSED BY:     jms@informix.com 
+
+Problem #22:  parameter output for Q11 can overflow default formatting at very
+              large volumes
+    SEVERITY:     bug
+    SPEC FIX:     N/A
+    DBGEN FIX:    expand format string to %11.10f
+    ANSWER SETS:  N/A
+    STATUS:       closed
+    WORKAROUND:   hand code queries for large volumes
+    HELP NEEDED:  none
+    AUDITORS NOTIFIED:	N/A
+    OPENED AGAINST: 1.1.0B
+    OPENED BY:     francois@ip.com
+    CLOSED IN:     1.1.0C
+    CLOSED BY:      jms@informix.com
+
+Problem #23:  typos in variant 14c
+    SEVERITY:     
+    SPEC FIX:    N/A
+    DBGEN FIX:   corrected query template
+    ANSWER SETS: N/A
+    STATUS:      closed
+    WORKAROUND:  none
+    HELP NEEDED: none
+    AUDITORS NOTIFIED:	no
+    OPENED AGAINST: 1.1.0B
+    OPENED BY:    francois@ip.com 
+    CLOSED IN:    1.1.0C
+    CLOSED BY:    jms@informix.com  
+
+Problem #24:  macro PR_DATE was hard-coded to print t->alpha even though a 
+              target was passed in as a parameter
+    SEVERITY:     minor
+    SPEC FIX:     N/A
+    SOURCE FIX:   re-worked macro to properly use its arguments 
+    ANSWER SETS:  N/A
+    STATUS:       closed
+    WORKAROUND:   none
+    HELP NEEDED:  none
+    AUDITORS NOTIFIED:	no
+    OPENED AGAINST:  1.1.0A
+    OPENED BY:       Robert.Lane@eng.sun.com
+    CLOSED IN:       dbgen 1.1.0B
+    CLOSED BY:       jms@informix.com
+
+Problem #25:  typos in variant 10a
+    SEVERITY:     
+    SPEC FIX:    N/A
+    DBGEN FIX:   corrected query template
+    ANSWER SETS: N/A
+    STATUS:      closed
+    WORKAROUND:  none
+    HELP NEEDED: none
+    AUDITORS NOTIFIED:	no
+    OPENED AGAINST: 1.1.0B
+    OPENED BY:    francois@ip.com 
+    CLOSED IN:    1.1.0C
+    CLOSED BY:    jms@informix.com  
+
+Problem #26: the version numbers for QGEN and DBGEN do not match
+    SEVERITY:     minor
+    SPEC FIX:     N/A
+    SOURCE FIX:   unified version numbers starting with 1.1.0C
+    ANSWER SETS:  N/A
+    STATUS:       closed
+    WORKAROUND:   N/A
+    HELP NEEDED:  none
+    AUDITORS NOTIFIED:	no
+    OPENED AGAINST:  1.1.0B (or 1.1.0C, depending)
+    OPENED BY:       Robert.Lane@eng.sun.com
+    CLOSED IN:       1.1.0C
+    CLOSED BY:       jms@informix.com
+
+Problem #27: correcting typos in 7, 9, 13
+    SEVERITY:     minor
+    SPEC FIX:     N/A
+    SOURCE FIX:   fixed them
+    ANSWER SETS:  N/A
+    STATUS:       closed
+    WORKAROUND:   N/A
+    HELP NEEDED:  none
+    AUDITORS NOTIFIED:	N/A
+    OPENED AGAINST:  1.1.0C (pre-release)
+    OPENED BY:       tblank@vnet.ibm.com
+    CLOSED IN:       1.1.0C
+    CLOSED BY:       jms@informix.com
+
+Problem #28: Seed generation fails with SF > 1000 due to 32 bit integer
+             arithmetic used to verify "divisible-ness" of data set
+    SEVERITY:     bug
+    SPEC FIX:     N/A
+    SOURCE FIX:   TBD
+    ANSWER SETS:  N/A
+    STATUS:       closed
+    WORKAROUND:   N/A
+    HELP NEEDED:  none
+    AUDITORS NOTIFIED:	N/A
+    OPENED AGAINST:  1.1.0C
+    OPENED BY:       alain_colotte@elsegundoca.ncr.com
+    CLOSED IN:      1.3.0 
+    CLOSED BY:       jms@gradientsystems.com
+
+Problem #29: Compile time errors on Solaris 2.5.1 and SunOS
+    SEVERITY:    bug 
+    SPEC FIX:     N/A
+    SOURCE FIX:   Solaris fixed by renaming lineitem field from extended to
+				  eprice; SunOS problem documented in Porting.Notes
+    ANSWER SETS:  N/A
+    STATUS:       closed
+    WORKAROUND:   N/A
+    HELP NEEDED:  N/A
+    AUDITORS NOTIFIED:	N/A
+    OPENED AGAINST:  1.1.0D
+    OPENED BY:       jms@informix.com
+    CLOSED IN:       1.2.0
+    CLOSED BY:       jms@informix.com
+
+Problem #30: Cryptic comments in dists.dss
+    SEVERITY:     flaw
+    SPEC FIX:     N/A
+    SOURCE FIX:   Cleaned up the comments in the file
+    ANSWER SETS:  N/A
+    STATUS:       closed
+    WORKAROUND:   N/A
+    HELP NEEDED:  N/A
+    AUDITORS NOTIFIED:	N/A
+    OPENED AGAINST:  1.2.0
+    OPENED BY:       francois@sizing.com
+    CLOSED IN:       1.2.3 ALPHA 1
+    CLOSED BY:       jms@informix.com
+
+Problem #31: Inconsistant handling of fopen() failures
+    SEVERITY:     bug
+    SPEC FIX:     N/A
+    SOURCE FIX:   introduced OPEN_CHECK macro (defined in dss.h)
+    ANSWER SETS:  N/A
+    STATUS:       closed
+    WORKAROUND:   N/A
+    HELP NEEDED:  none
+    AUDITORS NOTIFIED:	N/A
+    OPENED AGAINST:  1.2.0
+    OPENED BY:       schiefer@ca.ibm.com
+    CLOSED IN:       1.3.0
+    CLOSED BY:       jms@gradientsystems.com
+
+Problem #32: Path separators were hard-coded
+    SEVERITY:     bug
+    SPEC FIX:     N/A
+    SOURCE FIX:   introduced PATH_SEP in config.h
+    ANSWER SETS:  N/A
+    STATUS:       closed
+    WORKAROUND:   N/A
+    HELP NEEDED:  none
+    AUDITORS NOTIFIED:	N/A
+    OPENED AGAINST:  1.2.0
+    OPENED BY:       
+    CLOSED IN:       1.3.0
+    CLOSED BY:       jms@gradientsystems.com
+
+Problem #33: Parallel load doesn't work under NT
+    SEVERITY:     bug
+    SPEC FIX:     N/A
+    SOURCE FIX:   
+    ANSWER SETS:  N/A
+    STATUS:       OPEN
+    WORKAROUND:   use -S option to build each step independently
+    HELP NEEDED:  none
+    AUDITORS NOTIFIED:	N/A
+    OPENED AGAINST:  1.1.0
+    OPENED BY:       
+    CLOSED IN:       
+    CLOSED BY:       
+
+Problem #34: P_NAME not properly populated
+    SEVERITY:     bug
+    SPEC FIX:     N/A
+    SOURCE FIX:   Corrected color selection logic in agg_str()
+    ANSWER SETS:  NFI for 1.x since it effect answer sets
+    STATUS:       Closed
+    WORKAROUND:   N/A
+    HELP NEEDED:  None
+    AUDITORS NOTIFIED: N/A	
+    OPENED AGAINST:  1.2.3
+    OPENED BY:       schiefer@ca.ibm.com
+    CLOSED IN:       2.0.0
+    CLOSED BY:       jms@gradientsystems.com
+
+Problem #35: mk_sparse() returning bad orderkeys
+    SEVERITY:     bug
+    SPEC FIX:     N/A
+    SOURCE FIX:   corrected logic in mk_sparse() and bcd2_bin()
+    ANSWER SETS:  N/A
+    STATUS:       Closed
+    WORKAROUND:   N/A
+    HELP NEEDED:  None
+    AUDITORS NOTIFIED: N/A	
+    OPENED AGAINST:  1.3.0    
+    OPENED BY:       jennc@ca.ibm.com
+    CLOSED IN:       1.3.1
+    CLOSED BY:       jms@gradientsystems.com
+
+Problem #36: a_rnd() doesn't mask properly, uses small 'alphabet'
+    SEVERITY:     bug
+    SPEC FIX:     Corrected 4.2.2.6 to reflect 64 character set
+    SOURCE FIX:   changed mask in a_rnd() from 067 to 077
+    ANSWER SETS:  NFI for 1.x since answers would be effected
+    STATUS:       Closed
+    WORKAROUND:   N/A
+    HELP NEEDED:  None
+    AUDITORS NOTIFIED: N/A	
+    OPENED AGAINST:  1.2.3
+    OPENED BY:       pek@elsegundoca.ncr.com
+    CLOSED IN:       2.0.0
+    CLOSED BY:       jms@gradientsystems.com
+
+Problem #37: need way to validate DBGEN without large storage requriement
+    SEVERITY:     Feature Request
+    SPEC FIX:     N/A
+    SOURCE FIX:   Provide vrf_xxx routine to generate checksums
+    ANSWER SETS:  N/A
+    STATUS:       Open
+    WORKAROUND:   N/A
+    HELP NEEDED:  None
+    AUDITORS NOTIFIED: N/A	
+    OPENED AGAINST:  1.2.3
+    OPENED BY:       jms@gradientsystems.com
+    CLOSED IN:       
+    CLOSED BY:       
+

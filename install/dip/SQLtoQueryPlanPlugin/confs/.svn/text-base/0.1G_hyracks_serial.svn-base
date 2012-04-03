@@ -1,0 +1,21 @@
+DIP_DISTRIBUTED false
+DIP_QUERY_NAME hyracks
+
+DIP_TOPOLOGY_NAME_PREFIX teamX
+DIP_DATA_ROOT /path/to/tpch/on/local/machine/
+DIP_SQL_ROOT ../dip/SQLtoQueryPlanPlugin/SQLqueries/
+
+# DIP_DB_SIZE is in GBs
+DIP_DB_SIZE 0.1 
+DIP_MAX_SRC_PAR 1
+
+#below are unlikely to change
+DIP_EXTENSION .tbl
+DIP_READ_SPLIT_DELIMITER \|
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_KILL_AT_THE_END true
+#used only in distributed mode
+DIP_NIMBUS_HOST icdatasrv2
+DIP_STORM_ZOOKEEPER_SERVERS icdatasrv2

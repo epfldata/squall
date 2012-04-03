@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 139
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/visitors/jsql
+END
+SQLVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 155
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/visitors/jsql/SQLVisitor.java
+END
+AndVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 155
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/visitors/jsql/AndVisitor.java
+END
+ColumnCollectVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 165
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/visitors/jsql/ColumnCollectVisitor.java
+END
+JoinTablesExpVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 165
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/visitors/jsql/JoinTablesExpVisitor.java
+END

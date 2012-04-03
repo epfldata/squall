@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 121
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/operators
+END
+AggregateAvgOperator.java
+K 25
+svn:wc:ra_dav:version-url
+V 147
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/operators/AggregateAvgOperator.java
+END
+SelectionOperator.java
+K 25
+svn:wc:ra_dav:version-url
+V 144
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/operators/SelectionOperator.java
+END
+AggregateOperator.java
+K 25
+svn:wc:ra_dav:version-url
+V 144
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/operators/AggregateOperator.java
+END
+AggregateSumOperator.java
+K 25
+svn:wc:ra_dav:version-url
+V 147
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/operators/AggregateSumOperator.java
+END
+ProjectionOperator.java
+K 25
+svn:wc:ra_dav:version-url
+V 145
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/operators/ProjectionOperator.java
+END
+AggregateCountOperator.java
+K 25
+svn:wc:ra_dav:version-url
+V 149
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/operators/AggregateCountOperator.java
+END
+Operator.java
+K 25
+svn:wc:ra_dav:version-url
+V 135
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/operators/Operator.java
+END
+DistinctOperator.java
+K 25
+svn:wc:ra_dav:version-url
+V 143
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/operators/DistinctOperator.java
+END
+ChainOperator.java
+K 25
+svn:wc:ra_dav:version-url
+V 140
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/operators/ChainOperator.java
+END

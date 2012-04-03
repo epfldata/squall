@@ -1,0 +1,62 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: dbgen - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\TEMP\RSPF1.tmp" with contents
+[
+/nologo /ML /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /Fp"Release/dbgen.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"D:\Public\tpcd\DBGEN\bcd2.c"
+"D:\Public\tpcd\DBGEN\bm_utils.c"
+"D:\Public\tpcd\DBGEN\build.c"
+"D:\Public\tpcd\DBGEN\driver.c"
+"D:\Public\tpcd\DBGEN\load_stub.c"
+"D:\Public\tpcd\DBGEN\print.c"
+"D:\Public\tpcd\DBGEN\rnd.c"
+"D:\Public\tpcd\DBGEN\speed_seed.c"
+]
+Creating command line "cl.exe @C:\TEMP\RSPF1.tmp" 
+Creating temporary file "C:\TEMP\RSPF2.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/dbgen.pdb" /machine:I386 /out:"Release/dbgen.exe" 
+.\Release\bcd2.obj
+.\Release\bm_utils.obj
+.\Release\build.obj
+.\Release\driver.obj
+.\Release\load_stub.obj
+.\Release\print.obj
+.\Release\rnd.obj
+.\Release\speed_seed.obj
+]
+Creating command line "link.exe @C:\TEMP\RSPF2.tmp"
+<h3>Output Window</h3>
+Compiling...
+bcd2.c
+bm_utils.c
+build.c
+D:\Public\tpcd\DBGEN\build.c(225) : warning C4244: 'function' : conversion from 'double ' to 'int ', possible loss of data
+driver.c
+D:\Public\tpcd\DBGEN\build.c(225) : warning C4761: integral size mismatch in argument; conversion supplied
+D:\Public\tpcd\DBGEN\driver.c(324) : warning C4047: 'function' : 'long ' differs in levels of indirection from 'long [2]'
+D:\Public\tpcd\DBGEN\driver.c(324) : warning C4024: 'mk_sparse' : different types for formal and actual parameter 2
+D:\Public\tpcd\DBGEN\driver.c(719) : warning C4244: '*=' : conversion from 'double ' to 'long ', possible loss of data
+D:\Public\tpcd\DBGEN\driver.c(846) : warning C4244: '=' : conversion from 'double ' to 'long ', possible loss of data
+D:\Public\tpcd\DBGEN\driver.c(850) : warning C4244: '=' : conversion from 'double ' to 'long ', possible loss of data
+load_stub.c
+print.c
+rnd.c
+speed_seed.c
+D:\Public\tpcd\DBGEN\speed_seed.c(7) : warning C4005: 'DSS_HUGE' : macro redefinition
+        D:\Public\tpcd\DBGEN\config.h(105) : see previous definition of 'DSS_HUGE'
+Linking...
+
+
+
+<h3>Results</h3>
+dbgen.exe - 0 error(s), 8 warning(s)
+</pre>
+</body>
+</html>

@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 141
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/visitors/squall
+END
+ColumnRefCollectVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 170
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/visitors/squall/ColumnRefCollectVisitor.java
+END
+VECollectVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 163
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/visitors/squall/VECollectVisitor.java
+END
+SelectItemsVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 165
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/visitors/squall/SelectItemsVisitor.java
+END
+JoinHashVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 162
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/visitors/squall/JoinHashVisitor.java
+END
+WhereVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 159
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/visitors/squall/WhereVisitor.java
+END
+VECollectPredVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 167
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/visitors/squall/VECollectPredVisitor.java
+END

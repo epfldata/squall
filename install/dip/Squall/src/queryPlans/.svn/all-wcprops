@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/queryPlans
+END
+HyracksPlan.java
+K 25
+svn:wc:ra_dav:version-url
+V 139
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/queryPlans/HyracksPlan.java
+END
+QueryPlan.java
+K 25
+svn:wc:ra_dav:version-url
+V 137
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/queryPlans/QueryPlan.java
+END
+TPCH7Plan.java
+K 25
+svn:wc:ra_dav:version-url
+V 137
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/queryPlans/TPCH7Plan.java
+END
+TPCH8Plan.java
+K 25
+svn:wc:ra_dav:version-url
+V 137
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/queryPlans/TPCH8Plan.java
+END
+RSTPlan.java
+K 25
+svn:wc:ra_dav:version-url
+V 135
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/queryPlans/RSTPlan.java
+END
+HyracksPreAggPlan.java
+K 25
+svn:wc:ra_dav:version-url
+V 145
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/queryPlans/HyracksPreAggPlan.java
+END
+TPCH3Plan.java
+K 25
+svn:wc:ra_dav:version-url
+V 137
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/queryPlans/TPCH3Plan.java
+END
+TPCH4Plan.java
+K 25
+svn:wc:ra_dav:version-url
+V 137
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/queryPlans/TPCH4Plan.java
+END
+TPCH5Plan.java
+K 25
+svn:wc:ra_dav:version-url
+V 137
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/Squall/src/queryPlans/TPCH5Plan.java
+END

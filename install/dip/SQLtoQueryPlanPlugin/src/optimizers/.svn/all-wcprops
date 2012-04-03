@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/optimizers
+END
+DynamicProgOpt.java
+K 25
+svn:wc:ra_dav:version-url
+V 156
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/optimizers/DynamicProgOpt.java
+END
+ParallelismAssigner.java
+K 25
+svn:wc:ra_dav:version-url
+V 161
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/optimizers/ParallelismAssigner.java
+END
+Optimizer.java
+K 25
+svn:wc:ra_dav:version-url
+V 151
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/optimizers/Optimizer.java
+END
+LevelAssigner.java
+K 25
+svn:wc:ra_dav:version-url
+V 155
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/optimizers/LevelAssigner.java
+END
+CompLevel.java
+K 25
+svn:wc:ra_dav:version-url
+V 151
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/optimizers/CompLevel.java
+END
+TableSelector.java
+K 25
+svn:wc:ra_dav:version-url
+V 155
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/optimizers/TableSelector.java
+END
+ComponentGenerator.java
+K 25
+svn:wc:ra_dav:version-url
+V 160
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/optimizers/ComponentGenerator.java
+END
+EarlyProjection.java
+K 25
+svn:wc:ra_dav:version-url
+V 157
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/optimizers/EarlyProjection.java
+END
+SimpleOpt.java
+K 25
+svn:wc:ra_dav:version-url
+V 151
+/svn/data-teaching/!svn/ver/135/trunk/2012sp_advanced_databases/project/SquallMilestone2/install/dip/SQLtoQueryPlanPlugin/src/optimizers/SimpleOpt.java
+END
