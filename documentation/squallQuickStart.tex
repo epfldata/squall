@@ -25,7 +25,7 @@
 
 \begin{document}
 
-\title{Milestone 2: Squall/Storm project proposal}
+\title{Squall/Storm Quick Start Guide}
 \date{}
 \maketitle
 
@@ -39,7 +39,7 @@ The document is organized as follows. Chapter~\ref{ch:perspective} discusses cha
 
 Squall uses Storm as its underlying parallel environment, and builds query operators on top of it. Squall is a Java program which use Storm's Java libraries. Squall transforms a query plan, consisting of a DAG of \emph{query operator} components, into a Storm topology. Currently, we have implemented a heuristic-based optimizer which generates bushy plans.
 
-The following operators are supported: Selection, Projection, Distinct, Aggregation (Sum, Count and Average) and Join. All the operators have the expected semantics. Selection and Projection work ``on-the-fly'', as soon as a tuple arrives it is processed. Distinct and Aggregation operators need to store a state that is constantly updated. Each operator can be executed on a separate logical component, but inside a single logical component we can also pipeline the output of one operator to the input of another. The class \verb#ChainOperator# is responsible for this. The Join operator supports arbitrary equijoins and it works as follows: tuples with the same key have to be processed within a single node. Thus, it is guaranteed that the Join operator nodes will not have to communicate in order to produce the result. When a tuple arrives on a node, it is appended to the materialization of the corresponding relation and joined with the materialization of the opposite relation. For equijoins, it is quite efficient, since materializations are stored as hash tables containing join condition value as the key. This algorithm is essentially a version of Hash Ripple Join(~\cite{RippleJoin}) executing concurrently at multiple nodes. Our version of Hash Ripple Join provide a correct result for tuples seen so far (tuples which fully propagated). In contrast to its traditional counterpart, our version doesn't do sampling of the input tuples, yet it processes them as they arrive.
+The following operators are supported: Selection, Projection, Distinct, Aggregation (Sum, Count and Average) and Join. All the operators have the expected semantics. Selection and Projection work ``on-the-fly'', as soon as a tuple arrives it is processed. Distinct and Aggregation operators need to store a state that is constantly updated. Each operator can be executed on a separate logical component, but inside a single logical component we can also pipeline the output of one operator to the input of another. The class \verb#ChainOperator# is responsible for this. The Join operator supports arbitrary equijoins and it works as follows: tuples with the same key have to be processed within a single node. Thus, it is guaranteed that the Join operator nodes will not have to communicate in order to produce the result. When a tuple arrives on a node, it is appended to the materialization of the corresponding relation and joined with the materialization of the opposite relation. For equijoins, it is quite efficient, since materializations are stored as hash tables containing join condition value as the key. This algorithm is essentially a version of Hash Ripple Join(~\cite{RippleJoin}) executing concurrently at multiple nodes. Our version of Hash Ripple Join provide a correct result for tuples seen so far (tuples which fully propagated). In contrast to its traditional counterpart, our version does not do sampling of the input tuples, yet it processes them as they arrive.
 
 Note that Squall/Storm is not a production system - it works, but it is still in a beta stage. On this \href{http://groups.google.com/group/storm-user/browse_thread/thread/d4a50cf051ea878d/3c42dd8614aaf549?#3c42dd8614aaf549}{link}, the author of Storm admits that a topology fails with no valid reason once in every 50 runs. So, if you encounter a problem, try to execute the topology several times. If the problem persists, send us the complete source code you are using, the config file, and a full trace of the occurred Exception.
 
@@ -67,11 +67,11 @@ This section is a tutorial for installing Squall/Storm on your local machine, an
 
 The following steps are necessary for both modes:
 \begin{enumerate}
- \item Put the content of \verb#install# directory (not the directory itself) somewhere on your local machine. The directory where you put it will be denoted as \verb#INSTALL_DIR#. \verb#INSTALL_DIR# now contains 5 directories inside (auxiliary, bin, compilation, dip and lib). \textit{Don't change directory structure. Otherwise scripts for installation/running won't work!}
+ \item Put the content of \verb#install# directory (not the directory itself) somewhere on your local machine. The directory where you put it will be denoted as \verb#INSTALL_DIR#. \verb#INSTALL_DIR# now contains 5 directories inside (auxiliary, bin, compilation, dip and lib). \textit{Don't change directory structure. Otherwise scripts for installation/running would not work!}
  \item Download Storm 0.7.0 from \url{https://github.com/nathanmarz/storm/downloads}, extract it, and put \verb#storm-0.7.0# directory in \verb#INSTALL_DIR#.
  
 \subsection{Quick Start: Local Mode}
-You will run Squall on TPCH database. The paths for TPCH databases for Cluster Mode are already set, but in Local Mode you need to set them up. Go to \verb#INSTALL_DIR/dip/Squall/confs/0.1G_hyracks_serial# and change \verb#DIP_DATA_PATH# such that it is a full path to a 0.1-scaling factor TPCH database on your local machine. If on your local machine you neither have DBGEN installed, nor TPCH databases for scaling factors 0.1, you can \verb#scp# it from icdatasrv1 at the following location: \\ \verb#/export/home/avitorovic/queries/tpch/0.1G#. Inside \\ \verb#/export/home/avitorovic/queries/tpch/# remote directory you can find TPCH databases of different sizes as well (1G, 2G, 4G, 6G, 8G and 10G). For now, you will need only the one with scaling factor 0.1.
+You will run Squall on TPCH database. The paths for TPCH databases for Cluster Mode are already set, but in Local Mode you need to set them up. Go to \verb#INSTALL_DIR/dip/Squall/confs/0.1G_hyracks_serial# and change \verb#DIP_DATA_PATH# such that it is a full path to a 0.1-scaling factor TPCH database on your local machine. If on your local machine you neither have DBGen installed, nor TPCH databases for scaling factors 0.1, you can \verb#scp# it from icdatasrv1 at the following location: \\ \verb#/export/home/avitorovic/queries/tpch/0.1G#. Inside \\ \verb#/export/home/avitorovic/queries/tpch/# remote directory you can find TPCH databases of different sizes as well (1G, 2G, 4G, 6G, 8G and 10G). For now, you will need only the one with scaling factor 0.1.
 
 As usual, testing code in local mode is way better than in a cluster environment. Namely, in local mode all the errors go to the standard output/error, whereas in cluster mode one has to search for errors across many nodes. The same holds for presenting the final result.
 
@@ -119,7 +119,7 @@ The source code you are going to extend is available in \verb#INSTALL_DIR/dip/Sq
 \end{verbatim}
 The output of this command is a jar file: \\ \verb#INSTALL_DIR/compilation/squall-2.0-standalone.jar# (it will overwrite the old version of the same jar). You can run the modified code exactly the same as before.
 
-After you run \verb#recompile.sh# for the first time, you don't need Internet access to download packages - they will be already in place. Thus, you can safely comment out the following lines from \verb#recompile.sh#:
+After you run \verb#recompile.sh# for the first time, you do not need Internet access to download packages - they will be already in place. Thus, you can safely comment out the following lines from \verb#recompile.sh#:
 \begin{verbatim}
  mvn install:install-file -DgroupId=jsqlparser -DartifactId=jsqlparser \
       -Dversion=0.7.0 -Dpackaging=jar -Dfile=../lib/jsqlparser-0.7.0.jar
@@ -134,7 +134,7 @@ Alternatively, you can create a Java project in your favorite Java environment (
 \end{enumerate}
 and run Squall directly from a Java environment (do not use \verb#squallLocalRun.sh#!). In addition, you have to specify \verb#main.Main# as the main class, and the only argument is the config file full path. 
 
-If you use third-party libraries (as we do in SQLplugin, which we explain later), and run your code in Cluster Mode, \textit{you won't be able to run Squall directly from your Java environment}. This is due to the fact that your Java environment won't create a single jar file with all non-Storm dependencies. In that case, you have to use \verb#squallClusterRun.sh#, which uses \verb#/squall-2.0-standalone.jar#.
+If you use third-party libraries (as we do in SQLplugin, which we explain later), and run your code in Cluster Mode, \textit{you would not be able to run Squall directly from your Java environment}. This is due to the fact that your Java environment would not create a single jar file with all non-Storm dependencies. In that case, you have to use \verb#squallClusterRun.sh#, which uses \verb#/squall-2.0-standalone.jar#.
 
 \subsection{Query Plans and config files: Local Mode}
 The script for running Squall in Local Mode is \verb#bin/squallLocalRun.sh# (ignore \verb#pluginSQLLocalRun.sh# for now). As you can see in \verb#bin/squallLocalRun.sh#, there is a parameter specifying a path to \textit{config file}. Config file describes which query plan from a set of predefined ones is going to be used, along with some other parameters we explain later in this document. Your config file has to be in \verb#INSTALL_DIR/dip/Squall/confs#, and as you can see from \verb#bin/squallLocalRun.sh#, \verb#0.1G_hyracks_serial# config file is used by default. 
@@ -144,7 +144,7 @@ In order to run Squall in Local Mode with some other config file, \textit{must s
  cd $INSTALL_DIR/bin
  ./squallLocalRun.sh $CONFIG_FILE
 \end{verbatim}
-where \verb#CONFIG_FILE# is a file from \verb#INSTALL_DIR/dip/Squall/confs# which ends up with \verb#_serial#. If you don't want to use scripts, you can, for example, run the following commands:
+where \verb#CONFIG_FILE# is a file from \verb#INSTALL_DIR/dip/Squall/confs# which ends up with \verb#_serial#. If you do not want to use scripts, you can, for example, run the following commands:
 \begin{verbatim}
  cd $INSTALL_DIR/bin
  java -cp ../compilation/squall-2.0-standalone.jar:../storm-0.7.0/lib/*:
@@ -201,7 +201,7 @@ OperatorComponent oc =
                                         .setAggregation(agg);
 \end{verbatim}
 
-The explanation is provided in Figure~\ref{fig:Hyracks}. Note that we don't have to perform any projections on the \verb#CUSTOMER_ORDERS# join component. The output tuple doesn't contain \verb#CUSTKEY# from the right parent, since it is already included (with the same value) from the left parent. A hash from a parent relation (CUSTOMER, ORDERS) refers to a position(s) in a tuple \textit{after} projection is performed. The hash denotes the columns from a tuple that are join keys in the join component. You can find more query plan examples in the package \verb#queryPlans#. Their corresponding config files can be found in \verb#INSTALL_DIR/dip/Squall/confs#.
+The explanation is provided in Figure~\ref{fig:Hyracks}. Note that we do not have to perform any projections on the \verb#CUSTOMER_ORDERS# join component. The output tuple does not contain \verb#CUSTKEY# from the right parent, since it is already included (with the same value) from the left parent. A hash from a parent relation (CUSTOMER, ORDERS) refers to a position(s) in a tuple \textit{after} projection is performed. The hash denotes the columns from a tuple that are join keys in the join component. You can find more query plan examples in the package \verb#queryPlans#. Their corresponding config files can be found in \verb#INSTALL_DIR/dip/Squall/confs#.
 
 \begin{figure}
 \centering
@@ -241,21 +241,21 @@ DIP_NIMBUS_HOST icdatasrv2
 DIP_STORM_ZOOKEEPER_SERVERS icdatasrv2
 \end{verbatim}
 
-\verb|DIP_DISTRIBUTED| must be false to execute the query plan in Local mode. \verb|DIP_QUERY_NAME| must be case-insensitive equal to a query plan from \verb#queryPlans# package, without the ``Plan'' suffix at the end. For example, here we have a query named ``hyracks'' which targets \verb#HyracksPlan# class. Topology name is built by concatenation of \verb#DIP_TOPOLOGY_NAME_PREFIX# and \verb|DIP_TOPOLOGY_NAME|. \\ \verb#DIP_TOPOLOGY_NAME_PREFIX# is there to distinguish different users, but it must be set only in Cluster Mode. In Local mode, \verb|DIP_NUM_PARALLELISM| refers to the number of threads allocated for Squall. As already mentioned, if your topology requires more tasks than are available through this parameter, some of the tasks will be collocated in a single thread. This setting is quite important, because if too many threads are instantiated, the execution will be very slow. \verb|DIP_NUM_ACKERS| represents the number of nodes used for ensuring that each tuple is fully propagated. When all the tuples are processed, the final result is written to a file. You don't need to change this parameter. Note that if any tuple fails, you have to kill the topology, because if will never finish. \verb|DIP_DATA_PATH| points to a location of your database - \textit{you have to modify this parameter}.
+\verb|DIP_DISTRIBUTED| must be false to execute the query plan in Local mode. \verb|DIP_QUERY_NAME| must be case-insensitive equal to a query plan from \verb#queryPlans# package, without the ``Plan'' suffix at the end. For example, here we have a query named ``hyracks'' which targets \verb#HyracksPlan# class. Topology name is built by concatenation of \verb#DIP_TOPOLOGY_NAME_PREFIX# and \verb|DIP_TOPOLOGY_NAME|. \\ \verb#DIP_TOPOLOGY_NAME_PREFIX# is there to distinguish different users, but it must be set only in Cluster Mode. In Local mode, \verb|DIP_NUM_PARALLELISM| refers to the number of threads allocated for Squall. As already mentioned, if your topology requires more tasks than are available through this parameter, some of the tasks will be collocated in a single thread. This setting is quite important, because if too many threads are instantiated, the execution will be very slow. \verb|DIP_NUM_ACKERS| represents the number of nodes used for ensuring that each tuple is fully propagated. When all the tuples are processed, the final result is written to a file. You do not need to change this parameter. Note that if any tuple fails, you have to kill the topology, because if will never finish. \verb|DIP_DATA_PATH| points to a location of your database - \textit{you have to modify this parameter}.
 
 The parallelism of a component is denoted through \verb|COMPONENT_NAME_PAR|. Note the convention for naming a JoinComponent, it should have the following form: \\ \verb|"LEFTPARENT_RIGHTPARENT_PAR"|. No matter how you increase the parallelism for each component, the total number of threads is limited by \\ \verb|DIP_NUM_PARALLELISM|. \textit{Note that you cannot run arbitrary large database with small component parallelism. Your component might need to store more data than the maximum heap size for Squall/Storm process. This can be manifested by encountering errors such as ``failing message''.} This behavior is not manifested with an \verb|OutOfMemoryException|, rather when the used memory is close to this amount, the system slows down drastically, and the topology fails some tuples due to exceeded timeouts.
 
 Now we explain the parameters you most likely would not need to change; \\ \verb|DIP_EXTENSION| refers to file extension in your database. In our case, the names of the database files were \verb|customer.tbl|, \verb|orders.tbl|, etc. \\ \verb|DIP_READ_SPLIT_DELIMITER| is a regular expression used for delimiting columns of a tuple in a database file. \\ \verb|DIP_GLOBAL_ADD_DELIMITER| and \verb|DIP_GLOBAL_SPLIT_DELIMITER| are used in Squall internally for serializing and deserializing tuples between different components. \verb|DIP_KILL_AT_THE_END| assures your topology is killed after the final result is written to a file. If you set this to false, your topology will execute forever, consuming resources that could be used by other topologies executing at the same time. Master nodes for Storm are set via \verb|DIP_NIMBUS_HOST| and \verb|DIP_STORM_ZOOKEEPER_SERVERS|. This should not be changed.
 
 \subsection{Query Plans and config files: Cluster Mode}
-Other than for reading logs, you don't need to ssh to any of the cluster machines. A prerequisite is that you successfully run Storm in Local mode.
+Other than for reading logs, you do not need to ssh to any of the cluster machines. A prerequisite is that you successfully run Storm in Local mode.
 
 The script for running Squall in Cluster Mode is \verb#bin/squallClusterRun.sh# (ignore \verb#pluginSQLClusterRun.sh# for now). Config files are in the same format as before, yet with possibly different values. As you can see in the config file, the default config file is \verb#dip/Squall/confs/1G_hyracks_parallel#. 
 
 Before running Squall in Cluster Mode, you have to do the following:
 \begin{enumerate}
- \item Inside your home directory on \textit{your local machine}, create \verb#.storm# folder (don't forget full stop at the beginning). Copy \verb#INSTALL_DIR/auxiliary/storm.yaml# to \verb#~/.storm#. \verb#~# refers to your home directory. This file contains Storm parameters relevant for Cluster Mode, such as Storm Master node etc. You should never change this file.
- \item Inside  \verb#dip/Squall/confs/1G_hyracks_parallel# you have to set up \\ \verb#DIP_TOPOLOGY_NAME_PREFIX# to ``teamX'', where \verb#x# is your team number. If you don't set this parameter, multiple groups might try to run topologies with the same name at the same time, so Storm will prevent all of them from execution, except one.
+ \item Inside your home directory on \textit{your local machine}, create \verb#.storm# folder (do not forget full stop at the beginning). Copy \verb#INSTALL_DIR/auxiliary/storm.yaml# to \verb#~/.storm#. \verb#~# refers to your home directory. This file contains Storm parameters relevant for Cluster Mode, such as Storm Master node etc. You should never change this file.
+ \item Inside  \verb#dip/Squall/confs/1G_hyracks_parallel# you have to set up \\ \verb#DIP_TOPOLOGY_NAME_PREFIX# to ``teamX'', where \verb#x# is your team number. If you do not set this parameter, multiple groups might try to run topologies with the same name at the same time, so Storm will prevent all of them from execution, except one.
 \end{enumerate}
 
 Then, you can run Squall with the following commands:
@@ -271,7 +271,7 @@ You can run Squall in Cluster Mode with some other config files:
 \end{verbatim}
 where \verb#CONFIG_FILE# is a file from \verb#INSTALL_DIR/dip/Squall/confs# which ends up with \verb#_parallel#. \textit{Keep in mind that for any config file you are going to use, you have to specify} \verb#DIP_TOPOLOGY_NAME_PREFIX# \textit{properly}.
 
-If you don't want to use scripts, you can, for example, run the following commands:
+If you do not want to use scripts, you can, for example, run the following commands:
 \begin{verbatim}
  cd $INSTALL_DIR/bin
  ../storm-0.7.0/bin/storm jar ../compilation/squall-2.0-standalone.jar
@@ -336,8 +336,7 @@ Storm has only limited support for presenting errors in a web interface, so you 
 
 \section{SQLplugin: Run Squall directly from SQL queries}
 \vspace{2mm}
-
-We also implemented a heuristic-based query optimizer, which translates SQL into a bushy query plan. After creating a query plan, it assigns a parallelism to each logical component. However, it has only a limited support for SQL syntax. We tested it for Hyracks, TPCH3, 5, 7 and 8 and it works. You can find the SQL files in the \verb|INSTALL_DIR/dip/SQLtoQueryPlanPlugin/SQLqueries| directory. The query optimizer doesn't recognize Oracle SQL syntax (in which the TPCH queries are originally written), rather it supports only ANSI SQL syntax (take a look at the \verb|SQLqueries| examples).
+SQLPlugin is a SQL parser which translates SQL directly to Squall query plans, and then executes them. SQLplugin uses a heuristic-based query optimizer, which translates SQL into a bushy query plan. After creating a query plan, it assigns a parallelism to each logical component. However, it has only a limited support for SQL syntax. We tested it for Hyracks, TPCH3, 5, 7 and 8 and it works. You can find the SQL files in the \verb|INSTALL_DIR/dip/SQLtoQueryPlanPlugin/SQLqueries| directory. The query optimizer does not recognize Oracle SQL syntax (in which the TPCH queries are originally written), rather it supports only ANSI SQL syntax (take a look at the \verb|SQLqueries| examples).
 
 The source code for this project can be found in \\ \verb|INSTALL_DIR/dip/SQLtoQueryPlanPlugin/src| directory.
 
@@ -356,7 +355,7 @@ In order to run SQLplugin in Local Mode, in the config file you use, you \textit
  cd $INSTALL_DIR/bin
  ./pluginSQLLocalRun.sh $CONFIG_FILE
 \end{verbatim}
-where \verb#CONFIG_FILE# is a file from \verb#INSTALL_DIR/dip/SQLtoQueryPlanPlugin/confs# which ends up with \verb#_serial#. If you don't want to use scripts, you can, for example, run the following commands:
+where \verb#CONFIG_FILE# is a file from \verb#INSTALL_DIR/dip/SQLtoQueryPlanPlugin/confs# which ends up with \verb#_serial#. If you do not want to use scripts, you can, for example, run the following commands:
 \begin{verbatim}
  cd $INSTALL_DIR/bin
  java -cp ../compilation/squall-2.0-standalone.jar:../storm-0.7.0/lib/*:
@@ -407,12 +406,12 @@ We will explain here only the parameters that have different semantics than befo
 \subsection{Query Plans and config files: Cluster Mode}
 The script for running SQLplugin in Cluster Mode is \verb#pluginSQLClusterRun.sh#. As you can see in \verb#bin/pluginSQLClusterRun.sh#, there is a parameter specifying a path to a config file. By default, \verb#1G_hyracks_parallel# is used. You can find more examples of config files in \verb#INSTALL_DIR/dip/SQLtoQueryPlanPlugin/confs#. 
 
-To run SQLplugin in Cluster Mode, you need to set up \verb#DIP_TOPOLOGY_NAME_PREFIX# to ``teamX'', where \verb#x# is your team number in the config file you use. If you don't set this parameter, multiple groups might try to run topologies with the same name at the same time, so Storm will prevent all of them from execution, except one. Then, run the following commands:
+To run SQLplugin in Cluster Mode, you need to set up \verb#DIP_TOPOLOGY_NAME_PREFIX# to ``teamX'', where \verb#x# is your team number in the config file you use. If you do not set this parameter, multiple groups might try to run topologies with the same name at the same time, so Storm will prevent all of them from execution, except one. Then, run the following commands:
 \begin{verbatim}
  cd $INSTALL_DIR/bin
  ./pluginSQLClusterRun.sh $CONFIG_FILE
 \end{verbatim}
-where \verb#CONFIG_FILE# is a file from \verb#INSTALL_DIR/dip/SQLtoQueryPlanPlugin/confs# which ends up with \verb#_parallel#. If you don't want to use scripts, you can, for example, run the following commands:
+where \verb#CONFIG_FILE# is a file from \verb#INSTALL_DIR/dip/SQLtoQueryPlanPlugin/confs# which ends up with \verb#_parallel#. If you do not want to use scripts, you can, for example, run the following commands:
 \begin{verbatim}
  cd $INSTALL_DIR/bin
  java -cp ../compilation/squall-2.0-standalone.jar:../storm-0.7.0/lib/*:
