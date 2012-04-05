@@ -67,7 +67,7 @@ This section is a tutorial for installing Squall/Storm on your local machine, an
 
 The following steps are necessary for both modes:
 \begin{enumerate}
- \item Put the content of \verb#install# directory (not the directory itself) somewhere on your local machine. The directory where you put it will be denoted as \verb#INSTALL_DIR#. \verb#INSTALL_DIR# now contains 5 directories inside (auxiliary, bin, compilation, dip and lib). \textit{Don't change directory structure. Otherwise scripts for installation/running would not work!}
+ \item Put the content of \verb#install# directory (not the directory itself) somewhere on your local machine. The directory where you put it will be denoted as \verb#INSTALL_DIR#. \verb#INSTALL_DIR# now contains 5 directories inside (auxiliary, bin, compilation, dip and lib). \textit{Do not change directory structure. Otherwise scripts for installation/running would not work!}
  \item Download Storm 0.7.0 from \url{https://github.com/nathanmarz/storm/downloads}, extract it, and put \verb#storm-0.7.0# directory in \verb#INSTALL_DIR#.
  
 \subsection{Quick Start: Local Mode}
@@ -386,7 +386,7 @@ DIP_DATA_ROOT /path/to/tpch/on/local/machine/
 DIP_SQL_ROOT ../dip/SQLtoQueryPlanPlugin/SQLqueries/
 
 # DIP_DB_SIZE is in GBs
-DIP_DB_SIZE 1 
+DIP_DB_SIZE 0.1 
 DIP_MAX_SRC_PAR 1
 
 # below are unlikely to change
@@ -414,9 +414,7 @@ To run SQLplugin in Cluster Mode, you need to set up \verb#DIP_TOPOLOGY_NAME_PRE
 where \verb#CONFIG_FILE# is a file from \verb#INSTALL_DIR/dip/SQLtoQueryPlanPlugin/confs# which ends up with \verb#_parallel#. If you do not want to use scripts, you can, for example, run the following commands:
 \begin{verbatim}
  cd $INSTALL_DIR/bin
- java -cp ../compilation/squall-2.0-standalone.jar:../storm-0.7.0/lib/*:
-          ../storm-0.7.0/storm-0.7.0.jar 
-   main.ParserMain ../dip/SQLtoQueryPlanPlugin/confs/1G_hyracks_parallel
+ ../storm-0.7.0/bin/storm jar ../compilation/squall-2.0-standalone.jar main.ParserMain $CONFIG_PATH
 \end{verbatim}
 
 The result have to be the same as for before:
@@ -457,7 +455,7 @@ DIP_NIMBUS_HOST icdatasrv2
 DIP_STORM_ZOOKEEPER_SERVERS icdatasrv2
 \end{verbatim}
 
-Config file \verb#1G_hyracks_parallel# is the same as in \verb#1G_hyracks_parallel#, except:
+Config file \verb#1G_hyracks_parallel# is the same as in \verb#0.1G_hyracks_serial#, except:
 \begin{enumerate}
  \item \verb|DIP_DISTRIBUTED| is set to true.
  \item \verb#DIP_TOPOLOGY_NAME_PREFIX# has to be set to ``teamX'', where \verb#x# is your team number.
