@@ -7,7 +7,9 @@ package operators;
 
 import conversion.IntegerConversion;
 import conversion.NumericConversion;
+import expressions.Addition;
 import expressions.ValueExpression;
+import expressions.ValueSpecification;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,7 +33,7 @@ public class AggregateCountOperator implements AggregateOperator{
         private int _groupByType = GB_UNSET;
         private List<Integer> _groupByColumns = new ArrayList<Integer>();
         private ProjectionOperator _groupByProjection;
-        private int _invocations = 0;
+        private int _tuplesProcessed = 0;
 
         private NumericConversion<Integer> _wrapper = new IntegerConversion();
         private HashMap<String, Integer> _aggregateMap = new HashMap<String, Integer>();
@@ -94,7 +96,7 @@ public class AggregateCountOperator implements AggregateOperator{
          //from Operator
         @Override
         public List<String> process(List<String> tuple){
-            _invocations++;
+            _tuplesProcessed++;
             if(_distinct != null){
                 tuple = _distinct.process(tuple);
                 if(tuple == null){
@@ -139,18 +141,82 @@ public class AggregateCountOperator implements AggregateOperator{
         }
 
         @Override
+        public void addContent(AggregateOperator otherAgg){
+            HashMap<String, Integer> otherStorage = (HashMap<String, Integer>) otherAgg.getStorage();
+
+            Iterator<Entry<String, Integer>> it = otherStorage.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry pairs = (Map.Entry)it.next();
+                String key = (String)pairs.getKey();
+                Integer otherValue = (Integer)pairs.getValue();
+
+                Integer value = _aggregateMap.get(key);
+                if(value == null){
+                    _aggregateMap.put(key, otherValue);
+                }else{
+                    ValueExpression<Integer> base = new ValueSpecification<Integer>(_wrapper, value);
+                    ValueExpression<Integer> other = new ValueSpecification<Integer>(_wrapper, otherValue);
+                    Addition<Integer> result = new Addition<Integer>(_wrapper, base, other);
+                    Integer newValue = result.eval(null);
+                    _aggregateMap.put(key, newValue);
+                }
+            }
+        }
+
+        @Override
+        public HashMap<String, Integer> getStorage(){
+            return _aggregateMap;
+        }
+
+        @Override
 	public String printContent(){
             StringBuilder sb = new StringBuilder();
-            sb.append("Iteration ").append(_invocations).append(":\n");
             Iterator<Entry<String, Integer>> it = _aggregateMap.entrySet().iterator();
 	    while (it.hasNext()) {
 	       Map.Entry pairs = (Map.Entry)it.next();
 	       Integer value = (Integer) pairs.getValue();
 	       sb.append(pairs.getKey()).append(" = ").append(value).append("\n");
 	    }
-	    sb.append("----------------------------------\n");
             return sb.toString();
         }
+
+        @Override
+        public int tuplesProcessed(){
+            return _tuplesProcessed;
+        }
+
+        //for this method it is essential that HASH_DELIMITER, which is used in tupleToString method,
+        //  is the same as DIP_GLOBAL_ADD_DELIMITER
+        @Override
+        public List<String> getContent() {
+            List<String> content = new ArrayList<String>();
+            if(_groupByType == GB_UNSET){
+                Iterator<Entry<String, Integer>> it = _aggregateMap.entrySet().iterator();
+                while (it.hasNext()) {
+                    Map.Entry pairs = (Map.Entry)it.next();
+                    int value = (Integer)pairs.getValue();
+
+                    //we neglect key and add only value (should be exactly one value)
+                    content.add(_wrapper.toString(value));
+                }
+            }else{
+                Iterator<Entry<String, Integer>> it = _aggregateMap.entrySet().iterator();
+                while (it.hasNext()) {
+                    Map.Entry pairs = (Map.Entry)it.next();
+                    String key = (String)pairs.getKey();
+                    int value = (Integer)pairs.getValue();
+
+                    List<String> tuple = new ArrayList<String>();
+                    tuple.add(key);
+                    tuple.add(_wrapper.toString(value));
+
+                    content.add(MyUtilities.tupleToString(tuple, _map));
+                }
+
+            }
+            return content;
+        }
+
 
         @Override
         public String toString(){
@@ -187,35 +253,4 @@ public class AggregateCountOperator implements AggregateOperator{
             return (_groupByType != GB_COLUMNS && _groupByType != GB_UNSET);
         }
 
-        //for this method it is essential that HASH_DELIMITER, which is used in tupleToString method,
-        //  is the same as DIP_GLOBAL_ADD_DELIMITER
-        @Override
-        public List<String> getContent() {
-            List<String> content = new ArrayList<String>();
-            if(_groupByType == GB_UNSET){
-                Iterator<Entry<String, Integer>> it = _aggregateMap.entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry pairs = (Map.Entry)it.next();
-                    int value = (Integer)pairs.getValue();
-
-                    //we neglect key and add only value (should be exactly one value)
-                    content.add(_wrapper.toString(value));
-                }
-            }else{
-                Iterator<Entry<String, Integer>> it = _aggregateMap.entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry pairs = (Map.Entry)it.next();
-                    String key = (String)pairs.getKey();
-                    int value = (Integer)pairs.getValue();
-
-                    List<String> tuple = new ArrayList<String>();
-                    tuple.add(key);
-                    tuple.add(_wrapper.toString(value));
-
-                    content.add(MyUtilities.tupleToString(tuple, _map));
-                }
-                
-            }
-            return content;
-        }
 }

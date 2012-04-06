@@ -6,7 +6,6 @@
 package operators;
 
 import java.util.List;
-import java.util.Map;
 import predicates.Predicate;
 
 public class SelectionOperator implements Operator {
@@ -39,6 +38,16 @@ public class SelectionOperator implements Operator {
     @Override
     public String printContent() {
         throw new RuntimeException("printContent for SelectionOperator should never be invoked!");
+    }
+
+    @Override
+    public int tuplesProcessed(){
+        throw new RuntimeException("tupleProcessed for SelectionOperator should never be invoked!");
+    }
+
+    @Override
+    public List<String> getContent() {
+        throw new RuntimeException("getContent for SelectionOperator should never be invoked!");
     }
 
     @Override

@@ -39,7 +39,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
         private String _componentName;
 	private int _ID;
 
-        private int _invocations;
+        private int _receivedTuples;
         private boolean _printOut;
 
 	private ChainOperator _operatorChain;
@@ -241,10 +241,10 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
         private void printTuple(List<String> tuple){
             if(_printOut){
                 if(!_operatorChain.isBlocking()){
-                    _invocations++;
+                    _receivedTuples++;
                     StringBuilder sb = new StringBuilder();
                     sb.append("\nComponent ").append(_componentName);
-                    sb.append("\nIteration: ").append(_invocations);
+                    sb.append("\nReceived tuples: ").append(_receivedTuples);
                     sb.append(" Tuple: ").append(MyUtilities.tupleToString(tuple, _conf));
                     LOG.info(sb.toString());
                 }
@@ -254,12 +254,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
         private void printContent() {
                 if(_printOut){
                     if(_operatorChain.isBlocking()){
-                        StringBuilder sb = new StringBuilder();
-                        sb.append("\nThe result for topology ");
-                        sb.append(MyUtilities.getFullTopologyName(_conf));
-                        sb.append("\nComponent ").append(_componentName).append(":\n");
-                        sb.append(_operatorChain.printContent());
-                        LOG.info(sb.toString());
+                        MyUtilities.printBlockingResult(_componentName, (AggregateOperator)_operatorChain.getLastOperator(), _hierarchyPosition, _conf, LOG);
                     }
                 }
         }

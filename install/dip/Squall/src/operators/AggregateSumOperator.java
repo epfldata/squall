@@ -26,7 +26,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
         private int _groupByType = GB_UNSET;
         private List<Integer> _groupByColumns = new ArrayList<Integer>();
         private ProjectionOperator _groupByProjection;
-        private int _invocations = 0;
+        private int _tuplesProcessed = 0;
         
         private NumericConversion<T> _wrapper;
         private ValueExpression<T> _ve;
@@ -94,7 +94,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
         //from Operator
         @Override
         public List<String> process(List<String> tuple){
-            _invocations++;
+            _tuplesProcessed++;
             if(_distinct != null){
                 tuple = _distinct.process(tuple);
                 if(tuple == null){
@@ -141,17 +141,48 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
         }
 
         @Override
+        public void addContent(AggregateOperator otherAgg){
+            HashMap<String, T> otherStorage = (HashMap<String, T>) otherAgg.getStorage();
+
+            Iterator<Entry<String, T>> it = otherStorage.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry pairs = (Map.Entry)it.next();
+                String key = (String)pairs.getKey();
+                T otherValue = (T)pairs.getValue();
+
+                T value = _aggregateMap.get(key);
+                if(value == null){
+                    _aggregateMap.put(key, otherValue);
+                }else{
+                    ValueExpression<T> base = new ValueSpecification<T>(_wrapper, value);
+                    ValueExpression<T> other = new ValueSpecification<T>(_wrapper, otherValue);
+                    Addition<T> result = new Addition<T>(_wrapper, base, other);
+                    T newValue = result.eval(null);
+                    _aggregateMap.put(key, newValue);
+                }
+            }
+        }
+
+        @Override
+        public HashMap<String, T> getStorage(){
+            return _aggregateMap;
+        }
+
+         @Override
 	public String printContent(){
             StringBuilder sb = new StringBuilder();
-            sb.append("Iteration ").append(_invocations).append(":\n");
             Iterator<Entry<String, T>> it = _aggregateMap.entrySet().iterator();
 	    while (it.hasNext()) {
 	       Map.Entry pairs = (Map.Entry)it.next();
 	       T value = (T) pairs.getValue();
 	       sb.append(pairs.getKey()).append(" = ").append(value).append("\n");
 	    }
-	    sb.append("----------------------------------\n");
             return sb.toString();
+        }
+
+        @Override
+        public int tuplesProcessed(){
+            return _tuplesProcessed;
         }
 
         //for this method it is essential that HASH_DELIMITER, which is used in tupleToString method,

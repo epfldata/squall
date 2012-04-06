@@ -7,7 +7,6 @@ package operators;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 
 public class ChainOperator implements Operator {
@@ -43,8 +42,8 @@ public class ChainOperator implements Operator {
 
     @Override
     public boolean isBlocking() {
-        if(lastOperator()!=null){
-            return lastOperator().isBlocking();
+        if(getLastOperator()!=null){
+            return getLastOperator().isBlocking();
         }else{
             return false;
         }
@@ -54,13 +53,32 @@ public class ChainOperator implements Operator {
     public String printContent() {
         String result = null;
         if(isBlocking()){
-            result = lastOperator().printContent();
+            result = getLastOperator().printContent();
         }
         return result;
     }
 
+    @Override
+    public int tuplesProcessed(){
+        int result = -1;
+        if(isBlocking()){
+            result = getLastOperator().tuplesProcessed();
+        }else{
+            throw new RuntimeException("tuplesProcessed for non-blocking last operator should never be invoked!");
+        }
+        return result;
+    }
 
-    private Operator lastOperator(){
+    @Override
+    public List<String> getContent() {
+        List<String> result = null;
+        if(isBlocking()){
+            result = getLastOperator().getContent();
+        }
+        return result;
+    }
+
+    public Operator getLastOperator(){
         if(size()>0){
             return _operators.get(size()-1);
         }else{

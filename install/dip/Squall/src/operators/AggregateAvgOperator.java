@@ -30,7 +30,7 @@ public class AggregateAvgOperator implements AggregateOperator {
         private int _groupByType = GB_UNSET;
         private List<Integer> _groupByColumns = new ArrayList<Integer>();
         private ProjectionOperator _groupByProjection;
-        private int _invocations = 0;
+        private int _tuplesProcessed = 0;
         
         private NumericConversion<Double> _wrapper = new DoubleConversion();
         private ValueExpression<Double> _ve;
@@ -97,7 +97,7 @@ public class AggregateAvgOperator implements AggregateOperator {
         //from Operator
         @Override
         public List<String> process(List<String> tuple){
-            _invocations++;
+            _tuplesProcessed++;
             if(_distinct != null){
                 tuple = _distinct.process(tuple);
                 if(tuple == null){
@@ -147,18 +147,29 @@ public class AggregateAvgOperator implements AggregateOperator {
             return true;
         }
 
+        public void addContent(AggregateOperator otherAgg) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public Object getStorage() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
         @Override
 	public String printContent(){
             StringBuilder sb = new StringBuilder();
-            sb.append("Iteration ").append(_invocations).append(":\n");
             Iterator<Entry<String, SumCount>> it = _aggregateAvg.entrySet().iterator();
 	    while (it.hasNext()) {
 	       Map.Entry pairs = (Map.Entry) it.next();
 	       SumCount value = (SumCount) pairs.getValue();
 	       sb.append(pairs.getKey()).append(" = ").append(value.getAvg()).append("\n");
 	    }
-	    sb.append("----------------------------------\n");
             return sb.toString();
+        }
+
+        @Override
+        public int tuplesProcessed(){
+            return _tuplesProcessed;
         }
 
         @Override

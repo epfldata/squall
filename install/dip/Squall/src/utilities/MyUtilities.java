@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import operators.AggregateOperator;
 
 import org.apache.log4j.Logger;
 import stormComponents.StormEmitter;
@@ -19,7 +20,7 @@ public class MyUtilities{
 
 	private static int topologyId = 0;
         private static String SINGLE_HASH_KEY = "SingleHashEntry";
-	
+
         public static int[] mergeArrays(int[] array1, int[] array2){
             int[] result = new int[array1.length + array2.length];
             System.arraycopy(array1, 0, result, 0, array1.length);
@@ -37,6 +38,28 @@ public class MyUtilities{
             final PrintWriter printWriter = new PrintWriter(result);
             aThrowable.printStackTrace(printWriter);
             return result.toString();
+        }
+       
+        public static void printBlockingResult(String componentName, int receivedTuples, String compContent, int hierarchyPosition, Map map, Logger log){
+            //just print it, necessary for both modes (in Local mode we might print other than final components)
+            printPartialResult(componentName, receivedTuples, compContent, map, log);
+        }
+
+        public static void printBlockingResult(String componentName, AggregateOperator agg, int hierarchyPosition, Map map, Logger log){
+            //just print it, necessary for both modes (in Local mode we might print other than final components)
+            printPartialResult(componentName, agg.tuplesProcessed(), agg.printContent(), map, log);
+
+            LocalMergeResults.localCollectFinalResult(agg, hierarchyPosition, map, log);
+        }
+
+        private static void printPartialResult(String componentName, int receivedTuples, String compContent, Map map, Logger log) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("\nThe result for topology ");
+            sb.append(MyUtilities.getFullTopologyName(map));
+            sb.append("\nComponent ").append(componentName).append(":\n");
+            sb.append("\nThis task received ").append(receivedTuples);
+            sb.append("\n").append(compContent);
+            log.info(sb.toString());
         }
 
         /*

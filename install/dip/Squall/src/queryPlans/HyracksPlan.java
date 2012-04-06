@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import operators.AggregateCountOperator;
+import operators.AggregateOperator;
 import operators.ProjectionOperator;
 
 import org.apache.log4j.Logger;
@@ -21,6 +22,10 @@ public class HyracksPlan {
     private static Logger LOG = Logger.getLogger(HyracksPlan.class);
 
     private QueryPlan _queryPlan = new QueryPlan();
+
+    //this is aggregation performed on the results from multiple tasks of the same last component
+    //used for automatic check
+    private AggregateOperator _overallAgg;
 
     public HyracksPlan(String dataPath, String extension, Map conf){
             //-------------------------------------------------------------------------------------

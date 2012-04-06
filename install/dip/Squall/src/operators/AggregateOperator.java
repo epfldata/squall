@@ -7,7 +7,6 @@ package operators;
 
 import expressions.ValueExpression;
 import java.util.List;
-import java.util.Map;
 
 
 public interface AggregateOperator extends Operator{
@@ -25,8 +24,9 @@ public interface AggregateOperator extends Operator{
     //this is null for AggregateCountOperator
     public List<ValueExpression> getExpressions();
 
-    public List<String> getContent();
-
+    public void addContent(AggregateOperator otherAgg);
+    public Object getStorage();
+    
     
     //HAVING clause: Since HAVING depends on aggregate result,
     //  it cannot be evaluated before all the tuples are processed.

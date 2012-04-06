@@ -60,6 +60,16 @@ public class DistinctOperator implements Operator{
     }
 
     @Override
+    public int tuplesProcessed(){
+         throw new RuntimeException("tuplesProcessed for DistinctOperator should never be invoked!");
+    }
+
+    @Override
+    public List<String> getContent() {
+        throw new RuntimeException("getContent for DistinctOperator should never be invoked!");
+    }
+
+    @Override
     public String toString(){
         StringBuilder sb = new StringBuilder();
         sb.append("DistinctOperator with Projection: ");

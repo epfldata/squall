@@ -5,7 +5,6 @@ import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 public class ProjectionOperator implements Operator {
 	private static final long serialVersionUID = 1L;
@@ -49,6 +48,16 @@ public class ProjectionOperator implements Operator {
         @Override
         public String printContent() {
             throw new RuntimeException("printContent for ProjectionOperator should never be invoked!");
+        }
+
+        @Override
+        public int tuplesProcessed(){
+            throw new RuntimeException("tupleProcessed for ProjectionOperator should never be invoked!");
+        }
+
+        @Override
+        public List<String> getContent() {
+            throw new RuntimeException("getContent for ProjectionOperator should never be invoked!");
         }
 
         @Override
