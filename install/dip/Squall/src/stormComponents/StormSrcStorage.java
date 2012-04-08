@@ -43,7 +43,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
 	private ChainOperator _operatorChain;
 
-	private JoinStorage _preAggStorage;
+	private JoinStorage _joinStorage;
         private ProjectionOperator _preAggProj;
 
 	private OutputCollector _collector;
@@ -91,7 +91,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
                 currentBolt.allGrouping(Integer.toString(killer.getID()), SystemParameters.DumpResults);
             }
 
-            _preAggStorage = preAggStorage;
+            _joinStorage = preAggStorage;
             _preAggProj = preAggProj;
         }
 
@@ -114,10 +114,10 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 		String inputTupleHash=stormTuple.getString(2);
 
 		if(_tableName.equals(inputComponentName)) {//add the tuple into the datastructure!!
-                        _preAggStorage.put(inputTupleHash, inputTupleString);
+                        _joinStorage.put(inputTupleHash, inputTupleString);
 		} else {//JOIN
 			List<String> affectedTuple = MyUtilities.stringToTuple(inputTupleString, _conf);
-			List<String> oppositeTupleStringList = _preAggStorage.get(inputTupleHash);
+			List<String> oppositeTupleStringList = _joinStorage.get(inputTupleHash);
 
                         // do stuff
 			if(oppositeTupleStringList!=null)
@@ -136,7 +136,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
                                         }
 
                                         List<String> outputTuple;
-                                        if(_preAggStorage instanceof JoinHashStorage){
+                                        if(_joinStorage instanceof JoinHashStorage){
                                             outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple, _joinParams);
                                         }else{
                                             outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);

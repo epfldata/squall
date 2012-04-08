@@ -35,7 +35,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
         private int _hierarchyPosition=INTERMEDIATE;
 
         private StormEmitter _firstEmitter, _secondEmitter;
-        private JoinStorage _firstPreAggStorage, _secondPreAggStorage;
+        private JoinStorage _firstJoinStorage, _secondJoinStorage;
         private ProjectionOperator _firstPreAggProj, _secondPreAggProj;
         private String _componentName;
 	private int _ID;
@@ -99,8 +99,8 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                 currentBolt.allGrouping(Integer.toString(killer.getID()), SystemParameters.DumpResults);
             }
 
-            _firstPreAggStorage = firstPreAggStorage;
-            _secondPreAggStorage = secondPreAggStorage;
+            _firstJoinStorage = firstPreAggStorage;
+            _secondJoinStorage = secondPreAggStorage;
 
             _firstPreAggProj = firstPreAggProj;
             _secondPreAggProj = secondPreAggProj;
@@ -133,14 +133,14 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                 if(firstEmitterName.equals(inputComponentName)){
                     //R update
                     isFromFirstEmitter = true;
-                    affectedStorage = _firstPreAggStorage;
-                    oppositeStorage = _secondPreAggStorage;
+                    affectedStorage = _firstJoinStorage;
+                    oppositeStorage = _secondJoinStorage;
                     projPreAgg = _secondPreAggProj;
                 }else if(secondEmitterName.equals(inputComponentName)){
                     //S update
                     isFromFirstEmitter = false;
-                    affectedStorage = _secondPreAggStorage;
-                    oppositeStorage = _firstPreAggStorage;
+                    affectedStorage = _secondJoinStorage;
+                    oppositeStorage = _firstJoinStorage;
                     projPreAgg = _firstPreAggProj;
                 }else{
                     throw new RuntimeException("InputComponentName " + inputComponentName +
