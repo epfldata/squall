@@ -223,6 +223,11 @@ public class TPCH7Plan {
                 _queryPlan).setSelection(so)
                            .setAggregation(agg);
         //-------------------------------------------------------------------------------------
+        AggregateOperator overallAgg =
+                    new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 1), conf)
+                        .setGroupByColumns(Arrays.asList(0));
+
+        _queryPlan.setOverallAggregation(overallAgg);
 
     }
 

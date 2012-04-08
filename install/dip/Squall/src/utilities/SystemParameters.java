@@ -12,6 +12,9 @@ import org.apache.log4j.Logger;
 public class SystemParameters{
     private static Logger LOG = Logger.getLogger(SystemParameters.class);
 
+    //in Local Mode, we compare against a file in this dir, for example with the name "hyracks.result"
+    public static final String RESULT_DIR = "../checkResults";
+
     //default port, should not be changed unless some other application took this port
     public static final int NIMBUS_THRIFT_PORT = 6627;
 

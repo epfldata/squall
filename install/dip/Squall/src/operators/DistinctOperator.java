@@ -8,7 +8,6 @@ package operators;
 import expressions.ValueExpression;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 
 public class DistinctOperator implements Operator{
@@ -16,7 +15,7 @@ public class DistinctOperator implements Operator{
 
     private ProjectionOperator _projection;
 
-    private int _invocations;
+    private int _numTuplesProcessed;
     private HashSet<List<String>> _distinctTuples = new HashSet<List<String>>();
 
     public DistinctOperator(ValueExpression ... veArray){
@@ -39,7 +38,7 @@ public class DistinctOperator implements Operator{
        otherwise, return projected tuple */
     @Override
     public List<String> process(List<String> tuple) {
-        _invocations++;
+        _numTuplesProcessed++;
         List<String> projectedTuple = _projection.process(tuple);
         if(_distinctTuples.contains(projectedTuple)){
             return null;
@@ -60,8 +59,8 @@ public class DistinctOperator implements Operator{
     }
 
     @Override
-    public int tuplesProcessed(){
-         throw new RuntimeException("tuplesProcessed for DistinctOperator should never be invoked!");
+    public int getNumTuplesProcessed(){
+         return _numTuplesProcessed;
     }
 
     @Override

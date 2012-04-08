@@ -31,5 +31,6 @@ public interface Operator extends Serializable {
     /*
      * This is now decoupled from printContent
      */
-    public int tuplesProcessed();
+    public int getNumTuplesProcessed();
+    
 }

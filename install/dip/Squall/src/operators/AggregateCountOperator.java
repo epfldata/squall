@@ -7,20 +7,18 @@ package operators;
 
 import conversion.IntegerConversion;
 import conversion.NumericConversion;
-import expressions.Addition;
 import expressions.ValueExpression;
-import expressions.ValueSpecification;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import operators.storage.AggStorage;
+import operators.storage.HashMapAggStorage;
+import operators.storage.SingleEntryAggStorage;
 import org.apache.log4j.Logger;
 import utilities.MyUtilities;
 
 
-public class AggregateCountOperator implements AggregateOperator{
+public class AggregateCountOperator implements AggregateOperator<Integer>{
         private static final long serialVersionUID = 1L;
         private static Logger LOG = Logger.getLogger(AggregateCountOperator.class);
 
@@ -33,15 +31,17 @@ public class AggregateCountOperator implements AggregateOperator{
         private int _groupByType = GB_UNSET;
         private List<Integer> _groupByColumns = new ArrayList<Integer>();
         private ProjectionOperator _groupByProjection;
-        private int _tuplesProcessed = 0;
+        private int _numTuplesProcessed = 0;
 
         private NumericConversion<Integer> _wrapper = new IntegerConversion();
-        private HashMap<String, Integer> _aggregateMap = new HashMap<String, Integer>();
+        private AggStorage<Integer> _storage;
 
         private Map _map;
 
         public AggregateCountOperator(Map map){
             _map = map;
+
+            _storage = new SingleEntryAggStorage<Integer>(this, _wrapper, _map);
         }
 
         //from AgregateOperator
@@ -50,6 +50,7 @@ public class AggregateCountOperator implements AggregateOperator{
             if(!alreadySetOther(GB_COLUMNS)){
                 _groupByType = GB_COLUMNS;
                 _groupByColumns = groupByColumns;
+                _storage = new HashMapAggStorage<Integer>(this, _wrapper, _map);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");
@@ -61,6 +62,7 @@ public class AggregateCountOperator implements AggregateOperator{
              if(!alreadySetOther(GB_PROJECTION)){
                 _groupByType = GB_PROJECTION;
                 _groupByProjection = groupByProjection;
+                _storage = new HashMapAggStorage<Integer>(this, _wrapper, _map);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");
@@ -96,7 +98,7 @@ public class AggregateCountOperator implements AggregateOperator{
          //from Operator
         @Override
         public List<String> process(List<String> tuple){
-            _tuplesProcessed++;
+            _numTuplesProcessed++;
             if(_distinct != null){
                 tuple = _distinct.process(tuple);
                 if(tuple == null){
@@ -109,7 +111,7 @@ public class AggregateCountOperator implements AggregateOperator{
             }else{
                 tupleHash = MyUtilities.createHashString(tuple, _groupByColumns, _map);
             }
-            Integer value = updateContent(tuple, tupleHash);
+            Integer value =  (Integer)_storage.updateContent(tuple, tupleHash);
             String strValue = _wrapper.toString(value);
             
             // propagate further the affected tupleHash-tupleValue pair
@@ -120,19 +122,15 @@ public class AggregateCountOperator implements AggregateOperator{
             return affectedTuple;
         }
 
-        private Integer updateContent(List<String> tuple, String tupleHash){
-            Integer value = _aggregateMap.get(tupleHash);
-            if(value == null){
-                value=_wrapper.getInitialValue();
-            }
-            value = runAggregateFunction(value);
-            _aggregateMap.put(tupleHash, value);
-            return value;
+        //actual operator implementation
+        @Override
+        public Integer runAggregateFunction(Integer value, List<String> tuple) {
+            return value + 1;
         }
 
-        //actual operator implementation
-        private Integer runAggregateFunction(Integer value) {
-            return value+1;
+        @Override
+        public Integer runAggregateFunction(Integer value1, Integer value2) {
+            return value1 + value2;
         }
 
         @Override
@@ -141,82 +139,26 @@ public class AggregateCountOperator implements AggregateOperator{
         }
 
         @Override
-        public void addContent(AggregateOperator otherAgg){
-            HashMap<String, Integer> otherStorage = (HashMap<String, Integer>) otherAgg.getStorage();
-
-            Iterator<Entry<String, Integer>> it = otherStorage.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry pairs = (Map.Entry)it.next();
-                String key = (String)pairs.getKey();
-                Integer otherValue = (Integer)pairs.getValue();
-
-                Integer value = _aggregateMap.get(key);
-                if(value == null){
-                    _aggregateMap.put(key, otherValue);
-                }else{
-                    ValueExpression<Integer> base = new ValueSpecification<Integer>(_wrapper, value);
-                    ValueExpression<Integer> other = new ValueSpecification<Integer>(_wrapper, otherValue);
-                    Addition<Integer> result = new Addition<Integer>(_wrapper, base, other);
-                    Integer newValue = result.eval(null);
-                    _aggregateMap.put(key, newValue);
-                }
-            }
+        public AggStorage getStorage(){
+            return _storage;
         }
 
         @Override
-        public HashMap<String, Integer> getStorage(){
-            return _aggregateMap;
+        public int getNumTuplesProcessed(){
+            return _numTuplesProcessed;
         }
 
         @Override
 	public String printContent(){
-            StringBuilder sb = new StringBuilder();
-            Iterator<Entry<String, Integer>> it = _aggregateMap.entrySet().iterator();
-	    while (it.hasNext()) {
-	       Map.Entry pairs = (Map.Entry)it.next();
-	       Integer value = (Integer) pairs.getValue();
-	       sb.append(pairs.getKey()).append(" = ").append(value).append("\n");
-	    }
-            return sb.toString();
-        }
-
-        @Override
-        public int tuplesProcessed(){
-            return _tuplesProcessed;
+            return _storage.printContent();
         }
 
         //for this method it is essential that HASH_DELIMITER, which is used in tupleToString method,
         //  is the same as DIP_GLOBAL_ADD_DELIMITER
         @Override
-        public List<String> getContent() {
-            List<String> content = new ArrayList<String>();
-            if(_groupByType == GB_UNSET){
-                Iterator<Entry<String, Integer>> it = _aggregateMap.entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry pairs = (Map.Entry)it.next();
-                    int value = (Integer)pairs.getValue();
-
-                    //we neglect key and add only value (should be exactly one value)
-                    content.add(_wrapper.toString(value));
-                }
-            }else{
-                Iterator<Entry<String, Integer>> it = _aggregateMap.entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry pairs = (Map.Entry)it.next();
-                    String key = (String)pairs.getKey();
-                    int value = (Integer)pairs.getValue();
-
-                    List<String> tuple = new ArrayList<String>();
-                    tuple.add(key);
-                    tuple.add(_wrapper.toString(value));
-
-                    content.add(MyUtilities.tupleToString(tuple, _map));
-                }
-
-            }
-            return content;
+        public List<String> getContent(){
+            return _storage.getContent();
         }
-
 
         @Override
         public String toString(){

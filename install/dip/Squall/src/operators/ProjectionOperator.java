@@ -11,6 +11,8 @@ public class ProjectionOperator implements Operator {
 
         private List<ValueExpression> _veList = new ArrayList<ValueExpression>();
 
+        private int _numTuplesProcessed = 0;
+
         public ProjectionOperator(ValueExpression... veArray){
             _veList.addAll(Arrays.asList(veArray));
         }
@@ -32,6 +34,7 @@ public class ProjectionOperator implements Operator {
 
         @Override
 	public List<String> process(List<String> tuple) {
+            _numTuplesProcessed++;
             ArrayList<String> projection = new ArrayList<String>();
             for(ValueExpression ve: _veList){
                 String columnContent = ve.evalString(tuple);
@@ -51,8 +54,8 @@ public class ProjectionOperator implements Operator {
         }
 
         @Override
-        public int tuplesProcessed(){
-            throw new RuntimeException("tupleProcessed for ProjectionOperator should never be invoked!");
+        public int getNumTuplesProcessed(){
+            return _numTuplesProcessed;
         }
 
         @Override

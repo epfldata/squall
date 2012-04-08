@@ -17,6 +17,7 @@ import expressions.ValueSpecification;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
+import operators.AggregateOperator;
 import operators.AggregateSumOperator;
 import operators.SelectionOperator;
 
@@ -88,6 +89,11 @@ public class RSTPlan {
                                         new ValueSpecification(_ic, 10))));
 
             //-------------------------------------------------------------------------------------
+
+            AggregateOperator overallAgg =
+                    new AggregateSumOperator(_dc, new ColumnReference(_dc, 0), conf);
+
+            _queryPlan.setOverallAggregation(overallAgg);
             
     }
 

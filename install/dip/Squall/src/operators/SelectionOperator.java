@@ -13,6 +13,8 @@ public class SelectionOperator implements Operator {
     
     private Predicate _predicate;
 
+    private int _numTuplesProcessed=0;
+
     public SelectionOperator(Predicate predicate){
         _predicate = predicate;
     }
@@ -23,6 +25,7 @@ public class SelectionOperator implements Operator {
 
     @Override
     public List<String> process(List<String> tuple) {
+        _numTuplesProcessed++;
         if (_predicate.test(tuple)){
             return tuple;
         }else{
@@ -41,8 +44,8 @@ public class SelectionOperator implements Operator {
     }
 
     @Override
-    public int tuplesProcessed(){
-        throw new RuntimeException("tupleProcessed for SelectionOperator should never be invoked!");
+    public int getNumTuplesProcessed(){
+        return _numTuplesProcessed;
     }
 
     @Override

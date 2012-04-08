@@ -5,27 +5,27 @@
 
 package utilities;
 
-import conversion.IntegerConversion;
-import expressions.ColumnReference;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
+import main.Main;
 import operators.AggregateOperator;
-import operators.AggregateSumOperator;
 import org.apache.log4j.Logger;
+import queryPlans.QueryPlan;
 import stormComponents.StormComponent;
 
 
 public class LocalMergeResults {
         private static Logger LOG = Logger.getLogger(LocalMergeResults.class);
-    
+
         //for writing the full final result in Local Mode
         private static int _collectedLastComponents = 0;
-        private static int _receivedTuples = 0;
-            //ReceivedTuples is the number of tuples the componentTask is reponsible for (!! not how many tuples are in storage!!)
+        private static int _numTuplesProcessed = 0;
+            //the number of tuples the componentTask is reponsible for (!! not how many tuples are in storage!!)
         
-        private static AggregateOperator _agg;
+        private static AggregateOperator _computedAgg;
+        private static AggregateOperator _fileAgg;
         private static Semaphore _semFullResult = new Semaphore(1, true);
 
         //The following 2 methods are crucial for collecting, printing and comparing the results in Local Mode
@@ -37,7 +37,7 @@ public class LocalMergeResults {
                     _semFullResult.acquire();
 
                     _collectedLastComponents++;
-                    _receivedTuples += currentAgg.tuplesProcessed();
+                    _numTuplesProcessed += currentAgg.getNumTuplesProcessed();
                     addMoreResults(currentAgg, map);
 
                     _semFullResult.release();
@@ -52,8 +52,8 @@ public class LocalMergeResults {
         //  we need it due to collectedLastComponents, and lines of result
         //in cluster mode, they can communicate only through conf file
         public static void localPrintAndCompare(Map map) {
-            localPrint(_agg.printContent(), map);
-            localCompare(_agg.getContent(), map);
+            localPrint(_computedAgg.printContent(), map);
+            localCompare(map);
         }
 
         private static void localPrint(String finalResult, Map map){
@@ -61,22 +61,55 @@ public class LocalMergeResults {
             sb.append("\nThe full result for topology ");
             sb.append(MyUtilities.getFullTopologyName(map)).append(".");
             sb.append("\nCollected from ").append(_collectedLastComponents).append(" component tasks of the last component.");
-            sb.append("\nAll the tasks of the last component in total received ").append(_receivedTuples).append(" tuples.");
+            sb.append("\nAll the tasks of the last component in total received ").append(_numTuplesProcessed).append(" tuples.");
             sb.append("\n").append(finalResult);
             LOG.info(sb.toString());
         }
 
-        private static void localCompare(List<String> finalResult, Map map){
-            
+        private static void localCompare(Map map){
+            if(_fileAgg == null){
+                LOG.info("\nCannot validate the result, " + getResultFilePath(map) + " doesn't exist.");
+                return;
+            }
+            if(_computedAgg.getStorage().equals(_fileAgg.getStorage())){
+                LOG.info("\nOK: Expected result achieved for " + MyUtilities.getFullTopologyName(map));
+            }else{
+                StringBuilder sb = new StringBuilder();
+                sb.append("\nPROBLEM: Not expected result achieved for ").append(MyUtilities.getFullTopologyName(map));
+                sb.append("\nCOMPUTED: \n").append(_computedAgg.printContent());
+                sb.append("\nFROM THE RESULT FILE: \n").append(_fileAgg.printContent());
+                LOG.info(sb.toString());
+            }
         }
 
-        //result tuples are from second line, they look like:
-        //  FURNITURE = 29074
         private static void addMoreResults(AggregateOperator currentAgg, Map map){
-            if(_agg == null){
-                _agg = new AggregateSumOperator(new IntegerConversion(), new ColumnReference(new IntegerConversion(), 1), map);
-                _agg.setGroupByColumns(Arrays.asList(0));
+            if(_computedAgg == null){
+                //first task of the last component asked to be added
+                //we create empty aggregations, which we later fill, one from tasks, other from a file
+                QueryPlan currentPlan = Main.chooseQueryPlan(map);
+                _computedAgg = currentPlan.getOverallAggregation();
+                _fileAgg = (AggregateOperator) DeepCopy.copy(_computedAgg);
+                fillAggFromResultFile(map);
             }
-            _agg.addContent(currentAgg);
+            _computedAgg.getStorage().addContent(currentAgg.getStorage());
+        }
+
+        private static void fillAggFromResultFile(Map map){
+            String path = getResultFilePath(map);
+            List<String> lines = MyUtilities.getLinesFromFile(path);
+            if(lines!=null){
+                for(String line: lines){
+                    List<String> tuple = Arrays.asList(line.split("\\s+=\\s+"));
+                    _fileAgg.process(tuple);
+                }
+            }else{
+                //problem with finding the result file
+                _fileAgg = null;
+            }
+        }
+
+        private static String getResultFilePath(Map map){
+            String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
+            return System.getProperty("user.dir") + "/" + SystemParameters.RESULT_DIR + "/" + queryName + ".result";
         }
 }

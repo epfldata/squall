@@ -226,6 +226,13 @@ public class TPCH5Plan {
                 R_N_S_L_C_Ojoin,
                 "FINAL_RESULT",
                 _queryPlan).setAggregation(aggOp);
+
+        //-------------------------------------------------------------------------------------
+        AggregateOperator overallAgg =
+                    new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 1), conf)
+                        .setGroupByColumns(Arrays.asList(0));
+
+        _queryPlan.setOverallAggregation(overallAgg);
     }
 
     public QueryPlan getQueryPlan() {

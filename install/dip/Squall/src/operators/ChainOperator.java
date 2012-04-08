@@ -59,14 +59,12 @@ public class ChainOperator implements Operator {
     }
 
     @Override
-    public int tuplesProcessed(){
-        int result = -1;
+    public int getNumTuplesProcessed(){
         if(isBlocking()){
-            result = getLastOperator().tuplesProcessed();
+            return getLastOperator().getNumTuplesProcessed();
         }else{
             throw new RuntimeException("tuplesProcessed for non-blocking last operator should never be invoked!");
         }
-        return result;
     }
 
     @Override

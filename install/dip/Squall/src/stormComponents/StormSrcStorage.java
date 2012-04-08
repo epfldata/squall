@@ -19,6 +19,7 @@ import expressions.ValueExpression;
 import java.util.List;
 import operators.AggregateOperator;
 import operators.ChainOperator;
+import operators.Operator;
 import operators.ProjectionOperator;
 import operators.SelectionOperator;
 import utilities.SystemParameters;
@@ -46,7 +47,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
         private ProjectionOperator _preAggProj;
 
 	private OutputCollector _collector;
-        private int _receivedTuples;
+        private int _numSentTuples;
 	private int _ID;
 	private Map _conf;
 
@@ -158,6 +159,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
                 if(tuple == null){
                     return;
                 }
+                _numSentTuples++;
                 printTuple(tuple);
 
                 if(_hierarchyPosition!=FINAL_COMPONENT){
@@ -189,11 +191,10 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
         private void printTuple(List<String> tuple){
             if(_printOut){
-                if(!_operatorChain.isBlocking()){
-                    _receivedTuples++;
+                if((_operatorChain == null) || !_operatorChain.isBlocking()){
                     StringBuilder sb = new StringBuilder();
                     sb.append("\nComponent ").append(_componentName);
-                    sb.append("\nReceived tuples: ").append(_receivedTuples);
+                    sb.append("\nReceived tuples: ").append(_numSentTuples);
                     sb.append(" Tuple: ").append(MyUtilities.tupleToString(tuple, _conf));
                     LOG.info(sb.toString());
                 }
@@ -202,8 +203,22 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
         private void printContent() {
                 if(_printOut){
-                    if(_operatorChain.isBlocking()){
-                        MyUtilities.printBlockingResult(_componentName, (AggregateOperator)_operatorChain.getLastOperator(), _hierarchyPosition, _conf, LOG);
+                    if((_operatorChain!=null) &&_operatorChain.isBlocking()){
+                        Operator lastOperator = _operatorChain.getLastOperator();
+                        if (lastOperator instanceof AggregateOperator){
+                            MyUtilities.printBlockingResult(_componentName,
+                                                        (AggregateOperator) lastOperator,
+                                                        _hierarchyPosition,
+                                                        _conf,
+                                                        LOG);
+                        }else{
+                            MyUtilities.printBlockingResult(_componentName,
+                                                        lastOperator.getNumTuplesProcessed(),
+                                                        lastOperator.printContent(),
+                                                        _hierarchyPosition,
+                                                        _conf,
+                                                        LOG);
+                        }
                     }
                 }
         }
