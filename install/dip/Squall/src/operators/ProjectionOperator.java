@@ -5,12 +5,13 @@ import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 public class ProjectionOperator implements Operator {
 	private static final long serialVersionUID = 1L;
 
         private List<ValueExpression> _veList = new ArrayList<ValueExpression>();
+
+        private int _numTuplesProcessed = 0;
 
         public ProjectionOperator(ValueExpression... veArray){
             _veList.addAll(Arrays.asList(veArray));
@@ -33,6 +34,7 @@ public class ProjectionOperator implements Operator {
 
         @Override
 	public List<String> process(List<String> tuple) {
+            _numTuplesProcessed++;
             ArrayList<String> projection = new ArrayList<String>();
             for(ValueExpression ve: _veList){
                 String columnContent = ve.evalString(tuple);
@@ -49,6 +51,16 @@ public class ProjectionOperator implements Operator {
         @Override
         public String printContent() {
             throw new RuntimeException("printContent for ProjectionOperator should never be invoked!");
+        }
+
+        @Override
+        public int getNumTuplesProcessed(){
+            return _numTuplesProcessed;
+        }
+
+        @Override
+        public List<String> getContent() {
+            throw new RuntimeException("getContent for ProjectionOperator should never be invoked!");
         }
 
         @Override

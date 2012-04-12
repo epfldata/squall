@@ -6,13 +6,14 @@
 package operators;
 
 import java.util.List;
-import java.util.Map;
 import predicates.Predicate;
 
 public class SelectionOperator implements Operator {
     private static final long serialVersionUID = 1L;
     
     private Predicate _predicate;
+
+    private int _numTuplesProcessed=0;
 
     public SelectionOperator(Predicate predicate){
         _predicate = predicate;
@@ -24,6 +25,7 @@ public class SelectionOperator implements Operator {
 
     @Override
     public List<String> process(List<String> tuple) {
+        _numTuplesProcessed++;
         if (_predicate.test(tuple)){
             return tuple;
         }else{
@@ -39,6 +41,16 @@ public class SelectionOperator implements Operator {
     @Override
     public String printContent() {
         throw new RuntimeException("printContent for SelectionOperator should never be invoked!");
+    }
+
+    @Override
+    public int getNumTuplesProcessed(){
+        return _numTuplesProcessed;
+    }
+
+    @Override
+    public List<String> getContent() {
+        throw new RuntimeException("getContent for SelectionOperator should never be invoked!");
     }
 
     @Override

@@ -151,6 +151,7 @@ public class DataSourceComponent implements Component {
                _distinct,
                _projection,
                _aggregation,
+               hierarchyPosition,
                _printOut,
                i,
                parallelism,

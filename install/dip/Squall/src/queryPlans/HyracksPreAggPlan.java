@@ -9,6 +9,7 @@ import components.DataSourceComponent;
 import components.JoinComponent;
 import components.OperatorComponent;
 import conversion.DoubleConversion;
+import conversion.IntegerConversion;
 import conversion.StringConversion;
 import expressions.ColumnReference;
 import expressions.ValueSpecification;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import operators.AggregateCountOperator;
+import operators.AggregateOperator;
 import operators.AggregateSumOperator;
 import operators.ProjectionOperator;
 
@@ -29,8 +31,8 @@ public class HyracksPreAggPlan {
 
     private QueryPlan _queryPlan = new QueryPlan();
 
-    private DoubleConversion _dc = new DoubleConversion();
-    private StringConversion _sc = new StringConversion();
+    private static final DoubleConversion _dc = new DoubleConversion();
+    private static final StringConversion _sc = new StringConversion();
 
     public HyracksPreAggPlan(String dataPath, String extension, Map conf){
             //-------------------------------------------------------------------------------------
@@ -75,10 +77,20 @@ public class HyracksPreAggPlan {
                     .setGroupByColumns(Arrays.asList(0));
 
             OperatorComponent oc = new OperatorComponent(CUSTOMER_ORDERSjoin, "COUNTAGG", _queryPlan)
-                                        .setAggregation(agg);       
+                                        .setAggregation(agg);
+
+            //-------------------------------------------------------------------------------------
+            
+            AggregateOperator overallAgg =
+                    new AggregateSumOperator(_dc, new ColumnReference(_dc, 1), conf)
+                        .setGroupByColumns(Arrays.asList(0));
+
+            _queryPlan.setOverallAggregation(overallAgg);
+
     }
 
     public QueryPlan getQueryPlan() {
         return _queryPlan;
     }
+
 }

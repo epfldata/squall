@@ -9,15 +9,16 @@ import conversion.DoubleConversion;
 import conversion.NumericConversion;
 import expressions.ValueExpression;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import operators.AggregateAvgOperator.SumCount;
+import operators.storage.AggStorage;
+import operators.storage.HashMapAggStorage;
+import operators.storage.SingleEntryAggStorage;
 import org.apache.log4j.Logger;
 import utilities.MyUtilities;
 
-public class AggregateAvgOperator implements AggregateOperator {
+public class AggregateAvgOperator implements AggregateOperator<SumCount> {
         private static final long serialVersionUID = 1L;
         private static Logger LOG = Logger.getLogger(AggregateAvgOperator.class);
 
@@ -30,17 +31,19 @@ public class AggregateAvgOperator implements AggregateOperator {
         private int _groupByType = GB_UNSET;
         private List<Integer> _groupByColumns = new ArrayList<Integer>();
         private ProjectionOperator _groupByProjection;
-        private int _invocations = 0;
+        private int _numTuplesProcessed = 0;
         
         private NumericConversion<Double> _wrapper = new DoubleConversion();
         private ValueExpression<Double> _ve;
-        private HashMap<String, SumCount> _aggregateAvg = new HashMap<String, SumCount>();
+        private AggStorage<SumCount> _storage;
 
         private Map _map;
 
         public AggregateAvgOperator(ValueExpression<Double> ve, Map map){
             _ve=ve;
             _map=map;
+
+            _storage = new SingleEntryAggStorage<SumCount>(this, _wrapper, _map);
         }
 
         //from AgregateOperator
@@ -49,6 +52,7 @@ public class AggregateAvgOperator implements AggregateOperator {
              if(!alreadySetOther(GB_COLUMNS)){
                 _groupByType = GB_COLUMNS;
                 _groupByColumns = groupByColumns;
+                _storage = new HashMapAggStorage<SumCount>(this, _wrapper, _map);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");
@@ -60,6 +64,7 @@ public class AggregateAvgOperator implements AggregateOperator {
              if(!alreadySetOther(GB_PROJECTION)){
                 _groupByType = GB_PROJECTION;
                 _groupByProjection = groupByProjection;
+                _storage = new HashMapAggStorage<SumCount>(this, _wrapper, _map);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");
@@ -97,7 +102,7 @@ public class AggregateAvgOperator implements AggregateOperator {
         //from Operator
         @Override
         public List<String> process(List<String> tuple){
-            _invocations++;
+            _numTuplesProcessed++;
             if(_distinct != null){
                 tuple = _distinct.process(tuple);
                 if(tuple == null){
@@ -110,7 +115,8 @@ public class AggregateAvgOperator implements AggregateOperator {
             }else{
                 tupleHash = MyUtilities.createHashString(tuple, _groupByColumns, _map);
             }
-            Double value = updateContent(tuple, tupleHash);
+            SumCount sumCount = _storage.updateContent(tuple, tupleHash);
+            Double value = sumCount.getAvg();
             String strValue = _wrapper.toString(value);
 
             // propagate further the affected tupleHash-tupleValue pair
@@ -121,18 +127,9 @@ public class AggregateAvgOperator implements AggregateOperator {
             return affectedTuple;
         }
 
-        private Double updateContent(List<String> tuple, String tupleHash){
-            SumCount sumCount = _aggregateAvg.get(tupleHash);
-            if(sumCount == null){
-                sumCount = new SumCount();
-            }
-            sumCount = runAggregateFunction(sumCount, tuple);
-            _aggregateAvg.put(tupleHash, sumCount);
-            return sumCount.getAvg();
-        }
-
         //actual operator implementation
-        private SumCount runAggregateFunction(SumCount value, List<String> tuple) {
+        @Override
+        public SumCount runAggregateFunction(SumCount value, List<String> tuple) {
             Double sumDelta = _ve.eval(tuple);
             Integer countDelta = 1;
             
@@ -143,22 +140,30 @@ public class AggregateAvgOperator implements AggregateOperator {
         }
 
         @Override
+        public SumCount runAggregateFunction(SumCount value1, SumCount value2) {
+            Double sumNew = value1.getSum() + value2.getSum();
+            Integer countNew = value1.getCount() + value2.getCount();
+            return new SumCount(sumNew, countNew);
+        }
+
+        @Override
         public boolean isBlocking() {
             return true;
         }
 
         @Override
+        public AggStorage getStorage(){
+            return _storage;
+        }
+
+        @Override
+        public int getNumTuplesProcessed(){
+            return _numTuplesProcessed;
+        }
+
+        @Override
 	public String printContent(){
-            StringBuilder sb = new StringBuilder();
-            sb.append("Iteration ").append(_invocations).append(":\n");
-            Iterator<Entry<String, SumCount>> it = _aggregateAvg.entrySet().iterator();
-	    while (it.hasNext()) {
-	       Map.Entry pairs = (Map.Entry) it.next();
-	       SumCount value = (SumCount) pairs.getValue();
-	       sb.append(pairs.getKey()).append(" = ").append(value.getAvg()).append("\n");
-	    }
-	    sb.append("----------------------------------\n");
-            return sb.toString();
+            return _storage.printContent();
         }
 
         @Override
@@ -166,7 +171,7 @@ public class AggregateAvgOperator implements AggregateOperator {
             throw new UnsupportedOperationException("getContent for AggregateAvgOperator is not supported yet.");
         }
 
-        private class SumCount{
+        public class SumCount{
             private Double _sum;
             private Integer _count;
 
@@ -197,6 +202,31 @@ public class AggregateAvgOperator implements AggregateOperator {
 
             public double getAvg(){
                 return _sum/_count;
+            }
+
+            @Override
+            public String toString(){
+                return String.valueOf(getAvg());
+            }
+
+            @Override
+            public boolean equals(Object obj){
+                if(this == obj){
+                    return true;
+                }
+                if (!(obj instanceof SumCount)){
+                    return false;
+                }
+                SumCount otherSumCount = (SumCount) obj;
+                return getAvg() == otherSumCount.getAvg();
+            }
+
+            @Override
+            public int hashCode() {
+                int hash = 7;
+                hash = 89 * hash + (_sum != null ? _sum.hashCode() : 0);
+                hash = 89 * hash + (_count != null ? _count.hashCode() : 0);
+                return hash;
             }
         }
 

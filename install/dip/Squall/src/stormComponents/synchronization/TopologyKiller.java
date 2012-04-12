@@ -67,7 +67,7 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
                 StormWrapper.writeStats(conf);            	
             }
             if(SystemParameters.getBoolean(conf, "DIP_KILL_AT_THE_END")){
-                /*  Give enough time to dump statistics and dump the results
+                /*  Give enough time to dump the results
                 *  We couldn't use Storm ack mechanism for dumping results,
                 *    since our final result might be on Spout (StormDataSource).
                 *    Spouts cannot send ack to other spout (TopologyKiller spout).

@@ -3,6 +3,11 @@ package utilities;
 import backtype.storm.topology.InputDeclarer;
 import backtype.storm.tuple.Fields;
 import expressions.ValueExpression;
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -10,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import operators.AggregateOperator;
 
 import org.apache.log4j.Logger;
 import stormComponents.StormEmitter;
@@ -18,8 +24,8 @@ public class MyUtilities{
         private static Logger LOG = Logger.getLogger(MyUtilities.class);
 
 	private static int topologyId = 0;
-        private static String SINGLE_HASH_KEY = "SingleHashEntry";
-	
+        public static final String SINGLE_HASH_KEY = "SingleHashEntry";
+
         public static int[] mergeArrays(int[] array1, int[] array2){
             int[] result = new int[array1.length + array2.length];
             System.arraycopy(array1, 0, result, 0, array1.length);
@@ -39,9 +45,70 @@ public class MyUtilities{
             return result.toString();
         }
 
+        //this method is called when the last operator is not an aggregateOperator
+        public static void printBlockingResult(String componentName, 
+                                               int numProcessedTuples,
+                                               String compContent,
+                                               int hierarchyPosition,
+                                               Map map,
+                                               Logger log){
+            //just print it, necessary for both modes (in Local mode we might print other than final components)
+            printPartialResult(componentName, numProcessedTuples, compContent, map, log);
+        }
+
+        public static void printBlockingResult(String componentName, 
+                                               AggregateOperator agg,
+                                               int hierarchyPosition,
+                                               Map map,
+                                               Logger log){
+            //just print it, necessary for both modes (in Local mode we might print other than final components)
+            printPartialResult(componentName, agg.getNumTuplesProcessed(), agg.printContent(), map, log);
+
+            LocalMergeResults.localCollectFinalResult(agg, hierarchyPosition, map, log);
+        }
+
+        private static void printPartialResult(String componentName, 
+                                               int numProcessedTuples,
+                                               String compContent,
+                                               Map map,
+                                               Logger log) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("\nThe result for topology ");
+            sb.append(MyUtilities.getFullTopologyName(map));
+            sb.append("\nComponent ").append(componentName).append(":\n");
+            sb.append("\nThis task received ").append(numProcessedTuples);
+            sb.append("\n").append(compContent);
+            log.info(sb.toString());
+        }
+
         /*
          * Different tuple<->(String, Hash) conversions
          */
+
+        public static List<String> getLinesFromFile (String path){
+            List<String> lines = new ArrayList<String>();
+            try {
+                FileInputStream fstream = new FileInputStream(path);
+                DataInputStream in = new DataInputStream(fstream);
+                BufferedReader br = new BufferedReader(new InputStreamReader(in));
+
+                String strLine;
+                while ((strLine = br.readLine()) != null)   {
+                    if((!strLine.isEmpty()) && (!strLine.startsWith("#"))){
+                        lines.add(strLine);
+                    }
+                }
+                in.close();
+            } catch (FileNotFoundException ex) {
+                LOG.info("\nResult file " + path + " have not be found!");
+                lines = null;
+            } catch (Exception ex){
+                LOG.info(MyUtilities.getStackTrace(ex));
+                lines = null;
+            }
+            return lines;
+        }        
+
         public static List<String> fileLineToTuple(String line, Map conf) {
             String[] arr= line.split(SystemParameters.getString(conf, "DIP_READ_SPLIT_DELIMITER"));
             ArrayList<String> tuple = new ArrayList<String>(Arrays.asList(arr));

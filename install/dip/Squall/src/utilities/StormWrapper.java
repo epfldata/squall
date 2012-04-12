@@ -66,7 +66,7 @@ public class StormWrapper {
         boolean distributed = SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED");
         String topologyName = MyUtilities.getFullTopologyName(conf);
         if(!distributed){
-            localKillCluster(topologyName);
+            localKillCluster(conf, topologyName);
         }else{
             clusterKillTopology(conf, topologyName);
         }
@@ -75,9 +75,13 @@ public class StormWrapper {
     // all the staff below are only for local execution
     private static LocalCluster cluster;
 
-    private static void localKillCluster(String topologyName){
-        cluster.killTopology(topologyName);
-        cluster.shutdown();
+    private static void localKillCluster(Map conf, String topologyName){
+        LocalMergeResults.localPrintAndCompare(conf);
+        //Should be killed with the following two lines
+        //cluster.killTopology(topologyName);
+        //cluster.shutdown();
+        //However, it will never stop, so we use:
+        System.exit(0);
     }
 
    // all below are only for cluster execution
