@@ -68,7 +68,7 @@ This section is a tutorial for installing Squall/Storm on your local machine, an
 The following steps are necessary for both modes:
 \begin{enumerate}
  \item Put the content of \verb#install# directory (not the directory itself) somewhere on your local machine. The directory where you put it will be denoted as \verb#INSTALL_DIR#. \verb#INSTALL_DIR# now contains 5 directories inside (auxiliary, bin, compilation, dip and lib). \textit{Do not change directory structure. Otherwise scripts for installation/running would not work!}
- \item Download Storm 0.7.0 from \url{https://github.com/nathanmarz/storm/downloads}, extract it, and put \verb#storm-0.7.0# directory in \verb#INSTALL_DIR#.
+ \item Download Storm 0.7.0 from \url{https://github.com/nathanmarz/storm/downloads}, extract it, and put \verb#storm-0.7.0# directory in \verb#INSTALL_DIR#. Please note that you \textit{have to} use this version of Storm in order Squall.
  
 \subsection{Quick Start: Local Mode}
 You will run Squall on TPCH database. The paths for TPCH databases for Cluster Mode are already set, but in Local Mode you need to set them up. Go to \verb#INSTALL_DIR/dip/Squall/confs/0.1G_hyracks_serial# and change \verb#DIP_DATA_PATH# such that it is a full path to a 0.1-scaling factor TPCH database on your local machine. If on your local machine you neither have DBGen installed, nor TPCH databases for scaling factors 0.1, you can \verb#scp# it from icdatasrv1 at the following location: \\ \verb#/export/home/avitorovic/queries/tpch/0.1G#. Inside \\ \verb#/export/home/avitorovic/queries/tpch/# remote directory you can find TPCH databases of different sizes as well (1G, 2G, 4G, 6G, 8G and 10G). For now, you will need only the one with scaling factor 0.1.
@@ -127,7 +127,7 @@ After you run \verb#recompile.sh# for the first time, you do not need Internet a
 ../bin/lein deps
 \end{verbatim}
 
-Alternatively, you can create a Java project in your favorite Java environment (Eclipse, NetBeans, ...), import the source code from \verb#INSTALL_DIR/dip/Squall/src#, reference to the following set of jars:
+Alternatively, you can create a Java project in your favorite Java environment (Eclipse, NetBeans, ...), import the source code from \verb#INSTALL_DIR/dip/Squall/src#, reference to the following set of jars (exactly in this order):
 \begin{enumerate}
  \item all the jar files inside \verb#INSTALL_DIR/storm-0.7.0/lib/#
  \item \verb#INSTALL_DIR/storm-0.7.0/storm-0.7.0.jar#
@@ -213,6 +213,7 @@ The explanation is provided in Figure~\ref{fig:Hyracks}. Note that we do not hav
 \end{figure}
 
 Now we discuss parameters inside a config file. Once more, we will use \verb#0.1G_hyracks_serial# for illustration:
+\newpage
 \begin{verbatim}
 DIP_DISTRIBUTED false
 DIP_QUERY_NAME hyracks
@@ -330,9 +331,44 @@ HOUSEHOLD = 300147
 AUTOMOBILE = 297453
 \end{verbatim}
 
-The final result is written by the nodes which executes the last component in the topology. You can simply use \verb#INSTALL_DIR/bin/graspOutput.sh#, modify \verb#MACHINE# parameter inside the file such that it reflects your team number, and download all the output files. You can run the script as soon as the status of the topology in the web interface is set to ``KILLED''. By the way, web interface keeps the statistics for killed topology for 150 seconds.
+The final result is written by the nodes which executes the last component in the topology. In general, you need to aggregate the results from these nodes. However, in this example, the results are partitioned on the key, so the final value for a key is stored on a single node. You can simply use \verb#INSTALL_DIR/bin/graspOutput.sh#, modify \verb#MACHINE# parameter inside the file such that it reflects your team number, and download all the output files. You can run the script as soon as the status of the topology in the web interface is set to ``KILLED''. By the way, web interface keeps the statistics for killed topology for 150 seconds. 
 
 Storm has only limited support for presenting errors in a web interface, so you might use the same script for reading the logs and finding errors.
+
+\subsubsection{How to avoid entering password 88 times \\ each time I run graspOutput.sh?} In order not to enter your password each time you run \verb#graspOutput.sh#, you have to create and use a pair of private/public \verb|ssh| keys. Run all the following sets of commands from \textit{your local machine}. First, we need to backup existing keys:
+\begin{verbatim}
+ cd ~/.ssh
+ mkdir backup
+ cp id_rsa* backup
+\end{verbatim}
+Now, we generate a new rsa pair, with all the default parameters (if you are asked something, just hit Enter):
+\begin{verbatim}
+ ssh-keygen -t rsa
+\end{verbatim}
+
+Now use ssh to create a directory \verb|~/.ssh| as user teamX (instead of 'X', put your team number) on all the icdatasrv[1-4] machines. (The directory may already exist, which is fine). Note that each global zone icdatasrvY shares home directory with all of its local zones icdatasrvY[1-22]. Thus, you have only to share keys with global zones icdatasrv[1-4].
+\begin{verbatim}
+local@local:~> ssh teamX@icdatasrv1 mkdir -p .ssh
+teamX@icdatasrv1's password: 
+local@local:~> ssh teamX@icdatasrv2 mkdir -p .ssh
+teamX@icdatasrv2's password: 
+local@local:~> ssh teamX@icdatasrv3 mkdir -p .ssh
+teamX@icdatasrv3's password: 
+local@local:~> ssh teamX@icdatasrv4 mkdir -p .ssh
+teamX@icdatasrv4's password: 
+\end{verbatim}
+
+Finally append local's new public key to \verb#teamX@icdatasrv[1-4]:.ssh/authorized_keys# and enter your password one last time per blade:
+\begin{verbatim}
+local@local:~> cat .ssh/id_rsa.pub | ssh teamX@icdatasrv1 'cat >> .ssh/authorized_keys'
+teamX@icdatasrv1's password: 
+local@local:~> cat .ssh/id_rsa.pub | ssh teamX@icdatasrv2 'cat >> .ssh/authorized_keys'
+teamX@icdatasrv2's password: 
+local@local:~> cat .ssh/id_rsa.pub | ssh teamX@icdatasrv3 'cat >> .ssh/authorized_keys'
+teamX@icdatasrv3's password: 
+local@local:~> cat .ssh/id_rsa.pub | ssh teamX@icdatasrv4 'cat >> .ssh/authorized_keys'
+teamX@icdatasrv4's password: 
+\end{verbatim}
 
 \section{SQLplugin: Run Squall directly from SQL queries}
 \vspace{2mm}
@@ -414,7 +450,8 @@ To run SQLplugin in Cluster Mode, you need to set up \verb#DIP_TOPOLOGY_NAME_PRE
 where \verb#CONFIG_FILE# is a file from \verb#INSTALL_DIR/dip/SQLtoQueryPlanPlugin/confs# which ends up with \verb#_parallel#. If you do not want to use scripts, you can, for example, run the following commands:
 \begin{verbatim}
  cd $INSTALL_DIR/bin
- ../storm-0.7.0/bin/storm jar ../compilation/squall-2.0-standalone.jar main.ParserMain $CONFIG_PATH
+ ../storm-0.7.0/bin/storm jar ../compilation/squall-2.0-standalone.jar 
+     main.ParserMain $CONFIG_PATH
 \end{verbatim}
 
 The result have to be the same as for before:
