@@ -1,19 +1,19 @@
 package operators;
 
+import operators.storage.AggStorage;
+import operators.storage.HashMapAggStorage;
 import conversion.NumericConversion;
 import expressions.Addition;
 import expressions.ValueExpression;
 import expressions.ValueSpecification;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import operators.storage.SingleEntryAggStorage;
 import org.apache.log4j.Logger;
 import utilities.MyUtilities;
 
-public class AggregateSumOperator<T extends Number & Comparable<T>> implements AggregateOperator {
+public class AggregateSumOperator<T extends Number & Comparable<T>> implements AggregateOperator<T> {
         private static final long serialVersionUID = 1L;
         private static Logger LOG = Logger.getLogger(AggregateSumOperator.class);
 
@@ -26,11 +26,11 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
         private int _groupByType = GB_UNSET;
         private List<Integer> _groupByColumns = new ArrayList<Integer>();
         private ProjectionOperator _groupByProjection;
-        private int _invocations = 0;
+        private int _numTuplesProcessed = 0;
         
         private NumericConversion<T> _wrapper;
         private ValueExpression<T> _ve;
-        private HashMap<String, T> _aggregateMap = new HashMap<String, T>();
+        private AggStorage<T> _storage;
         
         private Map _map;
 
@@ -38,6 +38,8 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
             _wrapper = wrapper;
             _ve=ve;
             _map = map;
+
+            _storage = new SingleEntryAggStorage<T>(this, _wrapper, _map);
         }
 
         //from AgregateOperator
@@ -46,6 +48,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
             if(!alreadySetOther(GB_COLUMNS)){
                 _groupByType = GB_COLUMNS;
                 _groupByColumns = groupByColumns;
+                _storage = new HashMapAggStorage<T>(this, _wrapper, _map);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");
@@ -57,6 +60,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
             if(!alreadySetOther(GB_PROJECTION)){
                 _groupByType = GB_PROJECTION;
                 _groupByProjection = groupByProjection;
+                _storage = new HashMapAggStorage<T>(this, _wrapper, _map);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");
@@ -94,7 +98,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
         //from Operator
         @Override
         public List<String> process(List<String> tuple){
-            _invocations++;
+            _numTuplesProcessed++;
             if(_distinct != null){
                 tuple = _distinct.process(tuple);
                 if(tuple == null){
@@ -107,7 +111,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
             }else{
                 tupleHash = MyUtilities.createHashString(tuple, _groupByColumns, _map);
             }
-            T value = updateContent(tuple, tupleHash);
+            T value = _storage.updateContent(tuple, tupleHash);
             String strValue = _wrapper.toString(value);
 
             // propagate further the affected tupleHash-tupleValue pair
@@ -117,22 +121,21 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
             
             return affectedTuple;
         }
-        
-        private T updateContent(List<String> tuple, String tupleHash){
-            T value = _aggregateMap.get(tupleHash);
-            if(value == null){
-                value=_wrapper.getInitialValue();
-            }
-            value = runAggregateFunction(value, tuple);
-            _aggregateMap.put(tupleHash, value);
-            return value;
-        }
 
         //actual operator implementation
-        private T runAggregateFunction(T value, List<String> tuple) {
+        @Override
+        public T runAggregateFunction(T value, List<String> tuple) {
             ValueExpression<T> base = new ValueSpecification<T>(_wrapper, value);
             Addition<T> result = new Addition<T>(_wrapper, base, _ve);
             return result.eval(tuple);
+        }
+
+        @Override
+        public T runAggregateFunction(T value1, T value2) {
+            ValueExpression<T> ve1 = new ValueSpecification<T>(_wrapper, value1);
+            ValueExpression<T> ve2 = new ValueSpecification<T>(_wrapper, value2);
+            Addition<T> result = new Addition<T>(_wrapper, ve1, ve2);
+            return result.eval(null);
         }
 
         @Override
@@ -141,49 +144,25 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
         }
 
         @Override
+        public AggStorage getStorage(){
+            return _storage;
+        }
+
+        @Override
+        public int getNumTuplesProcessed(){
+            return _numTuplesProcessed;
+        }
+
+        @Override
 	public String printContent(){
-            StringBuilder sb = new StringBuilder();
-            sb.append("Iteration ").append(_invocations).append(":\n");
-            Iterator<Entry<String, T>> it = _aggregateMap.entrySet().iterator();
-	    while (it.hasNext()) {
-	       Map.Entry pairs = (Map.Entry)it.next();
-	       T value = (T) pairs.getValue();
-	       sb.append(pairs.getKey()).append(" = ").append(value).append("\n");
-	    }
-	    sb.append("----------------------------------\n");
-            return sb.toString();
+            return _storage.printContent();
         }
 
         //for this method it is essential that HASH_DELIMITER, which is used in tupleToString method,
         //  is the same as DIP_GLOBAL_ADD_DELIMITER
         @Override
         public List<String> getContent(){
-            List<String> content = new ArrayList<String>();
-            if(_groupByType == GB_UNSET){
-                Iterator<Entry<String, T>> it = _aggregateMap.entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry pairs = (Map.Entry)it.next();
-                    T value = (T) pairs.getValue();
-
-                    //we neglect key and add only value (should be exactly one value)
-                    content.add(_wrapper.toString(value));
-                }
-            }else{
-                Iterator<Entry<String, T>> it = _aggregateMap.entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry pairs = (Map.Entry)it.next();
-                    String key = (String)pairs.getKey();
-                    T value = (T)pairs.getValue();
-
-                    List<String> tuple = new ArrayList<String>();
-                    tuple.add(key);
-                    tuple.add(_wrapper.toString(value));
-
-                    content.add(MyUtilities.tupleToString(tuple, _map));
-                }
-
-            }
-            return content;
+            return _storage.getContent();
         }
 
         @Override

@@ -47,7 +47,7 @@ public class Main {
             StormWrapper.submitTopology(conf, builder);
         }
 
-        private TopologyBuilder createTopology(QueryPlan qp, Config conf) {
+        private static TopologyBuilder createTopology(QueryPlan qp, Config conf) {
             TopologyBuilder builder = new TopologyBuilder();
             TopologyKiller killer= new TopologyKiller(builder);
             Flusher flusher = null;
@@ -73,7 +73,7 @@ public class Main {
             return builder;
         }
 
-        private void printInfoID(TopologyKiller killer,
+        private static void printInfoID(TopologyKiller killer,
                 Flusher flusher,
                 TrafficLight trafficLight,
                 List<Component> queryPlan) {
@@ -105,7 +105,7 @@ public class Main {
         }
 
 
-        private QueryPlan chooseQueryPlan(Config conf){
+        public static QueryPlan chooseQueryPlan(Map conf){
             String queryName = SystemParameters.getString(conf, "DIP_QUERY_NAME");
             //if "/" is the last character, adding one more is not a problem
             String dataPath = SystemParameters.getString(conf, "DIP_DATA_PATH") + "/";

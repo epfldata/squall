@@ -19,6 +19,7 @@ import expressions.ValueExpression;
 import java.util.List;
 import operators.AggregateOperator;
 import operators.ChainOperator;
+import operators.Operator;
 import operators.ProjectionOperator;
 import operators.SelectionOperator;
 import utilities.SystemParameters;
@@ -42,11 +43,11 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
 	private ChainOperator _operatorChain;
 
-	private JoinStorage _preAggStorage;
+	private JoinStorage _joinStorage;
         private ProjectionOperator _preAggProj;
 
 	private OutputCollector _collector;
-        private int _invocations;
+        private int _numSentTuples;
 	private int _ID;
 	private Map _conf;
 
@@ -90,7 +91,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
                 currentBolt.allGrouping(Integer.toString(killer.getID()), SystemParameters.DumpResults);
             }
 
-            _preAggStorage = preAggStorage;
+            _joinStorage = preAggStorage;
             _preAggProj = preAggProj;
         }
 
@@ -113,10 +114,10 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 		String inputTupleHash=stormTuple.getString(2);
 
 		if(_tableName.equals(inputComponentName)) {//add the tuple into the datastructure!!
-                        _preAggStorage.put(inputTupleHash, inputTupleString);
+                        _joinStorage.put(inputTupleHash, inputTupleString);
 		} else {//JOIN
 			List<String> affectedTuple = MyUtilities.stringToTuple(inputTupleString, _conf);
-			List<String> oppositeTupleStringList = _preAggStorage.get(inputTupleHash);
+			List<String> oppositeTupleStringList = _joinStorage.get(inputTupleHash);
 
                         // do stuff
 			if(oppositeTupleStringList!=null)
@@ -135,7 +136,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
                                         }
 
                                         List<String> outputTuple;
-                                        if(_preAggStorage instanceof JoinHashStorage){
+                                        if(_joinStorage instanceof JoinHashStorage){
                                             outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple, _joinParams);
                                         }else{
                                             outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);
@@ -158,6 +159,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
                 if(tuple == null){
                     return;
                 }
+                _numSentTuples++;
                 printTuple(tuple);
 
                 if(_hierarchyPosition!=FINAL_COMPONENT){
@@ -189,11 +191,10 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
         private void printTuple(List<String> tuple){
             if(_printOut){
-                if(!_operatorChain.isBlocking()){
-                    _invocations++;
+                if((_operatorChain == null) || !_operatorChain.isBlocking()){
                     StringBuilder sb = new StringBuilder();
                     sb.append("\nComponent ").append(_componentName);
-                    sb.append("\nIteration: ").append(_invocations);
+                    sb.append("\nReceived tuples: ").append(_numSentTuples);
                     sb.append(" Tuple: ").append(MyUtilities.tupleToString(tuple, _conf));
                     LOG.info(sb.toString());
                 }
@@ -202,13 +203,22 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
         private void printContent() {
                 if(_printOut){
-                    if(_operatorChain.isBlocking()){
-                        StringBuilder sb = new StringBuilder();
-                        sb.append("\nThe result for topology ");
-                        sb.append(MyUtilities.getFullTopologyName(_conf));
-                        sb.append("\nComponent ").append(_componentName).append(":\n");
-                        sb.append(_operatorChain.printContent());
-                        LOG.info(sb.toString());
+                    if((_operatorChain!=null) &&_operatorChain.isBlocking()){
+                        Operator lastOperator = _operatorChain.getLastOperator();
+                        if (lastOperator instanceof AggregateOperator){
+                            MyUtilities.printBlockingResult(_componentName,
+                                                        (AggregateOperator) lastOperator,
+                                                        _hierarchyPosition,
+                                                        _conf,
+                                                        LOG);
+                        }else{
+                            MyUtilities.printBlockingResult(_componentName,
+                                                        lastOperator.getNumTuplesProcessed(),
+                                                        lastOperator.printContent(),
+                                                        _hierarchyPosition,
+                                                        _conf,
+                                                        LOG);
+                        }
                     }
                 }
         }

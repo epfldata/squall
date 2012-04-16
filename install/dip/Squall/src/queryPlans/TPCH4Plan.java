@@ -9,6 +9,7 @@ import components.DataSourceComponent;
 import components.JoinComponent;
 import components.OperatorComponent;
 import conversion.DateConversion;
+import conversion.IntegerConversion;
 import conversion.TypeConversion;
 import expressions.ColumnReference;
 import expressions.DateSum;
@@ -21,6 +22,7 @@ import java.util.Date;
 import java.util.Map;
 import operators.AggregateCountOperator;
 import operators.AggregateOperator;
+import operators.AggregateSumOperator;
 import operators.DistinctOperator;
 import operators.ProjectionOperator;
 import operators.SelectionOperator;
@@ -32,6 +34,7 @@ public class TPCH4Plan {
     private static Logger LOG = Logger.getLogger(TPCH4Plan.class);
 
     private static final TypeConversion<Date> _dc = new DateConversion();
+    private static final IntegerConversion _ic = new IntegerConversion();
     private QueryPlan _queryPlan = new QueryPlan();
 
     //query variables
@@ -112,6 +115,12 @@ public class TPCH4Plan {
                 _queryPlan).setAggregation(aggOp);
 
         //-------------------------------------------------------------------------------------
+
+        AggregateOperator overallAgg =
+                    new AggregateSumOperator(_ic, new ColumnReference(_ic, 1), conf)
+                        .setGroupByColumns(Arrays.asList(0));
+
+        _queryPlan.setOverallAggregation(overallAgg);
     }
 
     public QueryPlan getQueryPlan() {

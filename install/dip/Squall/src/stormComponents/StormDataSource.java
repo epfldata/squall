@@ -28,6 +28,7 @@ import java.util.List;
 import operators.AggregateOperator;
 import operators.ChainOperator;
 import operators.DistinctOperator;
+import operators.Operator;
 import operators.ProjectionOperator;
 import operators.SelectionOperator;
 import utilities.SystemParameters;
@@ -40,7 +41,8 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
 	private String _inputPath;
 	private String _componentName;
-
+        private int _hierarchyPosition;
+        
 	private List<Integer> _hashIndexes;
 	private List<ValueExpression> _hashExpressions;
 
@@ -53,7 +55,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
         private SpoutOutputCollector _collector;
         private ChainOperator _operatorChain;
 
-        private int _invocations;
+        private int _numSentTuples=0;
         private boolean _alreadyPrintedContent;
         private boolean _printOut;
 
@@ -70,6 +72,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                         DistinctOperator distinct,
                         ProjectionOperator projection,
                         AggregateOperator aggregation,
+                        int hierarchyPosition,
                         boolean printOut,
                         int fileSection,
                         int fileParts,
@@ -77,6 +80,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                         TopologyKiller killer,
                         Flusher flusher) {
                 _operatorChain = new ChainOperator(selection, distinct, projection, aggregation);
+                _hierarchyPosition = hierarchyPosition;
 		_ID=MyUtilities.getNextTopologyId();
 		_componentName=componentName;
 		_inputPath=inputPath;
@@ -129,6 +133,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                 if(tuple==null){
                     return;
                 }
+                _numSentTuples++;
                 printTuple(tuple);
 
 		String tupleString = MyUtilities.tupleToString(tuple, _conf);
@@ -144,7 +149,6 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                     // needed for local mode in order to avoid 100% CPU usage for a single process
                     Utils.sleep(_delay);
                 }*/
-
 	}
 
 	@Override
@@ -202,11 +206,10 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
         private void printTuple(List<String> tuple){
             if(_printOut){
-                if(!_operatorChain.isBlocking()){
-                    _invocations++;
+                if((_operatorChain == null) || !_operatorChain.isBlocking()){
                     StringBuilder sb = new StringBuilder();
                     sb.append("\nComponent ").append(_componentName);
-                    sb.append("\nIteration: ").append(_invocations);
+                    sb.append("\nReceived tuples: ").append(_numSentTuples);
                     sb.append(" Tuple: ").append(MyUtilities.tupleToString(tuple, _conf));
                     LOG.info(sb.toString());
                 }
@@ -215,13 +218,22 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
         private void printContent() {
                 if(_printOut){
-                    if(_operatorChain.isBlocking()){
-                        StringBuilder sb = new StringBuilder();
-                        sb.append("\nThe result for topology ");
-                        sb.append(MyUtilities.getFullTopologyName(_conf));
-                        sb.append("\nComponent ").append(_componentName).append(":\n");
-                        sb.append(_operatorChain.printContent());
-                        LOG.info(sb.toString());
+                    if((_operatorChain != null) && _operatorChain.isBlocking()){
+                        Operator lastOperator = _operatorChain.getLastOperator();
+                        if (lastOperator instanceof AggregateOperator){
+                            MyUtilities.printBlockingResult(_componentName,
+                                                        (AggregateOperator) lastOperator,
+                                                        _hierarchyPosition,
+                                                        _conf,
+                                                        LOG);
+                        }else{
+                            MyUtilities.printBlockingResult(_componentName,
+                                                        lastOperator.getNumTuplesProcessed(),
+                                                        lastOperator.printContent(),
+                                                        _hierarchyPosition,
+                                                        _conf,
+                                                        LOG);
+                        }
                     }
                 }
         }

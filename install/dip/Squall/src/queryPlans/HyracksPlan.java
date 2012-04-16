@@ -8,10 +8,14 @@ package queryPlans;
 import components.DataSourceComponent;
 import components.JoinComponent;
 import components.OperatorComponent;
+import conversion.IntegerConversion;
+import expressions.ColumnReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import operators.AggregateCountOperator;
+import operators.AggregateOperator;
+import operators.AggregateSumOperator;
 import operators.ProjectionOperator;
 
 import org.apache.log4j.Logger;
@@ -21,6 +25,8 @@ public class HyracksPlan {
     private static Logger LOG = Logger.getLogger(HyracksPlan.class);
 
     private QueryPlan _queryPlan = new QueryPlan();
+
+    private static final IntegerConversion _ic = new IntegerConversion();
 
     public HyracksPlan(String dataPath, String extension, Map conf){
             //-------------------------------------------------------------------------------------
@@ -69,9 +75,15 @@ public class HyracksPlan {
 //
 //            //-------------------------------------------------------------------------------------
 
+            AggregateOperator overallAgg =
+                    new AggregateSumOperator(_ic, new ColumnReference(_ic, 1), conf)
+                        .setGroupByColumns(Arrays.asList(0));
+
+            _queryPlan.setOverallAggregation(overallAgg);
     }
 
     public QueryPlan getQueryPlan() {
         return _queryPlan;
     }
+    
 }

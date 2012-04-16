@@ -132,6 +132,13 @@ public class TPCH3Plan {
                 _queryPlan).setAggregation(agg);
 
             //-------------------------------------------------------------------------------------
+
+            AggregateOperator overallAgg =
+                    new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 1), conf)
+                        .setGroupByColumns(Arrays.asList(0));
+
+            _queryPlan.setOverallAggregation(overallAgg);
+
         }
 
         public QueryPlan getQueryPlan() {

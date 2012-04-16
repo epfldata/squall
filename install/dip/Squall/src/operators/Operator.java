@@ -21,6 +21,16 @@ public interface Operator extends Serializable {
      *      It is responsability of Storm component to perfrorm desired printing in that case.
      *   This method is invoked when we are sure that no more tuples will arive at the component
      *     (i.e when topology is to be killed).
+     *   Used for UI
      */
     public String printContent();
+    /*
+     * Used mainly for Preaggregations
+     */
+    public List<String> getContent();
+    /*
+     * This is now decoupled from printContent
+     */
+    public int getNumTuplesProcessed();
+    
 }

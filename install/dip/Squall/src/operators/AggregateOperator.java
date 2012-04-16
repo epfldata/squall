@@ -5,12 +5,12 @@
 
 package operators;
 
+import operators.storage.AggStorage;
 import expressions.ValueExpression;
 import java.util.List;
-import java.util.Map;
 
 
-public interface AggregateOperator extends Operator{
+public interface AggregateOperator<T> extends Operator{
     // GROUP BY ValueExpression is not part of the SQL standard, only columns can be sed.
     public AggregateOperator setGroupByColumns(List<Integer> groupByColumns);
     public List<Integer> getGroupByColumns();
@@ -25,9 +25,12 @@ public interface AggregateOperator extends Operator{
     //this is null for AggregateCountOperator
     public List<ValueExpression> getExpressions();
 
-    public List<String> getContent();
+    //internal storage class
+    public AggStorage getStorage(); 
 
-    
+    public T runAggregateFunction(T value, List<String> tuple);
+    public T runAggregateFunction(T value1, T value2);
+
     //HAVING clause: Since HAVING depends on aggregate result,
     //  it cannot be evaluated before all the tuples are processed.
     //This will be done by user manually, as well as ORDER BY clause.

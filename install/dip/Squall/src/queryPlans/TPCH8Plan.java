@@ -244,6 +244,13 @@ public class TPCH8Plan {
                 R_N_Cjoin,
                 S_N_P_L_Ojoin,
                 _queryPlan).setAggregation(agg);
+
+        //-------------------------------------------------------------------------------------
+        AggregateOperator overallAgg =
+                    new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 1), conf)
+                        .setGroupByColumns(Arrays.asList(0));
+
+        _queryPlan.setOverallAggregation(overallAgg);
         
    }
    

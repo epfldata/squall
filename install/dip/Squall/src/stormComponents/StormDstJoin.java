@@ -20,6 +20,7 @@ import java.util.List;
 import operators.AggregateOperator;
 import operators.ChainOperator;
 import operators.DistinctOperator;
+import operators.Operator;
 import operators.ProjectionOperator;
 import operators.SelectionOperator;
 import utilities.SystemParameters;
@@ -34,12 +35,12 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
         private int _hierarchyPosition=INTERMEDIATE;
 
         private StormEmitter _firstEmitter, _secondEmitter;
-        private JoinStorage _firstPreAggStorage, _secondPreAggStorage;
+        private JoinStorage _firstJoinStorage, _secondJoinStorage;
         private ProjectionOperator _firstPreAggProj, _secondPreAggProj;
         private String _componentName;
 	private int _ID;
 
-        private int _invocations;
+        private int _numSentTuples=0;
         private boolean _printOut;
 
 	private ChainOperator _operatorChain;
@@ -98,8 +99,8 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                 currentBolt.allGrouping(Integer.toString(killer.getID()), SystemParameters.DumpResults);
             }
 
-            _firstPreAggStorage = firstPreAggStorage;
-            _secondPreAggStorage = secondPreAggStorage;
+            _firstJoinStorage = firstPreAggStorage;
+            _secondJoinStorage = secondPreAggStorage;
 
             _firstPreAggProj = firstPreAggProj;
             _secondPreAggProj = secondPreAggProj;
@@ -132,14 +133,14 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                 if(firstEmitterName.equals(inputComponentName)){
                     //R update
                     isFromFirstEmitter = true;
-                    affectedStorage = _firstPreAggStorage;
-                    oppositeStorage = _secondPreAggStorage;
+                    affectedStorage = _firstJoinStorage;
+                    oppositeStorage = _secondJoinStorage;
                     projPreAgg = _secondPreAggProj;
                 }else if(secondEmitterName.equals(inputComponentName)){
                     //S update
                     isFromFirstEmitter = false;
-                    affectedStorage = _secondPreAggStorage;
-                    oppositeStorage = _firstPreAggStorage;
+                    affectedStorage = _secondJoinStorage;
+                    oppositeStorage = _firstJoinStorage;
                     projPreAgg = _firstPreAggProj;
                 }else{
                     throw new RuntimeException("InputComponentName " + inputComponentName +
@@ -205,6 +206,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                 if(tuple == null){
                     return;
                 }
+                _numSentTuples++;
                 printTuple(tuple);
 
                 if(_hierarchyPosition!=FINAL_COMPONENT){
@@ -240,11 +242,10 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 
         private void printTuple(List<String> tuple){
             if(_printOut){
-                if(!_operatorChain.isBlocking()){
-                    _invocations++;
+                if((_operatorChain == null) || !_operatorChain.isBlocking()){
                     StringBuilder sb = new StringBuilder();
                     sb.append("\nComponent ").append(_componentName);
-                    sb.append("\nIteration: ").append(_invocations);
+                    sb.append("\nReceived tuples: ").append(_numSentTuples);
                     sb.append(" Tuple: ").append(MyUtilities.tupleToString(tuple, _conf));
                     LOG.info(sb.toString());
                 }
@@ -253,13 +254,22 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 
         private void printContent() {
                 if(_printOut){
-                    if(_operatorChain.isBlocking()){
-                        StringBuilder sb = new StringBuilder();
-                        sb.append("\nThe result for topology ");
-                        sb.append(MyUtilities.getFullTopologyName(_conf));
-                        sb.append("\nComponent ").append(_componentName).append(":\n");
-                        sb.append(_operatorChain.printContent());
-                        LOG.info(sb.toString());
+                    if((_operatorChain!=null) && _operatorChain.isBlocking()){
+                        Operator lastOperator = _operatorChain.getLastOperator();
+                        if (lastOperator instanceof AggregateOperator){
+                            MyUtilities.printBlockingResult(_componentName,
+                                                        (AggregateOperator) lastOperator,
+                                                        _hierarchyPosition,
+                                                        _conf,
+                                                        LOG);
+                        }else{
+                            MyUtilities.printBlockingResult(_componentName,
+                                                        lastOperator.getNumTuplesProcessed(),
+                                                        lastOperator.printContent(),
+                                                        _hierarchyPosition,
+                                                        _conf,
+                                                        LOG);
+                        }
                     }
                 }
         }
