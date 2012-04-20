@@ -19,10 +19,10 @@ import expressions.Multiplication;
 import expressions.Subtraction;
 import expressions.ValueExpression;
 import expressions.ValueSpecification;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import operators.AggregateOperator;
 import operators.AggregateSumOperator;
@@ -66,7 +66,7 @@ public class TPCH5Plan {
         computeDates();
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashRegion = new ArrayList<Integer>(Arrays.asList(0));
+        List<Integer> hashRegion = Arrays.asList(0);
 
         SelectionOperator selectionRegion = new SelectionOperator(
                 new ComparisonPredicate(
@@ -85,7 +85,7 @@ public class TPCH5Plan {
                            .setProjection(projectionRegion);
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashNation = new ArrayList<Integer>(Arrays.asList(2));
+        List<Integer> hashNation = Arrays.asList(2);
 
         ProjectionOperator projectionNation = new ProjectionOperator(new int[]{0, 1, 2});
 
@@ -98,7 +98,7 @@ public class TPCH5Plan {
 
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashRN = new ArrayList<Integer>(Arrays.asList(0));
+        List<Integer> hashRN = Arrays.asList(0);
 
         ProjectionOperator projectionRN = new ProjectionOperator(new int[]{1, 2});
 
@@ -109,7 +109,7 @@ public class TPCH5Plan {
                            .setProjection(projectionRN);
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashSupplier = new ArrayList<Integer>(Arrays.asList(1));
+        List<Integer> hashSupplier = Arrays.asList(1);
 
         ProjectionOperator projectionSupplier = new ProjectionOperator(new int[]{0, 3});
 
@@ -121,7 +121,7 @@ public class TPCH5Plan {
                            .setProjection(projectionSupplier);
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashRNS = new ArrayList<Integer>(Arrays.asList(2));
+        List<Integer> hashRNS = Arrays.asList(2);
 
         ProjectionOperator projectionRNS = new ProjectionOperator(new int[]{0, 1, 2});
 
@@ -132,7 +132,7 @@ public class TPCH5Plan {
                            .setProjection(projectionRNS);
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashLineitem = new ArrayList<Integer>(Arrays.asList(1));
+        List<Integer> hashLineitem = Arrays.asList(1);
 
         ProjectionOperator projectionLineitem = new ProjectionOperator(new int[]{0, 2, 5, 6});
 
@@ -144,7 +144,7 @@ public class TPCH5Plan {
                            .setProjection(projectionLineitem);
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashRNSL = new ArrayList<Integer>(Arrays.asList(0, 2));
+        List<Integer> hashRNSL = Arrays.asList(0, 2);
 
         ProjectionOperator projectionRNSL = new ProjectionOperator(new int[]{0, 1, 3, 4, 5});
 
@@ -155,7 +155,7 @@ public class TPCH5Plan {
                            .setProjection(projectionRNSL);
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashCustomer = new ArrayList<Integer>(Arrays.asList(0));
+        List<Integer> hashCustomer = Arrays.asList(0);
 
         ProjectionOperator projectionCustomer = new ProjectionOperator(new int[]{0, 3});
 
@@ -167,7 +167,7 @@ public class TPCH5Plan {
                            .setProjection(projectionCustomer);
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashOrders = new ArrayList<Integer>(Arrays.asList(1));
+        List<Integer> hashOrders = Arrays.asList(1);
 
         SelectionOperator selectionOrders = new SelectionOperator(
                 new BetweenPredicate(
@@ -187,7 +187,7 @@ public class TPCH5Plan {
                            .setProjection(projectionOrders);
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashCO = new ArrayList<Integer>(Arrays.asList(0, 1));
+        List<Integer> hashCO = Arrays.asList(0, 1);
 
         ProjectionOperator projectionCO = new ProjectionOperator(new int[]{1, 2});
 
@@ -198,7 +198,7 @@ public class TPCH5Plan {
                            .setProjection(projectionCO);
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashRNSLCO = new ArrayList<Integer>(Arrays.asList(0));
+        List<Integer> hashRNSLCO = Arrays.asList(0);
 
         ProjectionOperator projectionRNSLCO = new ProjectionOperator(new int[]{1, 3, 4});
 
@@ -221,7 +221,7 @@ public class TPCH5Plan {
                 new ColumnReference(_doubleConv, 1),
                 substract);
 
-        AggregateOperator aggOp = new AggregateSumOperator(_doubleConv, product, conf).setGroupByColumns(new ArrayList<Integer>(Arrays.asList(0)));
+        AggregateOperator aggOp = new AggregateSumOperator(_doubleConv, product, conf).setGroupByColumns(Arrays.asList(0));
         OperatorComponent finalComponent = new OperatorComponent(
                 R_N_S_L_C_Ojoin,
                 "FINAL_RESULT",

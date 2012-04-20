@@ -13,6 +13,7 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+import java.util.List;
 import utilities.SystemParameters;
 
 import org.apache.log4j.Logger;
@@ -125,7 +126,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		ArrayList<String> outputFields= new ArrayList<String>();
+		List<String> outputFields= new ArrayList<String>();
 		outputFields.add("TableName");
 		outputFields.add("Tuple");
 		outputFields.add("Hash");		

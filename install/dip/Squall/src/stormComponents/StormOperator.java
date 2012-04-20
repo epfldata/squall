@@ -49,6 +49,13 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
     private int _numSentTuples=0;
     private Map _conf;
 
+    //does this component receives from the previous one using direct stream grouping
+    private boolean _isPreviousDirect;
+
+    //if this is set, we send using direct stream grouping
+    private List<String> _fullHashList;
+    private List<Integer> _targetTaskIds;
+
     public StormOperator(StormEmitter emitter,
             String componentName,
             SelectionOperator selection,
@@ -59,6 +66,8 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
             List<ValueExpression> hashExpressions,
             int hierarchyPosition,
             boolean printOut,
+            boolean isPreviousDirect,
+            List<String> fullHashList,
             TopologyBuilder builder,
             TopologyKiller killer,
             Config conf) {
@@ -79,18 +88,33 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
 
         _ID=MyUtilities.getNextTopologyId();
         InputDeclarer currentBolt = builder.setBolt(Integer.toString(_ID), this, parallelism);
-        currentBolt = MyUtilities.attachEmitterComponents(currentBolt, _emitter);
+        
+        _isPreviousDirect = isPreviousDirect;
+        _fullHashList = fullHashList;
+        if(!_isPreviousDirect){
+            currentBolt = MyUtilities.attachEmitterComponents(currentBolt, _emitter);
+        }else{
+            currentBolt = MyUtilities.attachEmitterDirect(currentBolt, _emitter);
+        }
 
         _printOut= printOut;
         if (_printOut && _operatorChain.isBlocking()){
            currentBolt.allGrouping(Integer.toString(killer.getID()), SystemParameters.DumpResults);
         }
     }
-    
+
+    private boolean isNextDirect(){
+        return (_fullHashList != null);
+    }
+
     @Override
     public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
         _collector=collector;
         _conf=map;
+
+        if(isNextDirect()){
+            _targetTaskIds = MyUtilities.findTargetTaskIds(tc);
+        }
     }
 
     //from IRichBolt
@@ -117,7 +141,12 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
             String outputTupleString=MyUtilities.tupleToString(tuple, _conf);
             String outputTupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);
             //evaluate the hash string BASED ON THE PROJECTED resulted values
-            _collector.emit(stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
+             if(!isNextDirect()){
+                _collector.emit(stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
+             }else{
+                _collector.emitDirect(MyUtilities.chooseTarget(outputTupleHash, _fullHashList, _targetTaskIds),
+                    stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
+             }
         }
         _collector.ack(stormTuple);
     }
@@ -130,11 +159,11 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         if(_hierarchyPosition!=FINAL_COMPONENT){ // then its an intermediate stage not the final one
-            ArrayList<String> outputFields= new ArrayList<String>();
+            List<String> outputFields= new ArrayList<String>();
             outputFields.add("TableName");
             outputFields.add("Tuple");
             outputFields.add("Hash");
-            declarer.declare(new Fields(outputFields) );
+            declarer.declare(isNextDirect(), new Fields(outputFields) );
 	}
     }
 

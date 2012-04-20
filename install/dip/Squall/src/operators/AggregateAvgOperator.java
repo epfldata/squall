@@ -120,7 +120,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
             String strValue = _wrapper.toString(value);
 
             // propagate further the affected tupleHash-tupleValue pair
-            ArrayList<String> affectedTuple = new ArrayList<String>();
+            List<String> affectedTuple = new ArrayList<String>();
             affectedTuple.add(tupleHash);
             affectedTuple.add(strValue);
 

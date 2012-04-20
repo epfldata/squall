@@ -6,17 +6,16 @@
 package schema;
 
 import conversion.TypeConversion;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 
 public class Schema {
-    protected HashMap<String, ArrayList<ColumnNameType>> tables = new HashMap<String, ArrayList<ColumnNameType>>();
+    protected HashMap<String, List<ColumnNameType>> tables = new HashMap<String, List<ColumnNameType>>();
     protected HashMap<String, Integer> tableSize = new HashMap<String, Integer>();
 
     public boolean contains(String tableName, String column) {
-        ArrayList<ColumnNameType> columns = tables.get(tableName);
+        List<ColumnNameType> columns = tables.get(tableName);
         for(ColumnNameType cnt: columns){
             if(cnt.getName().equals(column)){
                 return true;
@@ -26,7 +25,7 @@ public class Schema {
     }
 
     public int indexOf(String tableName, String column) {
-        ArrayList<ColumnNameType> columns = tables.get(tableName);
+        List<ColumnNameType> columns = tables.get(tableName);
         for(int i=0; i<columns.size(); i++){
             if(columns.get(i).getName().equals(column)){
                 return i;
@@ -40,7 +39,7 @@ public class Schema {
     }
 
     public TypeConversion getType(String tableName, String columnName){
-        ArrayList<ColumnNameType> table = tables.get(tableName);
+        List<ColumnNameType> table = tables.get(tableName);
         if(table == null){
             throw new RuntimeException("Table " + tableName + "doesn't exist!");
         }

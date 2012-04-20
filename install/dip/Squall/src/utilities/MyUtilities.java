@@ -1,5 +1,7 @@
 package utilities;
 
+import backtype.storm.generated.Grouping;
+import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.InputDeclarer;
 import backtype.storm.tuple.Fields;
 import expressions.ValueExpression;
@@ -13,8 +15,10 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import operators.AggregateOperator;
 
 import org.apache.log4j.Logger;
@@ -111,13 +115,13 @@ public class MyUtilities{
 
         public static List<String> fileLineToTuple(String line, Map conf) {
             String[] arr= line.split(SystemParameters.getString(conf, "DIP_READ_SPLIT_DELIMITER"));
-            ArrayList<String> tuple = new ArrayList<String>(Arrays.asList(arr));
+            List<String> tuple = Arrays.asList(arr);
             return tuple;
         }
 
         public static List<String> stringToTuple(String tuple, Map conf){  //  arraylist 2 values
             String[] columnValues=tuple.split(SystemParameters.getString(conf, "DIP_GLOBAL_SPLIT_DELIMITER"));
-            ArrayList<String> result= new ArrayList<String>();
+            List<String> result= new ArrayList<String>();
             result.addAll(Arrays.asList(columnValues));
             return result;
 	}
@@ -218,7 +222,7 @@ public class MyUtilities{
         }
 
         // take one HashIndex from each emitter at a time
-        ArrayList<Integer> result = new ArrayList<Integer>();
+        List<Integer> result = new ArrayList<Integer>();
         for(int i=0; i<2*hash1size; i++){
             if(i % 2 == 0){
                 result.add(hash1.get(i/2));
@@ -288,7 +292,7 @@ public class MyUtilities{
          */
         public static InputDeclarer attachEmitterComponents(InputDeclarer currentBolt, 
                 StormEmitter emitter1, StormEmitter... emittersArray){
-            ArrayList<StormEmitter> emittersList = new ArrayList<StormEmitter>();
+            List<StormEmitter> emittersList = new ArrayList<StormEmitter>();
             emittersList.add(emitter1);
             emittersList.addAll(Arrays.asList(emittersArray));
 
@@ -300,6 +304,53 @@ public class MyUtilities{
             }
             return currentBolt;
         }
+
+        public static InputDeclarer attachEmitterDirect(InputDeclarer currentBolt,
+                StormEmitter emitter1, StormEmitter... emittersArray){
+            List<StormEmitter> emittersList = new ArrayList<StormEmitter>();
+            emittersList.add(emitter1);
+            emittersList.addAll(Arrays.asList(emittersArray));
+
+            for(StormEmitter emitter: emittersList){
+                int[] emitterIDs = emitter.getEmitterIDs();
+                for(int emitterID: emitterIDs){
+                    currentBolt = currentBolt.directGrouping(Integer.toString(emitterID));
+                }
+            }
+            return currentBolt;
+
+        }
+
+        //scatter hashes uniformly
+        public static int chooseTarget(String hash, List<String> fullHashList, List<Integer> targetTaskIds){
+            int index = fullHashList.indexOf(hash) % targetTaskIds.size();
+            return targetTaskIds.get(index);
+        }
+
+        //collects all the task ids for "default" stream id and "direct" stream grouping
+        public static List<Integer> findTargetTaskIds(TopologyContext tc){
+                List<Integer> result = new ArrayList<Integer>();
+                Map<String, Map<String, Grouping>> streamComponentGroup = tc.getThisTargets();
+                Iterator<Entry<String, Map<String, Grouping>>> it = streamComponentGroup.entrySet().iterator();
+                while(it.hasNext()){
+                    Map.Entry<String, Map<String, Grouping>> pair = it.next();
+                    String streamId = pair.getKey();
+                    Map<String, Grouping> componentGroup = pair.getValue();
+                    if(streamId.equalsIgnoreCase("default")){
+                        Iterator<Entry<String, Grouping>> innerIt = componentGroup.entrySet().iterator();
+                        while(innerIt.hasNext()){
+                            Map.Entry<String, Grouping> innerPair = innerIt.next();
+                            String componentId = innerPair.getKey();
+                            Grouping group = innerPair.getValue();
+                            if (group.is_set_direct()){
+                                result.addAll(tc.getComponentTasks(componentId));
+                            }
+                        }
+                    }
+                }
+                return result;
+        }
+
 
         public static <T extends Comparable<T>> List<ValueExpression> listTypeErasure(List<ValueExpression<T>> input){
             List<ValueExpression> result = new ArrayList<ValueExpression>();

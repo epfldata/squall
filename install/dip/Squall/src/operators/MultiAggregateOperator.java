@@ -8,9 +8,10 @@ package operators;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import operators.storage.AggStorage;
 
 
-public class MultiAggregateOperator implements Operator {
+public class MultiAggregateOperator implements AggregateOperator {
 
     private List<AggregateOperator> _opList;
     private Map _map;
@@ -84,5 +85,55 @@ public class MultiAggregateOperator implements Operator {
             //the result of the first operator, but this is the same for all the AggregateOperators
         }
         return 0;
+    }
+
+    @Override
+    public AggregateOperator setGroupByColumns(List groupByColumns) {
+        throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
+    }
+
+    @Override
+    public List getGroupByColumns() {
+        throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
+    }
+
+    @Override
+    public AggregateOperator setGroupByProjection(ProjectionOperator projection) {
+        throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
+    }
+
+    @Override
+    public ProjectionOperator getGroupByProjection() {
+        throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
+    }
+
+    @Override
+    public AggregateOperator setDistinct(DistinctOperator distinct) {
+        throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
+    }
+
+    @Override
+    public DistinctOperator getDistinct() {
+        throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
+    }
+
+    @Override
+    public List getExpressions() {
+        throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
+    }
+
+    @Override
+    public AggStorage getStorage() {
+        throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
+    }
+
+    @Override
+    public Object runAggregateFunction(Object value, List tuple) {
+        throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
+    }
+
+    @Override
+    public Object runAggregateFunction(Object value1, Object value2) {
+        throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
     }
 }

@@ -115,7 +115,7 @@ public class AggregateCountOperator implements AggregateOperator<Integer>{
             String strValue = _wrapper.toString(value);
             
             // propagate further the affected tupleHash-tupleValue pair
-            ArrayList<String> affectedTuple = new ArrayList<String>();
+            List<String> affectedTuple = new ArrayList<String>();
             affectedTuple.add(tupleHash);
             affectedTuple.add(strValue);
 

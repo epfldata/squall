@@ -64,6 +64,10 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
 	private spoutBufferBolt _sbb;
 
+        //direct stream grouping for load balancing
+        private List<String> _fullHashList;
+        private List<Integer> _targetTaskIds;
+
 	public StormDataSource(String componentName,
                         String inputPath,
                         List<Integer> hashIndexes,
@@ -76,6 +80,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                         boolean printOut,
                         int fileSection,
                         int fileParts,
+                        List<String> fullHashList,
                         TopologyBuilder	builder,
                         TopologyKiller killer,
                         Flusher flusher) {
@@ -93,6 +98,8 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                 _fileSection = fileSection;
                 _fileParts = fileParts;
 
+                _fullHashList = fullHashList;
+
 		builder.setSpout(Integer.toString(_ID), this);
 		killer.registerSpout(this);
 		if (flusher != null) {
@@ -101,6 +108,10 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
             						// as its _sbb, in order to connect it successfully
 		}
 	}
+
+        private boolean isNextDirect(){
+            return (_fullHashList != null);
+        }
 
         // from IRichSpout interface
         @Override
@@ -141,7 +152,12 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
                 _hasEmitted = true;
                 _pendingTuples++;
-		_collector.emit(new Values(_componentName, tupleString, tupleHash), "TrackTupleAck");
+                if(!isNextDirect()){
+                    _collector.emit(new Values(_componentName, tupleString, tupleHash), "TrackTupleAck");
+                }else{
+                    _collector.emitDirect(MyUtilities.chooseTarget(tupleHash, _fullHashList, _targetTaskIds),
+                            new Values(_componentName, tupleString, tupleHash), "TrackTupleAck");
+                }
 
 		/*
                 if(!SystemParameters.getBoolean(_conf, "DIP_DISTRIBUTED")){
@@ -152,7 +168,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 	}
 
 	@Override
-	public void open(Map map, TopologyContext arg1, SpoutOutputCollector collector){
+	public void open(Map map, TopologyContext tc, SpoutOutputCollector collector){
 		_collector = collector;
 		_conf=map;
 
@@ -165,6 +181,10 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 			LOG.info(error);
 			throw new RuntimeException("Filename not found:" + error);
 		}
+
+                if(isNextDirect()){
+                    _targetTaskIds = MyUtilities.findTargetTaskIds(tc);
+                }
 	}
 
 	@Override
@@ -196,12 +216,11 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		declarer.declareStream(SystemParameters.EOFmessageStream, new Fields("EOF"));
-		ArrayList<String> outputFields= new ArrayList<String>();
+		List<String> outputFields= new ArrayList<String>();
 		outputFields.add("TableName");
 		outputFields.add("Tuple");
 		outputFields.add("Hash");		
-		declarer.declareStream(SystemParameters.DatamessageStream, new Fields(outputFields));
-
+		declarer.declareStream(SystemParameters.DatamessageStream, isNextDirect(), new Fields(outputFields));
 	}
 
         private void printTuple(List<String> tuple){
@@ -295,7 +314,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 	public static class spoutBufferBolt extends BaseRichBolt implements StormComponent {
 		private int _ID;
 		private int _flusherId;
-		private ArrayList<Tuple> _buffer;
+		private List<Tuple> _buffer;
 		private boolean _isBuffering;
 		private StormDataSource _motherSpout;
 		private static int _streamnum = 0;
@@ -377,7 +396,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 		@Override
 		public void declareOutputFields(OutputFieldsDeclarer declarer) {
 			// The same output as the mother spout.
-			ArrayList<String> outputFields = new ArrayList<String>();
+			List<String> outputFields = new ArrayList<String>();
 			outputFields.add("TableName");
 			outputFields.add("Tuple");
 			outputFields.add("Hash");

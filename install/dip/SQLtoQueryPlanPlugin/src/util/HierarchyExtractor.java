@@ -19,7 +19,7 @@ public class HierarchyExtractor {
 
     public static List<String> getAncestorNames(Component component){
         List<DataSourceComponent> ancestors = component.getAncestorDataSources();
-        ArrayList<String> ancestorNames = new ArrayList<String>();
+        List<String> ancestorNames = new ArrayList<String>();
         for (DataSourceComponent ancestor: ancestors){
             ancestorNames.add(ancestor.getName());
         }

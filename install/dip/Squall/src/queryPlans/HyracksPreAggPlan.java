@@ -9,12 +9,11 @@ import components.DataSourceComponent;
 import components.JoinComponent;
 import components.OperatorComponent;
 import conversion.DoubleConversion;
-import conversion.IntegerConversion;
 import conversion.StringConversion;
 import expressions.ColumnReference;
 import expressions.ValueSpecification;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import operators.AggregateCountOperator;
 import operators.AggregateOperator;
@@ -38,7 +37,7 @@ public class HyracksPreAggPlan {
             //-------------------------------------------------------------------------------------
                     // start of query plan filling
             ProjectionOperator projectionCustomer = new ProjectionOperator(new int[]{0, 6});
-            ArrayList<Integer> hashCustomer = new ArrayList<Integer>(Arrays.asList(0));
+            List<Integer> hashCustomer = Arrays.asList(0);
             DataSourceComponent relationCustomer = new DataSourceComponent(
                                             "CUSTOMER",
                                             dataPath + "customer" + extension,
@@ -48,7 +47,7 @@ public class HyracksPreAggPlan {
 
             //-------------------------------------------------------------------------------------
             ProjectionOperator projectionOrders = new ProjectionOperator(new int[]{1});
-            ArrayList<Integer> hashOrders = new ArrayList<Integer>(Arrays.asList(0));
+            List<Integer> hashOrders = Arrays.asList(0);
             DataSourceComponent relationOrders = new DataSourceComponent(
                                             "ORDERS",
                                             dataPath + "orders" + extension,
@@ -63,7 +62,7 @@ public class HyracksPreAggPlan {
             ProjectionOperator projSecondOut = new ProjectionOperator(new int[]{1, 2});
             JoinStorage secondJoinStorage = new JoinAggStorage(new AggregateCountOperator(conf), conf);
             
-            ArrayList<Integer> hashIndexes = new ArrayList<Integer>(Arrays.asList(0));
+            List<Integer> hashIndexes = Arrays.asList(0);
             JoinComponent CUSTOMER_ORDERSjoin = new JoinComponent(
                     relationCustomer,
                     relationOrders,

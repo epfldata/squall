@@ -55,6 +55,10 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
         private List<Integer> _hashIndexes;
         private List<ValueExpression> _hashExpressions;
 
+        //used only in direct stream grouping
+        private List<Integer> _targetTaskIds;
+        private List<String> _fullHashList;
+
         public StormDstJoin(StormEmitter firstEmitter,
                     StormEmitter secondEmitter,
                     String componentName,
@@ -70,6 +74,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                     List<ValueExpression> hashExpressions,
                     int hierarchyPosition,
                     boolean printOut,
+                    List<String> fullHashList,
                     TopologyBuilder builder,
                     TopologyKiller killer,
                     Config conf) {
@@ -104,6 +109,12 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 
             _firstPreAggProj = firstPreAggProj;
             _secondPreAggProj = secondPreAggProj;
+
+            _fullHashList = fullHashList;
+        }
+
+        private boolean isNextDirect(){
+            return (_fullHashList != null);
         }
 
         // from IRichBolt
@@ -213,30 +224,38 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			String outputTupleString=MyUtilities.tupleToString(tuple, _conf);
                         String outputTupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);
 			//evaluate the hash string BASED ON THE PROJECTED resulted values
-			_collector.emit(stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
+                        if(!isNextDirect()){
+                            _collector.emit(stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
+                        }else{
+                            _collector.emitDirect(MyUtilities.chooseTarget(outputTupleHash, _fullHashList, _targetTaskIds),
+                                stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
+                        }
                 }
         }
-
+        
         @Override
         public Map<String,Object> getComponentConfiguration(){
             return _conf;
         }
 
         @Override
-	public void prepare(Map map, TopologyContext arg1, OutputCollector collector) {
+	public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
 		_collector=collector;
                 _conf=map;
-		
+
+                if(isNextDirect()){
+                    _targetTaskIds = MyUtilities.findTargetTaskIds(tc);
+                }
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		if(_hierarchyPosition!=FINAL_COMPONENT){ // then its an intermediate stage not the final one
-			ArrayList<String> outputFields= new ArrayList<String>();
+			List<String> outputFields= new ArrayList<String>();
 			outputFields.add("TableName");
 			outputFields.add("Tuple");
 			outputFields.add("Hash");
-			declarer.declare(new Fields(outputFields) );
+			declarer.declare(isNextDirect(), new Fields(outputFields) );
 		}
 	}
 

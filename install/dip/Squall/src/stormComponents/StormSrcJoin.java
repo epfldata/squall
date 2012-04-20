@@ -40,6 +40,7 @@ public class StormSrcJoin implements StormJoin, Serializable{
                 List<ValueExpression> hashExpressions,
                 int hierarchyPosition,
                 boolean printOut,
+                List<String> fullHashList,
                 TopologyBuilder builder,
                 TrafficLight trafficLight,
                 TopologyKiller killer,
@@ -73,6 +74,7 @@ public class StormSrcJoin implements StormJoin, Serializable{
                     hashExpressions,
                     hierarchyPosition,
                     printOut,
+                    fullHashList,
                     builder,
                     trafficLight,
                     killer,
@@ -91,13 +93,12 @@ public class StormSrcJoin implements StormJoin, Serializable{
                     hashExpressions,
                     hierarchyPosition,
                     printOut,
+                    fullHashList,
                     builder,
                     trafficLight,
                     killer,
                     conf);
 	}
-
-
 
         // from StormEmitter interface
         @Override

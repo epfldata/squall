@@ -52,7 +52,8 @@ public class JoinComponent implements Component {
 
     private boolean _printOut;
 
-
+    //list of all possible hashes for the next level
+    private List<String> _fullHashList;
 
     public JoinComponent(Component firstParent,
                     Component secondParent,
@@ -65,6 +66,23 @@ public class JoinComponent implements Component {
       _componentName = firstParent.getName() + "_" + secondParent.getName();
 
       queryPlan.add(this);
+    }
+
+    @Override
+    public boolean isPreviousDirect(){
+        return false;
+    }
+
+    //list of distinct keys, used for direct stream grouping and load-balancing ()
+    @Override
+    public JoinComponent setFullHashList(List<String> fullHashList){
+        _fullHashList = fullHashList;
+        return this;
+    }
+
+    @Override
+    public List<String> getFullHashList(){
+        return _fullHashList;
     }
 
     @Override
@@ -191,6 +209,7 @@ public class JoinComponent implements Component {
                                     _hashExpressions,
                                     hierarchyPosition,
                                     _printOut,
+                                    _fullHashList,
                                     builder,
                                     killer,
                                     conf);
@@ -221,6 +240,7 @@ public class JoinComponent implements Component {
                                     _hashExpressions,
                                     hierarchyPosition,
                                     _printOut,
+                                    _fullHashList,
                                     builder,
                                     trafficLight,
                                     killer,
@@ -254,7 +274,7 @@ public class JoinComponent implements Component {
 
     @Override
     public List<DataSourceComponent> getAncestorDataSources(){
-        ArrayList<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
+        List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
         for(Component parent: getParents()){
             list.addAll(parent.getAncestorDataSources());
         }

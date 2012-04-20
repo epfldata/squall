@@ -12,6 +12,7 @@ import conversion.StringConversion;
 import conversion.TypeConversion;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /*
  * This class is used only from parser. Because of JSQL limitations, wherever int is required, we use long.
@@ -23,7 +24,7 @@ public class TPCH_Schema extends Schema {
     private static final TypeConversion dtc = new DateConversion();
 
 
-    public static final ArrayList<ColumnNameType> orders = new ArrayList<ColumnNameType>(Arrays.asList(
+    public static final List<ColumnNameType> orders = Arrays.asList(
                 new ColumnNameType("ORDERKEY", lc),
                 new ColumnNameType("CUSTKEY", lc),
                 new ColumnNameType("ORDERSTATUS", sc),
@@ -33,9 +34,9 @@ public class TPCH_Schema extends Schema {
                 new ColumnNameType("CLERK", sc),
                 new ColumnNameType("SHIPPRIORITY", lc),
                 new ColumnNameType("COMMENT", sc)
-                ));
+                );
 
-    public static final ArrayList<ColumnNameType> lineitem = new ArrayList<ColumnNameType>(Arrays.asList(
+    public static final List<ColumnNameType> lineitem = Arrays.asList(
                 new ColumnNameType("ORDERKEY", lc),
                 new ColumnNameType("PARTKEY", lc),
                 new ColumnNameType("SUPPKEY", lc),
@@ -52,9 +53,9 @@ public class TPCH_Schema extends Schema {
                 new ColumnNameType("SHIPINSTRUCT", sc),
                 new ColumnNameType("SHIPMODE", sc),
                 new ColumnNameType("COMMENT", sc)
-                ));
+                );
 
-    public static final ArrayList<ColumnNameType> customer = new ArrayList<ColumnNameType>(Arrays.asList(
+    public static final List<ColumnNameType> customer = Arrays.asList(
                 new ColumnNameType("CUSTKEY", lc),
                 new ColumnNameType("NAME", sc),
                 new ColumnNameType("ADDRESS", sc),
@@ -63,16 +64,16 @@ public class TPCH_Schema extends Schema {
                 new ColumnNameType("ACCTBAL", dbc),
                 new ColumnNameType("MKTSEGMENT", sc),
                 new ColumnNameType("COMMENT", sc)
-                ));
+                );
 
-    public static final ArrayList<ColumnNameType> nation = new ArrayList<ColumnNameType>(Arrays.asList(
+    public static final List<ColumnNameType> nation = Arrays.asList(
                 new ColumnNameType("NATIONKEY", lc),
                 new ColumnNameType("NAME", sc),
                 new ColumnNameType("REGIONKEY", lc),
                 new ColumnNameType("COMMENT", sc)
-                ));
+                );
 
-    public static final ArrayList<ColumnNameType> supplier = new ArrayList<ColumnNameType>(Arrays.asList(
+    public static final List<ColumnNameType> supplier = Arrays.asList(
                 new ColumnNameType("SUPPKEY", lc),
                 new ColumnNameType("NAME fixed", sc),
                 new ColumnNameType("ADDRESS", sc),
@@ -80,15 +81,15 @@ public class TPCH_Schema extends Schema {
                 new ColumnNameType("PHONE", sc),
                 new ColumnNameType("ACCTBAL", dbc),
                 new ColumnNameType("COMMENT", sc)
-                ));
+                );
 
-    public static final ArrayList<ColumnNameType> region = new ArrayList<ColumnNameType>(Arrays.asList(
+    public static final List<ColumnNameType> region = Arrays.asList(
                 new ColumnNameType("REGIONKEY", lc),
                 new ColumnNameType("NAME", sc),
                 new ColumnNameType("COMMENT", sc)
-                ));
+                );
 
-    public static final ArrayList<ColumnNameType> part = new ArrayList<ColumnNameType>(Arrays.asList(
+    public static final List<ColumnNameType> part = Arrays.asList(
                 new ColumnNameType("PARTKEY", lc),
                 new ColumnNameType("NAME", sc),
                 new ColumnNameType("MFGR", sc),
@@ -98,15 +99,15 @@ public class TPCH_Schema extends Schema {
                 new ColumnNameType("CONTAINER", sc),
                 new ColumnNameType("RETAILPRICE", dbc),
                 new ColumnNameType("COMMENT", sc)
-                ));
+                );
 
-    public static final ArrayList<ColumnNameType> partsupp = new ArrayList<ColumnNameType>(Arrays.asList(
+    public static final List<ColumnNameType> partsupp = Arrays.asList(
                 new ColumnNameType("PARTKEY", lc),
                 new ColumnNameType("SUPPKEY", lc),
                 new ColumnNameType("AVAILQTY", lc),
                 new ColumnNameType("SUPPLYCOST", dbc),
                 new ColumnNameType("COMMENT", sc)
-                ));
+                );
 
     public TPCH_Schema(double scallingFactor){
         //tables

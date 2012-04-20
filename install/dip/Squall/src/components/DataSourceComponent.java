@@ -47,6 +47,8 @@ public class DataSourceComponent implements Component {
 
     private Component _child;
 
+    private List<String> _fullHashList;
+
     public DataSourceComponent(String componentName,
                         String inputPath,
                         List<ColumnNameType> tableSchema,
@@ -56,6 +58,22 @@ public class DataSourceComponent implements Component {
                 _tableSchema = tableSchema;
 
                 queryPlan.add(this);
+    }
+
+    @Override
+    public boolean isPreviousDirect(){
+        return false;
+    }
+
+    @Override
+    public DataSourceComponent setFullHashList(List<String> fullHashList){
+        _fullHashList = fullHashList;
+        return this;
+    }
+
+    @Override
+    public List<String> getFullHashList(){
+        return _fullHashList;
     }
 
     @Override
@@ -155,6 +173,7 @@ public class DataSourceComponent implements Component {
                _printOut,
                i,
                parallelism,
+               _fullHashList,
                builder,
                killer,
                flusher);
@@ -184,7 +203,7 @@ public class DataSourceComponent implements Component {
 
     @Override
     public List<DataSourceComponent> getAncestorDataSources(){
-        ArrayList<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
+        List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
         list.add(this);
         return list;
     }
