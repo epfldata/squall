@@ -48,9 +48,6 @@ public  class OperatorComponent implements Component{
     private Component _child;
     private StormOperator _stormOperator;
 
-    //does this component receives using direct stream grouping
-    private boolean _isPreviousDirect;
-
     private List<String> _fullHashList;
 
     public OperatorComponent(Component parent,
@@ -62,14 +59,7 @@ public  class OperatorComponent implements Component{
 
         _componentName = componentName;
 
-        _isPreviousDirect = (_parent.getFullHashList() != null);
-
         queryPlan.add(this);
-    }
-
-    @Override
-    public boolean isPreviousDirect(){
-        return _isPreviousDirect;
     }
 
     @Override
@@ -171,7 +161,6 @@ public  class OperatorComponent implements Component{
                 _hashExpressions,
                 hierarchyPosition,
                 _printOut,
-                _isPreviousDirect,
                 _fullHashList,
                 builder,
                 killer,

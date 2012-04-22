@@ -47,8 +47,6 @@ public class DataSourceComponent implements Component {
 
     private Component _child;
 
-    private List<String> _fullHashList;
-
     public DataSourceComponent(String componentName,
                         String inputPath,
                         List<ColumnNameType> tableSchema,
@@ -61,19 +59,13 @@ public class DataSourceComponent implements Component {
     }
 
     @Override
-    public boolean isPreviousDirect(){
-        return false;
-    }
-
-    @Override
     public DataSourceComponent setFullHashList(List<String> fullHashList){
-        _fullHashList = fullHashList;
-        return this;
+        throw new RuntimeException("This method should not be invoked for DataSourceComponent!");
     }
 
     @Override
     public List<String> getFullHashList(){
-        return _fullHashList;
+        throw new RuntimeException("This method should not be invoked for DataSourceComponent!");
     }
 
     @Override
@@ -173,7 +165,6 @@ public class DataSourceComponent implements Component {
                _printOut,
                i,
                parallelism,
-               _fullHashList,
                builder,
                killer,
                flusher);

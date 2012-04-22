@@ -52,7 +52,6 @@ public class JoinComponent implements Component {
 
     private boolean _printOut;
 
-    //list of all possible hashes for the next level
     private List<String> _fullHashList;
 
     public JoinComponent(Component firstParent,
@@ -66,11 +65,6 @@ public class JoinComponent implements Component {
       _componentName = firstParent.getName() + "_" + secondParent.getName();
 
       queryPlan.add(this);
-    }
-
-    @Override
-    public boolean isPreviousDirect(){
-        return false;
     }
 
     //list of distinct keys, used for direct stream grouping and load-balancing ()
@@ -225,7 +219,9 @@ public class JoinComponent implements Component {
             if(_secondPreAggStorage == null){
                 _secondPreAggStorage = new JoinHashStorage();
             }
-            
+
+            //since we don't know how data is scattered across StormSrcStorage,
+            //  we cannot do customStreamGrouping from the previous level
             _joiner = new StormSrcJoin(_firstParent,
                                     _secondParent,
                                     _componentName,
@@ -240,7 +236,6 @@ public class JoinComponent implements Component {
                                     _hashExpressions,
                                     hierarchyPosition,
                                     _printOut,
-                                    _fullHashList,
                                     builder,
                                     trafficLight,
                                     killer,

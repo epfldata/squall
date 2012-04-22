@@ -55,8 +55,6 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
         private List<Integer> _hashIndexes;
         private List<ValueExpression> _hashExpressions;
 
-        //used only in direct stream grouping
-        private List<Integer> _targetTaskIds;
         private List<String> _fullHashList;
 
         public StormDstJoin(StormEmitter firstEmitter,
@@ -95,9 +93,10 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 
             _hierarchyPosition = hierarchyPosition;
 
+            _fullHashList = fullHashList;
             _ID=MyUtilities.getNextTopologyId();
             InputDeclarer currentBolt = builder.setBolt(Integer.toString(_ID), this, parallelism);
-            currentBolt = MyUtilities.attachEmitterComponents(currentBolt, firstEmitter, secondEmitter);
+            currentBolt = MyUtilities.attachEmitterCustom(_fullHashList, currentBolt, firstEmitter, secondEmitter);
 
             _printOut= printOut;
             if (_printOut && _operatorChain.isBlocking()){
@@ -110,11 +109,6 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
             _firstPreAggProj = firstPreAggProj;
             _secondPreAggProj = secondPreAggProj;
 
-            _fullHashList = fullHashList;
-        }
-
-        private boolean isNextDirect(){
-            return (_fullHashList != null);
         }
 
         // from IRichBolt
@@ -224,12 +218,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			String outputTupleString=MyUtilities.tupleToString(tuple, _conf);
                         String outputTupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);
 			//evaluate the hash string BASED ON THE PROJECTED resulted values
-                        if(!isNextDirect()){
-                            _collector.emit(stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
-                        }else{
-                            _collector.emitDirect(MyUtilities.chooseTarget(outputTupleHash, _fullHashList, _targetTaskIds),
-                                stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
-                        }
+                        _collector.emit(stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
                 }
         }
         
@@ -242,10 +231,6 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 	public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
 		_collector=collector;
                 _conf=map;
-
-                if(isNextDirect()){
-                    _targetTaskIds = MyUtilities.findTargetTaskIds(tc);
-                }
 	}
 
 	@Override
@@ -255,7 +240,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			outputFields.add("TableName");
 			outputFields.add("Tuple");
 			outputFields.add("Hash");
-			declarer.declare(isNextDirect(), new Fields(outputFields) );
+			declarer.declare(new Fields(outputFields) );
 		}
 	}
 

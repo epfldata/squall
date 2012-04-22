@@ -64,10 +64,6 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
 	private spoutBufferBolt _sbb;
 
-        //direct stream grouping for load balancing
-        private List<String> _fullHashList;
-        private List<Integer> _targetTaskIds;
-
 	public StormDataSource(String componentName,
                         String inputPath,
                         List<Integer> hashIndexes,
@@ -80,7 +76,6 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                         boolean printOut,
                         int fileSection,
                         int fileParts,
-                        List<String> fullHashList,
                         TopologyBuilder	builder,
                         TopologyKiller killer,
                         Flusher flusher) {
@@ -98,8 +93,6 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                 _fileSection = fileSection;
                 _fileParts = fileParts;
 
-                _fullHashList = fullHashList;
-
 		builder.setSpout(Integer.toString(_ID), this);
 		killer.registerSpout(this);
 		if (flusher != null) {
@@ -108,10 +101,6 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
             						// as its _sbb, in order to connect it successfully
 		}
 	}
-
-        private boolean isNextDirect(){
-            return (_fullHashList != null);
-        }
 
         // from IRichSpout interface
         @Override
@@ -152,12 +141,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
                 _hasEmitted = true;
                 _pendingTuples++;
-                if(!isNextDirect()){
-                    _collector.emit(new Values(_componentName, tupleString, tupleHash), "TrackTupleAck");
-                }else{
-                    _collector.emitDirect(MyUtilities.chooseTarget(tupleHash, _fullHashList, _targetTaskIds),
-                            new Values(_componentName, tupleString, tupleHash), "TrackTupleAck");
-                }
+                _collector.emit(new Values(_componentName, tupleString, tupleHash), "TrackTupleAck");
 
 		/*
                 if(!SystemParameters.getBoolean(_conf, "DIP_DISTRIBUTED")){
@@ -181,14 +165,10 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 			LOG.info(error);
 			throw new RuntimeException("Filename not found:" + error);
 		}
-
-                if(isNextDirect()){
-                    _targetTaskIds = MyUtilities.findTargetTaskIds(tc);
-                }
 	}
 
 	@Override
-	public void ack(Object arg0) {
+	public void ack(Object msgId) {
 		_pendingTuples--;	    
 		if (_hasReachedEOF) {
 			if (_pendingTuples == 0) {
@@ -208,7 +188,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 	}
 
 	@Override
-	public void fail(Object arg0) {
+	public void fail(Object msgId) {
                 throw new RuntimeException("Failing tuple in " + _componentName);
 
 	}
@@ -220,7 +200,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 		outputFields.add("TableName");
 		outputFields.add("Tuple");
 		outputFields.add("Hash");		
-		declarer.declareStream(SystemParameters.DatamessageStream, isNextDirect(), new Fields(outputFields));
+		declarer.declareStream(SystemParameters.DatamessageStream, new Fields(outputFields));
 	}
 
         private void printTuple(List<String> tuple){
@@ -364,11 +344,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 								String tableName = t.getString(0);
 								String tuplePayLoad = t.getString(1);
 								String hash = t.getString(2);
-								Values v = new Values();
-								v.add(tableName);
-								v.add(tuplePayLoad);
-								v.add(hash);
-								_collector.emit(t, v);
+								_collector.emit(t, new Values(tableName, tuplePayLoad, hash));
 								_collector.ack(t);
 							}
 							_collector.ack(_ackTuple);
@@ -381,11 +357,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 					String tableName = tuple.getString(0);
 					String tuplePayLoad = tuple.getString(1);
 					String hash = tuple.getString(2);
-					Values v = new Values();
-					v.add(tableName);
-					v.add(tuplePayLoad);
-					v.add(hash);
-					_collector.emit(tuple, v);
+					_collector.emit(tuple, new Values(tableName, tuplePayLoad, hash));
 					_collector.ack(tuple);
 		}
 

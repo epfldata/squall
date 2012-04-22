@@ -305,7 +305,7 @@ public class MyUtilities{
             return currentBolt;
         }
 
-        public static InputDeclarer attachEmitterDirect(InputDeclarer currentBolt,
+        public static InputDeclarer attachEmitterCustom(List<String> fullHashList, InputDeclarer currentBolt,
                 StormEmitter emitter1, StormEmitter... emittersArray){
             List<StormEmitter> emittersList = new ArrayList<StormEmitter>();
             emittersList.add(emitter1);
@@ -314,43 +314,12 @@ public class MyUtilities{
             for(StormEmitter emitter: emittersList){
                 int[] emitterIDs = emitter.getEmitterIDs();
                 for(int emitterID: emitterIDs){
-                    currentBolt = currentBolt.directGrouping(Integer.toString(emitterID));
+                    currentBolt = currentBolt.customGrouping(Integer.toString(emitterID),
+                            new BalancedStreamGrouping(fullHashList));
                 }
             }
             return currentBolt;
-
         }
-
-        //scatter hashes uniformly
-        public static int chooseTarget(String hash, List<String> fullHashList, List<Integer> targetTaskIds){
-            int index = fullHashList.indexOf(hash) % targetTaskIds.size();
-            return targetTaskIds.get(index);
-        }
-
-        //collects all the task ids for "default" stream id and "direct" stream grouping
-        public static List<Integer> findTargetTaskIds(TopologyContext tc){
-                List<Integer> result = new ArrayList<Integer>();
-                Map<String, Map<String, Grouping>> streamComponentGroup = tc.getThisTargets();
-                Iterator<Entry<String, Map<String, Grouping>>> it = streamComponentGroup.entrySet().iterator();
-                while(it.hasNext()){
-                    Map.Entry<String, Map<String, Grouping>> pair = it.next();
-                    String streamId = pair.getKey();
-                    Map<String, Grouping> componentGroup = pair.getValue();
-                    if(streamId.equalsIgnoreCase("default")){
-                        Iterator<Entry<String, Grouping>> innerIt = componentGroup.entrySet().iterator();
-                        while(innerIt.hasNext()){
-                            Map.Entry<String, Grouping> innerPair = innerIt.next();
-                            String componentId = innerPair.getKey();
-                            Grouping group = innerPair.getValue();
-                            if (group.is_set_direct()){
-                                result.addAll(tc.getComponentTasks(componentId));
-                            }
-                        }
-                    }
-                }
-                return result;
-        }
-
 
         public static <T extends Comparable<T>> List<ValueExpression> listTypeErasure(List<ValueExpression<T>> input){
             List<ValueExpression> result = new ArrayList<ValueExpression>();

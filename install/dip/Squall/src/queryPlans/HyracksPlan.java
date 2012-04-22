@@ -56,14 +56,14 @@ public class HyracksPlan {
             JoinComponent CUSTOMER_ORDERSjoin = new JoinComponent(
                     relationCustomer,
                     relationOrders,
-                    _queryPlan).setHashIndexes(hashIndexes)
-                               .setFullHashList(Arrays.asList("FURNITURE", "BUILDING", "MACHINERY", "HOUSEHOLD", "AUTOMOBILE"));
+                    _queryPlan).setHashIndexes(hashIndexes);
 
             //-------------------------------------------------------------------------------------
             AggregateCountOperator agg = new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(1));
 
             OperatorComponent oc = new OperatorComponent(CUSTOMER_ORDERSjoin, "COUNTAGG", _queryPlan)
-                                        .setAggregation(agg);
+                                        .setAggregation(agg)
+                                        .setFullHashList(Arrays.asList("FURNITURE", "BUILDING", "MACHINERY", "HOUSEHOLD", "AUTOMOBILE"));
 
             //-------------------------------------------------------------------------------------
 

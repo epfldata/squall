@@ -51,9 +51,6 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 	private int _ID;
 	private Map _conf;
 
-        //direct grouping, load balancing
-        private List<String> _fullHashList;
-        private List<Integer> _targetTaskIds;
 
 	public StormSrcStorage(String componentName,
                 String tableName,
@@ -69,7 +66,6 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
                 List<ValueExpression> hashExpressions,
                 int hierarchyPosition,
                 boolean printOut,
-                List<String> fullHashList,
                 TopologyBuilder builder,
                 TrafficLight trafficLight,
                 TopologyKiller killer,
@@ -98,12 +94,6 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
             _joinStorage = preAggStorage;
             _preAggProj = preAggProj;
-
-            _fullHashList = fullHashList;
-        }
-
-        private boolean isNextDirect(){
-            return (_fullHashList != null);
         }
 
         // from IRichBolt
@@ -177,12 +167,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 			String outputTupleString=MyUtilities.tupleToString(tuple, _conf);
                         String outputTupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);
 			//evaluate the hash string BASED ON THE PROJECTED resulted values
-                        if(!isNextDirect()){
-                            _collector.emit(stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
-                        }else{
-                            _collector.emitDirect(MyUtilities.chooseTarget(outputTupleHash, _fullHashList, _targetTaskIds),
-                                stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
-                        }
+                        _collector.emit(stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
                 }
         }
 
@@ -190,10 +175,6 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 	public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
 		_collector=collector;
 		_conf=map;
-
-                if(isNextDirect()){
-                    _targetTaskIds = MyUtilities.findTargetTaskIds(tc);
-                }
 	}
 
 	@Override
@@ -203,7 +184,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 			outputFields.add("TableName");
 			outputFields.add("Tuple");
 			outputFields.add("Hash");
-			declarer.declare(isNextDirect(), new Fields(outputFields) );
+			declarer.declare(new Fields(outputFields) );
 		}
 
 	}

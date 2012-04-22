@@ -56,14 +56,6 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
                  */
 	}
 
-
-        /*
-	public StormSrcHarmonizer(String componentName) {
-		_ID= MyUtilities.getNextTopologyId();
-		_hasTrafficLight = false;
-                _componentName = componentName;
-	}*/
-
 	// from IRichBolt
 	@Override
 	public void cleanup() {
@@ -90,11 +82,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
     			String inputComponentName = t.getString(0);
     			String inputTupleString = t.getString(1);
     			String hash = t.getString(2);
-    			Values v = new Values();
-    			v.add(inputComponentName);
-    			v.add(inputTupleString);
-    			v.add(hash);
-    			_collector.emit(t, v);
+    			_collector.emit(t, new Values(inputComponentName, inputTupleString, hash));
     			_collector.ack(t);
 			}
 			assert(_buffer.isEmpty());
@@ -107,11 +95,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 			String tableName=tuple.getString(0);
 			String tuplePayLoad=tuple.getString(1);
 			String hash=tuple.getString(2);
-			Values v = new Values();
-			v.add(tableName);
-			v.add(tuplePayLoad);
-			v.add(hash);
-			_collector.emit(tuple, v);
+			_collector.emit(tuple, new Values(tableName, tuplePayLoad, hash));
                         _collector.ack(tuple);
 		} else {
 			_buffer.add(tuple);
