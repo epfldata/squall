@@ -1,6 +1,7 @@
 package stormComponents;
 
 
+import backtype.storm.Config;
 import stormComponents.synchronization.TopologyKiller;
 import stormComponents.synchronization.Flusher;
 import java.io.File;
@@ -64,6 +65,9 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
 	private spoutBufferBolt _sbb;
 
+        //NoAck
+        private boolean _hasSentLastAck = false;
+
 	public StormDataSource(String componentName,
                         String inputPath,
                         List<Integer> hashIndexes,
@@ -78,7 +82,9 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                         int fileParts,
                         TopologyBuilder	builder,
                         TopologyKiller killer,
-                        Flusher flusher) {
+                        Flusher flusher,
+                        Config conf) {
+                _conf = conf;
                 _operatorChain = new ChainOperator(selection, distinct, projection, aggregation);
                 _hierarchyPosition = hierarchyPosition;
 		_ID=MyUtilities.getNextTopologyId();
@@ -94,7 +100,9 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                 _fileParts = fileParts;
 
 		builder.setSpout(Integer.toString(_ID), this);
-		killer.registerSpout(this);
+                if(MyUtilities.isAckEveryTuple(conf)){
+                    killer.registerComponent(this, 1);
+                }
 		if (flusher != null) {
 		    _sbb = new spoutBufferBolt(builder, this, flusher);
 		    _ID = _sbb.getID(); // Set the id of this spout to be the same
@@ -110,12 +118,29 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                         _alreadyPrintedContent=true;
                         printContent();
                     }
-                    if(!_hasEmitted){
-                        //we never emitted anything, and we reach end of the file
-                        //nobody will call our ack method
-                        _hasEmitted=true; // to ensure we will not send multiple EOF per single spout
-                        _collector.emit(SystemParameters.EOFmessageStream, new Values("EOF"));
+                    if(MyUtilities.isAckEveryTuple(_conf)){
+                        if(!_hasEmitted){
+                                //we never emitted anything, and we reach end of the file
+                                //nobody will call our ack method
+                                _hasEmitted=true; // to ensure we will not send multiple EOF per single spout
+                                _collector.emit(SystemParameters.EOFmessageStream, new Values("EOF"));
+                        }
+                    }else{
+                        if(_hierarchyPosition == FINAL_COMPONENT){
+                            if(!_hasEmitted){
+                                //we never emitted anything, and we reach end of the file
+                                //nobody will call our ack method
+                                _hasEmitted=true; // to ensure we will not send multiple EOF per single spout
+                                _collector.emit(SystemParameters.EOFmessageStream, new Values("EOF"));
+                            }
+                        } else {
+                            if(!_hasSentLastAck){
+                                _hasSentLastAck = true;
+                                _collector.emit(new Values("N/A", "LAST_ACK", "N/A"));
+                            }
+                        }
                     }
+
                     Utils.sleep(SystemParameters.EOF_TIMEOUT_MILLIS);
                     return;
 		}
@@ -141,20 +166,17 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
                 _hasEmitted = true;
                 _pendingTuples++;
-                _collector.emit(new Values(_componentName, tupleString, tupleHash), "TrackTupleAck");
 
-		/*
-                if(!SystemParameters.getBoolean(_conf, "DIP_DISTRIBUTED")){
-                    // this method is called infinitely, no matter whether there are no more tuples
-                    // needed for local mode in order to avoid 100% CPU usage for a single process
-                    Utils.sleep(_delay);
-                }*/
+                String msgId = null;
+                if(MyUtilities.isAckEveryTuple(_conf)){
+                    msgId = "TrackTupleAck";
+                }
+                _collector.emit(new Values(_componentName, tupleString, tupleHash), msgId);
 	}
 
 	@Override
 	public void open(Map map, TopologyContext tc, SpoutOutputCollector collector){
 		_collector = collector;
-		_conf=map;
 
 		try {
 		//  _reader = new BufferedReader(new FileReader(new File(_inputPath)));
@@ -172,7 +194,11 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 		_pendingTuples--;	    
 		if (_hasReachedEOF) {
 			if (_pendingTuples == 0) {
-				_collector.emit(SystemParameters.EOFmessageStream, new Values("EOF"));
+                            if(MyUtilities.isAckEveryTuple(_conf)){
+                                _collector.emit(SystemParameters.EOFmessageStream, new Values("EOF"));
+                            }else{
+                                _collector.emit(new Values("N/A", "LAST_ACK", "N/A"));
+                            }
 			}
 		}
 	}
@@ -195,7 +221,9 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declareStream(SystemParameters.EOFmessageStream, new Fields("EOF"));
+                if(MyUtilities.isAckEveryTuple(_conf) || _hierarchyPosition == FINAL_COMPONENT){
+                    declarer.declareStream(SystemParameters.EOFmessageStream, new Fields("EOF"));
+                }
 		List<String> outputFields= new ArrayList<String>();
 		outputFields.add("TableName");
 		outputFields.add("Tuple");
@@ -267,11 +295,12 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
         @Override
         public String getInfoID() {
-            String str = "Table " + _componentName + " has ID: " + _ID;
+            StringBuilder sb = new StringBuilder();
+            sb.append("Table ").append(_componentName).append(" has ID: ").append(_ID);
             if(_sbb!=null){
-                str += _sbb.getInfoID();
+                sb.append(_sbb.getInfoID());
             }
-            return str;
+            return sb.toString();
         }
 
         // Helper methods

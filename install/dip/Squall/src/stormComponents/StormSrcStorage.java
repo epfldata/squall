@@ -71,6 +71,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
                 TopologyKiller killer,
                 Config conf) {
 
+            _conf = conf;
             _componentName = componentName;
             _tableName = tableName;
             _joinParams= joinParams;
@@ -174,7 +175,6 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 	@Override
 	public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
 		_collector=collector;
-		_conf=map;
 	}
 
 	@Override

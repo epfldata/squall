@@ -52,6 +52,9 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
     //if this is set, we receive using direct stream grouping
     private List<String> _fullHashList;
 
+    //for No ACK: the total number of tasks of all the parent compoonents
+    private int _numParentTasks;
+
     public StormOperator(StormEmitter emitter,
             String componentName,
             SelectionOperator selection,
@@ -67,6 +70,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
             TopologyKiller killer,
             Config conf) {
 
+        _conf = conf;
         _emitter = emitter;
         _componentName = componentName;
 
@@ -85,18 +89,16 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
         InputDeclarer currentBolt = builder.setBolt(Integer.toString(_ID), this, parallelism);
         
         _fullHashList = fullHashList;
-        currentBolt = MyUtilities.attachEmitterCustom(_fullHashList, currentBolt, _emitter);
+        currentBolt = MyUtilities.attachEmitterCustom(conf, _fullHashList, currentBolt, _emitter);
+
+        if( _hierarchyPosition == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf))){
+            killer.registerComponent(this, parallelism);
+        }
 
         _printOut= printOut;
         if (_printOut && _operatorChain.isBlocking()){
            currentBolt.allGrouping(Integer.toString(killer.getID()), SystemParameters.DumpResults);
         }
-    }
-
-    @Override
-    public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
-        _collector=collector;
-        _conf=map;
     }
 
     //from IRichBolt
@@ -108,11 +110,28 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
         }
 
         String inputTupleString = stormTuple.getString(1);
+
+        if(MyUtilities.isFinalAck(inputTupleString, _conf)){
+                    _numParentTasks--;
+                    if(_numParentTasks == 0){
+                        //this task received from all the parent tasks LAST_ACK
+                         if(_hierarchyPosition != FINAL_COMPONENT){
+                            //if this component is not the last one
+                            _collector.emit(new Values("N/A","LAST_ACK","N/A"));
+                         }else{
+                            _collector.emit(SystemParameters.EOFmessageStream, new Values("EOF"));
+                         }
+                    }
+                    return;
+        }
+
         List<String> tuple = MyUtilities.stringToTuple(inputTupleString, _conf);
 
         tuple = _operatorChain.process(tuple);
         if(tuple == null){
-            _collector.ack(stormTuple);
+            if(MyUtilities.isAckEveryTuple(_conf)){
+                _collector.ack(stormTuple);
+            }
             return;
         }
         _numSentTuples++;
@@ -123,9 +142,21 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
             String outputTupleString=MyUtilities.tupleToString(tuple, _conf);
             String outputTupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);
             //evaluate the hash string BASED ON THE PROJECTED resulted values
-             _collector.emit(stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
+             if(MyUtilities.isAckEveryTuple(_conf)){
+                _collector.emit(stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
+             } else {
+                _collector.emit(new Values(_componentName,outputTupleString,outputTupleHash));
+             }
         }
-        _collector.ack(stormTuple);
+        if(MyUtilities.isAckEveryTuple(_conf)){
+            _collector.ack(stormTuple);
+        }
+    }
+
+    @Override
+    public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
+        _collector=collector;
+        _numParentTasks = MyUtilities.getNumParentTasks(tc, _emitter);
     }
 
     @Override
@@ -141,7 +172,11 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
             outputFields.add("Tuple");
             outputFields.add("Hash");
             declarer.declare(new Fields(outputFields) );
-	}
+	}else{
+            if(!MyUtilities.isAckEveryTuple(_conf)){
+                declarer.declareStream(SystemParameters.EOFmessageStream, new Fields("EOF"));
+            }
+        }
     }
 
     private void printTuple(List<String> tuple){

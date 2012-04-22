@@ -1,6 +1,5 @@
 package utilities;
 
-import backtype.storm.generated.Grouping;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.InputDeclarer;
 import backtype.storm.tuple.Fields;
@@ -15,10 +14,8 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import operators.AggregateOperator;
 
 import org.apache.log4j.Logger;
@@ -305,7 +302,7 @@ public class MyUtilities{
             return currentBolt;
         }
 
-        public static InputDeclarer attachEmitterCustom(List<String> fullHashList, InputDeclarer currentBolt,
+        public static InputDeclarer attachEmitterCustom(Map map, List<String> fullHashList, InputDeclarer currentBolt,
                 StormEmitter emitter1, StormEmitter... emittersArray){
             List<StormEmitter> emittersList = new ArrayList<StormEmitter>();
             emittersList.add(emitter1);
@@ -315,10 +312,39 @@ public class MyUtilities{
                 int[] emitterIDs = emitter.getEmitterIDs();
                 for(int emitterID: emitterIDs){
                     currentBolt = currentBolt.customGrouping(Integer.toString(emitterID),
-                            new BalancedStreamGrouping(fullHashList));
+                            new BalancedStreamGrouping(map, fullHashList));
                 }
             }
             return currentBolt;
+        }
+
+        //if this is false, we have a specific mechanism to ensure all the tuples are fully processed
+        //  it is based on CustomStreamGrouping
+        public static boolean isAckEveryTuple(Map map){
+            return (SystemParameters.getBoolean(map, "DIP_ACK_EVERY_TUPLE"));
+        }
+
+        public static boolean isFinalAck(String tupleString, Map map){
+            return (!isAckEveryTuple(map)) && tupleString.equals("LAST_ACK");
+        }
+
+        //used for NoACK optimization
+        public static int getNumParentTasks(TopologyContext tc,
+                StormEmitter emitter1, StormEmitter... emittersArray){
+            List<StormEmitter> emittersList = new ArrayList<StormEmitter>();
+            emittersList.add(emitter1);
+            emittersList.addAll(Arrays.asList(emittersArray));
+
+            int result = 0;
+            for(StormEmitter emitter: emittersList){
+                //We have multiple emitterIDs only for StormSrcJoin
+                //  Anyway, we don't try to use StormSrcJoin with NoACK optimization.
+                int[] ids = emitter.getEmitterIDs();
+                for(int id: ids){
+                    result += tc.getComponentTasks(String.valueOf(id)).size();
+                }
+            }
+            return result;
         }
 
         public static <T extends Comparable<T>> List<ValueExpression> listTypeErasure(List<ValueExpression<T>> input){

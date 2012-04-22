@@ -26,6 +26,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
         private static Logger LOG = Logger.getLogger(StormSrcHarmonizer.class);
 
         private OutputCollector _collector;
+        private Map _conf;
 
         private int _ID;
         private String _componentName;
@@ -37,7 +38,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
                 TrafficLight trafficLight,
                 TopologyKiller killer,
                 Config conf){
-
+                _conf = conf;
 		_componentName = componentName;
 		
                 _ID= MyUtilities.getNextTopologyId();

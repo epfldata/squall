@@ -167,7 +167,8 @@ public class DataSourceComponent implements Component {
                parallelism,
                builder,
                killer,
-               flusher);
+               flusher,
+               conf);
         }
     }
 

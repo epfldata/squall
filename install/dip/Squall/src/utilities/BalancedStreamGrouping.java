@@ -7,13 +7,16 @@ package utilities;
 
 import backtype.storm.grouping.CustomStreamGrouping;
 import backtype.storm.tuple.Fields;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /*
  * If the list of all possible hash values isspecified,
  *   it uses uniform key (not number of tuples!) distribution
- * Otherwise, we encode fieldGrouping exactly the same as the Storm authors
+ * Otherwise, we encode fieldGrouping exactly the same as the Storm authors.
+ * Because of NoACK possibility, have to be used everywhere in the code.
  */
 public class BalancedStreamGrouping implements CustomStreamGrouping{
 
@@ -22,11 +25,14 @@ public class BalancedStreamGrouping implements CustomStreamGrouping{
     
     private List<String> _fullHashList;
 
-    public BalancedStreamGrouping() {
-        
+    private Map _map;
+
+    public BalancedStreamGrouping(Map map) {
+        _map = map;
     }
 
-    public BalancedStreamGrouping(List<String> fullHashList){
+    public BalancedStreamGrouping(Map map, List<String> fullHashList){
+        _map = map;
         _fullHashList = fullHashList;
     }
 
@@ -37,11 +43,19 @@ public class BalancedStreamGrouping implements CustomStreamGrouping{
 
     @Override
     public List<Integer> taskIndices(List<Object> stormTuple) {
+        String tupleString = (String) stormTuple.get(1);
         String tupleHash = (String) stormTuple.get(2);
-        if(isBalanced()){
-            return balancedGrouping(tupleHash);
-        }else{
+        if(MyUtilities.isFinalAck(tupleString, _map)){
+            List<Integer> result = new ArrayList<Integer>();
+            for(int i=0; i< _numTasks; i++){
+                result.add(i);
+            }
+            return result;
+        }
+        if(!isBalanced()){
             return fieldGrouping(tupleHash);
+        }else{
+            return balancedGrouping(tupleHash);
         }
     }
 
@@ -49,13 +63,13 @@ public class BalancedStreamGrouping implements CustomStreamGrouping{
         return (_fullHashList != null);
     }
 
-    private List<Integer> balancedGrouping(String tupleHash){
-        int index = _fullHashList.indexOf(tupleHash) % _numTasks;
+    private List<Integer> fieldGrouping(String tupleHash){
+        int index = Math.abs(tupleHash.hashCode()) % _numTasks;
         return Arrays.asList(index);
     }
 
-    private List<Integer> fieldGrouping(String tupleHash){
-        int index = Math.abs(tupleHash.hashCode()) % _numTasks;
+    private List<Integer> balancedGrouping(String tupleHash){
+        int index = _fullHashList.indexOf(tupleHash) % _numTasks;
         return Arrays.asList(index);
     }
 
