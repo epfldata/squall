@@ -55,6 +55,7 @@ public class StormWrapper {
             conf.setDebug(false);
             //Messages are failling if we do not specify timeout (proven for TPCH8)
             conf.setMessageTimeoutSecs(SystemParameters.MESSAGE_TIMEOUT_SECS);
+            conf.setNumAckers(numAckers);
             conf.setMaxTaskParallelism(numParallelism);
 
             cluster = new LocalCluster();

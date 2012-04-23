@@ -35,7 +35,7 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
     private int _ID;
     private int _numberRegisteredTasks;
     private transient InputDeclarer _inputDeclarer;
-    private Map conf;
+    private Map _conf;
     private OutputCollector _collector;
     
     public TopologyKiller(TopologyBuilder builder) {
@@ -48,7 +48,7 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
     @Override
     public void prepare(Map map, TopologyContext tc, OutputCollector oc) {
     	_collector=oc;
-        conf=map;
+        _conf=map;
     }
 
     @Override
@@ -64,10 +64,10 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
             // Instrument all the components for which printOut is set to dump their results
             _collector.emit(SystemParameters.DumpResults, new Values("DumpResults"));
             //write down statistics (the same which is shown in Storm UI web interface)
-            if(SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED")){
-                StormWrapper.writeStats(conf);            	
+            if(SystemParameters.getBoolean(_conf, "DIP_DISTRIBUTED")){
+                StormWrapper.writeStats(_conf);
             }
-            if(SystemParameters.getBoolean(conf, "DIP_KILL_AT_THE_END")){
+            if(SystemParameters.getBoolean(_conf, "DIP_KILL_AT_THE_END")){
                 /*  Give enough time to dump the results
                 *  We couldn't use Storm ack mechanism for dumping results,
                 *    since our final result might be on Spout (StormDataSource).
@@ -75,7 +75,7 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
                 *    They use EOF boolean to indicate when done.
                 */
                 Utils.sleep(SystemParameters.SLEEP_BEFORE_KILL_MILLIS);
-                StormWrapper.killExecution(conf);
+                StormWrapper.killExecution(_conf);
             }
 
         }

@@ -67,14 +67,14 @@ public class HyracksPlan {
 
             //-------------------------------------------------------------------------------------
 
-//            AggregateCountOperator agg = new AggregateCountOperator().setGroupByColumns(Arrays.asList(1));
+//            AggregateCountOperator agg = new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(1));
 //
 //            JoinComponent CUSTOMER_ORDERSjoin = new JoinComponent(
 //                    relationCustomer,
 //                    relationOrders,
 //                    _queryPlan).setAggregation(agg);
-//
-//            //-------------------------------------------------------------------------------------
+
+            //-------------------------------------------------------------------------------------
 
             AggregateOperator overallAgg =
                     new AggregateSumOperator(_ic, new ColumnReference(_ic, 1), conf)

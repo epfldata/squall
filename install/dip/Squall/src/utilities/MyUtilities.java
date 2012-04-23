@@ -321,7 +321,7 @@ public class MyUtilities{
         //if this is false, we have a specific mechanism to ensure all the tuples are fully processed
         //  it is based on CustomStreamGrouping
         public static boolean isAckEveryTuple(Map map){
-            return (SystemParameters.getBoolean(map, "DIP_ACK_EVERY_TUPLE"));
+            return (SystemParameters.getInt(map, "DIP_NUM_ACKERS") > 0);
         }
 
         public static boolean isFinalAck(String tupleString, Map map){
