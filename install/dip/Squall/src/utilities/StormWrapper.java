@@ -11,7 +11,6 @@ import backtype.storm.generated.AlreadyAliveException;
 import backtype.storm.generated.ClusterSummary;
 import backtype.storm.generated.Nimbus.Client;
 import backtype.storm.generated.NotAliveException;
-import backtype.storm.generated.TaskStats;
 import backtype.storm.generated.TaskSummary;
 import backtype.storm.generated.TopologyInfo;
 import backtype.storm.generated.TopologySummary;
@@ -35,11 +34,17 @@ public class StormWrapper {
         String topologyName = MyUtilities.getFullTopologyName(conf);
         int numAckers = SystemParameters.getInt(conf, "DIP_NUM_ACKERS");
 
-        if(distributed){
-            conf.setDebug(false);
-            conf.setNumAckers(numAckers);
-            conf.setNumWorkers(numParallelism);
+        conf.setDebug(false);
+        conf.setNumAckers(numAckers);
+        if(MyUtilities.isAckEveryTuple(conf)){
+            //otherwise this parameter is used only at the end,
+            //  and represents the time topology is shown as killed (will be set to default: 30s)
+            //Messages are failling if we do not specify timeout (proven for TPCH8)
             conf.setMessageTimeoutSecs(SystemParameters.MESSAGE_TIMEOUT_SECS);
+        }
+
+        if(distributed){
+            conf.setNumWorkers(numParallelism);
             conf.setMaxSpoutPending(SystemParameters.MAX_SPOUT_PENDING);
 
             try{
@@ -52,10 +57,6 @@ public class StormWrapper {
                  LOG.info(error);
             }
         }else{
-            conf.setDebug(false);
-            //Messages are failling if we do not specify timeout (proven for TPCH8)
-            conf.setMessageTimeoutSecs(SystemParameters.MESSAGE_TIMEOUT_SECS);
-            conf.setNumAckers(numAckers);
             conf.setMaxTaskParallelism(numParallelism);
 
             cluster = new LocalCluster();
