@@ -27,13 +27,6 @@ public class MyUtilities{
 	private static int topologyId = 0;
         public static final String SINGLE_HASH_KEY = "SingleHashEntry";
 
-        public static int[] mergeArrays(int[] array1, int[] array2){
-            int[] result = new int[array1.length + array2.length];
-            System.arraycopy(array1, 0, result, 0, array1.length);
-            System.arraycopy(array2, 0, result, array1.length, array2.length);
-            return result;
-        }
-
 	public static int getNextTopologyId() {
             MyUtilities.topologyId++;
             return MyUtilities.topologyId;

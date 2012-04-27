@@ -78,8 +78,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                         AggregateOperator aggregation,
                         int hierarchyPosition,
                         boolean printOut,
-                        int fileSection,
-                        int fileParts,
+                        int parallelism,
                         TopologyBuilder	builder,
                         TopologyKiller killer,
                         Flusher flusher,
@@ -96,10 +95,9 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 		
                 _printOut = printOut;
 
-                _fileSection = fileSection;
-                _fileParts = fileParts;
+                _fileParts = parallelism;
 
-		builder.setSpout(Integer.toString(_ID), this);
+		builder.setSpout(Integer.toString(_ID), this, parallelism);
                 if(MyUtilities.isAckEveryTuple(conf)){
                     killer.registerComponent(this, 1);
                 }
@@ -177,9 +175,10 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 	@Override
 	public void open(Map map, TopologyContext tc, SpoutOutputCollector collector){
 		_collector = collector;
-
+                _fileSection = tc.getThisTaskIndex();
+                
 		try {
-		//  _reader = new BufferedReader(new FileReader(new File(_inputPath)));
+                        //  _reader = new BufferedReader(new FileReader(new File(_inputPath)));
 			_reader = new SerializableFileInputStream(new File(_inputPath),1*1024*1024, _fileSection, _fileParts);
 
 		} catch (Exception e) {

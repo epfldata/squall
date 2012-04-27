@@ -52,27 +52,27 @@ public class HyracksPlan {
                                                        
 
             //-------------------------------------------------------------------------------------
-            List<Integer> hashIndexes = Arrays.asList(1);
-            JoinComponent CUSTOMER_ORDERSjoin = new JoinComponent(
-                    relationCustomer,
-                    relationOrders,
-                    _queryPlan).setHashIndexes(hashIndexes);
-
-            //-------------------------------------------------------------------------------------
-            AggregateCountOperator agg = new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(1));
-
-            OperatorComponent oc = new OperatorComponent(CUSTOMER_ORDERSjoin, "COUNTAGG", _queryPlan)
-                                        .setAggregation(agg)
-                                        .setFullHashList(Arrays.asList("FURNITURE", "BUILDING", "MACHINERY", "HOUSEHOLD", "AUTOMOBILE"));
-
-            //-------------------------------------------------------------------------------------
-
-//            AggregateCountOperator agg = new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(1));
-//
+//            List<Integer> hashIndexes = Arrays.asList(1);
 //            JoinComponent CUSTOMER_ORDERSjoin = new JoinComponent(
 //                    relationCustomer,
 //                    relationOrders,
-//                    _queryPlan).setAggregation(agg);
+//                    _queryPlan).setHashIndexes(hashIndexes);
+//
+//            //-------------------------------------------------------------------------------------
+//            AggregateCountOperator agg = new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(1));
+//
+//            OperatorComponent oc = new OperatorComponent(CUSTOMER_ORDERSjoin, "COUNTAGG", _queryPlan)
+//                                        .setAggregation(agg)
+//                                        .setFullHashList(Arrays.asList("FURNITURE", "BUILDING", "MACHINERY", "HOUSEHOLD", "AUTOMOBILE"));
+
+            //-------------------------------------------------------------------------------------
+
+            AggregateCountOperator agg = new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(1));
+
+            JoinComponent CUSTOMER_ORDERSjoin = new JoinComponent(
+                    relationCustomer,
+                    relationOrders,
+                    _queryPlan).setAggregation(agg);
 
             //-------------------------------------------------------------------------------------
 
