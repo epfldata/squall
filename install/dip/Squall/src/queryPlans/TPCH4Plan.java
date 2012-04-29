@@ -15,10 +15,10 @@ import expressions.ColumnReference;
 import expressions.DateSum;
 import expressions.ValueExpression;
 import expressions.ValueSpecification;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import operators.AggregateCountOperator;
 import operators.AggregateOperator;
@@ -61,7 +61,7 @@ public class TPCH4Plan {
         computeDates();
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashOrders = new ArrayList<Integer>(Arrays.asList(0));
+        List<Integer> hashOrders = Arrays.asList(0);
 
         SelectionOperator selectionOrders = new SelectionOperator(
                 new BetweenPredicate(
@@ -81,7 +81,7 @@ public class TPCH4Plan {
                            .setProjection(projectionOrders);
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashLineitem = new ArrayList<Integer>(Arrays.asList(0));
+        List<Integer> hashLineitem = Arrays.asList(0);
 
         SelectionOperator selectionLineitem = new SelectionOperator(
                 new ComparisonPredicate(
@@ -108,7 +108,7 @@ public class TPCH4Plan {
 
         //-------------------------------------------------------------------------------------
         // set up aggregation function on a separate StormComponent(Bolt)
-        AggregateOperator aggOp = new AggregateCountOperator(conf).setGroupByColumns(new ArrayList<Integer>(Arrays.asList(1)));
+        AggregateOperator aggOp = new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(1));
         OperatorComponent finalComponent = new OperatorComponent(
                 O_Ljoin,
                 "FINAL_RESULT",

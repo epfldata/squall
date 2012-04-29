@@ -24,10 +24,10 @@ import visitors.jsql.SQLVisitor;
 
 public class ParserMain{
     private final int CLUSTER_WORKERS = 176;
-    private final int CLUSTERS_ACKERS = 17;
+    private int CLUSTER_ACKERS = 17;
     
     private final int LOCAL_WORKERS = 5;
-    private final int LOCAL_ACKERS = 1;
+    private int LOCAL_ACKERS = 1;
 
     private final String sqlExtension = ".sql";
 
@@ -40,11 +40,18 @@ public class ParserMain{
     public ParserMain(String parserConfPath){
         Map map = SystemParameters.fileToMap(parserConfPath);
 
+        if(!SystemParameters.getBoolean(map, "DIP_ACK_EVERY_TUPLE")){
+            //we don't ack after each tuple is sent, 
+            //  so we don't need any node to be dedicated for acking
+            CLUSTER_ACKERS = 0;
+            LOCAL_ACKERS = 0;
+        }
+
         String mode = "";
         if (SystemParameters.getBoolean(map, "DIP_DISTRIBUTED")){
             mode = "parallel";
             SystemParameters.putInMap(map, "DIP_NUM_PARALLELISM", CLUSTER_WORKERS);
-            SystemParameters.putInMap(map, "DIP_NUM_ACKERS", CLUSTERS_ACKERS);
+            SystemParameters.putInMap(map, "DIP_NUM_ACKERS", CLUSTER_ACKERS);
         }else{
             mode = "serial";
             SystemParameters.putInMap(map, "DIP_NUM_PARALLELISM", LOCAL_WORKERS);

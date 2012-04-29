@@ -14,8 +14,8 @@ import expressions.ColumnReference;
 import expressions.Multiplication;
 import expressions.ValueExpression;
 import expressions.ValueSpecification;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import operators.AggregateOperator;
 import operators.AggregateSumOperator;
@@ -36,7 +36,7 @@ public class RSTPlan {
     public RSTPlan(String dataPath, String extension, Map conf){
             //-------------------------------------------------------------------------------------
                     // start of query plan filling
-            ArrayList<Integer> hashR = new ArrayList<Integer>(Arrays.asList(1));
+            List<Integer> hashR = Arrays.asList(1);
 
             DataSourceComponent relationR = new DataSourceComponent(
                                         "R",
@@ -45,7 +45,7 @@ public class RSTPlan {
                                         _queryPlan).setHashIndexes(hashR);
 
             //-------------------------------------------------------------------------------------
-            ArrayList<Integer> hashS = new ArrayList<Integer>(Arrays.asList(0));
+            List<Integer> hashS = Arrays.asList(0);
 
             DataSourceComponent relationS = new DataSourceComponent(
                                             "S",
@@ -54,7 +54,7 @@ public class RSTPlan {
                                             _queryPlan).setHashIndexes(hashS) ;
 
             //-------------------------------------------------------------------------------------
-            ArrayList<Integer> hashIndexes = new ArrayList<Integer>(Arrays.asList(2));
+            List<Integer> hashIndexes = Arrays.asList(2);
 
             JoinComponent R_Sjoin = new JoinComponent(
                     relationR,
@@ -62,7 +62,7 @@ public class RSTPlan {
                     _queryPlan).setHashIndexes(hashIndexes);
            
             //-------------------------------------------------------------------------------------
-            ArrayList<Integer> hashT = new ArrayList<Integer>(Arrays.asList(0));
+            List<Integer> hashT = Arrays.asList(0);
 
             DataSourceComponent relationT= new DataSourceComponent(
                                             "T",

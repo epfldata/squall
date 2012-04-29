@@ -10,8 +10,8 @@ import components.JoinComponent;
 import components.OperatorComponent;
 import conversion.IntegerConversion;
 import expressions.ColumnReference;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import operators.AggregateCountOperator;
 import operators.AggregateOperator;
@@ -32,7 +32,7 @@ public class HyracksPlan {
             //-------------------------------------------------------------------------------------
                     // start of query plan filling
             ProjectionOperator projectionCustomer = new ProjectionOperator(new int[]{0, 6});
-            ArrayList<Integer> hashCustomer = new ArrayList<Integer>(Arrays.asList(0));
+            List<Integer> hashCustomer = Arrays.asList(0);
             DataSourceComponent relationCustomer = new DataSourceComponent(
                                             "CUSTOMER",
                                             dataPath + "customer" + extension,
@@ -42,7 +42,7 @@ public class HyracksPlan {
 
             //-------------------------------------------------------------------------------------
             ProjectionOperator projectionOrders = new ProjectionOperator(new int[]{1});
-            ArrayList<Integer> hashOrders = new ArrayList<Integer>(Arrays.asList(0));
+            List<Integer> hashOrders = Arrays.asList(0);
             DataSourceComponent relationOrders = new DataSourceComponent(
                                             "ORDERS",
                                             dataPath + "orders" + extension,
@@ -52,28 +52,29 @@ public class HyracksPlan {
                                                        
 
             //-------------------------------------------------------------------------------------
-            ArrayList<Integer> hashIndexes = new ArrayList<Integer>(Arrays.asList(1));
-            JoinComponent CUSTOMER_ORDERSjoin = new JoinComponent(
-                    relationCustomer,
-                    relationOrders,
-                    _queryPlan).setHashIndexes(hashIndexes);
-
-            //-------------------------------------------------------------------------------------
-            AggregateCountOperator agg = new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(1));
-
-            OperatorComponent oc = new OperatorComponent(CUSTOMER_ORDERSjoin, "COUNTAGG", _queryPlan)
-                                        .setAggregation(agg);
-
-            //-------------------------------------------------------------------------------------
-
-//            AggregateCountOperator agg = new AggregateCountOperator().setGroupByColumns(Arrays.asList(1));
-//
+//            List<Integer> hashIndexes = Arrays.asList(1);
 //            JoinComponent CUSTOMER_ORDERSjoin = new JoinComponent(
 //                    relationCustomer,
 //                    relationOrders,
-//                    _queryPlan).setAggregation(agg);
+//                    _queryPlan).setHashIndexes(hashIndexes);
 //
 //            //-------------------------------------------------------------------------------------
+//            AggregateCountOperator agg = new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(1));
+//
+//            OperatorComponent oc = new OperatorComponent(CUSTOMER_ORDERSjoin, "COUNTAGG", _queryPlan)
+//                                        .setAggregation(agg)
+//                                        .setFullHashList(Arrays.asList("FURNITURE", "BUILDING", "MACHINERY", "HOUSEHOLD", "AUTOMOBILE"));
+
+            //-------------------------------------------------------------------------------------
+
+            AggregateCountOperator agg = new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(1));
+
+            JoinComponent CUSTOMER_ORDERSjoin = new JoinComponent(
+                    relationCustomer,
+                    relationOrders,
+                    _queryPlan).setAggregation(agg);
+
+            //-------------------------------------------------------------------------------------
 
             AggregateOperator overallAgg =
                     new AggregateSumOperator(_ic, new ColumnReference(_ic, 1), conf)

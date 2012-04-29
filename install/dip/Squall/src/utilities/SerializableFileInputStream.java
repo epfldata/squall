@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.io.IOException;
 
 public class SerializableFileInputStream extends    InputStream
-                                         implements Serializable 
+                                         implements Serializable, CustomReader
 {
   protected final File          _file;           // The _file to read from
   protected       byte[]        _buffer;         // The _file _buffer

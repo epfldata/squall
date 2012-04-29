@@ -51,6 +51,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 	private int _ID;
 	private Map _conf;
 
+
 	public StormSrcStorage(String componentName,
                 String tableName,
                 StormSrcHarmonizer harmonizer,
@@ -70,6 +71,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
                 TopologyKiller killer,
                 Config conf) {
 
+            _conf = conf;
             _componentName = componentName;
             _tableName = tableName;
             _joinParams= joinParams;
@@ -106,6 +108,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 	public void execute(Tuple stormTuple) {
                 if (receivedDumpSignal(stormTuple)) {
                     printContent();
+                    _collector.ack(stormTuple);
                     return;
                 }
 		
@@ -166,21 +169,19 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 			String outputTupleString=MyUtilities.tupleToString(tuple, _conf);
                         String outputTupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);
 			//evaluate the hash string BASED ON THE PROJECTED resulted values
-			_collector.emit(stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
+                        _collector.emit(stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
                 }
         }
 
 	@Override
-	public void prepare(Map map, TopologyContext arg1, OutputCollector collector) {
+	public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
 		_collector=collector;
-		_conf=map;
-
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		if(_hierarchyPosition!=FINAL_COMPONENT){ // then its an intermediate stage not the final one
-			ArrayList<String> outputFields= new ArrayList<String>();
+			List<String> outputFields= new ArrayList<String>();
 			outputFields.add("TableName");
 			outputFields.add("Tuple");
 			outputFields.add("Hash");

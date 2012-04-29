@@ -8,7 +8,7 @@ import visitors.PredicateVisitor;
 public class AndPredicate implements Predicate {
     private static final long serialVersionUID = 1L;
 
-    private ArrayList<Predicate> _predicateList = new ArrayList<Predicate>();
+    private List<Predicate> _predicateList = new ArrayList<Predicate>();
 
     public AndPredicate(Predicate pred1, Predicate pred2,
             Predicate... predicateArray){

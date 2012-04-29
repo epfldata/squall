@@ -73,9 +73,9 @@ public class HashMapAggStorage<T> implements AggStorage<T>{
 
         Iterator<Entry<String, T>> it = otherInternalStorage.entrySet().iterator();
         while (it.hasNext()) {
-            Map.Entry pairs = (Map.Entry)it.next();
-            String key = (String)pairs.getKey();
-            T otherValue = (T)pairs.getValue();
+            Map.Entry<String, T> pair = (Map.Entry)it.next();
+            String key = pair.getKey();
+            T otherValue = pair.getValue();
 
             updateContent(otherValue, key);
         }
@@ -86,9 +86,10 @@ public class HashMapAggStorage<T> implements AggStorage<T>{
         StringBuilder sb = new StringBuilder();
         Iterator<Entry<String, T>> it = _internalStorage.entrySet().iterator();
 	while (it.hasNext()) {
-            Map.Entry pairs = (Map.Entry)it.next();
-	    T value = (T) pairs.getValue();
-	    sb.append(pairs.getKey()).append(" = ").append(value).append("\n");
+            Map.Entry<String, T> pair = (Map.Entry)it.next();
+            String key = pair.getKey();
+	    T value = pair.getValue();
+	    sb.append(key).append(" = ").append(value).append("\n");
 	}
         return sb.toString();
     }
@@ -99,9 +100,9 @@ public class HashMapAggStorage<T> implements AggStorage<T>{
 
         Iterator<Entry<String, T>> it = _internalStorage.entrySet().iterator();
         while (it.hasNext()) {
-            Map.Entry pairs = (Map.Entry)it.next();
-            String key = (String)pairs.getKey();
-            T value = (T)pairs.getValue();
+            Map.Entry<String, T> pair = (Map.Entry)it.next();
+            String key = pair.getKey();
+            T value = pair.getValue();
 
             List<String> tuple = new ArrayList<String>();
             tuple.add(key);
@@ -129,9 +130,9 @@ public class HashMapAggStorage<T> implements AggStorage<T>{
 
         Iterator<Entry<String, T>> it = _internalStorage.entrySet().iterator();
         while (it.hasNext()) {
-            Map.Entry pairs = (Map.Entry)it.next();
-            String key = (String)pairs.getKey();
-            T value = (T)pairs.getValue();
+            Map.Entry<String, T> pair = (Map.Entry)it.next();
+            String key = pair.getKey();
+            T value = pair.getValue();
             T otherValue = otherInternalStorage.get(key);
             if(!(value.equals(otherValue))){
                 if(!(almostTheSame(value, otherValue))){

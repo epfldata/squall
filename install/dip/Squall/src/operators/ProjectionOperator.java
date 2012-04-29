@@ -35,7 +35,7 @@ public class ProjectionOperator implements Operator {
         @Override
 	public List<String> process(List<String> tuple) {
             _numTuplesProcessed++;
-            ArrayList<String> projection = new ArrayList<String>();
+            List<String> projection = new ArrayList<String>();
             for(ValueExpression ve: _veList){
                 String columnContent = ve.evalString(tuple);
                 projection.add(columnContent);
