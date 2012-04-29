@@ -123,6 +123,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 	public void execute(Tuple stormTuple) {
                 if (receivedDumpSignal(stormTuple)) {
                     printContent();
+                    _collector.ack(stormTuple);
                     return;
                 }
 
@@ -140,6 +141,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                          }else{
                             _collector.emit(SystemParameters.EOFmessageStream, new Values("EOF"));
                          }
+                         _collector.ack(stormTuple);
                     }
                     return;
                 }
@@ -177,9 +179,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                         oppositeStorage,
                         projPreAgg);
 
-                if(MyUtilities.isAckEveryTuple(_conf)){
-                    _collector.ack(stormTuple);
-                }
+                _collector.ack(stormTuple);
 	}
 
         protected void performJoin(Tuple stormTuple, 

@@ -106,6 +106,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
     public void execute(Tuple stormTuple) {
 	if (receivedDumpSignal(stormTuple)) {
                     printContent();
+                    _collector.ack(stormTuple);
                     return;
         }
 
@@ -121,6 +122,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
                          }else{
                             _collector.emit(SystemParameters.EOFmessageStream, new Values("EOF"));
                          }
+                         _collector.ack(stormTuple);
                     }
                     return;
         }
@@ -129,9 +131,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
 
         tuple = _operatorChain.process(tuple);
         if(tuple == null){
-            if(MyUtilities.isAckEveryTuple(_conf)){
-                _collector.ack(stormTuple);
-            }
+            _collector.ack(stormTuple);
             return;
         }
         _numSentTuples++;
@@ -148,9 +148,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
                 _collector.emit(new Values(_componentName,outputTupleString,outputTupleHash));
              }
         }
-        if(MyUtilities.isAckEveryTuple(_conf)){
-            _collector.ack(stormTuple);
-        }
+        _collector.ack(stormTuple);
     }
 
     @Override

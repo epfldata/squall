@@ -35,6 +35,7 @@ import operators.SelectionOperator;
 import utilities.SystemParameters;
 
 import org.apache.log4j.Logger;
+import utilities.CustomReader;
 
 public class StormDataSource extends BaseRichSpout implements StormEmitter, StormComponent {
 	private static final long serialVersionUID = 1L;
@@ -51,7 +52,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 	private long _pendingTuples=0;
 	private int _ID;
 
-        private SerializableFileInputStream _reader=null;
+        private CustomReader _reader=null;
         private Map _conf;
         private SpoutOutputCollector _collector;
         private ChainOperator _operatorChain;

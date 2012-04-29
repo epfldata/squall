@@ -108,6 +108,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 	public void execute(Tuple stormTuple) {
                 if (receivedDumpSignal(stormTuple)) {
                     printContent();
+                    _collector.ack(stormTuple);
                     return;
                 }
 		
