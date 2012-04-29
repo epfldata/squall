@@ -19,9 +19,9 @@ import expressions.Multiplication;
 import expressions.Subtraction;
 import expressions.ValueExpression;
 import expressions.ValueSpecification;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import operators.AggregateOperator;
 import operators.AggregateSumOperator;
@@ -54,7 +54,7 @@ public class TPCH8Plan {
 
    public TPCH8Plan(String dataPath, String extension, Map conf){
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashRegion = new ArrayList<Integer>(Arrays.asList(0));
+        List<Integer> hashRegion = Arrays.asList(0);
 
         SelectionOperator selectionRegion = new SelectionOperator(
                 new ComparisonPredicate(
@@ -73,7 +73,7 @@ public class TPCH8Plan {
                            .setProjection(projectionRegion);
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashNation1 = new ArrayList<Integer>(Arrays.asList(1));
+        List<Integer> hashNation1 = Arrays.asList(1);
 
         ProjectionOperator projectionNation1 = new ProjectionOperator(new int[]{0,2});
 
@@ -89,10 +89,10 @@ public class TPCH8Plan {
                 relationRegion,
                 relationNation1,
                 _queryPlan).setProjection(new ProjectionOperator(new int[]{1}))
-                           .setHashIndexes(new ArrayList<Integer>(Arrays.asList(0)));
+                           .setHashIndexes(Arrays.asList(0));
         
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashCustomer = new ArrayList<Integer>(Arrays.asList(0));
+        List<Integer> hashCustomer = Arrays.asList(0);
 
         ProjectionOperator projectionCustomer = new ProjectionOperator(new int[]{3,0});
 
@@ -108,10 +108,10 @@ public class TPCH8Plan {
                 R_Njoin,
                 relationCustomer,
                 _queryPlan).setProjection(new ProjectionOperator(new int[]{1}))
-                           .setHashIndexes(new ArrayList<Integer>(Arrays.asList(0)));
+                           .setHashIndexes(Arrays.asList(0));
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashSupplier = new ArrayList<Integer>(Arrays.asList(1));
+        List<Integer> hashSupplier = Arrays.asList(1);
 
         ProjectionOperator projectionSupplier = new ProjectionOperator(new int[]{0, 3});
 
@@ -123,7 +123,7 @@ public class TPCH8Plan {
                            .setProjection(projectionSupplier);
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashNation2 = new ArrayList<Integer>(Arrays.asList(0));
+        List<Integer> hashNation2 = Arrays.asList(0);
 
         ProjectionOperator projectionNation2 = new ProjectionOperator(new int[]{0, 1});
 
@@ -139,10 +139,10 @@ public class TPCH8Plan {
                 relationSupplier,
                 relationNation2,
                 _queryPlan).setProjection(new ProjectionOperator(new int[]{0, 2}))
-                           .setHashIndexes(new ArrayList<Integer>(Arrays.asList(0)));
+                           .setHashIndexes(Arrays.asList(0));
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashPart = new ArrayList<Integer>(Arrays.asList(0));
+        List<Integer> hashPart = Arrays.asList(0);
 
         SelectionOperator selectionPart = new SelectionOperator(
                 new ComparisonPredicate(
@@ -161,7 +161,7 @@ public class TPCH8Plan {
                            .setProjection(projectionPart);
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashLineitem = new ArrayList<Integer>(Arrays.asList(1));
+        List<Integer> hashLineitem = Arrays.asList(1);
 
         //first field in projection
         ColumnReference orderKey = new ColumnReference(_sc, 0);
@@ -193,10 +193,10 @@ public class TPCH8Plan {
                 relationPart,
                 relationLineitem,
                 _queryPlan).setProjection(new ProjectionOperator(new int[]{1,2,3}))
-                           .setHashIndexes(new ArrayList<Integer>(Arrays.asList(0)));
+                           .setHashIndexes(Arrays.asList(0));
 
        //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashOrders = new ArrayList<Integer>(Arrays.asList(0));
+        List<Integer> hashOrders = Arrays.asList(0);
 
         SelectionOperator selectionOrders = new SelectionOperator(
                 new BetweenPredicate(
@@ -227,18 +227,18 @@ public class TPCH8Plan {
                 P_Ljoin,
                 relationOrders,
                 _queryPlan).setProjection(new ProjectionOperator(new int[]{1,2,3,4}))
-                           .setHashIndexes(new ArrayList<Integer>(Arrays.asList(0)));
+                           .setHashIndexes(Arrays.asList(0));
 
         //-------------------------------------------------------------------------------------
         JoinComponent S_N_P_L_Ojoin = new JoinComponent(
                 S_Njoin,
                 P_L_Ojoin,
                 _queryPlan).setProjection(new ProjectionOperator(new int[]{1,2,3,4}))
-                           .setHashIndexes(new ArrayList<Integer>(Arrays.asList(2)));
+                           .setHashIndexes(Arrays.asList(2));
 
         //-------------------------------------------------------------------------------------
         AggregateOperator agg = new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 2), conf)
-                .setGroupByColumns(new ArrayList<Integer>(Arrays.asList(1, 3)));
+                .setGroupByColumns(Arrays.asList(1, 3));
 
         JoinComponent R_N_C_S_N_P_L_Ojoin = new JoinComponent(
                 R_N_Cjoin,

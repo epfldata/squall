@@ -7,27 +7,27 @@ package schema;
 
 import conversion.IntegerConversion;
 import conversion.TypeConversion;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 
 public class RST_Schema extends Schema {
     private static final TypeConversion ic = new IntegerConversion();
 
-    public static final ArrayList<ColumnNameType> R = new ArrayList<ColumnNameType>(Arrays.asList(
+    public static final List<ColumnNameType> R = Arrays.asList(
             new ColumnNameType("A", ic),
             new ColumnNameType("B", ic)
-            ));
+            );
 
-    public static final ArrayList<ColumnNameType> S = new ArrayList<ColumnNameType>(Arrays.asList(
+    public static final List<ColumnNameType> S = Arrays.asList(
             new ColumnNameType("B", ic),
             new ColumnNameType("C", ic)
-            ));
+            );
 
-    public static final ArrayList<ColumnNameType> T = new ArrayList<ColumnNameType>(Arrays.asList(
+    public static final List<ColumnNameType> T = Arrays.asList(
             new ColumnNameType("C", ic),
             new ColumnNameType("D", ic)
-            ));
+            );
 
     public RST_Schema(){
         //tables

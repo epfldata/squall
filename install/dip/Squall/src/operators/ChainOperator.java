@@ -11,7 +11,7 @@ import java.util.List;
 
 public class ChainOperator implements Operator {
 
-    private ArrayList<Operator> _operators = new ArrayList<Operator>();
+    private List<Operator> _operators = new ArrayList<Operator>();
 
     public ChainOperator(Operator... opArray){
         for(Operator oper: opArray){
@@ -21,7 +21,7 @@ public class ChainOperator implements Operator {
         }
     }
 
-    public ChainOperator(ArrayList<Operator> operators){
+    public ChainOperator(List<Operator> operators){
         _operators = operators;
     }
     

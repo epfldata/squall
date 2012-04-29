@@ -115,7 +115,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
             String strValue = _wrapper.toString(value);
 
             // propagate further the affected tupleHash-tupleValue pair
-            ArrayList<String> affectedTuple = new ArrayList<String>();
+            List<String> affectedTuple = new ArrayList<String>();
             affectedTuple.add(tupleHash);
             affectedTuple.add(strValue);
             

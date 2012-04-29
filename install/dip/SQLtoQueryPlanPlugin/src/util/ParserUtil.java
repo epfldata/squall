@@ -138,7 +138,7 @@ public class ParserUtil {
     }
 
     public static List<Integer> extractColumnIndexes(List<ValueExpression> veList) {
-        ArrayList<Integer> indexes = new ArrayList<Integer>();
+        List<Integer> indexes = new ArrayList<Integer>();
         for(ValueExpression ve: veList){
             if(ve instanceof ColumnReference){
                 ColumnReference cr = (ColumnReference) ve;

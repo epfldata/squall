@@ -36,7 +36,7 @@ public class DataSourceComponent implements Component {
     private List<ValueExpression> _hashExpressions;
 
     private List<ColumnNameType> _tableSchema;
-    private StormDataSource[] _dataSources;
+    private StormDataSource _dataSource;
 
     private SelectionOperator _selection;
     private ProjectionOperator _projection;
@@ -56,6 +56,16 @@ public class DataSourceComponent implements Component {
                 _tableSchema = tableSchema;
 
                 queryPlan.add(this);
+    }
+
+    @Override
+    public DataSourceComponent setFullHashList(List<String> fullHashList){
+        throw new RuntimeException("This method should not be invoked for DataSourceComponent!");
+    }
+
+    @Override
+    public List<String> getFullHashList(){
+        throw new RuntimeException("This method should not be invoked for DataSourceComponent!");
     }
 
     @Override
@@ -141,9 +151,8 @@ public class DataSourceComponent implements Component {
             throw new RuntimeException(_componentName + ": Distinct operator cannot be specified for multiple spouts for one input file!");
         }
 
-        _dataSources = new StormDataSource[parallelism];
-        for (int i=0; i<parallelism; i++){
-            _dataSources[i] = new StormDataSource(_componentName,
+        _dataSource = new StormDataSource(
+                _componentName,
                _inputPath,
                _hashIndexes,
                _hashExpressions,
@@ -153,12 +162,11 @@ public class DataSourceComponent implements Component {
                _aggregation,
                hierarchyPosition,
                _printOut,
-               i,
                parallelism,
                builder,
                killer,
-               flusher);
-        }
+               flusher,
+               conf);
     }
 
     @Override
@@ -184,7 +192,7 @@ public class DataSourceComponent implements Component {
 
     @Override
     public List<DataSourceComponent> getAncestorDataSources(){
-        ArrayList<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
+        List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
         list.add(this);
         return list;
     }
@@ -192,12 +200,7 @@ public class DataSourceComponent implements Component {
     // from StormEmitter interface
     @Override
     public int[] getEmitterIDs() {
-        int[] result = new int[]{};
-
-        for(StormDataSource ds: _dataSources){
-            result = MyUtilities.mergeArrays(result, ds.getEmitterIDs());
-        }
-        return result;
+        return _dataSource.getEmitterIDs();
     }
 
     @Override
@@ -217,11 +220,7 @@ public class DataSourceComponent implements Component {
 
     @Override
     public String getInfoID() {
-        StringBuilder sb = new StringBuilder();
-        for(StormDataSource ds: _dataSources){
-            sb.append(ds.getInfoID()).append("\n");
-        }
-        return sb.toString();
+        return _dataSource.getInfoID() + "\n";
     }
     
     @Override

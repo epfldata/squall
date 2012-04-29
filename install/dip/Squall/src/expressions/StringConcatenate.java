@@ -16,7 +16,7 @@ import visitors.ValueExpressionVisitor;
 public class StringConcatenate implements ValueExpression<String> {
     private static final long serialVersionUID = 1L;
 
-    private ArrayList<ValueExpression<String>> _strList = new ArrayList<ValueExpression<String>>();
+    private List<ValueExpression<String>> _strList = new ArrayList<ValueExpression<String>>();
 
     public StringConcatenate(ValueExpression<String> str1, ValueExpression<String> str2,
             ValueExpression<String>... strArray){

@@ -95,9 +95,11 @@ public class StormSrcJoin implements StormJoin, Serializable{
                     trafficLight,
                     killer,
                     conf);
+
+            if(!MyUtilities.isAckEveryTuple(conf)){
+                throw new RuntimeException("You must use StormDstJoin if you want to ACK only at the end!");
+            }
 	}
-
-
 
         // from StormEmitter interface
         @Override

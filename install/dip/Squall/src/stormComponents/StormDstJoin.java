@@ -55,6 +55,12 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
         private List<Integer> _hashIndexes;
         private List<ValueExpression> _hashExpressions;
 
+        //for load-balancing
+        private List<String> _fullHashList;
+
+        //for No ACK: the total number of tasks of all the parent compoonents
+        private int _numParentTasks;
+
         public StormDstJoin(StormEmitter firstEmitter,
                     StormEmitter secondEmitter,
                     String componentName,
@@ -70,10 +76,11 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                     List<ValueExpression> hashExpressions,
                     int hierarchyPosition,
                     boolean printOut,
+                    List<String> fullHashList,
                     TopologyBuilder builder,
                     TopologyKiller killer,
                     Config conf) {
-
+            _conf = conf;
             _firstEmitter = firstEmitter;
             _secondEmitter = secondEmitter;
             _componentName = componentName;
@@ -90,9 +97,14 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 
             _hierarchyPosition = hierarchyPosition;
 
+            _fullHashList = fullHashList;
             _ID=MyUtilities.getNextTopologyId();
             InputDeclarer currentBolt = builder.setBolt(Integer.toString(_ID), this, parallelism);
-            currentBolt = MyUtilities.attachEmitterComponents(currentBolt, firstEmitter, secondEmitter);
+            currentBolt = MyUtilities.attachEmitterCustom(conf, _fullHashList, currentBolt, firstEmitter, secondEmitter);
+
+            if( _hierarchyPosition == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf))){
+                killer.registerComponent(this, parallelism);
+            }
 
             _printOut= printOut;
             if (_printOut && _operatorChain.isBlocking()){
@@ -104,25 +116,35 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 
             _firstPreAggProj = firstPreAggProj;
             _secondPreAggProj = secondPreAggProj;
-        }
 
-        // from IRichBolt
-	@Override
-	public void cleanup() {
-		// TODO Auto-generated method stub
-		
-	}
+        }
 
 	@Override
 	public void execute(Tuple stormTuple) {
                 if (receivedDumpSignal(stormTuple)) {
                     printContent();
+                    _collector.ack(stormTuple);
                     return;
                 }
 
 		String inputComponentName=stormTuple.getString(0);
 		String inputTupleString=stormTuple.getString(1);   //INPUT TUPLE
 		String inputTupleHash=stormTuple.getString(2);
+
+                if(MyUtilities.isFinalAck(inputTupleString, _conf)){
+                    _numParentTasks--;
+                    if(_numParentTasks == 0){
+                        //this task received from all the parent tasks LAST_ACK
+                         if(_hierarchyPosition != FINAL_COMPONENT){
+                            //if this component is not the last one
+                            _collector.emit(new Values("N/A","LAST_ACK","N/A"));
+                         }else{
+                            _collector.emit(SystemParameters.EOFmessageStream, new Values("EOF"));
+                         }
+                         _collector.ack(stormTuple);
+                    }
+                    return;
+                }
 
                 String firstEmitterName = _firstEmitter.getName();
                 String secondEmitterName = _secondEmitter.getName();
@@ -213,9 +235,20 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			String outputTupleString=MyUtilities.tupleToString(tuple, _conf);
                         String outputTupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);
 			//evaluate the hash string BASED ON THE PROJECTED resulted values
-			_collector.emit(stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
+                        if(MyUtilities.isAckEveryTuple(_conf)){
+                            _collector.emit(stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
+                        }else{
+                            _collector.emit(new Values(_componentName,outputTupleString,outputTupleHash));
+                        }
                 }
         }
+
+        // from IRichBolt
+	@Override
+	public void cleanup() {
+		// TODO Auto-generated method stub
+
+	}
 
         @Override
         public Map<String,Object> getComponentConfiguration(){
@@ -223,21 +256,24 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
         }
 
         @Override
-	public void prepare(Map map, TopologyContext arg1, OutputCollector collector) {
+	public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
 		_collector=collector;
-                _conf=map;
-		
+                _numParentTasks = MyUtilities.getNumParentTasks(tc, _firstEmitter, _secondEmitter);
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		if(_hierarchyPosition!=FINAL_COMPONENT){ // then its an intermediate stage not the final one
-			ArrayList<String> outputFields= new ArrayList<String>();
+                        List<String> outputFields= new ArrayList<String>();
 			outputFields.add("TableName");
 			outputFields.add("Tuple");
 			outputFields.add("Hash");
 			declarer.declare(new Fields(outputFields) );
-		}
+		}else{
+                        if(!MyUtilities.isAckEveryTuple(_conf)){
+                            declarer.declareStream(SystemParameters.EOFmessageStream, new Fields("EOF"));
+                        }
+                }
 	}
 
         private void printTuple(List<String> tuple){

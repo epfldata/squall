@@ -13,6 +13,7 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+import java.util.List;
 import utilities.SystemParameters;
 
 import org.apache.log4j.Logger;
@@ -25,6 +26,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
         private static Logger LOG = Logger.getLogger(StormSrcHarmonizer.class);
 
         private OutputCollector _collector;
+        private Map _conf;
 
         private int _ID;
         private String _componentName;
@@ -36,7 +38,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
                 TrafficLight trafficLight,
                 TopologyKiller killer,
                 Config conf){
-
+                _conf = conf;
 		_componentName = componentName;
 		
                 _ID= MyUtilities.getNextTopologyId();
@@ -54,14 +56,6 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 		_buffer = new ArrayList<Tuple>();
                  */
 	}
-
-
-        /*
-	public StormSrcHarmonizer(String componentName) {
-		_ID= MyUtilities.getNextTopologyId();
-		_hasTrafficLight = false;
-                _componentName = componentName;
-	}*/
 
 	// from IRichBolt
 	@Override
@@ -89,11 +83,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
     			String inputComponentName = t.getString(0);
     			String inputTupleString = t.getString(1);
     			String hash = t.getString(2);
-    			Values v = new Values();
-    			v.add(inputComponentName);
-    			v.add(inputTupleString);
-    			v.add(hash);
-    			_collector.emit(t, v);
+    			_collector.emit(t, new Values(inputComponentName, inputTupleString, hash));
     			_collector.ack(t);
 			}
 			assert(_buffer.isEmpty());
@@ -106,11 +96,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 			String tableName=tuple.getString(0);
 			String tuplePayLoad=tuple.getString(1);
 			String hash=tuple.getString(2);
-			Values v = new Values();
-			v.add(tableName);
-			v.add(tuplePayLoad);
-			v.add(hash);
-			_collector.emit(tuple, v);
+			_collector.emit(tuple, new Values(tableName, tuplePayLoad, hash));
                         _collector.ack(tuple);
 		} else {
 			_buffer.add(tuple);
@@ -125,7 +111,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		ArrayList<String> outputFields= new ArrayList<String>();
+		List<String> outputFields= new ArrayList<String>();
 		outputFields.add("TableName");
 		outputFields.add("Tuple");
 		outputFields.add("Hash");		

@@ -18,9 +18,9 @@ import expressions.Multiplication;
 import expressions.Subtraction;
 import expressions.ValueExpression;
 import expressions.ValueSpecification;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import operators.AggregateOperator;
 import operators.AggregateSumOperator;
@@ -45,7 +45,7 @@ public class TPCH3Plan {
         public TPCH3Plan(String dataPath, String extension, Map conf){
          
             //-------------------------------------------------------------------------------------
-            ArrayList<Integer> hashCustomer = new ArrayList<Integer>(Arrays.asList(0));
+            List<Integer> hashCustomer = Arrays.asList(0);
 
             SelectionOperator selectionCustomer = new SelectionOperator(
                 new ComparisonPredicate(
@@ -64,7 +64,7 @@ public class TPCH3Plan {
                            .setProjection(projectionCustomer);
             
             //-------------------------------------------------------------------------------------
-            ArrayList<Integer> hashOrders = new ArrayList<Integer>(Arrays.asList(1));
+            List<Integer> hashOrders = Arrays.asList(1);
 
             SelectionOperator selectionOrders = new SelectionOperator(
                 new ComparisonPredicate(
@@ -88,10 +88,10 @@ public class TPCH3Plan {
                 relationCustomer,
                 relationOrders,
                 _queryPlan).setProjection(new ProjectionOperator(new int[]{1, 2, 3}))
-                           .setHashIndexes(new ArrayList<Integer>(Arrays.asList(0)));
+                           .setHashIndexes(Arrays.asList(0));
 
             //-------------------------------------------------------------------------------------
-            ArrayList<Integer> hashLineitem = new ArrayList<Integer>(Arrays.asList(0));
+            List<Integer> hashLineitem = Arrays.asList(0);
 
             SelectionOperator selectionLineitem = new SelectionOperator(
                 new ComparisonPredicate(
@@ -124,7 +124,7 @@ public class TPCH3Plan {
                     new ColumnReference(_doubleConv, 3),
                     substract);
             AggregateOperator agg = new AggregateSumOperator(_doubleConv, product, conf)
-                    .setGroupByColumns(new ArrayList<Integer>(Arrays.asList(0, 1, 2)));
+                    .setGroupByColumns(Arrays.asList(0, 1, 2));
 
             JoinComponent C_O_Ljoin = new JoinComponent(
                 C_Ojoin,

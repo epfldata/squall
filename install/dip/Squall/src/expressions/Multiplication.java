@@ -29,7 +29,7 @@ public class Multiplication<T extends Number & Comparable<T>> implements ValueEx
 
     private static final long serialVersionUID = 1L;
 
-    private ArrayList<ValueExpression<T>> _veList = new ArrayList<ValueExpression<T>>();
+    private List<ValueExpression<T>> _veList = new ArrayList<ValueExpression<T>>();
     private NumericConversion<T> _wrapper;
 
     public Multiplication(NumericConversion<T> wrapper, ValueExpression<T> ve1, ValueExpression<T> ve2,

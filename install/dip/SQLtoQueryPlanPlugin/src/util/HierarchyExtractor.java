@@ -19,7 +19,7 @@ public class HierarchyExtractor {
 
     public static List<String> getAncestorNames(Component component){
         List<DataSourceComponent> ancestors = component.getAncestorDataSources();
-        ArrayList<String> ancestorNames = new ArrayList<String>();
+        List<String> ancestorNames = new ArrayList<String>();
         for (DataSourceComponent ancestor: ancestors){
             ancestorNames.add(ancestor.getName());
         }
@@ -121,26 +121,44 @@ public class HierarchyExtractor {
     }
 
     //is affectedComponent already hashed by hashColumns
-    public static boolean isHashedBy(Component affectedComponent, List<Integer> hashColumns) {
+    public static boolean isHashedBy(Component affectedComponent, List<Integer> affectedHashIndexes) {
         Component[] parents = affectedComponent.getParents();
-        boolean isTheSame = false;
         if(parents!=null){
             //if both parents have only hashIndexes, they point to the same indexes in the child
             //so we choose arbitrarily first parent
             Component parent = parents[0];
             List<Integer> parentHashes = parent.getHashIndexes();
             if(parent.getHashExpressions() == null){
-                List<Integer> parentToChild = new ArrayList<Integer>();
+                List<Integer> parentHashIndexes = new ArrayList<Integer>();
                 for(int parentHash: parentHashes){
-                    parentToChild.add(HierarchyExtractor.getChildIndex(parentHash, parent, affectedComponent));
+                    parentHashIndexes.add(HierarchyExtractor.getChildIndex(parentHash, parent, affectedComponent));
                 }
-                if(hashColumns.equals(parentToChild)){
-                     isTheSame = true;
-                }
+                return isSuperset(parentHashIndexes, affectedHashIndexes);
             }
         }
-        return isTheSame;
+        return false;
     }
 
-   
+    /*
+     * Return true if hashes are equivalent, or parent groups tuples exactly the same as the affected component,
+     *   with addition of some more columns. This means that Join and Aggregation can be performed on the same node.
+     * Inspiration taken from the Nephele paper.
+     */
+    private static boolean isSuperset(List<Integer> parentHashIndexes, List<Integer> affectedHashIndexes) {
+        int parentSize = parentHashIndexes.size();
+        int affectedSize = affectedHashIndexes.size();
+
+        if (parentSize < affectedSize){
+            return false;
+        }else if(parentSize == affectedSize){
+            return parentHashIndexes.equals(affectedHashIndexes);
+        }else{
+            for(int i=0; i<affectedSize; i++){
+                if (!(affectedHashIndexes.get(i).equals(parentHashIndexes.get(i)))){
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
 }
