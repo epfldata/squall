@@ -144,6 +144,11 @@ public class AggregateCountOperator implements AggregateOperator<Integer>{
         }
 
         @Override
+        public void clearStorage(){
+            _storage.clear();
+        }
+
+        @Override
         public int getNumTuplesProcessed(){
             return _numTuplesProcessed;
         }

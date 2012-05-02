@@ -34,12 +34,14 @@ public class SystemParameters{
     // used for both local and clustered mode execution
     public static final long SLEEP_BEFORE_KILL_MILLIS = 2000;
 
-
     //DO NOT MODIFY OR MOVE ANYWHERE ELSE. THESE ARE NOT CONFIGURATION VARIABLES
-    public static final String DatamessageStream = Utils.DEFAULT_STREAM_ID; /* "default" */
-    public static final String EOFmessageStream = "2";
-    public static final String DumpResults = "3";
+    public static final String DATA_STREAM = Utils.DEFAULT_STREAM_ID; /* "default" */
+    public static final String EOF_STREAM = "2";
+    public static final String DUMP_RESULTS_STREAM = "3";
 
+    public static final String LAST_ACK = "LAST_ACK";
+    public static final String EOF = "EOF";
+    public static final String DUMP_RESULTS = "DumpResults";
     
     public static String getString(Map conf, String key){
         String result =  (String) conf.get(key);

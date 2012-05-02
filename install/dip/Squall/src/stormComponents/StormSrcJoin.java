@@ -39,6 +39,7 @@ public class StormSrcJoin implements StormJoin, Serializable{
                 List<ValueExpression> hashExpressions,
                 int hierarchyPosition,
                 boolean printOut,
+                long batchOutputMillis,
                 TopologyBuilder builder,
                 TopologyKiller killer,
                 Config conf){
@@ -70,6 +71,7 @@ public class StormSrcJoin implements StormJoin, Serializable{
                     hashExpressions,
                     hierarchyPosition,
                     printOut,
+                    batchOutputMillis,
                     builder,
                     killer,
                     conf);
@@ -87,6 +89,7 @@ public class StormSrcJoin implements StormJoin, Serializable{
                     hashExpressions,
                     hierarchyPosition,
                     printOut,
+                    batchOutputMillis,
                     builder,
                     killer,
                     conf);

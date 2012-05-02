@@ -83,6 +83,11 @@ public class SingleEntryAggStorage<T> implements AggStorage<T>{
     }
 
     @Override
+    public void clear(){
+        _internalStorage = (T) _wrapper.getInitialValue();
+    }
+
+    @Override
     public boolean equals(Object obj){
         if(this == obj){
             return true;

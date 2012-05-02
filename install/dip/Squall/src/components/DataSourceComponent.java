@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import queryPlans.QueryPlan;
 import stormComponents.StormComponent;
 import schema.ColumnNameType;
+import utilities.MyUtilities;
 import utilities.SystemParameters;
 
 public class DataSourceComponent implements Component {
@@ -28,6 +29,8 @@ public class DataSourceComponent implements Component {
     
     private String _componentName;
     private String _inputPath;
+
+    private long _batchOutputMillis;
 
     private List<Integer> _hashIndexes;
     private List<ValueExpression> _hashExpressions;
@@ -129,6 +132,12 @@ public class DataSourceComponent implements Component {
     }
 
     @Override
+    public DataSourceComponent setBatchOutputMode(long millis){
+        _batchOutputMillis = millis;
+        return this;
+    }
+
+    @Override
     public void makeBolts(TopologyBuilder builder,
                        TopologyKiller killer,
                        Config conf,
@@ -146,6 +155,8 @@ public class DataSourceComponent implements Component {
             throw new RuntimeException(_componentName + ": Distinct operator cannot be specified for multiple spouts for one input file!");
         }
 
+        MyUtilities.checkBatchOutput(_batchOutputMillis, _aggregation, conf);
+
         _dataSource = new StormDataSource(
                 _componentName,
                _inputPath,
@@ -157,6 +168,7 @@ public class DataSourceComponent implements Component {
                _aggregation,
                hierarchyPosition,
                _printOut,
+               _batchOutputMillis,
                parallelism,
                builder,
                killer,

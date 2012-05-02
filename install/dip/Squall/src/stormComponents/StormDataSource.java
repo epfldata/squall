@@ -18,10 +18,12 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.topology.base.BaseRichSpout;
 import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
 import expressions.ValueExpression;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 import operators.AggregateOperator;
 import operators.ChainOperator;
 import operators.DistinctOperator;
@@ -32,6 +34,7 @@ import utilities.SystemParameters;
 
 import org.apache.log4j.Logger;
 import utilities.CustomReader;
+import utilities.PeriodicBatchSend;
 
 public class StormDataSource extends BaseRichSpout implements StormEmitter, StormComponent {
 	private static final long serialVersionUID = 1L;
@@ -60,9 +63,14 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
         private int _fileSection, _fileParts;
         private boolean _hasEmitted=false; //have this spout emitted at least one tuple
 
-
         //NoAck
         private boolean _hasSentLastAck = false;
+
+        //for batch sending
+        private final Semaphore _semAgg = new Semaphore(1, true);
+        private boolean _firstTime = true;
+        private PeriodicBatchSend _periodicBatch;
+        private long _batchOutputMillis;
 
 	public StormDataSource(String componentName,
                         String inputPath,
@@ -74,6 +82,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                         AggregateOperator aggregation,
                         int hierarchyPosition,
                         boolean printOut,
+                        long batchOutputMillis,
                         int parallelism,
                         TopologyBuilder	builder,
                         TopologyKiller killer,
@@ -84,6 +93,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 		_ID=MyUtilities.getNextTopologyId();
 		_componentName=componentName;
 		_inputPath=inputPath;
+                _batchOutputMillis = batchOutputMillis;
 
                 _hashIndexes=hashIndexes;
                 _hashExpressions = hashExpressions;
@@ -101,6 +111,11 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
         // from IRichSpout interface
         @Override
 	public void nextTuple() {
+                if(_firstTime && MyUtilities.isBatchOutputMode(_batchOutputMillis)){
+                    _periodicBatch = new PeriodicBatchSend(_batchOutputMillis, this);
+                    _firstTime = false;
+                }
+
 		if(_hasReachedEOF) {
                     eofFinalization();
 
@@ -115,27 +130,33 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 		}
 
 		List<String> tuple = MyUtilities.fileLineToTuple(line, _conf);
+                applyOperatorsAndSend(tuple);
+	}
 
-                // do selection and projection
-                tuple = _operatorChain.process(tuple);
+        protected void applyOperatorsAndSend(List<String> tuple){
+            // do selection and projection
+                if(MyUtilities.isBatchOutputMode(_batchOutputMillis)){
+                    try {
+                        _semAgg.acquire();
+                    } catch (InterruptedException ex) {}
+                }
+		tuple = _operatorChain.process(tuple);
+                if(MyUtilities.isBatchOutputMode(_batchOutputMillis)){
+                    _semAgg.release();
+                }
+
                 if(tuple==null){
                     return;
                 }
+                _hasEmitted = true;
                 _numSentTuples++;
+                _pendingTuples++;
                 printTuple(tuple);
 
-		String tupleString = MyUtilities.tupleToString(tuple, _conf);
-		String tupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);
-
-                _hasEmitted = true;
-                _pendingTuples++;
-
-                String msgId = null;
-                if(MyUtilities.isAckEveryTuple(_conf)){
-                    msgId = "TrackTupleAck";
+                if(MyUtilities.isSending(_hierarchyPosition, _batchOutputMillis)){
+                    tupleSend(tuple, null);
                 }
-                _collector.emit(new Values(_componentName, tupleString, tupleHash), msgId);
-	}
+        }
 
         private void eofFinalization(){
             if(!_alreadyPrintedContent){
@@ -147,7 +168,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                     //we never emitted anything, and we reach end of the file
                         //nobody will call our ack method
                     _hasEmitted=true; // to ensure we will not send multiple EOF per single spout
-                    _collector.emit(SystemParameters.EOFmessageStream, new Values("EOF"));
+                    _collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
                  }
             }else{
                 if(_hierarchyPosition == FINAL_COMPONENT){
@@ -155,14 +176,47 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                         //we never emitted anything, and we reach end of the file
                             //nobody will call our ack method
                         _hasEmitted=true; // to ensure we will not send multiple EOF per single spout
-                        _collector.emit(SystemParameters.EOFmessageStream, new Values("EOF"));
+                        _collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
                     }
                  } else {
                     if(!_hasSentLastAck){
                         _hasSentLastAck = true;
-                        _collector.emit(new Values("N/A", "LAST_ACK", "N/A"));
+                        _collector.emit(new Values("N/A", SystemParameters.LAST_ACK, "N/A"));
                     }
                  }
+            }
+        }
+
+        @Override
+        public void tupleSend(List<String> tuple, Tuple stormTupleRcv) {
+            Values stormTupleSnd = MyUtilities.createTupleValues(tuple, _componentName,
+                        _hashIndexes, _hashExpressions, _conf);
+            MyUtilities.sendTuple(stormTupleSnd, _collector, _conf);
+        }
+
+        @Override
+        public void batchSend(){
+            if(MyUtilities.isBatchOutputMode(_batchOutputMillis)){
+                if (_operatorChain != null){
+                    Operator lastOperator = _operatorChain.getLastOperator();
+                    if(lastOperator instanceof AggregateOperator){
+                        try {
+                            _semAgg.acquire();
+                        } catch (InterruptedException ex) {}
+
+                        //sending
+                        AggregateOperator agg = (AggregateOperator) lastOperator;
+                        List<String> tuples = agg.getContent();
+                        for(String tuple: tuples){
+                            tupleSend(MyUtilities.stringToTuple(tuple, _conf), null);
+                        }
+
+                        //clearing
+                        agg.clearStorage();
+
+                        _semAgg.release();
+                    }
+                }
             }
         }
 
@@ -188,9 +242,9 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 		if (_hasReachedEOF) {
 			if (_pendingTuples == 0) {
                             if(MyUtilities.isAckEveryTuple(_conf)){
-                                _collector.emit(SystemParameters.EOFmessageStream, new Values("EOF"));
+                                _collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
                             }else{
-                                _collector.emit(new Values("N/A", "LAST_ACK", "N/A"));
+                                _collector.emit(new Values("N/A", SystemParameters.LAST_ACK, "N/A"));
                             }
 			}
 		}
@@ -215,13 +269,13 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
                 if(MyUtilities.isAckEveryTuple(_conf) || _hierarchyPosition == FINAL_COMPONENT){
-                    declarer.declareStream(SystemParameters.EOFmessageStream, new Fields("EOF"));
+                    declarer.declareStream(SystemParameters.EOF_STREAM, new Fields(SystemParameters.EOF));
                 }
 		List<String> outputFields= new ArrayList<String>();
 		outputFields.add("TableName");
 		outputFields.add("Tuple");
 		outputFields.add("Hash");		
-		declarer.declareStream(SystemParameters.DatamessageStream, new Fields(outputFields));
+		declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(outputFields));
 	}
 
         @Override

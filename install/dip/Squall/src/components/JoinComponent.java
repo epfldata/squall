@@ -23,6 +23,7 @@ import queryPlans.QueryPlan;
 import stormComponents.JoinHashStorage;
 import stormComponents.JoinStorage;
 import stormComponents.StormComponent;
+import utilities.MyUtilities;
 
 public class JoinComponent implements Component {
     private static final long serialVersionUID = 1L;
@@ -33,6 +34,8 @@ public class JoinComponent implements Component {
     private Component _child;
 
     private String _componentName;
+
+    private long _batchOutputMillis;
 
     private List<Integer> _hashIndexes;
     private List<ValueExpression> _hashExpressions;
@@ -163,6 +166,12 @@ public class JoinComponent implements Component {
     }
 
     @Override
+    public JoinComponent setBatchOutputMode(long millis){
+        _batchOutputMillis = millis;
+        return this;
+    }
+
+    @Override
     public void makeBolts(TopologyBuilder builder,
             TopologyKiller killer,
             Config conf,
@@ -174,6 +183,8 @@ public class JoinComponent implements Component {
         if(hierarchyPosition==StormComponent.FINAL_COMPONENT){
            setPrintOut();
         }
+
+        MyUtilities.checkBatchOutput(_batchOutputMillis, _aggregation, conf);
 
         if(partitioningType == StormJoin.DST_ORDERING){
                 //In Preaggregation one or two storages can be set; otherwise no storage is set
@@ -199,6 +210,7 @@ public class JoinComponent implements Component {
                                     _hashExpressions,
                                     hierarchyPosition,
                                     _printOut,
+                                    _batchOutputMillis,
                                     _fullHashList,
                                     builder,
                                     killer,
@@ -232,6 +244,7 @@ public class JoinComponent implements Component {
                                     _hashExpressions,
                                     hierarchyPosition,
                                     _printOut,
+                                    _batchOutputMillis,
                                     builder,
                                     killer,
                                     conf);

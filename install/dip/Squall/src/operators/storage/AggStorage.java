@@ -28,4 +28,7 @@ public interface AggStorage<T> extends Serializable{
     //get the content in machine readable form - used in preaggregations
     public List<String> getContent();
 
+    //reset the storage
+    public void clear();
+
 }

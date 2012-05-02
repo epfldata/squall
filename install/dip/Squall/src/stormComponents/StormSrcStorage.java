@@ -17,6 +17,7 @@ import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import expressions.ValueExpression;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 import operators.AggregateOperator;
 import operators.ChainOperator;
 import operators.Operator;
@@ -26,6 +27,7 @@ import utilities.SystemParameters;
 
 import org.apache.log4j.Logger;
 import stormComponents.synchronization.TopologyKiller;
+import utilities.PeriodicBatchSend;
 
 public class StormSrcStorage extends BaseRichBolt implements StormEmitter, StormComponent{
 	private static Logger LOG = Logger.getLogger(StormSrcStorage.class);
@@ -53,6 +55,12 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
         private int _numRemainingParents;
 
+        //for batch sending
+        private final Semaphore _semAgg = new Semaphore(1, true);
+        private boolean _firstTime = true;
+        private PeriodicBatchSend _periodicBatch;
+        private long _batchOutputMillis;
+
 	public StormSrcStorage(String componentName,
                 String tableName,
                 StormSrcHarmonizer harmonizer,
@@ -67,6 +75,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
                 List<ValueExpression> hashExpressions,
                 int hierarchyPosition,
                 boolean printOut,
+                long batchOutputMillis,
                 TopologyBuilder builder,
                 TopologyKiller killer,
                 Config conf) {
@@ -77,6 +86,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
             _joinParams= joinParams;
             _isFromFirstEmitter=isFromFirstEmitter;
             _harmonizer = harmonizer;
+            _batchOutputMillis = batchOutputMillis;
 
             _operatorChain = new ChainOperator(selection, projection, aggregation);
             _hashIndexes=hashIndexes;
@@ -91,7 +101,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
             currentBolt.fieldsGrouping(Integer.toString(_harmonizer.getID()), new Fields("Hash"));
 
             if (_printOut && _operatorChain.isBlocking()){
-                currentBolt.allGrouping(Integer.toString(killer.getID()), SystemParameters.DumpResults);
+                currentBolt.allGrouping(Integer.toString(killer.getID()), SystemParameters.DUMP_RESULTS_STREAM);
             }
 
             _joinStorage = preAggStorage;
@@ -107,6 +117,11 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
 	@Override
 	public void execute(Tuple stormTupleRcv) {
+                if(_firstTime && MyUtilities.isBatchOutputMode(_batchOutputMillis)){
+                    _periodicBatch = new PeriodicBatchSend(_batchOutputMillis, this);
+                    _firstTime = false;
+                }
+
                 if (receivedDumpSignal(stormTupleRcv)) {
                     MyUtilities.dumpSignal(this, stormTupleRcv, _collector);
                     return;
@@ -118,7 +133,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
                 if(MyUtilities.isFinalAck(inputTupleString, _conf)){
                     _numRemainingParents--;
-                    MyUtilities.processFinalAck(_numRemainingParents, _hierarchyPosition, stormTupleRcv, _collector);
+                    MyUtilities.processFinalAck(_numRemainingParents, _hierarchyPosition, stormTupleRcv, _collector, _periodicBatch);
                     return;
                 }
 
@@ -162,20 +177,58 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 	}
 
         private void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> tuple){
+		if(MyUtilities.isBatchOutputMode(_batchOutputMillis)){
+                    try {
+                        _semAgg.acquire();
+                    } catch (InterruptedException ex) {}
+                }
 		tuple = _operatorChain.process(tuple);
+                if(MyUtilities.isBatchOutputMode(_batchOutputMillis)){
+                    _semAgg.release();
+                }
+
                 if(tuple == null){
                     return;
                 }
                 _numSentTuples++;
                 printTuple(tuple);
 
-                if(_hierarchyPosition!=FINAL_COMPONENT){
-			String outputTupleString=MyUtilities.tupleToString(tuple, _conf);
-                        String outputTupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);
-			//evaluate the hash string BASED ON THE PROJECTED resulted values
-                        Values stormTupleSnd = new Values(_componentName,outputTupleString,outputTupleHash);
-                        MyUtilities.sendTuple(stormTupleSnd, stormTupleRcv, _collector, _conf);
+                if(MyUtilities.isSending(_hierarchyPosition, _batchOutputMillis)){
+                    tupleSend(tuple, stormTupleRcv);
                 }
+        }
+
+        @Override
+        public void tupleSend(List<String> tuple, Tuple stormTupleRcv) {
+            Values stormTupleSnd = MyUtilities.createTupleValues(tuple, _componentName,
+                        _hashIndexes, _hashExpressions, _conf);
+            MyUtilities.sendTuple(stormTupleSnd, stormTupleRcv, _collector, _conf);
+        }
+
+        @Override
+        public void batchSend(){
+            if(MyUtilities.isBatchOutputMode(_batchOutputMillis)){
+                if (_operatorChain != null){
+                    Operator lastOperator = _operatorChain.getLastOperator();
+                    if(lastOperator instanceof AggregateOperator){
+                        try {
+                            _semAgg.acquire();
+                        } catch (InterruptedException ex) {}
+
+                        //sending
+                        AggregateOperator agg = (AggregateOperator) lastOperator;
+                        List<String> tuples = agg.getContent();
+                        for(String tuple: tuples){
+                            tupleSend(MyUtilities.stringToTuple(tuple, _conf), null);
+                        }
+
+                        //clearing
+                        agg.clearStorage();
+
+                        _semAgg.release();
+                    }
+                }
+            }
         }
 
 	@Override
@@ -233,7 +286,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
         }
 
         private boolean receivedDumpSignal(Tuple stormTuple) {
-            return stormTuple.getSourceStreamId().equalsIgnoreCase(SystemParameters.DumpResults);
+            return stormTuple.getSourceStreamId().equalsIgnoreCase(SystemParameters.DUMP_RESULTS_STREAM);
         }
 
         // from StormComponent interface

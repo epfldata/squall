@@ -75,6 +75,16 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
             _collector.ack(stormRcvTuple);
 	}
 
+        @Override
+        public void tupleSend(List<String> tuple, Tuple stormTupleRcv) {
+            throw new RuntimeException("Should not be here!");
+        }
+
+        @Override
+        public void batchSend(){
+            throw new RuntimeException("Should not be here!");
+        }
+
 	@Override
 	public void prepare(Map conf, TopologyContext tc, OutputCollector collector) {
 		_collector=collector;

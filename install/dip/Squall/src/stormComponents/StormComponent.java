@@ -5,6 +5,7 @@
 
 package stormComponents;
 
+import backtype.storm.tuple.Tuple;
 import java.util.List;
 
 public interface StormComponent {
@@ -19,5 +20,9 @@ public interface StormComponent {
 
     public void printTuple(List<String> tuple);
     public void printContent();
+
+    public void tupleSend(List<String> tuple, Tuple stormTupleRcv);
+    //sending the current content of aggregation and then clearing it
+    public void batchSend();
 
 }

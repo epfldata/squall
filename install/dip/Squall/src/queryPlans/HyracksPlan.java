@@ -67,6 +67,25 @@ public class HyracksPlan {
 
             //-------------------------------------------------------------------------------------
 
+//            AggregateCountOperator postAgg = new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(1));
+//            List<Integer> hashIndexes = Arrays.asList(0);
+//            JoinComponent CUSTOMER_ORDERSjoin = new JoinComponent(
+//                    relationCustomer,
+//                    relationOrders,
+//                    _queryPlan).setAggregation(postAgg)
+//                               .setHashIndexes(hashIndexes)
+//                               .setBatchOutputMode(1000);
+//
+//            //-------------------------------------------------------------------------------------
+//            AggregateSumOperator agg = new AggregateSumOperator(_ic, new ColumnReference(_ic, 1), conf)
+//                    .setGroupByColumns(Arrays.asList(0));
+//
+//            OperatorComponent oc = new OperatorComponent(CUSTOMER_ORDERSjoin, "COUNTAGG", _queryPlan)
+//                                        .setAggregation(agg)
+//                                        .setFullHashList(Arrays.asList("FURNITURE", "BUILDING", "MACHINERY", "HOUSEHOLD", "AUTOMOBILE"));
+
+            //-------------------------------------------------------------------------------------
+
 //            AggregateCountOperator agg = new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(1));
 //
 //            JoinComponent CUSTOMER_ORDERSjoin = new JoinComponent(

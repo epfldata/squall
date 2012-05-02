@@ -149,6 +149,11 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
         }
 
         @Override
+        public void clearStorage(){
+            _storage.clear();
+        }
+
+        @Override
         public int getNumTuplesProcessed(){
             return _numTuplesProcessed;
         }

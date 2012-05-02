@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import queryPlans.QueryPlan;
 import stormComponents.StormComponent;
 import stormComponents.StormOperator;
+import utilities.MyUtilities;
 
 /*
  * To change this template, choose Tools | Templates
@@ -31,6 +32,8 @@ public  class OperatorComponent implements Component{
     private static Logger LOG = Logger.getLogger(OperatorComponent.class);
 
     private String _componentName;
+
+    private long _batchOutputMillis;
 
     private List<Integer> _hashIndexes;
     private List<ValueExpression> _hashExpressions;
@@ -133,6 +136,11 @@ public  class OperatorComponent implements Component{
         return this;
     }
 
+    @Override
+    public OperatorComponent setBatchOutputMode(long millis){
+        _batchOutputMillis = millis;
+        return this;
+    }
 
     @Override
     public void makeBolts(TopologyBuilder builder,
@@ -147,6 +155,8 @@ public  class OperatorComponent implements Component{
             _printOut = true;
         }
 
+        MyUtilities.checkBatchOutput(_batchOutputMillis, _aggregation, conf);
+
         _stormOperator = new StormOperator(_parent,
                 _componentName,
                 _selection,
@@ -157,6 +167,7 @@ public  class OperatorComponent implements Component{
                 _hashExpressions,
                 hierarchyPosition,
                 _printOut,
+                _batchOutputMillis,
                 _fullHashList,
                 builder,
                 killer,

@@ -1,5 +1,6 @@
 package utilities;
 
+import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.InputDeclarer;
@@ -20,6 +21,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import operators.AggregateOperator;
+import operators.ChainOperator;
+import operators.Operator;
 
 import org.apache.log4j.Logger;
 import stormComponents.StormComponent;
@@ -316,6 +319,17 @@ public class MyUtilities{
             return currentBolt;
         }
 
+        public static void checkBatchOutput(long batchOutputMillis, AggregateOperator aggregation, Map conf) {
+            if(aggregation == null && batchOutputMillis !=0){
+                throw new RuntimeException("A component must have aggregation operator in order to support batching.");
+            }
+            if(isAckEveryTuple(conf) && batchOutputMillis !=0){
+                throw new RuntimeException("With batching, only AckAtEnd mode is allowed!");
+                //we don't keep Storm Tuple instances for batched tuples
+                //  we also ack them immediately, which doesn't fir in AckEveryTime logic
+            }
+        }
+
         //if this is false, we have a specific mechanism to ensure all the tuples are fully processed
         //  it is based on CustomStreamGrouping
         public static boolean isAckEveryTuple(Map map){
@@ -323,21 +337,54 @@ public class MyUtilities{
         }
 
         public static boolean isFinalAck(String tupleString, Map map){
-            return (!isAckEveryTuple(map)) && tupleString.equals("LAST_ACK");
+            return (!isAckEveryTuple(map)) && tupleString.equals(SystemParameters.LAST_ACK);
         }
 
+        //in ProcessFinalAck and dumpSignal we have acking at the end, because we return after that
         public static void processFinalAck(int numRemainingParents,
                 int hierarchyPosition, Tuple stormTupleRcv, OutputCollector collector) {
             if(numRemainingParents == 0){
-            //this task received from all the parent tasks LAST_ACK
+            //this task received from all the parent tasks SystemParameters.LAST_ACK
                 if(hierarchyPosition != StormComponent.FINAL_COMPONENT){
                 //if this component is not the last one
-                    collector.emit(new Values("N/A","LAST_ACK","N/A"));
+                    collector.emit(new Values("N/A",SystemParameters.LAST_ACK,"N/A"));
                 }else{
-                    collector.emit(SystemParameters.EOFmessageStream, new Values("EOF"));
+                    collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
                 }
                 collector.ack(stormTupleRcv);
             }
+        }
+
+        public static void processFinalAck(int numRemainingParents,
+                int hierarchyPosition, Tuple stormTupleRcv, OutputCollector collector, PeriodicBatchSend periodicBatch) {
+            if(numRemainingParents == 0){
+                if(periodicBatch != null){
+                    periodicBatch.cancel();
+                    periodicBatch.getComponent().batchSend();
+                }
+            }
+            processFinalAck(numRemainingParents, hierarchyPosition, stormTupleRcv, collector);
+        }
+
+        public static void dumpSignal(StormComponent comp, Tuple stormTupleRcv, OutputCollector _collector) {
+            comp.printContent();
+            _collector.ack(stormTupleRcv);
+        }
+
+        public static boolean isBatchOutputMode(long batchOutputMillis) {
+            return batchOutputMillis != 0L;
+        }
+
+        public static boolean isSending(int hierarchyPosition, long batchOutputMillis) {
+            return (hierarchyPosition != StormComponent.FINAL_COMPONENT) && !isBatchOutputMode(batchOutputMillis);
+        }
+
+        public static Values createTupleValues(List<String> tuple, String componentName,
+                List<Integer> hashIndexes, List<ValueExpression> hashExpressions, Map conf) {
+
+            String outputTupleString=MyUtilities.tupleToString(tuple, conf);
+            String outputTupleHash = MyUtilities.createHashString(tuple, hashIndexes, hashExpressions, conf);
+            return new Values(componentName, outputTupleString, outputTupleHash);
         }
 
         /*
@@ -345,8 +392,23 @@ public class MyUtilities{
          *   we might have multiple tuples to be sent.
          */
         public static void sendTuple(Values stormTupleSnd, Tuple stormTupleRcv, OutputCollector collector, Map conf) {
-            if(isAckEveryTuple(conf)){
+            //stormTupleRcv is equals to null when we send tuples in batch fashion
+            if(isAckEveryTuple(conf) && stormTupleRcv != null){
                 collector.emit(stormTupleRcv, stormTupleSnd);
+            }else{
+                collector.emit(stormTupleSnd);
+            }
+        }
+
+        //this is for Spout
+        public static void sendTuple(Values stormTupleSnd, SpoutOutputCollector collector, Map conf) {
+            String msgId = null;
+            if(MyUtilities.isAckEveryTuple(conf)){
+                msgId = "TrackTupleAck";
+            }
+
+            if(msgId != null){
+                collector.emit(stormTupleSnd, msgId);
             }else{
                 collector.emit(stormTupleSnd);
             }
@@ -382,11 +444,6 @@ public class MyUtilities{
                 result.add(ve);
             }
             return result;
-        }
-
-        public static void dumpSignal(StormComponent comp, Tuple stormTupleRcv, OutputCollector _collector) {
-            comp.printContent();
-            _collector.ack(stormTupleRcv);
         }
 	
 }
