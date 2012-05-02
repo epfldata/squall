@@ -5,6 +5,8 @@
 
 package stormComponents;
 
+import java.util.List;
+
 public interface StormComponent {
 
     //Component which sends data further down
@@ -14,5 +16,8 @@ public interface StormComponent {
 
     public int getID();
     public String getInfoID();
+
+    public void printTuple(List<String> tuple);
+    public void printContent();
 
 }

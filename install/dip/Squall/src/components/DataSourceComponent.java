@@ -15,14 +15,11 @@ import operators.DistinctOperator;
 import operators.ProjectionOperator;
 import operators.SelectionOperator;
 import stormComponents.StormDataSource;
-import stormComponents.synchronization.Flusher;
 import stormComponents.synchronization.TopologyKiller;
-import stormComponents.synchronization.TrafficLight;
 import org.apache.log4j.Logger;
 import queryPlans.QueryPlan;
 import stormComponents.StormComponent;
 import schema.ColumnNameType;
-import utilities.MyUtilities;
 import utilities.SystemParameters;
 
 public class DataSourceComponent implements Component {
@@ -134,8 +131,6 @@ public class DataSourceComponent implements Component {
     @Override
     public void makeBolts(TopologyBuilder builder,
                        TopologyKiller killer,
-                       Flusher flusher,
-                       TrafficLight trafficLight,
                        Config conf,
                        int partitioningType,
                        int hierarchyPosition){
@@ -165,7 +160,6 @@ public class DataSourceComponent implements Component {
                parallelism,
                builder,
                killer,
-               flusher,
                conf);
     }
 

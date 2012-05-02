@@ -15,11 +15,9 @@ import operators.DistinctOperator;
 import operators.ProjectionOperator;
 import operators.SelectionOperator;
 import stormComponents.StormDstJoin;
-import stormComponents.synchronization.Flusher;
 import stormComponents.StormJoin;
 import stormComponents.StormSrcJoin;
 import stormComponents.synchronization.TopologyKiller;
-import stormComponents.synchronization.TrafficLight;
 import org.apache.log4j.Logger;
 import queryPlans.QueryPlan;
 import stormComponents.JoinHashStorage;
@@ -167,8 +165,6 @@ public class JoinComponent implements Component {
     @Override
     public void makeBolts(TopologyBuilder builder,
             TopologyKiller killer,
-            Flusher flusher,
-            TrafficLight trafficLight,
             Config conf,
             int partitioningType,
             int hierarchyPosition){
@@ -237,7 +233,6 @@ public class JoinComponent implements Component {
                                     hierarchyPosition,
                                     _printOut,
                                     builder,
-                                    trafficLight,
                                     killer,
                                     conf);
 

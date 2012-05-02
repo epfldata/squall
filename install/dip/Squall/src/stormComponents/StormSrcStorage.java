@@ -26,7 +26,6 @@ import utilities.SystemParameters;
 
 import org.apache.log4j.Logger;
 import stormComponents.synchronization.TopologyKiller;
-import stormComponents.synchronization.TrafficLight;
 
 public class StormSrcStorage extends BaseRichBolt implements StormEmitter, StormComponent{
 	private static Logger LOG = Logger.getLogger(StormSrcStorage.class);
@@ -46,11 +45,13 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 	private JoinStorage _joinStorage;
         private ProjectionOperator _preAggProj;
 
+        private StormSrcHarmonizer _harmonizer;
 	private OutputCollector _collector;
         private int _numSentTuples;
 	private int _ID;
 	private Map _conf;
 
+        private int _numRemainingParents;
 
 	public StormSrcStorage(String componentName,
                 String tableName,
@@ -67,7 +68,6 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
                 int hierarchyPosition,
                 boolean printOut,
                 TopologyBuilder builder,
-                TrafficLight trafficLight,
                 TopologyKiller killer,
                 Config conf) {
 
@@ -76,6 +76,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
             _tableName = tableName;
             _joinParams= joinParams;
             _isFromFirstEmitter=isFromFirstEmitter;
+            _harmonizer = harmonizer;
 
             _operatorChain = new ChainOperator(selection, projection, aggregation);
             _hashIndexes=hashIndexes;
@@ -87,7 +88,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
             int parallelism = SystemParameters.getInt(conf, _componentName+"_PAR");
             _ID = MyUtilities.getNextTopologyId();
             InputDeclarer currentBolt = builder.setBolt(Integer.toString(_ID), this, parallelism);
-            currentBolt.fieldsGrouping(Integer.toString(harmonizer.getID()), new Fields("Hash"));
+            currentBolt.fieldsGrouping(Integer.toString(_harmonizer.getID()), new Fields("Hash"));
 
             if (_printOut && _operatorChain.isBlocking()){
                 currentBolt.allGrouping(Integer.toString(killer.getID()), SystemParameters.DumpResults);
@@ -105,16 +106,21 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 	}
 
 	@Override
-	public void execute(Tuple stormTuple) {
-                if (receivedDumpSignal(stormTuple)) {
-                    printContent();
-                    _collector.ack(stormTuple);
+	public void execute(Tuple stormTupleRcv) {
+                if (receivedDumpSignal(stormTupleRcv)) {
+                    MyUtilities.dumpSignal(this, stormTupleRcv, _collector);
                     return;
                 }
 		
-		String inputComponentName=stormTuple.getString(0);
-		String inputTupleString=stormTuple.getString(1);   //INPUT TUPLE
-		String inputTupleHash=stormTuple.getString(2);
+		String inputComponentName=stormTupleRcv.getString(0);
+		String inputTupleString=stormTupleRcv.getString(1);   //INPUT TUPLE
+		String inputTupleHash=stormTupleRcv.getString(2);
+
+                if(MyUtilities.isFinalAck(inputTupleString, _conf)){
+                    _numRemainingParents--;
+                    MyUtilities.processFinalAck(_numRemainingParents, _hierarchyPosition, stormTupleRcv, _collector);
+                    return;
+                }
 
 		if(_tableName.equals(inputComponentName)) {//add the tuple into the datastructure!!
                         _joinStorage.put(inputTupleHash, inputTupleString);
@@ -149,15 +155,13 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
                                             outputTuple = _preAggProj.process(outputTuple);
                                         }
 
-                                        String outputTupleString = MyUtilities.tupleToString(outputTuple, _conf);
-                                	applyOperatorsAndSend(stormTuple, outputTupleString);
+                                	applyOperatorsAndSend(stormTupleRcv, outputTuple);
 				}
 		}
-		_collector.ack(stormTuple);
+		_collector.ack(stormTupleRcv);
 	}
 
-        private void applyOperatorsAndSend(Tuple stormTuple, String inputTupleString){
-		List<String> tuple = MyUtilities.stringToTuple(inputTupleString, _conf);
+        private void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> tuple){
 		tuple = _operatorChain.process(tuple);
                 if(tuple == null){
                     return;
@@ -169,13 +173,15 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 			String outputTupleString=MyUtilities.tupleToString(tuple, _conf);
                         String outputTupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);
 			//evaluate the hash string BASED ON THE PROJECTED resulted values
-                        _collector.emit(stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
+                        Values stormTupleSnd = new Values(_componentName,outputTupleString,outputTupleHash);
+                        MyUtilities.sendTuple(stormTupleSnd, stormTupleRcv, _collector, _conf);
                 }
         }
 
 	@Override
 	public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
-		_collector=collector;
+		_collector = collector;
+                _numRemainingParents = MyUtilities.getNumParentTasks(tc, _harmonizer);
 	}
 
 	@Override
@@ -190,7 +196,8 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
 	}
 
-        private void printTuple(List<String> tuple){
+        @Override
+        public void printTuple(List<String> tuple){
             if(_printOut){
                 if((_operatorChain == null) || !_operatorChain.isBlocking()){
                     StringBuilder sb = new StringBuilder();
@@ -202,7 +209,8 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
             }
         }
 
-        private void printContent() {
+        @Override
+        public void printContent() {
                 if(_printOut){
                     if((_operatorChain!=null) &&_operatorChain.isBlocking()){
                         Operator lastOperator = _operatorChain.getLastOperator();

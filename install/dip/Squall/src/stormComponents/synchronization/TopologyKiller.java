@@ -15,6 +15,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
+import java.util.List;
 import stormComponents.StormComponent;
 
 import java.util.Map;
@@ -107,5 +108,13 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
     public String getInfoID() {
         String str = "TopologyKiller has ID: " + _ID;
         return str;
+    }
+
+    public void printTuple(List<String> tuple) {
+        //purposely left empty
+    }
+
+    public void printContent() {
+        //purposely left empty
     }
 }

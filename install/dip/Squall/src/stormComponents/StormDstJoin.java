@@ -59,7 +59,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
         private List<String> _fullHashList;
 
         //for No ACK: the total number of tasks of all the parent compoonents
-        private int _numParentTasks;
+        private int _numRemainingParents;
 
         public StormDstJoin(StormEmitter firstEmitter,
                     StormEmitter secondEmitter,
@@ -120,29 +120,19 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
         }
 
 	@Override
-	public void execute(Tuple stormTuple) {
-                if (receivedDumpSignal(stormTuple)) {
-                    printContent();
-                    _collector.ack(stormTuple);
+	public void execute(Tuple stormTupleRcv) {
+                if (receivedDumpSignal(stormTupleRcv)) {
+                    MyUtilities.dumpSignal(this, stormTupleRcv, _collector);
                     return;
                 }
 
-		String inputComponentName=stormTuple.getString(0);
-		String inputTupleString=stormTuple.getString(1);   //INPUT TUPLE
-		String inputTupleHash=stormTuple.getString(2);
+		String inputComponentName=stormTupleRcv.getString(0);
+		String inputTupleString=stormTupleRcv.getString(1);   //INPUT TUPLE
+		String inputTupleHash=stormTupleRcv.getString(2);
 
                 if(MyUtilities.isFinalAck(inputTupleString, _conf)){
-                    _numParentTasks--;
-                    if(_numParentTasks == 0){
-                        //this task received from all the parent tasks LAST_ACK
-                         if(_hierarchyPosition != FINAL_COMPONENT){
-                            //if this component is not the last one
-                            _collector.emit(new Values("N/A","LAST_ACK","N/A"));
-                         }else{
-                            _collector.emit(SystemParameters.EOFmessageStream, new Values("EOF"));
-                         }
-                         _collector.ack(stormTuple);
-                    }
+                    _numRemainingParents--;
+                    MyUtilities.processFinalAck(_numRemainingParents, _hierarchyPosition, stormTupleRcv, _collector);
                     return;
                 }
 
@@ -172,17 +162,17 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                 //add the stormTuple to the specific storage
                 affectedStorage.put(inputTupleHash, inputTupleString);
 
-		performJoin(stormTuple,
+		performJoin(stormTupleRcv,
                         inputTupleString,
                         inputTupleHash,
                         isFromFirstEmitter,
                         oppositeStorage,
                         projPreAgg);
 
-                _collector.ack(stormTuple);
+                _collector.ack(stormTupleRcv);
 	}
 
-        protected void performJoin(Tuple stormTuple, 
+        protected void performJoin(Tuple stormTupleRcv,
                 String inputTupleString, 
                 String inputTupleHash,
                 boolean isFromFirstEmitter,
@@ -217,13 +207,11 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                             outputTuple = projPreAgg.process(outputTuple);
                         }
 
-                        String outputTupleString = MyUtilities.tupleToString(outputTuple, _conf);
-			applyOperatorsAndSend(stormTuple, outputTupleString);
+			applyOperatorsAndSend(stormTupleRcv, outputTuple);
 		  }
         }
 
-        protected void applyOperatorsAndSend(Tuple stormTuple, String inputTupleString){
-		List<String> tuple = MyUtilities.stringToTuple(inputTupleString, _conf);
+        protected void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> tuple){
 		tuple = _operatorChain.process(tuple);
                 if(tuple == null){
                     return;
@@ -234,12 +222,8 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                 if(_hierarchyPosition!=FINAL_COMPONENT){
 			String outputTupleString=MyUtilities.tupleToString(tuple, _conf);
                         String outputTupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);
-			//evaluate the hash string BASED ON THE PROJECTED resulted values
-                        if(MyUtilities.isAckEveryTuple(_conf)){
-                            _collector.emit(stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
-                        }else{
-                            _collector.emit(new Values(_componentName,outputTupleString,outputTupleHash));
-                        }
+                        Values stormTupleSnd = new Values(_componentName,outputTupleString,outputTupleHash);
+                        MyUtilities.sendTuple(stormTupleSnd, stormTupleRcv, _collector, _conf);
                 }
         }
 
@@ -258,7 +242,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
         @Override
 	public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
 		_collector=collector;
-                _numParentTasks = MyUtilities.getNumParentTasks(tc, _firstEmitter, _secondEmitter);
+                _numRemainingParents = MyUtilities.getNumParentTasks(tc, _firstEmitter, _secondEmitter);
 	}
 
 	@Override
@@ -276,7 +260,8 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                 }
 	}
 
-        private void printTuple(List<String> tuple){
+        @Override
+        public void printTuple(List<String> tuple){
             if(_printOut){
                 if((_operatorChain == null) || !_operatorChain.isBlocking()){
                     StringBuilder sb = new StringBuilder();
@@ -288,7 +273,8 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
             }
         }
 
-        private void printContent() {
+        @Override
+        public void printContent() {
                 if(_printOut){
                     if((_operatorChain!=null) && _operatorChain.isBlocking()){
                         Operator lastOperator = _operatorChain.getLastOperator();

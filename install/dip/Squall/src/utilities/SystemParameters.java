@@ -38,9 +38,7 @@ public class SystemParameters{
     //DO NOT MODIFY OR MOVE ANYWHERE ELSE. THESE ARE NOT CONFIGURATION VARIABLES
     public static final String DatamessageStream = Utils.DEFAULT_STREAM_ID; /* "default" */
     public static final String EOFmessageStream = "2";
-    public static final String TrafficLightStream = "3";
-    public static final String DumpResults = "4";
-    public static final String FlushmessageStream = "5";
+    public static final String DumpResults = "3";
 
     
     public static String getString(Map conf, String key){

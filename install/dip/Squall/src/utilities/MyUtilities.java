@@ -1,8 +1,11 @@
 package utilities;
 
+import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.InputDeclarer;
 import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 import expressions.ValueExpression;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -19,7 +22,9 @@ import java.util.Map;
 import operators.AggregateOperator;
 
 import org.apache.log4j.Logger;
+import stormComponents.StormComponent;
 import stormComponents.StormEmitter;
+import stormComponents.StormSrcHarmonizer;
 
 public class MyUtilities{
         private static Logger LOG = Logger.getLogger(MyUtilities.class);
@@ -321,6 +326,32 @@ public class MyUtilities{
             return (!isAckEveryTuple(map)) && tupleString.equals("LAST_ACK");
         }
 
+        public static void processFinalAck(int numRemainingParents,
+                int hierarchyPosition, Tuple stormTupleRcv, OutputCollector collector) {
+            if(numRemainingParents == 0){
+            //this task received from all the parent tasks LAST_ACK
+                if(hierarchyPosition != StormComponent.FINAL_COMPONENT){
+                //if this component is not the last one
+                    collector.emit(new Values("N/A","LAST_ACK","N/A"));
+                }else{
+                    collector.emit(SystemParameters.EOFmessageStream, new Values("EOF"));
+                }
+                collector.ack(stormTupleRcv);
+            }
+        }
+
+        /*
+         * no acking at the end, because for one tuple arrived in JoinComponent,
+         *   we might have multiple tuples to be sent.
+         */
+        public static void sendTuple(Values stormTupleSnd, Tuple stormTupleRcv, OutputCollector collector, Map conf) {
+            if(isAckEveryTuple(conf)){
+                collector.emit(stormTupleRcv, stormTupleSnd);
+            }else{
+                collector.emit(stormTupleSnd);
+            }
+        }
+
         //used for NoACK optimization
         public static int getNumParentTasks(TopologyContext tc,
                 StormEmitter emitter1, StormEmitter... emittersArray){
@@ -331,13 +362,18 @@ public class MyUtilities{
             int result = 0;
             for(StormEmitter emitter: emittersList){
                 //We have multiple emitterIDs only for StormSrcJoin
-                //  Anyway, we don't try to use StormSrcJoin with NoACK optimization.
                 int[] ids = emitter.getEmitterIDs();
                 for(int id: ids){
                     result += tc.getComponentTasks(String.valueOf(id)).size();
                 }
             }
             return result;
+        }
+
+        //used for NoACK optimization for StormSrcJoin
+        public static int getNumParentTasks(TopologyContext tc, StormSrcHarmonizer harmonizer){
+            String id = String.valueOf(harmonizer.getID());
+            return tc.getComponentTasks(String.valueOf(id)).size();
         }
 
         public static <T extends Comparable<T>> List<ValueExpression> listTypeErasure(List<ValueExpression<T>> input){
@@ -347,5 +383,10 @@ public class MyUtilities{
             }
             return result;
         }
-		
+
+        public static void dumpSignal(StormComponent comp, Tuple stormTupleRcv, OutputCollector _collector) {
+            comp.printContent();
+            _collector.ack(stormTupleRcv);
+        }
+	
 }

@@ -15,17 +15,13 @@ import operators.DistinctOperator;
 import operators.ProjectionOperator;
 import operators.SelectionOperator;
 import stormComponents.StormEmitter;
-import stormComponents.synchronization.Flusher;
 import stormComponents.synchronization.TopologyKiller;
-import stormComponents.synchronization.TrafficLight;
 
 
 public interface Component extends Serializable, StormEmitter {
 
     public void makeBolts(TopologyBuilder builder,
                        TopologyKiller killer,
-                       Flusher flusher,
-                       TrafficLight trafficLight,
                        Config conf,
                        int partitioningType,
                        int hierarchyPosition);

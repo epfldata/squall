@@ -14,9 +14,7 @@ import operators.AggregateOperator;
 import operators.DistinctOperator;
 import operators.ProjectionOperator;
 import operators.SelectionOperator;
-import stormComponents.synchronization.Flusher;
 import stormComponents.synchronization.TopologyKiller;
-import stormComponents.synchronization.TrafficLight;
 
 import org.apache.log4j.Logger;
 import queryPlans.QueryPlan;
@@ -139,8 +137,6 @@ public  class OperatorComponent implements Component{
     @Override
     public void makeBolts(TopologyBuilder builder,
             TopologyKiller killer,
-            Flusher flusher,
-            TrafficLight trafficLight,
             Config conf,
             int partitioningType,
             int hierarchyPosition) {

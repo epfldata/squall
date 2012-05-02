@@ -53,7 +53,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
     private List<String> _fullHashList;
 
     //for No ACK: the total number of tasks of all the parent compoonents
-    private int _numParentTasks;
+    private int _numRemainingParents;
 
     public StormOperator(StormEmitter emitter,
             String componentName,
@@ -103,35 +103,25 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
 
     //from IRichBolt
     @Override
-    public void execute(Tuple stormTuple) {
-	if (receivedDumpSignal(stormTuple)) {
-                    printContent();
-                    _collector.ack(stormTuple);
-                    return;
+    public void execute(Tuple stormTupleRcv) {
+	if (receivedDumpSignal(stormTupleRcv)) {
+            MyUtilities.dumpSignal(this, stormTupleRcv, _collector);
+            return;
         }
 
-        String inputTupleString = stormTuple.getString(1);
+        String inputTupleString = stormTupleRcv.getString(1);
 
         if(MyUtilities.isFinalAck(inputTupleString, _conf)){
-                    _numParentTasks--;
-                    if(_numParentTasks == 0){
-                        //this task received from all the parent tasks LAST_ACK
-                         if(_hierarchyPosition != FINAL_COMPONENT){
-                            //if this component is not the last one
-                            _collector.emit(new Values("N/A","LAST_ACK","N/A"));
-                         }else{
-                            _collector.emit(SystemParameters.EOFmessageStream, new Values("EOF"));
-                         }
-                         _collector.ack(stormTuple);
-                    }
-                    return;
+            _numRemainingParents--;
+            MyUtilities.processFinalAck(_numRemainingParents, _hierarchyPosition, stormTupleRcv, _collector);
+            return;
         }
 
         List<String> tuple = MyUtilities.stringToTuple(inputTupleString, _conf);
 
         tuple = _operatorChain.process(tuple);
         if(tuple == null){
-            _collector.ack(stormTuple);
+            _collector.ack(stormTupleRcv);
             return;
         }
         _numSentTuples++;
@@ -141,20 +131,16 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
             //we are emitting tuple unless we are the very last component in the hirerachy
             String outputTupleString=MyUtilities.tupleToString(tuple, _conf);
             String outputTupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);
-            //evaluate the hash string BASED ON THE PROJECTED resulted values
-             if(MyUtilities.isAckEveryTuple(_conf)){
-                _collector.emit(stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
-             } else {
-                _collector.emit(new Values(_componentName,outputTupleString,outputTupleHash));
-             }
+            Values stormTupleSnd = new Values(_componentName,outputTupleString,outputTupleHash);
+            MyUtilities.sendTuple(stormTupleSnd, stormTupleRcv, _collector, _conf);
         }
-        _collector.ack(stormTuple);
+        _collector.ack(stormTupleRcv);
     }
 
     @Override
     public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
-        _collector=collector;
-        _numParentTasks = MyUtilities.getNumParentTasks(tc, _emitter);
+        _collector = collector;
+        _numRemainingParents = MyUtilities.getNumParentTasks(tc, _emitter);
     }
 
     @Override
@@ -177,7 +163,8 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
         }
     }
 
-    private void printTuple(List<String> tuple){
+    @Override
+    public void printTuple(List<String> tuple){
         if(_printOut){
             if(!_operatorChain.isBlocking()){
                 StringBuilder sb = new StringBuilder();
@@ -189,7 +176,8 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
         }
     }
 
-    private void printContent() {
+    @Override
+    public void printContent() {
              if(_printOut){
                  if(_operatorChain.isBlocking()){
                         Operator lastOperator = _operatorChain.getLastOperator();
