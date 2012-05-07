@@ -20,6 +20,7 @@ import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 import operators.AggregateOperator;
 import operators.ChainOperator;
 import operators.DistinctOperator;
@@ -29,6 +30,7 @@ import operators.SelectionOperator;
 import org.apache.log4j.Logger;
 import stormComponents.synchronization.TopologyKiller;
 import utilities.MyUtilities;
+import utilities.PeriodicBatchSend;
 import utilities.SystemParameters;
 
 public class StormOperator extends BaseRichBolt implements StormEmitter, StormComponent {
@@ -53,7 +55,13 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
     private List<String> _fullHashList;
 
     //for No ACK: the total number of tasks of all the parent compoonents
-    private int _numParentTasks;
+    private int _numRemainingParents;
+
+    //for batch sending
+    private final Semaphore _semAgg = new Semaphore(1, true);
+    private boolean _firstTime = true;
+    private PeriodicBatchSend _periodicBatch;
+    private long _batchOutputMillis;
 
     public StormOperator(StormEmitter emitter,
             String componentName,
@@ -65,6 +73,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
             List<ValueExpression> hashExpressions,
             int hierarchyPosition,
             boolean printOut,
+            long batchOutputMillis,
             List<String> fullHashList,
             TopologyBuilder builder,
             TopologyKiller killer,
@@ -73,11 +82,13 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
         _conf = conf;
         _emitter = emitter;
         _componentName = componentName;
+        _batchOutputMillis = batchOutputMillis;
 
         int parallelism = SystemParameters.getInt(conf, _componentName+"_PAR");
-        if(parallelism > 1 && distinct != null){
-            throw new RuntimeException(_componentName + ": Distinct operator cannot be specified for multiThreaded bolts!");
-        }
+
+//        if(parallelism > 1 && distinct != null){
+//            throw new RuntimeException(_componentName + ": Distinct operator cannot be specified for multiThreaded bolts!");
+//        }
         _operatorChain = new ChainOperator(selection, distinct, projection, aggregation);
 
         _hashIndexes = hashIndexes;
@@ -97,64 +108,96 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
 
         _printOut= printOut;
         if (_printOut && _operatorChain.isBlocking()){
-           currentBolt.allGrouping(Integer.toString(killer.getID()), SystemParameters.DumpResults);
+           currentBolt.allGrouping(Integer.toString(killer.getID()), SystemParameters.DUMP_RESULTS_STREAM);
         }
     }
 
     //from IRichBolt
     @Override
-    public void execute(Tuple stormTuple) {
-	if (receivedDumpSignal(stormTuple)) {
-                    printContent();
-                    _collector.ack(stormTuple);
-                    return;
+    public void execute(Tuple stormTupleRcv) {
+        if(_firstTime && MyUtilities.isBatchOutputMode(_batchOutputMillis)){
+            _periodicBatch = new PeriodicBatchSend(_batchOutputMillis, this);
+            _firstTime = false;
         }
 
-        String inputTupleString = stormTuple.getString(1);
+	if (receivedDumpSignal(stormTupleRcv)) {
+            MyUtilities.dumpSignal(this, stormTupleRcv, _collector);
+            return;
+        }
+
+        String inputTupleString = stormTupleRcv.getString(1);
 
         if(MyUtilities.isFinalAck(inputTupleString, _conf)){
-                    _numParentTasks--;
-                    if(_numParentTasks == 0){
-                        //this task received from all the parent tasks LAST_ACK
-                         if(_hierarchyPosition != FINAL_COMPONENT){
-                            //if this component is not the last one
-                            _collector.emit(new Values("N/A","LAST_ACK","N/A"));
-                         }else{
-                            _collector.emit(SystemParameters.EOFmessageStream, new Values("EOF"));
-                         }
-                         _collector.ack(stormTuple);
-                    }
-                    return;
+            _numRemainingParents--;
+            MyUtilities.processFinalAck(_numRemainingParents, _hierarchyPosition, stormTupleRcv, _collector, _periodicBatch);
+            return;
         }
 
         List<String> tuple = MyUtilities.stringToTuple(inputTupleString, _conf);
+        applyOperatorsAndSend(stormTupleRcv, tuple);
+        _collector.ack(stormTupleRcv);
+    }
 
-        tuple = _operatorChain.process(tuple);
+    protected void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> tuple){
+        if(MyUtilities.isBatchOutputMode(_batchOutputMillis)){
+            try {
+                _semAgg.acquire();
+            } catch (InterruptedException ex) {}
+        }
+	tuple = _operatorChain.process(tuple);
+        if(MyUtilities.isBatchOutputMode(_batchOutputMillis)){
+            _semAgg.release();
+        }
+
         if(tuple == null){
-            _collector.ack(stormTuple);
+            _collector.ack(stormTupleRcv);
             return;
         }
         _numSentTuples++;
         printTuple(tuple);
 
-        if(_hierarchyPosition != FINAL_COMPONENT){
-            //we are emitting tuple unless we are the very last component in the hirerachy
-            String outputTupleString=MyUtilities.tupleToString(tuple, _conf);
-            String outputTupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);
-            //evaluate the hash string BASED ON THE PROJECTED resulted values
-             if(MyUtilities.isAckEveryTuple(_conf)){
-                _collector.emit(stormTuple, new Values(_componentName,outputTupleString,outputTupleHash));
-             } else {
-                _collector.emit(new Values(_componentName,outputTupleString,outputTupleHash));
-             }
+        if(MyUtilities.isSending(_hierarchyPosition, _batchOutputMillis)){
+            tupleSend(tuple, stormTupleRcv);
         }
-        _collector.ack(stormTuple);
+    }
+
+    @Override
+    public void tupleSend(List<String> tuple, Tuple stormTupleRcv) {
+        Values stormTupleSnd = MyUtilities.createTupleValues(tuple, _componentName,
+                        _hashIndexes, _hashExpressions, _conf);
+        MyUtilities.sendTuple(stormTupleSnd, stormTupleRcv, _collector, _conf);
+    }
+
+    @Override
+    public void batchSend(){
+        if(MyUtilities.isBatchOutputMode(_batchOutputMillis)){
+            if (_operatorChain != null){
+                Operator lastOperator = _operatorChain.getLastOperator();
+                if(lastOperator instanceof AggregateOperator){
+                    try {
+                        _semAgg.acquire();
+                    } catch (InterruptedException ex) {}
+
+                    //sending
+                    AggregateOperator agg = (AggregateOperator) lastOperator;
+                    List<String> tuples = agg.getContent();
+                    for(String tuple: tuples){
+                        tupleSend(MyUtilities.stringToTuple(tuple, _conf), null);
+                    }
+
+                    //clearing
+                    agg.clearStorage();
+
+                    _semAgg.release();
+                }
+            }
+        }
     }
 
     @Override
     public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
-        _collector=collector;
-        _numParentTasks = MyUtilities.getNumParentTasks(tc, _emitter);
+        _collector = collector;
+        _numRemainingParents = MyUtilities.getNumParentTasks(tc, _emitter);
     }
 
     @Override
@@ -172,12 +215,13 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
             declarer.declare(new Fields(outputFields) );
 	}else{
             if(!MyUtilities.isAckEveryTuple(_conf)){
-                declarer.declareStream(SystemParameters.EOFmessageStream, new Fields("EOF"));
+                declarer.declareStream(SystemParameters.EOF_STREAM, new Fields(SystemParameters.EOF));
             }
         }
     }
 
-    private void printTuple(List<String> tuple){
+    @Override
+    public void printTuple(List<String> tuple){
         if(_printOut){
             if(!_operatorChain.isBlocking()){
                 StringBuilder sb = new StringBuilder();
@@ -189,7 +233,8 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
         }
     }
 
-    private void printContent() {
+    @Override
+    public void printContent() {
              if(_printOut){
                  if(_operatorChain.isBlocking()){
                         Operator lastOperator = _operatorChain.getLastOperator();
@@ -212,7 +257,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
     }
 
     private boolean receivedDumpSignal(Tuple stormTuple) {
-        return stormTuple.getSourceStreamId().equalsIgnoreCase(SystemParameters.DumpResults);
+        return stormTuple.getSourceStreamId().equalsIgnoreCase(SystemParameters.DUMP_RESULTS_STREAM);
     }
 
     //from StormComponent

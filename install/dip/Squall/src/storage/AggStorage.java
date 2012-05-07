@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package operators.storage;
+package storage;
 
 import java.io.Serializable;
 import java.util.List;
@@ -27,5 +27,8 @@ public interface AggStorage<T> extends Serializable{
     
     //get the content in machine readable form - used in preaggregations
     public List<String> getContent();
+
+    //reset the storage
+    public void clear();
 
 }

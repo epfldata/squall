@@ -18,7 +18,6 @@ import utilities.SystemParameters;
 
 import org.apache.log4j.Logger;
 import stormComponents.synchronization.TopologyKiller;
-import stormComponents.synchronization.TrafficLight;
 import utilities.MyUtilities;
 
 public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
@@ -30,31 +29,28 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 
         private int _ID;
         private String _componentName;
+        private StormEmitter _firstEmitter, _secondEmitter;
+
+        private int _numRemainingParents;
 
 	public StormSrcHarmonizer(String componentName,
                 StormEmitter firstEmitter,
                 StormEmitter secondEmitter,
                 TopologyBuilder builder,
-                TrafficLight trafficLight,
                 TopologyKiller killer,
                 Config conf){
                 _conf = conf;
 		_componentName = componentName;
 		
+                _firstEmitter = firstEmitter;
+                _secondEmitter = secondEmitter;
+
                 _ID= MyUtilities.getNextTopologyId();
 
                 int parallelism = SystemParameters.getInt(conf, _componentName+"_PAR");
                 InputDeclarer currentBolt = builder.setBolt(Integer.toString(_ID), this, parallelism);
-                currentBolt = MyUtilities.attachEmitterComponents(currentBolt, firstEmitter, secondEmitter);
+                currentBolt = MyUtilities.attachEmitterComponents(currentBolt, _firstEmitter, _secondEmitter);
 
-                /*
-                if (trafficLight != null) {
-		   currentBolt.allGrouping(trafficLight.getID(), SystemParameters.TrafficLightStream);
-		}
-                _hasTrafficLight = true;
-                _turn = _firstSourceID;
-		_buffer = new ArrayList<Tuple>();
-                 */
 	}
 
 	// from IRichBolt
@@ -64,49 +60,35 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 	}
 
 	@Override
-	public void execute(Tuple tuple) {
-            String inputComponentName=tuple.getString(0);
-            String inputTupleString=tuple.getString(1);
-            String inputTupleHash=tuple.getString(2);
+	public void execute(Tuple stormRcvTuple) {
+            String inputComponentName=stormRcvTuple.getString(0);
+            String inputTupleString=stormRcvTuple.getString(1);
+            String inputTupleHash=stormRcvTuple.getString(2);
 
-            _collector.emit(tuple, new Values(inputComponentName, inputTupleString, inputTupleHash));
-            _collector.ack(tuple);
+            if(MyUtilities.isFinalAck(inputTupleString, _conf)){
+                _numRemainingParents--;
+                MyUtilities.processFinalAck(_numRemainingParents, StormComponent.INTERMEDIATE, stormRcvTuple, _collector);
+                return;
+            }
 
-            /*
-		if (_hasTrafficLight && (tuple.getSourceStreamId().equalsIgnoreCase(SystemParameters.TrafficLightStream))) {
-                        //LOG.info("StormSrcHarmonizer " + getID() + " is switching...");
-			// Flush previous buffer
-			int buffersize = _buffer.size();
-			//LOG.info("StormSrcHarmonizer " + getID() + " found "+buffersize +" tuples buffered");
-			for (int i = 0 ; i < buffersize ; i++) {
-				Tuple t = _buffer.remove(0);
-    			String inputComponentName = t.getString(0);
-    			String inputTupleString = t.getString(1);
-    			String hash = t.getString(2);
-    			_collector.emit(t, new Values(inputComponentName, inputTupleString, hash));
-    			_collector.ack(t);
-			}
-			assert(_buffer.isEmpty());
-			// Change turn
-			_turn = (_turn == _firstSourceID) ? _secondSourceID : _firstSourceID;
-			return;
-		}
-		
-		if (!_hasTrafficLight || (_turn == tuple.getSourceComponent())) {
-			String tableName=tuple.getString(0);
-			String tuplePayLoad=tuple.getString(1);
-			String hash=tuple.getString(2);
-			_collector.emit(tuple, new Values(tableName, tuplePayLoad, hash));
-                        _collector.ack(tuple);
-		} else {
-			_buffer.add(tuple);
-		}*/
-	
+            _collector.emit(stormRcvTuple, new Values(inputComponentName, inputTupleString, inputTupleHash));
+            _collector.ack(stormRcvTuple);
 	}
 
+        @Override
+        public void tupleSend(List<String> tuple, Tuple stormTupleRcv) {
+            throw new RuntimeException("Should not be here!");
+        }
+
+        @Override
+        public void batchSend(){
+            throw new RuntimeException("Should not be here!");
+        }
+
 	@Override
-	public void prepare(Map conf, TopologyContext arg1, OutputCollector collector) {
+	public void prepare(Map conf, TopologyContext tc, OutputCollector collector) {
 		_collector=collector;
+                _numRemainingParents = MyUtilities.getNumParentTasks(tc, _firstEmitter, _secondEmitter);
 	}
 
 	@Override
@@ -128,5 +110,13 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
         public String getInfoID() {
             String str = "Harmonizer " + _componentName + " has ID: "+ _ID;
             return str;
+        }
+
+        public void printTuple(List<String> tuple) {
+            //this is purposely empty
+        }
+
+        public void printContent() {
+            //this class has no content: this is purposely empty
         }
 }

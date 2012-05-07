@@ -12,9 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import operators.AggregateAvgOperator.SumCount;
-import operators.storage.AggStorage;
-import operators.storage.HashMapAggStorage;
-import operators.storage.SingleEntryAggStorage;
+import storage.AggStorage;
+import storage.HashMapAggStorage;
+import storage.SingleEntryAggStorage;
 import org.apache.log4j.Logger;
 import utilities.MyUtilities;
 
@@ -154,6 +154,11 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
         @Override
         public AggStorage getStorage(){
             return _storage;
+        }
+
+        @Override
+        public void clearStorage(){
+            _storage.clear();
         }
 
         @Override

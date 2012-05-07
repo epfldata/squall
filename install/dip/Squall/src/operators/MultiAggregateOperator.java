@@ -8,7 +8,7 @@ package operators;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import operators.storage.AggStorage;
+import storage.AggStorage;
 
 
 public class MultiAggregateOperator implements AggregateOperator {
@@ -124,6 +124,11 @@ public class MultiAggregateOperator implements AggregateOperator {
 
     @Override
     public AggStorage getStorage() {
+        throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
+    }
+
+    @Override
+    public void clearStorage(){
         throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
     }
 

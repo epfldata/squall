@@ -15,9 +15,7 @@ import operators.DistinctOperator;
 import operators.ProjectionOperator;
 import operators.SelectionOperator;
 import stormComponents.StormDataSource;
-import stormComponents.synchronization.Flusher;
 import stormComponents.synchronization.TopologyKiller;
-import stormComponents.synchronization.TrafficLight;
 import org.apache.log4j.Logger;
 import queryPlans.QueryPlan;
 import stormComponents.StormComponent;
@@ -31,6 +29,8 @@ public class DataSourceComponent implements Component {
     
     private String _componentName;
     private String _inputPath;
+
+    private long _batchOutputMillis;
 
     private List<Integer> _hashIndexes;
     private List<ValueExpression> _hashExpressions;
@@ -132,10 +132,14 @@ public class DataSourceComponent implements Component {
     }
 
     @Override
+    public DataSourceComponent setBatchOutputMode(long millis){
+        _batchOutputMillis = millis;
+        return this;
+    }
+
+    @Override
     public void makeBolts(TopologyBuilder builder,
                        TopologyKiller killer,
-                       Flusher flusher,
-                       TrafficLight trafficLight,
                        Config conf,
                        int partitioningType,
                        int hierarchyPosition){
@@ -151,6 +155,8 @@ public class DataSourceComponent implements Component {
             throw new RuntimeException(_componentName + ": Distinct operator cannot be specified for multiple spouts for one input file!");
         }
 
+        MyUtilities.checkBatchOutput(_batchOutputMillis, _aggregation, conf);
+
         _dataSource = new StormDataSource(
                 _componentName,
                _inputPath,
@@ -162,10 +168,10 @@ public class DataSourceComponent implements Component {
                _aggregation,
                hierarchyPosition,
                _printOut,
+               _batchOutputMillis,
                parallelism,
                builder,
                killer,
-               flusher,
                conf);
     }
 
