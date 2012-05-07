@@ -1,5 +1,6 @@
 package stormComponents;
 
+import storage.SquallStorage;
 import stormComponents.synchronization.TopologyKiller;
 import backtype.storm.Config;
 import utilities.MyUtilities;
@@ -31,8 +32,8 @@ public class StormSrcJoin implements StormJoin, Serializable{
                 SelectionOperator selection,
                 ProjectionOperator projection,
                 AggregateOperator aggregation,
-                JoinStorage firstPreAggStorage,
-                JoinStorage secondPreAggStorage,
+                SquallStorage firstPreAggStorage,
+                SquallStorage secondPreAggStorage,
                 ProjectionOperator firstPreAggProj,
                 ProjectionOperator secondPreAggProj,
                 List<Integer> hashIndexes,

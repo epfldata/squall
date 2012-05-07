@@ -20,10 +20,9 @@ import stormComponents.StormSrcJoin;
 import stormComponents.synchronization.TopologyKiller;
 import org.apache.log4j.Logger;
 import queryPlans.QueryPlan;
-import stormComponents.JoinHashStorage;
-import stormComponents.JoinStorage;
 import stormComponents.StormComponent;
 import utilities.MyUtilities;
+import storage.SquallStorage;
 
 public class JoinComponent implements Component {
     private static final long serialVersionUID = 1L;
@@ -48,7 +47,7 @@ public class JoinComponent implements Component {
     private AggregateOperator _aggregation;
 
     //preAggregation
-    private JoinStorage _firstPreAggStorage, _secondPreAggStorage;
+    private SquallStorage _firstPreAggStorage, _secondPreAggStorage;
     private ProjectionOperator _firstPreAggProj, _secondPreAggProj;
 
     private boolean _printOut;
@@ -117,12 +116,12 @@ public class JoinComponent implements Component {
     }
 
     //next four methods are for Preaggregation
-    public JoinComponent setFirstPreAggStorage(JoinStorage firstPreAggStorage){
+    public JoinComponent setFirstPreAggStorage(SquallStorage firstPreAggStorage){
         _firstPreAggStorage = firstPreAggStorage;
         return this;
     }
 
-    public JoinComponent setSecondPreAggStorage(JoinStorage secondPreAggStorage){
+    public JoinComponent setSecondPreAggStorage(SquallStorage secondPreAggStorage){
         _secondPreAggStorage = secondPreAggStorage;
         return this;
     }
@@ -189,10 +188,10 @@ public class JoinComponent implements Component {
         if(partitioningType == StormJoin.DST_ORDERING){
                 //In Preaggregation one or two storages can be set; otherwise no storage is set
                 if(_firstPreAggStorage == null){
-                    _firstPreAggStorage = new JoinHashStorage();
+                    _firstPreAggStorage = new SquallStorage();
                 }
                 if(_secondPreAggStorage == null){
-                    _secondPreAggStorage = new JoinHashStorage();
+                    _secondPreAggStorage = new SquallStorage();
                 }
 
                 _joiner = new StormDstJoin(_firstParent,
@@ -222,10 +221,10 @@ public class JoinComponent implements Component {
             }
             //In Preaggregation one or two storages can be set; otherwise no storage is set
             if(_firstPreAggStorage == null){
-                _firstPreAggStorage = new JoinHashStorage();
+                _firstPreAggStorage = new SquallStorage();
             }
             if(_secondPreAggStorage == null){
-                _secondPreAggStorage = new JoinHashStorage();
+                _secondPreAggStorage = new SquallStorage();
             }
 
             //since we don't know how data is scattered across StormSrcStorage,

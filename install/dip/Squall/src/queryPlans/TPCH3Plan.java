@@ -31,117 +31,117 @@ import predicates.ComparisonPredicate;
 
 public class TPCH3Plan {
 	private static Logger LOG = Logger.getLogger(TPCH3Plan.class);
-        
-        private static final String _customerMktSegment = "BUILDING";
-        private static final String _dateStr = "1995-03-15";
-        
-        private static final TypeConversion<Date> _dateConv = new DateConversion();
-        private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
-        private static final TypeConversion<String> _sc = new StringConversion();
-        private static final Date _date = _dateConv.fromString(_dateStr);
-        
-        private QueryPlan _queryPlan = new QueryPlan();
-            
-        public TPCH3Plan(String dataPath, String extension, Map conf){
-         
-            //-------------------------------------------------------------------------------------
-            List<Integer> hashCustomer = Arrays.asList(0);
 
-            SelectionOperator selectionCustomer = new SelectionOperator(
-                new ComparisonPredicate(
-                    new ColumnReference(_sc, 6),
-                    new ValueSpecification(_sc, _customerMktSegment)
-                ));
+	private static final String _customerMktSegment = "BUILDING";
+	private static final String _dateStr = "1995-03-15";
 
-            ProjectionOperator projectionCustomer = new ProjectionOperator(new int[]{0});
+	private static final TypeConversion<Date> _dateConv = new DateConversion();
+	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
+	private static final TypeConversion<String> _sc = new StringConversion();
+	private static final Date _date = _dateConv.fromString(_dateStr);
 
-            DataSourceComponent relationCustomer = new DataSourceComponent(
-                "CUSTOMER",
-                dataPath + "customer" + extension,
-                TPCH_Schema.customer,
-                _queryPlan).setHashIndexes(hashCustomer)
-                           .setSelection(selectionCustomer)
-                           .setProjection(projectionCustomer);
-            
-            //-------------------------------------------------------------------------------------
-            List<Integer> hashOrders = Arrays.asList(1);
+	private QueryPlan _queryPlan = new QueryPlan();
 
-            SelectionOperator selectionOrders = new SelectionOperator(
-                new ComparisonPredicate(
-                    ComparisonPredicate.LESS_OP,
-                    new ColumnReference(_dateConv, 4),
-                    new ValueSpecification(_dateConv, _date)
-                ));
+	public TPCH3Plan(String dataPath, String extension, Map conf){
 
-            ProjectionOperator projectionOrders = new ProjectionOperator(new int[]{0, 1, 4, 7});
+		//-------------------------------------------------------------------------------------
+		List<Integer> hashCustomer = Arrays.asList(0);
 
-            DataSourceComponent relationOrders = new DataSourceComponent(
-                "ORDERS",
-                dataPath + "orders" + extension,
-                TPCH_Schema.orders,
-                _queryPlan).setHashIndexes(hashOrders)
-                           .setSelection(selectionOrders)
-                           .setProjection(projectionOrders);
-            
-            //-------------------------------------------------------------------------------------
-            JoinComponent C_Ojoin = new JoinComponent(
-                relationCustomer,
-                relationOrders,
-                _queryPlan).setProjection(new ProjectionOperator(new int[]{1, 2, 3}))
-                           .setHashIndexes(Arrays.asList(0));
+		SelectionOperator selectionCustomer = new SelectionOperator(
+				new ComparisonPredicate(
+					new ColumnReference(_sc, 6),
+					new ValueSpecification(_sc, _customerMktSegment)
+					));
 
-            //-------------------------------------------------------------------------------------
-            List<Integer> hashLineitem = Arrays.asList(0);
+		ProjectionOperator projectionCustomer = new ProjectionOperator(new int[]{0});
 
-            SelectionOperator selectionLineitem = new SelectionOperator(
-                new ComparisonPredicate(
-                    ComparisonPredicate.GREATER_OP,
-                    new ColumnReference(_dateConv, 10),
-                    new ValueSpecification(_dateConv, _date)
-                ));
+		DataSourceComponent relationCustomer = new DataSourceComponent(
+				"CUSTOMER",
+				dataPath + "customer" + extension,
+				TPCH_Schema.customer,
+				_queryPlan).setHashIndexes(hashCustomer)
+			.setSelection(selectionCustomer)
+			.setProjection(projectionCustomer);
 
-            ProjectionOperator projectionLineitem = new ProjectionOperator(new int[]{0, 5, 6});
+		//-------------------------------------------------------------------------------------
+		List<Integer> hashOrders = Arrays.asList(1);
 
-            DataSourceComponent relationLineitem = new DataSourceComponent(
-                "LINEITEM",
-                dataPath + "lineitem" + extension,
-                TPCH_Schema.lineitem,
-                _queryPlan).setHashIndexes(hashLineitem)
-                           .setSelection(selectionLineitem)
-                           .setProjection(projectionLineitem);
+		SelectionOperator selectionOrders = new SelectionOperator(
+				new ComparisonPredicate(
+					ComparisonPredicate.LESS_OP,
+					new ColumnReference(_dateConv, 4),
+					new ValueSpecification(_dateConv, _date)
+					));
 
-            //-------------------------------------------------------------------------------------
-            // set up aggregation function on the StormComponent(Bolt) where join is performed
+		ProjectionOperator projectionOrders = new ProjectionOperator(new int[]{0, 1, 4, 7});
 
-                //1 - discount
-            ValueExpression<Double> substract = new Subtraction(
-                    _doubleConv,
-                    new ValueSpecification(_doubleConv, 1.0),
-                    new ColumnReference(_doubleConv, 4));
-                //extendedPrice*(1-discount)
-            ValueExpression<Double> product = new Multiplication(
-                    _doubleConv,
-                    new ColumnReference(_doubleConv, 3),
-                    substract);
-            AggregateOperator agg = new AggregateSumOperator(_doubleConv, product, conf)
-                    .setGroupByColumns(Arrays.asList(0, 1, 2));
+		DataSourceComponent relationOrders = new DataSourceComponent(
+				"ORDERS",
+				dataPath + "orders" + extension,
+				TPCH_Schema.orders,
+				_queryPlan).setHashIndexes(hashOrders)
+			.setSelection(selectionOrders)
+			.setProjection(projectionOrders);
 
-            JoinComponent C_O_Ljoin = new JoinComponent(
-                C_Ojoin,
-                relationLineitem,
-                _queryPlan).setAggregation(agg);
+		//-------------------------------------------------------------------------------------
+		JoinComponent C_Ojoin = new JoinComponent(
+				relationCustomer,
+				relationOrders,
+				_queryPlan).setProjection(new ProjectionOperator(new int[]{1, 2, 3}))
+			.setHashIndexes(Arrays.asList(0));
 
-            //-------------------------------------------------------------------------------------
+		//-------------------------------------------------------------------------------------
+		List<Integer> hashLineitem = Arrays.asList(0);
 
-            AggregateOperator overallAgg =
-                    new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 1), conf)
-                        .setGroupByColumns(Arrays.asList(0));
+		SelectionOperator selectionLineitem = new SelectionOperator(
+				new ComparisonPredicate(
+					ComparisonPredicate.GREATER_OP,
+					new ColumnReference(_dateConv, 10),
+					new ValueSpecification(_dateConv, _date)
+					));
 
-            _queryPlan.setOverallAggregation(overallAgg);
+		ProjectionOperator projectionLineitem = new ProjectionOperator(new int[]{0, 5, 6});
 
-        }
+		DataSourceComponent relationLineitem = new DataSourceComponent(
+				"LINEITEM",
+				dataPath + "lineitem" + extension,
+				TPCH_Schema.lineitem,
+				_queryPlan).setHashIndexes(hashLineitem)
+			.setSelection(selectionLineitem)
+			.setProjection(projectionLineitem);
 
-        public QueryPlan getQueryPlan() {
-            return _queryPlan;
-        }
+		//-------------------------------------------------------------------------------------
+		// set up aggregation function on the StormComponent(Bolt) where join is performed
+
+		//1 - discount
+		ValueExpression<Double> substract = new Subtraction(
+				_doubleConv,
+				new ValueSpecification(_doubleConv, 1.0),
+				new ColumnReference(_doubleConv, 4));
+		//extendedPrice*(1-discount)
+		ValueExpression<Double> product = new Multiplication(
+				_doubleConv,
+				new ColumnReference(_doubleConv, 3),
+				substract);
+		AggregateOperator agg = new AggregateSumOperator(_doubleConv, product, conf)
+			.setGroupByColumns(Arrays.asList(0, 1, 2));
+
+		JoinComponent C_O_Ljoin = new JoinComponent(
+				C_Ojoin,
+				relationLineitem,
+				_queryPlan).setAggregation(agg);
+
+		//-------------------------------------------------------------------------------------
+
+		AggregateOperator overallAgg =
+			new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 1), conf)
+			.setGroupByColumns(Arrays.asList(0));
+
+		_queryPlan.setOverallAggregation(overallAgg);
+
+	}
+
+	public QueryPlan getQueryPlan() {
+		return _queryPlan;
+	}
 }
