@@ -26,7 +26,8 @@ public interface AggregateOperator<T> extends Operator{
     public List<ValueExpression> getExpressions();
 
     //internal storage class
-    public AggStorage getStorage(); 
+    public AggStorage getStorage();
+    public void clearStorage();
 
     public T runAggregateFunction(T value, List<String> tuple);
     public T runAggregateFunction(T value1, T value2);

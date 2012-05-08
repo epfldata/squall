@@ -115,6 +115,11 @@ public class HashMapAggStorage<T> implements AggStorage<T>{
     }
 
     @Override
+    public void clear(){
+        _internalStorage = new HashMap<String, T>();
+    }
+
+    @Override
     public boolean equals(Object obj){
         if(this == obj){
             return true;
@@ -156,8 +161,16 @@ public class HashMapAggStorage<T> implements AggStorage<T>{
         String str1 = _wrapper.toString(value1);
         String str2 = _wrapper.toString(value2);
 
-        str1 = str1.substring(0, 9);
-        str2 = str2.substring(0, 9);
+        int numComparedChars = 9;
+        if(str1.length() < numComparedChars){
+            numComparedChars = str1.length();
+        }
+        if(str2.length() < numComparedChars){
+            numComparedChars = str2.length();
+        }
+
+        str1 = str1.substring(0, numComparedChars);
+        str2 = str2.substring(0, numComparedChars);
         return str1.equalsIgnoreCase(str2);
     }
 

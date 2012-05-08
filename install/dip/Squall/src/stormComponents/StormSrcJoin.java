@@ -1,6 +1,5 @@
 package stormComponents;
 
-import stormComponents.synchronization.TrafficLight;
 import stormComponents.synchronization.TopologyKiller;
 import backtype.storm.Config;
 import utilities.MyUtilities;
@@ -40,8 +39,8 @@ public class StormSrcJoin implements StormJoin, Serializable{
                 List<ValueExpression> hashExpressions,
                 int hierarchyPosition,
                 boolean printOut,
+                long batchOutputMillis,
                 TopologyBuilder builder,
-                TrafficLight trafficLight,
                 TopologyKiller killer,
                 Config conf){
 
@@ -54,7 +53,6 @@ public class StormSrcJoin implements StormJoin, Serializable{
                     firstEmitter,
                     secondEmitter,
                     builder,
-                    trafficLight,
                     killer,
                     conf);
 		
@@ -73,8 +71,8 @@ public class StormSrcJoin implements StormJoin, Serializable{
                     hashExpressions,
                     hierarchyPosition,
                     printOut,
+                    batchOutputMillis,
                     builder,
-                    trafficLight,
                     killer,
                     conf);
             _secondStorage = new StormSrcStorage(componentName,
@@ -91,8 +89,8 @@ public class StormSrcJoin implements StormJoin, Serializable{
                     hashExpressions,
                     hierarchyPosition,
                     printOut,
+                    batchOutputMillis,
                     builder,
-                    trafficLight,
                     killer,
                     conf);
 

@@ -128,6 +128,11 @@ public class MultiAggregateOperator implements AggregateOperator {
     }
 
     @Override
+    public void clearStorage(){
+        throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
+    }
+
+    @Override
     public Object runAggregateFunction(Object value, List tuple) {
         throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
     }

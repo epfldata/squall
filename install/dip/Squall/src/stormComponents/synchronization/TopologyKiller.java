@@ -15,6 +15,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
+import java.util.List;
 import stormComponents.StormComponent;
 
 import java.util.Map;
@@ -62,7 +63,7 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
             //EVENT WHEN ALL THE SPOUTS FINISHED EMITTING AND ACKED or
             //  WHEN ALL THE TASKS FROM THE LAST COMPONENTS SENT EOF SIGNAL
             // Instrument all the components for which printOut is set to dump their results
-            _collector.emit(SystemParameters.DumpResults, new Values("DumpResults"));
+            _collector.emit(SystemParameters.DUMP_RESULTS_STREAM, new Values(SystemParameters.DUMP_RESULTS));
             //write down statistics (the same which is shown in Storm UI web interface)
             if(SystemParameters.getBoolean(_conf, "DIP_DISTRIBUTED")){
                 StormWrapper.writeStats(_conf);
@@ -88,14 +89,14 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-	declarer.declareStream(SystemParameters.DumpResults, new Fields("DumpResults"));
+	declarer.declareStream(SystemParameters.DUMP_RESULTS_STREAM, new Fields(SystemParameters.DUMP_RESULTS));
     }
 
     //Helper methods
     public void registerComponent(StormComponent component, int parallelism) {
     	LOG.info("registering new component");
         _numberRegisteredTasks += parallelism;
-        _inputDeclarer.allGrouping(Integer.toString(component.getID()), SystemParameters.EOFmessageStream);
+        _inputDeclarer.allGrouping(Integer.toString(component.getID()), SystemParameters.EOF_STREAM);
     }
 
     @Override
@@ -107,5 +108,21 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
     public String getInfoID() {
         String str = "TopologyKiller has ID: " + _ID;
         return str;
+    }
+
+    public void printTuple(List<String> tuple) {
+        throw new UnsupportedOperationException("These methods are not ment to be invoked for synchronizationStormComponents");
+    }
+
+    public void printContent() {
+        throw new UnsupportedOperationException("These methods are not ment to be invoked for synchronizationStormComponents");
+    }
+
+    public void tupleSend(List<String> tuple, Tuple stormTupleRcv) {
+        throw new UnsupportedOperationException("These methods are not ment to be invoked for synchronizationStormComponents");
+    }
+
+    public void batchSend() {
+        throw new UnsupportedOperationException("These methods are not ment to be invoked for synchronizationStormComponents");
     }
 }

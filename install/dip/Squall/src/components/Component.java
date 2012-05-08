@@ -15,17 +15,13 @@ import operators.DistinctOperator;
 import operators.ProjectionOperator;
 import operators.SelectionOperator;
 import stormComponents.StormEmitter;
-import stormComponents.synchronization.Flusher;
 import stormComponents.synchronization.TopologyKiller;
-import stormComponents.synchronization.TrafficLight;
 
 
 public interface Component extends Serializable, StormEmitter {
 
     public void makeBolts(TopologyBuilder builder,
                        TopologyKiller killer,
-                       Flusher flusher,
-                       TrafficLight trafficLight,
                        Config conf,
                        int partitioningType,
                        int hierarchyPosition);
@@ -33,6 +29,9 @@ public interface Component extends Serializable, StormEmitter {
     public String getName();
     public String getInfoID();
     public Component setPrintOut();
+    
+    //sending the content of the component every 'millis' milliseconds
+    public Component setBatchOutputMode(long millis);
 
     //this needs to be separatelly kept, due to Parser.SelectItemsVisitor.ComplexCondition
     //  in short, whether the component uses indexes or expressions
