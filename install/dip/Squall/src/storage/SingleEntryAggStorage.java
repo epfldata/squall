@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package operators.storage;
+package storage;
 
 import conversion.TypeConversion;
 import java.util.ArrayList;
@@ -80,6 +80,11 @@ public class SingleEntryAggStorage<T> implements AggStorage<T>{
         content.add(MyUtilities.tupleToString(tuple, _map));
 
         return content;
+    }
+
+    @Override
+    public void clear(){
+        _internalStorage = (T) _wrapper.getInitialValue();
     }
 
     @Override

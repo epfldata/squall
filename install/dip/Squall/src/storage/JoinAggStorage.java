@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package stormComponents;
+package storage;
 
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +13,7 @@ import utilities.DeepCopy;
 import utilities.MyUtilities;
 
 
-public class JoinAggStorage implements JoinStorage {
+public class JoinAggStorage {
     private static final long serialVersionUID = 1L;
 
     private Map<String, AggregateOperator> _storage = new HashMap<String, AggregateOperator>();

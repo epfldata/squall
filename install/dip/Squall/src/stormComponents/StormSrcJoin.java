@@ -1,6 +1,6 @@
 package stormComponents;
 
-import stormComponents.synchronization.TrafficLight;
+import storage.SquallStorage;
 import stormComponents.synchronization.TopologyKiller;
 import backtype.storm.Config;
 import utilities.MyUtilities;
@@ -32,16 +32,16 @@ public class StormSrcJoin implements StormJoin, Serializable{
                 SelectionOperator selection,
                 ProjectionOperator projection,
                 AggregateOperator aggregation,
-                JoinStorage firstPreAggStorage,
-                JoinStorage secondPreAggStorage,
+                SquallStorage firstPreAggStorage,
+                SquallStorage secondPreAggStorage,
                 ProjectionOperator firstPreAggProj,
                 ProjectionOperator secondPreAggProj,
                 List<Integer> hashIndexes,
                 List<ValueExpression> hashExpressions,
                 int hierarchyPosition,
                 boolean printOut,
+                long batchOutputMillis,
                 TopologyBuilder builder,
-                TrafficLight trafficLight,
                 TopologyKiller killer,
                 Config conf){
 
@@ -54,7 +54,6 @@ public class StormSrcJoin implements StormJoin, Serializable{
                     firstEmitter,
                     secondEmitter,
                     builder,
-                    trafficLight,
                     killer,
                     conf);
 		
@@ -73,8 +72,8 @@ public class StormSrcJoin implements StormJoin, Serializable{
                     hashExpressions,
                     hierarchyPosition,
                     printOut,
+                    batchOutputMillis,
                     builder,
-                    trafficLight,
                     killer,
                     conf);
             _secondStorage = new StormSrcStorage(componentName,
@@ -91,8 +90,8 @@ public class StormSrcJoin implements StormJoin, Serializable{
                     hashExpressions,
                     hierarchyPosition,
                     printOut,
+                    batchOutputMillis,
                     builder,
-                    trafficLight,
                     killer,
                     conf);
 

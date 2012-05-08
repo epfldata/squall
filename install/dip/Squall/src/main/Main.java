@@ -18,9 +18,7 @@ import queryPlans.TPCH7Plan;
 import queryPlans.TPCH8Plan;
 import stormComponents.StormJoin;
 import stormComponents.StormComponent;
-import stormComponents.synchronization.Flusher;
 import stormComponents.synchronization.TopologyKiller;
-import stormComponents.synchronization.TrafficLight;
 import utilities.StormWrapper;
 import utilities.SystemParameters;
 
@@ -49,9 +47,7 @@ public class Main {
 
         private static TopologyBuilder createTopology(QueryPlan qp, Config conf) {
             TopologyBuilder builder = new TopologyBuilder();
-            TopologyKiller killer= new TopologyKiller(builder);
-            Flusher flusher = null;
-            TrafficLight trafficLight= null;
+            TopologyKiller killer = new TopologyKiller(builder);
 
             //DST_ORDERING is the optimized version, so it's used by default
             int partitioningType = StormJoin.DST_ORDERING;
@@ -62,33 +58,23 @@ public class Main {
                 Component component = queryPlan.get(i);
                 if(i == planSize - 1){
                     //very last element
-                    component.makeBolts(builder, killer, flusher, trafficLight, conf, partitioningType, StormComponent.FINAL_COMPONENT);
+                    component.makeBolts(builder, killer, conf, partitioningType, StormComponent.FINAL_COMPONENT);
                 }else{
-                    component.makeBolts(builder, killer, flusher, trafficLight, conf, partitioningType, StormComponent.INTERMEDIATE);
+                    component.makeBolts(builder, killer, conf, partitioningType, StormComponent.INTERMEDIATE);
                 }  
             }
 
             // printing infoID information and returning the result
-            printInfoID(killer, flusher, trafficLight, queryPlan);
+            printInfoID(killer, queryPlan);
             return builder;
         }
 
         private static void printInfoID(TopologyKiller killer,
-                Flusher flusher,
-                TrafficLight trafficLight,
                 List<Component> queryPlan) {
 
             StringBuilder infoID = new StringBuilder("\n");
             if(killer!=null){
                 infoID.append(killer.getInfoID());
-                infoID.append("\n");
-            }
-            if(flusher!=null){
-                infoID.append(flusher.getInfoID());
-                infoID.append("\n");
-            }
-            if(trafficLight!=null){
-                infoID.append(trafficLight.getInfoID());
                 infoID.append("\n");
             }
             infoID.append("\n");

@@ -15,16 +15,14 @@ import operators.DistinctOperator;
 import operators.ProjectionOperator;
 import operators.SelectionOperator;
 import stormComponents.StormDstJoin;
-import stormComponents.synchronization.Flusher;
 import stormComponents.StormJoin;
 import stormComponents.StormSrcJoin;
 import stormComponents.synchronization.TopologyKiller;
-import stormComponents.synchronization.TrafficLight;
 import org.apache.log4j.Logger;
 import queryPlans.QueryPlan;
-import stormComponents.JoinHashStorage;
-import stormComponents.JoinStorage;
 import stormComponents.StormComponent;
+import utilities.MyUtilities;
+import storage.SquallStorage;
 
 public class JoinComponent implements Component {
     private static final long serialVersionUID = 1L;
@@ -35,6 +33,8 @@ public class JoinComponent implements Component {
     private Component _child;
 
     private String _componentName;
+
+    private long _batchOutputMillis;
 
     private List<Integer> _hashIndexes;
     private List<ValueExpression> _hashExpressions;
@@ -47,7 +47,7 @@ public class JoinComponent implements Component {
     private AggregateOperator _aggregation;
 
     //preAggregation
-    private JoinStorage _firstPreAggStorage, _secondPreAggStorage;
+    private SquallStorage _firstPreAggStorage, _secondPreAggStorage;
     private ProjectionOperator _firstPreAggProj, _secondPreAggProj;
 
     private boolean _printOut;
@@ -116,12 +116,12 @@ public class JoinComponent implements Component {
     }
 
     //next four methods are for Preaggregation
-    public JoinComponent setFirstPreAggStorage(JoinStorage firstPreAggStorage){
+    public JoinComponent setFirstPreAggStorage(SquallStorage firstPreAggStorage){
         _firstPreAggStorage = firstPreAggStorage;
         return this;
     }
 
-    public JoinComponent setSecondPreAggStorage(JoinStorage secondPreAggStorage){
+    public JoinComponent setSecondPreAggStorage(SquallStorage secondPreAggStorage){
         _secondPreAggStorage = secondPreAggStorage;
         return this;
     }
@@ -165,10 +165,14 @@ public class JoinComponent implements Component {
     }
 
     @Override
+    public JoinComponent setBatchOutputMode(long millis){
+        _batchOutputMillis = millis;
+        return this;
+    }
+
+    @Override
     public void makeBolts(TopologyBuilder builder,
             TopologyKiller killer,
-            Flusher flusher,
-            TrafficLight trafficLight,
             Config conf,
             int partitioningType,
             int hierarchyPosition){
@@ -179,13 +183,15 @@ public class JoinComponent implements Component {
            setPrintOut();
         }
 
+        MyUtilities.checkBatchOutput(_batchOutputMillis, _aggregation, conf);
+
         if(partitioningType == StormJoin.DST_ORDERING){
                 //In Preaggregation one or two storages can be set; otherwise no storage is set
                 if(_firstPreAggStorage == null){
-                    _firstPreAggStorage = new JoinHashStorage();
+                    _firstPreAggStorage = new SquallStorage();
                 }
                 if(_secondPreAggStorage == null){
-                    _secondPreAggStorage = new JoinHashStorage();
+                    _secondPreAggStorage = new SquallStorage();
                 }
 
                 _joiner = new StormDstJoin(_firstParent,
@@ -203,6 +209,7 @@ public class JoinComponent implements Component {
                                     _hashExpressions,
                                     hierarchyPosition,
                                     _printOut,
+                                    _batchOutputMillis,
                                     _fullHashList,
                                     builder,
                                     killer,
@@ -214,10 +221,10 @@ public class JoinComponent implements Component {
             }
             //In Preaggregation one or two storages can be set; otherwise no storage is set
             if(_firstPreAggStorage == null){
-                _firstPreAggStorage = new JoinHashStorage();
+                _firstPreAggStorage = new SquallStorage();
             }
             if(_secondPreAggStorage == null){
-                _secondPreAggStorage = new JoinHashStorage();
+                _secondPreAggStorage = new SquallStorage();
             }
 
             //since we don't know how data is scattered across StormSrcStorage,
@@ -236,8 +243,8 @@ public class JoinComponent implements Component {
                                     _hashExpressions,
                                     hierarchyPosition,
                                     _printOut,
+                                    _batchOutputMillis,
                                     builder,
-                                    trafficLight,
                                     killer,
                                     conf);
 
