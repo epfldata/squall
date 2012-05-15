@@ -43,9 +43,9 @@ public class BalancedStreamGrouping implements CustomStreamGrouping{
 
     @Override
     public List<Integer> taskIndices(List<Object> stormTuple) {
-        String tupleString = (String) stormTuple.get(1);
+        List<String> tuple = (List<String>) stormTuple.get(1);
         String tupleHash = (String) stormTuple.get(2);
-        if(MyUtilities.isFinalAck(tupleString, _map)){
+        if(MyUtilities.isFinalAck(tuple, _map)){
             List<Integer> result = new ArrayList<Integer>();
             for(int i=0; i< _numTasks; i++){
                 result.add(i);

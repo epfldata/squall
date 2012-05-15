@@ -19,6 +19,7 @@ import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
 import expressions.ValueExpression;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Semaphore;
@@ -198,7 +199,8 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
                  } else {
                     if(!_hasSentLastAck){
                         _hasSentLastAck = true;
-                        _collector.emit(new Values("N/A", SystemParameters.LAST_ACK, "N/A"));
+                        List<String> lastTuple = new ArrayList<String>(Arrays.asList(SystemParameters.LAST_ACK));
+			_collector.emit(new Values("N/A", lastTuple, "N/A"));
                     }
                  }
             }
@@ -243,6 +245,7 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
                
 	}
 
+        //ack method on spout is called only if in AckEveryTuple mode (ACKERS > 0)
 	@Override
 	public void ack(Object msgId) {
 		_pendingTuples--;	    
@@ -250,8 +253,6 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
 			if (_pendingTuples == 0) {
                             if(MyUtilities.isAckEveryTuple(_conf)){
                                 _collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
-                            }else{
-                                _collector.emit(new Values("N/A", SystemParameters.LAST_ACK, "N/A"));
                             }
 			}
 		}

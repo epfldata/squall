@@ -62,16 +62,16 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 	@Override
 	public void execute(Tuple stormRcvTuple) {
             String inputComponentName=stormRcvTuple.getString(0);
-            String inputTupleString=stormRcvTuple.getString(1);
+            List<String> tuple = (List<String>) stormRcvTuple.getValue(1);
             String inputTupleHash=stormRcvTuple.getString(2);
 
-            if(MyUtilities.isFinalAck(inputTupleString, _conf)){
+            if(MyUtilities.isFinalAck(tuple, _conf)){
                 _numRemainingParents--;
                 MyUtilities.processFinalAck(_numRemainingParents, StormComponent.INTERMEDIATE, stormRcvTuple, _collector);
                 return;
             }
 
-            _collector.emit(stormRcvTuple, new Values(inputComponentName, inputTupleString, inputTupleHash));
+            _collector.emit(stormRcvTuple, new Values(inputComponentName, tuple, inputTupleHash));
             _collector.ack(stormRcvTuple);
 	}
 

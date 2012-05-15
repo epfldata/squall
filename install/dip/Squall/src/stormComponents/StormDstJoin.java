@@ -145,10 +145,11 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			}
 
 			String inputComponentName=stormTupleRcv.getString(0);
-			String inputTupleString=stormTupleRcv.getString(1);   //INPUT TUPLE
+                        List<String> tuple = (List<String>) stormTupleRcv.getValue(1);
+                        String inputTupleString = MyUtilities.tupleToString(tuple, _conf);
 			String inputTupleHash=stormTupleRcv.getString(2);
 
-			if(MyUtilities.isFinalAck(inputTupleString, _conf)){
+			if(MyUtilities.isFinalAck(tuple, _conf)){
 				_numRemainingParents--;
 				MyUtilities.processFinalAck(_numRemainingParents, _hierarchyPosition, stormTupleRcv, _collector, _periodicBatch);
 				return;
@@ -181,7 +182,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			affectedStorage.put(inputTupleHash, inputTupleString);
 
 			performJoin(stormTupleRcv,
-					inputTupleString,
+					tuple,
 					inputTupleHash,
 					isFromFirstEmitter,
 					oppositeStorage,
@@ -191,13 +192,12 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 		}
 
 	protected void performJoin(Tuple stormTupleRcv,
-			String inputTupleString, 
+			List<String> tuple,
 			String inputTupleHash,
 			boolean isFromFirstEmitter,
 			SquallStorage oppositeStorage,
 			ProjectionOperator projPreAgg){
 
-		List<String> affectedTuple = MyUtilities.stringToTuple(inputTupleString, getComponentConfiguration());
 		List<String> oppositeStringTupleList = (ArrayList<String>)oppositeStorage.get(inputTupleHash);
 
 		if(oppositeStringTupleList!=null)
@@ -207,11 +207,11 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 
 				List<String> firstTuple, secondTuple;
 				if(isFromFirstEmitter){
-					firstTuple = affectedTuple;
+					firstTuple = tuple;
 					secondTuple = oppositeTuple;
 				}else{
 					firstTuple = oppositeTuple;
-					secondTuple = affectedTuple;
+					secondTuple = tuple;
 				}
 
 				List<String> outputTuple;

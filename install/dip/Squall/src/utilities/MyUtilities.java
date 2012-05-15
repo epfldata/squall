@@ -113,16 +113,13 @@ public class MyUtilities{
         }        
 
         public static List<String> fileLineToTuple(String line, Map conf) {
-            String[] arr= line.split(SystemParameters.getString(conf, "DIP_READ_SPLIT_DELIMITER"));
-            List<String> tuple = Arrays.asList(arr);
-            return tuple;
+            String[] columnValues = line.split(SystemParameters.getString(conf, "DIP_READ_SPLIT_DELIMITER"));
+            return new ArrayList<String>(Arrays.asList(columnValues));
         }
 
-        public static List<String> stringToTuple(String tuple, Map conf){  //  arraylist 2 values
-            String[] columnValues=tuple.split(SystemParameters.getString(conf, "DIP_GLOBAL_SPLIT_DELIMITER"));
-            List<String> result= new ArrayList<String>();
-            result.addAll(Arrays.asList(columnValues));
-            return result;
+        public static List<String> stringToTuple(String tupleString, Map conf){  //  arraylist 2 values
+            String[] columnValues = tupleString.split(SystemParameters.getString(conf, "DIP_GLOBAL_SPLIT_DELIMITER"));
+            return new ArrayList<String>(Arrays.asList(columnValues));
 	}
 
         public static String tupleToString(List<String> tuple, Map conf) {
@@ -356,8 +353,8 @@ public class MyUtilities{
             return (SystemParameters.getInt(map, "DIP_NUM_ACKERS") > 0);
         }
 
-        public static boolean isFinalAck(String tupleString, Map map){
-            return (!isAckEveryTuple(map)) && tupleString.equals(SystemParameters.LAST_ACK);
+        public static boolean isFinalAck(List<String> tuple, Map map){
+            return (!isAckEveryTuple(map)) && tuple.get(0).equals(SystemParameters.LAST_ACK);
         }
 
         //in ProcessFinalAck and dumpSignal we have acking at the end, because we return after that
@@ -367,12 +364,13 @@ public class MyUtilities{
             //this task received from all the parent tasks SystemParameters.LAST_ACK
                 if(hierarchyPosition != StormComponent.FINAL_COMPONENT){
                 //if this component is not the last one
-                    collector.emit(new Values("N/A",SystemParameters.LAST_ACK,"N/A"));
+                    List<String> lastTuple = new ArrayList<String>(Arrays.asList(SystemParameters.LAST_ACK));
+                    collector.emit(new Values("N/A", lastTuple, "N/A"));
                 }else{
                     collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
                 }
-                collector.ack(stormTupleRcv);
             }
+            collector.ack(stormTupleRcv);
         }
 
         public static void processFinalAck(int numRemainingParents,
@@ -386,9 +384,9 @@ public class MyUtilities{
             processFinalAck(numRemainingParents, hierarchyPosition, stormTupleRcv, collector);
         }
 
-        public static void dumpSignal(StormComponent comp, Tuple stormTupleRcv, OutputCollector _collector) {
+        public static void dumpSignal(StormComponent comp, Tuple stormTupleRcv, OutputCollector collector) {
             comp.printContent();
-            _collector.ack(stormTupleRcv);
+            collector.ack(stormTupleRcv);
         }
 
         public static boolean isBatchOutputMode(long batchOutputMillis) {
@@ -402,9 +400,8 @@ public class MyUtilities{
         public static Values createTupleValues(List<String> tuple, String componentName,
                 List<Integer> hashIndexes, List<ValueExpression> hashExpressions, Map conf) {
 
-            String outputTupleString=MyUtilities.tupleToString(tuple, conf);
             String outputTupleHash = MyUtilities.createHashString(tuple, hashIndexes, hashExpressions, conf);
-            return new Values(componentName, outputTupleString, outputTupleHash);
+            return new Values(componentName, tuple, outputTupleHash);
         }
 
         /*

@@ -133,10 +133,11 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 			}
 
 			String inputComponentName=stormTupleRcv.getString(0);
-			String inputTupleString=stormTupleRcv.getString(1);   //INPUT TUPLE
+                        List<String> tuple = (List<String>)stormTupleRcv.getValue(1);
+			String inputTupleString=MyUtilities.tupleToString(tuple, _conf);
 			String inputTupleHash=stormTupleRcv.getString(2);
 
-			if(MyUtilities.isFinalAck(inputTupleString, _conf)){
+			if(MyUtilities.isFinalAck(tuple, _conf)){
 				_numRemainingParents--;
 				MyUtilities.processFinalAck(_numRemainingParents, _hierarchyPosition, stormTupleRcv, _collector, _periodicBatch);
 				return;
@@ -145,7 +146,6 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 			if(_tableName.equals(inputComponentName)) {//add the tuple into the datastructure!!
 				_joinStorage.put(inputTupleHash, inputTupleString);
 			} else {//JOIN
-				List<String> affectedTuple = MyUtilities.stringToTuple(inputTupleString, _conf);
 				List<String> oppositeTupleStringList = (ArrayList<String>)_joinStorage.get(inputTupleHash);
 
 				// do stuff
@@ -158,9 +158,9 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 						if(_isFromFirstEmitter){
 							//we receive R updates in the Storage which is responsible for S
 							firstTuple=oppositeTuple;
-							secondTuple=affectedTuple;
+							secondTuple=tuple;
 						}else{
-							firstTuple=affectedTuple;
+							firstTuple=tuple;
 							secondTuple=oppositeTuple;    
 						}
 

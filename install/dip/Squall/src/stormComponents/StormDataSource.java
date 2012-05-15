@@ -22,6 +22,7 @@ import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
 import expressions.ValueExpression;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import operators.AggregateOperator;
@@ -190,7 +191,8 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 			} else {
 				if(!_hasSentLastAck){
 					_hasSentLastAck = true;
-					_collector.emit(new Values("N/A", SystemParameters.LAST_ACK, "N/A"));
+                                        List<String> lastTuple = new ArrayList<String>(Arrays.asList(SystemParameters.LAST_ACK));
+					_collector.emit(new Values("N/A", lastTuple, "N/A"));
 				}
 			}
 		}
@@ -245,6 +247,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 			}
 		}
 
+        //ack method on spout is called only if in AckEveryTuple mode (ACKERS > 0)
 	@Override
 		public void ack(Object msgId) {
 			_pendingTuples--;	    
@@ -252,8 +255,6 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 				if (_pendingTuples == 0) {
 					if(MyUtilities.isAckEveryTuple(_conf)){
 						_collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
-					}else{
-						_collector.emit(new Values("N/A", SystemParameters.LAST_ACK, "N/A"));
 					}
 				}
 			}
@@ -284,7 +285,8 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 			outputFields.add("TableName");
 			outputFields.add("Tuple");
 			outputFields.add("Hash");		
-			declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(outputFields));
+			//declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(outputFields));
+                        declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("TableName", "Tuple", "Hash"));
 		}
 
 	@Override

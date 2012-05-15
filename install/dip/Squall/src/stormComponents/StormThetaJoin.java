@@ -183,10 +183,11 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 		}
 
 		String inputComponentName=stormTupleRcv.getString(0);
-		String inputTupleString=stormTupleRcv.getString(1);   //INPUT TUPLE
+                List<String> tuple = (List<String>)stormTupleRcv.getValue(1);
+		String inputTupleString=MyUtilities.tupleToString(tuple, _conf);
 		String inputTupleHash=stormTupleRcv.getString(2);
 
-		if(MyUtilities.isFinalAck(inputTupleString, _conf)){
+		if(MyUtilities.isFinalAck(tuple, _conf)){
 			_numRemainingParents--;
 			MyUtilities.processFinalAck(_numRemainingParents, _hierarchyPosition, stormTupleRcv, _collector, _periodicBatch);
 			return;
@@ -229,7 +230,7 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 		}
 
 		performJoin( stormTupleRcv,
-				inputTupleString, 
+				tuple,
 				inputTupleHash,
 				isFromFirstEmitter,
 				oppositeIndexes,
@@ -242,9 +243,8 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 	private List<String> updateIndexes(Tuple stormTupleRcv, List<Index> affectedIndexes, long row_id){
 
 		String inputComponentName = stormTupleRcv.getString(0); // Table name
-		String inputTupleString = stormTupleRcv.getString(1); //INPUT TUPLE
+		List<String> tuple = (List<String>) stormTupleRcv.getValue(1); //INPUT TUPLE
 		// Get a list of tuple attributes and the key value
-		List<String> tuple = MyUtilities.stringToTuple(inputTupleString, _conf);
 		
 		String firstEmitterName = _firstEmitter.getName();
 		String secondEmitterName = _secondEmitter.getName();
@@ -283,7 +283,7 @@ System.out.println("types----"+typesOfValuesToIndex);
 	
 
 	protected void performJoin(Tuple stormTupleRcv,
-			String inputTupleString, 
+			List<String> tuple,
 			String inputTupleHash,
 			boolean isFromFirstEmitter,
 			List<Index> oppositeIndexes,
@@ -293,7 +293,7 @@ System.out.println("types----"+typesOfValuesToIndex);
 		TupleStorage tuplesToJoin = new TupleStorage();
 		selectTupleToJoin(oppositeStorage, oppositeIndexes, isFromFirstEmitter, valuesToApplyOnIndex, tuplesToJoin);
 		System.out.println("list"+tuplesToJoin);
-		join(stormTupleRcv, inputTupleString, isFromFirstEmitter, tuplesToJoin);
+		join(stormTupleRcv, tuple, isFromFirstEmitter, tuplesToJoin);
 	}
 	
 	private void selectTupleToJoin(TupleStorage oppositeStorage,
@@ -421,15 +421,13 @@ System.out.println("types----"+typesOfValuesToIndex);
 	}
 	
 	private void join(Tuple stormTuple, 
-            String inputTupleString, 
+            List<String> tuple,
             boolean isFromFirstEmitter,
             TupleStorage oppositeStorage){
 		
 		if (oppositeStorage == null || oppositeStorage.size() == 0) {
 			return;
 		}
-		
-		List<String> affectedTuple = MyUtilities.stringToTuple(inputTupleString, getComponentConfiguration());
  
 		for (long i=0; i<oppositeStorage.size(); i++) {
 			String oppositeTupleString = oppositeStorage.get(i);
@@ -437,11 +435,11 @@ System.out.println("types----"+typesOfValuesToIndex);
 			List<String> oppositeTuple= MyUtilities.stringToTuple(oppositeTupleString, getComponentConfiguration());
 			List<String> firstTuple, secondTuple;
 			if(isFromFirstEmitter){
-			    firstTuple = affectedTuple;
+			    firstTuple = tuple;
 			    secondTuple = oppositeTuple;
 			}else{
 			    firstTuple = oppositeTuple;
-			    secondTuple = affectedTuple;
+			    secondTuple = tuple;
 			}
 			
 			// Check joinCondition

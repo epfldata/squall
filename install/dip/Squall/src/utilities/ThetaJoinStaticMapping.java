@@ -39,14 +39,15 @@ public class ThetaJoinStaticMapping implements CustomStreamGrouping{
 	public List<Integer> taskIndices(List<Object> values) {
 		
 		//////////////////////
-		String tupleString = (String) values.get(1);
-		if(MyUtilities.isFinalAck(tupleString, _map)){
-            List<Integer> result = new ArrayList<Integer>();
-            for(int i=0; i< _numTasks; i++){
-                result.add(i);
+            List<String> tuple = (List<String>) values.get(1);
+            if(MyUtilities.isFinalAck(tuple, _map)){
+                List<Integer> result = new ArrayList<Integer>();
+                for(int i=0; i< _numTasks; i++){
+                    result.add(i);
+                }
+                return result;
             }
-            return result;
-        }
+            
 		//////////////////
 		List<Integer> tasks=null;
 		String tableName= (String)values.get(0);

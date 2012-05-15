@@ -125,15 +125,14 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
             return;
         }
 
-        String inputTupleString = stormTupleRcv.getString(1);
+        List<String> tuple = (List<String>) stormTupleRcv.getValue(1);
 
-        if(MyUtilities.isFinalAck(inputTupleString, _conf)){
+        if(MyUtilities.isFinalAck(tuple, _conf)){
             _numRemainingParents--;
             MyUtilities.processFinalAck(_numRemainingParents, _hierarchyPosition, stormTupleRcv, _collector, _periodicBatch);
             return;
         }
 
-        List<String> tuple = MyUtilities.stringToTuple(inputTupleString, _conf);
         applyOperatorsAndSend(stormTupleRcv, tuple);
         _collector.ack(stormTupleRcv);
     }
