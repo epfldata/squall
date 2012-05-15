@@ -102,6 +102,10 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
 		_fileParts = parallelism;
 
+                if( _hierarchyPosition == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf))){
+			killer.registerComponent(this, parallelism);
+		}
+
 		builder.setSpout(Integer.toString(_ID), this, parallelism);
 		if(MyUtilities.isAckEveryTuple(conf)){
 			killer.registerComponent(this, 1);
@@ -148,7 +152,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 		if(tuple==null){
 			return;
 		}
-		_hasEmitted = true;
+                
 		_numSentTuples++;
 		_pendingTuples++;
 		printTuple(tuple);
@@ -156,6 +160,11 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 		if(MyUtilities.isSending(_hierarchyPosition, _batchOutputMillis)){
 			tupleSend(tuple, null);
 		}
+
+                if(MyUtilities.isSending(_hierarchyPosition, _batchOutputMillis) || MyUtilities.isBatchOutputMode(_batchOutputMillis)){
+                    // if we are sending tuple, or we will do it in future, we have to set hasEmitter
+                    _hasEmitted = true;
+                }
 	}
 
 	private void eofFinalization(){

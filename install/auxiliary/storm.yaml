@@ -3,7 +3,8 @@
 # NO BLANK SPACES BEFORE KEYS, AFTER : THERE SHOULD BE EXACTLY ONE SPACE
 
 storm.zookeeper.servers:
-     - "icdatasrv2"
+     - "icdatasrv1"
+     - "icdatasrv3"
 
 nimbus.host: "icdatasrv2"
  
