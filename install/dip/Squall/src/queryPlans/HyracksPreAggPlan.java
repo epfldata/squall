@@ -15,18 +15,16 @@ import expressions.ValueSpecification;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import operators.AggregateCountOperator;
 import operators.AggregateOperator;
 import operators.AggregateSumOperator;
 import operators.ProjectionOperator;
 
 import org.apache.log4j.Logger;
 import schema.TPCH_Schema;
-import storage.JoinAggStorage;
 import storage.SquallStorage;
 
 public class HyracksPreAggPlan {
-	private static Logger LOG = Logger.getLogger(HyracksPlan.class);
+	private static Logger LOG = Logger.getLogger(HyracksPreAggPlan.class);
 
 	private QueryPlan _queryPlan = new QueryPlan();
 

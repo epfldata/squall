@@ -9,7 +9,7 @@ DIP_TOPOLOGY_NAME TPCH3Simple
 DIP_NUM_PARALLELISM 5
 DIP_NUM_ACKERS 1
 
-DIP_DATA_PATH /home/klonatos/Desktop/mySquall/test/sf0.1
+DIP_DATA_PATH /path/to/tpch0.1G/on/local/machine/
 
 CUSTOMER_PAR 1
 ORDERS_PAR 1

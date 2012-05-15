@@ -44,6 +44,7 @@ public  class OperatorComponent implements Component{
     private AggregateOperator _aggregation;
 
     private boolean _printOut;
+    private boolean _printOutSet;
 
     private Component _parent;
     private Component _child;
@@ -131,8 +132,9 @@ public  class OperatorComponent implements Component{
     }
 
     @Override
-    public OperatorComponent setPrintOut(){
-        _printOut = true;
+    public OperatorComponent setPrintOut(boolean printOut){
+        _printOutSet = true;
+        _printOut = printOut;
         return this;
     }
 
@@ -151,8 +153,8 @@ public  class OperatorComponent implements Component{
 
         //by default print out for the last component
         //for other conditions, can be set via setPrintOut
-        if(hierarchyPosition==StormComponent.FINAL_COMPONENT){
-            _printOut = true;
+        if(hierarchyPosition==StormComponent.FINAL_COMPONENT && !_printOutSet){
+            setPrintOut(true);
         }
 
         MyUtilities.checkBatchOutput(_batchOutputMillis, _aggregation, conf);
