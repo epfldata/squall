@@ -33,7 +33,7 @@ public class HyracksL1Plan {
                                             TPCH_Schema.customer,
                                             _queryPlan).setProjection(projectionCustomer)
                                                        .setHashIndexes(hashCustomer)
-                                                       .setPrintOut(false);
+                                                       .setPrintOut(true);
 
             //-------------------------------------------------------------------------------------
             ProjectionOperator projectionOrders = new ProjectionOperator(new int[]{1});
@@ -44,7 +44,7 @@ public class HyracksL1Plan {
                                             TPCH_Schema.orders,
                                             _queryPlan).setProjection(projectionOrders)
                                                        .setHashIndexes(hashOrders)
-                                                       .setPrintOut(false);
+                                                       .setPrintOut(true);
                                                        
 
     }

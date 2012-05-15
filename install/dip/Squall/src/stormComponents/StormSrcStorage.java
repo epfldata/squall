@@ -101,6 +101,10 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 		InputDeclarer currentBolt = builder.setBolt(Integer.toString(_ID), this, parallelism);
 		currentBolt.fieldsGrouping(Integer.toString(_harmonizer.getID()), new Fields("Hash"));
 
+		if( _hierarchyPosition == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf))){
+			killer.registerComponent(this, parallelism);
+		}
+
 		if (_printOut && _operatorChain.isBlocking()){
 			currentBolt.allGrouping(Integer.toString(killer.getID()), SystemParameters.DUMP_RESULTS_STREAM);
 		}
