@@ -90,7 +90,7 @@ public class TPCH4Plan {
                     new ColumnReference(_dc, 12)
                 ));
 
-        DistinctOperator distinctLineitem = new DistinctOperator(new int[]{0});
+        DistinctOperator distinctLineitem = new DistinctOperator(conf, new int[]{0});
 
         DataSourceComponent relationLineitem = new DataSourceComponent(
                 "LINEITEM",

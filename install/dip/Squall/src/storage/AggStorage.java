@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package operators.storage;
+package storage;
 
 import java.io.Serializable;
 import java.util.List;

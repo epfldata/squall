@@ -9,7 +9,7 @@ DIP_TOPOLOGY_NAME 1G_hyracks_parallel
 DIP_NUM_PARALLELISM 176
 DIP_NUM_ACKERS 17
 
-DIP_DATA_PATH /export/home/avitorovic/queries/tpch/1G/
+DIP_DATA_PATH /home/klonatos/Desktop/mySquall/test/sf0.1
 
 CUSTOMER_PAR 8
 ORDERS_PAR 8

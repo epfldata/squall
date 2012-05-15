@@ -222,7 +222,7 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
 
             //DISTINCT and agg are stored on the same component.
             if(function.isDistinct()){
-                DistinctOperator distinct = new DistinctOperator(expressions);
+                DistinctOperator distinct = new DistinctOperator(_map, expressions);
                 _agg.setDistinct(distinct);
             }
         }else if(fnName.equalsIgnoreCase("COUNT")){
@@ -231,7 +231,7 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
 
             //DISTINCT and agg are stored on the same component.
             if(function.isDistinct()){
-                DistinctOperator distinct = new DistinctOperator(expressions);
+                DistinctOperator distinct = new DistinctOperator(_map, expressions);
                 _agg.setDistinct(distinct);
             }
         }else if (fnName.equalsIgnoreCase("EXTRACT_YEAR")) {
