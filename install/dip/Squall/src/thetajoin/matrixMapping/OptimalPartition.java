@@ -3,10 +3,29 @@ package thetajoin.matrixMapping;
 import java.io.Serializable;
 
 /**
- * This class implement the partitioning algorithm presented as Modification3.
- * The idea is to improve Modification2 to make use of all reducers.
- * So we first construct Modification2, then we add a reducer to the r first row,
- * where r is the number of unused reducers in Modification2.
+ *  This class implement a partitioning algorithm. 
+ *  The idea here is to start by assigning all the matrix to a single worker.
+ *  Then, while there exists unused workers, 
+ *  we redistribute them with one of the following policy:
+ *  	A) Add a whole row of workers,
+ *  	B) Add a whole column of workers, or
+ *  	C) Add all the k remaining workers to the k first rows.
+ *  
+ *  To choose between the three options, we apply the following heuristic:
+ *  	If there are enough remaining workers to apply either A) or B)
+ *  		Apply A) if each worker is responsible for an area that is higher than large.
+ *  		Otherwise, apply B)
+ *  	If only one of A) or B) can be apply
+ *  		Apply it
+ *  	If neither A) nor B) can be apply
+ *  		Apply C)
+ * 
+ * In the policy C), we always add workers to rows. 
+ * The reasons is that the matrix is the Matrix is defined such that 
+ * it is larger than height. 
+ * 
+ * Once the policy C) has been applied, there are no more remaining worker,
+ * thus, the algorithm terminates.
  */
 
 public class OptimalPartition extends Partition implements Serializable {
@@ -24,14 +43,13 @@ public class OptimalPartition extends Partition implements Serializable {
 		int h= matrix_.getHeight();
 		int w = matrix_.getWidth();
 
-		/*
-		 * countH := number of rows of reducers (initially 1)
-		 * countW := number of colunms of reducers (initially 1)
-		 */
+		
+		// countH := number of rows of reducers (initially 1)
+		// countW := number of colunms of reducers (initially 1) 
 		int countH = 1; 
 		int countW = 1;
 		
-		//	While it remains enough reducers to add either a row or a column 
+		//	While it remains enough reducers to add either a row or a column (A or B possible)
 		for (; countH*(countW+1)<=numReducers_|| countW*(countH+1) <= numReducers_;)
 		{
 			// add to the best possible place
@@ -58,7 +76,7 @@ public class OptimalPartition extends Partition implements Serializable {
 		int param2[]=new int[numReducers_];
 		int param3[]=new int[numReducers_];
 		
-		// Create virtual partition as in Modification2 
+		// Create virtual partition, assigning the matrix to worker that are already used
 		for(int i=0; i<countH; ++i){
 			for(int j=0; j<countW; ++j, ++reducerIndex){
 				int startH = (int)Math.round((double)h/(double)countH*(i));
@@ -73,7 +91,7 @@ public class OptimalPartition extends Partition implements Serializable {
 			}
 		}
 		
-		// Then add other reducers and balance load
+		// Then add other workers (C) and balance load
 
 		// We always allocate remaining reducers to first rows
 		
