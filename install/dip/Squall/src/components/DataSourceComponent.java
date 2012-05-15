@@ -44,6 +44,7 @@ public class DataSourceComponent implements Component {
     private AggregateOperator _aggregation;
 
     private boolean _printOut;
+    private boolean _printOutSet; // whether printOut condition is already set
 
     private Component _child;
 
@@ -126,8 +127,9 @@ public class DataSourceComponent implements Component {
 
 
     @Override
-    public DataSourceComponent setPrintOut(){
-        _printOut = true;
+    public DataSourceComponent setPrintOut(boolean printOut){
+        _printOutSet = true;
+        _printOut = printOut;
         return this;
     }
 
@@ -146,8 +148,8 @@ public class DataSourceComponent implements Component {
 
         //by default print out for the last component
         //for other conditions, can be set via setPrintOut
-        if(hierarchyPosition==StormComponent.FINAL_COMPONENT){
-                setPrintOut();
+        if(hierarchyPosition==StormComponent.FINAL_COMPONENT && !_printOutSet){
+                setPrintOut(true);
         }
 
         int parallelism = SystemParameters.getInt(conf, _componentName+"_PAR");

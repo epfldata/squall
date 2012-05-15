@@ -7,6 +7,9 @@ import org.apache.log4j.Logger;
 import components.Component;
 import java.util.List;
 import java.util.Map;
+import queryPlans.HyracksL1Plan;
+import queryPlans.HyracksL3BatchPlan;
+import queryPlans.HyracksL3Plan;
 import queryPlans.HyracksPlan;
 import queryPlans.HyracksPreAggPlan;
 import queryPlans.QueryPlan;
@@ -56,8 +59,8 @@ public class Main {
             int planSize = queryPlan.size();
             for(int i=0;i<planSize;i++){
                 Component component = queryPlan.get(i);
-                if(i == planSize - 1){
-                    //very last element
+                if(component.getChild() == null){
+                    //a last component (it might be multiple of them)
                     component.makeBolts(builder, killer, conf, partitioningType, StormComponent.FINAL_COMPONENT);
                 }else{
                     component.makeBolts(builder, killer, conf, partitioningType, StormComponent.INTERMEDIATE);
@@ -116,6 +119,12 @@ public class Main {
                 queryPlan = new HyracksPlan(dataPath, extension, conf).getQueryPlan();
             }else if (queryName.equalsIgnoreCase("HyracksPreAgg")){
                 queryPlan = new HyracksPreAggPlan(dataPath, extension, conf).getQueryPlan();
+            }else if (queryName.equalsIgnoreCase("HyracksL1")){
+                queryPlan = new HyracksL1Plan(dataPath, extension, conf).getQueryPlan();
+            }else if (queryName.equalsIgnoreCase("HyracksL3")){
+                queryPlan = new HyracksL3Plan(dataPath, extension, conf).getQueryPlan();
+            }else if (queryName.equalsIgnoreCase("HyracksL3Batch")){
+                queryPlan = new HyracksL3BatchPlan(dataPath, extension, conf).getQueryPlan();
             }
             // ... this line
 

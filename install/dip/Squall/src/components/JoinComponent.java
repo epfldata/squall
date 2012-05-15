@@ -51,6 +51,7 @@ public class JoinComponent implements Component {
     private ProjectionOperator _firstPreAggProj, _secondPreAggProj;
 
     private boolean _printOut;
+    private boolean _printOutSet; //whether printOut was already set
 
     private List<String> _fullHashList;
 
@@ -159,8 +160,9 @@ public class JoinComponent implements Component {
     }
 
     @Override
-    public JoinComponent setPrintOut(){
-        _printOut = true;
+    public JoinComponent setPrintOut(boolean printOut){
+        _printOutSet = true;
+        _printOut = printOut;
         return this;
     }
 
@@ -179,8 +181,8 @@ public class JoinComponent implements Component {
 
         //by default print out for the last component
         //for other conditions, can be set via setPrintOut
-        if(hierarchyPosition==StormComponent.FINAL_COMPONENT){
-           setPrintOut();
+        if(hierarchyPosition==StormComponent.FINAL_COMPONENT && !_printOutSet){
+           setPrintOut(true);
         }
 
         MyUtilities.checkBatchOutput(_batchOutputMillis, _aggregation, conf);

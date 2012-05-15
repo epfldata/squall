@@ -28,7 +28,7 @@ public interface Component extends Serializable, StormEmitter {
 
     public String getName();
     public String getInfoID();
-    public Component setPrintOut();
+    public Component setPrintOut(boolean printOut);
     
     //sending the content of the component every 'millis' milliseconds
     public Component setBatchOutputMode(long millis);

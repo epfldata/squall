@@ -39,7 +39,7 @@ public class SquallStorage implements Serializable {
 	/* Constructors */
 	public SquallStorage() {
 		/* Default mode is persistent storage */
-		this(StorageFormat.PERSISTENT_STORAGE);
+		this(StorageFormat.INMEM_HASHTABLE);
 	}
 
 	public SquallStorage(StorageFormat sf) {

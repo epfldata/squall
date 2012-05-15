@@ -125,7 +125,10 @@ public class SystemParameters{
         return map;
     }
 
-    /* Set variables for which there is no set method in Config
+    /* Decided not to set it here, because we have to change many Squall config files
+     *   this way the only change is in storm.yaml.
+     *
+     * Set variables for which there is no set method in Config
      * This overrides ~/.storm/storm.yaml
      * Thus, we don't need to change storm.yaml
      *   when submission to other master is required.
@@ -133,15 +136,13 @@ public class SystemParameters{
      *   so when storm.yaml is uploaded,
      *   all the worker nodes are aware of the appropriate master node.
      *   This is important for multiple-instance Storm on cluster.
-     * This variables are common for local and distributed execution.
-     *   Other ones are set in StormWrapper.submitTopology method.
      */
     private static void setStormVariables(Config conf) {
-        if(SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED")){
-            String nimbusHost = SystemParameters.getString(conf, "DIP_NIMBUS_HOST");
-            conf.put(Config.NIMBUS_HOST, nimbusHost);
-            String stormZookeeperServers = SystemParameters.getString(conf, "DIP_STORM_ZOOKEEPER_SERVERS");
-            conf.put(Config.STORM_ZOOKEEPER_SERVERS, stormZookeeperServers);
-        }
+//        if(SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED")){
+//            String nimbusHost = SystemParameters.getString(conf, "DIP_NIMBUS_HOST");
+//            conf.put(Config.NIMBUS_HOST, nimbusHost);
+//            String stormZookeeperServers = SystemParameters.getString(conf, "DIP_STORM_ZOOKEEPER_SERVERS");
+//            conf.put(Config.STORM_ZOOKEEPER_SERVERS, stormZookeeperServers);
+//        }
     }
 }

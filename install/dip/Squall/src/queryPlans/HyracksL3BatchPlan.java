@@ -7,6 +7,7 @@ package queryPlans;
 
 import components.DataSourceComponent;
 import components.JoinComponent;
+import components.OperatorComponent;
 import conversion.IntegerConversion;
 import expressions.ColumnReference;
 import java.util.Arrays;
@@ -20,14 +21,14 @@ import operators.ProjectionOperator;
 import org.apache.log4j.Logger;
 import schema.TPCH_Schema;
 
-public class HyracksPlan {
-    private static Logger LOG = Logger.getLogger(HyracksPlan.class);
+public class HyracksL3BatchPlan {
+    private static Logger LOG = Logger.getLogger(HyracksL3Plan.class);
 
     private QueryPlan _queryPlan = new QueryPlan();
 
     private static final IntegerConversion _ic = new IntegerConversion();
 
-    public HyracksPlan(String dataPath, String extension, Map conf){
+    public HyracksL3BatchPlan(String dataPath, String extension, Map conf){
             //-------------------------------------------------------------------------------------
                     // start of query plan filling
             ProjectionOperator projectionCustomer = new ProjectionOperator(new int[]{0, 6});
@@ -49,14 +50,25 @@ public class HyracksPlan {
                                             _queryPlan).setProjection(projectionOrders)
                                                        .setHashIndexes(hashOrders);
                                                        
+
             //-------------------------------------------------------------------------------------
 
-            AggregateCountOperator agg = new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(1));
-
+            AggregateCountOperator postAgg = new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(1));
+            List<Integer> hashIndexes = Arrays.asList(0);
             JoinComponent CUSTOMER_ORDERSjoin = new JoinComponent(
                     relationCustomer,
                     relationOrders,
-                    _queryPlan).setAggregation(agg);
+                    _queryPlan).setAggregation(postAgg)
+                               .setHashIndexes(hashIndexes)
+                               .setBatchOutputMode(1000);
+
+            //-------------------------------------------------------------------------------------
+            AggregateSumOperator agg = new AggregateSumOperator(_ic, new ColumnReference(_ic, 1), conf)
+                    .setGroupByColumns(Arrays.asList(0));
+
+            OperatorComponent oc = new OperatorComponent(CUSTOMER_ORDERSjoin, "COUNTAGG", _queryPlan)
+                                        .setAggregation(agg)
+                                        .setFullHashList(Arrays.asList("FURNITURE", "BUILDING", "MACHINERY", "HOUSEHOLD", "AUTOMOBILE"));
 
             //-------------------------------------------------------------------------------------
 
