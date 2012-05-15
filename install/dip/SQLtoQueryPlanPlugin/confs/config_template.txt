@@ -17,6 +17,3 @@ DIP_GLOBAL_SPLIT_DELIMITER String
 
 DIP_ACK_EVERY_TUPLE boolean (true or false)
 DIP_KILL_AT_THE_END boolean (true or false)
-#used only in distributed mode
-DIP_NIMBUS_HOST String
-DIP_STORM_ZOOKEEPER_SERVERS String
