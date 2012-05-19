@@ -30,6 +30,11 @@ public class ValueSpecification<T extends Comparable<T>> implements ValueExpress
     public T eval(List<String> tuple) {
         return _constant;
     }
+    
+    @Override
+    public T eval(List<String> firstTuple, List<String> secondTuple) {
+    	return _constant;
+    }
 
     @Override
     public String evalString(List<String> tuple) {

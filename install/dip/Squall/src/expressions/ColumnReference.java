@@ -26,6 +26,17 @@ public class ColumnReference<T extends Comparable<T>> implements ValueExpression
         String value = tuple.get(_column);
         return _wrapper.fromString(value);
     }
+    
+    @Override
+    public T eval(List<String> firstTuple, List<String> secondTuple){
+    	String value;
+    	if(_column < firstTuple.size()){
+	        value = firstTuple.get(_column);
+    	}else{
+	    	value = secondTuple.get(_column-firstTuple.size());  
+    	}
+    	return _wrapper.fromString(value);
+    }
 
     @Override
     public String evalString(List<String> tuple) {

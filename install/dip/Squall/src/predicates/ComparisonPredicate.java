@@ -73,6 +73,38 @@ public  class ComparisonPredicate<T extends Comparable<T>> implements Predicate 
         }
         return result;
     }
+    
+    @Override
+    public boolean test(List<String> firstTupleValues, List<String> secondTupleValues){
+        Comparable val1 = (Comparable) _ve1.eval(firstTupleValues, secondTupleValues);
+        Comparable val2 = (Comparable) _ve2.eval(firstTupleValues, secondTupleValues);
+        int compared = val1.compareTo(val2);
+
+        boolean result = false;
+        switch(_operation){
+            case EQUAL_OP:
+                result = (compared == 0);
+                break;
+            case NONEQUAL_OP:
+                result = (compared != 0);
+                break;                
+            case LESS_OP:
+                result = (compared < 0);
+                break;
+            case NONLESS_OP:
+                result = (compared >= 0);
+                break;
+            case GREATER_OP:
+                result = (compared > 0);
+                break;
+            case NONGREATER_OP:
+                result = (compared <= 0);
+                break;
+            default:
+                throw new RuntimeException("Unsupported operation " + _operation);
+        }
+        return result;
+    }
 
     @Override
     public void accept(PredicateVisitor pv) {

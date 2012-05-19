@@ -33,6 +33,15 @@ public class StringConcatenate implements ValueExpression<String> {
         }
         return result;
     }
+    
+    @Override
+    public String eval(List<String> firstTuple, List<String> secondTuple){
+        String result = "";
+        for(ValueExpression<String> str: _strList){
+            result += str;
+        }
+        return result;
+    }
 
     @Override
     public String evalString(List<String> tuple) {
