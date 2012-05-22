@@ -22,7 +22,7 @@ import predicates.ComparisonPredicate;
 import predicates.OrPredicate;
 import predicates.Predicate;
 
-public class PredicateUpdateIndexesVisitor implements PredicateVisitor, ExpressionVisitor{
+public class PredicateUpdateIndexesVisitor implements PredicateVisitor{
 
 	private List<String> _tuple;
 	
@@ -59,124 +59,30 @@ public class PredicateUpdateIndexesVisitor implements PredicateVisitor, Expressi
 	@Override
 	public void visit(BetweenPredicate between) {
 		//In between there is only an and predicate
-		visit(between.getInnerPredicates().get(0));
+		Predicate p = (Predicate)between.getInnerPredicates().get(0);
+		visit(p);
 	}
 
 	@Override
 	public void visit(ComparisonPredicate comparison) {
+		ExpressionUpdateIndexesVisitor exprVisitor =
+			new ExpressionUpdateIndexesVisitor(_tuple);
+		
+		ValueExpression val;
+		
 		if(_comeFromFirstEmitter){
-			visit(comparison.getExpressions().get(0));
+			val = (ValueExpression) comparison.getExpressions().get(0);
 		}else{
-			visit(comparison.getExpressions().get(1));
+			val = (ValueExpression) comparison.getExpressions().get(1);
 		}
 		
+		val.accept(exprVisitor);
+		_valuesToIndex.addAll(exprVisitor._valuesToIndex);
+		_typesOfValuesToIndex.addAll(exprVisitor._typesOfValuesToIndex);		
 	}
 
-	
-	public void visit(Object object) {
-		try
-		{
-			Method downPolymorphic = object.getClass().getMethod("visit",
-				new Class[] { object.getClass() });
-
-			if (downPolymorphic == null) {
-				defaultVisit(object);
-			} else {
-				downPolymorphic.invoke(this, new Object[] {object});
-			}
-		}
-		catch (NoSuchMethodException e)
-		{
-			this.defaultVisit(object);
-		}
-		catch (InvocationTargetException e)
-		{
-			this.defaultVisit(object);
-		}   
-		catch (IllegalAccessException e)
-		{
-			this.defaultVisit(object);
-		}      	
+	public void visit(Predicate pred) {
+		pred.accept(this);
 	}
 	
-	public void defaultVisit(Object object)
-	{
-		// if we don't know the class we do nothing
-		if (object.getClass().equals(Predicate.class) || object.getClass().equals(ValueExpression.class))
-		{
-			System.out.println("default visit: "
-				+ object.getClass().getSimpleName());
-		}
-	}
-
-
-	@Override
-	public void visit(Addition addition) {
-		List<ValueExpression> l = addition.getInnerExpressions();
-		for(int index=0; index<l.size(); index++){
-			visit(l.get(index));
-		}
-	}
-
-
-	@Override
-	public void visit(ColumnReference colRef) {
-		_valuesToIndex.add(_tuple.get(colRef.getColumnIndex()));
-		_typesOfValuesToIndex.add(colRef.getType().getInitialValue());
-	}
-
-
-	@Override
-	public void visit(DateSum dateSum) {
-		List<ValueExpression> l = dateSum.getInnerExpressions();
-		for(int index=0; index<l.size(); index++){
-			visit(l.get(index));
-		}
-	}
-
-
-	@Override
-	public void visit(IntegerYearFromDate year) {
-		List<ValueExpression> l = year.getInnerExpressions();
-		for(int index=0; index<l.size(); index++){
-			visit(l.get(index));
-		}
-	}
-
-
-	@Override
-	public void visit(Multiplication multiplication) {
-		List<ValueExpression> l = multiplication.getInnerExpressions();
-		for(int index=0; index<l.size(); index++){
-			visit(l.get(index));
-		}
-	}
-
-
-	@Override
-	public void visit(StringConcatenate stringConcatenate) {
-		List<ValueExpression> l = stringConcatenate.getInnerExpressions();
-		for(int index=0; index<l.size(); index++){
-			visit(l.get(index));
-		}
-	}
-
-
-	@Override
-	public void visit(Subtraction substraction) {
-		List<ValueExpression> l = substraction.getInnerExpressions();
-		for(int index=0; index<l.size(); index++){
-			visit(l.get(index));
-		}
-	}
-
-
-	@Override
-	public void visit(ValueSpecification valueSpecification) {
-		List<ValueExpression> l = valueSpecification.getInnerExpressions();
-		for(int index=0; index<l.size(); index++){
-			visit(l.get(index));
-		}
-	}
-
 }

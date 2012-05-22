@@ -54,8 +54,8 @@ public class TestThetaJoin {
             NumericConversion<Integer> intConv = new IntegerConversion();
             
             ColumnReference colNation = new ColumnReference(intConv, 2);
-            ColumnReference colRegion = new ColumnReference(intConv, 4);
-            ComparisonPredicate comp = new ComparisonPredicate(colNation, colRegion);
+            ColumnReference colRegion = new ColumnReference(intConv, 0);
+            ComparisonPredicate comp = new ComparisonPredicate(1,colNation, colRegion);
             ThetaJoinComponent CUSTOMER_ORDERSjoin = new ThetaJoinComponent(
                     relationCustomer,
                     relationOrders,

@@ -178,80 +178,80 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 		_secondRelationIndexes = new ArrayList<Index>(visitor._secondRelationIndexes);
 		_operatorForIndexes = new ArrayList<Integer>(visitor._operatorForIndexes);
 		_typeOfValueIndexed = new ArrayList<Object>(visitor._typeOfValueIndexed);
-		System.out.println("/"+_firstRelationIndexes.size()+"/"+_secondRelationIndexes.size()+"/"+_operatorForIndexes+"/"+_typeOfValueIndexed);
 	}
 	
 
 	@Override
-		public void execute(Tuple stormTupleRcv) {
-			if(_firstTime && MyUtilities.isBatchOutputMode(_batchOutputMillis)){
-				_periodicBatch = new PeriodicBatchSend(_batchOutputMillis, this);
-				_firstTime = false;
-			}
-
-			if (receivedDumpSignal(stormTupleRcv)) {
-				MyUtilities.dumpSignal(this, stormTupleRcv, _collector);
-				return;
-			}
-
-			String inputComponentName=stormTupleRcv.getString(0);
-			String inputTupleString=stormTupleRcv.getString(1);   //INPUT TUPLE
-			String inputTupleHash=stormTupleRcv.getString(2);
-
-			if(MyUtilities.isFinalAck(inputTupleString, _conf)){
-				_numRemainingParents--;
-				MyUtilities.processFinalAck(_numRemainingParents, _hierarchyPosition, stormTupleRcv, _collector, _periodicBatch);
-				return;
-			}
-
-			String firstEmitterName = _firstEmitter.getName();
-			String secondEmitterName = _secondEmitter.getName();
-
-			boolean isFromFirstEmitter = false;
-			
-			TupleStorage affectedStorage, oppositeStorage;
-			List<Index> affectedIndexes, oppositeIndexes;
-			
-			if(firstEmitterName.equals(inputComponentName)){
-				//R update
-				isFromFirstEmitter = true;
-				affectedStorage = _firstRelationStorage;
-				oppositeStorage = _secondRelationStorage;
-				affectedIndexes = _firstRelationIndexes;
-				oppositeIndexes = _secondRelationIndexes;
-			}else if(secondEmitterName.equals(inputComponentName)){
-				//S update
-				isFromFirstEmitter = false;
-				affectedStorage = _secondRelationStorage;
-				oppositeStorage = _firstRelationStorage;
-				affectedIndexes = _secondRelationIndexes;
-				oppositeIndexes = _firstRelationIndexes;
-			}else{
-				throw new RuntimeException("InputComponentName " + inputComponentName +
-						" doesn't match neither " + firstEmitterName + " nor " + secondEmitterName + ".");
-			}
-
-			//add the stormTuple to the specific storage
-			long row_id = affectedStorage.insert(inputTupleString);
-			List<String> valuesToApplyOnIndex = null;
-			
-			if(_existIndexes){
-				valuesToApplyOnIndex = updateIndexes(stormTupleRcv, affectedIndexes, row_id);
-			}
-
-			performJoin( stormTupleRcv,
-					inputTupleString, 
-					inputTupleHash,
-					isFromFirstEmitter,
-					oppositeIndexes,
-					valuesToApplyOnIndex,
-					oppositeStorage);
-
-			_collector.ack(stormTupleRcv);
+	public void execute(Tuple stormTupleRcv) {
+		if(_firstTime && MyUtilities.isBatchOutputMode(_batchOutputMillis)){
+			_periodicBatch = new PeriodicBatchSend(_batchOutputMillis, this);
+			_firstTime = false;
 		}
+
+		if (receivedDumpSignal(stormTupleRcv)) {
+			MyUtilities.dumpSignal(this, stormTupleRcv, _collector);
+			return;
+		}
+
+		String inputComponentName=stormTupleRcv.getString(0);
+		String inputTupleString=stormTupleRcv.getString(1);   //INPUT TUPLE
+		String inputTupleHash=stormTupleRcv.getString(2);
+
+		if(MyUtilities.isFinalAck(inputTupleString, _conf)){
+			_numRemainingParents--;
+			MyUtilities.processFinalAck(_numRemainingParents, _hierarchyPosition, stormTupleRcv, _collector, _periodicBatch);
+			return;
+		}
+
+		String firstEmitterName = _firstEmitter.getName();
+		String secondEmitterName = _secondEmitter.getName();
+
+		boolean isFromFirstEmitter = false;
+		
+		TupleStorage affectedStorage, oppositeStorage;
+		List<Index> affectedIndexes, oppositeIndexes;
+		
+		if(firstEmitterName.equals(inputComponentName)){
+			//R update
+			isFromFirstEmitter = true;
+			affectedStorage = _firstRelationStorage;
+			oppositeStorage = _secondRelationStorage;
+			affectedIndexes = _firstRelationIndexes;
+			oppositeIndexes = _secondRelationIndexes;
+		}else if(secondEmitterName.equals(inputComponentName)){
+			//S update
+			isFromFirstEmitter = false;
+			affectedStorage = _secondRelationStorage;
+			oppositeStorage = _firstRelationStorage;
+			affectedIndexes = _secondRelationIndexes;
+			oppositeIndexes = _firstRelationIndexes;
+		}else{
+			throw new RuntimeException("InputComponentName " + inputComponentName +
+					" doesn't match neither " + firstEmitterName + " nor " + secondEmitterName + ".");
+		}
+
+		//add the stormTuple to the specific storage
+		long row_id = affectedStorage.insert(inputTupleString);
+
+		List<String> valuesToApplyOnIndex = null;
+		
+		if(_existIndexes){
+			valuesToApplyOnIndex = updateIndexes(stormTupleRcv, affectedIndexes, row_id);
+		}
+
+		performJoin( stormTupleRcv,
+				inputTupleString, 
+				inputTupleHash,
+				isFromFirstEmitter,
+				oppositeIndexes,
+				valuesToApplyOnIndex,
+				oppositeStorage);
+
+		_collector.ack(stormTupleRcv);
+	}
 	
 	private List<String> updateIndexes(Tuple stormTupleRcv, List<Index> affectedIndexes, long row_id){
-		
+
 		String inputComponentName = stormTupleRcv.getString(0); // Table name
 		String inputTupleString = stormTupleRcv.getString(1); //INPUT TUPLE
 		// Get a list of tuple attributes and the key value
@@ -267,13 +267,14 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 		}else{
 			comeFromFirstEmitter = false;
 		}
-		
+
 		PredicateUpdateIndexesVisitor visitor = new PredicateUpdateIndexesVisitor(comeFromFirstEmitter, tuple);
 		_joinPredicate.accept(visitor);
-		
+
 		List<String> valuesToIndex = new ArrayList<String>(visitor._valuesToIndex);
 		List<Object> typesOfValuesToIndex = new ArrayList<Object>(visitor._typesOfValuesToIndex);
-		
+System.out.println("values----"+valuesToIndex);
+System.out.println("types----"+typesOfValuesToIndex);
 		for(int i=0; i<affectedIndexes.size(); i++){
 			if(typesOfValuesToIndex.get(i) instanceof Integer){
 				affectedIndexes.get(i).put(Integer.parseInt(valuesToIndex.get(i)), row_id);
@@ -301,8 +302,8 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 			TupleStorage oppositeStorage){
 
 		TupleStorage tuplesToJoin = new TupleStorage();
-		System.out.println("perform:"+_existIndexes+"-"+oppositeIndexes.size());
 		selectTupleToJoin(oppositeStorage, oppositeIndexes, isFromFirstEmitter, valuesToApplyOnIndex, tuplesToJoin);
+		System.out.println("list"+tuplesToJoin);
 		join(stormTupleRcv, inputTupleString, isFromFirstEmitter, tuplesToJoin);
 	}
 	
@@ -310,7 +311,7 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 			List<Index> oppositeIndexes, boolean isFromFirstEmitter,
 			List<String> valuesToApplyOnIndex, TupleStorage tuplesToJoin){
 		
-		System.out.println("selectTupleToJoin");
+		System.out.println("valuetoApply"+valuesToApplyOnIndex);
 		
 		if(!_existIndexes ){
 			tuplesToJoin = oppositeStorage;
@@ -368,7 +369,7 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 			Index currentOpposIndex = oppositeIndexes.get(i);
 			String value = valuesToApplyOnIndex.get(i);
 			int currentOperator = -1;
-			
+			System.out.println("Index:"+currentOpposIndex);
 			// Switch inequality operator if the tuple coming is from the other relation
 			if (isFromFirstEmitter){
 				int operator = _operatorForIndexes.get(i);
@@ -388,9 +389,10 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 				}
 				
 			}
-			
+			System.out.println("typeIndexed:"+_typeOfValueIndexed.get(i));
 			// Get the values from the index (check type first)
 			if(_typeOfValueIndexed.get(i) instanceof Integer){
+				System.out.println("INT");
 				currentRowIds = currentOpposIndex.getValues(Integer.parseInt(value), currentOperator );
 			}else if(_typeOfValueIndexed.get(i) instanceof Double){
 				currentRowIds = currentOpposIndex.getValues(Double.parseDouble(value), currentOperator );
@@ -401,7 +403,7 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 			}
 				
 			
-			
+			System.out.println("currentIDS:"+currentRowIds);
 			
 			// Compute the intersection
 			// TODO: Search only within the ids that are in rowIds from previous join conditions
@@ -471,11 +473,12 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 					// Cartesian product - Outputs all attributes
 					outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);
 				//}
-	
+
 				applyOperatorsAndSend(stormTuple, outputTuple);
-				System.out.println(outputTuple);
+
 			}
 		}	
+		
 	}
 
 	protected void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> tuple){

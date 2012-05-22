@@ -59,13 +59,13 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 			return null;
 		else if (operator == ComparisonPredicate.EQUAL_OP)
 			return getValues(key);
-		else if (operator == ComparisonPredicate.NONGREATER_OP)
-			return myGreater(key, false);
 		else if (operator == ComparisonPredicate.GREATER_OP)
-			return myGreater(key, true);
+			return myGreater(key, false);
 		else if (operator == ComparisonPredicate.NONLESS_OP)
-			return myLess(key, false);
+			return myGreater(key, true);
 		else if (operator == ComparisonPredicate.LESS_OP)
+			return myLess(key, false);
+		else if (operator == ComparisonPredicate.NONGREATER_OP)
 			return myLess(key, true);
 		else
 			return null;

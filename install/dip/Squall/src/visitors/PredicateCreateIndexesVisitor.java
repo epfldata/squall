@@ -23,7 +23,7 @@ import indexes.BplusTreeIndex;
 import indexes.HashIndex;
 import indexes.Index;
 
-public class PredicateCreateIndexesVisitor implements PredicateVisitor, ExpressionVisitor{
+public class PredicateCreateIndexesVisitor implements PredicateVisitor{
 
 	public List<Index> _firstRelationIndexes = new ArrayList<Index>();
 	public List<Index> _secondRelationIndexes = new ArrayList<Index>();
@@ -61,7 +61,8 @@ public class PredicateCreateIndexesVisitor implements PredicateVisitor, Expressi
 	@Override
 	public void visit(BetweenPredicate between) {
 		//In between there is only an and predicate
-		visit(between.getInnerPredicates().get(0));
+		Predicate p = (Predicate)between.getInnerPredicates().get(0);
+		visit(p);
 	}
 
 	@Override
@@ -107,97 +108,9 @@ public class PredicateCreateIndexesVisitor implements PredicateVisitor, Expressi
 		
 	}
 	
-	public void visit(Object object) {
+	public void visit(Predicate pred) {
 		System.out.println("visit");
-		try
-		{
-			Method downPolymorphic = object.getClass().getMethod("accept",
-				new Class[] { object.getClass() });
-
-			if (downPolymorphic == null) {
-				defaultVisit(object);
-			} else {
-				downPolymorphic.invoke(this, new Object[] {object});
-			}
-		}
-		catch (NoSuchMethodException e)
-		{
-			this.defaultVisit(object);
-		}
-		catch (InvocationTargetException e)
-		{
-			this.defaultVisit(object);
-		}   
-		catch (IllegalAccessException e)
-		{
-			this.defaultVisit(object);
-		}      	
-	}
-	
-	public void defaultVisit(Object object)
-	{
-		// if we don't know the class we do nothing
-		if (object.getClass().equals(Predicate.class))
-		{
-			System.out.println("default visit: "
-				+ object.getClass().getSimpleName());
-		}
-	}
-
-
-	@Override
-	public void visit(Addition addition) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void visit(ColumnReference colRef) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void visit(DateSum dateSum) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void visit(IntegerYearFromDate year) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void visit(Multiplication multiplication) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void visit(StringConcatenate stringConcatenate) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void visit(Subtraction substraction) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void visit(ValueSpecification valueSpecification) {
-		// TODO Auto-generated method stub
-		
+		pred.accept(this);
 	}
 
 }
