@@ -11,4 +11,5 @@ public interface Predicate extends Serializable  {
     public List<Predicate> getInnerPredicates();
 
     public void accept(PredicateVisitor pv);
+    public String toString();
 }

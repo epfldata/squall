@@ -19,6 +19,7 @@ import queryPlans.TPCH4Plan;
 import queryPlans.TPCH5Plan;
 import queryPlans.TPCH7Plan;
 import queryPlans.TPCH8Plan;
+import queryPlans.TestThetaJoin;
 import stormComponents.StormJoin;
 import stormComponents.StormComponent;
 import stormComponents.synchronization.TopologyKiller;
@@ -123,6 +124,8 @@ public class Main {
                 queryPlan = new HyracksL1Plan(dataPath, extension, conf).getQueryPlan();
             }else if (queryName.equalsIgnoreCase("HyracksL3")){
                 queryPlan = new HyracksL3Plan(dataPath, extension, conf).getQueryPlan();
+            }else if (queryName.equalsIgnoreCase("TestTheta")){
+            	queryPlan = new TestThetaJoin(dataPath, extension, conf).getQueryPlan();
             }else if (queryName.equalsIgnoreCase("HyracksL3Batch")){
                 queryPlan = new HyracksL3BatchPlan(dataPath, extension, conf).getQueryPlan();
             }

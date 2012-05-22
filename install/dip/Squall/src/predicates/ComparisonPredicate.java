@@ -144,4 +144,12 @@ public  class ComparisonPredicate<T extends Comparable<T>> implements Predicate 
         }
         return result;
     }
+    
+    public T getType(){
+    	return (T) _ve1.getType().getInitialValue();
+    }
+    
+    public int getOperation(){
+    	return _operation;
+    }
 }
