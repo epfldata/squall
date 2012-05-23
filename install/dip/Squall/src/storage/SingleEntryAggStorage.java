@@ -109,11 +109,20 @@ public class SingleEntryAggStorage<T> implements AggStorage<T>{
     }
 
     private boolean almostTheSame(T value1, T value2){
+           //This should be made by percentages
         String str1 = _wrapper.toString(value1);
         String str2 = _wrapper.toString(value2);
 
-        str1 = str1.substring(0, 9);
-        str2 = str2.substring(0, 9);
+        int numComparedChars = 8;
+        if(str1.length() < numComparedChars){
+            numComparedChars = str1.length();
+        }
+        if(str2.length() < numComparedChars){
+            numComparedChars = str2.length();
+        }
+
+        str1 = str1.substring(0, numComparedChars);
+        str2 = str2.substring(0, numComparedChars);
         return str1.equalsIgnoreCase(str2);
     }
 

@@ -7,13 +7,17 @@ import org.apache.log4j.Logger;
 import components.Component;
 import java.util.List;
 import java.util.Map;
-import queryPlans.HyracksL1Plan;
-import queryPlans.HyracksL3BatchPlan;
-import queryPlans.HyracksL3Plan;
+import queryPlans.debug.HyracksL1Plan;
+import queryPlans.debug.HyracksL3BatchPlan;
+import queryPlans.debug.HyracksL3Plan;
 import queryPlans.HyracksPlan;
 import queryPlans.HyracksPreAggPlan;
 import queryPlans.QueryPlan;
 import queryPlans.RSTPlan;
+import queryPlans.TPCH10Plan;
+import queryPlans.debug.TPCH3L1Plan;
+import queryPlans.debug.TPCH3L23Plan;
+import queryPlans.debug.TPCH3L2Plan;
 import queryPlans.TPCH3Plan;
 import queryPlans.TPCH4Plan;
 import queryPlans.TPCH5Plan;
@@ -106,16 +110,6 @@ public class Main {
             // change between this and ...
             if(queryName.equalsIgnoreCase("RST")){
                 queryPlan = new RSTPlan(dataPath, extension, conf).getQueryPlan();
-            }else if(queryName.equalsIgnoreCase("TPCH3")){
-                queryPlan = new TPCH3Plan(dataPath, extension, conf).getQueryPlan();
-            }else if(queryName.equalsIgnoreCase("TPCH4")){
-                queryPlan = new TPCH4Plan(dataPath, extension, conf).getQueryPlan();
-            }else if(queryName.equalsIgnoreCase("TPCH5")){
-                queryPlan = new TPCH5Plan(dataPath, extension, conf).getQueryPlan();
-            }else if(queryName.equalsIgnoreCase("TPCH7")){
-                queryPlan = new TPCH7Plan(dataPath, extension, conf).getQueryPlan();
-            }else if(queryName.equalsIgnoreCase("TPCH8")){
-                queryPlan = new TPCH8Plan(dataPath, extension, conf).getQueryPlan();
             }else if (queryName.equalsIgnoreCase("Hyracks")){
                 queryPlan = new HyracksPlan(dataPath, extension, conf).getQueryPlan();
             }else if (queryName.equalsIgnoreCase("HyracksPreAgg")){
@@ -124,10 +118,28 @@ public class Main {
                 queryPlan = new HyracksL1Plan(dataPath, extension, conf).getQueryPlan();
             }else if (queryName.equalsIgnoreCase("HyracksL3")){
                 queryPlan = new HyracksL3Plan(dataPath, extension, conf).getQueryPlan();
-            }else if (queryName.equalsIgnoreCase("TestTheta")){
-            	queryPlan = new TestThetaJoin(dataPath, extension, conf).getQueryPlan();
             }else if (queryName.equalsIgnoreCase("HyracksL3Batch")){
                 queryPlan = new HyracksL3BatchPlan(dataPath, extension, conf).getQueryPlan();
+            }else if(queryName.equalsIgnoreCase("TPCH3")){
+                queryPlan = new TPCH3Plan(dataPath, extension, conf).getQueryPlan();
+            }else if(queryName.equalsIgnoreCase("TPCH3L1")){
+                queryPlan = new TPCH3L1Plan(dataPath, extension, conf).getQueryPlan();
+            }else if(queryName.equalsIgnoreCase("TPCH3L2")){
+                queryPlan = new TPCH3L2Plan(dataPath, extension, conf).getQueryPlan();
+            }else if(queryName.equalsIgnoreCase("TPCH3L23")){
+                queryPlan = new TPCH3L23Plan(dataPath, extension, conf).getQueryPlan();
+            }else if(queryName.equalsIgnoreCase("TPCH4")){
+                queryPlan = new TPCH4Plan(dataPath, extension, conf).getQueryPlan();
+            }else if(queryName.equalsIgnoreCase("TPCH5")){
+                queryPlan = new TPCH5Plan(dataPath, extension, conf).getQueryPlan();
+            }else if(queryName.equalsIgnoreCase("TPCH7")){
+                queryPlan = new TPCH7Plan(dataPath, extension, conf).getQueryPlan();
+            }else if(queryName.equalsIgnoreCase("TPCH8")){
+                queryPlan = new TPCH8Plan(dataPath, extension, conf).getQueryPlan();
+            }else if(queryName.equalsIgnoreCase("TPCH10")){
+                queryPlan = new TPCH10Plan(dataPath, extension, conf).getQueryPlan();
+            }else if (queryName.equalsIgnoreCase("TestTheta")){
+            	queryPlan = new TestThetaJoin(dataPath, extension, conf).getQueryPlan();
             }
             // ... this line
 

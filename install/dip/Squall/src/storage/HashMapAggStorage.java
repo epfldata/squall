@@ -161,7 +161,7 @@ public class HashMapAggStorage<T> implements AggStorage<T>{
         String str1 = _wrapper.toString(value1);
         String str2 = _wrapper.toString(value2);
 
-        int numComparedChars = 9;
+        int numComparedChars = 8;
         if(str1.length() < numComparedChars){
             numComparedChars = str1.length();
         }

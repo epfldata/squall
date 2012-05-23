@@ -108,7 +108,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
 		builder.setSpout(Integer.toString(_ID), this, parallelism);
 		if(MyUtilities.isAckEveryTuple(conf)){
-			killer.registerComponent(this, 1);
+			killer.registerComponent(this, parallelism);
 		}
 	}
 

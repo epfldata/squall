@@ -4,25 +4,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import utilities.MyUtilities;
 
-import matrixMapping.EquiMatrixAssignment;
-import matrixMapping.MatrixAssignment;
-import matrixMapping.MatrixAssignment.Dimension;
+import thetajoin.matrixMapping.MatrixAssignment;
+import thetajoin.matrixMapping.MatrixAssignment.Dimension;
 
 import backtype.storm.grouping.CustomStreamGrouping;
 import backtype.storm.tuple.Fields;
+import org.apache.log4j.Logger;
 
 public class ThetaJoinStaticMapping implements CustomStreamGrouping{
-	
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
+	private static Logger LOG = Logger.getLogger(ThetaJoinStaticMapping.class);
+
 	private MatrixAssignment _assignment;
 	private String _first, _second;
 	private int _numTasks;
 	private Map _map;
+
 	public ThetaJoinStaticMapping(String first,String second,MatrixAssignment assignment, Map map) {
 		_assignment=assignment;
 		_first=first;
@@ -32,7 +30,7 @@ public class ThetaJoinStaticMapping implements CustomStreamGrouping{
 
 	@Override
 	public void prepare(Fields outFields, int numTasks) {
-		//System.out.println("Number of tasks is : "+numTasks);
+		//LOG.info("Number of tasks is : "+numTasks);
 		_numTasks = numTasks;
 		
 	}
@@ -57,8 +55,8 @@ public class ThetaJoinStaticMapping implements CustomStreamGrouping{
 		else if(tableName.equals(_second))
 			tasks= _assignment.getRegionIDs(Dimension.COLUMN);
 		else
-			System.out.println("WRONG ASSIGNMENT");
-		//System.out.println(tasks);
+			LOG.info("WRONG ASSIGNMENT");
+		//LOG.info(tasks);
 		return tasks;
 	}
 

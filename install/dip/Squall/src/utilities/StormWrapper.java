@@ -80,7 +80,7 @@ public class StormWrapper {
 
     private static void localKillCluster(Map conf, String topologyName){
     	long endTime = System.currentTimeMillis();
-        System.out.println("Running time (sec):" + ((endTime - startTime) / 1000));
+        LOG.info("Running time (sec):" + ((endTime - startTime) / 1000));
         LocalMergeResults.localPrintAndCompare(conf);
         //Should be killed with the following two lines
         //cluster.killTopology(topologyName);

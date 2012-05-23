@@ -1,14 +1,11 @@
 package predicates;
 
-import org.apache.log4j.Logger;
-
 import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
 import visitors.PredicateVisitor;
 
 public  class ComparisonPredicate<T extends Comparable<T>> implements Predicate {
-    private static Logger LOG = Logger.getLogger(ComparisonPredicate.class);
 
     public static final int EQUAL_OP=0;
     public static final int NONEQUAL_OP=1;

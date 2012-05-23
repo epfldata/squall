@@ -14,9 +14,6 @@ import operators.AggregateOperator;
 import operators.DistinctOperator;
 import operators.ProjectionOperator;
 import operators.SelectionOperator;
-import stormComponents.StormDstJoin;
-import stormComponents.StormJoin;
-import stormComponents.StormSrcJoin;
 import stormComponents.StormThetaJoin;
 import stormComponents.synchronization.TopologyKiller;
 import org.apache.log4j.Logger;
@@ -25,11 +22,10 @@ import predicates.Predicate;
 import queryPlans.QueryPlan;
 import stormComponents.StormComponent;
 import utilities.MyUtilities;
-import storage.SquallStorage;
 
 public class ThetaJoinComponent implements Component {
     private static final long serialVersionUID = 1L;
-    private static Logger LOG = Logger.getLogger(JoinComponent.class);
+    private static Logger LOG = Logger.getLogger(ThetaJoinComponent.class);
 
     private Component _firstParent;
     private Component _secondParent;
@@ -49,11 +45,8 @@ public class ThetaJoinComponent implements Component {
     private ProjectionOperator _projection;
     private AggregateOperator _aggregation;
 
-
     private boolean _printOut;
     private boolean _printOutSet; //whether printOut was already set
-
-    private List<String> _fullHashList;
     
     private Predicate _joinPredicate;
 
@@ -82,13 +75,12 @@ public class ThetaJoinComponent implements Component {
     //list of distinct keys, used for direct stream grouping and load-balancing ()
     @Override
     public ThetaJoinComponent setFullHashList(List<String> fullHashList){
-        _fullHashList = fullHashList;
-        return this;
+        throw new RuntimeException("Load balancing for Theta join is done inherently!");
     }
 
     @Override
     public List<String> getFullHashList(){
-        return _fullHashList;
+        throw new RuntimeException("Load balancing for Theta join is done inherently!");
     }
 
     @Override
@@ -174,7 +166,6 @@ public class ThetaJoinComponent implements Component {
         }
 
         MyUtilities.checkBatchOutput(_batchOutputMillis, _aggregation, conf);
-       
 
         _joiner = new StormThetaJoin(_firstParent,
                             _secondParent,
@@ -189,11 +180,9 @@ public class ThetaJoinComponent implements Component {
                             hierarchyPosition,
                             _printOut,
                             _batchOutputMillis,
-                            _fullHashList,
                             builder,
                             killer,
-                            conf);
-       
+                            conf);   
     }
 
     @Override

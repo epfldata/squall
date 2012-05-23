@@ -21,10 +21,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import matrixMapping.MatrixAssignment;
+import thetajoin.matrixMapping.MatrixAssignment;
 import operators.AggregateOperator;
-import operators.ChainOperator;
-import operators.Operator;
 
 import org.apache.log4j.Logger;
 import stormComponents.StormComponent;

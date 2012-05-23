@@ -1,13 +1,10 @@
 package stormComponents;
 
 import backtype.storm.Config;
-import indexes.Index;
+import thetajoin.indexes.Index;
 
 import java.util.ArrayList;
 import java.util.Map;
-
-
-
 
 import utilities.MyUtilities;
 
@@ -25,8 +22,8 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 
 
-import matrixMapping.Matrix;
-import matrixMapping.OptimalPartition;
+import thetajoin.matrixMapping.Matrix;
+import thetajoin.matrixMapping.OptimalPartition;
 import operators.AggregateOperator;
 import operators.ChainOperator;
 import operators.DistinctOperator;
@@ -34,7 +31,6 @@ import operators.Operator;
 import operators.ProjectionOperator;
 import operators.SelectionOperator;
 import utilities.SystemParameters;
-import storage.SquallStorage;
 import storage.TupleStorage;
 
 import org.apache.log4j.Logger;
@@ -48,7 +44,7 @@ import visitors.PredicateUpdateIndexesVisitor;
 
 public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComponent {
 	private static final long serialVersionUID = 1L;
-	private static Logger LOG = Logger.getLogger(StormDstJoin.class);
+	private static Logger LOG = Logger.getLogger(StormThetaJoin.class);
 
 	private int _hierarchyPosition=INTERMEDIATE;
 
@@ -80,10 +76,6 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 	private List<Integer> _operatorForIndexes;
 	private List<Object> _typeOfValueIndexed;
 	private boolean _existIndexes = false;
-	
-
-	//for load-balancing
-	private List<String> _fullHashList;
 
 	//for No ACK: the total number of tasks of all the parent compoonents
 	private int _numRemainingParents;
@@ -107,7 +99,6 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 			int hierarchyPosition,
 			boolean printOut,
 			long batchOutputMillis,
-			List<String> fullHashList,
 			TopologyBuilder builder,
 			TopologyKiller killer,
 			Config conf) {
@@ -119,7 +110,6 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 		
 		int firstCardinality=SystemParameters.getInt(conf, firstEmitter.getName()+"_CARD");
 		int secondCardinality=SystemParameters.getInt(conf, secondEmitter.getName()+"_CARD");
-
 
 		int parallelism = SystemParameters.getInt(conf, _componentName+"_PAR");
 
@@ -135,7 +125,6 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 
 		_hierarchyPosition = hierarchyPosition;
 
-		_fullHashList = fullHashList;
 		_ID=MyUtilities.getNextTopologyId();
 		InputDeclarer currentBolt = builder.setBolt(Integer.toString(_ID), this, parallelism);
 		

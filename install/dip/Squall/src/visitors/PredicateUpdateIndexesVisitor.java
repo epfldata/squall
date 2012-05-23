@@ -1,20 +1,10 @@
 package visitors;
 
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import expressions.Addition;
-import expressions.ColumnReference;
-import expressions.DateSum;
-import expressions.IntegerYearFromDate;
-import expressions.Multiplication;
-import expressions.StringConcatenate;
-import expressions.Subtraction;
 import expressions.ValueExpression;
-import expressions.ValueSpecification;
 
 import predicates.AndPredicate;
 import predicates.BetweenPredicate;
