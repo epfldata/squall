@@ -34,6 +34,15 @@ public class DateSum implements ValueExpression<Date>{
         c.add(_unit, _interval);
         return c.getTime();
     }
+    
+    @Override
+    public Date eval(List<String> firstTuple, List<String> secondTuple) {
+        Date base = _ve.eval(firstTuple, secondTuple);
+        Calendar c = Calendar.getInstance();
+        c.setTime(base);
+        c.add(_unit, _interval);
+        return c.getTime();
+    }
 
     @Override
     public String evalString(List<String> tuple) {

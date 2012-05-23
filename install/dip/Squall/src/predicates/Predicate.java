@@ -6,7 +6,10 @@ import visitors.PredicateVisitor;
 
 public interface Predicate extends Serializable  {
     public boolean test(List<String> tupleValues);
+    public boolean test(List<String> firstTupleValues, List<String> secondTupleValues);
+    
     public List<Predicate> getInnerPredicates();
 
     public void accept(PredicateVisitor pv);
+    public String toString();
 }

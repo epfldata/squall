@@ -23,7 +23,16 @@ public class AndPredicate implements Predicate {
             if(pred.test(tupleValues)==false)
                 return false;
             }
-	return true;
+    	return true;
+    }
+    
+    @Override
+    public boolean test(List<String> firstTupleValues, List<String> secondTupleValues) {
+    	for (Predicate pred: _predicateList){
+            if(pred.test(firstTupleValues, secondTupleValues)==false)
+                return false;
+            }
+    	return true;
     }
 
     @Override

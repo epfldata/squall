@@ -12,6 +12,8 @@ import visitors.ValueExpressionVisitor;
 
 public interface ValueExpression<T extends Comparable<T>> extends Serializable{
     public T eval(List<String> tuple);
+    public T eval(List<String> firstTuple, List<String> secondTuple);
+    
     public String evalString(List<String> tuple);
 
     public TypeConversion getType();

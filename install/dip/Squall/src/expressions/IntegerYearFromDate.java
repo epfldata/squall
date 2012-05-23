@@ -24,8 +24,25 @@ public class IntegerYearFromDate implements ValueExpression<Integer> {
         _veDate = veDate;
     }
 
-    public Integer eval(List<String> tuple) {
+	@Override
+	public Integer eval(List<String> tuple) {
         Date date = _veDate.eval(tuple);
+        
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        int year = c.get(Calendar.YEAR);
+
+        /* Alternative approach:
+        SimpleDateFormat formatNowYear = new SimpleDateFormat("yyyy");
+        String currentYear = formatNowYear.format(date); // = '2006'
+        */
+
+        return year;
+    }
+    
+	@Override
+	public Integer eval(List<String> firstTuple, List<String> secondTuple) {
+        Date date = _veDate.eval(firstTuple, secondTuple);
         
         Calendar c = Calendar.getInstance();
         c.setTime(date);

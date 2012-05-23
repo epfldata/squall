@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import matrixMapping.MatrixAssignment;
 import operators.AggregateOperator;
 import operators.ChainOperator;
 import operators.Operator;
@@ -28,6 +30,7 @@ import org.apache.log4j.Logger;
 import stormComponents.StormComponent;
 import stormComponents.StormEmitter;
 import stormComponents.StormSrcHarmonizer;
+
 
 public class MyUtilities{
         private static Logger LOG = Logger.getLogger(MyUtilities.class);
@@ -298,6 +301,25 @@ public class MyUtilities{
                 int[] emitterIDs = emitter.getEmitterIDs();
                 for(int emitterID: emitterIDs){
                     currentBolt = currentBolt.fieldsGrouping(Integer.toString(emitterID), new Fields("Hash"));
+                }
+            }
+            return currentBolt;
+        }
+        
+        public static InputDeclarer thetaAttachEmitterComponents(InputDeclarer currentBolt, 
+                StormEmitter emitter1, StormEmitter emitter2, MatrixAssignment assignment,Map map){
+        	
+        	//MatrixAssignment assignment = new MatrixAssignment(firstRelationSize, secondRelationSize, parallelism,-1);
+        	ThetaJoinStaticMapping mapping = new ThetaJoinStaticMapping(emitter1.getName(), emitter2.getName(), assignment,map);
+        	
+            ArrayList<StormEmitter> emittersList = new ArrayList<StormEmitter>();
+            emittersList.add(emitter1);
+            emittersList.add(emitter2);
+
+            for(StormEmitter emitter: emittersList){
+                int[] emitterIDs = emitter.getEmitterIDs();
+                for(int emitterID: emitterIDs){
+                    currentBolt = currentBolt.customGrouping(Integer.toString(emitterID), mapping);
                 }
             }
             return currentBolt;

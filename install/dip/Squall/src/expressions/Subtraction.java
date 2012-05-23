@@ -53,6 +53,19 @@ public class Subtraction<T extends Number & Comparable<T>> implements ValueExpre
         }
         return _wrapper.fromDouble(result);
     }
+    
+    @Override
+    public T eval(List<String> firstTuple, List<String> secondTuple){
+        T first = _veList.get(0).eval(firstTuple, secondTuple);
+        double result = _wrapper.toDouble(first);
+
+        for(int i = 1; i < _veList.size(); i++){
+            ValueExpression<T> factor = _veList.get(i);
+            T value = (T)factor.eval(firstTuple, secondTuple);
+            result -= _wrapper.toDouble(value);
+        }
+        return _wrapper.fromDouble(result);
+    }
 
     @Override
     public String evalString(List<String> tuple) {

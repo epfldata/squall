@@ -50,6 +50,11 @@ public class BetweenPredicate<T extends Comparable<T>> implements Predicate {
     public boolean test(List<String> tupleValues) {
         return _and.test(tupleValues);
     }
+    
+    @Override
+    public boolean test(List<String> firstTupleValues, List<String> secondTupleValues) {
+        return _and.test(firstTupleValues, secondTupleValues);
+    }
 
     @Override
     public void accept(PredicateVisitor pv) {

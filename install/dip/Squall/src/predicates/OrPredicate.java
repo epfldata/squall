@@ -26,8 +26,17 @@ public class OrPredicate implements Predicate {
     public boolean test(List<String> tupleValues){
     	for (Predicate pred: _predicateList){
             if(pred.test(tupleValues)==true)
-		return true;
-	}
+            	return true;
+    	}
+    	return false;
+    }
+    
+    @Override
+    public boolean test(List<String> firstTupleValues, List<String> secondTupleValues){
+    	for (Predicate pred: _predicateList){
+            if(pred.test(firstTupleValues, secondTupleValues)==true)
+            	return true;
+    	}
     	return false;
     }
 

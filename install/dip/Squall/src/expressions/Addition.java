@@ -49,6 +49,16 @@ public class Addition<T extends Number & Comparable<T>> implements ValueExpressi
         }
         return _wrapper.fromDouble(result);
     }
+    
+    @Override
+    public T eval(List<String> firstTuple, List<String> secondTuple){
+        double result = 0;
+        for(ValueExpression<T> factor: _veList){
+            T value = (T)factor.eval(firstTuple, secondTuple);
+            result += _wrapper.toDouble(value);
+        }
+        return _wrapper.fromDouble(result);
+    }
 
      @Override
     public String evalString(List<String> tuple) {
