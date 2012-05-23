@@ -23,6 +23,7 @@ import queryPlans.TPCH4Plan;
 import queryPlans.TPCH5Plan;
 import queryPlans.TPCH7Plan;
 import queryPlans.TPCH8Plan;
+import queryPlans.TPCH9Plan;
 import queryPlans.TestThetaJoin;
 import stormComponents.StormJoin;
 import stormComponents.StormComponent;
@@ -136,6 +137,8 @@ public class Main {
                 queryPlan = new TPCH7Plan(dataPath, extension, conf).getQueryPlan();
             }else if(queryName.equalsIgnoreCase("TPCH8")){
                 queryPlan = new TPCH8Plan(dataPath, extension, conf).getQueryPlan();
+            }else if(queryName.equalsIgnoreCase("TPCH9")){
+                queryPlan = new TPCH9Plan(dataPath, extension, conf).getQueryPlan();
             }else if(queryName.equalsIgnoreCase("TPCH10")){
                 queryPlan = new TPCH10Plan(dataPath, extension, conf).getQueryPlan();
             }else if (queryName.equalsIgnoreCase("TestTheta")){
