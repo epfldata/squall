@@ -13,11 +13,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import operators.AggregateOperator;
+import org.apache.log4j.Logger;
 import utilities.MyUtilities;
 
 
 public class HashMapAggStorage<T> implements AggStorage<T>{
     private static final long serialVersionUID = 1L;
+    private static Logger LOG = Logger.getLogger(HashMapAggStorage.class);
     
     private HashMap<String, T> _internalStorage = new HashMap<String, T>();
 
@@ -129,7 +131,10 @@ public class HashMapAggStorage<T> implements AggStorage<T>{
         }
         HashMapAggStorage otherStorage = (HashMapAggStorage) obj;
         HashMap<String, T> otherInternalStorage = otherStorage._internalStorage;
-        if(_internalStorage.size() != otherInternalStorage.size()){
+        int internalSize = _internalStorage.size();
+        int otherSize = otherInternalStorage.size();
+        if(internalSize != otherSize){
+            LOG.info("The storages differ in size: computed has " + internalSize + ", and file has "+ otherSize + " size.");
             return false;
         }
 
@@ -139,8 +144,12 @@ public class HashMapAggStorage<T> implements AggStorage<T>{
             String key = pair.getKey();
             T value = pair.getValue();
             T otherValue = otherInternalStorage.get(key);
+            if(otherValue == null){
+                LOG.info("In file there is no entry with the key " + key + ".");
+            }
             if(!(value.equals(otherValue))){
                 if(!(almostTheSame(value, otherValue))){
+                    LOG.info("Computed value is " + value + ", value from file is " + otherValue + " for key " + key);
                     return false;
                 }
             }
@@ -173,5 +182,4 @@ public class HashMapAggStorage<T> implements AggStorage<T>{
         str2 = str2.substring(0, numComparedChars);
         return str1.equalsIgnoreCase(str2);
     }
-
 }

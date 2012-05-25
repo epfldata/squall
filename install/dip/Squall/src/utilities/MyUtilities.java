@@ -131,7 +131,7 @@ public class MyUtilities{
                     tupleString+=tuple.get(i) + SystemParameters.getString(conf, "DIP_GLOBAL_ADD_DELIMITER");
                 }
             }
-            tupleString=tupleString.trim();
+            //this cause a bug when space (" ") is the last character: tupleString=tupleString.trim();
             return tupleString;
         }
 

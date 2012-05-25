@@ -99,7 +99,10 @@ public class LocalMergeResults {
             List<String> lines = MyUtilities.getLinesFromFile(path);
             if(lines!=null){
                 for(String line: lines){
-                    List<String> tuple = Arrays.asList(line.split("\\s+=\\s+"));
+                    //List<String> tuple = Arrays.asList(line.split("\\s+=\\s+"));
+                    //we want to catch exactly one space between and after =.
+                    //  tuple might consist of spaces as well
+                    List<String> tuple = Arrays.asList(line.split(" = "));
                     _fileAgg.process(tuple);
                 }
             }else{
