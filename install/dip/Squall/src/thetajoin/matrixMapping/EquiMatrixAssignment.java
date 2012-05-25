@@ -143,14 +143,12 @@ public class EquiMatrixAssignment implements Serializable, MatrixAssignment{
 		}
 	}
 
-	@Override
-	public int getNumberOfWorkerRows() {
-		return _r_S;
-	}
-
-	@Override
-	public int getNumberOfWorkerColumns() {
-		return _r_T;
+	public String toString(){
+		String ret="";
+		ret = ret.concat("Print of an EquiMatrixAssignment: \n");
+		ret = ret.concat("Number of worker rows: " + _r_S + "\n");
+		ret = ret.concat("Number of worker columns: " + _r_T + "\n");
+		return ret;
 	}
 	
 }

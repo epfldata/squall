@@ -10,6 +10,9 @@ import java.io.Serializable;
 
 public class Part implements Serializable {
 
+	
+	private static final long serialVersionUID = 1L;
+	
 	// size of the part
 	private int height_;
 	private int width_;
@@ -48,8 +51,7 @@ public class Part implements Serializable {
 		return 
 				(hIndex_<= pixelW) &&
 				(pixelW < hIndex_ + height_);		
-	}
-	
+	}	
 	
 	public boolean intersectColumn(int pixelH){
 		return 	
