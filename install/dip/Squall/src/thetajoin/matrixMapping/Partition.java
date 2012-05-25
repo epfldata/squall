@@ -2,7 +2,6 @@ package thetajoin.matrixMapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 
@@ -46,7 +45,7 @@ public abstract class Partition implements MatrixAssignment, Serializable {
 		return max;
 	}
 	
-	/*
+	/**
 	 * @return the sum of half perimeters of Part in the Partition
 	 */
 	public int getSumHalfPerimeter(){
@@ -57,14 +56,18 @@ public abstract class Partition implements MatrixAssignment, Serializable {
 		return sum;
 	}
 	
-	/*
-	 * Method to get a list of indexes of Part that are on a row/column chosen at random
+	/**
+	 * Method to get a list of indexes of Part (workers) that are on a row/column chosen at random
+	 *	
+	 * @param _dimension a Dimension indicating in which direction we want to cross the matrix.
+	 * 		(Dimension.ROW or Dimension.COLUMN)
+	 * @return the list of indexes of workers
 	 */
-	public ArrayList<Integer> getRegionIDs(Dimension isSRelation) {
+	public ArrayList<Integer> getRegionIDs(Dimension _dimension) {
 		
 		ArrayList<Integer> retList = new ArrayList<Integer>();
 
-		if (isSRelation == Dimension.ROW) { // tuple from relation S
+		if (_dimension == Dimension.ROW) { // tuple from relation S
 			int sIndex=randGen.nextInt(matrix_.getSizeOfS());
 			for (int i=0; i<numReducers_; ++i){	
 				if (((!matrix_.isSGreaterThanT())&&parts_[i].intersectRow(sIndex))||((matrix_.isSGreaterThanT())&&parts_[i].intersectColumn(sIndex))){
@@ -82,13 +85,13 @@ public abstract class Partition implements MatrixAssignment, Serializable {
 		return retList;
 	}
 	
-	/*
-	 * this method check that each portion of the matrix is covered by exactly one part.
+	/**
+	 * This method check that each portion of the matrix is covered by exactly one part.
 	 * @return
 	 * 	 		true if all partition conditions are respected
 	 * 			false otherwise 
 	 */
-	public boolean verifyValidity(){
+	public boolean valid(){
 		for (int h=0; h<matrix_.getHeight();++h){
 			for (int w=0; w<matrix_.getWidth();++w){
 				int index=0;
@@ -106,30 +109,16 @@ public abstract class Partition implements MatrixAssignment, Serializable {
 		return true;
 	}
 	
-	public void print(String _arg){
-		System.out.println("Print of a Partition: " + _arg);
-		this.matrix_.print("");
-		System.out.println("Number of reducers: " + numReducers_);
+	public String toString(){
+		String ret="";
+		ret=ret.concat("Print of a Partition: \n");
+		ret=ret.concat(matrix_.toString());
+		ret=ret.concat("Number of reducers: " + numReducers_ + "\n");
 		for (int i=0; i<numReducers_; ++i){
-			System.out.print("Partition " + i + ": ");
-			System.out.println("[( " + parts_[i].getWIndex() + ", " + (parts_[i].getWIndex()+ parts_[i].getWidth()) + "), (" + parts_[i].getHIndex()+ ", " + (parts_[i].getHIndex()+ parts_[i].getHeight()) + ")]" );
+			ret=ret.concat("Partition " + i + ": \n ");
+			ret=ret.concat("[( " + parts_[i].getWIndex() + ", " + (parts_[i].getWIndex()+ parts_[i].getWidth()) + "), (" + parts_[i].getHIndex()+ ", " + (parts_[i].getHIndex()+ parts_[i].getHeight()) + ")]\n" );
 		}
-		
+		return ret;
 	}
-
-	@Override
-	public int getNumberOfWorkerColumns() {
-		return matrix_.getSizeOfT();
-	}
-
-	@Override
-	public int getNumberOfWorkerRows() {
-		return matrix_.getSizeOfS();
-	}
-
-
-
-
-
 
 }
