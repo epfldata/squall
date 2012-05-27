@@ -1,13 +1,13 @@
 DIP_DISTRIBUTED true
-DIP_QUERY_NAME hyracks
+DIP_QUERY_NAME TPCH3
 
 DIP_TOPOLOGY_NAME_PREFIX teamX
 DIP_DATA_ROOT /export/home/avitorovic/queries/tpch/
-DIP_SQL_ROOT ../dip/SQLtoQueryPlanPlugin/SQLqueries/
+DIP_SQL_ROOT ../testing/squall/sql_queries/
 
 # DIP_DB_SIZE is in GBs
 DIP_DB_SIZE 1 
-DIP_MAX_SRC_PAR 4
+DIP_MAX_SRC_PAR 1
 
 #below are unlikely to change
 DIP_EXTENSION .tbl

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONFDIR=../dip/Squall/confs
+CONFDIR=../testing/squall_plan_runner/confs
 TESTDIR=test/
 BINDIR=../../../bin
 
@@ -13,5 +13,5 @@ ARRAY=(`find $TESTDIR -type f | xargs echo`)
 # go back to bin directory and run one by one config file
 cd $BINDIR
 for i in ${ARRAY[*]}; do
-    ./squallLocalRun.sh $i
+    ./squall_plan_runner_local.sh $i
 done

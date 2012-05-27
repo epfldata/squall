@@ -7,7 +7,7 @@ else
 CONFIG_FILE=$1
 fi
 
-CONFIG_DIR=../dip/Squall/confs
+CONFIG_DIR=../testing/squall/confs
 CONFIG_PATH=$CONFIG_DIR/$CONFIG_FILE
 
 # check if your configuration file exists
@@ -17,4 +17,4 @@ then
    exit
 fi
 
-../storm-0.7.0/bin/storm jar ../compilation/squall-2.0-standalone.jar main.Main $CONFIG_PATH
+../storm-0.7.0/bin/storm jar ../squall-2.0-standalone.jar main.ParserMain $CONFIG_PATH
