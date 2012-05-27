@@ -15,7 +15,7 @@ public interface StormComponent {
     //Last level component (can be part of Joiner), which does not propagate data anywhere
     public static final int FINAL_COMPONENT=2;
 
-    public int getID();
+    public String getID();
     public String getInfoID();
 
     public void printTuple(List<String> tuple);

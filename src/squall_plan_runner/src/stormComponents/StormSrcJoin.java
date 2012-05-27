@@ -107,8 +107,8 @@ public class StormSrcJoin implements StormJoin, Serializable{
         }
 
         @Override
-        public int[] getEmitterIDs() {
-            return new int[]{_firstStorage.getID(), _secondStorage.getID()};
+        public String[] getEmitterIDs() {
+            return new String[]{_firstStorage.getID(), _secondStorage.getID()};
         }
 
         @Override

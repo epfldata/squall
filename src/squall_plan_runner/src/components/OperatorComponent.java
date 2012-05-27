@@ -205,7 +205,7 @@ public  class OperatorComponent implements Component{
 
     // from StormComponent
     @Override
-    public int[] getEmitterIDs() {
+    public String[] getEmitterIDs() {
         return _stormOperator.getEmitterIDs();
     }
 

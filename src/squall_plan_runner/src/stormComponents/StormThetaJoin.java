@@ -52,7 +52,7 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 	private TupleStorage _firstRelationStorage, _secondRelationStorage;
 	
 	private String _componentName;
-	private int _ID;
+	private String _ID;
 
 	private int _numSentTuples=0;
 	private boolean _printOut;
@@ -125,8 +125,8 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 
 		_hierarchyPosition = hierarchyPosition;
 
-		_ID=MyUtilities.getNextTopologyId();
-		InputDeclarer currentBolt = builder.setBolt(Integer.toString(_ID), this, parallelism);
+		_ID=componentName;
+		InputDeclarer currentBolt = builder.setBolt(_ID, this, parallelism);
 		
 		Matrix makides = new Matrix(firstCardinality, secondCardinality);
 		_partitioning = new OptimalPartition (makides, parallelism);
@@ -139,7 +139,7 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 
 		_printOut= printOut;
 		if (_printOut && _operatorChain.isBlocking()){
-			currentBolt.allGrouping(Integer.toString(killer.getID()), SystemParameters.DUMP_RESULTS_STREAM);
+			currentBolt.allGrouping(killer.getID(), SystemParameters.DUMP_RESULTS_STREAM);
 		}
 
 		_firstRelationStorage = new TupleStorage();
@@ -598,14 +598,14 @@ System.out.println("types----"+typesOfValuesToIndex);
 
 	// from StormComponent interface
 	@Override
-		public int getID() {
+		public String getID() {
 			return _ID;
 		}
 
 	// from StormEmitter interface
 	@Override
-		public int[] getEmitterIDs() {
-			return new int[]{_ID};
+		public String[] getEmitterIDs() {
+			return new String[]{_ID};
 		}
 
 	@Override

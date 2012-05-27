@@ -217,7 +217,7 @@ public class ThetaJoinComponent implements Component {
 
     // from StormEmitter interface
     @Override
-    public int[] getEmitterIDs() {
+    public String[] getEmitterIDs() {
          return _joiner.getEmitterIDs();
     }
 

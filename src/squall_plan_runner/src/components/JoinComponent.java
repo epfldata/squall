@@ -287,7 +287,7 @@ public class JoinComponent implements Component {
 
     // from StormEmitter interface
     @Override
-    public int[] getEmitterIDs() {
+    public String[] getEmitterIDs() {
          return _joiner.getEmitterIDs();
     }
 

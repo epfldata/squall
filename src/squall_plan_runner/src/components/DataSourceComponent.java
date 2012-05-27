@@ -207,7 +207,7 @@ public class DataSourceComponent implements Component {
 
     // from StormEmitter interface
     @Override
-    public int[] getEmitterIDs() {
+    public String[] getEmitterIDs() {
         return _dataSource.getEmitterIDs();
     }
 

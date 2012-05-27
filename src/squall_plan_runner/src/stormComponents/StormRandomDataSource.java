@@ -34,6 +34,11 @@ import utilities.SystemParameters;
 import org.apache.log4j.Logger;
 import utilities.PeriodicBatchSend;
 
+/*
+ * This class works only for Hyracks query.
+ * A more generic approach is necessary to support randomization for other queries
+ *    (an inline version of DBGEN).
+ */
 public class StormRandomDataSource extends BaseRichSpout implements StormEmitter, StormComponent {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormRandomDataSource.class);
@@ -47,7 +52,7 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
 
         private boolean _hasReachedEOF=false;
 	private long _pendingTuples=0;
-	private int _ID;
+	private String _ID;
 
         private Map _conf;
         private SpoutOutputCollector _collector;
@@ -96,7 +101,7 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
                 _conf = conf;
                 _operatorChain = new ChainOperator(selection, distinct, projection, aggregation);
                 _hierarchyPosition = hierarchyPosition;
-		_ID=MyUtilities.getNextTopologyId();
+		_ID=componentName;
 		_componentName=componentName;
 		_inputPath=inputPath;
                 _batchOutputMillis = batchOutputMillis;
@@ -112,9 +117,9 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
 			killer.registerComponent(this, parallelism);
 		}
 
-		builder.setSpout(Integer.toString(_ID), this, parallelism);
+		builder.setSpout(_ID, this, parallelism);
                 if(MyUtilities.isAckEveryTuple(conf)){
-                    killer.registerComponent(this, 1);
+                    killer.registerComponent(this, parallelism);
                 }
 
                 _customerProduced = _customerTotal/_fileParts;
@@ -319,14 +324,14 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
 
         // from StormComponent interface
         @Override
-	public int getID() {
+	public String getID() {
 		return _ID;
 	}
 
         // from StormEmitter interface
         @Override
-        public int[] getEmitterIDs() {
-            return new int[]{_ID};
+        public String[] getEmitterIDs() {
+            return new String[]{_ID};
 	}
 
 	@Override
@@ -371,14 +376,14 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
             _tuplesProduced++;
             String res = null;
             if(_componentName.equalsIgnoreCase("Customer")){
-                res = (_randomGenerator.nextInt(_generatedMax)) +"|Pera|Pazova|1|011|sdfa sdwe|FURNITURE|bla" ;
+                res = (_randomGenerator.nextInt(_generatedMax)) +"|Pera|palace|1|011|sdfa sdwe|FURNITURE|bla" ;
                 if(_tuplesProduced == _customerProduced){
                     return null;
                 }else{
                     return res;
                 }
             }else {
-                res = (_randomGenerator.nextInt(_generatedMax)) +"|1111|F|1022.34|1995-11-11|1-URGENT|mika|1-URGENT|ma kakva komentar";
+                res = (_randomGenerator.nextInt(_generatedMax)) +"|1111|F|1022.34|1995-11-11|1-URGENT|mika|1-URGENT|no comment";
                 if(_tuplesProduced == _ordersProduced){
                     return null;
                 }else{

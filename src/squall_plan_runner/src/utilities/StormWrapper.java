@@ -59,6 +59,7 @@ public class StormWrapper {
             }
         }else{
             conf.setMaxTaskParallelism(numParallelism);
+            conf.setFallBackOnJavaSerialization(false);
             cluster = new LocalCluster();
             startTime = System.currentTimeMillis();
             cluster.submitTopology(topologyName, conf, builder.createTopology());

@@ -33,13 +33,7 @@ import stormComponents.StormSrcHarmonizer;
 public class MyUtilities{
         private static Logger LOG = Logger.getLogger(MyUtilities.class);
 
-	private static int topologyId = 0;
         public static final String SINGLE_HASH_KEY = "SingleHashEntry";
-
-	public static int getNextTopologyId() {
-            MyUtilities.topologyId++;
-            return MyUtilities.topologyId;
-        }
 
         public static String getStackTrace(Throwable aThrowable) {
             final Writer result = new StringWriter();
@@ -293,9 +287,9 @@ public class MyUtilities{
             emittersList.addAll(Arrays.asList(emittersArray));
 
             for(StormEmitter emitter: emittersList){
-                int[] emitterIDs = emitter.getEmitterIDs();
-                for(int emitterID: emitterIDs){
-                    currentBolt = currentBolt.fieldsGrouping(Integer.toString(emitterID), new Fields("Hash"));
+                String[] emitterIDs = emitter.getEmitterIDs();
+                for(String emitterID: emitterIDs){
+                    currentBolt = currentBolt.fieldsGrouping(emitterID, new Fields("Hash"));
                 }
             }
             return currentBolt;
@@ -312,9 +306,9 @@ public class MyUtilities{
             emittersList.add(emitter2);
 
             for(StormEmitter emitter: emittersList){
-                int[] emitterIDs = emitter.getEmitterIDs();
-                for(int emitterID: emitterIDs){
-                    currentBolt = currentBolt.customGrouping(Integer.toString(emitterID), mapping);
+                String[] emitterIDs = emitter.getEmitterIDs();
+                for(String emitterID: emitterIDs){
+                    currentBolt = currentBolt.customGrouping(emitterID, mapping);
                 }
             }
             return currentBolt;
@@ -327,9 +321,9 @@ public class MyUtilities{
             emittersList.addAll(Arrays.asList(emittersArray));
 
             for(StormEmitter emitter: emittersList){
-                int[] emitterIDs = emitter.getEmitterIDs();
-                for(int emitterID: emitterIDs){
-                    currentBolt = currentBolt.customGrouping(Integer.toString(emitterID),
+                String[] emitterIDs = emitter.getEmitterIDs();
+                for(String emitterID: emitterIDs){
+                    currentBolt = currentBolt.customGrouping(emitterID,
                             new BalancedStreamGrouping(map, fullHashList));
                 }
             }
@@ -441,9 +435,9 @@ public class MyUtilities{
             int result = 0;
             for(StormEmitter emitter: emittersList){
                 //We have multiple emitterIDs only for StormSrcJoin
-                int[] ids = emitter.getEmitterIDs();
-                for(int id: ids){
-                    result += tc.getComponentTasks(String.valueOf(id)).size();
+                String[] ids = emitter.getEmitterIDs();
+                for(String id: ids){
+                    result += tc.getComponentTasks(id).size();
                 }
             }
             return result;

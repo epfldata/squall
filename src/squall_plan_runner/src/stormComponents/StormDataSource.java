@@ -50,7 +50,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
 	private boolean _hasReachedEOF=false;
 	private long _pendingTuples=0;
-	private int _ID;
+	private String _ID;
 
 	private CustomReader _reader=null;
 	private Map _conf;
@@ -91,7 +91,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 		_conf = conf;
 		_operatorChain = new ChainOperator(selection, distinct, projection, aggregation);
 		_hierarchyPosition = hierarchyPosition;
-		_ID=MyUtilities.getNextTopologyId();
+		_ID=componentName;
 		_componentName=componentName;
 		_inputPath=inputPath;
 		_batchOutputMillis = batchOutputMillis;
@@ -107,7 +107,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 			killer.registerComponent(this, parallelism);
 		}
 
-		builder.setSpout(Integer.toString(_ID), this, parallelism);
+		builder.setSpout(_ID, this, parallelism);
 		if(MyUtilities.isAckEveryTuple(conf)){
 			killer.registerComponent(this, parallelism);
 		}
@@ -327,14 +327,14 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
 	// from StormComponent interface
 	@Override
-		public int getID() {
+		public String getID() {
 			return _ID;
 		}
 
 	// from StormEmitter interface
 	@Override
-		public int[] getEmitterIDs() {
-			return new int[]{_ID};
+		public String[] getEmitterIDs() {
+			return new String[]{_ID};
 		}
 
 	@Override

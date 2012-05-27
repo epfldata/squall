@@ -40,7 +40,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
     private int _hierarchyPosition=INTERMEDIATE;
     private StormEmitter _emitter;
     private String _componentName;
-    private int _ID;
+    private String _ID;
     //output has hash formed out of these indexes
     private List<Integer> _hashIndexes;
     private List<ValueExpression> _hashExpressions;
@@ -96,8 +96,8 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
 
         _hierarchyPosition = hierarchyPosition;
 
-        _ID=MyUtilities.getNextTopologyId();
-        InputDeclarer currentBolt = builder.setBolt(Integer.toString(_ID), this, parallelism);
+        _ID=componentName;
+        InputDeclarer currentBolt = builder.setBolt(_ID, this, parallelism);
         
         _fullHashList = fullHashList;
         currentBolt = MyUtilities.attachEmitterCustom(conf, _fullHashList, currentBolt, _emitter);
@@ -108,7 +108,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
 
         _printOut= printOut;
         if (_printOut && _operatorChain.isBlocking()){
-           currentBolt.allGrouping(Integer.toString(killer.getID()), SystemParameters.DUMP_RESULTS_STREAM);
+           currentBolt.allGrouping(killer.getID(), SystemParameters.DUMP_RESULTS_STREAM);
         }
     }
 
@@ -261,7 +261,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
 
     //from StormComponent
     @Override
-    public int getID() {
+    public String getID() {
         return _ID;
     }
 
@@ -272,8 +272,8 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
     }
 
     @Override
-    public int[] getEmitterIDs() {
-        return new int[]{_ID};
+    public String[] getEmitterIDs() {
+        return new String[]{_ID};
     }
 
     @Override

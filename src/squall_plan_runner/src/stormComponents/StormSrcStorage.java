@@ -51,7 +51,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 	private StormSrcHarmonizer _harmonizer;
 	private OutputCollector _collector;
 	private int _numSentTuples;
-	private int _ID;
+	private String _ID;
 	private Map _conf;
 
 	private int _numRemainingParents;
@@ -97,16 +97,16 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 		_printOut = printOut;
 
 		int parallelism = SystemParameters.getInt(conf, _componentName+"_PAR");
-		_ID = MyUtilities.getNextTopologyId();
-		InputDeclarer currentBolt = builder.setBolt(Integer.toString(_ID), this, parallelism);
-		currentBolt.fieldsGrouping(Integer.toString(_harmonizer.getID()), new Fields("Hash"));
+		_ID = componentName + "_" + tableName;
+		InputDeclarer currentBolt = builder.setBolt(_ID, this, parallelism);
+		currentBolt.fieldsGrouping(_harmonizer.getID(), new Fields("Hash"));
 
 		if( _hierarchyPosition == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf))){
 			killer.registerComponent(this, parallelism);
 		}
 
 		if (_printOut && _operatorChain.isBlocking()){
-			currentBolt.allGrouping(Integer.toString(killer.getID()), SystemParameters.DUMP_RESULTS_STREAM);
+			currentBolt.allGrouping(killer.getID(), SystemParameters.DUMP_RESULTS_STREAM);
 		}
 
 		_joinStorage = preAggStorage;
@@ -296,14 +296,14 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
 	// from StormComponent interface
 	@Override
-		public int getID() {
+		public String getID() {
 			return _ID;
 		}
 
 	// from StormEmitter interface
 	@Override
-		public int[] getEmitterIDs(){
-			return new int[]{_ID};
+		public String[] getEmitterIDs(){
+			return new String[]{_ID};
 		}
 
 	@Override

@@ -68,7 +68,7 @@ public class TPCH7Plan {
         ProjectionOperator projectionNation1 = new ProjectionOperator(new int[]{1, 0});
 
         DataSourceComponent relationNation1 = new DataSourceComponent(
-                "NATION",
+                "NATION1",
                 dataPath + "nation" + extension,
                 TPCH_Schema.nation,
                 _queryPlan).setHashIndexes(hashNation1)
@@ -131,7 +131,7 @@ public class TPCH7Plan {
         ProjectionOperator projectionNation2 = new ProjectionOperator(new int[]{1,0});
 
         DataSourceComponent relationNation2 = new DataSourceComponent(
-                "NATION",
+                "NATION2",
                 dataPath + "nation" + extension,
                 TPCH_Schema.nation,
                 _queryPlan).setHashIndexes(hashNation2)

@@ -27,7 +27,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
         private OutputCollector _collector;
         private Map _conf;
 
-        private int _ID;
+        private String _ID;
         private String _componentName;
         private StormEmitter _firstEmitter, _secondEmitter;
 
@@ -45,12 +45,11 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
                 _firstEmitter = firstEmitter;
                 _secondEmitter = secondEmitter;
 
-                _ID= MyUtilities.getNextTopologyId();
+                _ID= componentName + "_HARM";
 
                 int parallelism = SystemParameters.getInt(conf, _componentName+"_PAR");
-                InputDeclarer currentBolt = builder.setBolt(Integer.toString(_ID), this, parallelism);
+                InputDeclarer currentBolt = builder.setBolt(_ID, this, parallelism);
                 currentBolt = MyUtilities.attachEmitterComponents(currentBolt, _firstEmitter, _secondEmitter);
-
 	}
 
 	// from IRichBolt
@@ -102,7 +101,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 
         //from StormComponent
         @Override
-        public int getID() {
+        public String getID() {
             return _ID;
 	}
 

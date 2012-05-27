@@ -33,16 +33,16 @@ import utilities.StormWrapper;
 public class TopologyKiller extends BaseRichBolt implements StormComponent {
     private static Logger LOG = Logger.getLogger(TopologyKiller.class);
 
-    private int _ID;
+    private String _ID;
     private int _numberRegisteredTasks;
     private transient InputDeclarer _inputDeclarer;
     private Map _conf;
     private OutputCollector _collector;
     
     public TopologyKiller(TopologyBuilder builder) {
-        _ID = MyUtilities.getNextTopologyId();
+        _ID = "KILLER";
         _numberRegisteredTasks = 0;
-        _inputDeclarer = builder.setBolt(Integer.toString(_ID), this);
+        _inputDeclarer = builder.setBolt(_ID, this);
     }
     
     // from IRichBolt
@@ -96,11 +96,11 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
     public void registerComponent(StormComponent component, int parallelism) {
     	LOG.info("registering new component");
         _numberRegisteredTasks += parallelism;
-        _inputDeclarer.allGrouping(Integer.toString(component.getID()), SystemParameters.EOF_STREAM);
+        _inputDeclarer.allGrouping(component.getID(), SystemParameters.EOF_STREAM);
     }
 
     @Override
-    public int getID() {
+    public String getID() {
     	return _ID;
     }
     
