@@ -96,6 +96,11 @@ public class ColumnCollectVisitor implements ExpressionVisitor {
     }
 
     @Override
+    public void visit(LikeExpression le) {
+        visitBinaryOperation(le);
+    }
+
+    @Override
     public void visit(GreaterThan gt) {
         visitBinaryOperation(gt);
     }
@@ -205,11 +210,6 @@ public class ColumnCollectVisitor implements ExpressionVisitor {
 
     @Override
     public void visit(IsNullExpression ine) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void visit(LikeExpression le) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

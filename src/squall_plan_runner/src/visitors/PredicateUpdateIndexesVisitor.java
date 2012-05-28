@@ -9,6 +9,7 @@ import expressions.ValueExpression;
 import predicates.AndPredicate;
 import predicates.BetweenPredicate;
 import predicates.ComparisonPredicate;
+import predicates.LikePredicate;
 import predicates.OrPredicate;
 import predicates.Predicate;
 
@@ -74,5 +75,9 @@ public class PredicateUpdateIndexesVisitor implements PredicateVisitor{
 	public void visit(Predicate pred) {
 		pred.accept(this);
 	}
+
+    public void visit(LikePredicate like) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 	
 }

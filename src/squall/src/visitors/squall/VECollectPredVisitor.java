@@ -11,6 +11,7 @@ import java.util.List;
 import predicates.AndPredicate;
 import predicates.BetweenPredicate;
 import predicates.ComparisonPredicate;
+import predicates.LikePredicate;
 import predicates.OrPredicate;
 import predicates.Predicate;
 import visitors.PredicateVisitor;
@@ -47,6 +48,11 @@ public class VECollectPredVisitor implements PredicateVisitor{
     @Override
     public void visit(ComparisonPredicate comparison) {
         _veList.addAll(comparison.getExpressions());
+    }
+
+    @Override
+    public void visit(LikePredicate like) {
+        _veList.addAll(like.getExpressions());
     }
 
 }

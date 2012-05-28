@@ -7,6 +7,7 @@ import java.util.List;
 import predicates.AndPredicate;
 import predicates.BetweenPredicate;
 import predicates.ComparisonPredicate;
+import predicates.LikePredicate;
 import predicates.OrPredicate;
 import predicates.Predicate;
 import thetajoin.indexes.BplusTreeIndex;
@@ -102,5 +103,9 @@ public class PredicateCreateIndexesVisitor implements PredicateVisitor{
 		System.out.println("visit");
 		pred.accept(this);
 	}
+
+    public void visit(LikePredicate like) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
 }

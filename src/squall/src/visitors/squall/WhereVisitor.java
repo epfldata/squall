@@ -65,6 +65,7 @@ import net.sf.jsqlparser.statement.select.SubSelect;
 import operators.SelectionOperator;
 import predicates.AndPredicate;
 import predicates.ComparisonPredicate;
+import predicates.LikePredicate;
 import predicates.OrPredicate;
 import predicates.Predicate;
 import queryPlans.QueryPlan;
@@ -193,6 +194,17 @@ public class WhereVisitor implements ExpressionVisitor {
 
         ComparisonPredicate cp = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP, left, right);
         _predStack.push(cp);
+    }
+
+    @Override
+    public void visit(LikeExpression le) {
+        visitBinaryOperation(le);
+
+        ValueExpression right = _exprStack.pop();
+        ValueExpression left = _exprStack.pop();
+
+        LikePredicate lp = new LikePredicate(left, right);
+        _predStack.push(lp);
     }
 
     @Override
@@ -367,11 +379,6 @@ public class WhereVisitor implements ExpressionVisitor {
 
     @Override
     public void visit(IsNullExpression ine) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void visit(LikeExpression le) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

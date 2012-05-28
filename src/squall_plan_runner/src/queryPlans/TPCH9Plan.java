@@ -36,7 +36,7 @@ public class TPCH9Plan {
     private static final TypeConversion<Date> _dateConv = new DateConversion();
     private static final StringConversion _sc = new StringConversion();
     
-    private static final String COLOR = "green";
+    private static final String COLOR = "%green%";
 
     private QueryPlan _queryPlan = new QueryPlan();
 

@@ -98,6 +98,11 @@ public class AndVisitor implements ExpressionVisitor {
     }
 
     @Override
+    public void visit(LikeExpression le) {
+        _atomicExprs.add(le);
+    }
+
+    @Override
     public void visit(GreaterThan gt) {
         _atomicExprs.add(gt);
     }
@@ -211,11 +216,6 @@ public class AndVisitor implements ExpressionVisitor {
 
     @Override
     public void visit(IsNullExpression ine) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void visit(LikeExpression le) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
