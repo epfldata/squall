@@ -161,6 +161,20 @@ public class JoinHashVisitor implements ExpressionVisitor {
     }
 
     @Override
+    public void visit(Division dvsn) {
+        _complexCondition = true;
+        visitBinaryOperation(dvsn);
+
+        ValueExpression right = _exprStack.pop();
+        ValueExpression left = _exprStack.pop();
+
+        NumericConversion nc = (NumericConversion) left.getType();
+
+        ValueExpression division = new expressions.Division(nc, left, right);
+        _exprStack.push(division);
+    }
+
+    @Override
     public void visit(Subtraction s) {
         _complexCondition = true;
         visitBinaryOperation(s);
@@ -324,11 +338,6 @@ public class JoinHashVisitor implements ExpressionVisitor {
 
     @Override
     public void visit(TimestampValue tv) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void visit(Division dvsn) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

@@ -8,6 +8,7 @@ package visitors.squall;
 import expressions.Addition;
 import expressions.ColumnReference;
 import expressions.DateSum;
+import expressions.Division;
 import expressions.IntegerYearFromDate;
 import expressions.Multiplication;
 import expressions.StringConcatenate;
@@ -44,6 +45,11 @@ public class ColumnRefCollectVisitor implements ValueExpressionVisitor{
     @Override    
     public void visit(Multiplication mult) {
         visit(mult.getInnerExpressions());
+    }
+
+    @Override    
+    public void visit(Division dvsn) {
+        visit(dvsn.getInnerExpressions());
     }
     
     @Override

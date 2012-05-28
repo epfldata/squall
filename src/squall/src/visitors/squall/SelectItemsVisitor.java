@@ -273,6 +273,20 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
     }
 
     @Override
+    public void visit(Division dvsn) {
+        visitBinaryExpression(dvsn);
+
+        ValueExpression right = _exprStack.pop();
+        ValueExpression left = _exprStack.pop();
+
+        NumericConversion numConv = (NumericConversion) left.getType();
+        //TODO: check whether they are both of the same type
+
+        ValueExpression ve = new expressions.Division(numConv, left, right);
+        _exprStack.push(ve);
+    }
+
+    @Override
     public void visit(Subtraction s) {
         visitBinaryExpression(s);
 
@@ -359,11 +373,6 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
 
     @Override
     public void visit(TimestampValue tv) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void visit(Division dvsn) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

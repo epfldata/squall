@@ -5,6 +5,7 @@
 
 package optimizers;
 
+import optimizers.ruleBased.ParallelismAssigner;
 import components.Component;
 import java.util.List;
 import java.util.Map;

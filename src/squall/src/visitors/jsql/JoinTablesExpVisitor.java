@@ -111,6 +111,11 @@ public class JoinTablesExpVisitor implements ExpressionVisitor {
     }
 
     @Override
+    public void visit(Division dvsn) {
+        visitBinaryOperation(dvsn);
+    }
+
+    @Override
     public void visit(Subtraction s) {
         visitBinaryOperation(s);
     }
@@ -227,11 +232,6 @@ public class JoinTablesExpVisitor implements ExpressionVisitor {
 
     @Override
     public void visit(TimestampValue tv) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void visit(Division dvsn) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

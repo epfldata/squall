@@ -8,6 +8,7 @@ package visitors;
 import expressions.Addition;
 import expressions.ColumnReference;
 import expressions.DateSum;
+import expressions.Division;
 import expressions.IntegerYearFromDate;
 import expressions.Multiplication;
 import expressions.StringConcatenate;
@@ -21,6 +22,7 @@ public interface ValueExpressionVisitor {
     public void visit(DateSum ds);
     public void visit(IntegerYearFromDate iyfd);
     public void visit(Multiplication mult);
+    public void visit(Division dvsn);
     public void visit(StringConcatenate sc);
     public void visit(Subtraction sub);
     public void visit(ValueSpecification vs);

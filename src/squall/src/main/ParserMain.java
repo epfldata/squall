@@ -12,7 +12,7 @@ import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import optimizers.ComponentGenerator;
-import optimizers.DynamicProgOpt;
+import optimizers.ruleBased.RuleBasedOpt;
 import optimizers.Optimizer;
 import queryPlans.QueryPlan;
 import schema.Schema;
@@ -129,7 +129,7 @@ public class ParserMain{
         //Simple optimizer provides lefty plans
         //Optimizer opt = new SimpleOpt(schema, tan, dataPath, extension, map);
         //Dynamic programming query plan
-        Optimizer opt = new DynamicProgOpt(schema, tan, dataPath, extension, map);
+        Optimizer opt = new RuleBasedOpt(schema, tan, dataPath, extension, map);
 
         ComponentGenerator cg = opt.generate(tableList, joinList, selectItems, whereExpr);
 

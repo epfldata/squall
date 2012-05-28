@@ -3,6 +3,7 @@ package visitors;
 import expressions.Addition;
 import expressions.ColumnReference;
 import expressions.DateSum;
+import expressions.Division;
 import expressions.IntegerYearFromDate;
 import expressions.Multiplication;
 import expressions.StringConcatenate;
@@ -37,6 +38,12 @@ public class ExpressionCreateIndexesVisitor implements ValueExpressionVisitor{
 
 	@Override
 	public void visit(Multiplication multiplication) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void visit(Division division) {
 		// TODO Auto-generated method stub
 		
 	}

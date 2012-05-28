@@ -52,9 +52,9 @@ public class TPCH7Plan {
     public TPCH7Plan(String dataPath, String extension, Map conf){
 
         //-------------------------------------------------------------------------------------
-        List<Integer> hashNation1 = Arrays.asList(1);
+        List<Integer> hashNation2 = Arrays.asList(1);
 
-        SelectionOperator selectionNation1 = new SelectionOperator(
+        SelectionOperator selectionNation2 = new SelectionOperator(
                 new OrPredicate(
                     new ComparisonPredicate(
                         new ColumnReference(_sc, 1),
@@ -65,15 +65,15 @@ public class TPCH7Plan {
                     )
                 ));
 
-        ProjectionOperator projectionNation1 = new ProjectionOperator(new int[]{1, 0});
+        ProjectionOperator projectionNation2 = new ProjectionOperator(new int[]{1, 0});
 
-        DataSourceComponent relationNation1 = new DataSourceComponent(
-                "NATION1",
+        DataSourceComponent relationNation2 = new DataSourceComponent(
+                "NATION2",
                 dataPath + "nation" + extension,
                 TPCH_Schema.nation,
-                _queryPlan).setHashIndexes(hashNation1)
-                           .setSelection(selectionNation1)
-                           .setProjection(projectionNation1);
+                _queryPlan).setHashIndexes(hashNation2)
+                           .setSelection(selectionNation2)
+                           .setProjection(projectionNation2);
 
         //-------------------------------------------------------------------------------------
         List<Integer> hashCustomer = Arrays.asList(1);
@@ -89,7 +89,7 @@ public class TPCH7Plan {
 
         //-------------------------------------------------------------------------------------
         JoinComponent N_Cjoin = new JoinComponent(
-                relationNation1,
+                relationNation2,
                 relationCustomer,
                 _queryPlan).setProjection(new ProjectionOperator(new int[]{0, 2}))
                            .setHashIndexes(Arrays.asList(1));
@@ -126,22 +126,22 @@ public class TPCH7Plan {
                            .setProjection(projectionSupplier);
 
         //-------------------------------------------------------------------------------------
-        List<Integer> hashNation2 = Arrays.asList(1);
+        List<Integer> hashNation1 = Arrays.asList(1);
 
-        ProjectionOperator projectionNation2 = new ProjectionOperator(new int[]{1,0});
+        ProjectionOperator projectionNation1 = new ProjectionOperator(new int[]{1,0});
 
-        DataSourceComponent relationNation2 = new DataSourceComponent(
-                "NATION2",
+        DataSourceComponent relationNation1 = new DataSourceComponent(
+                "NATION1",
                 dataPath + "nation" + extension,
                 TPCH_Schema.nation,
-                _queryPlan).setHashIndexes(hashNation2)
-                           .setSelection(selectionNation1)
-                           .setProjection(projectionNation2);
+                _queryPlan).setHashIndexes(hashNation1)
+                           .setSelection(selectionNation2)
+                           .setProjection(projectionNation1);
 
         //-------------------------------------------------------------------------------------
         JoinComponent S_Njoin = new JoinComponent(
                 relationSupplier,
-                relationNation2,
+                relationNation1,
                 _queryPlan).setProjection(new ProjectionOperator(new int[]{0, 2}))
                            .setHashIndexes(Arrays.asList(0));
 
@@ -215,7 +215,7 @@ public class TPCH7Plan {
                 ));
 
         AggregateOperator agg = new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 4), conf)
-                .setGroupByColumns(Arrays.asList(0, 2, 3));
+                .setGroupByColumns(Arrays.asList(2, 0, 3));
 
         JoinComponent N_C_O_L_S_Njoin = new JoinComponent(
                 N_C_Ojoin,
