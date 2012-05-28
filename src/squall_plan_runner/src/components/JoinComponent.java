@@ -274,9 +274,9 @@ public class JoinComponent implements Component {
     }
 
     @Override
-    public int getOutputSize(){
+    public int getPreOpsOutputSize(){
         int joinColumnsLength = _firstParent.getHashIndexes().size();
-        return _firstParent.getOutputSize() + _secondParent.getOutputSize() - joinColumnsLength;
+        return _firstParent.getPreOpsOutputSize() + _secondParent.getPreOpsOutputSize() - joinColumnsLength;
     }
 
     @Override

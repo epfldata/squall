@@ -194,9 +194,8 @@ public class DataSourceComponent implements Component {
         _child = child;
     }
 
-    //TODO: not correct if we have projection, distinct or aggregation
     @Override
-    public int getOutputSize(){
+    public int getPreOpsOutputSize(){
         return _tableSchema.size();
     }
 

@@ -56,7 +56,7 @@ public interface Component extends Serializable, StormEmitter {
     public Component[] getParents();
     public void setChild(Component child);
     public Component getChild();
-    public int getOutputSize();
+    public int getPreOpsOutputSize();
     public List<DataSourceComponent> getAncestorDataSources();
 
     //method necessary for direct grouping and load balancing:

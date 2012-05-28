@@ -94,7 +94,7 @@ public class HierarchyExtractor {
             if(!rightParent.getHashIndexes().contains(originalIndex)){
                 //requested column is *not* in joinColumns
                 int indexesBefore = getNumHashIndexesBefore(originalIndex, rightParent.getHashIndexes());
-                index = leftParent.getOutputSize() - indexesBefore + originalIndex;
+                index = leftParent.getPreOpsOutputSize() - indexesBefore + originalIndex;
             }else{
                 //requested column is in joinColumns
                 //if in the keys have to find lhs index

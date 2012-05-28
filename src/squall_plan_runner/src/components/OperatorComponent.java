@@ -194,8 +194,8 @@ public  class OperatorComponent implements Component{
     }
 
     @Override
-    public int getOutputSize(){
-        return _parent.getOutputSize();
+    public int getPreOpsOutputSize(){
+        return _parent.getPreOpsOutputSize();
     }
 
     @Override

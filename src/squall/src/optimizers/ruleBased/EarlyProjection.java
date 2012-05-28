@@ -80,7 +80,7 @@ public class EarlyProjection {
         if(parents!=null){
             //left
             Component leftParent = parents[0];
-            int leftParentSize = leftParent.getOutputSize();
+            int leftParentSize = leftParent.getPreOpsOutputSize();
             List<Integer> leftSentUsedIndexes = filterLess(allUsedIndexes, leftParentSize);
             bottomUp(leftParent, leftSentUsedIndexes, level + 1);
 
@@ -376,7 +376,7 @@ public class EarlyProjection {
             Component[] parents = component.getParents();
             if(parents!=null){
                 Component leftParent = parents[0];
-                _leftParentOutputSize = leftParent.getOutputSize();
+                _leftParentOutputSize = leftParent.getPreOpsOutputSize();
             }
         }
 
