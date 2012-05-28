@@ -7,6 +7,7 @@ package queryPlans;
 
 import components.Component;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import operators.AggregateOperator;
 
@@ -54,6 +55,16 @@ public class QueryPlan {
     
     public Component getLastComponent(){
         return _plan.get(_plan.size()-1);
+    }
+
+    //returns a sorted list of component names
+    public List<String> getComponentNames(){
+        List<String> result = new ArrayList<String>();
+        for(Component component:_plan){
+            result.add(component.getName());
+        }
+        Collections.sort(result);
+        return result;
     }
 
 }

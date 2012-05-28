@@ -42,7 +42,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 	private static Logger LOG = Logger.getLogger(StormDataSource.class);
 
 	private String _inputPath;
-	private String _componentName;
+	private String _ID;
 	private int _hierarchyPosition;
 
 	private List<Integer> _hashIndexes;
@@ -50,7 +50,9 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
 	private boolean _hasReachedEOF=false;
 	private long _pendingTuples=0;
-	private String _ID;
+        private String _componentIndex; //a unique index in a list of all the components
+                            //used as a shorter name, to save some network traffic
+                            //it's of type int, but we use String to save more space
 
 	private CustomReader _reader=null;
 	private Map _conf;
@@ -74,6 +76,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 	private long _batchOutputMillis;
 
 	public StormDataSource(String componentName,
+                        List<String> allCompNames,
 			String inputPath,
 			List<Integer> hashIndexes,
 			List<ValueExpression> hashExpressions,
@@ -92,7 +95,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 		_operatorChain = new ChainOperator(selection, distinct, projection, aggregation);
 		_hierarchyPosition = hierarchyPosition;
 		_ID=componentName;
-		_componentName=componentName;
+                _componentIndex = String.valueOf(allCompNames.indexOf(componentName));
 		_inputPath=inputPath;
 		_batchOutputMillis = batchOutputMillis;
 
@@ -200,7 +203,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
 	@Override
 		public void tupleSend(List<String> tuple, Tuple stormTupleRcv) {
-			Values stormTupleSnd = MyUtilities.createTupleValues(tuple, _componentName,
+			Values stormTupleSnd = MyUtilities.createTupleValues(tuple, _componentIndex,
 					_hashIndexes, _hashExpressions, _conf);
 			MyUtilities.sendTuple(stormTupleSnd, _collector, _conf);
 		}
@@ -272,7 +275,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
 	@Override
 		public void fail(Object msgId) {
-			throw new RuntimeException("Failing tuple in " + _componentName);
+			throw new RuntimeException("Failing tuple in " + _ID);
 
 		}
 
@@ -281,12 +284,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 			if(MyUtilities.isAckEveryTuple(_conf) || _hierarchyPosition == FINAL_COMPONENT){
 				declarer.declareStream(SystemParameters.EOF_STREAM, new Fields(SystemParameters.EOF));
 			}
-			List<String> outputFields= new ArrayList<String>();
-			outputFields.add("TableName");
-			outputFields.add("Tuple");
-			outputFields.add("Hash");		
-			//declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(outputFields));
-                        declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("TableName", "Tuple", "Hash"));
+                        declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("CompIndex", "Tuple", "Hash"));
 		}
 
 	@Override
@@ -294,7 +292,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 			if(_printOut){
 				if((_operatorChain == null) || !_operatorChain.isBlocking()){
 					StringBuilder sb = new StringBuilder();
-					sb.append("\nComponent ").append(_componentName);
+					sb.append("\nComponent ").append(_ID);
 					sb.append("\nReceived tuples: ").append(_numSentTuples);
 					sb.append(" Tuple: ").append(MyUtilities.tupleToString(tuple, _conf));
 					LOG.info(sb.toString());
@@ -308,13 +306,13 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 				if((_operatorChain != null) && _operatorChain.isBlocking()){
 					Operator lastOperator = _operatorChain.getLastOperator();
 					if (lastOperator instanceof AggregateOperator){
-						MyUtilities.printBlockingResult(_componentName,
+						MyUtilities.printBlockingResult(_ID,
 								(AggregateOperator) lastOperator,
 								_hierarchyPosition,
 								_conf,
 								LOG);
 					}else{
-						MyUtilities.printBlockingResult(_componentName,
+						MyUtilities.printBlockingResult(_ID,
 								lastOperator.getNumTuplesProcessed(),
 								lastOperator.printContent(),
 								_hierarchyPosition,
@@ -340,7 +338,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 	@Override
 		public String getName() {
 			// TODO Auto-generated method stub
-			return _componentName;
+			return _ID;
 		}
 
 	@Override
@@ -356,7 +354,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 	@Override
 		public String getInfoID() {
 			StringBuilder sb = new StringBuilder();
-			sb.append("Table ").append(_componentName).append(" has ID: ").append(_ID);
+			sb.append("Table ").append(_ID).append(" has ID: ").append(_ID);
 			return sb.toString();
 		}
 

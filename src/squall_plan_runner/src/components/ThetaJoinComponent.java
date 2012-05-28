@@ -155,6 +155,7 @@ public class ThetaJoinComponent implements Component {
     @Override
     public void makeBolts(TopologyBuilder builder,
             TopologyKiller killer,
+            List<String> allCompNames,
             Config conf,
             int partitioningType,
             int hierarchyPosition){
@@ -170,6 +171,7 @@ public class ThetaJoinComponent implements Component {
         _joiner = new StormThetaJoin(_firstParent,
                             _secondParent,
                             _componentName,
+                            allCompNames,
                             _selection,
                             _distinct,
                             _projection,

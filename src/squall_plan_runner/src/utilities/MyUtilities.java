@@ -18,6 +18,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -391,11 +392,11 @@ public class MyUtilities{
             return (hierarchyPosition != StormComponent.FINAL_COMPONENT) && !isBatchOutputMode(batchOutputMillis);
         }
 
-        public static Values createTupleValues(List<String> tuple, String componentName,
+        public static Values createTupleValues(List<String> tuple, String componentIndex,
                 List<Integer> hashIndexes, List<ValueExpression> hashExpressions, Map conf) {
 
             String outputTupleHash = MyUtilities.createHashString(tuple, hashIndexes, hashExpressions, conf);
-            return new Values(componentName, tuple, outputTupleHash);
+            return new Values(componentIndex, tuple, outputTupleHash);
         }
 
         /*

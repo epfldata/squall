@@ -40,8 +40,13 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 	private StormEmitter _firstEmitter, _secondEmitter;
 	private SquallStorage _firstSquallStorage, _secondSquallStorage;
 	private ProjectionOperator _firstPreAggProj, _secondPreAggProj;
-	private String _componentName;
 	private String _ID;
+        private List<String> _compIds; // a sorted list of all the components
+        private String _componentIndex; //a unique index in a list of all the components
+                            //used as a shorter name, to save some network traffic
+                            //it's of type int, but we use String to save more space
+        private String _firstEmitterIndex, _secondEmitterIndex;
+
 
 	private int _numSentTuples=0;
 	private boolean _printOut;
@@ -73,6 +78,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 	public StormDstJoin(StormEmitter firstEmitter,
 			StormEmitter secondEmitter,
 			String componentName,
+                        List<String> allCompNames,
 			SelectionOperator selection,
 			DistinctOperator distinct,
 			ProjectionOperator projection,
@@ -93,10 +99,13 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 		_conf = conf;
 		_firstEmitter = firstEmitter;
 		_secondEmitter = secondEmitter;
-		_componentName = componentName;
+		_ID = componentName;
+                _componentIndex = String.valueOf(allCompNames.indexOf(componentName));
+                _firstEmitterIndex = String.valueOf(allCompNames.indexOf(_firstEmitter.getName()));
+                _secondEmitterIndex = String.valueOf(allCompNames.indexOf(_secondEmitter.getName()));
 		_batchOutputMillis = batchOutputMillis;
 
-		int parallelism = SystemParameters.getInt(conf, _componentName+"_PAR");
+		int parallelism = SystemParameters.getInt(conf, _ID+"_PAR");
 
 		//            if(parallelism > 1 && distinct != null){
 		//                throw new RuntimeException(_componentName + ": Distinct operator cannot be specified for multiThreaded bolts!");
@@ -111,7 +120,6 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 		_hierarchyPosition = hierarchyPosition;
 
 		_fullHashList = fullHashList;
-		_ID=componentName;
 		InputDeclarer currentBolt = builder.setBolt(_ID, this, parallelism);
 		currentBolt = MyUtilities.attachEmitterCustom(conf, _fullHashList, currentBolt, firstEmitter, secondEmitter);
 
@@ -144,7 +152,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 				return;
 			}
 
-			String inputComponentName=stormTupleRcv.getString(0);
+			String inputComponentIndex=stormTupleRcv.getString(0);
                         List<String> tuple = (List<String>) stormTupleRcv.getValue(1);
                         String inputTupleString = MyUtilities.tupleToString(tuple, _conf);
 			String inputTupleHash=stormTupleRcv.getString(2);
@@ -155,27 +163,24 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 				return;
 			}
 
-			String firstEmitterName = _firstEmitter.getName();
-			String secondEmitterName = _secondEmitter.getName();
-
 			boolean isFromFirstEmitter = false;
 			SquallStorage affectedStorage, oppositeStorage;
 			ProjectionOperator projPreAgg;
-			if(firstEmitterName.equals(inputComponentName)){
+			if(_firstEmitterIndex.equals(inputComponentIndex)){
 				//R update
 				isFromFirstEmitter = true;
 				affectedStorage = _firstSquallStorage;
 				oppositeStorage = _secondSquallStorage;
 				projPreAgg = _secondPreAggProj;
-			}else if(secondEmitterName.equals(inputComponentName)){
+			}else if(_secondEmitterIndex.equals(inputComponentIndex)){
 				//S update
 				isFromFirstEmitter = false;
 				affectedStorage = _secondSquallStorage;
 				oppositeStorage = _firstSquallStorage;
 				projPreAgg = _firstPreAggProj;
 			}else{
-				throw new RuntimeException("InputComponentName " + inputComponentName +
-						" doesn't match neither " + firstEmitterName + " nor " + secondEmitterName + ".");
+				throw new RuntimeException("InputComponentName " + inputComponentIndex +
+						" doesn't match neither " + _firstEmitterIndex + " nor " + _secondEmitterIndex + ".");
 			}
 
 			//add the stormTuple to the specific storage
@@ -253,7 +258,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 
 	@Override
 		public void tupleSend(List<String> tuple, Tuple stormTupleRcv) {
-			Values stormTupleSnd = MyUtilities.createTupleValues(tuple, _componentName,
+			Values stormTupleSnd = MyUtilities.createTupleValues(tuple, _componentIndex,
 					_hashIndexes, _hashExpressions, _conf);
 			MyUtilities.sendTuple(stormTupleSnd, stormTupleRcv, _collector, _conf);
 		}
@@ -305,11 +310,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 	@Override
 		public void declareOutputFields(OutputFieldsDeclarer declarer) {
 			if(_hierarchyPosition!=FINAL_COMPONENT){ // then its an intermediate stage not the final one
-				List<String> outputFields= new ArrayList<String>();
-				outputFields.add("TableName");
-				outputFields.add("Tuple");
-				outputFields.add("Hash");
-				declarer.declare(new Fields(outputFields) );
+				declarer.declare(new Fields("CompIndex", "Tuple", "Hash") );
 			}else{
 				if(!MyUtilities.isAckEveryTuple(_conf)){
 					declarer.declareStream(SystemParameters.EOF_STREAM, new Fields(SystemParameters.EOF));
@@ -322,7 +323,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			if(_printOut){
 				if((_operatorChain == null) || !_operatorChain.isBlocking()){
 					StringBuilder sb = new StringBuilder();
-					sb.append("\nComponent ").append(_componentName);
+					sb.append("\nComponent ").append(_ID);
 					sb.append("\nReceived tuples: ").append(_numSentTuples);
 					sb.append(" Tuple: ").append(MyUtilities.tupleToString(tuple, _conf));
 					LOG.info(sb.toString());
@@ -336,13 +337,13 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 				if((_operatorChain!=null) && _operatorChain.isBlocking()){
 					Operator lastOperator = _operatorChain.getLastOperator();
 					if (lastOperator instanceof AggregateOperator){
-						MyUtilities.printBlockingResult(_componentName,
+						MyUtilities.printBlockingResult(_ID,
 								(AggregateOperator) lastOperator,
 								_hierarchyPosition,
 								_conf,
 								LOG);
 					}else{
-						MyUtilities.printBlockingResult(_componentName,
+						MyUtilities.printBlockingResult(_ID,
 								lastOperator.getNumTuplesProcessed(),
 								lastOperator.printContent(),
 								_hierarchyPosition,
@@ -371,7 +372,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 
 	@Override
 		public String getName() {
-			return _componentName;
+			return _ID;
 		}
 
 	@Override
@@ -386,7 +387,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 
 	@Override
 		public String getInfoID() {
-			String str = "DestinationStorage " + _componentName + " has ID: " + _ID;
+			String str = "DestinationStorage " + _ID + " has ID: " + _ID;
 			return str;
 		}
 

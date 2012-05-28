@@ -142,6 +142,7 @@ public class DataSourceComponent implements Component {
     @Override
     public void makeBolts(TopologyBuilder builder,
                        TopologyKiller killer,
+                       List<String> allCompNames,
                        Config conf,
                        int partitioningType,
                        int hierarchyPosition){
@@ -161,6 +162,7 @@ public class DataSourceComponent implements Component {
 
         _dataSource = new StormDataSource(
                 _componentName,
+                allCompNames,
                _inputPath,
                _hashIndexes,
                _hashExpressions,

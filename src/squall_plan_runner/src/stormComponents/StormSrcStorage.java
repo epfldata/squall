@@ -36,6 +36,9 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
 	private String _componentName;
 	private String _tableName;
+        private String _componentIndex; //a unique index in a list of all the components
+                            //used as a shorter name, to save some network traffic
+                            //it's of type int, but we use String to save more space
 	private boolean _isFromFirstEmitter; // receive R updates
 	private boolean _printOut;
 	private int _hierarchyPosition=INTERMEDIATE;
@@ -54,6 +57,9 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 	private String _ID;
 	private Map _conf;
 
+        private String _firstEmitterIndex, _secondEmitterIndex; 
+                    //a unique id of the components which sends to StormSrcJoin
+
 	private int _numRemainingParents;
 
 	//for batch sending
@@ -62,8 +68,10 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 	private PeriodicBatchSend _periodicBatch;
 	private long _batchOutputMillis;
 
-	public StormSrcStorage(String componentName,
-			String tableName,
+	public StormSrcStorage(StormEmitter firstEmitter,
+                        StormEmitter secondEmitter,
+                        String componentName,
+                        List<String> allCompNames,
 			StormSrcHarmonizer harmonizer,
 			List<Integer> joinParams,
 			boolean isFromFirstEmitter,
@@ -81,9 +89,13 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 			TopologyKiller killer,
 			Config conf) {
 
+               _firstEmitterIndex = String.valueOf(allCompNames.indexOf(firstEmitter.getName()));
+               _secondEmitterIndex = String.valueOf(allCompNames.indexOf(secondEmitter.getName()));
+
 		_conf = conf;
 		_componentName = componentName;
-		_tableName = tableName;
+                _componentIndex = String.valueOf(allCompNames.indexOf(componentName));
+		_tableName = (isFromFirstEmitter ? firstEmitter.getName(): secondEmitter.getName());
 		_joinParams= joinParams;
 		_isFromFirstEmitter=isFromFirstEmitter;
 		_harmonizer = harmonizer;
@@ -97,7 +109,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 		_printOut = printOut;
 
 		int parallelism = SystemParameters.getInt(conf, _componentName+"_PAR");
-		_ID = componentName + "_" + tableName;
+		_ID = componentName + "_" + _tableName;
 		InputDeclarer currentBolt = builder.setBolt(_ID, this, parallelism);
 		currentBolt.fieldsGrouping(_harmonizer.getID(), new Fields("Hash"));
 
@@ -132,7 +144,8 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 				return;
 			}
 
-			String inputComponentName=stormTupleRcv.getString(0);
+                        //inside StormSrcJoin, we have inputComponentName, not inputComponentIndex
+			String inputComponentIndex=stormTupleRcv.getString(0);
                         List<String> tuple = (List<String>)stormTupleRcv.getValue(1);
 			String inputTupleString=MyUtilities.tupleToString(tuple, _conf);
 			String inputTupleHash=stormTupleRcv.getString(2);
@@ -143,7 +156,8 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 				return;
 			}
 
-			if(_tableName.equals(inputComponentName)) {//add the tuple into the datastructure!!
+			if((_isFromFirstEmitter && (inputComponentIndex.equals(_firstEmitterIndex))) ||
+                            (!_isFromFirstEmitter && (inputComponentIndex.equals(_secondEmitterIndex)))){//add the tuple into the datastructure!!
 				_joinStorage.put(inputTupleHash, inputTupleString);
 			} else {//JOIN
 				List<String> oppositeTupleStringList = (ArrayList<String>)_joinStorage.get(inputTupleHash);
@@ -205,7 +219,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
 	@Override
 		public void tupleSend(List<String> tuple, Tuple stormTupleRcv) {
-			Values stormTupleSnd = MyUtilities.createTupleValues(tuple, _componentName,
+			Values stormTupleSnd = MyUtilities.createTupleValues(tuple, _componentIndex,
 					_hashIndexes, _hashExpressions, _conf);
 			MyUtilities.sendTuple(stormTupleSnd, stormTupleRcv, _collector, _conf);
 		}
@@ -245,11 +259,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 	@Override
 		public void declareOutputFields(OutputFieldsDeclarer declarer) {
 			if(_hierarchyPosition!=FINAL_COMPONENT){ // then its an intermediate stage not the final one
-				List<String> outputFields= new ArrayList<String>();
-				outputFields.add("TableName");
-				outputFields.add("Tuple");
-				outputFields.add("Hash");
-				declarer.declare(new Fields(outputFields) );
+				declarer.declare(new Fields("CompIndex", "Tuple", "Hash") );
 			}
 
 		}

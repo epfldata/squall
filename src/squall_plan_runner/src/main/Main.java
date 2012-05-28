@@ -62,19 +62,20 @@ public class Main {
             int partitioningType = StormJoin.DST_ORDERING;
 
             List<Component> queryPlan = qp.getPlan();
+            List<String> allCompNames = qp.getComponentNames();
             int planSize = queryPlan.size();
             for(int i=0;i<planSize;i++){
                 Component component = queryPlan.get(i);
                 if(component.getChild() == null){
                     //a last component (it might be multiple of them)
-                    component.makeBolts(builder, killer, conf, partitioningType, StormComponent.FINAL_COMPONENT);
+                    component.makeBolts(builder, killer, allCompNames, conf, partitioningType, StormComponent.FINAL_COMPONENT);
                 }else{
-                    component.makeBolts(builder, killer, conf, partitioningType, StormComponent.INTERMEDIATE);
+                    component.makeBolts(builder, killer, allCompNames, conf, partitioningType, StormComponent.INTERMEDIATE);
                 }  
             }
 
             // printing infoID information and returning the result
-            printInfoID(killer, queryPlan);
+            //printInfoID(killer, queryPlan); commented out because IDs are now desriptive names
             return builder;
         }
 

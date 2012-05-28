@@ -22,6 +22,7 @@ public interface Component extends Serializable, StormEmitter {
 
     public void makeBolts(TopologyBuilder builder,
                        TopologyKiller killer,
+                       List<String> allCompNames,
                        Config conf,
                        int partitioningType,
                        int hierarchyPosition);

@@ -44,7 +44,6 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
 	private static Logger LOG = Logger.getLogger(StormRandomDataSource.class);
 
 	private String _inputPath;
-	private String _componentName;
         private int _hierarchyPosition;
         
 	private List<Integer> _hashIndexes;
@@ -53,6 +52,10 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
         private boolean _hasReachedEOF=false;
 	private long _pendingTuples=0;
 	private String _ID;
+        private String _componentIndex; //a unique index in a list of all the components
+                            //used as a shorter name, to save some network traffic
+                            //it's of type int, but we use String to save more space
+
 
         private Map _conf;
         private SpoutOutputCollector _collector;
@@ -84,6 +87,7 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
         private int _ordersProduced;
 
 	public StormRandomDataSource(String componentName,
+                        List<String> allCompNames,
                         String inputPath,
                         List<Integer> hashIndexes,
                         List<ValueExpression> hashExpressions,
@@ -102,8 +106,8 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
                 _operatorChain = new ChainOperator(selection, distinct, projection, aggregation);
                 _hierarchyPosition = hierarchyPosition;
 		_ID=componentName;
-		_componentName=componentName;
-		_inputPath=inputPath;
+		_componentIndex = String.valueOf(allCompNames.indexOf(componentName));
+                _inputPath=inputPath;
                 _batchOutputMillis = batchOutputMillis;
 
                 _hashIndexes=hashIndexes;
@@ -213,7 +217,7 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
 
         @Override
         public void tupleSend(List<String> tuple, Tuple stormTupleRcv) {
-            Values stormTupleSnd = MyUtilities.createTupleValues(tuple, _componentName,
+            Values stormTupleSnd = MyUtilities.createTupleValues(tuple, _componentIndex,
                         _hashIndexes, _hashExpressions, _conf);
             MyUtilities.sendTuple(stormTupleSnd, _collector, _conf);
         }
@@ -247,7 +251,6 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
 	@Override
 	public void open(Map map, TopologyContext tc, SpoutOutputCollector collector){
 		_collector = collector;
-               
 	}
 
         //ack method on spout is called only if in AckEveryTuple mode (ACKERS > 0)
@@ -270,7 +273,7 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
 
 	@Override
 	public void fail(Object msgId) {
-                throw new RuntimeException("Failing tuple in " + _componentName);
+                throw new RuntimeException("Failing tuple in " + _ID);
 
 	}
 
@@ -279,11 +282,7 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
                 if(MyUtilities.isAckEveryTuple(_conf) || _hierarchyPosition == FINAL_COMPONENT){
                     declarer.declareStream(SystemParameters.EOF_STREAM, new Fields(SystemParameters.EOF));
                 }
-		List<String> outputFields= new ArrayList<String>();
-		outputFields.add("TableName");
-		outputFields.add("Tuple");
-		outputFields.add("Hash");		
-		declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(outputFields));
+		declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("CompIndex", "Tuple", "Hash"));
 	}
 
         @Override
@@ -291,7 +290,7 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
             if(_printOut){
                 if((_operatorChain == null) || !_operatorChain.isBlocking()){
                     StringBuilder sb = new StringBuilder();
-                    sb.append("\nComponent ").append(_componentName);
+                    sb.append("\nComponent ").append(_ID);
                     sb.append("\nReceived tuples: ").append(_numSentTuples);
                     sb.append(" Tuple: ").append(MyUtilities.tupleToString(tuple, _conf));
                     LOG.info(sb.toString());
@@ -305,13 +304,13 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
                     if((_operatorChain != null) && _operatorChain.isBlocking()){
                         Operator lastOperator = _operatorChain.getLastOperator();
                         if (lastOperator instanceof AggregateOperator){
-                            MyUtilities.printBlockingResult(_componentName,
+                            MyUtilities.printBlockingResult(_ID,
                                                         (AggregateOperator) lastOperator,
                                                         _hierarchyPosition,
                                                         _conf,
                                                         LOG);
                         }else{
-                            MyUtilities.printBlockingResult(_componentName,
+                            MyUtilities.printBlockingResult(_ID,
                                                         lastOperator.getNumTuplesProcessed(),
                                                         lastOperator.printContent(),
                                                         _hierarchyPosition,
@@ -337,7 +336,7 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
 	@Override
 	public String getName() {
 		// TODO Auto-generated method stub
-		return _componentName;
+		return _ID;
 	}
 
         @Override
@@ -353,7 +352,7 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
         @Override
         public String getInfoID() {
             StringBuilder sb = new StringBuilder();
-            sb.append("Table ").append(_componentName).append(" has ID: ").append(_ID);
+            sb.append("Table ").append(_ID).append(" has ID: ").append(_ID);
             return sb.toString();
         }
 
@@ -375,7 +374,7 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
         private String readLine(){
             _tuplesProduced++;
             String res = null;
-            if(_componentName.equalsIgnoreCase("Customer")){
+            if(_ID.equalsIgnoreCase("Customer")){
                 res = (_randomGenerator.nextInt(_generatedMax)) +"|Pera|palace|1|011|sdfa sdwe|FURNITURE|bla" ;
                 if(_tuplesProduced == _customerProduced){
                     return null;

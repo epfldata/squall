@@ -29,6 +29,7 @@ public class StormSrcJoin implements StormJoin, Serializable{
 	public StormSrcJoin(StormEmitter firstEmitter,
                 StormEmitter secondEmitter,
                 String componentName,
+                List<String> allCompNames,
                 SelectionOperator selection,
                 ProjectionOperator projection,
                 AggregateOperator aggregation,
@@ -58,8 +59,10 @@ public class StormSrcJoin implements StormJoin, Serializable{
                     conf);
 		
             List<Integer> joinParams = MyUtilities.combineHashIndexes(firstEmitter, secondEmitter);
-            _firstStorage = new StormSrcStorage(componentName,
-                    firstEmitter.getName(),
+            _firstStorage = new StormSrcStorage(firstEmitter,
+                    secondEmitter,
+                    componentName,
+                    allCompNames,
                     _harmonizer,
                     joinParams,
                     true,
@@ -76,8 +79,10 @@ public class StormSrcJoin implements StormJoin, Serializable{
                     builder,
                     killer,
                     conf);
-            _secondStorage = new StormSrcStorage(componentName,
-                    secondEmitter.getName(),
+            _secondStorage = new StormSrcStorage(firstEmitter,
+                    secondEmitter,
+                    componentName,
+                    allCompNames,
                     _harmonizer,
                     joinParams,
                     false,

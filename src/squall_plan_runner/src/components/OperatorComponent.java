@@ -147,6 +147,7 @@ public  class OperatorComponent implements Component{
     @Override
     public void makeBolts(TopologyBuilder builder,
             TopologyKiller killer,
+            List<String> allCompNames,
             Config conf,
             int partitioningType,
             int hierarchyPosition) {
@@ -161,6 +162,7 @@ public  class OperatorComponent implements Component{
 
         _stormOperator = new StormOperator(_parent,
                 _componentName,
+                allCompNames,
                 _selection,
                 _distinct,
                 _projection,

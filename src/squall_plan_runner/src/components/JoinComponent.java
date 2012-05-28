@@ -175,6 +175,7 @@ public class JoinComponent implements Component {
     @Override
     public void makeBolts(TopologyBuilder builder,
             TopologyKiller killer,
+            List<String> allCompNames,
             Config conf,
             int partitioningType,
             int hierarchyPosition){
@@ -199,6 +200,7 @@ public class JoinComponent implements Component {
                 _joiner = new StormDstJoin(_firstParent,
                                     _secondParent,
                                     _componentName,
+                                    allCompNames,
                                     _selection,
                                     _distinct,
                                     _projection,
@@ -234,6 +236,7 @@ public class JoinComponent implements Component {
             _joiner = new StormSrcJoin(_firstParent,
                                     _secondParent,
                                     _componentName,
+                                    allCompNames,
                                     _selection,
                                     _projection,
                                     _aggregation,

@@ -60,7 +60,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 
 	@Override
 	public void execute(Tuple stormRcvTuple) {
-            String inputComponentName=stormRcvTuple.getString(0);
+            String inputComponentIndex=stormRcvTuple.getString(0);
             List<String> tuple = (List<String>) stormRcvTuple.getValue(1);
             String inputTupleHash=stormRcvTuple.getString(2);
 
@@ -70,7 +70,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
                 return;
             }
 
-            _collector.emit(stormRcvTuple, new Values(inputComponentName, tuple, inputTupleHash));
+            _collector.emit(stormRcvTuple, new Values(inputComponentIndex, tuple, inputTupleHash));
             _collector.ack(stormRcvTuple);
 	}
 
@@ -92,11 +92,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		List<String> outputFields= new ArrayList<String>();
-		outputFields.add("TableName");
-		outputFields.add("Tuple");
-		outputFields.add("Hash");		
-		declarer.declare(new Fields(outputFields));
+		declarer.declare(new Fields("CompIndex", "Tuple", "Hash"));
 	}
 
         //from StormComponent
