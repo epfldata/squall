@@ -6,7 +6,6 @@
 package visitors.squall;
 
 import components.Component;
-import components.OperatorComponent;
 import conversion.DateConversion;
 import conversion.DoubleConversion;
 import conversion.LongConversion;
@@ -72,11 +71,9 @@ import operators.AggregateCountOperator;
 import operators.AggregateOperator;
 import operators.AggregateSumOperator;
 import operators.DistinctOperator;
-import operators.ProjectionOperator;
 import optimizers.OptimizerTranslator;
 import queryPlans.QueryPlan;
 import schema.Schema;
-import util.DeepCopy;
 import util.ParserUtil;
 import util.TableAliasName;
 
@@ -91,8 +88,10 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
 
     private Stack<ValueExpression> _exprStack;
     private AggregateOperator _agg = null;
+
+    //these two are of interest for the invoker
     private List<AggregateOperator> _aggOps = new ArrayList<AggregateOperator>();
-    private List<ValueExpression> _selectExpr = new ArrayList<ValueExpression>();
+    private List<ValueExpression> _selectVEs = new ArrayList<ValueExpression>();
 
     public static final int AGG = 0;
     public static final int NON_AGG = 1;
@@ -105,6 +104,14 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
         _map = map;
 
         _affectedComponent = queryPlan.getLastComponent();
+    }
+
+    public List<AggregateOperator> getAggOps(){
+        return _aggOps;
+    }
+
+    public List<ValueExpression> getSelectVEs(){
+        return _selectVEs;
     }
 
     //SELECTITEMVISITOR DESIGN PATTERN
@@ -131,67 +138,9 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
 
     private void doneSingleItem(){
         if(_agg == null){
-            _selectExpr.add(_exprStack.peek());
+            _selectVEs.add(_exprStack.peek());
         }else{
             _aggOps.add(_agg);
-        }
-    }
-
-    public int doneVisiting(){
-        return attachToQueryPlan();
-    }
-
-    private int attachToQueryPlan(){
-        if (_aggOps.isEmpty()){
-            ProjectionOperator project = new ProjectionOperator(_selectExpr);
-            _affectedComponent.setProjection(project);
-            return NON_AGG;
-        }else if (_aggOps.size() == 1){
-            //all the others are group by
-            AggregateOperator firstAgg = _aggOps.get(0);
-            
-            if(ParserUtil.isAllColumnRefs(_selectExpr)){
-                //plain fields in select
-                List<Integer> groupByColumns = ParserUtil.extractColumnIndexes(_selectExpr);
-                firstAgg.setGroupByColumns(groupByColumns);
-
-                //Setting new level of components is necessary for correctness only for distinct in aggregates
-                    //  but it's certainly pleasant to have the final result grouped on nodes by group by columns.
-                boolean newLevel = !(_ot.isHashedBy(_affectedComponent, groupByColumns));
-                if(newLevel){
-                    _affectedComponent.setHashIndexes(groupByColumns);
-                    OperatorComponent newComponent = new OperatorComponent(_affectedComponent,
-                                                                      ParserUtil.generateUniqueName("OPERATOR"),
-                                                                      _queryPlan).setAggregation(firstAgg);
-
-                    //this now becomes "active component"
-                    _affectedComponent = newComponent;
-                }else{
-                    _affectedComponent.setAggregation(firstAgg);
-                }
-            }else{
-                //Sometimes selectExpr contains other functions, so we have to use projections instead of simple groupBy
-                //Check for complexity
-                if (_affectedComponent.getHashExpressions()!=null && !_affectedComponent.getHashExpressions().isEmpty()){
-                    throw new RuntimeException("Too complex: cannot have hashExpression both for joinCondition and groupBy!");
-                }
-
-                //WARNING: _selectExpr cannot be used on two places: that's why we do deep copy
-               _affectedComponent.setHashExpressions((List<ValueExpression>)DeepCopy.copy(_selectExpr));
-
-                //always new level
-                ProjectionOperator groupByProj = new ProjectionOperator((List<ValueExpression>)DeepCopy.copy(_selectExpr));
-                firstAgg.setGroupByProjection(groupByProj);
-                OperatorComponent newComponent = new OperatorComponent(_affectedComponent,
-                                                                      ParserUtil.generateUniqueName("OPERATOR"),
-                                                                      _queryPlan).setAggregation(firstAgg);
-
-                    //this now becomes "active component"
-                    _affectedComponent = newComponent;
-            }
-            return AGG;
-        }else{
-            throw new RuntimeException("For now only one aggregate function supported!");
         }
     }
 

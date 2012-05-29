@@ -6,6 +6,8 @@
 package optimizers.ruleBased;
 
 import components.Component;
+import components.OperatorComponent;
+import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -20,13 +22,18 @@ import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SelectItem;
+import operators.AggregateOperator;
+import operators.ProjectionOperator;
+import operators.SelectionOperator;
 import optimizers.ComponentGenerator;
 import optimizers.Optimizer;
 import optimizers.OptimizerTranslator;
+import predicates.Predicate;
 import util.HierarchyExtractor;
 import util.JoinTablesExp;
 import util.ParserUtil;
 import util.TableAliasName;
+import utilities.DeepCopy;
 import visitors.jsql.AndVisitor;
 import visitors.jsql.ColumnCollectVisitor;
 import visitors.jsql.JoinTablesExpVisitor;
@@ -60,7 +67,7 @@ public class RuleBasedOpt implements Optimizer {
         ParserUtil.printQueryPlan(_cg.getQueryPlan());
 
         //selectItems might add OperatorComponent, this is why it goes first
-        int queryType = selectItemsVisitor(selectItems);
+        int queryType = processSelectClause(selectItems);
         processWhereClause(whereExpr);
         if(queryType == SelectItemsVisitor.NON_AGG){
             System.out.println("Early projection will not be performed since the query is NON_AGG type (contains projections)!");
@@ -187,13 +194,66 @@ public class RuleBasedOpt implements Optimizer {
         return cg;
     }
 
-    private int selectItemsVisitor(List<SelectItem> selectItems) {
+    private int processSelectClause(List<SelectItem> selectItems) {
         //TODO: take care in nested case
         SelectItemsVisitor selectVisitor = new SelectItemsVisitor(_cg.getQueryPlan(), _schema, _tan, _ot, _map);
         for(SelectItem elem: selectItems){
             elem.accept(selectVisitor);
         }
-        return selectVisitor.doneVisiting();
+        List<AggregateOperator> aggOps = selectVisitor.getAggOps();
+        List<ValueExpression> selectVEs = selectVisitor.getSelectVEs();
+
+        Component affectedComponent = _cg.getQueryPlan().getLastComponent();
+        attachSelectClause(aggOps, selectVEs, affectedComponent);
+        return (aggOps.isEmpty() ? SelectItemsVisitor.NON_AGG : SelectItemsVisitor.AGG);
+    }
+
+    private void attachSelectClause(List<AggregateOperator> aggOps, List<ValueExpression> selectVEs, Component affectedComponent) {
+        if (aggOps.isEmpty()){
+            ProjectionOperator project = new ProjectionOperator(selectVEs);
+            affectedComponent.setProjection(project);
+        }else if (aggOps.size() == 1){
+            //all the others are group by
+            AggregateOperator firstAgg = aggOps.get(0);
+
+            if(ParserUtil.isAllColumnRefs(selectVEs)){
+                //plain fields in select
+                List<Integer> groupByColumns = ParserUtil.extractColumnIndexes(selectVEs);
+                firstAgg.setGroupByColumns(groupByColumns);
+
+                //Setting new level of components is necessary for correctness only for distinct in aggregates
+                    //  but it's certainly pleasant to have the final result grouped on nodes by group by columns.
+                boolean newLevel = !(_ot.isHashedBy(affectedComponent, groupByColumns));
+                if(newLevel){
+                    affectedComponent.setHashIndexes(groupByColumns);
+                    OperatorComponent newComponent = new OperatorComponent(affectedComponent,
+                                                                      ParserUtil.generateUniqueName("OPERATOR"),
+                                                                      _cg.getQueryPlan()).setAggregation(firstAgg);
+
+                }else{
+                    affectedComponent.setAggregation(firstAgg);
+                }
+            }else{
+                //Sometimes selectExpr contains other functions, so we have to use projections instead of simple groupBy
+                //Check for complexity
+                if (affectedComponent.getHashExpressions()!=null && !affectedComponent.getHashExpressions().isEmpty()){
+                    throw new RuntimeException("Too complex: cannot have hashExpression both for joinCondition and groupBy!");
+                }
+
+                //WARNING: _selectExpr cannot be used on two places: that's why we do deep copy
+               affectedComponent.setHashExpressions((List<ValueExpression>)DeepCopy.copy(selectVEs));
+
+                //always new level
+                ProjectionOperator groupByProj = new ProjectionOperator((List<ValueExpression>)DeepCopy.copy(selectVEs));
+                firstAgg.setGroupByProjection(groupByProj);
+                OperatorComponent newComponent = new OperatorComponent(affectedComponent,
+                                                                      ParserUtil.generateUniqueName("OPERATOR"),
+                                                                      _cg.getQueryPlan()).setAggregation(firstAgg);
+
+            }
+        }else{
+            throw new RuntimeException("For now only one aggregate function supported!");
+        }
     }
 
     private void processWhereClause(Expression whereExpr) {
@@ -228,27 +288,32 @@ public class RuleBasedOpt implements Optimizer {
             String columnName = entry.getKey();
             Expression exprPerColumn = entry.getValue();
             Component affectedComponent = HierarchyExtractor.getDSCwithColumn(columnName, _cg);
-            invokeWhereVisitor(exprPerColumn, affectedComponent, _cg);
+            processWhereForComponent(exprPerColumn, affectedComponent);
         }
 
         for(OrExpression orExpr: orExprs){
             List<Column> columns = invokeColumnVisitor(orExpr);
             List<Component> compList = HierarchyExtractor.getDSCwithColumn(columns, _cg);
             Component affectedComponent = HierarchyExtractor.getLCM(compList);
-            invokeWhereVisitor(orExpr, affectedComponent, _cg);
+            processWhereForComponent(orExpr, affectedComponent);
         }
     }
-    
+
+    private void processWhereForComponent(Expression whereExpression, Component affectedComponent){
+        WhereVisitor whereVisitor = new WhereVisitor(_cg.getQueryPlan(), affectedComponent, _schema, _tan, _ot);
+        whereExpression.accept(whereVisitor);
+        attachWhereClause(whereVisitor.getPredicate(), affectedComponent);
+    }
+
+    private void attachWhereClause(Predicate predicate, Component affectedComponent) {
+        affectedComponent.setSelection(new SelectionOperator(predicate));
+    }
+
+    //HELPER
     private List<Column> invokeColumnVisitor(Expression expr) {
         ColumnCollectVisitor columnCollect = new ColumnCollectVisitor();
         expr.accept(columnCollect);
         return columnCollect.getColumns();
-    }
-
-    private void invokeWhereVisitor(Expression expr, Component affectedComponent, ComponentGenerator cg){
-        WhereVisitor whereVisitor = new WhereVisitor(cg.getQueryPlan(), affectedComponent, _schema, _tan, _ot);
-        expr.accept(whereVisitor);
-        whereVisitor.doneVisiting();
     }
 
     private int getNumHighLevelPairs(int numTables) {
@@ -265,5 +330,6 @@ public class RuleBasedOpt implements Optimizer {
         EarlyProjection early = new EarlyProjection();
         early.operate(queryPlan);
     }
+
 
 }

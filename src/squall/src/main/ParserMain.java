@@ -15,6 +15,7 @@ import optimizers.ComponentGenerator;
 import optimizers.ruleBased.RuleBasedOpt;
 import optimizers.Optimizer;
 import optimizers.OptimizerTranslator;
+import optimizers.SimpleOpt;
 import optimizers.ruleBased.RuleTranslator;
 import queryPlans.QueryPlan;
 import schema.Schema;
@@ -132,7 +133,7 @@ public class ParserMain{
         OptimizerTranslator ot = new RuleTranslator();
 
         //Simple optimizer provides lefty plans
-        //Optimizer opt = new SimpleOpt(schema, tan, dataPath, extension, map);
+        //Optimizer opt = new SimpleOpt(schema, tan, dataPath, extension, ot, map);
         //Dynamic programming query plan
         Optimizer opt = new RuleBasedOpt(schema, tan, dataPath, extension, ot, map);
 

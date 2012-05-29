@@ -81,18 +81,11 @@ public class WhereVisitor implements ExpressionVisitor {
 
     private Schema _schema;
     private QueryPlan _queryPlan;
+
+    //necessary for getColumnIndex in visitColumn method
     private Component _affectedComponent;
     private TableAliasName _tan;
     private OptimizerTranslator _ot;
-
-    public WhereVisitor(QueryPlan queryPlan, Schema schema, TableAliasName tan, OptimizerTranslator ot){
-        _queryPlan = queryPlan;
-        _schema = schema;
-        _tan = tan;
-        _ot = ot;
-        
-        _affectedComponent = queryPlan.getLastComponent();
-    }
 
     public WhereVisitor(QueryPlan queryPlan, Component affectedComponent, Schema schema, TableAliasName tan, OptimizerTranslator ot){
         _queryPlan = queryPlan;
@@ -100,11 +93,8 @@ public class WhereVisitor implements ExpressionVisitor {
         _schema = schema;
         _tan = tan;
         _ot = ot;
-    }
 
-    public void doneVisiting(){
-        Predicate pred = getPredicate();
-        _affectedComponent.setSelection(new SelectionOperator(pred));
+        _affectedComponent = affectedComponent;
     }
 
     public Predicate getPredicate(){
