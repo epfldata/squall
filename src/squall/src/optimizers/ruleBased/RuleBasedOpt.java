@@ -23,8 +23,8 @@ import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import operators.AggregateOperator;
-import operators.ProjectionOperator;
-import operators.SelectionOperator;
+import operators.ProjectOperator;
+import operators.SelectOperator;
 import optimizers.ComponentGenerator;
 import optimizers.Optimizer;
 import optimizers.OptimizerTranslator;
@@ -40,7 +40,11 @@ import visitors.jsql.JoinTablesExpVisitor;
 import visitors.squall.SelectItemsVisitor;
 import visitors.squall.WhereVisitor;
 
-
+/*
+ * Does not take relation cardinalities into account.
+ * Assume no projections before the aggregation, so that EarlyProjection may impose some projections.
+ * Aggregation only on the last level.
+ */
 public class RuleBasedOpt implements Optimizer {
     private Schema _schema;
     private String _dataPath;
@@ -75,6 +79,8 @@ public class RuleBasedOpt implements Optimizer {
             earlyProjection(_cg.getQueryPlan());
         }
         
+        ParserUtil.orderOperators(_cg.getQueryPlan());
+
         ParallelismAssigner parAssign = new ParallelismAssigner(_cg.getQueryPlan(), _tan, _schema, _map);
         parAssign.assignPar();
 
@@ -210,8 +216,8 @@ public class RuleBasedOpt implements Optimizer {
 
     private void attachSelectClause(List<AggregateOperator> aggOps, List<ValueExpression> selectVEs, Component affectedComponent) {
         if (aggOps.isEmpty()){
-            ProjectionOperator project = new ProjectionOperator(selectVEs);
-            affectedComponent.setProjection(project);
+            ProjectOperator project = new ProjectOperator(selectVEs);
+            affectedComponent.addOperator(project);
         }else if (aggOps.size() == 1){
             //all the others are group by
             AggregateOperator firstAgg = aggOps.get(0);
@@ -228,10 +234,10 @@ public class RuleBasedOpt implements Optimizer {
                     affectedComponent.setHashIndexes(groupByColumns);
                     OperatorComponent newComponent = new OperatorComponent(affectedComponent,
                                                                       ParserUtil.generateUniqueName("OPERATOR"),
-                                                                      _cg.getQueryPlan()).setAggregation(firstAgg);
+                                                                      _cg.getQueryPlan()).addOperator(firstAgg);
 
                 }else{
-                    affectedComponent.setAggregation(firstAgg);
+                    affectedComponent.addOperator(firstAgg);
                 }
             }else{
                 //Sometimes selectExpr contains other functions, so we have to use projections instead of simple groupBy
@@ -244,11 +250,11 @@ public class RuleBasedOpt implements Optimizer {
                affectedComponent.setHashExpressions((List<ValueExpression>)DeepCopy.copy(selectVEs));
 
                 //always new level
-                ProjectionOperator groupByProj = new ProjectionOperator((List<ValueExpression>)DeepCopy.copy(selectVEs));
+                ProjectOperator groupByProj = new ProjectOperator((List<ValueExpression>)DeepCopy.copy(selectVEs));
                 firstAgg.setGroupByProjection(groupByProj);
                 OperatorComponent newComponent = new OperatorComponent(affectedComponent,
                                                                       ParserUtil.generateUniqueName("OPERATOR"),
-                                                                      _cg.getQueryPlan()).setAggregation(firstAgg);
+                                                                      _cg.getQueryPlan()).addOperator(firstAgg);
 
             }
         }else{
@@ -306,7 +312,7 @@ public class RuleBasedOpt implements Optimizer {
     }
 
     private void attachWhereClause(Predicate predicate, Component affectedComponent) {
-        affectedComponent.setSelection(new SelectionOperator(predicate));
+        affectedComponent.addOperator(new SelectOperator(predicate));
     }
 
     //HELPER

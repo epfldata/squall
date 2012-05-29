@@ -49,7 +49,7 @@ public class MultiAggregateOperator implements AggregateOperator {
         if(groupByColumns != null){
             result += groupByColumns.size();
         }
-        ProjectionOperator groupByProjection = agg.getGroupByProjection();
+        ProjectOperator groupByProjection = agg.getGroupByProjection();
         if(groupByProjection != null){
             result += groupByProjection.getExpressions().size();
         }
@@ -98,12 +98,12 @@ public class MultiAggregateOperator implements AggregateOperator {
     }
 
     @Override
-    public AggregateOperator setGroupByProjection(ProjectionOperator projection) {
+    public AggregateOperator setGroupByProjection(ProjectOperator projection) {
         throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
     }
 
     @Override
-    public ProjectionOperator getGroupByProjection() {
+    public ProjectOperator getGroupByProjection() {
         throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
     }
 

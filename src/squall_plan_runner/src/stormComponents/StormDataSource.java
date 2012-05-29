@@ -29,8 +29,8 @@ import operators.AggregateOperator;
 import operators.ChainOperator;
 import operators.DistinctOperator;
 import operators.Operator;
-import operators.ProjectionOperator;
-import operators.SelectionOperator;
+import operators.ProjectOperator;
+import operators.SelectOperator;
 import utilities.SystemParameters;
 
 import org.apache.log4j.Logger;
@@ -80,10 +80,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 			String inputPath,
 			List<Integer> hashIndexes,
 			List<ValueExpression> hashExpressions,
-			SelectionOperator selection,
-			DistinctOperator distinct,
-			ProjectionOperator projection,
-			AggregateOperator aggregation,
+			ChainOperator chain,
 			int hierarchyPosition,
 			boolean printOut,
 			long batchOutputMillis,
@@ -92,7 +89,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 			TopologyKiller killer,
 			Config conf) {
 		_conf = conf;
-		_operatorChain = new ChainOperator(selection, distinct, projection, aggregation);
+		_operatorChain = chain;
 		_hierarchyPosition = hierarchyPosition;
 		_ID=componentName;
                 _componentIndex = String.valueOf(allCompNames.indexOf(componentName));

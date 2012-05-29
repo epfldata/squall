@@ -10,7 +10,7 @@ import conversion.IntegerConversion;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import operators.ProjectionOperator;
+import operators.ProjectOperator;
 
 import org.apache.log4j.Logger;
 import queryPlans.QueryPlan;
@@ -26,24 +26,24 @@ public class HyracksL1Plan {
     public HyracksL1Plan(String dataPath, String extension, Map conf){
             //-------------------------------------------------------------------------------------
                     // start of query plan filling
-            ProjectionOperator projectionCustomer = new ProjectionOperator(new int[]{0, 6});
+            ProjectOperator projectionCustomer = new ProjectOperator(new int[]{0, 6});
             List<Integer> hashCustomer = Arrays.asList(0);
             DataSourceComponent relationCustomer = new DataSourceComponent(
                                             "CUSTOMER",
                                             dataPath + "customer" + extension,
                                             TPCH_Schema.customer,
-                                            _queryPlan).setProjection(projectionCustomer)
+                                            _queryPlan).addOperator(projectionCustomer)
                                                        .setHashIndexes(hashCustomer)
                                                        .setPrintOut(false);
 
             //-------------------------------------------------------------------------------------
-            ProjectionOperator projectionOrders = new ProjectionOperator(new int[]{1});
+            ProjectOperator projectionOrders = new ProjectOperator(new int[]{1});
             List<Integer> hashOrders = Arrays.asList(0);
             DataSourceComponent relationOrders = new DataSourceComponent(
                                             "ORDERS",
                                             dataPath + "orders" + extension,
                                             TPCH_Schema.orders,
-                                            _queryPlan).setProjection(projectionOrders)
+                                            _queryPlan).addOperator(projectionOrders)
                                                        .setHashIndexes(hashOrders)
                                                        .setPrintOut(false);
                                                        

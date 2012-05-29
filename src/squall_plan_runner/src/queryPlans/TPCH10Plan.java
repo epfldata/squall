@@ -9,7 +9,6 @@ import components.DataSourceComponent;
 import components.EquiJoinComponent;
 import conversion.DateConversion;
 import conversion.DoubleConversion;
-import conversion.IntegerConversion;
 import conversion.NumericConversion;
 import conversion.StringConversion;
 import conversion.TypeConversion;
@@ -26,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 import operators.AggregateOperator;
 import operators.AggregateSumOperator;
-import operators.ProjectionOperator;
-import operators.SelectionOperator;
+import operators.ProjectOperator;
+import operators.SelectOperator;
 import org.apache.log4j.Logger;
 import predicates.BetweenPredicate;
 import predicates.ComparisonPredicate;
@@ -37,7 +36,6 @@ public class TPCH10Plan {
 
     private static final TypeConversion<Date> _dc = new DateConversion();
     private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
-    private static final IntegerConversion _ic = new IntegerConversion();
     private static final StringConversion _sc = new StringConversion();
     private QueryPlan _queryPlan = new QueryPlan();
 
@@ -67,34 +65,34 @@ public class TPCH10Plan {
         //-------------------------------------------------------------------------------------
         List<Integer> hashCustomer = Arrays.asList(0);
 
-        ProjectionOperator projectionCustomer = new ProjectionOperator(new int[]{0, 1, 2, 3, 4, 5, 7});
+        ProjectOperator projectionCustomer = new ProjectOperator(new int[]{0, 1, 2, 3, 4, 5, 7});
 
         DataSourceComponent relationCustomer = new DataSourceComponent(
                 "CUSTOMER",
                 dataPath + "customer" + extension,
                 TPCH_Schema.customer,
                 _queryPlan).setHashIndexes(hashCustomer)
-                           .setProjection(projectionCustomer);
+                           .addOperator(projectionCustomer);
 
         //-------------------------------------------------------------------------------------
         List<Integer> hashOrders = Arrays.asList(1);
 
-        SelectionOperator selectionOrders = new SelectionOperator(
+        SelectOperator selectionOrders = new SelectOperator(
                 new BetweenPredicate(
                     new ColumnReference(_dc, 4),
                     true, new ValueSpecification(_dc, _date1),
                     false, new ValueSpecification(_dc, _date2)
                 ));
 
-        ProjectionOperator projectionOrders = new ProjectionOperator(new int[]{0, 1});
+        ProjectOperator projectionOrders = new ProjectOperator(new int[]{0, 1});
 
         DataSourceComponent relationOrders = new DataSourceComponent(
                 "ORDERS",
                 dataPath + "orders" + extension,
                 TPCH_Schema.orders,
                 _queryPlan).setHashIndexes(hashOrders)
-                           .setSelection(selectionOrders)
-                           .setProjection(projectionOrders);
+                           .addOperator(selectionOrders)
+                           .addOperator(projectionOrders);
 
         //-------------------------------------------------------------------------------------
         EquiJoinComponent C_Ojoin = new EquiJoinComponent(
@@ -104,40 +102,40 @@ public class TPCH10Plan {
         //-------------------------------------------------------------------------------------
         List<Integer> hashNation = Arrays.asList(0);
 
-        ProjectionOperator projectionNation = new ProjectionOperator(new int[]{0, 1});
+        ProjectOperator projectionNation = new ProjectOperator(new int[]{0, 1});
 
         DataSourceComponent relationNation = new DataSourceComponent(
                 "NATION",
                 dataPath + "nation" + extension,
                 TPCH_Schema.nation,
                 _queryPlan).setHashIndexes(hashNation)
-                           .setProjection(projectionNation);
+                           .addOperator(projectionNation);
         //-------------------------------------------------------------------------------------
 
         EquiJoinComponent C_O_Njoin = new EquiJoinComponent(
 				C_Ojoin,
 				relationNation,
-				_queryPlan).setProjection(new ProjectionOperator(new int[]{0, 1, 2, 4, 5, 6, 7, 8}))
+				_queryPlan).addOperator(new ProjectOperator(new int[]{0, 1, 2, 4, 5, 6, 7, 8}))
                                            .setHashIndexes(Arrays.asList(6));
         //-------------------------------------------------------------------------------------
 
         List<Integer> hashLineitem = Arrays.asList(0);
 
-        SelectionOperator selectionLineitem = new SelectionOperator(
+        SelectOperator selectionLineitem = new SelectOperator(
                 new ComparisonPredicate(
                     new ColumnReference(_sc, 8),
                     new ValueSpecification(_sc, "R")
                 ));
 
-        ProjectionOperator projectionLineitem = new ProjectionOperator(new int[]{0, 5, 6});
+        ProjectOperator projectionLineitem = new ProjectOperator(new int[]{0, 5, 6});
 
         DataSourceComponent relationLineitem = new DataSourceComponent(
                 "LINEITEM",
                 dataPath + "lineitem" + extension,
                 TPCH_Schema.lineitem,
                 _queryPlan).setHashIndexes(hashLineitem)
-                           .setSelection(selectionLineitem)
-                           .setProjection(projectionLineitem);
+                           .addOperator(selectionLineitem)
+                           .addOperator(projectionLineitem);
 
         //-------------------------------------------------------------------------------------
         // set up aggregation function on the StormComponent(Bolt) where join is performed
@@ -158,8 +156,8 @@ public class TPCH10Plan {
         EquiJoinComponent C_O_N_Ljoin = new EquiJoinComponent(
 				C_O_Njoin,
 				relationLineitem,
-				_queryPlan).setProjection(new ProjectionOperator(new int[]{0, 1, 2, 3, 4, 5, 7, 8, 9}))
-                                           .setAggregation(agg);
+				_queryPlan).addOperator(new ProjectOperator(new int[]{0, 1, 2, 3, 4, 5, 7, 8, 9}))
+                                           .addOperator(agg);
         //-------------------------------------------------------------------------------------
 
         AggregateOperator overallAgg =

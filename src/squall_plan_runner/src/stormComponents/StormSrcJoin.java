@@ -8,9 +8,8 @@ import backtype.storm.topology.TopologyBuilder;
 import expressions.ValueExpression;
 import java.io.Serializable;
 import java.util.List;
-import operators.AggregateOperator;
-import operators.ProjectionOperator;
-import operators.SelectionOperator;
+import operators.ChainOperator;
+import operators.ProjectOperator;
 
 import org.apache.log4j.Logger;
 
@@ -30,13 +29,11 @@ public class StormSrcJoin implements StormJoin, Serializable{
                 StormEmitter secondEmitter,
                 String componentName,
                 List<String> allCompNames,
-                SelectionOperator selection,
-                ProjectionOperator projection,
-                AggregateOperator aggregation,
+                ChainOperator chain,
                 SquallStorage firstPreAggStorage,
                 SquallStorage secondPreAggStorage,
-                ProjectionOperator firstPreAggProj,
-                ProjectionOperator secondPreAggProj,
+                ProjectOperator firstPreAggProj,
+                ProjectOperator secondPreAggProj,
                 List<Integer> hashIndexes,
                 List<ValueExpression> hashExpressions,
                 int hierarchyPosition,
@@ -66,9 +63,7 @@ public class StormSrcJoin implements StormJoin, Serializable{
                     _harmonizer,
                     joinParams,
                     true,
-                    selection,
-                    projection,
-                    aggregation,
+                    chain,
                     firstPreAggStorage,
                     firstPreAggProj,
                     hashIndexes,
@@ -86,9 +81,7 @@ public class StormSrcJoin implements StormJoin, Serializable{
                     _harmonizer,
                     joinParams,
                     false,
-                    selection,
-                    projection,
-                    aggregation,
+                    chain,
                     secondPreAggStorage,
                     secondPreAggProj,
                     hashIndexes,

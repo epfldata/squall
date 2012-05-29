@@ -24,8 +24,8 @@ import operators.AggregateCountOperator;
 import operators.AggregateOperator;
 import operators.AggregateSumOperator;
 import operators.DistinctOperator;
-import operators.ProjectionOperator;
-import operators.SelectionOperator;
+import operators.ProjectOperator;
+import operators.SelectOperator;
 import org.apache.log4j.Logger;
 import predicates.BetweenPredicate;
 import predicates.ComparisonPredicate;
@@ -63,27 +63,27 @@ public class TPCH4Plan {
         //-------------------------------------------------------------------------------------
         List<Integer> hashOrders = Arrays.asList(0);
 
-        SelectionOperator selectionOrders = new SelectionOperator(
+        SelectOperator selectionOrders = new SelectOperator(
                 new BetweenPredicate(
                     new ColumnReference(_dc, 4),
                     true, new ValueSpecification(_dc, _date1),
                     false, new ValueSpecification(_dc, _date2)
                 ));
 
-        ProjectionOperator projectionOrders = new ProjectionOperator(new int[]{0, 5});
+        ProjectOperator projectionOrders = new ProjectOperator(new int[]{0, 5});
 
         DataSourceComponent relationOrders = new DataSourceComponent(
                 "ORDERS",
                 dataPath + "orders" + extension,
                 TPCH_Schema.orders,
                 _queryPlan).setHashIndexes(hashOrders)
-                           .setSelection(selectionOrders)
-                           .setProjection(projectionOrders);
+                           .addOperator(selectionOrders)
+                           .addOperator(projectionOrders);
 
         //-------------------------------------------------------------------------------------
         List<Integer> hashLineitem = Arrays.asList(0);
 
-        SelectionOperator selectionLineitem = new SelectionOperator(
+        SelectOperator selectionLineitem = new SelectOperator(
                 new ComparisonPredicate(
                     ComparisonPredicate.LESS_OP,
                     new ColumnReference(_dc, 11),
@@ -97,8 +97,8 @@ public class TPCH4Plan {
                 dataPath + "lineitem" + extension,
                 TPCH_Schema.lineitem,
                 _queryPlan).setHashIndexes(hashLineitem)
-                           .setSelection(selectionLineitem)
-                           .setDistinct(distinctLineitem);
+                           .addOperator(selectionLineitem)
+                           .addOperator(distinctLineitem);
 
         //-------------------------------------------------------------------------------------
         EquiJoinComponent O_Ljoin = new EquiJoinComponent(
@@ -112,7 +112,7 @@ public class TPCH4Plan {
         OperatorComponent finalComponent = new OperatorComponent(
                 O_Ljoin,
                 "FINAL_RESULT",
-                _queryPlan).setAggregation(aggOp);
+                _queryPlan).addOperator(aggOp);
 
         //-------------------------------------------------------------------------------------
 

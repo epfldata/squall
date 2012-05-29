@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.Join;
+import operators.ChainOperator;
+import operators.Operator;
 import queryPlans.QueryPlan;
 import utilities.MyUtilities;
 
@@ -77,18 +79,7 @@ public class ParserUtil {
         for(Component comp: queryPlan.getPlan()){
             sb.append("\n\nComponent ").append(comp.getName());
 
-            if(comp.getSelection()!=null){
-                sb.append("\n").append(comp.getSelection().toString());
-            }
-            if(comp.getProjection()!=null){
-                sb.append("\n").append(comp.getProjection().toString());
-            }
-            if(comp.getDistinct()!=null){
-                sb.append("\n").append(comp.getDistinct().toString());
-            }
-            if(comp.getAggregation()!=null){
-                sb.append("\n").append(comp.getAggregation().toString());
-            }
+            sb.append("\n").append(comp.getChainOperator());
             if(comp.getHashIndexes()!=null && !comp.getHashIndexes().isEmpty()){
                 sb.append("\n HashIndexes: ").append(listToStr(comp.getHashIndexes()));
             }
@@ -222,5 +213,34 @@ public class ParserUtil {
             throw new RuntimeException(error);
 	}
         return sqlstring.toString();
+    }
+
+    /*
+     * On each component order the Operators as Select, Distinct, Project, Aggregation
+     */
+    public static void orderOperators(QueryPlan queryPlan) {
+        List<Component> comps = queryPlan.getPlan();
+        for(Component comp: comps){
+            ChainOperator chain = comp.getChainOperator();
+            chain.setOperators(orderOperators(chain));
+        }
+    }
+
+    private static List<Operator> orderOperators(ChainOperator chain) {
+        List<Operator> result = new ArrayList<Operator>();
+
+        Operator selection = chain.getSelection();
+        if (selection!=null) result.add(selection);
+
+        Operator distinct = chain.getDistinct();
+        if (distinct!=null) result.add(distinct);
+
+        Operator projection = chain.getProjection();
+        if (projection!=null) result.add(projection);
+
+        Operator agg = chain.getAggregation();
+        if (agg!=null) result.add(agg);
+
+        return result;
     }
 }

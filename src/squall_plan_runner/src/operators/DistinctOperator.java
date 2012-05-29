@@ -14,7 +14,7 @@ public class DistinctOperator implements Operator {
 
 	private Map _conf;
 	private int _numTuplesProcessed;
-	private ProjectionOperator _projection;
+	private ProjectOperator _projection;
 	private static final long serialVersionUID = 1L;
 	private SquallStorage _storage = new SquallStorage();
 	/* Dummy value to associate with a tuple in the backing Storage (Since
@@ -22,21 +22,21 @@ public class DistinctOperator implements Operator {
 	private static final String dummyString = new String("dummy");
 
 	public DistinctOperator(Map conf, ValueExpression ... veArray){
-		_projection = new ProjectionOperator(veArray);
+		_projection = new ProjectOperator(veArray);
 		_conf = conf;
 	}
 
 	public DistinctOperator(Map conf, List<ValueExpression> veList){
-		_projection = new ProjectionOperator(veList);
+		_projection = new ProjectOperator(veList);
 		_conf = conf;
 	}
 
 	public DistinctOperator(Map conf, int[] projectionIndexes){
-		_projection = new ProjectionOperator(projectionIndexes);
+		_projection = new ProjectOperator(projectionIndexes);
 		_conf = conf;
 	}
 
-	public ProjectionOperator getProjection(){
+	public ProjectOperator getProjection(){
 		return _projection;
 	}
 

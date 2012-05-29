@@ -15,7 +15,7 @@ import java.util.Map;
 import operators.AggregateCountOperator;
 import operators.AggregateOperator;
 import operators.AggregateSumOperator;
-import operators.ProjectionOperator;
+import operators.ProjectOperator;
 
 import org.apache.log4j.Logger;
 import schema.TPCH_Schema;
@@ -30,23 +30,23 @@ public class HyracksPlan {
     public HyracksPlan(String dataPath, String extension, Map conf){
             //-------------------------------------------------------------------------------------
                     // start of query plan filling
-            ProjectionOperator projectionCustomer = new ProjectionOperator(new int[]{0, 6});
+            ProjectOperator projectionCustomer = new ProjectOperator(new int[]{0, 6});
             List<Integer> hashCustomer = Arrays.asList(0);
             DataSourceComponent relationCustomer = new DataSourceComponent(
                                             "CUSTOMER",
                                             dataPath + "customer" + extension,
                                             TPCH_Schema.customer,
-                                            _queryPlan).setProjection(projectionCustomer)
+                                            _queryPlan).addOperator(projectionCustomer)
                                                        .setHashIndexes(hashCustomer);
 
             //-------------------------------------------------------------------------------------
-            ProjectionOperator projectionOrders = new ProjectionOperator(new int[]{1});
+            ProjectOperator projectionOrders = new ProjectOperator(new int[]{1});
             List<Integer> hashOrders = Arrays.asList(0);
             DataSourceComponent relationOrders = new DataSourceComponent(
                                             "ORDERS",
                                             dataPath + "orders" + extension,
                                             TPCH_Schema.orders,
-                                            _queryPlan).setProjection(projectionOrders)
+                                            _queryPlan).addOperator(projectionOrders)
                                                        .setHashIndexes(hashOrders);
                                                        
             //-------------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ public class HyracksPlan {
             EquiJoinComponent CUSTOMER_ORDERSjoin = new EquiJoinComponent(
                     relationCustomer,
                     relationOrders,
-                    _queryPlan).setAggregation(agg);
+                    _queryPlan).addOperator(agg);
 
             //-------------------------------------------------------------------------------------
 

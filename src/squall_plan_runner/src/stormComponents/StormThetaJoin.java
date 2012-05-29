@@ -28,8 +28,8 @@ import operators.AggregateOperator;
 import operators.ChainOperator;
 import operators.DistinctOperator;
 import operators.Operator;
-import operators.ProjectionOperator;
-import operators.SelectionOperator;
+import operators.ProjectOperator;
+import operators.SelectOperator;
 import utilities.SystemParameters;
 import storage.TupleStorage;
 
@@ -93,10 +93,7 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 			StormEmitter secondEmitter,
 			String componentName,
                         List<String> allCompNames,
-			SelectionOperator selection,
-			DistinctOperator distinct,
-			ProjectionOperator projection,
-			AggregateOperator aggregation,
+			ChainOperator chain,
 			List<Integer> hashIndexes,
 			List<ValueExpression> hashExpressions,
 			Predicate joinPredicate,
@@ -125,7 +122,7 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 		//                throw new RuntimeException(_componentName + ": Distinct operator cannot be specified for multiThreaded bolts!");
 		//            }
 
-		_operatorChain = new ChainOperator(selection, distinct, projection, aggregation);
+		_operatorChain = chain;
 
 		_hashIndexes = hashIndexes;
 		_hashExpressions = hashExpressions;

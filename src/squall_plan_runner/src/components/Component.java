@@ -11,9 +11,11 @@ import expressions.ValueExpression;
 import java.io.Serializable;
 import java.util.List;
 import operators.AggregateOperator;
+import operators.ChainOperator;
 import operators.DistinctOperator;
-import operators.ProjectionOperator;
-import operators.SelectionOperator;
+import operators.Operator;
+import operators.ProjectOperator;
+import operators.SelectOperator;
 import stormComponents.StormEmitter;
 import stormComponents.synchronization.TopologyKiller;
 
@@ -42,15 +44,8 @@ public interface Component extends Serializable, StormEmitter {
     public Component setHashExpressions(List<ValueExpression> hashExpressions);
     public List<ValueExpression> getHashExpressions();
 
-    public Component setSelection(SelectionOperator selection);
-    public SelectionOperator getSelection();
-    public Component setDistinct(DistinctOperator distinct);
-    public DistinctOperator getDistinct();
-    public Component setProjection(ProjectionOperator projection);
-    public ProjectionOperator getProjection();
-    public Component setAggregation(AggregateOperator aggregation);
-    public AggregateOperator getAggregation();
-
+    public Component addOperator(Operator operator); //add to the end of ChainOperator
+    public ChainOperator getChainOperator(); //contains all the previously added operators
 
     // methods necessary for query plan processing
     public Component[] getParents();

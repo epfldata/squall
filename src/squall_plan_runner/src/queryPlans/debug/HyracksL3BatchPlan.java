@@ -16,7 +16,7 @@ import java.util.Map;
 import operators.AggregateCountOperator;
 import operators.AggregateOperator;
 import operators.AggregateSumOperator;
-import operators.ProjectionOperator;
+import operators.ProjectOperator;
 
 import org.apache.log4j.Logger;
 import queryPlans.QueryPlan;
@@ -32,23 +32,23 @@ public class HyracksL3BatchPlan {
     public HyracksL3BatchPlan(String dataPath, String extension, Map conf){
             //-------------------------------------------------------------------------------------
                     // start of query plan filling
-            ProjectionOperator projectionCustomer = new ProjectionOperator(new int[]{0, 6});
+            ProjectOperator projectionCustomer = new ProjectOperator(new int[]{0, 6});
             List<Integer> hashCustomer = Arrays.asList(0);
             DataSourceComponent relationCustomer = new DataSourceComponent(
                                             "CUSTOMER",
                                             dataPath + "customer" + extension,
                                             TPCH_Schema.customer,
-                                            _queryPlan).setProjection(projectionCustomer)
+                                            _queryPlan).addOperator(projectionCustomer)
                                                        .setHashIndexes(hashCustomer);
 
             //-------------------------------------------------------------------------------------
-            ProjectionOperator projectionOrders = new ProjectionOperator(new int[]{1});
+            ProjectOperator projectionOrders = new ProjectOperator(new int[]{1});
             List<Integer> hashOrders = Arrays.asList(0);
             DataSourceComponent relationOrders = new DataSourceComponent(
                                             "ORDERS",
                                             dataPath + "orders" + extension,
                                             TPCH_Schema.orders,
-                                            _queryPlan).setProjection(projectionOrders)
+                                            _queryPlan).addOperator(projectionOrders)
                                                        .setHashIndexes(hashOrders);
                                                        
 
@@ -59,7 +59,7 @@ public class HyracksL3BatchPlan {
             EquiJoinComponent CUSTOMER_ORDERSjoin = new EquiJoinComponent(
                     relationCustomer,
                     relationOrders,
-                    _queryPlan).setAggregation(postAgg)
+                    _queryPlan).addOperator(postAgg)
                                .setHashIndexes(hashIndexes)
                                .setBatchOutputMode(1000);
 
@@ -68,7 +68,7 @@ public class HyracksL3BatchPlan {
                     .setGroupByColumns(Arrays.asList(0));
 
             OperatorComponent oc = new OperatorComponent(CUSTOMER_ORDERSjoin, "COUNTAGG", _queryPlan)
-                                        .setAggregation(agg)
+                                        .addOperator(agg)
                                         .setFullHashList(Arrays.asList("FURNITURE", "BUILDING", "MACHINERY", "HOUSEHOLD", "AUTOMOBILE"));
 
             //-------------------------------------------------------------------------------------

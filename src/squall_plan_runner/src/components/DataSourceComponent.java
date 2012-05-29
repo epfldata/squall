@@ -11,9 +11,11 @@ import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
 import operators.AggregateOperator;
+import operators.ChainOperator;
 import operators.DistinctOperator;
-import operators.ProjectionOperator;
-import operators.SelectionOperator;
+import operators.Operator;
+import operators.ProjectOperator;
+import operators.SelectOperator;
 import stormComponents.StormDataSource;
 import stormComponents.synchronization.TopologyKiller;
 import org.apache.log4j.Logger;
@@ -38,10 +40,7 @@ public class DataSourceComponent implements Component {
     private List<ColumnNameType> _tableSchema;
     private StormDataSource _dataSource;
 
-    private SelectionOperator _selection;
-    private ProjectionOperator _projection;
-    private DistinctOperator _distinct;
-    private AggregateOperator _aggregation;
+    private ChainOperator _chain = new ChainOperator();
 
     private boolean _printOut;
     private boolean _printOutSet; // whether printOut condition is already set
@@ -82,49 +81,15 @@ public class DataSourceComponent implements Component {
     }
 
     @Override
-    public DataSourceComponent setSelection(SelectionOperator selection){
-	_selection=selection;
+    public DataSourceComponent addOperator(Operator operator){
+	_chain.addOperator(operator);
         return this;
     }
 
     @Override
-    public DataSourceComponent setDistinct(DistinctOperator distinct) {
-        _distinct = distinct;
-        return this;
+    public ChainOperator getChainOperator(){
+        return _chain;
     }
-
-    @Override
-    public DataSourceComponent setProjection(ProjectionOperator projection){
-        _projection=projection;
-        return this;
-    }
-
-    @Override
-    public DataSourceComponent setAggregation(AggregateOperator aggregation) {
-        _aggregation = aggregation;
-        return this;
-    }
-
-    @Override
-    public SelectionOperator getSelection() {
-        return _selection;
-    }
-
-    @Override
-    public DistinctOperator getDistinct() {
-        return _distinct;
-    }
-
-    @Override
-    public ProjectionOperator getProjection() {
-        return _projection;
-    }
-
-    @Override
-    public AggregateOperator getAggregation() {
-        return _aggregation;
-    }
-
 
     @Override
     public DataSourceComponent setPrintOut(boolean printOut){
@@ -154,11 +119,11 @@ public class DataSourceComponent implements Component {
         }
 
         int parallelism = SystemParameters.getInt(conf, _componentName+"_PAR");
-        if(parallelism > 1 && _distinct != null){
+        if(parallelism > 1 && _chain.getDistinct() != null){
             throw new RuntimeException(_componentName + ": Distinct operator cannot be specified for multiple spouts for one input file!");
         }
 
-        MyUtilities.checkBatchOutput(_batchOutputMillis, _aggregation, conf);
+        MyUtilities.checkBatchOutput(_batchOutputMillis, _chain.getAggregation(), conf);
 
         _dataSource = new StormDataSource(
                 _componentName,
@@ -166,10 +131,7 @@ public class DataSourceComponent implements Component {
                _inputPath,
                _hashIndexes,
                _hashExpressions,
-               _selection,
-               _distinct,
-               _projection,
-               _aggregation,
+               _chain,
                hierarchyPosition,
                _printOut,
                _batchOutputMillis,

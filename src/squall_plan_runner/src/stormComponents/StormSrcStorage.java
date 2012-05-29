@@ -21,8 +21,8 @@ import java.util.concurrent.Semaphore;
 import operators.AggregateOperator;
 import operators.ChainOperator;
 import operators.Operator;
-import operators.ProjectionOperator;
-import operators.SelectionOperator;
+import operators.ProjectOperator;
+import operators.SelectOperator;
 import utilities.SystemParameters;
 import storage.SquallStorage;
 
@@ -49,7 +49,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 	private ChainOperator _operatorChain;
 
 	private SquallStorage _joinStorage;
-	private ProjectionOperator _preAggProj;
+	private ProjectOperator _preAggProj;
 
 	private StormSrcHarmonizer _harmonizer;
 	private OutputCollector _collector;
@@ -75,11 +75,9 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 			StormSrcHarmonizer harmonizer,
 			List<Integer> joinParams,
 			boolean isFromFirstEmitter,
-			SelectionOperator selection,
-			ProjectionOperator projection,
-			AggregateOperator aggregation,
+			ChainOperator chain,
 			SquallStorage preAggStorage,
-			ProjectionOperator preAggProj,
+			ProjectOperator preAggProj,
 			List<Integer> hashIndexes,
 			List<ValueExpression> hashExpressions,
 			int hierarchyPosition,
@@ -101,7 +99,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 		_harmonizer = harmonizer;
 		_batchOutputMillis = batchOutputMillis;
 
-		_operatorChain = new ChainOperator(selection, projection, aggregation);
+		_operatorChain = chain;
 		_hashIndexes=hashIndexes;
 		_hashExpressions = hashExpressions;
 		_hierarchyPosition=hierarchyPosition;

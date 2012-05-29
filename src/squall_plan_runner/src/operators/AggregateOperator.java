@@ -14,8 +14,8 @@ public interface AggregateOperator<T> extends Operator{
     // GROUP BY ValueExpression is not part of the SQL standard, only columns can be sed.
     public AggregateOperator setGroupByColumns(List<Integer> groupByColumns);
     public List<Integer> getGroupByColumns();
-    public AggregateOperator setGroupByProjection(ProjectionOperator projection);
-    public ProjectionOperator getGroupByProjection();
+    public AggregateOperator setGroupByProjection(ProjectOperator projection);
+    public ProjectOperator getGroupByProjection();
     
     //SUM(DISTINCT ValueExpression), COUNT(DISTINCT ValueExpression): a single ValueExpression by SQL standard
     //  MySQL supports multiple ValueExpression. Inside aggregation(SUM, COUNT), there must be single ValueExpression.

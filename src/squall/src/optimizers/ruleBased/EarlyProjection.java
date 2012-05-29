@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import operators.AggregateOperator;
-import operators.ProjectionOperator;
+import operators.ProjectOperator;
 import queryPlans.QueryPlan;
 import util.ParserUtil;
 import visitors.squall.ColumnRefCollectVisitor;
@@ -68,8 +68,8 @@ public class EarlyProjection {
         afterProjIndexes = sortElimDuplicates(afterProjIndexes);
 
         //set projection as if parent do not change
-        ProjectionOperator projection = new ProjectionOperator(ParserUtil.listToArr(afterProjIndexes));
-        component.setProjection(projection);
+        ProjectOperator projection = new ProjectOperator(ParserUtil.listToArr(afterProjIndexes));
+        component.addOperator(projection);
 
         //projection changed, everybody after it should notice that
         updateColumnRefs(afterProjColRefs, afterProjIndexes);
@@ -111,7 +111,7 @@ public class EarlyProjection {
         if(hashIndexes != null){
             result.addAll(hashIndexes);
         }
-        AggregateOperator agg = component.getAggregation();
+        AggregateOperator agg = component.getChainOperator().getAggregation();
         if(agg!=null){
             List<Integer> groupBy = agg.getGroupByColumns();
             if(groupBy != null){
@@ -216,7 +216,7 @@ public class EarlyProjection {
             List<Integer> newHashIndexes = elemsBefore(oldHashIndexes, filteredIndexList);
             component.setHashIndexes(newHashIndexes);
         }
-        AggregateOperator agg = component.getAggregation();
+        AggregateOperator agg = component.getChainOperator().getAggregation();
         if(agg!=null){
             List<Integer> oldGroupBy = agg.getGroupByColumns();
             if(oldGroupBy != null && !oldGroupBy.isEmpty()){
@@ -294,7 +294,7 @@ public class EarlyProjection {
             updateColumnRefs(beforeProjColRefs, fromParents);
 
             //update Projection indexes
-            List<ValueExpression> projVE = comp.getProjection().getExpressions();
+            List<ValueExpression> projVE = comp.getChainOperator().getProjection().getExpressions();
             List<ColumnReference> projColRefs = extractColumnRefFromVEs(projVE);
 
             //after bottom-up: projection will be set, so it will contain all the necessary fields,
@@ -331,7 +331,7 @@ public class EarlyProjection {
 
     private List<Integer> extractProjIndexesAfterBottomUp(Component comp){
         if(comp instanceof DataSourceComponent){
-            return ParserUtil.extractColumnIndexes(comp.getProjection().getExpressions());
+            return ParserUtil.extractColumnIndexes(comp.getChainOperator().getProjection().getExpressions());
         }else{
             return _compOldProj.get(comp);
         }

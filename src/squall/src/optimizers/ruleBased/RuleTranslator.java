@@ -43,7 +43,7 @@ public class RuleTranslator implements OptimizerTranslator{
         Component child = originator.getChild();
         Component[] parents = child.getParents();
 
-        if(child.getProjection()!=null){
+        if(child.getChainOperator().getProjection()!=null){
             throw new RuntimeException("Cannot use getChildIndex method on the component with Projection! getOutputSize does not work anymore!");
         }
 

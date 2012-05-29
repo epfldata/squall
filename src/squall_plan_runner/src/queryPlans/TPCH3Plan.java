@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 import operators.AggregateOperator;
 import operators.AggregateSumOperator;
-import operators.ProjectionOperator;
-import operators.SelectionOperator;
+import operators.ProjectOperator;
+import operators.SelectOperator;
 import org.apache.log4j.Logger;
 import predicates.ComparisonPredicate;
 
@@ -47,68 +47,68 @@ public class TPCH3Plan {
 		//-------------------------------------------------------------------------------------
 		List<Integer> hashCustomer = Arrays.asList(0);
 
-		SelectionOperator selectionCustomer = new SelectionOperator(
+		SelectOperator selectionCustomer = new SelectOperator(
 				new ComparisonPredicate(
 					new ColumnReference(_sc, 6),
 					new ValueSpecification(_sc, _customerMktSegment)
 					));
 
-		ProjectionOperator projectionCustomer = new ProjectionOperator(new int[]{0});
+		ProjectOperator projectionCustomer = new ProjectOperator(new int[]{0});
 
 		DataSourceComponent relationCustomer = new DataSourceComponent(
 				"CUSTOMER",
 				dataPath + "customer" + extension,
 				TPCH_Schema.customer,
 				_queryPlan).setHashIndexes(hashCustomer)
-			.setSelection(selectionCustomer)
-			.setProjection(projectionCustomer);
+                                           .addOperator(selectionCustomer)
+                                           .addOperator(projectionCustomer);
 
 		//-------------------------------------------------------------------------------------
 		List<Integer> hashOrders = Arrays.asList(1);
 
-		SelectionOperator selectionOrders = new SelectionOperator(
+		SelectOperator selectionOrders = new SelectOperator(
 				new ComparisonPredicate(
 					ComparisonPredicate.LESS_OP,
 					new ColumnReference(_dateConv, 4),
 					new ValueSpecification(_dateConv, _date)
 					));
 
-		ProjectionOperator projectionOrders = new ProjectionOperator(new int[]{0, 1, 4, 7});
+		ProjectOperator projectionOrders = new ProjectOperator(new int[]{0, 1, 4, 7});
 
 		DataSourceComponent relationOrders = new DataSourceComponent(
 				"ORDERS",
 				dataPath + "orders" + extension,
 				TPCH_Schema.orders,
 				_queryPlan).setHashIndexes(hashOrders)
-			.setSelection(selectionOrders)
-			.setProjection(projectionOrders);
+                                           .addOperator(selectionOrders)
+                                           .addOperator(projectionOrders);
 
 		//-------------------------------------------------------------------------------------
 		EquiJoinComponent C_Ojoin = new EquiJoinComponent(
 				relationCustomer,
 				relationOrders,
-				_queryPlan).setProjection(new ProjectionOperator(new int[]{1, 2, 3}))
-			.setHashIndexes(Arrays.asList(0));
+				_queryPlan).addOperator(new ProjectOperator(new int[]{1, 2, 3}))
+                                           .setHashIndexes(Arrays.asList(0));
 
 		//-------------------------------------------------------------------------------------
 		List<Integer> hashLineitem = Arrays.asList(0);
 
-		SelectionOperator selectionLineitem = new SelectionOperator(
+		SelectOperator selectionLineitem = new SelectOperator(
 				new ComparisonPredicate(
 					ComparisonPredicate.GREATER_OP,
 					new ColumnReference(_dateConv, 10),
 					new ValueSpecification(_dateConv, _date)
 					));
 
-		ProjectionOperator projectionLineitem = new ProjectionOperator(new int[]{0, 5, 6});
+		ProjectOperator projectionLineitem = new ProjectOperator(new int[]{0, 5, 6});
 
 		DataSourceComponent relationLineitem = new DataSourceComponent(
 				"LINEITEM",
 				dataPath + "lineitem" + extension,
 				TPCH_Schema.lineitem,
 				_queryPlan).setHashIndexes(hashLineitem)
-			.setSelection(selectionLineitem)
-			.setProjection(projectionLineitem);
+                                           .addOperator(selectionLineitem)
+                                           .addOperator(projectionLineitem);
 
 		//-------------------------------------------------------------------------------------
 		// set up aggregation function on the StormComponent(Bolt) where join is performed
@@ -129,7 +129,7 @@ public class TPCH3Plan {
 		EquiJoinComponent C_O_Ljoin = new EquiJoinComponent(
 				C_Ojoin,
 				relationLineitem,
-				_queryPlan).setAggregation(agg);
+				_queryPlan).addOperator(agg);
 
 		//-------------------------------------------------------------------------------------
 

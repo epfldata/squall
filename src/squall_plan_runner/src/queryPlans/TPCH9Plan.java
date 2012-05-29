@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 import operators.AggregateOperator;
 import operators.AggregateSumOperator;
-import operators.ProjectionOperator;
-import operators.SelectionOperator;
+import operators.ProjectOperator;
+import operators.SelectOperator;
 import org.apache.log4j.Logger;
 import predicates.LikePredicate;
 
@@ -44,33 +44,33 @@ public class TPCH9Plan {
         //-------------------------------------------------------------------------------------
         List<Integer> hashPart = Arrays.asList(0);
 
-        SelectionOperator selectionPart = new SelectionOperator(
+        SelectOperator selectionPart = new SelectOperator(
                 new LikePredicate(
                     new ColumnReference(_sc, 1),
                     new ValueSpecification(_sc, COLOR)
                 ));
 
-        ProjectionOperator projectionPart = new ProjectionOperator(new int[]{0});
+        ProjectOperator projectionPart = new ProjectOperator(new int[]{0});
 
         DataSourceComponent relationPart = new DataSourceComponent(
                 "PART",
                 dataPath + "part" + extension,
                 TPCH_Schema.part,
                 _queryPlan).setHashIndexes(hashPart)
-                           .setSelection(selectionPart)
-                           .setProjection(projectionPart);
+                           .addOperator(selectionPart)
+                           .addOperator(projectionPart);
 
         //-------------------------------------------------------------------------------------
         List<Integer> hashLineitem = Arrays.asList(1);
 
-        ProjectionOperator projectionLineitem = new ProjectionOperator(new int[]{0, 1, 2, 4, 5, 6});
+        ProjectOperator projectionLineitem = new ProjectOperator(new int[]{0, 1, 2, 4, 5, 6});
 
         DataSourceComponent relationLineitem = new DataSourceComponent(
                 "LINEITEM",
                 dataPath + "lineitem" + extension,
                 TPCH_Schema.lineitem,
                 _queryPlan).setHashIndexes(hashLineitem)
-                           .setProjection(projectionLineitem);
+                           .addOperator(projectionLineitem);
 
         //-------------------------------------------------------------------------------------
         EquiJoinComponent P_Ljoin = new EquiJoinComponent(
@@ -81,26 +81,26 @@ public class TPCH9Plan {
 
         List<Integer> hashPartsupp = Arrays.asList(0, 1);
 
-        ProjectionOperator projectionPartsupp = new ProjectionOperator(new int[]{0, 1, 3});
+        ProjectOperator projectionPartsupp = new ProjectOperator(new int[]{0, 1, 3});
 
         DataSourceComponent relationPartsupp = new DataSourceComponent(
                 "PARTSUPP",
                 dataPath + "partsupp" + extension,
                 TPCH_Schema.partsupp,
                 _queryPlan).setHashIndexes(hashPartsupp)
-                           .setProjection(projectionPartsupp);
+                           .addOperator(projectionPartsupp);
 
         //-------------------------------------------------------------------------------------
         EquiJoinComponent P_L_PSjoin = new EquiJoinComponent(
 				P_Ljoin,
 				relationPartsupp,
 				_queryPlan).setHashIndexes(Arrays.asList(0))
-                                           .setProjection(new ProjectionOperator(new int[]{1, 2, 3, 4, 5, 6}));
+                                           .addOperator(new ProjectOperator(new int[]{1, 2, 3, 4, 5, 6}));
         //-------------------------------------------------------------------------------------
 
         List<Integer> hashOrders = Arrays.asList(0);
 
-        ProjectionOperator projectionOrders = new ProjectionOperator(
+        ProjectOperator projectionOrders = new ProjectOperator(
                 new ColumnReference(_sc, 0),
                 new IntegerYearFromDate(new ColumnReference(_dateConv, 4)));
 
@@ -109,7 +109,7 @@ public class TPCH9Plan {
                 dataPath + "orders" + extension,
                 TPCH_Schema.orders,
                 _queryPlan).setHashIndexes(hashOrders)
-                           .setProjection(projectionOrders);
+                           .addOperator(projectionOrders);
 
         //-------------------------------------------------------------------------------------
 
@@ -117,37 +117,37 @@ public class TPCH9Plan {
 				P_L_PSjoin,
 				relationOrders,
 				_queryPlan).setHashIndexes(Arrays.asList(0))
-                                           .setProjection(new ProjectionOperator(new int[]{1, 2, 3, 4, 5, 6}));
+                                           .addOperator(new ProjectOperator(new int[]{1, 2, 3, 4, 5, 6}));
         //-------------------------------------------------------------------------------------
 
         List<Integer> hashSupplier = Arrays.asList(0);
 
-        ProjectionOperator projectionSupplier = new ProjectionOperator(new int[]{0, 3});
+        ProjectOperator projectionSupplier = new ProjectOperator(new int[]{0, 3});
 
         DataSourceComponent relationSupplier = new DataSourceComponent(
                 "SUPPLIER",
                 dataPath + "supplier" + extension,
                 TPCH_Schema.supplier,
                 _queryPlan).setHashIndexes(hashSupplier)
-                           .setProjection(projectionSupplier);
+                           .addOperator(projectionSupplier);
 
         //-------------------------------------------------------------------------------------
         EquiJoinComponent P_L_PS_O_Sjoin = new EquiJoinComponent(
 				P_L_PS_Ojoin,
 				relationSupplier,
 				_queryPlan).setHashIndexes(Arrays.asList(5))
-                                           .setProjection(new ProjectionOperator(new int[]{1, 2, 3, 4, 5, 6}));
+                                           .addOperator(new ProjectOperator(new int[]{1, 2, 3, 4, 5, 6}));
         //-------------------------------------------------------------------------------------
         List<Integer> hashNation = Arrays.asList(0);
 
-        ProjectionOperator projectionNation = new ProjectionOperator(new int[]{0, 1});
+        ProjectOperator projectionNation = new ProjectOperator(new int[]{0, 1});
 
         DataSourceComponent relationNation = new DataSourceComponent(
                 "NATION",
                 dataPath + "nation" + extension,
                 TPCH_Schema.nation,
                 _queryPlan).setHashIndexes(hashNation)
-                           .setProjection(projectionNation);
+                           .addOperator(projectionNation);
 
         //-------------------------------------------------------------------------------------
         // set up aggregation function on the StormComponent(Bolt) where join is performed
@@ -182,8 +182,8 @@ public class TPCH9Plan {
         EquiJoinComponent P_L_PS_O_S_Njoin = new EquiJoinComponent(
 				P_L_PS_O_Sjoin,
 				relationNation,
-				_queryPlan).setProjection(new ProjectionOperator(new int[]{0, 1, 2, 3, 4, 6}))
-                                           .setAggregation(agg);
+				_queryPlan).addOperator(new ProjectOperator(new int[]{0, 1, 2, 3, 4, 6}))
+                                           .addOperator(agg);
         //-------------------------------------------------------------------------------------
 
 

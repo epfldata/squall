@@ -11,9 +11,11 @@ import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
 import operators.AggregateOperator;
+import operators.ChainOperator;
 import operators.DistinctOperator;
-import operators.ProjectionOperator;
-import operators.SelectionOperator;
+import operators.Operator;
+import operators.ProjectOperator;
+import operators.SelectOperator;
 import stormComponents.StormDstJoin;
 import stormComponents.StormJoin;
 import stormComponents.StormSrcJoin;
@@ -41,14 +43,11 @@ public class EquiJoinComponent implements Component {
 
     private StormJoin _joiner;
 
-    private SelectionOperator _selection;
-    private DistinctOperator _distinct;
-    private ProjectionOperator _projection;
-    private AggregateOperator _aggregation;
+    private ChainOperator _chain = new ChainOperator();
 
     //preAggregation
     private SquallStorage _firstPreAggStorage, _secondPreAggStorage;
-    private ProjectionOperator _firstPreAggProj, _secondPreAggProj;
+    private ProjectOperator _firstPreAggProj, _secondPreAggProj;
 
     private boolean _printOut;
     private boolean _printOutSet; //whether printOut was already set
@@ -93,28 +92,16 @@ public class EquiJoinComponent implements Component {
     }
 
     @Override
-    public EquiJoinComponent setSelection(SelectionOperator selection){
-        _selection = selection;
+    public EquiJoinComponent addOperator(Operator operator){
+	_chain.addOperator(operator);
         return this;
     }
 
     @Override
-    public EquiJoinComponent setDistinct(DistinctOperator distinct){
-        _distinct = distinct;
-        return this;
+    public ChainOperator getChainOperator(){
+        return _chain;
     }
 
-    @Override
-    public EquiJoinComponent setProjection(ProjectionOperator projection){
-        _projection = projection;
-        return this;
-    }
-
-    @Override
-    public EquiJoinComponent setAggregation(AggregateOperator aggregation){
-        _aggregation = aggregation;
-        return this;
-    }
 
     //next four methods are for Preaggregation
     public EquiJoinComponent setFirstPreAggStorage(SquallStorage firstPreAggStorage){
@@ -128,35 +115,15 @@ public class EquiJoinComponent implements Component {
     }
 
     //Out of the first storage (join of S tuple with R relation)
-    public EquiJoinComponent setFirstPreAggProj(ProjectionOperator firstPreAggProj){
+    public EquiJoinComponent setFirstPreAggProj(ProjectOperator firstPreAggProj){
         _firstPreAggProj = firstPreAggProj;
         return this;
     }
 
     //Out of the second storage (join of R tuple with S relation)
-    public EquiJoinComponent setSecondPreAggProj(ProjectionOperator secondPreAggProj){
+    public EquiJoinComponent setSecondPreAggProj(ProjectOperator secondPreAggProj){
         _secondPreAggProj = secondPreAggProj;
         return this;
-    }
-
-    @Override
-    public SelectionOperator getSelection() {
-        return _selection;
-    }
-
-    @Override
-    public DistinctOperator getDistinct() {
-        return _distinct;
-    }
-
-    @Override
-    public ProjectionOperator getProjection() {
-        return _projection;
-    }
-
-    @Override
-    public AggregateOperator getAggregation() {
-        return _aggregation;
     }
 
     @Override
@@ -186,7 +153,7 @@ public class EquiJoinComponent implements Component {
            setPrintOut(true);
         }
 
-        MyUtilities.checkBatchOutput(_batchOutputMillis, _aggregation, conf);
+        MyUtilities.checkBatchOutput(_batchOutputMillis, _chain.getAggregation(), conf);
 
         if(partitioningType == StormJoin.DST_ORDERING){
                 //In Preaggregation one or two storages can be set; otherwise no storage is set
@@ -201,10 +168,7 @@ public class EquiJoinComponent implements Component {
                                     _secondParent,
                                     _componentName,
                                     allCompNames,
-                                    _selection,
-                                    _distinct,
-                                    _projection,
-                                    _aggregation,
+                                    _chain,
                                     _firstPreAggStorage,
                                     _secondPreAggStorage,
                                     _firstPreAggProj,
@@ -220,7 +184,7 @@ public class EquiJoinComponent implements Component {
                                     conf);
    
         }else if(partitioningType == StormJoin.SRC_ORDERING){
-            if(_distinct!=null){
+            if(_chain.getDistinct()!=null){
                 throw new RuntimeException("Cannot instantiate Distinct operator from StormSourceJoin! There are two Bolts processing operators!");
             }
             //In Preaggregation one or two storages can be set; otherwise no storage is set
@@ -237,9 +201,7 @@ public class EquiJoinComponent implements Component {
                                     _secondParent,
                                     _componentName,
                                     allCompNames,
-                                    _selection,
-                                    _projection,
-                                    _aggregation,
+                                    _chain,
                                     _firstPreAggStorage,
                                     _secondPreAggStorage,
                                     _firstPreAggProj,

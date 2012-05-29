@@ -22,8 +22,8 @@ import operators.AggregateOperator;
 import operators.ChainOperator;
 import operators.DistinctOperator;
 import operators.Operator;
-import operators.ProjectionOperator;
-import operators.SelectionOperator;
+import operators.ProjectOperator;
+import operators.SelectOperator;
 import utilities.SystemParameters;
 import storage.SquallStorage;
 
@@ -39,7 +39,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 
 	private StormEmitter _firstEmitter, _secondEmitter;
 	private SquallStorage _firstSquallStorage, _secondSquallStorage;
-	private ProjectionOperator _firstPreAggProj, _secondPreAggProj;
+	private ProjectOperator _firstPreAggProj, _secondPreAggProj;
 	private String _ID;
         private List<String> _compIds; // a sorted list of all the components
         private String _componentIndex; //a unique index in a list of all the components
@@ -79,14 +79,11 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			StormEmitter secondEmitter,
 			String componentName,
                         List<String> allCompNames,
-			SelectionOperator selection,
-			DistinctOperator distinct,
-			ProjectionOperator projection,
-			AggregateOperator aggregation,
+			ChainOperator chain,
 			SquallStorage firstPreAggStorage,
 			SquallStorage secondPreAggStorage,
-			ProjectionOperator firstPreAggProj,
-			ProjectionOperator secondPreAggProj,
+			ProjectOperator firstPreAggProj,
+			ProjectOperator secondPreAggProj,
 			List<Integer> hashIndexes,
 			List<ValueExpression> hashExpressions,
 			int hierarchyPosition,
@@ -111,7 +108,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 		//                throw new RuntimeException(_componentName + ": Distinct operator cannot be specified for multiThreaded bolts!");
 		//            }
 
-		_operatorChain = new ChainOperator(selection, distinct, projection, aggregation);
+		_operatorChain = chain;
 
 		_hashIndexes = hashIndexes;
 		_hashExpressions = hashExpressions;
@@ -165,7 +162,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 
 			boolean isFromFirstEmitter = false;
 			SquallStorage affectedStorage, oppositeStorage;
-			ProjectionOperator projPreAgg;
+			ProjectOperator projPreAgg;
 			if(_firstEmitterIndex.equals(inputComponentIndex)){
 				//R update
 				isFromFirstEmitter = true;
@@ -201,7 +198,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			String inputTupleHash,
 			boolean isFromFirstEmitter,
 			SquallStorage oppositeStorage,
-			ProjectionOperator projPreAgg){
+			ProjectOperator projPreAgg){
 
 		List<String> oppositeStringTupleList = (ArrayList<String>)oppositeStorage.get(inputTupleHash);
 

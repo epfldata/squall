@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import operators.AggregateOperator;
 import operators.AggregateSumOperator;
-import operators.ProjectionOperator;
+import operators.ProjectOperator;
 
 import org.apache.log4j.Logger;
 import schema.TPCH_Schema;
@@ -34,30 +34,30 @@ public class HyracksPreAggPlan {
 	public HyracksPreAggPlan(String dataPath, String extension, Map conf){
 		//-------------------------------------------------------------------------------------
 		// start of query plan filling
-		ProjectionOperator projectionCustomer = new ProjectionOperator(new int[]{0, 6});
+		ProjectOperator projectionCustomer = new ProjectOperator(new int[]{0, 6});
 		List<Integer> hashCustomer = Arrays.asList(0);
 		DataSourceComponent relationCustomer = new DataSourceComponent(
 				"CUSTOMER",
 				dataPath + "customer" + extension,
 				TPCH_Schema.customer,
-				_queryPlan).setProjection(projectionCustomer)
-			.setHashIndexes(hashCustomer);
+				_queryPlan).addOperator(projectionCustomer)
+                                           .setHashIndexes(hashCustomer);
 
 		//-------------------------------------------------------------------------------------
-		ProjectionOperator projectionOrders = new ProjectionOperator(new int[]{1});
+		ProjectOperator projectionOrders = new ProjectOperator(new int[]{1});
 		List<Integer> hashOrders = Arrays.asList(0);
 		DataSourceComponent relationOrders = new DataSourceComponent(
 				"ORDERS",
 				dataPath + "orders" + extension,
 				TPCH_Schema.orders,
-				_queryPlan).setProjection(projectionOrders)
-			.setHashIndexes(hashOrders);
+				_queryPlan).addOperator(projectionOrders)
+			                   .setHashIndexes(hashOrders);
 
 		//-------------------------------------------------------------------------------------
-		ProjectionOperator projFirstOut = new ProjectionOperator(
+		ProjectOperator projFirstOut = new ProjectOperator(
 				new ColumnReference(_sc, 1),
 				new ValueSpecification(_sc, "1"));
-		ProjectionOperator projSecondOut = new ProjectionOperator(new int[]{1, 2});
+		ProjectOperator projSecondOut = new ProjectOperator(new int[]{1, 2});
 		// FIXME FIXME FIXME: This should be as below, but there is an incombatibility with SquallStorage
 		// Replace with wrong SquallStorage instantiation, but will be fixed eventually
 		// JoinAggStorage secondJoinStorage = new JoinAggStorage(new AggregateCountOperator(conf), conf);
@@ -68,16 +68,16 @@ public class HyracksPreAggPlan {
 				relationCustomer,
 				relationOrders,
 				_queryPlan).setFirstPreAggProj(projFirstOut)
-			.setSecondPreAggProj(projSecondOut)
-			.setSecondPreAggStorage(secondJoinStorage)
-			.setHashIndexes(hashIndexes);
+                                           .setSecondPreAggProj(projSecondOut)
+                                           .setSecondPreAggStorage(secondJoinStorage)
+                                           .setHashIndexes(hashIndexes);
 
 		//-------------------------------------------------------------------------------------           
 		AggregateSumOperator agg = new AggregateSumOperator(_dc, new ColumnReference(_dc, 1), conf)
 			.setGroupByColumns(Arrays.asList(0));
 
 		OperatorComponent oc = new OperatorComponent(CUSTOMER_ORDERSjoin, "COUNTAGG", _queryPlan)
-			.setAggregation(agg);
+			.addOperator(agg);
 
 		//-------------------------------------------------------------------------------------
 

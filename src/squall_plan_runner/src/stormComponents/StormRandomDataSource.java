@@ -27,8 +27,8 @@ import operators.AggregateOperator;
 import operators.ChainOperator;
 import operators.DistinctOperator;
 import operators.Operator;
-import operators.ProjectionOperator;
-import operators.SelectionOperator;
+import operators.ProjectOperator;
+import operators.SelectOperator;
 import utilities.SystemParameters;
 
 import org.apache.log4j.Logger;
@@ -91,9 +91,9 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
                         String inputPath,
                         List<Integer> hashIndexes,
                         List<ValueExpression> hashExpressions,
-                        SelectionOperator selection,
+                        SelectOperator selection,
                         DistinctOperator distinct,
-                        ProjectionOperator projection,
+                        ProjectOperator projection,
                         AggregateOperator aggregation,
                         int hierarchyPosition,
                         boolean printOut,

@@ -10,10 +10,8 @@ import backtype.storm.topology.TopologyBuilder;
 import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
-import operators.AggregateOperator;
-import operators.DistinctOperator;
-import operators.ProjectionOperator;
-import operators.SelectionOperator;
+import operators.ChainOperator;
+import operators.Operator;
 import stormComponents.StormThetaJoin;
 import stormComponents.synchronization.TopologyKiller;
 import org.apache.log4j.Logger;
@@ -40,10 +38,7 @@ public class ThetaJoinComponent implements Component {
 
     private StormThetaJoin _joiner;
 
-    private SelectionOperator _selection;
-    private DistinctOperator _distinct;
-    private ProjectionOperator _projection;
-    private AggregateOperator _aggregation;
+    private ChainOperator _chain = new ChainOperator();
 
     private boolean _printOut;
     private boolean _printOutSet; //whether printOut was already set
@@ -96,48 +91,16 @@ public class ThetaJoinComponent implements Component {
     }
 
     @Override
-    public ThetaJoinComponent setSelection(SelectionOperator selection){
-        _selection = selection;
+    public ThetaJoinComponent addOperator(Operator operator){
+	_chain.addOperator(operator);
         return this;
     }
 
     @Override
-    public ThetaJoinComponent setDistinct(DistinctOperator distinct){
-        _distinct = distinct;
-        return this;
+    public ChainOperator getChainOperator(){
+        return _chain;
     }
 
-    @Override
-    public ThetaJoinComponent setProjection(ProjectionOperator projection){
-        _projection = projection;
-        return this;
-    }
-
-    @Override
-    public ThetaJoinComponent setAggregation(AggregateOperator aggregation){
-        _aggregation = aggregation;
-        return this;
-    }
-
-    @Override
-    public SelectionOperator getSelection() {
-        return _selection;
-    }
-
-    @Override
-    public DistinctOperator getDistinct() {
-        return _distinct;
-    }
-
-    @Override
-    public ProjectionOperator getProjection() {
-        return _projection;
-    }
-
-    @Override
-    public AggregateOperator getAggregation() {
-        return _aggregation;
-    }
 
     @Override
     public ThetaJoinComponent setPrintOut(boolean printOut){
@@ -166,16 +129,13 @@ public class ThetaJoinComponent implements Component {
            setPrintOut(true);
         }
 
-        MyUtilities.checkBatchOutput(_batchOutputMillis, _aggregation, conf);
+        MyUtilities.checkBatchOutput(_batchOutputMillis, _chain.getAggregation(), conf);
 
         _joiner = new StormThetaJoin(_firstParent,
                             _secondParent,
                             _componentName,
                             allCompNames,
-                            _selection,
-                            _distinct,
-                            _projection,
-                            _aggregation,
+                            _chain,
                             _hashIndexes,
                             _hashExpressions,
                             _joinPredicate,

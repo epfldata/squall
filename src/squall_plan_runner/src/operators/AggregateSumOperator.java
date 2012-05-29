@@ -25,7 +25,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
         private DistinctOperator _distinct;
         private int _groupByType = GB_UNSET;
         private List<Integer> _groupByColumns = new ArrayList<Integer>();
-        private ProjectionOperator _groupByProjection;
+        private ProjectOperator _groupByProjection;
         private int _numTuplesProcessed = 0;
         
         private NumericConversion<T> _wrapper;
@@ -56,7 +56,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
         }
 
         @Override
-        public AggregateSumOperator setGroupByProjection(ProjectionOperator groupByProjection) {
+        public AggregateSumOperator setGroupByProjection(ProjectOperator groupByProjection) {
             if(!alreadySetOther(GB_PROJECTION)){
                 _groupByType = GB_PROJECTION;
                 _groupByProjection = groupByProjection;
@@ -79,7 +79,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
         }
 
         @Override
-        public ProjectionOperator getGroupByProjection() {
+        public ProjectOperator getGroupByProjection() {
             return _groupByProjection;
         }
 

@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.Map;
 import operators.AggregateOperator;
 import operators.AggregateSumOperator;
-import operators.ProjectionOperator;
-import operators.SelectionOperator;
+import operators.ProjectOperator;
+import operators.SelectOperator;
 import org.apache.log4j.Logger;
 import predicates.BetweenPredicate;
 import predicates.ComparisonPredicate;
@@ -68,145 +68,145 @@ public class TPCH5Plan {
         //-------------------------------------------------------------------------------------
         List<Integer> hashRegion = Arrays.asList(0);
 
-        SelectionOperator selectionRegion = new SelectionOperator(
+        SelectOperator selectionRegion = new SelectOperator(
                 new ComparisonPredicate(
                     new ColumnReference(_sc, 1),
                     new ValueSpecification(_sc, REGION_NAME)
                 ));
 
-        ProjectionOperator projectionRegion = new ProjectionOperator(new int[]{0});
+        ProjectOperator projectionRegion = new ProjectOperator(new int[]{0});
 
         DataSourceComponent relationRegion = new DataSourceComponent(
                 "REGION",
                 dataPath + "region" + extension,
                 TPCH_Schema.region,
                 _queryPlan).setHashIndexes(hashRegion)
-                           .setSelection(selectionRegion)
-                           .setProjection(projectionRegion);
+                           .addOperator(selectionRegion)
+                           .addOperator(projectionRegion);
 
         //-------------------------------------------------------------------------------------
         List<Integer> hashNation = Arrays.asList(2);
 
-        ProjectionOperator projectionNation = new ProjectionOperator(new int[]{0, 1, 2});
+        ProjectOperator projectionNation = new ProjectOperator(new int[]{0, 1, 2});
 
         DataSourceComponent relationNation = new DataSourceComponent(
                 "NATION",
                 dataPath + "nation" + extension,
                 TPCH_Schema.nation,
                 _queryPlan).setHashIndexes(hashNation)
-                           .setProjection(projectionNation);
+                           .addOperator(projectionNation);
 
 
         //-------------------------------------------------------------------------------------
         List<Integer> hashRN = Arrays.asList(0);
 
-        ProjectionOperator projectionRN = new ProjectionOperator(new int[]{1, 2});
+        ProjectOperator projectionRN = new ProjectOperator(new int[]{1, 2});
 
         EquiJoinComponent R_Njoin = new EquiJoinComponent(
                 relationRegion,
                 relationNation,
                 _queryPlan).setHashIndexes(hashRN)
-                           .setProjection(projectionRN);
+                           .addOperator(projectionRN);
 
         //-------------------------------------------------------------------------------------
         List<Integer> hashSupplier = Arrays.asList(1);
 
-        ProjectionOperator projectionSupplier = new ProjectionOperator(new int[]{0, 3});
+        ProjectOperator projectionSupplier = new ProjectOperator(new int[]{0, 3});
 
         DataSourceComponent relationSupplier = new DataSourceComponent(
                 "SUPPLIER",
                 dataPath + "supplier" + extension,
                 TPCH_Schema.supplier,
                 _queryPlan).setHashIndexes(hashSupplier)
-                           .setProjection(projectionSupplier);
+                           .addOperator(projectionSupplier);
 
         //-------------------------------------------------------------------------------------
         List<Integer> hashRNS = Arrays.asList(2);
 
-        ProjectionOperator projectionRNS = new ProjectionOperator(new int[]{0, 1, 2});
+        ProjectOperator projectionRNS = new ProjectOperator(new int[]{0, 1, 2});
 
         EquiJoinComponent R_N_Sjoin = new EquiJoinComponent(
                 R_Njoin,
                 relationSupplier,
                 _queryPlan).setHashIndexes(hashRNS)
-                           .setProjection(projectionRNS);
+                           .addOperator(projectionRNS);
 
         //-------------------------------------------------------------------------------------
         List<Integer> hashLineitem = Arrays.asList(1);
 
-        ProjectionOperator projectionLineitem = new ProjectionOperator(new int[]{0, 2, 5, 6});
+        ProjectOperator projectionLineitem = new ProjectOperator(new int[]{0, 2, 5, 6});
 
         DataSourceComponent relationLineitem = new DataSourceComponent(
                 "LINEITEM",
                 dataPath + "lineitem" + extension,
                 TPCH_Schema.lineitem,
                 _queryPlan).setHashIndexes(hashLineitem)
-                           .setProjection(projectionLineitem);
+                           .addOperator(projectionLineitem);
 
         //-------------------------------------------------------------------------------------
         List<Integer> hashRNSL = Arrays.asList(0, 2);
 
-        ProjectionOperator projectionRNSL = new ProjectionOperator(new int[]{0, 1, 3, 4, 5});
+        ProjectOperator projectionRNSL = new ProjectOperator(new int[]{0, 1, 3, 4, 5});
 
         EquiJoinComponent R_N_S_Ljoin = new EquiJoinComponent(
                 R_N_Sjoin,
                 relationLineitem,
                 _queryPlan).setHashIndexes(hashRNSL)
-                           .setProjection(projectionRNSL);
+                           .addOperator(projectionRNSL);
 
         //-------------------------------------------------------------------------------------
         List<Integer> hashCustomer = Arrays.asList(0);
 
-        ProjectionOperator projectionCustomer = new ProjectionOperator(new int[]{0, 3});
+        ProjectOperator projectionCustomer = new ProjectOperator(new int[]{0, 3});
 
         DataSourceComponent relationCustomer = new DataSourceComponent(
                 "CUSTOMER",
                 dataPath + "customer" + extension,
                 TPCH_Schema.customer,
                 _queryPlan).setHashIndexes(hashCustomer)
-                           .setProjection(projectionCustomer);
+                           .addOperator(projectionCustomer);
 
         //-------------------------------------------------------------------------------------
         List<Integer> hashOrders = Arrays.asList(1);
 
-        SelectionOperator selectionOrders = new SelectionOperator(
+        SelectOperator selectionOrders = new SelectOperator(
                 new BetweenPredicate(
                     new ColumnReference(_dc, 4),
                     true, new ValueSpecification(_dc, _date1),
                     false, new ValueSpecification(_dc, _date2)
                 ));
 
-        ProjectionOperator projectionOrders = new ProjectionOperator(new int[]{0, 1});
+        ProjectOperator projectionOrders = new ProjectOperator(new int[]{0, 1});
 
         DataSourceComponent relationOrders = new DataSourceComponent(
                 "ORDERS",
                 dataPath + "orders" + extension,
                 TPCH_Schema.orders,
                 _queryPlan).setHashIndexes(hashOrders)
-                           .setSelection(selectionOrders)
-                           .setProjection(projectionOrders);
+                           .addOperator(selectionOrders)
+                           .addOperator(projectionOrders);
 
         //-------------------------------------------------------------------------------------
         List<Integer> hashCO = Arrays.asList(0, 1);
 
-        ProjectionOperator projectionCO = new ProjectionOperator(new int[]{1, 2});
+        ProjectOperator projectionCO = new ProjectOperator(new int[]{1, 2});
 
         EquiJoinComponent C_Ojoin = new EquiJoinComponent(
                 relationCustomer,
                 relationOrders,
                 _queryPlan).setHashIndexes(hashCO)
-                           .setProjection(projectionCO);
+                           .addOperator(projectionCO);
 
         //-------------------------------------------------------------------------------------
         List<Integer> hashRNSLCO = Arrays.asList(0);
 
-        ProjectionOperator projectionRNSLCO = new ProjectionOperator(new int[]{1, 3, 4});
+        ProjectOperator projectionRNSLCO = new ProjectOperator(new int[]{1, 3, 4});
 
         EquiJoinComponent R_N_S_L_C_Ojoin = new EquiJoinComponent(
                 R_N_S_Ljoin,
                 C_Ojoin,
                 _queryPlan).setHashIndexes(hashRNSLCO)
-                           .setProjection(projectionRNSLCO);
+                           .addOperator(projectionRNSLCO);
 
         //-------------------------------------------------------------------------------------
         // set up aggregation function on a separate StormComponent(Bolt)
@@ -225,7 +225,7 @@ public class TPCH5Plan {
         OperatorComponent finalComponent = new OperatorComponent(
                 R_N_S_L_C_Ojoin,
                 "FINAL_RESULT",
-                _queryPlan).setAggregation(aggOp);
+                _queryPlan).addOperator(aggOp);
 
         //-------------------------------------------------------------------------------------
         AggregateOperator overallAgg =

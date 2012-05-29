@@ -10,10 +10,8 @@ import backtype.storm.topology.TopologyBuilder;
 import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
-import operators.AggregateOperator;
-import operators.DistinctOperator;
-import operators.ProjectionOperator;
-import operators.SelectionOperator;
+import operators.ChainOperator;
+import operators.Operator;
 import stormComponents.synchronization.TopologyKiller;
 
 import org.apache.log4j.Logger;
@@ -38,10 +36,7 @@ public  class OperatorComponent implements Component{
     private List<Integer> _hashIndexes;
     private List<ValueExpression> _hashExpressions;
 
-    private SelectionOperator _selection;
-    private DistinctOperator _distinct;
-    private ProjectionOperator _projection;
-    private AggregateOperator _aggregation;
+    private ChainOperator _chain = new ChainOperator();
 
     private boolean _printOut;
     private boolean _printOutSet;
@@ -87,49 +82,17 @@ public  class OperatorComponent implements Component{
         return this;
     }
 
-    @Override
-    public OperatorComponent setSelection(SelectionOperator selection){
-        _selection = selection;
+        @Override
+    public OperatorComponent addOperator(Operator operator){
+	_chain.addOperator(operator);
         return this;
     }
 
     @Override
-    public OperatorComponent setDistinct(DistinctOperator distinct){
-        _distinct = distinct;
-        return this;
+    public ChainOperator getChainOperator(){
+        return _chain;
     }
 
-    @Override
-    public OperatorComponent setProjection(ProjectionOperator projection){
-        _projection = projection;
-        return this;
-    }
-
-    @Override
-    public OperatorComponent setAggregation(AggregateOperator aggregation){
-        _aggregation = aggregation;
-        return this;
-    }
-
-    @Override
-    public SelectionOperator getSelection() {
-        return _selection;
-    }
-
-    @Override
-    public DistinctOperator getDistinct() {
-        return _distinct;
-    }
-
-    @Override
-    public ProjectionOperator getProjection() {
-        return _projection;
-    }
-
-    @Override
-    public AggregateOperator getAggregation() {
-        return _aggregation;
-    }
 
     @Override
     public OperatorComponent setPrintOut(boolean printOut){
@@ -158,15 +121,12 @@ public  class OperatorComponent implements Component{
             setPrintOut(true);
         }
 
-        MyUtilities.checkBatchOutput(_batchOutputMillis, _aggregation, conf);
+        MyUtilities.checkBatchOutput(_batchOutputMillis, _chain.getAggregation(), conf);
 
         _stormOperator = new StormOperator(_parent,
                 _componentName,
                 allCompNames,
-                _selection,
-                _distinct,
-                _projection,
-                _aggregation,
+                _chain,
                 _hashIndexes,
                 _hashExpressions,
                 hierarchyPosition,

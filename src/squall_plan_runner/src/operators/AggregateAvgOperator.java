@@ -30,7 +30,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
         private DistinctOperator _distinct;
         private int _groupByType = GB_UNSET;
         private List<Integer> _groupByColumns = new ArrayList<Integer>();
-        private ProjectionOperator _groupByProjection;
+        private ProjectOperator _groupByProjection;
         private int _numTuplesProcessed = 0;
         
         private NumericConversion<Double> _wrapper = new DoubleConversion();
@@ -60,7 +60,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
         }
 
         @Override
-        public AggregateAvgOperator setGroupByProjection(ProjectionOperator groupByProjection){
+        public AggregateAvgOperator setGroupByProjection(ProjectOperator groupByProjection){
              if(!alreadySetOther(GB_PROJECTION)){
                 _groupByType = GB_PROJECTION;
                 _groupByProjection = groupByProjection;
@@ -83,7 +83,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
         }
 
         @Override
-        public ProjectionOperator getGroupByProjection(){
+        public ProjectOperator getGroupByProjection(){
             return _groupByProjection;
         }
 

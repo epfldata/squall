@@ -25,8 +25,8 @@ import operators.AggregateOperator;
 import operators.ChainOperator;
 import operators.DistinctOperator;
 import operators.Operator;
-import operators.ProjectionOperator;
-import operators.SelectionOperator;
+import operators.ProjectOperator;
+import operators.SelectOperator;
 import org.apache.log4j.Logger;
 import stormComponents.synchronization.TopologyKiller;
 import utilities.MyUtilities;
@@ -69,10 +69,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
     public StormOperator(StormEmitter emitter,
             String componentName,
             List<String> allCompNames,
-            SelectionOperator selection,
-            DistinctOperator distinct,
-            ProjectionOperator projection,
-            AggregateOperator aggregation,
+            ChainOperator chain,
             List<Integer> hashIndexes,
             List<ValueExpression> hashExpressions,
             int hierarchyPosition,
@@ -94,7 +91,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
 //        if(parallelism > 1 && distinct != null){
 //            throw new RuntimeException(_componentName + ": Distinct operator cannot be specified for multiThreaded bolts!");
 //        }
-        _operatorChain = new ChainOperator(selection, distinct, projection, aggregation);
+        _operatorChain = chain;
 
         _hashIndexes = hashIndexes;
         _hashExpressions = hashExpressions;

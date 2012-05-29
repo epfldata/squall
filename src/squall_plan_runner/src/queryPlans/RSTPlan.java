@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 import operators.AggregateOperator;
 import operators.AggregateSumOperator;
-import operators.SelectionOperator;
+import operators.SelectOperator;
 
 import org.apache.log4j.Logger;
 import predicates.ComparisonPredicate;
@@ -81,13 +81,12 @@ public class RSTPlan {
             EquiJoinComponent R_S_Tjoin= new EquiJoinComponent(
                     R_Sjoin,
                     relationT,
-                    _queryPlan).setAggregation(sp)
-                               .setSelection(
-                                    new SelectionOperator(
+                    _queryPlan).addOperator(
+                                    new SelectOperator(
                                     new ComparisonPredicate(
                                         new ColumnReference(_ic, 1),
-                                        new ValueSpecification(_ic, 10))));
-
+                                        new ValueSpecification(_ic, 10))))
+                               .addOperator(sp);
             //-------------------------------------------------------------------------------------
 
             AggregateOperator overallAgg =
