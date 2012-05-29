@@ -6,7 +6,7 @@
 package queryPlans;
 import schema.TPCH_Schema;
 import components.DataSourceComponent;
-import components.JoinComponent;
+import components.EquiJoinComponent;
 import components.OperatorComponent;
 import conversion.DateConversion;
 import conversion.IntegerConversion;
@@ -101,7 +101,7 @@ public class TPCH4Plan {
                            .setDistinct(distinctLineitem);
 
         //-------------------------------------------------------------------------------------
-        JoinComponent O_Ljoin = new JoinComponent(
+        EquiJoinComponent O_Ljoin = new EquiJoinComponent(
                 relationOrders,
                 relationLineitem,
                 _queryPlan);

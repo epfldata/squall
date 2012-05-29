@@ -7,7 +7,7 @@ package optimizers;
 
 import components.Component;
 import components.DataSourceComponent;
-import components.JoinComponent;
+import components.EquiJoinComponent;
 import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,20 +23,22 @@ import visitors.squall.JoinHashVisitor;
 
 
 public class ComponentGenerator {
+    private TableAliasName _tan;
+    private OptimizerTranslator _ot;
+
     private Schema _schema;
     private String _dataPath;
     private String _extension;
 
     private QueryPlan _queryPlan = new QueryPlan();
 
-    //List of JoinComponent and OperatorComponent
+    //List of EquiJoinComponent and OperatorComponent
     private List<Component> _subPlans = new ArrayList<Component>();
 
-    private TableAliasName _tan;
-
-    public ComponentGenerator(Schema schema, TableAliasName tan, String dataPath, String extension){
+    public ComponentGenerator(Schema schema, TableAliasName tan, OptimizerTranslator ot, String dataPath, String extension){
         _schema = schema;
         _tan = tan;
+        _ot = ot;
         _dataPath = dataPath;
         _extension = extension;
     }
@@ -58,7 +60,7 @@ public class ComponentGenerator {
     public Component generateSubplan(Table leftTable, Table rightTable, List<Expression> listExp) {
         DataSourceComponent leftDSC = generateDataSource(leftTable);
         DataSourceComponent rightDSC = generateDataSource(rightTable);
-        JoinComponent lastComponent = generateJoinComponent(leftDSC, rightDSC, listExp);
+        EquiJoinComponent lastComponent = generateJoinComponent(leftDSC, rightDSC, listExp);
         _subPlans.add(lastComponent);
         return lastComponent;
     }
@@ -71,7 +73,7 @@ public class ComponentGenerator {
 
     public Component generateSubplan(Component component, Table table, List<Expression> listExp){
         DataSourceComponent dataSourceComp = generateDataSource(table);
-        JoinComponent lastComponent = generateJoinComponent(component, dataSourceComp, listExp);
+        EquiJoinComponent lastComponent = generateJoinComponent(component, dataSourceComp, listExp);
         _subPlans.remove(component);
         _subPlans.add(lastComponent);
         return lastComponent;
@@ -84,7 +86,7 @@ public class ComponentGenerator {
     }
 
     public Component generateSubplan(Component left, Component right, List<Expression> listExp){
-        JoinComponent lastComponent = generateJoinComponent(left, right, listExp);
+        EquiJoinComponent lastComponent = generateJoinComponent(left, right, listExp);
         _subPlans.remove(left);
         _subPlans.remove(right);
         _subPlans.add(lastComponent);
@@ -106,13 +108,13 @@ public class ComponentGenerator {
         return relation;
     }
 
-    public JoinComponent generateJoinComponent(Component leftParent, Component rightParent, Join join){
+    public EquiJoinComponent generateJoinComponent(Component leftParent, Component rightParent, Join join){
        List<Expression> listExp = ParserUtil.createListExp(join.getOnExpression());
        return generateJoinComponent(leftParent, rightParent, listExp);
     }
 
-    private JoinComponent generateJoinComponent(Component leftParent, Component rightParent, List<Expression> listExp) {
-        JoinComponent joinComponent = new JoinComponent(
+    private EquiJoinComponent generateJoinComponent(Component leftParent, Component rightParent, List<Expression> listExp) {
+        EquiJoinComponent joinComponent = new EquiJoinComponent(
                     leftParent,
                     rightParent,
                     _queryPlan);
@@ -139,7 +141,7 @@ public class ComponentGenerator {
     //  but we have to filter who belongs to my branch in JoinHashVisitor.
     //We don't want to hash on something which will be used to join with same later component in the hierarchy.
     private void setHash(Component component, List<Expression> listExp) {
-            JoinHashVisitor joinOn = new JoinHashVisitor(_schema, _queryPlan, component, _tan);
+            JoinHashVisitor joinOn = new JoinHashVisitor(_schema, _queryPlan, component, _tan, _ot);
             for(Expression exp: listExp){
                 exp.accept(joinOn);
             }

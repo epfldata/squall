@@ -6,7 +6,7 @@
 package queryPlans.debug;
 
 import components.DataSourceComponent;
-import components.JoinComponent;
+import components.EquiJoinComponent;
 import components.OperatorComponent;
 import conversion.IntegerConversion;
 import expressions.ColumnReference;
@@ -56,7 +56,7 @@ public class HyracksL3BatchPlan {
 
             AggregateCountOperator postAgg = new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(1));
             List<Integer> hashIndexes = Arrays.asList(0);
-            JoinComponent CUSTOMER_ORDERSjoin = new JoinComponent(
+            EquiJoinComponent CUSTOMER_ORDERSjoin = new EquiJoinComponent(
                     relationCustomer,
                     relationOrders,
                     _queryPlan).setAggregation(postAgg)

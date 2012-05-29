@@ -6,7 +6,7 @@
 package queryPlans;
 import schema.TPCH_Schema;
 import components.DataSourceComponent;
-import components.JoinComponent;
+import components.EquiJoinComponent;
 import conversion.DateConversion;
 import conversion.DoubleConversion;
 import conversion.NumericConversion;
@@ -73,7 +73,7 @@ public class TPCH9Plan {
                            .setProjection(projectionLineitem);
 
         //-------------------------------------------------------------------------------------
-        JoinComponent P_Ljoin = new JoinComponent(
+        EquiJoinComponent P_Ljoin = new EquiJoinComponent(
 				relationPart,
 				relationLineitem,
 				_queryPlan).setHashIndexes(Arrays.asList(0, 2));
@@ -91,7 +91,7 @@ public class TPCH9Plan {
                            .setProjection(projectionPartsupp);
 
         //-------------------------------------------------------------------------------------
-        JoinComponent P_L_PSjoin = new JoinComponent(
+        EquiJoinComponent P_L_PSjoin = new EquiJoinComponent(
 				P_Ljoin,
 				relationPartsupp,
 				_queryPlan).setHashIndexes(Arrays.asList(0))
@@ -113,7 +113,7 @@ public class TPCH9Plan {
 
         //-------------------------------------------------------------------------------------
 
-        JoinComponent P_L_PS_Ojoin = new JoinComponent(
+        EquiJoinComponent P_L_PS_Ojoin = new EquiJoinComponent(
 				P_L_PSjoin,
 				relationOrders,
 				_queryPlan).setHashIndexes(Arrays.asList(0))
@@ -132,7 +132,7 @@ public class TPCH9Plan {
                            .setProjection(projectionSupplier);
 
         //-------------------------------------------------------------------------------------
-        JoinComponent P_L_PS_O_Sjoin = new JoinComponent(
+        EquiJoinComponent P_L_PS_O_Sjoin = new EquiJoinComponent(
 				P_L_PS_Ojoin,
 				relationSupplier,
 				_queryPlan).setHashIndexes(Arrays.asList(5))
@@ -179,7 +179,7 @@ public class TPCH9Plan {
 		.setGroupByColumns(Arrays.asList(5, 4));
 
 
-        JoinComponent P_L_PS_O_S_Njoin = new JoinComponent(
+        EquiJoinComponent P_L_PS_O_S_Njoin = new EquiJoinComponent(
 				P_L_PS_O_Sjoin,
 				relationNation,
 				_queryPlan).setProjection(new ProjectionOperator(new int[]{0, 1, 2, 3, 4, 6}))

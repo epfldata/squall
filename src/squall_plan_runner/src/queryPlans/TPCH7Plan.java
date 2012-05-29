@@ -7,7 +7,7 @@ package queryPlans;
 
 import schema.TPCH_Schema;
 import components.DataSourceComponent;
-import components.JoinComponent;
+import components.EquiJoinComponent;
 import conversion.DateConversion;
 import conversion.DoubleConversion;
 import conversion.NumericConversion;
@@ -88,7 +88,7 @@ public class TPCH7Plan {
                            .setProjection(projectionCustomer);
 
         //-------------------------------------------------------------------------------------
-        JoinComponent N_Cjoin = new JoinComponent(
+        EquiJoinComponent N_Cjoin = new EquiJoinComponent(
                 relationNation2,
                 relationCustomer,
                 _queryPlan).setProjection(new ProjectionOperator(new int[]{0, 2}))
@@ -107,7 +107,7 @@ public class TPCH7Plan {
                            .setProjection(projectionOrders);
 
         //-------------------------------------------------------------------------------------
-        JoinComponent N_C_Ojoin = new JoinComponent(
+        EquiJoinComponent N_C_Ojoin = new EquiJoinComponent(
                 N_Cjoin,
                 relationOrders,
                 _queryPlan).setProjection(new ProjectionOperator(new int[]{0, 2}))
@@ -139,7 +139,7 @@ public class TPCH7Plan {
                            .setProjection(projectionNation1);
 
         //-------------------------------------------------------------------------------------
-        JoinComponent S_Njoin = new JoinComponent(
+        EquiJoinComponent S_Njoin = new EquiJoinComponent(
                 relationSupplier,
                 relationNation1,
                 _queryPlan).setProjection(new ProjectionOperator(new int[]{0, 2}))
@@ -184,7 +184,7 @@ public class TPCH7Plan {
                            .setProjection(projectionLineitem);
 
         //-------------------------------------------------------------------------------------
-        JoinComponent L_S_Njoin = new JoinComponent(
+        EquiJoinComponent L_S_Njoin = new EquiJoinComponent(
                 relationLineitem,
                 S_Njoin,
                 _queryPlan).setProjection(new ProjectionOperator(new int[]{4, 0, 1, 3}))
@@ -217,7 +217,7 @@ public class TPCH7Plan {
         AggregateOperator agg = new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 4), conf)
                 .setGroupByColumns(Arrays.asList(2, 0, 3));
 
-        JoinComponent N_C_O_L_S_Njoin = new JoinComponent(
+        EquiJoinComponent N_C_O_L_S_Njoin = new EquiJoinComponent(
                 N_C_Ojoin,
                 L_S_Njoin,
                 _queryPlan).setSelection(so)

@@ -7,7 +7,7 @@ package queryPlans.debug;
 
 import schema.TPCH_Schema;
 import components.DataSourceComponent;
-import components.JoinComponent;
+import components.EquiJoinComponent;
 import conversion.DateConversion;
 import conversion.DoubleConversion;
 import conversion.NumericConversion;
@@ -80,7 +80,7 @@ public class TPCH3L2Plan {
 			.setProjection(projectionOrders);
 
 		//-------------------------------------------------------------------------------------
-		JoinComponent C_Ojoin = new JoinComponent(
+		EquiJoinComponent C_Ojoin = new EquiJoinComponent(
 				relationCustomer,
 				relationOrders,
 				_queryPlan).setProjection(new ProjectionOperator(new int[]{1, 2, 3}))

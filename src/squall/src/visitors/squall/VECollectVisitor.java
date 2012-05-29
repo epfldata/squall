@@ -15,7 +15,10 @@ import operators.ProjectionOperator;
 import operators.SelectionOperator;
 import predicates.Predicate;
 
-//VECollectVisitor is meant to visit all the inside of the component in search for VEs
+/*
+ * Collects all the VE inside a component.
+ *   Lists refering to VE appearing after and before projection are necessary only for rule-based optimization.
+ */
 public class VECollectVisitor {
     private List<ValueExpression> _veList = new ArrayList<ValueExpression>();
     private List<ValueExpression> _afterProjection = new ArrayList<ValueExpression>();

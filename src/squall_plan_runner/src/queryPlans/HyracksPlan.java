@@ -6,7 +6,7 @@
 package queryPlans;
 
 import components.DataSourceComponent;
-import components.JoinComponent;
+import components.EquiJoinComponent;
 import conversion.IntegerConversion;
 import expressions.ColumnReference;
 import java.util.Arrays;
@@ -53,7 +53,7 @@ public class HyracksPlan {
 
             AggregateCountOperator agg = new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(1));
 
-            JoinComponent CUSTOMER_ORDERSjoin = new JoinComponent(
+            EquiJoinComponent CUSTOMER_ORDERSjoin = new EquiJoinComponent(
                     relationCustomer,
                     relationOrders,
                     _queryPlan).setAggregation(agg);

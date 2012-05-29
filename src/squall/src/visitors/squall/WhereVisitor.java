@@ -63,6 +63,7 @@ import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import operators.SelectionOperator;
+import optimizers.OptimizerTranslator;
 import predicates.AndPredicate;
 import predicates.ComparisonPredicate;
 import predicates.LikePredicate;
@@ -70,7 +71,6 @@ import predicates.OrPredicate;
 import predicates.Predicate;
 import queryPlans.QueryPlan;
 import schema.Schema;
-import util.HierarchyExtractor;
 import util.ParserUtil;
 import util.TableAliasName;
 
@@ -83,20 +83,23 @@ public class WhereVisitor implements ExpressionVisitor {
     private QueryPlan _queryPlan;
     private Component _affectedComponent;
     private TableAliasName _tan;
+    private OptimizerTranslator _ot;
 
-    public WhereVisitor(QueryPlan queryPlan, Schema schema, TableAliasName tan){
+    public WhereVisitor(QueryPlan queryPlan, Schema schema, TableAliasName tan, OptimizerTranslator ot){
         _queryPlan = queryPlan;
         _schema = schema;
         _tan = tan;
+        _ot = ot;
         
         _affectedComponent = queryPlan.getLastComponent();
     }
 
-    public WhereVisitor(QueryPlan queryPlan, Component affectedComponent, Schema schema, TableAliasName tan){
+    public WhereVisitor(QueryPlan queryPlan, Component affectedComponent, Schema schema, TableAliasName tan, OptimizerTranslator ot){
         _queryPlan = queryPlan;
         _affectedComponent = affectedComponent;
         _schema = schema;
         _tan = tan;
+        _ot = ot;
     }
 
     public void doneVisiting(){
@@ -306,7 +309,7 @@ public class WhereVisitor implements ExpressionVisitor {
         TypeConversion tc = _schema.getType(tableSchemaName, columnName);
 
         //extract the position (index) of the required column
-        int position = HierarchyExtractor.extractComponentIndex(column, _affectedComponent, _queryPlan, _schema, _tan);
+        int position = _ot.getColumnIndex(column, _affectedComponent, _queryPlan, _schema, _tan);
 
         ValueExpression ve = new ColumnReference(tc, position);
         _exprStack.push(ve);

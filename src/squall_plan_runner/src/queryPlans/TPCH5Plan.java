@@ -6,7 +6,7 @@
 package queryPlans;
 import schema.TPCH_Schema;
 import components.DataSourceComponent;
-import components.JoinComponent;
+import components.EquiJoinComponent;
 import components.OperatorComponent;
 import conversion.DateConversion;
 import conversion.DoubleConversion;
@@ -102,7 +102,7 @@ public class TPCH5Plan {
 
         ProjectionOperator projectionRN = new ProjectionOperator(new int[]{1, 2});
 
-        JoinComponent R_Njoin = new JoinComponent(
+        EquiJoinComponent R_Njoin = new EquiJoinComponent(
                 relationRegion,
                 relationNation,
                 _queryPlan).setHashIndexes(hashRN)
@@ -125,7 +125,7 @@ public class TPCH5Plan {
 
         ProjectionOperator projectionRNS = new ProjectionOperator(new int[]{0, 1, 2});
 
-        JoinComponent R_N_Sjoin = new JoinComponent(
+        EquiJoinComponent R_N_Sjoin = new EquiJoinComponent(
                 R_Njoin,
                 relationSupplier,
                 _queryPlan).setHashIndexes(hashRNS)
@@ -148,7 +148,7 @@ public class TPCH5Plan {
 
         ProjectionOperator projectionRNSL = new ProjectionOperator(new int[]{0, 1, 3, 4, 5});
 
-        JoinComponent R_N_S_Ljoin = new JoinComponent(
+        EquiJoinComponent R_N_S_Ljoin = new EquiJoinComponent(
                 R_N_Sjoin,
                 relationLineitem,
                 _queryPlan).setHashIndexes(hashRNSL)
@@ -191,7 +191,7 @@ public class TPCH5Plan {
 
         ProjectionOperator projectionCO = new ProjectionOperator(new int[]{1, 2});
 
-        JoinComponent C_Ojoin = new JoinComponent(
+        EquiJoinComponent C_Ojoin = new EquiJoinComponent(
                 relationCustomer,
                 relationOrders,
                 _queryPlan).setHashIndexes(hashCO)
@@ -202,7 +202,7 @@ public class TPCH5Plan {
 
         ProjectionOperator projectionRNSLCO = new ProjectionOperator(new int[]{1, 3, 4});
 
-        JoinComponent R_N_S_L_C_Ojoin = new JoinComponent(
+        EquiJoinComponent R_N_S_L_C_Ojoin = new EquiJoinComponent(
                 R_N_S_Ljoin,
                 C_Ojoin,
                 _queryPlan).setHashIndexes(hashRNSLCO)

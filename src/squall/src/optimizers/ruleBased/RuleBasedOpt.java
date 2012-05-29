@@ -22,6 +22,7 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import optimizers.ComponentGenerator;
 import optimizers.Optimizer;
+import optimizers.OptimizerTranslator;
 import util.HierarchyExtractor;
 import util.JoinTablesExp;
 import util.ParserUtil;
@@ -39,13 +40,15 @@ public class RuleBasedOpt implements Optimizer {
     private String _extension;
     private TableAliasName _tan;
     private ComponentGenerator _cg;
+    private OptimizerTranslator _ot;
     private Map _map; //map is updates in place
 
-    public RuleBasedOpt(Schema schema, TableAliasName tan, String dataPath, String extension, Map map){
+    public RuleBasedOpt(Schema schema, TableAliasName tan, String dataPath, String extension, OptimizerTranslator ot, Map map){
         _schema = schema;
         _tan = tan;
         _dataPath = dataPath;
         _extension = extension;
+        _ot = ot;
         _map = map;
     }
 
@@ -72,7 +75,7 @@ public class RuleBasedOpt implements Optimizer {
     }
 
     private ComponentGenerator generateTableJoins(List<Table> tableList, List<Join> joinList) {
-        ComponentGenerator cg = new ComponentGenerator(_schema, _tan, _dataPath, _extension);
+        ComponentGenerator cg = new ComponentGenerator(_schema, _tan, _ot, _dataPath, _extension);
         TableSelector ts = new TableSelector(tableList, _schema, _tan);
 
         //From a list of joins, create collection of elements like {R->{S, R.A=S.A}}
@@ -186,7 +189,7 @@ public class RuleBasedOpt implements Optimizer {
 
     private int selectItemsVisitor(List<SelectItem> selectItems) {
         //TODO: take care in nested case
-        SelectItemsVisitor selectVisitor = new SelectItemsVisitor(_cg.getQueryPlan(), _schema, _tan, _map);
+        SelectItemsVisitor selectVisitor = new SelectItemsVisitor(_cg.getQueryPlan(), _schema, _tan, _ot, _map);
         for(SelectItem elem: selectItems){
             elem.accept(selectVisitor);
         }
@@ -224,13 +227,13 @@ public class RuleBasedOpt implements Optimizer {
         for(Map.Entry<String, Expression> entry: collocatedExprs.entrySet()){
             String columnName = entry.getKey();
             Expression exprPerColumn = entry.getValue();
-            Component affectedComponent = ParserUtil.columnToComp(columnName, _cg);
+            Component affectedComponent = HierarchyExtractor.getDSCwithColumn(columnName, _cg);
             invokeWhereVisitor(exprPerColumn, affectedComponent, _cg);
         }
 
         for(OrExpression orExpr: orExprs){
             List<Column> columns = invokeColumnVisitor(orExpr);
-            List<Component> compList = ParserUtil.columnToComp(columns, _cg);
+            List<Component> compList = HierarchyExtractor.getDSCwithColumn(columns, _cg);
             Component affectedComponent = HierarchyExtractor.getLCM(compList);
             invokeWhereVisitor(orExpr, affectedComponent, _cg);
         }
@@ -243,7 +246,7 @@ public class RuleBasedOpt implements Optimizer {
     }
 
     private void invokeWhereVisitor(Expression expr, Component affectedComponent, ComponentGenerator cg){
-        WhereVisitor whereVisitor = new WhereVisitor(cg.getQueryPlan(), affectedComponent, _schema, _tan);
+        WhereVisitor whereVisitor = new WhereVisitor(cg.getQueryPlan(), affectedComponent, _schema, _tan, _ot);
         expr.accept(whereVisitor);
         whereVisitor.doneVisiting();
     }

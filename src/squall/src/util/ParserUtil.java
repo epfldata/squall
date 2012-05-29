@@ -7,19 +7,15 @@ package util;
 
 import components.Component;
 import expressions.ColumnReference;
-import expressions.IntegerYearFromDate;
 import expressions.ValueExpression;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.Join;
-import optimizers.ComponentGenerator;
 import queryPlans.QueryPlan;
 import utilities.MyUtilities;
 
@@ -164,26 +160,18 @@ public class ParserUtil {
         return true;
     }
 
-    //columnName is in form table.column, i.e. N2.NATIONKEY
-    public static Component columnToComp(String columnName, ComponentGenerator cg){
-        String tableCompName = columnName.split("\\.")[0];
-        Component affectedComponent = cg.getQueryPlan().getComponent(tableCompName);
-        return affectedComponent;
-    }
-
-    public static Component columnToComp(Column column, ComponentGenerator cg) {
-        String tableCompName = ParserUtil.getComponentName(column.getTable());
-        Component affectedComponent = cg.getQueryPlan().getComponent(tableCompName);
-        return affectedComponent;
-    }
-
-    public static List<Component> columnToComp(List<Column> columns, ComponentGenerator cg) {
-        List<Component> compList = new ArrayList<Component>();
-        for(Column column: columns){
-            Component newComp = columnToComp(column, cg);
-            compList.add(newComp);
+    /*
+     * get the number of elements with the value in a segment [0, endIndex).
+     *   Used to get the number of hashIndexes(elements) which are smaller than index(endIndex).
+     */
+    public static int getNumElementsBefore(int endIndex, List<Integer> elements) {
+        int numBefore = 0;
+        for(int i=0; i<endIndex; i++){
+            if(elements.contains(i)){
+                numBefore++;
+            }
         }
-        return compList;
+        return numBefore;
     }
 
     //template method

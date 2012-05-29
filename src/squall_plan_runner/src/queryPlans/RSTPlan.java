@@ -6,7 +6,7 @@
 package queryPlans;
 
 import components.DataSourceComponent;
-import components.JoinComponent;
+import components.EquiJoinComponent;
 import conversion.DoubleConversion;
 import conversion.IntegerConversion;
 import conversion.NumericConversion;
@@ -56,7 +56,7 @@ public class RSTPlan {
             //-------------------------------------------------------------------------------------
             List<Integer> hashIndexes = Arrays.asList(2);
 
-            JoinComponent R_Sjoin = new JoinComponent(
+            EquiJoinComponent R_Sjoin = new EquiJoinComponent(
                     relationR,
                     relationS,
                     _queryPlan).setHashIndexes(hashIndexes);
@@ -78,7 +78,7 @@ public class RSTPlan {
 
             AggregateSumOperator sp = new AggregateSumOperator(_dc, aggVe, conf);
 
-            JoinComponent R_S_Tjoin= new JoinComponent(
+            EquiJoinComponent R_S_Tjoin= new EquiJoinComponent(
                     R_Sjoin,
                     relationT,
                     _queryPlan).setAggregation(sp)

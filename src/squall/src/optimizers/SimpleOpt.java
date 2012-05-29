@@ -24,13 +24,15 @@ public class SimpleOpt implements Optimizer {
     private String _dataPath;
     private String _extension;
     private TableAliasName _tan;
+    private OptimizerTranslator _ot;
     private Map _map;
     
-    public SimpleOpt(Schema schema, TableAliasName tan, String dataPath, String extension, Map map){
+    public SimpleOpt(Schema schema, TableAliasName tan, String dataPath, String extension, OptimizerTranslator ot, Map map){
         _schema = schema;
         _tan = tan;
         _dataPath = dataPath;
         _extension = extension;
+        _ot = ot;
         _map = map;
     }
 
@@ -49,7 +51,7 @@ public class SimpleOpt implements Optimizer {
     }
 
     private ComponentGenerator generateTableJoins(List<Table> tableList, List<Join> joinList) {
-        ComponentGenerator cg = new ComponentGenerator(_schema, _tan, _dataPath, _extension);
+        ComponentGenerator cg = new ComponentGenerator(_schema, _tan, _ot, _dataPath, _extension);
 
         //special case
         if(tableList.size()==1){
@@ -74,7 +76,7 @@ public class SimpleOpt implements Optimizer {
 
     private void selectItemsVisitor(List<SelectItem> selectItems, ComponentGenerator cg) {
         //TODO: take care in nested case
-        SelectItemsVisitor selectVisitor = new SelectItemsVisitor(cg.getQueryPlan(), _schema, _tan, _map);
+        SelectItemsVisitor selectVisitor = new SelectItemsVisitor(cg.getQueryPlan(), _schema, _tan, _ot, _map);
         for(SelectItem elem: selectItems){
             elem.accept(selectVisitor);
         }
@@ -83,7 +85,7 @@ public class SimpleOpt implements Optimizer {
 
     private void whereVisitor(Expression whereExpr, ComponentGenerator cg) {
         // TODO: in non-nested case, there is a single Expression
-        WhereVisitor whereVisitor = new WhereVisitor(cg.getQueryPlan(), _schema, _tan);
+        WhereVisitor whereVisitor = new WhereVisitor(cg.getQueryPlan(), _schema, _tan, _ot);
         if(whereExpr != null){
             whereExpr.accept(whereVisitor);
         }

@@ -55,19 +55,23 @@ import util.TableAliasName;
 import util.ParserUtil;
 
 /*
- * Although we use JoinHashVisitor, this class is necessary.
- * This class contains information regarding join between two tables or two components
+ * This class contains information regarding all the possible joins between any two tables.
+ *   It is used when we want to find out whether two Components can be joined or not
+ *   (the necessary condition is that they have at least one R.A = S.B,
+ *    where R(S) is one of the ancestors of the first(second) component)
+ *
  * We don't hash immediately on all the columns which will be used for all the joins below in the hierarchy.
- * For example X=(R join S) join Y=(T join V), we hash X on columns in expressions R.A=T.A and R.B=V.B and S.C=T.C and S.D=V.D
- * R might be later joined with fifth table.
+ * For example X=(R join S), Y=(T join V), and we want X join Y.
+ *   Then, we hash X on columns S.C and S.D in expressions S.C=T.C and S.D=V.D
+ *   R might be later joined with fifth table.
  * Thus, sending information about all the tables R joins with in JoinHashVisitor, will result in hashing on unnecessary columns.
+ *
+ * Let's take a look at a join condition: R.A = S.A and T.B = S.B
+ * On both sides must be at least one relation (otherwise it is WHERE clause)
+ *    and at most one relation - we need it since we index joins by tables keys (TODO).
+ * Returns two objects {R->{S, exp{R.A = S.A}} and {T->{S, exp{T.B=S.B}}
  */
 public class JoinTablesExpVisitor implements ExpressionVisitor {
-    //R.A = S.A and T.B = S.B
-    //On both sides must be at least one relation (otherwise it is WHERE clause)
-    //  and at most one relation - we need it since we index joins by tables keys.
-    //Returns two objects {R->{S, exp{R.A = S.A}} and {T->{S, exp{T.B=S.B}}
-
     private Table _sideTable;
     private JoinTablesExp _joinTablesExp;
 

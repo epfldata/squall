@@ -73,10 +73,10 @@ import operators.AggregateOperator;
 import operators.AggregateSumOperator;
 import operators.DistinctOperator;
 import operators.ProjectionOperator;
+import optimizers.OptimizerTranslator;
 import queryPlans.QueryPlan;
 import schema.Schema;
 import util.DeepCopy;
-import util.HierarchyExtractor;
 import util.ParserUtil;
 import util.TableAliasName;
 
@@ -86,6 +86,7 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
     private QueryPlan _queryPlan;
     private Component _affectedComponent;
     private TableAliasName _tan;
+    private OptimizerTranslator _ot;
     private Map _map;
 
     private Stack<ValueExpression> _exprStack;
@@ -96,10 +97,11 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
     public static final int AGG = 0;
     public static final int NON_AGG = 1;
 
-    public SelectItemsVisitor(QueryPlan queryPlan, Schema schema, TableAliasName tan, Map map){
+    public SelectItemsVisitor(QueryPlan queryPlan, Schema schema, TableAliasName tan, OptimizerTranslator ot, Map map){
         _queryPlan = queryPlan;
         _schema = schema;
         _tan = tan;
+        _ot = ot;
         _map = map;
 
         _affectedComponent = queryPlan.getLastComponent();
@@ -155,7 +157,7 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
 
                 //Setting new level of components is necessary for correctness only for distinct in aggregates
                     //  but it's certainly pleasant to have the final result grouped on nodes by group by columns.
-                boolean newLevel = !(HierarchyExtractor.isHashedBy(_affectedComponent, groupByColumns));
+                boolean newLevel = !(_ot.isHashedBy(_affectedComponent, groupByColumns));
                 if(newLevel){
                     _affectedComponent.setHashIndexes(groupByColumns);
                     OperatorComponent newComponent = new OperatorComponent(_affectedComponent,
@@ -319,7 +321,7 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
         TypeConversion tc = _schema.getType(tableSchemaName, columnName);
 
         //extract the position (index) of the required column
-        int position = HierarchyExtractor.extractComponentIndex(column, _affectedComponent, _queryPlan, _schema, _tan);
+        int position = _ot.getColumnIndex(column, _affectedComponent, _queryPlan, _schema, _tan);
 
         ValueExpression ve = new ColumnReference(tc, position);
         _exprStack.push(ve);

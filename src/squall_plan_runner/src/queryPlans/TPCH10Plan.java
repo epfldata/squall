@@ -6,7 +6,7 @@
 package queryPlans;
 import schema.TPCH_Schema;
 import components.DataSourceComponent;
-import components.JoinComponent;
+import components.EquiJoinComponent;
 import conversion.DateConversion;
 import conversion.DoubleConversion;
 import conversion.IntegerConversion;
@@ -97,7 +97,7 @@ public class TPCH10Plan {
                            .setProjection(projectionOrders);
 
         //-------------------------------------------------------------------------------------
-        JoinComponent C_Ojoin = new JoinComponent(
+        EquiJoinComponent C_Ojoin = new EquiJoinComponent(
 				relationCustomer,
 				relationOrders,
 				_queryPlan).setHashIndexes(Arrays.asList(3));
@@ -114,7 +114,7 @@ public class TPCH10Plan {
                            .setProjection(projectionNation);
         //-------------------------------------------------------------------------------------
 
-        JoinComponent C_O_Njoin = new JoinComponent(
+        EquiJoinComponent C_O_Njoin = new EquiJoinComponent(
 				C_Ojoin,
 				relationNation,
 				_queryPlan).setProjection(new ProjectionOperator(new int[]{0, 1, 2, 4, 5, 6, 7, 8}))
@@ -155,7 +155,7 @@ public class TPCH10Plan {
 	AggregateOperator agg = new AggregateSumOperator(_doubleConv, product, conf)
 		.setGroupByColumns(Arrays.asList(0, 1, 4, 6, 2, 3, 5));
 
-        JoinComponent C_O_N_Ljoin = new JoinComponent(
+        EquiJoinComponent C_O_N_Ljoin = new EquiJoinComponent(
 				C_O_Njoin,
 				relationLineitem,
 				_queryPlan).setProjection(new ProjectionOperator(new int[]{0, 1, 2, 3, 4, 5, 7, 8, 9}))

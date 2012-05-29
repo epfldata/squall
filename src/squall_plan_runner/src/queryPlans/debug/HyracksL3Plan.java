@@ -6,7 +6,7 @@
 package queryPlans.debug;
 
 import components.DataSourceComponent;
-import components.JoinComponent;
+import components.EquiJoinComponent;
 import components.OperatorComponent;
 import conversion.IntegerConversion;
 import expressions.ColumnReference;
@@ -54,7 +54,7 @@ public class HyracksL3Plan {
 
             //-------------------------------------------------------------------------------------
             List<Integer> hashIndexes = Arrays.asList(1);
-            JoinComponent CUSTOMER_ORDERSjoin = new JoinComponent(
+            EquiJoinComponent CUSTOMER_ORDERSjoin = new EquiJoinComponent(
                     relationCustomer,
                     relationOrders,
                     _queryPlan).setHashIndexes(hashIndexes);

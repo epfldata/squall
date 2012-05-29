@@ -6,7 +6,7 @@
 package queryPlans;
 
 import components.DataSourceComponent;
-import components.JoinComponent;
+import components.EquiJoinComponent;
 import components.OperatorComponent;
 import conversion.DoubleConversion;
 import conversion.StringConversion;
@@ -64,7 +64,7 @@ public class HyracksPreAggPlan {
 		SquallStorage secondJoinStorage = new SquallStorage();
 
 		List<Integer> hashIndexes = Arrays.asList(0);
-		JoinComponent CUSTOMER_ORDERSjoin = new JoinComponent(
+		EquiJoinComponent CUSTOMER_ORDERSjoin = new EquiJoinComponent(
 				relationCustomer,
 				relationOrders,
 				_queryPlan).setFirstPreAggProj(projFirstOut)

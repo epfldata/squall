@@ -63,43 +63,47 @@ import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
+import optimizers.OptimizerTranslator;
 import queryPlans.QueryPlan;
 import schema.Schema;
 import util.HierarchyExtractor;
 import util.ParserUtil;
 import util.TableAliasName;
 
-
+/*
+ * Creates hashIndexes/hashExpressions for a given component in a given query plan.
+ *
+ * For example, on join condition R.B = S.B, from component R,
+ *   we need to find the index of B. This is not so easy if
+ *    a) R is no a DataSourceComponent)
+ *    b) many operators down the path
+ */
 public class JoinHashVisitor implements ExpressionVisitor {
     private Schema _schema;
     private QueryPlan _queryPlan;
-
-    //Component must be inside, because without it,
-    //  we cannot instantiate ColumnReference.
-    //I.e. R join S ON R.B=S.B, we need to know on particular component R join S,
-    //  which is the index of R.B (each component can have two parents and a lot of projections on the path)
     private Component _affectedComponent;
+    private TableAliasName _tan;
+    private OptimizerTranslator _ot;
 
-    //If we have ValueExpressions to be joined On, instead of columns
+    //complex condition means that we will use HashExpressions, not HashIndexes.
     //   i.e. R.A=S.A+1 is complexCondition, whereas R.A=S.A and R.B=S.B is not.
-    //Because of later creation of JoinParemeters, both R and S need to have
-    //  hashindexes on the same position, and hashExpressions on the same position.
-    //If this is done manually, some of join conditions can be indexes, some expressions,
-    //  but if we do parsing if we have expression on one place, we do not use indexes.
-    //I.e. R.B = S.B and R.A = S.C + 1.
+    //if complex condition appeared at least once,
+    //   we decide to use HashExpressions all over the place,
+    //   because of unspecified order of HashIndexes and HashExpression,
+    //   when they are interleaved.
+
     private boolean _complexCondition = false;
 
     private Stack<ValueExpression> _exprStack = new Stack<ValueExpression>();
 
     private List<ValueExpression> _expressions = new ArrayList<ValueExpression>();
 
-    private TableAliasName _tan;
-
-    public JoinHashVisitor(Schema schema, QueryPlan queryPlan, Component affectedComponent, TableAliasName tan){
+    public JoinHashVisitor(Schema schema, QueryPlan queryPlan, Component affectedComponent, TableAliasName tan, OptimizerTranslator ot){
         _schema = schema;
         _queryPlan = queryPlan;
         _affectedComponent = affectedComponent;
         _tan = tan;
+        _ot = ot;
     }
 
     public List<ValueExpression> getExpressions(){
@@ -242,7 +246,7 @@ public class JoinHashVisitor implements ExpressionVisitor {
             TypeConversion tc = _schema.getType(tableSchemaName, columnName);
 
             //extract the position (index) of the required column
-            int position = HierarchyExtractor.extractComponentIndex(column, _affectedComponent, _queryPlan, _schema, _tan);
+            int position = _ot.getColumnIndex(column, _affectedComponent, _queryPlan, _schema, _tan);
 
             ValueExpression ve = new ColumnReference(tc, position);
             _exprStack.push(ve);
