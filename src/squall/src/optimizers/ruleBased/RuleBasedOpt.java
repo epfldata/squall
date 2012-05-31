@@ -207,24 +207,24 @@ public class RuleBasedOpt implements Optimizer {
             elem.accept(selectVisitor);
         }
         List<AggregateOperator> aggOps = selectVisitor.getAggOps();
-        List<ValueExpression> selectVEs = selectVisitor.getSelectVEs();
+        List<ValueExpression> groupByVEs = selectVisitor.getGroupByVEs();
 
         Component affectedComponent = _cg.getQueryPlan().getLastComponent();
-        attachSelectClause(aggOps, selectVEs, affectedComponent);
+        attachSelectClause(aggOps, groupByVEs, affectedComponent);
         return (aggOps.isEmpty() ? SelectItemsVisitor.NON_AGG : SelectItemsVisitor.AGG);
     }
 
-    private void attachSelectClause(List<AggregateOperator> aggOps, List<ValueExpression> selectVEs, Component affectedComponent) {
+    private void attachSelectClause(List<AggregateOperator> aggOps, List<ValueExpression> groupByVEs, Component affectedComponent) {
         if (aggOps.isEmpty()){
-            ProjectOperator project = new ProjectOperator(selectVEs);
+            ProjectOperator project = new ProjectOperator(groupByVEs);
             affectedComponent.addOperator(project);
         }else if (aggOps.size() == 1){
             //all the others are group by
             AggregateOperator firstAgg = aggOps.get(0);
 
-            if(ParserUtil.isAllColumnRefs(selectVEs)){
+            if(ParserUtil.isAllColumnRefs(groupByVEs)){
                 //plain fields in select
-                List<Integer> groupByColumns = ParserUtil.extractColumnIndexes(selectVEs);
+                List<Integer> groupByColumns = ParserUtil.extractColumnIndexes(groupByVEs);
                 firstAgg.setGroupByColumns(groupByColumns);
 
                 //Setting new level of components is necessary for correctness only for distinct in aggregates
@@ -240,22 +240,25 @@ public class RuleBasedOpt implements Optimizer {
                     affectedComponent.addOperator(firstAgg);
                 }
             }else{
-                //Sometimes selectExpr contains other functions, so we have to use projections instead of simple groupBy
-                //Check for complexity
+                //Sometimes groupByVEs contains other functions, so we have to use projections instead of simple groupBy
+                //always new level
+
                 if (affectedComponent.getHashExpressions()!=null && !affectedComponent.getHashExpressions().isEmpty()){
+                    //TODO: probably will be solved in cost-based optimizer
                     throw new RuntimeException("Too complex: cannot have hashExpression both for joinCondition and groupBy!");
                 }
 
-                //WARNING: _selectExpr cannot be used on two places: that's why we do deep copy
-               affectedComponent.setHashExpressions((List<ValueExpression>)DeepCopy.copy(selectVEs));
-
-                //always new level
-                ProjectOperator groupByProj = new ProjectOperator((List<ValueExpression>)DeepCopy.copy(selectVEs));
+                //WARNING: groupByVEs cannot be used on two places: that's why we do deep copy
+                ProjectOperator groupByProj = new ProjectOperator((List<ValueExpression>)DeepCopy.copy(groupByVEs));
                 firstAgg.setGroupByProjection(groupByProj);
+
+                //current component
+                affectedComponent.setHashExpressions((List<ValueExpression>)DeepCopy.copy(groupByVEs));
+
+                //next component
                 OperatorComponent newComponent = new OperatorComponent(affectedComponent,
                                                                       ParserUtil.generateUniqueName("OPERATOR"),
                                                                       _cg.getQueryPlan()).addOperator(firstAgg);
-
             }
         }else{
             throw new RuntimeException("For now only one aggregate function supported!");
@@ -272,21 +275,32 @@ public class RuleBasedOpt implements Optimizer {
         List<Expression> atomicExprs = andVisitor.getAtomicExprs();
         List<OrExpression> orExprs = andVisitor.getOrExprs();
 
-        //atomic expression are those who have AND between them. Still, we need to put same columns together
+        /*
+         * we have to group atomicExpr (conjuctive terms) by tblComponentName
+         *   there might be mutliple columns from a single DataSourceComponent, and we want to group them
+         *
+         * conditions such as R.A + R.B = 10 are possible
+         *   not possible to have ColumnReference from multiple tables,
+         *   because than it would be join condition
+         */
         HashMap<String, Expression> collocatedExprs = new HashMap<String, Expression>();
         for(Expression atomicExpr: atomicExprs){
             List<Column> columns = invokeColumnVisitor(atomicExpr);
-            if(columns.size()!=1){
-                throw new RuntimeException("Number of expected columns for atomic expression is exactly one!");
+            if(columns.isEmpty()){
+                //there should be at least one column, otherwise we are comparing constants
+                throw new RuntimeException("Number of expected columns for atomic expression should be non-zero!");
             }
+
+            //all the columns will be from the same table, so we can choose any of them
+            //  (here we choose the first one)
             Column column = columns.get(0);
-            String columnName = column.getWholeColumnName();
-            if(collocatedExprs.containsKey(columnName)){
-                Expression oldExpr = collocatedExprs.get(columnName);
+            String tableCompName = ParserUtil.getComponentName(column.getTable());
+            if(collocatedExprs.containsKey(tableCompName)){
+                Expression oldExpr = collocatedExprs.get(tableCompName);
                 Expression newExpr = new AndExpression(oldExpr, atomicExpr);
-                collocatedExprs.put(columnName, newExpr);
+                collocatedExprs.put(tableCompName, newExpr);
             }else{
-                collocatedExprs.put(columnName, atomicExpr);
+                collocatedExprs.put(tableCompName, atomicExpr);
             }
         }
 
@@ -305,14 +319,18 @@ public class RuleBasedOpt implements Optimizer {
         }
     }
 
+    /*
+     * whereExpression is the part of WHERE clause which refers to affectedComponent
+     * This is the only method in this class where WhereVisitor is actually instantiated and invoked
+     */
     private void processWhereForComponent(Expression whereExpression, Component affectedComponent){
         WhereVisitor whereVisitor = new WhereVisitor(_cg.getQueryPlan(), affectedComponent, _schema, _tan, _ot);
         whereExpression.accept(whereVisitor);
-        attachWhereClause(whereVisitor.getPredicate(), affectedComponent);
+        attachWhereClause(whereVisitor.getSelectOperator(), affectedComponent);
     }
 
-    private void attachWhereClause(Predicate predicate, Component affectedComponent) {
-        affectedComponent.addOperator(new SelectOperator(predicate));
+    private void attachWhereClause(SelectOperator select, Component affectedComponent) {
+        affectedComponent.addOperator(select);
     }
 
     //HELPER

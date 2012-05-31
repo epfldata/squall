@@ -46,11 +46,14 @@ import net.sf.jsqlparser.statement.select.SubSelect;
 
 /*
  * Extracts all the conjunctive terms
- * (R.A=3) and ( (S.A = 3 and R.A =4)or (S.A = 4 and R.A = 3))
+ * (R.A = 3) and ((S.A = 3 and R.A = 4) or (S.A = 4 and R.A = 3))
  */
 public class AndVisitor implements ExpressionVisitor {
 
+    //From the above example: (R.A = 3)
     private List<Expression> _atomicExprs = new ArrayList<Expression>();
+
+    //From the above example: (S.A = 3 and R.A = 4) or (S.A = 4 and R.A = 3)
     private List<OrExpression> _orExprs = new ArrayList<OrExpression>();
 
     public List<Expression> getAtomicExprs(){

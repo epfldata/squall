@@ -8,6 +8,7 @@ package schema;
 import conversion.TypeConversion;
 import java.util.HashMap;
 import java.util.List;
+import utilities.MyUtilities;
 
 
 public class Schema {
@@ -26,6 +27,10 @@ public class Schema {
 
     public int indexOf(String tableName, String column) {
         List<ColumnNameType> columns = tables.get(tableName);
+        return indexOf(columns, column);
+    }
+
+    public int indexOf(List<ColumnNameType> columns, String column){
         for(int i=0; i<columns.size(); i++){
             if(columns.get(i).getName().equals(column)){
                 return i;

@@ -12,25 +12,37 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import optimizers.OptimizerTranslator;
 import queryPlans.QueryPlan;
+import schema.ColumnNameType;
 import schema.Schema;
 import util.ParserUtil;
 import util.TableAliasName;
 
 
 public class RuleTranslator implements OptimizerTranslator{
+    private Schema _schema;
+    private TableAliasName _tan;
+
+    public RuleTranslator(Schema schema, TableAliasName tan){
+        _schema = schema;
+        _tan = tan;
+    }
+
    /*
     * For a given component and column,
     *   find out the index of that column in a given component.
     * not meant to be used with projections - EarlyProjection is the very last thing done on the plan
+    *
+    * tupleSchema is not used here (it's used for Cost-based optimizer,
+    *   where each component updates the schema after each operator)
     */
-    public int getColumnIndex(Column column, Component requestor, QueryPlan queryPlan, Schema schema, TableAliasName tan){
-        Table table = column.getTable();
-        String tableSchemaName = tan.getSchemaName(ParserUtil.getComponentName(table));
-        String tblCompName = ParserUtil.getComponentName(table);
-        Component originator = queryPlan.getComponent(tblCompName);
+    public int getColumnIndex(Column column, Component requestor, QueryPlan queryPlan, List<ColumnNameType> tupleSchema){
         String columnName = column.getColumnName();
+        Table table = column.getTable();
+        String tblCompName = ParserUtil.getComponentName(table);
+        String tableSchemaName = _tan.getSchemaName(tblCompName);
 
-        int originalIndex = schema.indexOf(tableSchemaName, columnName);
+        int originalIndex = _schema.indexOf(tableSchemaName, columnName);
+        Component originator = queryPlan.getComponent(tblCompName);
 
         if (originator.equals(requestor)){
             return originalIndex;

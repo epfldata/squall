@@ -130,12 +130,12 @@ public class ParserMain{
         TableAliasName tan = new TableAliasName(tableList);
 
         //works both for simple and rule-based optimizer
-        OptimizerTranslator ot = new RuleTranslator();
+        OptimizerTranslator ot = new RuleTranslator(schema, tan);
 
         //Simple optimizer provides lefty plans
-        //Optimizer opt = new SimpleOpt(schema, tan, dataPath, extension, ot, map);
+        Optimizer opt = new SimpleOpt(schema, tan, dataPath, extension, ot, map);
         //Dynamic programming query plan
-        Optimizer opt = new RuleBasedOpt(schema, tan, dataPath, extension, ot, map);
+        //Optimizer opt = new RuleBasedOpt(schema, tan, dataPath, extension, ot, map);
 
         ComponentGenerator cg = opt.generate(tableList, joinList, selectItems, whereExpr);
 

@@ -9,8 +9,7 @@ import components.Component;
 import java.util.List;
 import net.sf.jsqlparser.schema.Column;
 import queryPlans.QueryPlan;
-import schema.Schema;
-import util.TableAliasName;
+import schema.ColumnNameType;
 
 
 /*
@@ -22,7 +21,7 @@ public interface OptimizerTranslator {
     * For a given component and column,
     *   find out the index of that column in a given component
     */
-    int getColumnIndex(Column column, Component requestor, QueryPlan queryPlan, Schema schema, TableAliasName tan);
+    int getColumnIndex(Column column, Component requestor, QueryPlan queryPlan, List<ColumnNameType> tupleSchema);
 
     /*
      * Is component already hashed by hashIndexes

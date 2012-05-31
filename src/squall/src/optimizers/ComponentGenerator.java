@@ -51,12 +51,15 @@ public class ComponentGenerator {
         return _subPlans;
     }
 
-    //two tables
     public Component generateSubplan(Table leftTable, Table rightTable, Join join) {
         List<Expression> listExp = ParserUtil.createListExp(join.getOnExpression());
         return generateSubplan(leftTable, rightTable, listExp);
     }
 
+    /*
+     * List<Expression> is a set of join conditions between left and right table.
+     * For Equijoins it is a List<EqualsTo>.
+     */
     public Component generateSubplan(Table leftTable, Table rightTable, List<Expression> listExp) {
         DataSourceComponent leftDSC = generateDataSource(leftTable);
         DataSourceComponent rightDSC = generateDataSource(rightTable);
@@ -95,8 +98,8 @@ public class ComponentGenerator {
 
     //generate Squall components from JSQL structures
     public DataSourceComponent generateDataSource(Table table){
-        String tableSchemaName = _tan.getSchemaName(ParserUtil.getComponentName(table));
         String tableCompName = ParserUtil.getComponentName(table);
+        String tableSchemaName = _tan.getSchemaName(tableCompName);
         String sourceFile = tableSchemaName.toLowerCase();
         List<ColumnNameType> tableSchema = _schema.getTableSchema(tableSchemaName);
 
@@ -136,10 +139,10 @@ public class ComponentGenerator {
         }
     }
 
-    //joinCondition from next level join
-    //Conditions are related only to parents of join,
+    //set hash for this component, knowing its position in the query plan.
+    //  Conditions are related only to parents of join,
     //  but we have to filter who belongs to my branch in JoinHashVisitor.
-    //We don't want to hash on something which will be used to join with same later component in the hierarchy.
+    //  We don't want to hash on something which will be used to join with same later component in the hierarchy.
     private void setHash(Component component, List<Expression> listExp) {
             JoinHashVisitor joinOn = new JoinHashVisitor(_schema, _queryPlan, component, _tan, _ot);
             for(Expression exp: listExp){
@@ -150,13 +153,13 @@ public class ComponentGenerator {
             if(!joinOn.isComplexCondition()){
                 //all the join conditions are represented through columns, no ValueExpression (neither in joined component)
                 //guaranteed that both joined components will have joined columns visited in the same order
-                //i.e R.A =S.A and R.B=S.B, the columns are (R.A, R.B), (S.A, S.B), respectively
+                //i.e R.A=S.A and R.B=S.B, the columns are (R.A, R.B), (S.A, S.B), respectively
                 List<Integer> hashIndexes = ParserUtil.extractColumnIndexes(hashExpressions);
 
-                //set hashColumn for this joinComponent
+                //hash indexes in join condition
                 component.setHashIndexes(hashIndexes);
             }else{
-                //ValueExpression in join condition
+                //hahs expressions in join condition
                 component.setHashExpressions(hashExpressions);
             }
     }

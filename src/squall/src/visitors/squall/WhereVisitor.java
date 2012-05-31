@@ -62,6 +62,7 @@ import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
+import operators.SelectOperator;
 import optimizers.OptimizerTranslator;
 import predicates.AndPredicate;
 import predicates.ComparisonPredicate;
@@ -73,7 +74,10 @@ import schema.Schema;
 import util.ParserUtil;
 import util.TableAliasName;
 
-
+/*
+ * Translates JSQL expressions to a SelectionOperator of a component.
+ *   JSQL expressions *must* refer only to the component.
+ */
 public class WhereVisitor implements ExpressionVisitor {
     private Stack<ValueExpression> _exprStack = new Stack<ValueExpression>();
     private Stack<Predicate> _predStack = new Stack<Predicate>();
@@ -96,11 +100,11 @@ public class WhereVisitor implements ExpressionVisitor {
         _affectedComponent = affectedComponent;
     }
 
-    public Predicate getPredicate(){
-        if(_predStack.size()!=1){
+    public SelectOperator getSelectOperator(){
+        if(_predStack.size() != 1){
             throw new RuntimeException("After WhereVisitor is done, it should contain one predicate exactly!");
         }
-        return _predStack.peek();
+        return new SelectOperator(_predStack.peek());
     }
 
     @Override
@@ -298,7 +302,7 @@ public class WhereVisitor implements ExpressionVisitor {
         TypeConversion tc = _schema.getType(tableSchemaName, columnName);
 
         //extract the position (index) of the required column
-        int position = _ot.getColumnIndex(column, _affectedComponent, _queryPlan, _schema, _tan);
+        int position = _ot.getColumnIndex(column, _affectedComponent, _queryPlan, null);
 
         ValueExpression ve = new ColumnReference(tc, position);
         _exprStack.push(ve);

@@ -58,7 +58,9 @@ import util.ParserUtil;
  * This class contains information regarding all the possible joins between any two tables.
  *   It is used when we want to find out whether two Components can be joined or not
  *   (the necessary condition is that they have at least one R.A = S.B,
- *    where R(S) is one of the ancestors of the first(second) component)
+ *    where R(S) is one of the ancestors of the first(second) component).
+ *
+ * This class populates joinTableExp from join conditition expressions.
  *
  * We don't hash immediately on all the columns which will be used for all the joins below in the hierarchy.
  * For example X=(R join S), Y=(T join V), and we want X join Y.
@@ -70,6 +72,8 @@ import util.ParserUtil;
  * On both sides must be at least one relation (otherwise it is WHERE clause)
  *    and at most one relation - we need it since we index joins by tables keys (TODO).
  * Returns two objects {R->{S, exp{R.A = S.A}} and {T->{S, exp{T.B=S.B}}
+ *
+ * TODO: OR in join condition is not yet supported.
  */
 public class JoinTablesExpVisitor implements ExpressionVisitor {
     private Table _sideTable;

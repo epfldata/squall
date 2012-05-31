@@ -77,7 +77,9 @@ import schema.Schema;
 import util.ParserUtil;
 import util.TableAliasName;
 
-
+/*
+ * Generates Aggregation and
+ */
 public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
     private Schema _schema;
     private QueryPlan _queryPlan;
@@ -91,7 +93,7 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
 
     //these two are of interest for the invoker
     private List<AggregateOperator> _aggOps = new ArrayList<AggregateOperator>();
-    private List<ValueExpression> _selectVEs = new ArrayList<ValueExpression>();
+    private List<ValueExpression> _groupByVEs = new ArrayList<ValueExpression>();
 
     public static final int AGG = 0;
     public static final int NON_AGG = 1;
@@ -110,8 +112,8 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
         return _aggOps;
     }
 
-    public List<ValueExpression> getSelectVEs(){
-        return _selectVEs;
+    public List<ValueExpression> getGroupByVEs(){
+        return _groupByVEs;
     }
 
     //SELECTITEMVISITOR DESIGN PATTERN
@@ -138,7 +140,7 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
 
     private void doneSingleItem(){
         if(_agg == null){
-            _selectVEs.add(_exprStack.peek());
+            _groupByVEs.add(_exprStack.peek());
         }else{
             _aggOps.add(_agg);
         }
@@ -270,7 +272,7 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
         TypeConversion tc = _schema.getType(tableSchemaName, columnName);
 
         //extract the position (index) of the required column
-        int position = _ot.getColumnIndex(column, _affectedComponent, _queryPlan, _schema, _tan);
+        int position = _ot.getColumnIndex(column, _affectedComponent, _queryPlan, null);
 
         ValueExpression ve = new ColumnReference(tc, position);
         _exprStack.push(ve);

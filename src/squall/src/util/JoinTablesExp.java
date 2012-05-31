@@ -7,18 +7,24 @@ package util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.schema.Table;
 
-
+    /*
+     *  **Only conjunctive join conditions are supported!**
+     *
+     *  R,S: R.A=S.A is represented as:
+     *  {R, {S, R.A = S.A}} and {S, {R, R.A = S.A}}
+     *    so that we can inquire for both tables
+     *
+     *  Expression are always EqualsTo, unless from ThetaJoinComponent
+     */
 public class JoinTablesExp {
-    //R,S: R.A=S.A is represented as:
-    //{R, {S, R.A = S.A}} and {S, {R, R.A = S.A}}
-    //so that we can inquire for both tables
-                                                //this Expressions are EqualsTo
+    
      private HashMap<String, HashMap<String, List<Expression>>> _tablesJoinExp = new HashMap<String, HashMap<String, List<Expression>>>();
      private TableAliasName _tan;
 
@@ -26,7 +32,7 @@ public class JoinTablesExp {
          _tan = tan;
      }
 
-     public void addEntry(Table leftTable, Table rightTable, EqualsTo exp){
+     public void addEntry(Table leftTable, Table rightTable, Expression exp){
          String leftName = ParserUtil.getComponentName(leftTable);
          String rightName = ParserUtil.getComponentName(rightTable);
 
@@ -54,19 +60,28 @@ public class JoinTablesExp {
          }
     }
 
-    public List<String> getJoinedWith(Table table){
-        return getJoinedWith(ParserUtil.getComponentName(table));
-    }
-
+    /*
+     * Get a list of tables joinable form a set of DataSourceComponents(ancestors)
+     *   This might return duplicates: For example, R.A=S.A and S.B=T.B and R.A=T.C
+     *   If we want to join R-S with T, then getJoinedWith(R, S) will return (T, T)
+     *   To fix the problem, we used sets, and then we converted it back to List<String>
+     */
     public List<String> getJoinedWith(List<String> ancestors) {
-        List<String> result = new ArrayList<String>();
+        Set<String> result = new HashSet<String>();
         for(String ancestor: ancestors){
             List<String> singleJoinedWith = getJoinedWith(ancestor);
             result.addAll(singleJoinedWith);
         }
-        return result;
+        return new ArrayList<String>(result);
     }
 
+    public List<String> getJoinedWith(Table table){
+        return getJoinedWith(ParserUtil.getComponentName(table));
+    }
+
+    /*
+     * Get a list of tables DataSourceComponent named tblCompName can join with
+     */
     public List<String> getJoinedWith(String tblCompName){
         if(!_tablesJoinExp.containsKey(tblCompName)){
             throw new RuntimeException("Table doesn't exist in JoinTablesExp: "+tblCompName);
@@ -80,6 +95,11 @@ public class JoinTablesExp {
         return joinedWith;
     }
 
+    /*
+     * Get a list of join condition expressions.
+     * For EquiJoin, it's in form of EqualsTo.
+     * We support only conjunctive join conditions.
+     */
    public List<Expression> getExpressions(List<String> tables1, List<String> tables2) {
         List<Expression> result = new ArrayList<Expression>();
         for(String table1: tables1){

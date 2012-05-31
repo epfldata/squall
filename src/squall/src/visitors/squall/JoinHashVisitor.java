@@ -65,17 +65,20 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import optimizers.OptimizerTranslator;
 import queryPlans.QueryPlan;
+import schema.ColumnNameType;
 import schema.Schema;
 import util.HierarchyExtractor;
 import util.ParserUtil;
 import util.TableAliasName;
 
 /*
- * Creates hashIndexes/hashExpressions for a given component in a given query plan.
+ * Returns a list of hashExpressions for a given component in a given query plan.
+ * If we do not have complexCondition, 
+ *   outside this class hashIndexes are extracted from hashExpressions.
  *
  * For example, on join condition R.B = S.B, from component R,
  *   we need to find the index of B. This is not so easy if
- *    a) R is no a DataSourceComponent)
+ *    a) R is not a DataSourceComponent)
  *    b) many operators down the path
  */
 public class JoinHashVisitor implements ExpressionVisitor {
@@ -96,7 +99,7 @@ public class JoinHashVisitor implements ExpressionVisitor {
 
     private Stack<ValueExpression> _exprStack = new Stack<ValueExpression>();
 
-    private List<ValueExpression> _expressions = new ArrayList<ValueExpression>();
+    private List<ValueExpression> _hashExpressions = new ArrayList<ValueExpression>();
 
     public JoinHashVisitor(Schema schema, QueryPlan queryPlan, Component affectedComponent, TableAliasName tan, OptimizerTranslator ot){
         _schema = schema;
@@ -107,7 +110,7 @@ public class JoinHashVisitor implements ExpressionVisitor {
     }
 
     public List<ValueExpression> getExpressions(){
-        return _expressions;
+        return _hashExpressions;
     }
 
     public boolean isComplexCondition(){
@@ -130,7 +133,7 @@ public class JoinHashVisitor implements ExpressionVisitor {
             _exprStack = new Stack<ValueExpression>();
             ex.accept(this);
             ValueExpression ve = _exprStack.pop();
-            _expressions.add(ve);
+            _hashExpressions.add(ve);
         }catch(NotFromMyBranchException exc){
             //expression would not be added in the list
         }
@@ -237,7 +240,7 @@ public class JoinHashVisitor implements ExpressionVisitor {
     @Override
     public void visit(Column column) {
         String tableCompName = ParserUtil.getComponentName(column.getTable());
-        String tableSchemaName = _tan.getSchemaName(ParserUtil.getComponentName(column.getTable()));
+        String tableSchemaName = _tan.getSchemaName(tableCompName);
         List<String> ancestorNames = HierarchyExtractor.getAncestorNames(_affectedComponent);
 
         if(ancestorNames.contains(tableCompName)){
@@ -246,7 +249,7 @@ public class JoinHashVisitor implements ExpressionVisitor {
             TypeConversion tc = _schema.getType(tableSchemaName, columnName);
 
             //extract the position (index) of the required column
-            int position = _ot.getColumnIndex(column, _affectedComponent, _queryPlan, _schema, _tan);
+            int position = _ot.getColumnIndex(column, _affectedComponent, _queryPlan, null);
 
             ValueExpression ve = new ColumnReference(tc, position);
             _exprStack.push(ve);
