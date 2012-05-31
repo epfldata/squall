@@ -53,6 +53,7 @@ public class Division<T extends Number & Comparable<T>> implements ValueExpressi
         return _wrapper.fromDouble(result);
     }
 
+    /*
     @Override
     public T eval(List<String> firstTuple, List<String> secondTuple){
         T first = _veList.get(0).eval(firstTuple, secondTuple);
@@ -65,7 +66,7 @@ public class Division<T extends Number & Comparable<T>> implements ValueExpressi
         }
         return _wrapper.fromDouble(result);
     }
-
+*/
      @Override
     public String evalString(List<String> tuple) {
         T result = eval(tuple);
@@ -98,5 +99,23 @@ public class Division<T extends Number & Comparable<T>> implements ValueExpressi
         }
         return sb.toString();
     }
+
+	@Override
+	public void changeValues(int i, ValueExpression<T> newExpr) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void inverseNumber() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean isNegative() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
 }

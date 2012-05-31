@@ -1,5 +1,7 @@
 package thetajoin.indexes;
 
+import gnu.trove.list.array.TIntArrayList;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -18,21 +20,21 @@ public class HashIndex<KeyType> implements Index<KeyType> {
 	private static final long serialVersionUID = 1L;
 
 	
-	private HashMap<KeyType, ArrayList<Long>> _index;
+	private HashMap<KeyType, TIntArrayList> _index;
 	
 	public HashIndex()
 	{
-		_index = new HashMap<KeyType, ArrayList<Long>>();
+		_index = new HashMap<KeyType, TIntArrayList>();
 	}
 	
 	@Override
-	public ArrayList<Long> getValues(KeyType key) 
+	public TIntArrayList getValues(KeyType key) 
 	{
 		return _index.get(key);
 	}
 	
 	@Override
-	public ArrayList<Long> getValues(KeyType key, int operator) 
+	public TIntArrayList getValues(KeyType key, int operator) 
 	{
 		if (operator != ComparisonPredicate.EQUAL_OP)
 			return null;
@@ -41,10 +43,10 @@ public class HashIndex<KeyType> implements Index<KeyType> {
 	}
 
 	@Override
-	public void put(KeyType key, long row_id) {
-		ArrayList<Long> idsList = _index.get(key);
+	public void put(KeyType key, Integer row_id) {
+		TIntArrayList idsList = _index.get(key);
 		if(idsList == null){
-			idsList = new ArrayList<Long>();
+			idsList = new TIntArrayList(1);
 			_index.put(key, idsList);
 		}
 		idsList.add(row_id);

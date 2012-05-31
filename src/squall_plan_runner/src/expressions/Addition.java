@@ -50,15 +50,20 @@ public class Addition<T extends Number & Comparable<T>> implements ValueExpressi
         return _wrapper.fromDouble(result);
     }
     
-    @Override
+   /* @Override
     public T eval(List<String> firstTuple, List<String> secondTuple){
         double result = 0;
-        for(ValueExpression<T> factor: _veList){
-            T value = (T)factor.eval(firstTuple, secondTuple);
-            result += _wrapper.toDouble(value);
-        }
+   
+    	ValueExpression<T> factor = _veList.get(0);
+        T value = (T)factor.eval(firstTuple);
+        result += _wrapper.toDouble(value);
+        
+        factor = _veList.get(1);
+        value = (T)factor.eval(secondTuple);
+        result += _wrapper.toDouble(value);
+
         return _wrapper.fromDouble(result);
-    }
+    }*/
 
      @Override
     public String evalString(List<String> tuple) {
@@ -92,5 +97,24 @@ public class Addition<T extends Number & Comparable<T>> implements ValueExpressi
         }
         return sb.toString();
     }
+
+    @Override
+    public void changeValues(int i, ValueExpression<T> newExpr)
+    {
+    	_veList.remove(i);
+    	_veList.add(i, newExpr);
+    }
+
+	@Override
+	public void inverseNumber() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean isNegative() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
 }

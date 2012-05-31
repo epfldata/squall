@@ -296,10 +296,15 @@ public class MyUtilities{
         }
         
         public static InputDeclarer thetaAttachEmitterComponents(InputDeclarer currentBolt, 
-                StormEmitter emitter1, StormEmitter emitter2, MatrixAssignment assignment,Map map){
+                StormEmitter emitter1, StormEmitter emitter2,List<String> allCompNames,MatrixAssignment assignment,Map map){
         	
         	//MatrixAssignment assignment = new MatrixAssignment(firstRelationSize, secondRelationSize, parallelism,-1);
-        	ThetaJoinStaticMapping mapping = new ThetaJoinStaticMapping(emitter1.getName(), emitter2.getName(), assignment,map);
+        	
+        	
+        	String firstEmitterIndex = String.valueOf(allCompNames.indexOf(emitter1.getName()));
+        	String secondEmitterIndex = String.valueOf(allCompNames.indexOf(emitter2.getName()));
+        	
+        	ThetaJoinStaticMapping mapping = new ThetaJoinStaticMapping(firstEmitterIndex, secondEmitterIndex, assignment,map);
         	
             ArrayList<StormEmitter> emittersList = new ArrayList<StormEmitter>();
             emittersList.add(emitter1);

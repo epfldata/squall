@@ -6,10 +6,13 @@
 package queryPlans;
 
 import schema.TPCH_Schema;
+
+import components.Component;
 import components.DataSourceComponent;
-import components.EquiJoinComponent;
+import components.ThetaJoinComponent;
 import conversion.DateConversion;
 import conversion.DoubleConversion;
+import conversion.IntegerConversion;
 import conversion.NumericConversion;
 import conversion.StringConversion;
 import conversion.TypeConversion;
@@ -19,9 +22,9 @@ import expressions.Multiplication;
 import expressions.Subtraction;
 import expressions.ValueExpression;
 import expressions.ValueSpecification;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import operators.AggregateOperator;
 import operators.AggregateSumOperator;
@@ -32,11 +35,14 @@ import predicates.AndPredicate;
 import predicates.BetweenPredicate;
 import predicates.ComparisonPredicate;
 import predicates.OrPredicate;
+import queryPlans.QueryPlan;
 
-public class TPCH7Plan {
-    private static Logger LOG = Logger.getLogger(TPCH7Plan.class);
+public class ThetaTPCH7Plan {
+    private static Logger LOG = Logger.getLogger(ThetaTPCH7Plan.class);
 
     private QueryPlan _queryPlan = new QueryPlan();
+    
+    private static final IntegerConversion _ic = new IntegerConversion();
 
     private static final String    _date1Str = "1995-01-01";
     private static final String    _date2Str = "1996-12-31";
@@ -49,12 +55,12 @@ public class TPCH7Plan {
     private static final Date _date1=_dateConv.fromString(_date1Str);
     private static final Date _date2=_dateConv.fromString(_date2Str);
 
-    public TPCH7Plan(String dataPath, String extension, Map conf){
+    public ThetaTPCH7Plan(String dataPath, String extension, Map conf){
 
         //-------------------------------------------------------------------------------------
-        List<Integer> hashNation2 = Arrays.asList(1);
+        ArrayList<Integer> hashNation1 = new ArrayList<Integer>(Arrays.asList(1));
 
-        SelectOperator selectionNation2 = new SelectOperator(
+        SelectOperator selectionNation1 = new SelectOperator(
                 new OrPredicate(
                     new ComparisonPredicate(
                         new ColumnReference(_sc, 1),
@@ -65,18 +71,18 @@ public class TPCH7Plan {
                     )
                 ));
 
-        ProjectOperator projectionNation2 = new ProjectOperator(new int[]{1, 0});
+        ProjectOperator projectionNation1 = new ProjectOperator(new int[]{1, 0});
 
-        DataSourceComponent relationNation2 = new DataSourceComponent(
+        DataSourceComponent relationNation1 = new DataSourceComponent(
                 "NATION1",
                 dataPath + "nation" + extension,
                 TPCH_Schema.nation,
-                _queryPlan).setHashIndexes(hashNation2)
-                           .addOperator(selectionNation2)
-                           .addOperator(projectionNation2);
+                _queryPlan).setHashIndexes(hashNation1)
+                           .addOperator(selectionNation1)
+                           .addOperator(projectionNation1);
 
         //-------------------------------------------------------------------------------------
-        List<Integer> hashCustomer = Arrays.asList(1);
+        ArrayList<Integer> hashCustomer = new ArrayList<Integer>(Arrays.asList(1));
 
         ProjectOperator projectionCustomer = new ProjectOperator(new int[]{0,3});
 
@@ -88,14 +94,23 @@ public class TPCH7Plan {
                            .addOperator(projectionCustomer);
 
         //-------------------------------------------------------------------------------------
-        EquiJoinComponent N_Cjoin = new EquiJoinComponent(
-                relationNation2,
+        ColumnReference colN = new ColumnReference(_ic, 1);
+		ColumnReference colC = new ColumnReference(_ic, 1);
+		ComparisonPredicate N_C_comp = new ComparisonPredicate(
+				ComparisonPredicate.EQUAL_OP, colN, colC);
+				
+        Component N_Cjoin;
+        
+
+        N_Cjoin = new ThetaJoinComponent(
+                relationNation1,
                 relationCustomer,
                 _queryPlan).addOperator(new ProjectOperator(new int[]{0, 2}))
-                           .setHashIndexes(Arrays.asList(1));
+                .setJoinPredicate(N_C_comp);
+
 
         //-------------------------------------------------------------------------------------
-        List<Integer> hashOrders = Arrays.asList(1);
+        ArrayList<Integer> hashOrders = new ArrayList<Integer>(Arrays.asList(1));
 
         ProjectOperator projectionOrders = new ProjectOperator(new int[]{0,1});
 
@@ -107,14 +122,25 @@ public class TPCH7Plan {
                            .addOperator(projectionOrders);
 
         //-------------------------------------------------------------------------------------
-        EquiJoinComponent N_C_Ojoin = new EquiJoinComponent(
-                N_Cjoin,
-                relationOrders,
-                _queryPlan).addOperator(new ProjectOperator(new int[]{0, 2}))
-                           .setHashIndexes(Arrays.asList(1));
+        
+        ColumnReference colN_C = new ColumnReference(_ic, 1);
+		ColumnReference colO = new ColumnReference(_ic, 1);
+		ComparisonPredicate N_C_O_comp = new ComparisonPredicate(
+				ComparisonPredicate.EQUAL_OP, colN_C, colO);
+                
+        Component N_C_Ojoin;
+        
+    	N_C_Ojoin = new ThetaJoinComponent(
+        N_Cjoin,
+        relationOrders,
+        _queryPlan).addOperator(new ProjectOperator(new int[]{0, 2}))
+                   .setJoinPredicate(N_C_O_comp);
+				 //.setHashIndexes(new ArrayList<Integer>(Arrays.asList(1)));	
+        
+        
 
         //-------------------------------------------------------------------------------------
-        List<Integer> hashSupplier = Arrays.asList(1);
+        ArrayList<Integer> hashSupplier = new ArrayList<Integer>(Arrays.asList(1));
 
         ProjectOperator projectionSupplier = new ProjectOperator(new int[]{0,3});
 
@@ -126,27 +152,37 @@ public class TPCH7Plan {
                            .addOperator(projectionSupplier);
 
         //-------------------------------------------------------------------------------------
-        List<Integer> hashNation1 = Arrays.asList(1);
+        ArrayList<Integer> hashNation2 = new ArrayList<Integer>(Arrays.asList(1));
 
-        ProjectOperator projectionNation1 = new ProjectOperator(new int[]{1,0});
+        ProjectOperator projectionNation2 = new ProjectOperator(new int[]{1,0});
 
-        DataSourceComponent relationNation1 = new DataSourceComponent(
+        DataSourceComponent relationNation2 = new DataSourceComponent(
                 "NATION2",
                 dataPath + "nation" + extension,
                 TPCH_Schema.nation,
-                _queryPlan).setHashIndexes(hashNation1)
-                           .addOperator(selectionNation2)
-                           .addOperator(projectionNation1);
+                _queryPlan).setHashIndexes(hashNation2)
+                           .addOperator(selectionNation1)
+                           .addOperator(projectionNation2);
 
         //-------------------------------------------------------------------------------------
-        EquiJoinComponent S_Njoin = new EquiJoinComponent(
+
+        ColumnReference colS = new ColumnReference(_ic, 1);
+		ColumnReference colN2 = new ColumnReference(_ic, 1);
+		ComparisonPredicate S_N_comp = new ComparisonPredicate(
+				ComparisonPredicate.EQUAL_OP, colS, colN2);
+                
+        Component S_Njoin;
+
+        		S_Njoin = new ThetaJoinComponent(
                 relationSupplier,
-                relationNation1,
+                relationNation2,
                 _queryPlan).addOperator(new ProjectOperator(new int[]{0, 2}))
-                           .setHashIndexes(Arrays.asList(0));
+                .setJoinPredicate(S_N_comp);
+                           //.setHashIndexes(new ArrayList<Integer>(Arrays.asList(0)));
+
 
        //-------------------------------------------------------------------------------------
-        List<Integer> hashLineitem = Arrays.asList(2);
+        ArrayList<Integer> hashLineitem = new ArrayList<Integer>(Arrays.asList(2));
 
         SelectOperator selectionLineitem = new SelectOperator(
                 new BetweenPredicate(
@@ -184,11 +220,19 @@ public class TPCH7Plan {
                            .addOperator(projectionLineitem);
 
         //-------------------------------------------------------------------------------------
-        EquiJoinComponent L_S_Njoin = new EquiJoinComponent(
-                relationLineitem,
-                S_Njoin,
-                _queryPlan).addOperator(new ProjectOperator(new int[]{4, 0, 1, 3}))
-                           .setHashIndexes(Arrays.asList(3));
+        
+        ColumnReference colL = new ColumnReference(_ic, 2);
+		ColumnReference colS_N = new ColumnReference(_ic, 0);
+		ComparisonPredicate L_S_N_comp = new ComparisonPredicate(
+				ComparisonPredicate.EQUAL_OP, colL, colS_N);
+        
+        Component L_S_Njoin;
+
+    		L_S_Njoin = new ThetaJoinComponent(
+            relationLineitem,
+            S_Njoin,
+            _queryPlan).addOperator(new ProjectOperator(new int[]{4, 0, 1, 3}))
+            .setJoinPredicate(L_S_N_comp);
 
         //-------------------------------------------------------------------------------------
         // set up aggregation function on the same StormComponent(Bolt) where the last join is
@@ -215,13 +259,21 @@ public class TPCH7Plan {
                 ));
 
         AggregateOperator agg = new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 4), conf)
-                .setGroupByColumns(Arrays.asList(2, 0, 3));
+                .setGroupByColumns(new ArrayList<Integer>(Arrays.asList(0, 2, 3)));
+        
+        ColumnReference colN_C_O = new ColumnReference(_ic, 1);
+		ColumnReference colL_S_N = new ColumnReference(_ic, 3);
+		ComparisonPredicate N_C_O_L_S_N_comp = new ComparisonPredicate(
+				ComparisonPredicate.EQUAL_OP, colN_C_O, colL_S_N);
 
-        EquiJoinComponent N_C_O_L_S_Njoin = new EquiJoinComponent(
-                N_C_Ojoin,
-                L_S_Njoin,
-                _queryPlan).addOperator(so)
-                           .addOperator(agg);
+                
+        Component N_C_O_L_S_Njoin;
+
+        	N_C_O_L_S_Njoin = new ThetaJoinComponent(
+            N_C_Ojoin,
+            L_S_Njoin,
+            _queryPlan).addOperator(so)
+                       .addOperator(agg).setJoinPredicate(N_C_O_L_S_N_comp);
         //-------------------------------------------------------------------------------------
         AggregateOperator overallAgg =
                     new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 1), conf)

@@ -18,6 +18,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import expressions.ValueExpression;
+import gnu.trove.list.array.TIntArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
@@ -35,6 +36,7 @@ import storage.TupleStorage;
 
 import org.apache.log4j.Logger;
 
+import thetajoin.predicateAnalyser.PredicateAnalyser;
 import predicates.ComparisonPredicate;
 import predicates.Predicate;
 import stormComponents.synchronization.TopologyKiller;
@@ -78,6 +80,14 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 	private List<Index> _firstRelationIndexes, _secondRelationIndexes;
 	private List<Integer> _operatorForIndexes;
 	private List<Object> _typeOfValueIndexed;
+	
+	private List<Object> _listCoefA;
+	private List<Object> _listCoefB;
+	
+	private List<Integer> _listColRef = new ArrayList<Integer>();
+
+	
+	
 	private boolean _existIndexes = false;
 
 	//for No ACK: the total number of tasks of all the parent compoonents
@@ -135,7 +145,7 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 		Matrix makides = new Matrix(firstCardinality, secondCardinality);
 		_partitioning = new OptimalPartition (makides, parallelism);
 		
-		currentBolt = MyUtilities.thetaAttachEmitterComponents(currentBolt, firstEmitter, secondEmitter,_partitioning,conf);
+		currentBolt = MyUtilities.thetaAttachEmitterComponents(currentBolt, firstEmitter, secondEmitter,allCompNames,_partitioning,conf);
 		
 		if( _hierarchyPosition == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf))){
 			killer.registerComponent(this, parallelism);
@@ -150,15 +160,19 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 		_secondRelationStorage = new TupleStorage();
 
 		
-		//TODO
-		//a function that take joinPredicate,
-		//decide if it is possible to construct usefull indexes and switch a boolean
-		//if(function(joinPredicate){
+PredicateAnalyser predicateAnalyser = new PredicateAnalyser();
+		
+		Predicate modifiedPredicate = predicateAnalyser.analyse(_joinPredicate);
+		System.out.println("--"+modifiedPredicate);
+		
+		if (modifiedPredicate == _joinPredicate) { //cannot create index
+			_existIndexes = false;
+		} else {
+			System.out.println("index-----------------");
+			_joinPredicate = modifiedPredicate;
 			createIndexes();
 			_existIndexes = true;
-		//}else{
-		//	_existIndexes = false;
-		//}
+		}
 
 	}
 	
@@ -171,6 +185,11 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 		_secondRelationIndexes = new ArrayList<Index>(visitor._secondRelationIndexes);
 		_operatorForIndexes = new ArrayList<Integer>(visitor._operatorForIndexes);
 		_typeOfValueIndexed = new ArrayList<Object>(visitor._typeOfValueIndexed);
+		
+		_listCoefA = new ArrayList<Object>(visitor._coefA);
+		_listCoefB = new ArrayList<Object>(visitor._coefB);
+		
+		_listColRef = new ArrayList<Integer>(visitor._colsRef);
 	}
 	
 
@@ -222,7 +241,7 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 		}
 
 		//add the stormTuple to the specific storage
-		long row_id = affectedStorage.insert(inputTupleString);
+		int row_id = affectedStorage.insert(inputTupleString);
 
 		List<String> valuesToApplyOnIndex = null;
 		
@@ -241,7 +260,7 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 		_collector.ack(stormTupleRcv);
 	}
 	
-	private List<String> updateIndexes(Tuple stormTupleRcv, List<Index> affectedIndexes, long row_id){
+	private List<String> updateIndexes(Tuple stormTupleRcv, List<Index> affectedIndexes, int row_id){
 
 		String inputComponentIndex = stormTupleRcv.getString(0); // Table name
 		List<String> tuple = (List<String>) stormTupleRcv.getValue(1); //INPUT TUPLE
@@ -260,12 +279,9 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 
 		List<String> valuesToIndex = new ArrayList<String>(visitor._valuesToIndex);
 		List<Object> typesOfValuesToIndex = new ArrayList<Object>(visitor._typesOfValuesToIndex);
-System.out.println("values----"+valuesToIndex);
-System.out.println("types----"+typesOfValuesToIndex);
+		
 		for(int i=0; i<affectedIndexes.size(); i++){
-			if(typesOfValuesToIndex.get(i) instanceof Integer){
-				affectedIndexes.get(i).put(Integer.parseInt(valuesToIndex.get(i)), row_id);
-			}else if(typesOfValuesToIndex.get(i) instanceof Double){
+			if(typesOfValuesToIndex.get(i) instanceof Integer || typesOfValuesToIndex.get(i) instanceof Double){
 				affectedIndexes.get(i).put(Double.parseDouble(valuesToIndex.get(i)), row_id);
 			}else if(typesOfValuesToIndex.get(i) instanceof String){
 				affectedIndexes.get(i).put(valuesToIndex.get(i), row_id);
@@ -273,7 +289,7 @@ System.out.println("types----"+typesOfValuesToIndex);
 				throw new RuntimeException("non supported type");
 			}
 			
-		}	
+		}
 		
 		return valuesToIndex;
 		
@@ -290,22 +306,19 @@ System.out.println("types----"+typesOfValuesToIndex);
 
 		TupleStorage tuplesToJoin = new TupleStorage();
 		selectTupleToJoin(oppositeStorage, oppositeIndexes, isFromFirstEmitter, valuesToApplyOnIndex, tuplesToJoin);
-		System.out.println("list"+tuplesToJoin);
 		join(stormTupleRcv, tuple, isFromFirstEmitter, tuplesToJoin);
 	}
 	
 	private void selectTupleToJoin(TupleStorage oppositeStorage,
 			List<Index> oppositeIndexes, boolean isFromFirstEmitter,
 			List<String> valuesToApplyOnIndex, TupleStorage tuplesToJoin){
-		
-		System.out.println("valuetoApply"+valuesToApplyOnIndex);
-		
+				
 		if(!_existIndexes ){
-			tuplesToJoin = oppositeStorage;
+			tuplesToJoin.copy(oppositeStorage);
 			return;
 		}
 		
-		List<Long> rowIds = new ArrayList<Long>();
+		TIntArrayList rowIds = new TIntArrayList();
 		// If there is atleast one index (so we have single join conditions with 1 index per condition)
 		// Get the row indices in the storage of the opposite relation that
 		// satisfy each join condition (equijoin / inequality)
@@ -314,52 +327,29 @@ System.out.println("types----"+typesOfValuesToIndex);
 		
 		for (int i = 0; i < oppositeIndexes.size(); i ++)
 		{
-			List<Long> currentRowIds = null;
-			//TODO
-			/*		
-			SingleThetaJoinParameters currentJoinParam = _joinParameters.get(i);
-			ExpressionOperator currentOperator = currentJoinParam.operator;
-			
-			// If we have indexes, there is only one join key in this join condition, get it 
-			String joinValue = affectedJoinKeyValues.get(i).get(0); 
-			
-			ThetaJoinIndex currentOpposIndex = oppositeIndexes.get(i);
-			
-			// If the join condition is an equality/inequality expression (of the form R.0 = a * S.1 + b)
-			// we need to evaluate the opposite key value and use this to access the index
-			if (currentJoinParam.type == ThetaJoinType.EQUI_EXPR || currentJoinParam.type == ThetaJoinType.INEQUALITY_EXPR)
-			{
-				if (currentJoinParam.keyClass == KeyClass.DOUBLE || currentJoinParam.keyClass == KeyClass.INT)
-				{
-					// Apply the "R op a * S + b" only to numerical columns!! 
-					Double val;
-					double a = currentJoinParam.aParameter;
-					double b = currentJoinParam.bParameter;
-					if (a == 0)
-						throw new RuntimeException("a = 0!");
-					
-					if (isFromFirstEmitter)
-					{
-						val = (Double.parseDouble(joinValue) - b) / a;
-					}
-					else
-					{
-						val = a * Double.parseDouble(joinValue) + b;
-					}
-					
-					joinValue = val.toString();
-				}
+			TIntArrayList currentRowIds = null;
 
-				
-			}
-			*/
 			Index currentOpposIndex = oppositeIndexes.get(i);
 			String value = valuesToApplyOnIndex.get(i);
-			int currentOperator = -1;
-			System.out.println("Index:"+currentOpposIndex);
+			
+			
+			//Check if the join condition is with numerical value or String
+			//If String -> do nothing, if numeric we precalulate in order to optimize
+			if(_typeOfValueIndexed.get(i) instanceof Integer || _typeOfValueIndexed.get(i) instanceof Double){
+				Double val ;
+				if(isFromFirstEmitter){
+					val = (Double.parseDouble(value) - (Double)_listCoefB.get(i)) / (Double)_listCoefA.get(i);
+				}else{
+					val = (Double)_listCoefA.get(i) * Double.parseDouble(value) + (Double)_listCoefB.get(i);
+				}
+				value = val.toString();
+			}
+			
+			
+			int currentOperator = _operatorForIndexes.get(i);
 			// Switch inequality operator if the tuple coming is from the other relation
 			if (isFromFirstEmitter){
-				int operator = _operatorForIndexes.get(i);
+				int operator = currentOperator;
 				
 				if (operator == ComparisonPredicate.GREATER_OP){
 					currentOperator = ComparisonPredicate.LESS_OP;
@@ -373,24 +363,21 @@ System.out.println("types----"+typesOfValuesToIndex);
 				//then it is an equal or not equal so we dont switch the operator
 				}else{
 					currentOperator = operator;		
-				}
-				
+				}	
 			}
-			System.out.println("typeIndexed:"+_typeOfValueIndexed.get(i));
+
 			// Get the values from the index (check type first)
-			if(_typeOfValueIndexed.get(i) instanceof Integer){
-				System.out.println("INT");
-				currentRowIds = currentOpposIndex.getValues(Integer.parseInt(value), currentOperator );
-			}else if(_typeOfValueIndexed.get(i) instanceof Double){
-				currentRowIds = currentOpposIndex.getValues(Double.parseDouble(value), currentOperator );
-			}else if(_typeOfValueIndexed.get(i) instanceof String){
+			if(_typeOfValueIndexed.get(i) instanceof String){
 				currentRowIds = currentOpposIndex.getValues(value, currentOperator );
+			//Even if valueIndexed is at first time an integer with precomputation a*col +b, it become a double
+			}else if(_typeOfValueIndexed.get(i) instanceof Double || _typeOfValueIndexed.get(i) instanceof Integer){
+				currentRowIds = currentOpposIndex.getValues(Double.parseDouble(value), currentOperator );
 			}else{
 				throw new RuntimeException("non supported type");
 			}
 				
 			
-			System.out.println("currentIDS:"+currentRowIds);
+			//System.out.println("currentIDS:"+currentRowIds);
 			
 			// Compute the intersection
 			// TODO: Search only within the ids that are in rowIds from previous join conditions
@@ -411,7 +398,8 @@ System.out.println("types----"+typesOfValuesToIndex);
 		
 	
 		//generate tuplestorage
-		for(Long id: rowIds){
+		for(int i = 0; i < rowIds.size(); i++){
+			int id = rowIds.get(i);
 			tuplesToJoin.insert(oppositeStorage.get(id));
 			
 		}
@@ -427,7 +415,7 @@ System.out.println("types----"+typesOfValuesToIndex);
 			return;
 		}
  
-		for (long i=0; i<oppositeStorage.size(); i++) {
+		for (int i=0; i<oppositeStorage.size(); i++) {
 			String oppositeTupleString = oppositeStorage.get(i);
 			
 			List<String> oppositeTuple= MyUtilities.stringToTuple(oppositeTupleString, getComponentConfiguration());
@@ -447,17 +435,17 @@ System.out.println("types----"+typesOfValuesToIndex);
 				// Create the output tuple by omitting the oppositeJoinKeys (ONLY for equi-joins since they are added 
 				// by the first relation), if any (in case of cartesian product there are none)
 				List<String> outputTuple = null;
-				//TODO
-				/*if (!_equiJoinOmitRelBIndices.isEmpty())
+				
+				if (!_listColRef.isEmpty())
 				{
 					//This version, removes all equi-join keys of the second relation from the output tuple
-					outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple,_equiJoinOmitRelBIndices);
+					outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple,_listColRef);
 				}
 				else
-				{*/
+				{
 					// Cartesian product - Outputs all attributes
 					outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);
-				//}
+				}
 
 				applyOperatorsAndSend(stormTuple, outputTuple);
 

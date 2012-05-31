@@ -56,7 +56,7 @@ public class EquiMatrixAssignment implements Serializable, MatrixAssignment{
 		 */
 		double denominator =  Math.sqrt(_sizeS * _sizeT / _r);
 		if( (_sizeS % denominator)==0 && (_sizeT % denominator)==0){
-			System.out.println("IF ONE!!");
+//			System.out.println("IF ONE!!");
 			_r_S= (int) (_sizeS/denominator);
 			_r_T= (int) (_sizeT/denominator);
 		}

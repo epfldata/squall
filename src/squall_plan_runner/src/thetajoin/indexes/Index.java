@@ -1,7 +1,10 @@
 package thetajoin.indexes;
 
+import gnu.trove.list.array.TIntArrayList;
+
 import java.io.Serializable;
 import java.util.ArrayList;
+
 
 /**
  * 
@@ -10,11 +13,11 @@ import java.util.ArrayList;
  *         the storage structures (where the tuples are saved)
  */
 public interface Index<KeyType> extends Serializable {
+	
+	public TIntArrayList getValues(KeyType key, int operator);
 
-	public ArrayList<Long> getValues(KeyType key, int operator);
+	public void put(KeyType key, Integer row_id);
 
-	public void put(KeyType key, long row_id);
-
-	public ArrayList<Long> getValues(KeyType key);
+	public TIntArrayList getValues(KeyType key);
 
 }
