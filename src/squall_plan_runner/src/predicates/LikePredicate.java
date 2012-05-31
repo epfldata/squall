@@ -1,12 +1,15 @@
 package predicates;
 
+import conversion.StringConversion;
 import expressions.ValueExpression;
+import expressions.ValueSpecification;
 import java.util.ArrayList;
 import java.util.List;
 import visitors.PredicateVisitor;
 
 /*
  * ve1 LIKE ve2 (bigger smaller)
+ * WORKS ONLY for pattern '%value%'
  */
 public  class LikePredicate implements Predicate {
     private ValueExpression<String> _ve1, _ve2;
@@ -14,6 +17,12 @@ public  class LikePredicate implements Predicate {
     public LikePredicate(ValueExpression<String> ve1, ValueExpression<String> ve2){
       _ve1 = ve1;
       _ve2 = ve2;
+      // WORKS ONLY for pattern '%value%'
+      if(_ve2 instanceof ValueSpecification){
+          String value = _ve2.eval(null);
+          value = value.replace("%", "");
+          _ve2 = new ValueSpecification<String>(new StringConversion(), value);
+      }
     }
 
     public List<ValueExpression> getExpressions(){
@@ -38,13 +47,13 @@ public  class LikePredicate implements Predicate {
     @Override
     public boolean test(List<String> firstTupleValues, List<String> secondTupleValues){
         String val1 = _ve1.eval(firstTupleValues);
-        String val2 = _ve2.eval(secondTupleValues);
-        return val1.contains(val2);    }
+        String val2 = _ve2.eval(firstTupleValues);
+        return val1.contains(val2);
+    }
 
     @Override
     public void accept(PredicateVisitor pv) {
-        throw new RuntimeException("Not supported right now! Visitor classes need to be changed!");
-        //pv.visit(this);
+        pv.visit(this);
     }
 
     @Override
