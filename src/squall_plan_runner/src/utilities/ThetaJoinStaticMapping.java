@@ -17,14 +17,14 @@ public class ThetaJoinStaticMapping implements CustomStreamGrouping{
 	private static Logger LOG = Logger.getLogger(ThetaJoinStaticMapping.class);
 
 	private MatrixAssignment _assignment;
-	private String _first, _second;
+	private String _firstIndex, _secondIndex;
 	private int _numTasks;
 	private Map _map;
 
 	public ThetaJoinStaticMapping(String first,String second,MatrixAssignment assignment, Map map) {
 		_assignment=assignment;
-		_first=first;
-		_second=second;
+		_firstIndex=first;
+		_secondIndex=second;
 		_map=map;
 	}
 
@@ -51,12 +51,16 @@ public class ThetaJoinStaticMapping implements CustomStreamGrouping{
 		//////////////////
 		List<Integer> tasks=null;
 		String tableName= (String)values.get(0);
-		if(tableName.equals(_first))
+		if(tableName.equals(_firstIndex))
 			tasks= _assignment.getRegionIDs(Dimension.ROW);
-		else if(tableName.equals(_second))
+		else if(tableName.equals(_secondIndex))
 			tasks= _assignment.getRegionIDs(Dimension.COLUMN);
-		else
+		else{
+			LOG.info("First Name: "+_firstIndex);
+			LOG.info("Second Name: "+_secondIndex);
+			LOG.info("Table Name: "+tableName);
 			LOG.info("WRONG ASSIGNMENT");
+		}
 		//LOG.info(tasks);
 		return tasks;
 	}

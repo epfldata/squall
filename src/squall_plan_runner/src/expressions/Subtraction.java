@@ -52,20 +52,19 @@ public class Subtraction<T extends Number & Comparable<T>> implements ValueExpre
             result -= _wrapper.toDouble(value);
         }
         return _wrapper.fromDouble(result);
+        
     }
     
-    @Override
+  /*  @Override
     public T eval(List<String> firstTuple, List<String> secondTuple){
-        T first = _veList.get(0).eval(firstTuple, secondTuple);
+        T first = _veList.get(0).eval(firstTuple);
         double result = _wrapper.toDouble(first);
 
-        for(int i = 1; i < _veList.size(); i++){
-            ValueExpression<T> factor = _veList.get(i);
-            T value = (T)factor.eval(firstTuple, secondTuple);
-            result -= _wrapper.toDouble(value);
-        }
+        ValueExpression<T> factor = _veList.get(1);
+        T value = (T)factor.eval(secondTuple);
+        result -= _wrapper.toDouble(value);
         return _wrapper.fromDouble(result);
-    }
+    }*/
 
     @Override
     public String evalString(List<String> tuple) {
@@ -99,6 +98,24 @@ public class Subtraction<T extends Number & Comparable<T>> implements ValueExpre
         }
         return sb.toString();
     }
+
+    @Override
+	public void changeValues(int i, ValueExpression<T> newExpr) {
+    	_veList.remove(i);
+    	_veList.add(i, newExpr);
+	}
+
+	@Override
+	public void inverseNumber() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean isNegative() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
 
 }

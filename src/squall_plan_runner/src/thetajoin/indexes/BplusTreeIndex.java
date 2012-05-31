@@ -1,7 +1,10 @@
 package thetajoin.indexes;
 
+import gnu.trove.list.array.TIntArrayList;
+
 import java.util.ArrayList;
 import java.util.List;
+
 
 import predicates.ComparisonPredicate;
 
@@ -20,9 +23,9 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 
 	private static final long serialVersionUID = 1L;
 
-	private BPlusTree<KeyType, ArrayList<Long>> _index;
+	private BPlusTree<KeyType, TIntArrayList> _index;
 	private int _order, _slots;
-
+	
 	/**
 	 * Constructor
 	 * @param o Order of tree
@@ -31,14 +34,15 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 	public BplusTreeIndex(int order, int slots) {
 		_order = order;
 		_slots = slots;
-		NodeFactory<KeyType, ArrayList<Long>> nf = new MemoryNodeFactory<KeyType, ArrayList<Long>>(_order, _slots);
-		_index = new BPlusTree<KeyType, ArrayList<Long>>(nf);
+		NodeFactory<KeyType, TIntArrayList> nf = new MemoryNodeFactory<KeyType, TIntArrayList>(_order, _slots);
+		_index = new BPlusTree<KeyType, TIntArrayList>(nf);
+
 	}
 
 	@Override
-	public ArrayList<Long> getValues(KeyType key) {
+	public TIntArrayList getValues(KeyType key) {
 		// search for the leaf node where the key is expected to be
-		LeafNode<KeyType, ArrayList<Long>> ln = _index.findLeafNode(key);
+		LeafNode<KeyType, TIntArrayList> ln = _index.findLeafNode(key);
 		
 		// get the index of the key in the node
 		if (ln == null)
@@ -54,7 +58,7 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 	}
 
 	@Override
-	public ArrayList<Long> getValues(KeyType key, int operator) {
+	public TIntArrayList getValues(KeyType key, int operator) {
 		if (operator == ComparisonPredicate.NONEQUAL_OP)
 			return null;
 		else if (operator == ComparisonPredicate.EQUAL_OP)
@@ -79,10 +83,10 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 	 * @param includeEqual If it's a greater-equal search
 	 * @return
 	 */
-	public ArrayList<Long> myGreater(KeyType key, boolean includeEqual) {
+	public TIntArrayList myGreater(KeyType key, boolean includeEqual) {
 		
-		ArrayList<Long> values = new ArrayList<Long>();
-		LeafNode<KeyType, ArrayList<Long>> ln;
+		TIntArrayList values = new TIntArrayList();
+		LeafNode<KeyType, TIntArrayList> ln;
 		int keyIndex;
 		
 		boolean first = true;
@@ -113,7 +117,7 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 				if (keepGoing || ln.getKey(s).compareTo(key) > 0 || (ln.getKey(s).compareTo(key) == 0 && includeEqual))
 				{
 					// Get the corresponding list with values and append its contents to the final result
-					List<Long> slotVals = ln.getValue(s);
+					TIntArrayList slotVals = ln.getValue(s);
 					for (int i = 0; i < slotVals.size(); i++)
 						values.add(slotVals.get(i));
 					
@@ -122,7 +126,7 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 			}
 			
 			// Go to next leaf node
-			ln = (LeafNode<KeyType, ArrayList<Long>>) ln.getNext();
+			ln = (LeafNode<KeyType, TIntArrayList>) ln.getNext();
 		}while (ln != null);
 		
 		return values;
@@ -138,32 +142,32 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 	 * @param includeEqual If it's a less-equal search
 	 * @return
 	 */
-	public ArrayList<Long> myLess(KeyType key, boolean includeEqual) {
+	public TIntArrayList myLess(KeyType key, boolean includeEqual) {
 		
-		ArrayList<Long> values = new ArrayList<Long>();
+		TIntArrayList values = new TIntArrayList();
 
-		LeafNode<KeyType, ArrayList<Long>> ln;
-		Node<KeyType, ArrayList<Long>> nd;
+		LeafNode<KeyType, TIntArrayList> ln;
+		Node<KeyType, TIntArrayList> nd;
 	
 		// Get root
 		if (_index.getRoot() instanceof MemoryInnerNode)
 		{
-			MemoryInnerNode<KeyType, ArrayList<Long>> root = (MemoryInnerNode<KeyType, ArrayList<Long>>) _index.getRoot();
+			MemoryInnerNode<KeyType, TIntArrayList> root = (MemoryInnerNode<KeyType, TIntArrayList>) _index.getRoot();
 			if (root == null)
 				return null;
 			
 			// Go down to left most node
 			nd = root.getChild(0);
 			while (nd != null && nd instanceof MemoryInnerNode)
-				nd = ((MemoryInnerNode<KeyType, ArrayList<Long>>)nd).getChild(0);
+				nd = ((MemoryInnerNode<KeyType, TIntArrayList>)nd).getChild(0);
 			
 			if (nd == null)
 				return null;
 			
-			ln = (MemoryLeafNode<KeyType, ArrayList<Long>>) nd;
+			ln = (MemoryLeafNode<KeyType, TIntArrayList>) nd;
 		}
 		else
-			ln = (MemoryLeafNode<KeyType, ArrayList<Long>>) _index.getRoot();
+			ln = (MemoryLeafNode<KeyType, TIntArrayList>) _index.getRoot();
 		
 
 		// Iterate over leaf nodes
@@ -176,7 +180,7 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 				if (ln.getKey(s).compareTo(key) < 0 || (ln.getKey(s).compareTo(key) == 0 && includeEqual))
 				{
 					// Get the corresponding list with values and append its contents to the final result
-					List<Long> slotVals = ln.getValue(s);
+					TIntArrayList slotVals = ln.getValue(s);
 					for (int i = 0; i < slotVals.size(); i++)
 						values.add(slotVals.get(i));
 					
@@ -186,7 +190,7 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 			}
 			
 			// Go to next leaf node
-			ln = (LeafNode<KeyType, ArrayList<Long>>) ln.getNext();
+			ln = (LeafNode<KeyType, TIntArrayList>) ln.getNext();
 		}while (ln != null);
 		
 		return values;
@@ -195,15 +199,17 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 	
 	
 	@Override
-	public void put(KeyType key, long row_id) {
+	public void put(KeyType key, Integer row_id) {
 
 		// find node where key could be
-		LeafNode<KeyType, ArrayList<Long>> ln = _index.findLeafNode(key);
+		LeafNode<KeyType, TIntArrayList> ln = _index.findLeafNode(key);
 
-		ArrayList<Long> idsList = _index.get(key);
+		TIntArrayList idsList = _index.get(key);
 		if (idsList == null) {
-			idsList = new ArrayList<Long>();
+			idsList = new TIntArrayList(1);
 			_index.put(key, idsList);
+			
+
 		}
 		idsList.add(row_id);
 	}

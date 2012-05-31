@@ -40,7 +40,7 @@ public class IntegerYearFromDate implements ValueExpression<Integer> {
         return year;
     }
     
-	@Override
+	/*@Override
 	public Integer eval(List<String> firstTuple, List<String> secondTuple) {
         Date date = _veDate.eval(firstTuple, secondTuple);
         
@@ -48,13 +48,13 @@ public class IntegerYearFromDate implements ValueExpression<Integer> {
         c.setTime(date);
         int year = c.get(Calendar.YEAR);
 
-        /* Alternative approach:
-        SimpleDateFormat formatNowYear = new SimpleDateFormat("yyyy");
-        String currentYear = formatNowYear.format(date); // = '2006'
-        */
+        // Alternative approach:
+        //SimpleDateFormat formatNowYear = new SimpleDateFormat("yyyy");
+        //String currentYear = formatNowYear.format(date); // = '2006'
+        
 
         return year;
-    }
+    }*/
 
     @Override
     public String evalString(List<String> tuple) {
@@ -85,5 +85,24 @@ public class IntegerYearFromDate implements ValueExpression<Integer> {
         sb.append("IntegerYearFromDate ").append(_veDate.toString());
         return sb.toString();
     }
+
+    @Override
+	public void changeValues(int i, ValueExpression<Integer> newExpr) {
+		//nothing
+		
+	}
+
+	@Override
+	public void inverseNumber() {
+		//nothing
+		
+	}
+
+	@Override
+	public boolean isNegative() {
+		return false;
+	}
+    
+    
 
 }

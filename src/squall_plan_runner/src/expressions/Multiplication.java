@@ -50,15 +50,20 @@ public class Multiplication<T extends Number & Comparable<T>> implements ValueEx
         return _wrapper.fromDouble(result);
     }
     
-    @Override
+    /*@Override
     public T eval(List<String> firstTuple, List<String> secondTuple){
         double result = 1;
-        for(ValueExpression<T> factor: _veList){
-            T value = (T)factor.eval(firstTuple, secondTuple);
-            result *= _wrapper.toDouble(value);
-        }
+        
+    	ValueExpression<T> factor = _veList.get(0);
+        T value = (T)factor.eval(firstTuple);
+        result *= _wrapper.toDouble(value);
+        
+        factor = _veList.get(1);
+        value = (T)factor.eval(secondTuple);
+        result *= _wrapper.toDouble(value);
+
         return _wrapper.fromDouble(result);
-    }
+    }*/
 
      @Override
     public String evalString(List<String> tuple) {
@@ -92,5 +97,22 @@ public class Multiplication<T extends Number & Comparable<T>> implements ValueEx
         }
         return sb.toString();
     }
+
+    @Override
+	public void changeValues(int i, ValueExpression<T> newExpr) {
+    	_veList.remove(i);
+    	_veList.add(i, newExpr);		
+	}
+
+	@Override
+	public void inverseNumber() {
+		//nothing
+		
+	}
+
+	@Override
+	public boolean isNegative() {
+		return false;
+	}
 
 }

@@ -24,7 +24,7 @@ public  class ComparisonPredicate<T extends Comparable<T>> implements Predicate 
     }
     
     public ComparisonPredicate(ValueExpression<T> ve1, ValueExpression<T> ve2){
-      this(EQUAL_OP, ve1, ve2);
+    	this(EQUAL_OP, ve1, ve2);
     }
 
     public List<ValueExpression> getExpressions(){
@@ -73,8 +73,8 @@ public  class ComparisonPredicate<T extends Comparable<T>> implements Predicate 
     
     @Override
     public boolean test(List<String> firstTupleValues, List<String> secondTupleValues){
-        Comparable val1 = (Comparable) _ve1.eval(firstTupleValues, secondTupleValues);
-        Comparable val2 = (Comparable) _ve2.eval(firstTupleValues, secondTupleValues);
+        Comparable val1 = (Comparable) _ve1.eval(firstTupleValues);
+        Comparable val2 = (Comparable) _ve2.eval(secondTupleValues);
         int compared = val1.compareTo(val2);
 
         boolean result = false;
@@ -149,4 +149,38 @@ public  class ComparisonPredicate<T extends Comparable<T>> implements Predicate 
     public int getOperation(){
     	return _operation;
     }
+    
+    public int getOperator(boolean inverse)
+    {
+    	int result = 0;
+    	if (inverse)
+    	{
+            switch (_operation){
+            case NONEQUAL_OP:
+                result = NONEQUAL_OP;
+                break;
+            case EQUAL_OP:
+                result = EQUAL_OP;
+                break;
+            case LESS_OP:
+                result = GREATER_OP;
+                break;
+            case NONLESS_OP:
+                result = NONGREATER_OP;
+                break;
+            case GREATER_OP:
+                result = LESS_OP;
+                break;
+            case NONGREATER_OP:
+                result = NONLESS_OP;
+                break;
+            }
+        }
+    	else
+    	{
+    		result = _operation;
+    	}
+    	return result;
+    }
+
 }

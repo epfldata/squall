@@ -25,6 +25,10 @@ import queryPlans.TPCH7Plan;
 import queryPlans.TPCH8Plan;
 import queryPlans.TPCH9Plan;
 import queryPlans.TestThetaJoin;
+import queryPlans.ThetaInputDominatedQuery;
+import queryPlans.ThetaMultipleJoinOperators;
+import queryPlans.ThetaOutputDominatedQuery;
+import queryPlans.ThetaTPCH7Plan;
 import stormComponents.StormJoin;
 import stormComponents.StormComponent;
 import stormComponents.synchronization.TopologyKiller;
@@ -144,6 +148,14 @@ public class Main {
                 queryPlan = new TPCH10Plan(dataPath, extension, conf).getQueryPlan();
             }else if (queryName.equalsIgnoreCase("TestTheta")){
             	queryPlan = new TestThetaJoin(dataPath, extension, conf).getQueryPlan();
+            }else if (queryName.equalsIgnoreCase("ThetaTPCH7")){
+            	queryPlan = new ThetaTPCH7Plan(dataPath, extension, conf).getQueryPlan();
+            }else if (queryName.equalsIgnoreCase("ThetaInputDominated")){
+            	queryPlan = new ThetaInputDominatedQuery(dataPath, extension, conf).getQueryPlan();
+            }else if (queryName.equalsIgnoreCase("ThetaOutputDominated")){
+            	queryPlan = new ThetaOutputDominatedQuery(dataPath, extension, conf).getQueryPlan();
+            }else if (queryName.equalsIgnoreCase("ThetaMultipleJoin")){
+            	queryPlan = new ThetaMultipleJoinOperators(dataPath, extension, conf).getQueryPlan();
             }
             // ... this line
 

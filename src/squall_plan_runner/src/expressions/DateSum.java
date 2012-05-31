@@ -35,14 +35,14 @@ public class DateSum implements ValueExpression<Date>{
         return c.getTime();
     }
     
-    @Override
+   /* @Override
     public Date eval(List<String> firstTuple, List<String> secondTuple) {
         Date base = _ve.eval(firstTuple, secondTuple);
         Calendar c = Calendar.getInstance();
         c.setTime(base);
         c.add(_unit, _interval);
         return c.getTime();
-    }
+    }*/
 
     @Override
     public String evalString(List<String> tuple) {
@@ -74,6 +74,22 @@ public class DateSum implements ValueExpression<Date>{
         sb.append(" unit ").append(_unit);
         return sb.toString();
     }
+
+	@Override
+	public void changeValues(int i, ValueExpression<Date> newExpr) {
+		//nothing
+	}
+
+	@Override
+	public void inverseNumber() {
+		//nothing	
+	}
+
+	@Override
+	public boolean isNegative() {
+		// nothing
+		return false;
+	}
 
 
 }

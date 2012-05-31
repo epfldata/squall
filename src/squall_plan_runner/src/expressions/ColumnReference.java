@@ -27,16 +27,10 @@ public class ColumnReference<T extends Comparable<T>> implements ValueExpression
         return _wrapper.fromString(value);
     }
     
-    @Override
+   /* @Override
     public T eval(List<String> firstTuple, List<String> secondTuple){
-    	String value;
-    	if(_column < firstTuple.size()){
-	        value = firstTuple.get(_column);
-    	}else{
-	    	value = secondTuple.get(_column-firstTuple.size());  
-    	}
-    	return _wrapper.fromString(value);
-    }
+    	return null;
+    }*/
 
     @Override
     public String evalString(List<String> tuple) {
@@ -74,6 +68,22 @@ public class ColumnReference<T extends Comparable<T>> implements ValueExpression
         sb.append("ColumnReference ").append(_column);
         return sb.toString();
     }
+
+    @Override
+	public void changeValues(int i, ValueExpression<T> newExpr) {
+		//nothing
+	}
+
+	@Override
+	public void inverseNumber() {
+		//nothing
+		
+	}
+
+	@Override
+	public boolean isNegative() {
+		return false;
+	}
 
 
 }

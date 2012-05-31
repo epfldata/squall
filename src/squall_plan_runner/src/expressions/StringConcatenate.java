@@ -34,14 +34,14 @@ public class StringConcatenate implements ValueExpression<String> {
         return result;
     }
     
-    @Override
+  /*  @Override
     public String eval(List<String> firstTuple, List<String> secondTuple){
         String result = "";
         for(ValueExpression<String> str: _strList){
             result += str;
         }
         return result;
-    }
+    }*/
 
     @Override
     public String evalString(List<String> tuple) {
@@ -74,5 +74,23 @@ public class StringConcatenate implements ValueExpression<String> {
         }
         return sb.toString();
     }
+
+    @Override
+	public void changeValues(int i, ValueExpression<String> newExpr) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void inverseNumber() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean isNegative() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
 }

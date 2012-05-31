@@ -1,7 +1,7 @@
 package storage;
 
+import gnu.trove.map.hash.TIntObjectHashMap;
 import java.io.Serializable;
-import java.util.HashMap;
 
 
 /** 
@@ -13,26 +13,32 @@ public class TupleStorage implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private HashMap<Long, String> _storage;
-	private long _lastId;
+	private TIntObjectHashMap<String> _storage;
+	private int _lastId;
 
 	
 	public TupleStorage()
 	{
-		_storage = new HashMap<Long, String>();
+		_storage = new TIntObjectHashMap<String>();
 		_lastId = -1;
 	}
 	
+	public void copy(TupleStorage t){
+		_storage.putAll(t._storage);
+		_lastId = t._lastId;
+	}
 	
 	
-	public long insert(String tuple)
+	public int insert(String tuple)
 	{
 		_lastId++;
 		_storage.put(_lastId, tuple);
+		
+
 		return _lastId;
 	}
 	
-	public String get(long id)
+	public String get(int id)
 	{
 		return _storage.get(id);
 	}
@@ -51,5 +57,5 @@ public class TupleStorage implements Serializable {
 	public String toString(){
 		return _storage.toString();
 	}
-	
 }
+

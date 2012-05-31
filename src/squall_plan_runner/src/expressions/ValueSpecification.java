@@ -5,6 +5,7 @@
 
 package expressions;
 
+import conversion.NumericConversion;
 import conversion.TypeConversion;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,10 +32,10 @@ public class ValueSpecification<T extends Comparable<T>> implements ValueExpress
         return _constant;
     }
     
-    @Override
+   /* @Override
     public T eval(List<String> firstTuple, List<String> secondTuple) {
     	return _constant;
-    }
+    }*/
 
     @Override
     public String evalString(List<String> tuple) {
@@ -63,4 +64,43 @@ public class ValueSpecification<T extends Comparable<T>> implements ValueExpress
         sb.append("ValueSpecification - constant ").append(_constant.toString());
         return sb.toString();
     }
+
+    @Override
+	public void changeValues(int i, ValueExpression<T> newExpr) {
+		// TODO Auto-generated method stub
+		
+	}
+	/*
+	public void inverseNumber()
+	{
+		if ( _wrapper instanceof NumericConversion )
+		{
+			NumericConversion makis = (NumericConversion)_wrapper;
+			double temp = makis.toDouble((Number) _constant);
+			_constant = (T) makis.fromDouble(1.0/temp);
+		}
+	}*/
+	
+	public void inverseNumber()
+	{
+		if ( _wrapper instanceof NumericConversion )
+		{
+			NumericConversion makis = (NumericConversion)_wrapper;
+			//double temp = makis.toDouble((Number) _constant);
+			double val = (double)((Number)_constant).doubleValue();
+			double temp = makis.toDouble(new Double(val));
+			_constant = (T) makis.fromDouble(1.0/temp);
+		}
+	}
+	
+	public boolean isNegative()
+	{
+		if ( _wrapper instanceof NumericConversion )
+		{
+			NumericConversion makis = (NumericConversion)_wrapper;
+			double temp = makis.toDouble((Number) _constant);
+			return (temp < 0);
+		}
+		return false;		
+	}
 }
