@@ -70,7 +70,8 @@ import util.ParserUtil;
  *
  * Let's take a look at a join condition: R.A = S.A and T.B = S.B
  * On both sides must be at least one relation (otherwise it is WHERE clause)
- *    and at most one relation - we need it since we index joins by tables keys (TODO).
+ *    and at most one relation - we need it since we index joins by tables keys,
+ *    so R.A + S.A = 5 is not supported right now (TODO)
  * Returns two objects {R->{S, exp{R.A = S.A}} and {T->{S, exp{T.B=S.B}}
  *
  * TODO: OR in join condition is not yet supported.
