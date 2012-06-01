@@ -78,7 +78,8 @@ import util.ParserUtil;
 import util.TableAliasName;
 
 /*
- * Generates Aggregation and
+ * Generates Aggregations and its groupBy projections.
+ *   If there is no aggregation, these groupBy projections becomes simple projections
  */
 public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
     private Schema _schema;
