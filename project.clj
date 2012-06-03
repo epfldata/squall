@@ -5,8 +5,11 @@
   :jvm-opts ["-Djava.library.path=/usr/local/lib:/opt/local/lib:/usr/lib"
             ]
 
-  :dev-dependencies [
-		     [storm "0.7.0"]
+  :dependencies [
 		     [jsqlparser "0.7.0"]
 		     [trove "3.0.2"]
+                    ])
+
+  :dev-dependencies [
+		     [storm "0.7.0"]
                     ])
