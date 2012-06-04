@@ -117,7 +117,7 @@ public class ThetaInputDominatedQuery {
 				_queryPlan)
 				.setJoinPredicate(overallPred)
 		//.setJoinPredicate(pred2)
-				.addOperator(new ProjectOperator(new int[]{1, 2, 3}))
+				.addOperator(new ProjectOperator(new int[]{1, 2, 4}))
 				.addOperator(agg)
 				;
 		//-------------------------------------------------------------------------------------

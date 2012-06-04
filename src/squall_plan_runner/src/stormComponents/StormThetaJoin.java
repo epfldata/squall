@@ -80,14 +80,7 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 	private List<Index> _firstRelationIndexes, _secondRelationIndexes;
 	private List<Integer> _operatorForIndexes;
 	private List<Object> _typeOfValueIndexed;
-	
-	private List<Object> _listCoefA;
-	private List<Object> _listCoefB;
-	
-	private List<Integer> _listColRef = new ArrayList<Integer>();
-
-	
-	
+		
 	private boolean _existIndexes = false;
 
 	//for No ACK: the total number of tasks of all the parent compoonents
@@ -159,20 +152,24 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 		_firstRelationStorage = new TupleStorage();
 		_secondRelationStorage = new TupleStorage();
 
-		
-PredicateAnalyser predicateAnalyser = new PredicateAnalyser();
-		
-		Predicate modifiedPredicate = predicateAnalyser.analyse(_joinPredicate);
-		System.out.println("--"+modifiedPredicate);
-		
-		if (modifiedPredicate == _joinPredicate) { //cannot create index
+
+		if(_joinPredicate != null){
+			PredicateAnalyser predicateAnalyser = new PredicateAnalyser();
+			
+			Predicate modifiedPredicate = predicateAnalyser.analyse(_joinPredicate);
+	
+			
+			if (modifiedPredicate == _joinPredicate) { //cannot create index
+				_existIndexes = false;
+			} else {
+				_joinPredicate = modifiedPredicate;
+				createIndexes();
+				_existIndexes = true;
+			}
+		}else{
 			_existIndexes = false;
-		} else {
-			System.out.println("index-----------------");
-			_joinPredicate = modifiedPredicate;
-			createIndexes();
-			_existIndexes = true;
 		}
+		
 
 	}
 	
@@ -186,10 +183,6 @@ PredicateAnalyser predicateAnalyser = new PredicateAnalyser();
 		_operatorForIndexes = new ArrayList<Integer>(visitor._operatorForIndexes);
 		_typeOfValueIndexed = new ArrayList<Object>(visitor._typeOfValueIndexed);
 		
-		_listCoefA = new ArrayList<Object>(visitor._coefA);
-		_listCoefB = new ArrayList<Object>(visitor._coefB);
-		
-		_listColRef = new ArrayList<Integer>(visitor._colsRef);
 	}
 	
 
@@ -281,7 +274,9 @@ PredicateAnalyser predicateAnalyser = new PredicateAnalyser();
 		List<Object> typesOfValuesToIndex = new ArrayList<Object>(visitor._typesOfValuesToIndex);
 		
 		for(int i=0; i<affectedIndexes.size(); i++){
-			if(typesOfValuesToIndex.get(i) instanceof Integer || typesOfValuesToIndex.get(i) instanceof Double){
+			if(typesOfValuesToIndex.get(i) instanceof Integer ){
+				affectedIndexes.get(i).put(Integer.parseInt(valuesToIndex.get(i)), row_id);
+			}else if(typesOfValuesToIndex.get(i) instanceof Double ){
 				affectedIndexes.get(i).put(Double.parseDouble(valuesToIndex.get(i)), row_id);
 			}else if(typesOfValuesToIndex.get(i) instanceof String){
 				affectedIndexes.get(i).put(valuesToIndex.get(i), row_id);
@@ -325,27 +320,13 @@ PredicateAnalyser predicateAnalyser = new PredicateAnalyser();
 		// Then take the intersection of the returned row indices since each join condition
 		// is separated by AND
 		
-		for (int i = 0; i < oppositeIndexes.size(); i ++)
+		for (int i = 0; i < oppositeIndexes.size(); i ++) 
 		{
 			TIntArrayList currentRowIds = null;
 
 			Index currentOpposIndex = oppositeIndexes.get(i);
 			String value = valuesToApplyOnIndex.get(i);
-			
-			
-			//Check if the join condition is with numerical value or String
-			//If String -> do nothing, if numeric we precalulate in order to optimize
-			if(_typeOfValueIndexed.get(i) instanceof Integer || _typeOfValueIndexed.get(i) instanceof Double){
-				Double val ;
-				if(isFromFirstEmitter){
-					val = (Double.parseDouble(value) - (Double)_listCoefB.get(i)) / (Double)_listCoefA.get(i);
-				}else{
-					val = (Double)_listCoefA.get(i) * Double.parseDouble(value) + (Double)_listCoefB.get(i);
-				}
-				value = val.toString();
-			}
-			
-			
+				
 			int currentOperator = _operatorForIndexes.get(i);
 			// Switch inequality operator if the tuple coming is from the other relation
 			if (isFromFirstEmitter){
@@ -370,8 +351,10 @@ PredicateAnalyser predicateAnalyser = new PredicateAnalyser();
 			if(_typeOfValueIndexed.get(i) instanceof String){
 				currentRowIds = currentOpposIndex.getValues(value, currentOperator );
 			//Even if valueIndexed is at first time an integer with precomputation a*col +b, it become a double
-			}else if(_typeOfValueIndexed.get(i) instanceof Double || _typeOfValueIndexed.get(i) instanceof Integer){
+			}else if(_typeOfValueIndexed.get(i) instanceof Double){
 				currentRowIds = currentOpposIndex.getValues(Double.parseDouble(value), currentOperator );
+			}else if(_typeOfValueIndexed.get(i) instanceof Integer){
+				currentRowIds = currentOpposIndex.getValues(Integer.parseInt(value), currentOperator );
 			}else{
 				throw new RuntimeException("non supported type");
 			}
@@ -436,16 +419,10 @@ PredicateAnalyser predicateAnalyser = new PredicateAnalyser();
 				// by the first relation), if any (in case of cartesian product there are none)
 				List<String> outputTuple = null;
 				
-				if (!_listColRef.isEmpty())
-				{
-					//This version, removes all equi-join keys of the second relation from the output tuple
-					outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple,_listColRef);
-				}
-				else
-				{
-					// Cartesian product - Outputs all attributes
-					outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);
-				}
+				
+				// Cartesian product - Outputs all attributes
+				outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);
+				
 
 				applyOperatorsAndSend(stormTuple, outputTuple);
 

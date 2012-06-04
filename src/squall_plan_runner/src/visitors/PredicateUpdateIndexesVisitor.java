@@ -53,12 +53,9 @@ public class PredicateUpdateIndexesVisitor implements PredicateVisitor{
 		Predicate p = (Predicate)between.getInnerPredicates().get(0);
 		visit(p);
 	}
-
+	
 	@Override
-	public void visit(ComparisonPredicate comparison) {
-		ExpressionUpdateIndexesVisitor exprVisitor =
-			new ExpressionUpdateIndexesVisitor(_tuple);
-		
+	public void visit(ComparisonPredicate comparison){
 		ValueExpression val;
 		
 		if(_comeFromFirstEmitter){
@@ -67,11 +64,11 @@ public class PredicateUpdateIndexesVisitor implements PredicateVisitor{
 			val = (ValueExpression) comparison.getExpressions().get(1);
 		}
 		
-		val.accept(exprVisitor);
-		_valuesToIndex.addAll(exprVisitor._valuesToIndex);
-		_typesOfValuesToIndex.addAll(exprVisitor._typesOfValuesToIndex);		
+		_valuesToIndex.add(val.eval(_tuple).toString());
+		_typesOfValuesToIndex.add(val.getType().getInitialValue());
 	}
-
+	
+	
 	public void visit(Predicate pred) {
 		pred.accept(this);
 	}

@@ -23,20 +23,7 @@ public class PredicateCreateIndexesVisitor implements PredicateVisitor{
 	
 	public List<Integer> _operatorForIndexes = new ArrayList<Integer>();
 	public List<Object> _typeOfValueIndexed = new ArrayList<Object>();
-	
-	
-	//The indexes of the column useful for the join
-	//stock in the array where we interleaves the indexes of R and S : [R.u, S.v, R.m, S.n, ...]
-	public List<Integer> _colsRef = new ArrayList<Integer>();
-
-	
-	//For the cases where
-	// the join condition is an equality/inequality expression (of the form R.0 = a * S.1 + b)
-	// on integer or double
-	//stock the coefficients of a and b for each conditions 
-	public List<Object> _coefA = new ArrayList<Object>();
-	public List<Object> _coefB = new ArrayList<Object>();
-	
+		
 	
 	@Override
 	public void visit(AndPredicate and) {
@@ -67,7 +54,7 @@ public class PredicateCreateIndexesVisitor implements PredicateVisitor{
 		_typeOfValueIndexed.add(comparison.getType());
 		
 		boolean isString = false;
-		System.out.println("visitComp");
+		
 		if (comparison.getOperation()==ComparisonPredicate.EQUAL_OP){
 			if(comparison.getType() instanceof Integer){
 				_firstRelationIndexes.add(new HashIndex<Integer>());
@@ -98,39 +85,9 @@ public class PredicateCreateIndexesVisitor implements PredicateVisitor{
 			}
 		}
 		
-		if(!isString){
-			ExpressionCreateIndexesVisitor vi = new ExpressionCreateIndexesVisitor();
-			//We don't need to visit this branch for finding a and b coeficients as we have the form : R.0 op a * S.1 + b
-			((ValueExpression)comparison.getExpressions().get(0)).accept(vi);
-			((ValueExpression)comparison.getExpressions().get(1)).accept(vi);
-			
-			if(comparison.getOperation() == ComparisonPredicate.EQUAL_OP){
-				_colsRef.add(vi._R);
-				_colsRef.add(vi._S);
-			}
-			
-			if(vi._a != null && vi._b != null){
-				_coefA.add(vi._a);
-				_coefB.add(vi._b);
-			}
-		}else{
-			if(comparison.getOperation() == ComparisonPredicate.EQUAL_OP){
-				ExpressionCreateIndexesVisitor vi = new ExpressionCreateIndexesVisitor();
-				((ValueExpression)comparison.getExpressions().get(0)).accept(vi);
-				_colsRef.add(vi._R);
-				
-				((ValueExpression)comparison.getExpressions().get(1)).accept(vi);
-				_colsRef.add(vi._R);
-			}
-			
-		}
-		
-		
-		
 	}
 	
 	public void visit(Predicate pred) {
-		System.out.println("visit");
 		pred.accept(this);
 	}
 

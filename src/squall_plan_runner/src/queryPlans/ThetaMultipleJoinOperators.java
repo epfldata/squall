@@ -142,7 +142,7 @@ public class ThetaMultipleJoinOperators {
 				relationPartsupp,
 				_queryPlan)
 				.setJoinPredicate(predS_P)
-				.addOperator(new ProjectOperator(new int[]{0,1,2}))
+				.addOperator(new ProjectOperator(new int[]{0,1,3}))
 				.addOperator(selectionPartSupp)
 				;  
 		

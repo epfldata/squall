@@ -231,7 +231,7 @@ public class ThetaTPCH7Plan {
     		L_S_Njoin = new ThetaJoinComponent(
             relationLineitem,
             S_Njoin,
-            _queryPlan).addOperator(new ProjectOperator(new int[]{4, 0, 1, 3}))
+            _queryPlan).addOperator(new ProjectOperator(new int[]{5, 0, 1, 3}))
             .setJoinPredicate(L_S_N_comp);
 
         //-------------------------------------------------------------------------------------
