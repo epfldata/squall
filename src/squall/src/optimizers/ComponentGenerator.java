@@ -12,8 +12,6 @@ import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
 import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.select.Join;
 import queryPlans.QueryPlan;
 import schema.ColumnNameType;
 import schema.Schema;
@@ -21,7 +19,10 @@ import util.ParserUtil;
 import util.TableAliasName;
 import visitors.squall.JoinHashVisitor;
 
-
+/*
+ * It is necessary that this class operates with Tables,
+ *   since we don't want multiple CG sharing the same copy of DataSourceComponent.
+ */
 public class ComponentGenerator {
     private TableAliasName _tan;
     private OptimizerTranslator _ot;
@@ -32,7 +33,7 @@ public class ComponentGenerator {
 
     private QueryPlan _queryPlan = new QueryPlan();
 
-    //List of EquiJoinComponent and OperatorComponent
+    //List of Components which are already added throughEquiJoinComponent and OperatorComponent
     private List<Component> _subPlans = new ArrayList<Component>();
 
     public ComponentGenerator(Schema schema, TableAliasName tan, OptimizerTranslator ot, String dataPath, String extension){
@@ -51,54 +52,11 @@ public class ComponentGenerator {
         return _subPlans;
     }
 
-    public Component generateSubplan(Table leftTable, Table rightTable, Join join) {
-        List<Expression> listExp = ParserUtil.createListExp(join.getOnExpression());
-        return generateSubplan(leftTable, rightTable, listExp);
-    }
-
     /*
-     * List<Expression> is a set of join conditions between left and right table.
-     * For Equijoins it is a List<EqualsTo>.
+     * adding a DataSourceComponent to the list of components
+     * Necessary to call only when only one table is addresses in WHERE clause of a SQL query
      */
-    public Component generateSubplan(Table leftTable, Table rightTable, List<Expression> listExp) {
-        DataSourceComponent leftDSC = generateDataSource(leftTable);
-        DataSourceComponent rightDSC = generateDataSource(rightTable);
-        EquiJoinComponent lastComponent = generateJoinComponent(leftDSC, rightDSC, listExp);
-        _subPlans.add(lastComponent);
-        return lastComponent;
-    }
-
-    //table and Component
-    public Component generateSubplan(Component component, Table table, Join join){
-        List<Expression> listExp = ParserUtil.createListExp(join.getOnExpression());
-        return generateSubplan(component, table, listExp);
-    }
-
-    public Component generateSubplan(Component component, Table table, List<Expression> listExp){
-        DataSourceComponent dataSourceComp = generateDataSource(table);
-        EquiJoinComponent lastComponent = generateJoinComponent(component, dataSourceComp, listExp);
-        _subPlans.remove(component);
-        _subPlans.add(lastComponent);
-        return lastComponent;
-    }
-
-    //two Components
-    public Component generateSubplan(Component left, Component right, Join join){
-        List<Expression> listExp = ParserUtil.createListExp(join.getOnExpression());
-        return generateSubplan(left, right, listExp);
-    }
-
-    public Component generateSubplan(Component left, Component right, List<Expression> listExp){
-        EquiJoinComponent lastComponent = generateJoinComponent(left, right, listExp);
-        _subPlans.remove(left);
-        _subPlans.remove(right);
-        _subPlans.add(lastComponent);
-        return lastComponent;
-    }
-
-    //generate Squall components from JSQL structures
-    public DataSourceComponent generateDataSource(Table table){
-        String tableCompName = ParserUtil.getComponentName(table);
+    public DataSourceComponent generateDataSource(String tableCompName){
         String tableSchemaName = _tan.getSchemaName(tableCompName);
         String sourceFile = tableSchemaName.toLowerCase();
         List<ColumnNameType> tableSchema = _schema.getTableSchema(tableSchemaName);
@@ -108,44 +66,40 @@ public class ComponentGenerator {
                                         _dataPath + sourceFile + _extension,
                                         tableSchema,
                                         _queryPlan);
+        _subPlans.add(relation);
         return relation;
     }
 
-    public EquiJoinComponent generateJoinComponent(Component leftParent, Component rightParent, Join join){
-       List<Expression> listExp = ParserUtil.createListExp(join.getOnExpression());
-       return generateJoinComponent(leftParent, rightParent, listExp);
-    }
-
-    private EquiJoinComponent generateJoinComponent(Component leftParent, Component rightParent, List<Expression> listExp) {
+    /*
+     * Join between two components
+     * List<Expression> is a set of join conditions between two components.
+     */
+    public Component generateEquiJoin(Component left, Component right, List<Expression> joinCondition){
         EquiJoinComponent joinComponent = new EquiJoinComponent(
-                    leftParent,
-                    rightParent,
+                    left,
+                    right,
                     _queryPlan);
 
         //set hashes for two parents
-        setHash(leftParent, listExp);
-        setHash(rightParent, listExp);
+        addHash(left, joinCondition);
+        addHash(right, joinCondition);
+
+        _subPlans.remove(left);
+        _subPlans.remove(right);
+        _subPlans.add(joinComponent);
 
         return joinComponent;
     }
 
-    //HELPER methods
-    //this is used from SimpleOpt - parser tree is exactly the same as the generated Squall tree
-    public void setHash(Component component, Join nextJoin){
-        if(nextJoin!=null){
-            //if there is next level, we set hash indexes
-            List<Expression> listExp = ParserUtil.createListExp(nextJoin.getOnExpression());
-            setHash(component, listExp);
-        }
-    }
+
 
     //set hash for this component, knowing its position in the query plan.
     //  Conditions are related only to parents of join,
     //  but we have to filter who belongs to my branch in JoinHashVisitor.
     //  We don't want to hash on something which will be used to join with same later component in the hierarchy.
-    private void setHash(Component component, List<Expression> listExp) {
+    private void addHash(Component component, List<Expression> joinCondition) {
             JoinHashVisitor joinOn = new JoinHashVisitor(_schema, _queryPlan, component, _tan, _ot);
-            for(Expression exp: listExp){
+            for(Expression exp: joinCondition){
                 exp.accept(joinOn);
             }
             List<ValueExpression> hashExpressions = joinOn.getExpressions();

@@ -23,11 +23,11 @@ public class LevelAssigner {
         orderComponents();
     }
 
-    public List<DataSourceComponent> getDSComponents(){
+    public List<DataSourceComponent> getSources(){
         return _dsList;
     }
 
-    public List<CompLevel> getNonDSComponents(){
+    public List<CompLevel> getNonSourceComponents(){
         return _clList;
     }
     

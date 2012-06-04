@@ -10,80 +10,76 @@ import java.util.Collections;
 import java.util.List;
 import net.sf.jsqlparser.schema.Table;
 import schema.Schema;
-import util.TableAliasName;
 import util.ParserUtil;
+import util.TableAliasName;
 
 public class TableSelector {
-    private List<PairTableSize> _pairsTableSize;
+    private List<PairTableNameSize> _pairsTableNameSize;
     private TableAliasName _tan;
 
-    public TableSelector(List<Table> tableList, Schema schema, TableAliasName tan) {
+    public TableSelector(List<Table> listTables, Schema schema, TableAliasName tan) {
         _tan = tan;
 
         //generateSubplan (table, size) list from tables from the query
-        _pairsTableSize = createSizePairs(tableList, schema);
+        _pairsTableNameSize = createSizePairs(listTables, schema);
         //in place sort
-        Collections.sort(_pairsTableSize);
+        Collections.sort(_pairsTableNameSize);
     }
 
     //best means the smallest available
-    public Table removeBestTable(){
-        return _pairsTableSize.remove(0).getTable();
+    public String removeBestTableName(){
+        return _pairsTableNameSize.remove(0).getTableName();
     }
 
-    public List<Table> removeAll(){
-        List<Table> tableList = new ArrayList<Table>();
-        while(!_pairsTableSize.isEmpty()){
-            tableList.add(_pairsTableSize.remove(0).getTable());
+    public List<String> removeAll(){
+        List<String> tableNameList = new ArrayList<String>();
+        while(!_pairsTableNameSize.isEmpty()){
+            tableNameList.add(_pairsTableNameSize.remove(0).getTableName());
         }
-        return tableList;
+        return tableNameList;
     }
 
     //Best means smallest available from the pairs
-    public Table removeBestPairedTable(List<String> joinedWith) {
-        for (int i = 0; i < _pairsTableSize.size(); i++) {
-            PairTableSize pts = _pairsTableSize.get(i);
-            String currentTblName = pts.getTblCompName();
-            if (joinedWith.contains(currentTblName)) {
-                _pairsTableSize.remove(i);
-                return _tan.getTable(currentTblName);
+    public String removeBestPairedTableName(List<String> joinedWith) {
+        for (int i = 0; i < _pairsTableNameSize.size(); i++) {
+            PairTableNameSize pts = _pairsTableNameSize.get(i);
+            String currentTableName = pts.getTableName();
+            if (joinedWith.contains(currentTableName)) {
+                _pairsTableNameSize.remove(i);
+                return currentTableName;
             }
         }
         //all the pairs I can join with are already taken
         return null;
     }
 
-    private List<PairTableSize> createSizePairs(List<Table> tableList, Schema schema) {
-        List<PairTableSize> pairsTableSize = new ArrayList<PairTableSize>();
-        for(Table table: tableList){
+    private List<PairTableNameSize> createSizePairs(List<Table> listTables, Schema schema) {
+        List<PairTableNameSize> pairsTableSize = new ArrayList<PairTableNameSize>();
+        for(Table table: listTables){
             String schemaName = _tan.getSchemaName(ParserUtil.getComponentName(table));
             int tableSize = schema.getTableSize(schemaName);
 
-            PairTableSize pts = new PairTableSize(table, tableSize);
+            PairTableNameSize pts = new PairTableNameSize(table, tableSize);
             pairsTableSize.add(pts);
         }
         return pairsTableSize;
     }
 
     public int size() {
-        return _pairsTableSize.size();
+        return _pairsTableNameSize.size();
     }
 
-    public class PairTableSize implements Comparable<PairTableSize>{
-        private Table _table;
+    public class PairTableNameSize implements Comparable<PairTableNameSize>{
+        private String _tableName;
         private int _size;
 
-        public PairTableSize(Table table, int size){
-            _table = table;
+        public PairTableNameSize(Table table, int size){
+            _tableName = ParserUtil.getComponentName(table);
             _size = size;
         }
 
-        public Table getTable(){
-            return _table;
-        }
-
-        public String getTblCompName(){
-            return ParserUtil.getComponentName(_table);
+        public String getTableName(){
+            return _tableName;
         }
 
         public int getSize(){
@@ -91,7 +87,7 @@ public class TableSelector {
         }
 
         @Override
-        public int compareTo(PairTableSize t) {
+        public int compareTo(PairTableNameSize t) {
             int otherSize = t.getSize();
             return (new Integer(_size)).compareTo(new Integer(otherSize));
         }

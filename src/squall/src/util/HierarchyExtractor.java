@@ -10,7 +10,6 @@ import components.DataSourceComponent;
 import java.util.ArrayList;
 import java.util.List;
 import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.schema.Table;
 import optimizers.ComponentGenerator;
 
 /*
@@ -25,15 +24,6 @@ public class HierarchyExtractor {
             ancestorNames.add(ancestor.getName());
         }
         return ancestorNames;
-    }
-
-    public static List<Table> getAncestorTables(Component component, TableAliasName tan){
-        List<String> ancestorNames = getAncestorNames(component);
-        List<Table> ancestorTables = new ArrayList<Table>();
-        for(String ancestorName: ancestorNames){
-            ancestorTables.add(tan.getTable(ancestorName));
-        }
-        return ancestorTables;
     }
 
     public static Component getLCM(List<Component> compList) {
@@ -59,22 +49,22 @@ public class HierarchyExtractor {
      * This method finds a DataSourceComponent a column refers to
      *   columnName is in form table.column, i.e. N2.NATIONKEY
      */
-    public static Component getDSCwithColumn(String columnName, ComponentGenerator cg){
+    public static Component getSourcewithColumn(String columnName, ComponentGenerator cg){
         String tableCompName = columnName.split("\\.")[0];
         Component affectedComponent = cg.getQueryPlan().getComponent(tableCompName);
         return affectedComponent;
     }
 
-    public static Component getDSCwithColumn(Column column, ComponentGenerator cg) {
+    public static Component getSourcewithColumn(Column column, ComponentGenerator cg) {
         String tableCompName = ParserUtil.getComponentName(column.getTable());
         Component affectedComponent = cg.getQueryPlan().getComponent(tableCompName);
         return affectedComponent;
     }
 
-    public static List<Component> getDSCwithColumn(List<Column> columns, ComponentGenerator cg) {
+    public static List<Component> getSourcewithColumn(List<Column> columns, ComponentGenerator cg) {
         List<Component> compList = new ArrayList<Component>();
         for(Column column: columns){
-            Component newComp = getDSCwithColumn(column, cg);
+            Component newComp = getSourcewithColumn(column, cg);
             compList.add(newComp);
         }
         return compList;

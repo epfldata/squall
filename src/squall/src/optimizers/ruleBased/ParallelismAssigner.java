@@ -33,16 +33,16 @@ public class ParallelismAssigner {
 
     public void assignPar() {
         LevelAssigner topDown = new LevelAssigner(_plan.getLastComponent());
-        List<DataSourceComponent> dsList = topDown.getDSComponents();
-        List<CompLevel>  clList = topDown.getNonDSComponents();
+        List<DataSourceComponent> dsList = topDown.getSources();
+        List<CompLevel>  clList = topDown.getNonSourceComponents();
 
         assignParDataSource(dsList);
         assignParNonDataSource(clList);
     }
 
-    private void assignParDataSource(List<DataSourceComponent> dsList) {
-        for(DataSourceComponent dsc: dsList){
-            String compName = dsc.getName();
+    private void assignParDataSource(List<DataSourceComponent> sources) {
+        for(DataSourceComponent source: sources){
+            String compName = source.getName();
             String compMapStr = compName + "_PAR";
             if(getNumOfTuples(compName) > THRESHOLD_TUPLES){
                 SystemParameters.putInMap(_map, compMapStr, _maxInputPar);

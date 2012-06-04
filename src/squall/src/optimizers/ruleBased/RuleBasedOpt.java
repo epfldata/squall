@@ -5,7 +5,9 @@
 
 package optimizers.ruleBased;
 
+import optimizers.ComponentGenerator;
 import components.Component;
+import components.DataSourceComponent;
 import components.OperatorComponent;
 import expressions.ValueExpression;
 import java.util.ArrayList;
@@ -25,10 +27,8 @@ import net.sf.jsqlparser.statement.select.SelectItem;
 import operators.AggregateOperator;
 import operators.ProjectOperator;
 import operators.SelectOperator;
-import optimizers.ComponentGenerator;
 import optimizers.Optimizer;
 import optimizers.OptimizerTranslator;
-import predicates.Predicate;
 import util.HierarchyExtractor;
 import util.JoinTablesExp;
 import util.ParserUtil;
@@ -100,28 +100,30 @@ public class RuleBasedOpt implements Optimizer {
 
         //first phase
         //make high level pairs
-        List<Table> skippedBestTables = new ArrayList<Table>();
+        List<String> skippedBestTableNames = new ArrayList<String>();
         int numTables = tableList.size();
         if(numTables == 1){
-            cg.generateDataSource(tableList.get(0));
+            cg.generateDataSource(ParserUtil.getComponentName(tableList.get(0)));
             return cg;
         }else{
             int highLevelPairs = getNumHighLevelPairs(numTables);
 
             for(int i=0; i<highLevelPairs; i++){
-                Table bestTable = ts.removeBestTable();
+                String bestTableName = ts.removeBestTableName();
 
                 //enumerates all the tables it has joinCondition to join with
-                List<String> joinedWith = jte.getJoinedWith(bestTable);
+                List<String> joinedWith = jte.getJoinedWith(bestTableName);
                 //dependent on previously used tables, so might return null
-                Table bestPairedTable = ts.removeBestPairedTable(joinedWith);
+                String bestPairedTable = ts.removeBestPairedTableName(joinedWith);
                 if(bestPairedTable != null){
                     //we found a pair
-                    List<Expression> listExp = jte.getExpressions(bestTable, bestPairedTable);
-                    cg.generateSubplan(bestTable, bestPairedTable, listExp);
+                    DataSourceComponent bestSource = cg.generateDataSource(bestTableName);
+                    DataSourceComponent bestPairedSource = cg.generateDataSource(bestPairedTable);
+                    List<Expression> joinCondition = jte.getExpressions(bestTableName, bestPairedTable);
+                    cg.generateEquiJoin(bestSource, bestPairedSource, joinCondition);
                 }else{
                     //we have to keep this table for latter processing
-                    skippedBestTables.add(bestTable);
+                    skippedBestTableNames.add(bestTableName);
                 }
             }
         }
@@ -142,13 +144,13 @@ public class RuleBasedOpt implements Optimizer {
          * Bad side is updating of subPlanAncestors, but than has to be done anyway
          * LinkedHashMap guarantees in order iterator
          */
-        List<Table> unpairedTables = ts.removeAll();
-        unpairedTables.addAll(skippedBestTables);
-        while(!unpairedTables.isEmpty()){
-            List<Table> stillUnprocessed = new ArrayList<Table>();
+        List<String> unpairedTableNames = ts.removeAll();
+        unpairedTableNames.addAll(skippedBestTableNames);
+        while(!unpairedTableNames.isEmpty()){
+            List<String> stillUnprocessed = new ArrayList<String>();
             //we will try to join all the tables, but some of them cannot be joined before some other tables
             //that's why we have while outer loop
-            for(Table unpaired: unpairedTables){
+            for(String unpaired: unpairedTableNames){
                 boolean processed = false;
                 List<String> joinedWith = jte.getJoinedWith(unpaired);
                 for(Map.Entry<Component, List<String>> entry: subPlanAncestors.entrySet()){
@@ -156,9 +158,9 @@ public class RuleBasedOpt implements Optimizer {
                     List<String> ancestors = entry.getValue();
                     List<String> intersection = ParserUtil.getIntersection(joinedWith, ancestors);
                     if(!intersection.isEmpty()){
-                        String unpairedName = ParserUtil.getComponentName(unpaired);
-                        List<Expression> listExp = jte.getExpressions(unpairedName, intersection);
-                        Component newComp = cg.generateSubplan(currentComp, unpaired, listExp);
+                        List<Expression> joinCondition = jte.getExpressions(unpaired, intersection);
+                        DataSourceComponent unpairedSource = cg.generateDataSource(unpaired);
+                        Component newComp = cg.generateEquiJoin(currentComp, unpairedSource, joinCondition);
 
                         //update subPlanAncestor
                         subPlanAncestors.remove(currentComp);
@@ -173,7 +175,7 @@ public class RuleBasedOpt implements Optimizer {
                     stillUnprocessed.add(unpaired);
                 }
             }
-            unpairedTables = stillUnprocessed;
+            unpairedTableNames = stillUnprocessed;
         }
 
         //third phase: joining Components until there is a single component
@@ -188,8 +190,8 @@ public class RuleBasedOpt implements Optimizer {
                     List<String> otherAncestors = HierarchyExtractor.getAncestorNames(otherComp);
                     List<String> intersection = ParserUtil.getIntersection(firstJoinedWith, otherAncestors);
                     if(!intersection.isEmpty()){
-                        List<Expression> listExp = jte.getExpressions(firstAncestors, intersection);
-                        Component newComp = cg.generateSubplan(firstComp, otherComp, listExp);
+                        List<Expression> joinCondition = jte.getExpressions(firstAncestors, intersection);
+                        Component newComp = cg.generateEquiJoin(firstComp, otherComp, joinCondition);
                         break;
                     }
                 }
@@ -307,13 +309,13 @@ public class RuleBasedOpt implements Optimizer {
         for(Map.Entry<String, Expression> entry: collocatedExprs.entrySet()){
             String columnName = entry.getKey();
             Expression exprPerColumn = entry.getValue();
-            Component affectedComponent = HierarchyExtractor.getDSCwithColumn(columnName, _cg);
+            Component affectedComponent = HierarchyExtractor.getSourcewithColumn(columnName, _cg);
             processWhereForComponent(exprPerColumn, affectedComponent);
         }
 
         for(OrExpression orExpr: orExprs){
             List<Column> columns = invokeColumnVisitor(orExpr);
-            List<Component> compList = HierarchyExtractor.getDSCwithColumn(columns, _cg);
+            List<Component> compList = HierarchyExtractor.getSourcewithColumn(columns, _cg);
             Component affectedComponent = HierarchyExtractor.getLCM(compList);
             processWhereForComponent(orExpr, affectedComponent);
         }

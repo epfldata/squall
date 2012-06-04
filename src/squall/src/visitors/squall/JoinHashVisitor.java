@@ -65,7 +65,6 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import optimizers.OptimizerTranslator;
 import queryPlans.QueryPlan;
-import schema.ColumnNameType;
 import schema.Schema;
 import util.HierarchyExtractor;
 import util.ParserUtil;
@@ -101,6 +100,9 @@ public class JoinHashVisitor implements ExpressionVisitor {
 
     private List<ValueExpression> _hashExpressions = new ArrayList<ValueExpression>();
 
+    /*
+     * affectedComponent is one of the parents of the join component
+     */
     public JoinHashVisitor(Schema schema, QueryPlan queryPlan, Component affectedComponent, TableAliasName tan, OptimizerTranslator ot){
         _schema = schema;
         _queryPlan = queryPlan;

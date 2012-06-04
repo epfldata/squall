@@ -75,10 +75,6 @@ public class JoinTablesExp {
         return new ArrayList<String>(result);
     }
 
-    public List<String> getJoinedWith(Table table){
-        return getJoinedWith(ParserUtil.getComponentName(table));
-    }
-
     /*
      * Get a list of tables DataSourceComponent named tblCompName can join with
      */
@@ -117,14 +113,6 @@ public class JoinTablesExp {
             }
         }
         return result;
-    }
-
-
-    public List<Expression> getExpressions(Table table1, Table table2){
-        String tableName1 = ParserUtil.getComponentName(table1);
-        String tableName2 = ParserUtil.getComponentName(table2);
-
-        return getExpressions(tableName1, tableName2);
     }
 
     public List<Expression> getExpressions(String tableName1, String tableName2){

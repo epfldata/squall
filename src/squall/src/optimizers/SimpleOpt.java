@@ -7,6 +7,7 @@ package optimizers;
 
 import optimizers.ruleBased.ParallelismAssigner;
 import components.Component;
+import components.DataSourceComponent;
 import components.OperatorComponent;
 import expressions.ValueExpression;
 import java.util.List;
@@ -18,7 +19,6 @@ import net.sf.jsqlparser.statement.select.SelectItem;
 import operators.AggregateOperator;
 import operators.ProjectOperator;
 import operators.SelectOperator;
-import predicates.Predicate;
 import schema.Schema;
 import util.ParserUtil;
 import util.TableAliasName;
@@ -66,22 +66,25 @@ public class SimpleOpt implements Optimizer {
     private ComponentGenerator generateTableJoins(List<Table> tableList, List<Join> joinList) {
         ComponentGenerator cg = new ComponentGenerator(_schema, _tan, _ot, _dataPath, _extension);
 
-        //special case
+        //a special case
         if(tableList.size()==1){
-            cg.generateDataSource(tableList.get(0));
+            cg.generateDataSource(ParserUtil.getComponentName(tableList.get(0)));
             return cg;
         }
 
         // This generates a lefty query plan.
-        Table firstTable = tableList.get(0);
-        Table secondTable = tableList.get(1);
-        Join firstJoin = joinList.get(0);
-        Component comp = cg.generateSubplan(firstTable, secondTable, firstJoin);
+        Table first = tableList.get(0);
+        DataSourceComponent firstParent = cg.generateDataSource(ParserUtil.getComponentName(first));
+        Table second = tableList.get(1);
+        DataSourceComponent secondParent = cg.generateDataSource(ParserUtil.getComponentName(second));
+        List<Expression> joinCondition = ParserUtil.createListExp(joinList.get(0).getOnExpression());
+        Component comp = cg.generateEquiJoin(firstParent, secondParent, joinCondition);
 
         for(int i=1; i<joinList.size(); i++){
             Table currentTable = tableList.get(i+1);
-            Join currentJoin = joinList.get(i);
-            comp = cg.generateSubplan(comp, currentTable, currentJoin);
+            DataSourceComponent currentSource = cg.generateDataSource(ParserUtil.getComponentName(currentTable));
+            List<Expression> currentJoinCondition = ParserUtil.createListExp(joinList.get(i).getOnExpression());
+            comp = cg.generateEquiJoin(comp, currentSource, currentJoinCondition);
         }
         return cg;
     }
