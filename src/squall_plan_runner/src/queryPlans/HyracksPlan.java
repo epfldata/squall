@@ -18,7 +18,6 @@ import operators.AggregateSumOperator;
 import operators.ProjectOperator;
 
 import org.apache.log4j.Logger;
-import schema.TPCH_Schema;
 
 public class HyracksPlan {
     private static Logger LOG = Logger.getLogger(HyracksPlan.class);
@@ -35,7 +34,6 @@ public class HyracksPlan {
             DataSourceComponent relationCustomer = new DataSourceComponent(
                                             "CUSTOMER",
                                             dataPath + "customer" + extension,
-                                            TPCH_Schema.customer,
                                             _queryPlan).addOperator(projectionCustomer)
                                                        .setHashIndexes(hashCustomer);
 
@@ -45,7 +43,6 @@ public class HyracksPlan {
             DataSourceComponent relationOrders = new DataSourceComponent(
                                             "ORDERS",
                                             dataPath + "orders" + extension,
-                                            TPCH_Schema.orders,
                                             _queryPlan).addOperator(projectionOrders)
                                                        .setHashIndexes(hashOrders);
                                                        

@@ -10,12 +10,9 @@ import backtype.storm.topology.TopologyBuilder;
 import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
-import operators.AggregateOperator;
 import operators.ChainOperator;
-import operators.DistinctOperator;
 import operators.Operator;
 import operators.ProjectOperator;
-import operators.SelectOperator;
 import stormComponents.StormDstJoin;
 import stormComponents.StormJoin;
 import stormComponents.StormSrcJoin;
@@ -233,12 +230,6 @@ public class EquiJoinComponent implements Component {
     @Override
     public void setChild(Component child) {
         _child = child;
-    }
-
-    @Override
-    public int getPreOpsOutputSize(){
-        int joinColumnsLength = _firstParent.getHashIndexes().size();
-        return _firstParent.getPreOpsOutputSize() + _secondParent.getPreOpsOutputSize() - joinColumnsLength;
     }
 
     @Override

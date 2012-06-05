@@ -10,7 +10,7 @@ import components.DataSourceComponent;
 import java.util.ArrayList;
 import java.util.List;
 import net.sf.jsqlparser.schema.Column;
-import optimizers.ComponentGenerator;
+import optimizers.IndexComponentGenerator;
 
 /*
  * A utility class for extracting different hierarchy-(topology-)related information
@@ -49,19 +49,19 @@ public class HierarchyExtractor {
      * This method finds a DataSourceComponent a column refers to
      *   columnName is in form table.column, i.e. N2.NATIONKEY
      */
-    public static Component getSourcewithColumn(String columnName, ComponentGenerator cg){
+    public static Component getSourcewithColumn(String columnName, IndexComponentGenerator cg){
         String tableCompName = columnName.split("\\.")[0];
         Component affectedComponent = cg.getQueryPlan().getComponent(tableCompName);
         return affectedComponent;
     }
 
-    public static Component getSourcewithColumn(Column column, ComponentGenerator cg) {
+    public static Component getSourcewithColumn(Column column, IndexComponentGenerator cg) {
         String tableCompName = ParserUtil.getComponentName(column.getTable());
         Component affectedComponent = cg.getQueryPlan().getComponent(tableCompName);
         return affectedComponent;
     }
 
-    public static List<Component> getSourcewithColumn(List<Column> columns, ComponentGenerator cg) {
+    public static List<Component> getSourcewithColumn(List<Column> columns, IndexComponentGenerator cg) {
         List<Component> compList = new ArrayList<Component>();
         for(Column column: columns){
             Component newComp = getSourcewithColumn(column, cg);

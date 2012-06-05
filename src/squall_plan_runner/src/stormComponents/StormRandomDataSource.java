@@ -62,14 +62,14 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
         private ChainOperator _operatorChain;
 
         private int _numSentTuples=0;
-        private boolean _alreadyPrintedContent;
         private boolean _printOut;
 
         private int _fileParts;
-        private boolean _hasEmitted=false; //have this spout emitted at least one tuple
+	private boolean _hasEmitted=false; //have this spout emitted at least one tuple
+        private boolean _hasSentEOF = false; //have sent EOF to TopologyKiller (AckEachTuple mode)
 
-        //NoAck
-        private boolean _hasSentLastAck = false;
+	private boolean _hasSentLastAck = false; // AckLastTuple mode
+
 
         //for batch sending
         private final Semaphore _semAgg = new Semaphore(1, true);
@@ -133,26 +133,28 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
         // from IRichSpout interface
         @Override
 	public void nextTuple() {
-                if(_firstTime && MyUtilities.isBatchOutputMode(_batchOutputMillis)){
-                    _periodicBatch = new PeriodicBatchSend(_batchOutputMillis, this);
-                    _firstTime = false;
-                }
+			if(_firstTime && MyUtilities.isBatchOutputMode(_batchOutputMillis)){
+				_periodicBatch = new PeriodicBatchSend(_batchOutputMillis, this);
+				_firstTime = false;
+			}
 
-		if(_hasReachedEOF) {
-                    eofFinalization();
+			String line = readLine();
+			if(line==null) {
+                                if(!_hasReachedEOF){
+                                    //we reached EOF, first time this happens we invoke the method:
+                                    eofFinalization();
+                                }
+				_hasReachedEOF=true;
+                                sendEOF();
+                                //sleep since we are not goint to do useful work,
+                                //  but still are looping in nextTuple method
+				Utils.sleep(SystemParameters.EOF_TIMEOUT_MILLIS);
+				return;
+			}
 
-                    Utils.sleep(SystemParameters.EOF_TIMEOUT_MILLIS);
-                    return;
-		}
+			List<String> tuple = MyUtilities.fileLineToTuple(line, _conf);
+			applyOperatorsAndSend(tuple);
 
-		String line = readLine();
-		if(line==null) {
-                    _hasReachedEOF=true;
-                    return;
-		}
-
-		List<String> tuple = MyUtilities.fileLineToTuple(line, _conf);
-                applyOperatorsAndSend(tuple);
 	}
 
         protected void applyOperatorsAndSend(List<String> tuple){
@@ -185,33 +187,50 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
                 }
         }
 
-        private void eofFinalization(){
-            if(!_alreadyPrintedContent){
-                _alreadyPrintedContent=true;
-                printContent();
-            }
-            if(MyUtilities.isAckEveryTuple(_conf)){
-                if(!_hasEmitted){
-                    //we never emitted anything, and we reach end of the file
-                        //nobody will call our ack method
-                    _hasEmitted=true; // to ensure we will not send multiple EOF per single spout
-                    _collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
-                 }
-            }else{
-                if(_hierarchyPosition == FINAL_COMPONENT){
-                    if(!_hasEmitted){
-                        //we never emitted anything, and we reach end of the file
-                            //nobody will call our ack method
-                        _hasEmitted=true; // to ensure we will not send multiple EOF per single spout
-                        _collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
+        /*
+         * whatever is inside this method is done only once
+         */
+	private void eofFinalization(){
+		printContent();
+
+		if(MyUtilities.isAckEveryTuple(_conf)){
+			if(!_hasEmitted){
+				//we never emitted anything, and we reach end of the file
+				//nobody will call our ack method
+				_hasEmitted=true; // to ensure we will not send multiple EOF per single spout
+				_collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
+			}
+		}else{
+			if(_hierarchyPosition == FINAL_COMPONENT){
+				if(!_hasEmitted){
+					//we never emitted anything, and we reach end of the file
+					//nobody will call our ack method
+					_hasEmitted=true; // to ensure we will not send multiple EOF per single spout
+					_collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
+				}
+			} else {
+				if(!_hasSentLastAck){
+					_hasSentLastAck = true;
+                                        List<String> lastTuple = new ArrayList<String>(Arrays.asList(SystemParameters.LAST_ACK));
+					_collector.emit(new Values("N/A", lastTuple, "N/A"));
+				}
+			}
+		}
+	}
+
+        /*
+         * sending EOF in AckEveryTuple mode when we send at least one tuple to the next component
+         */
+        private void sendEOF(){
+            if (MyUtilities.isAckEveryTuple(_conf)){
+                if(_hasEmitted){
+                    if (_pendingTuples == 0) {
+                        if(!_hasSentEOF){
+                            _hasSentEOF = true;
+                            _collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
+                        }
                     }
-                 } else {
-                    if(!_hasSentLastAck){
-                        _hasSentLastAck = true;
-                        List<String> lastTuple = new ArrayList<String>(Arrays.asList(SystemParameters.LAST_ACK));
-			_collector.emit(new Values("N/A", lastTuple, "N/A"));
-                    }
-                 }
+                }
             }
         }
 
@@ -256,14 +275,7 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
         //ack method on spout is called only if in AckEveryTuple mode (ACKERS > 0)
 	@Override
 	public void ack(Object msgId) {
-		_pendingTuples--;	    
-		if (_hasReachedEOF) {
-			if (_pendingTuples == 0) {
-                            if(MyUtilities.isAckEveryTuple(_conf)){
-                                _collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
-                            }
-			}
-		}
+            _pendingTuples--;
 	}
 
 	@Override

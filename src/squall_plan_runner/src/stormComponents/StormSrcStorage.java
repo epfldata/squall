@@ -22,7 +22,6 @@ import operators.AggregateOperator;
 import operators.ChainOperator;
 import operators.Operator;
 import operators.ProjectOperator;
-import operators.SelectOperator;
 import utilities.SystemParameters;
 import storage.SquallStorage;
 

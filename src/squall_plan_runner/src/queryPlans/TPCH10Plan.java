@@ -4,7 +4,6 @@
  */
 
 package queryPlans;
-import schema.TPCH_Schema;
 import components.DataSourceComponent;
 import components.EquiJoinComponent;
 import conversion.DateConversion;
@@ -70,7 +69,6 @@ public class TPCH10Plan {
         DataSourceComponent relationCustomer = new DataSourceComponent(
                 "CUSTOMER",
                 dataPath + "customer" + extension,
-                TPCH_Schema.customer,
                 _queryPlan).setHashIndexes(hashCustomer)
                            .addOperator(projectionCustomer);
 
@@ -89,7 +87,6 @@ public class TPCH10Plan {
         DataSourceComponent relationOrders = new DataSourceComponent(
                 "ORDERS",
                 dataPath + "orders" + extension,
-                TPCH_Schema.orders,
                 _queryPlan).setHashIndexes(hashOrders)
                            .addOperator(selectionOrders)
                            .addOperator(projectionOrders);
@@ -107,7 +104,6 @@ public class TPCH10Plan {
         DataSourceComponent relationNation = new DataSourceComponent(
                 "NATION",
                 dataPath + "nation" + extension,
-                TPCH_Schema.nation,
                 _queryPlan).setHashIndexes(hashNation)
                            .addOperator(projectionNation);
         //-------------------------------------------------------------------------------------
@@ -132,7 +128,6 @@ public class TPCH10Plan {
         DataSourceComponent relationLineitem = new DataSourceComponent(
                 "LINEITEM",
                 dataPath + "lineitem" + extension,
-                TPCH_Schema.lineitem,
                 _queryPlan).setHashIndexes(hashLineitem)
                            .addOperator(selectionLineitem)
                            .addOperator(projectionLineitem);

@@ -6,9 +6,9 @@
 package schema;
 
 import conversion.TypeConversion;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import utilities.MyUtilities;
 
 
 public class Schema {
@@ -39,8 +39,21 @@ public class Schema {
         return -1;
     }
 
-    public List<ColumnNameType> getTableSchema(String tableName){
+    public List<ColumnNameType> getColumnNameTypes(String tableName){
         return tables.get(tableName);
+    }
+
+    /*
+     * Schema contains only names of the columns from a table
+     */
+    public List<String> getTableSchema(String tableName){
+        List<ColumnNameType> columnTypes = getColumnNameTypes(tableName);
+
+        List<String> columnNames = new ArrayList<String>();
+        for(ColumnNameType cnt: columnTypes){
+            columnNames.add(cnt.getName());
+        }
+        return columnNames;
     }
 
     public TypeConversion getType(String tableName, String columnName){

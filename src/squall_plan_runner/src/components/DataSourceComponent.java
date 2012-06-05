@@ -10,18 +10,13 @@ import backtype.storm.topology.TopologyBuilder;
 import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
-import operators.AggregateOperator;
 import operators.ChainOperator;
-import operators.DistinctOperator;
 import operators.Operator;
-import operators.ProjectOperator;
-import operators.SelectOperator;
 import stormComponents.StormDataSource;
 import stormComponents.synchronization.TopologyKiller;
 import org.apache.log4j.Logger;
 import queryPlans.QueryPlan;
 import stormComponents.StormComponent;
-import schema.ColumnNameType;
 import utilities.MyUtilities;
 import utilities.SystemParameters;
 
@@ -37,7 +32,6 @@ public class DataSourceComponent implements Component {
     private List<Integer> _hashIndexes;
     private List<ValueExpression> _hashExpressions;
 
-    private List<ColumnNameType> _tableSchema;
     private StormDataSource _dataSource;
 
     private ChainOperator _chain = new ChainOperator();
@@ -49,11 +43,9 @@ public class DataSourceComponent implements Component {
 
     public DataSourceComponent(String componentName,
                         String inputPath,
-                        List<ColumnNameType> tableSchema,
                         QueryPlan queryPlan) {
 		_componentName=componentName;
 		_inputPath=inputPath;
-                _tableSchema = tableSchema;
 
                 queryPlan.add(this);
     }
@@ -154,11 +146,6 @@ public class DataSourceComponent implements Component {
     @Override
     public void setChild(Component child) {
         _child = child;
-    }
-
-    @Override
-    public int getPreOpsOutputSize(){
-        return _tableSchema.size();
     }
 
     @Override

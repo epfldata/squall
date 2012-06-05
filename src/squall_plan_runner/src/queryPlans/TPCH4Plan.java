@@ -4,7 +4,6 @@
  */
 
 package queryPlans;
-import schema.TPCH_Schema;
 import components.DataSourceComponent;
 import components.EquiJoinComponent;
 import components.OperatorComponent;
@@ -75,7 +74,6 @@ public class TPCH4Plan {
         DataSourceComponent relationOrders = new DataSourceComponent(
                 "ORDERS",
                 dataPath + "orders" + extension,
-                TPCH_Schema.orders,
                 _queryPlan).setHashIndexes(hashOrders)
                            .addOperator(selectionOrders)
                            .addOperator(projectionOrders);
@@ -95,7 +93,6 @@ public class TPCH4Plan {
         DataSourceComponent relationLineitem = new DataSourceComponent(
                 "LINEITEM",
                 dataPath + "lineitem" + extension,
-                TPCH_Schema.lineitem,
                 _queryPlan).setHashIndexes(hashLineitem)
                            .addOperator(selectionLineitem)
                            .addOperator(distinctLineitem);

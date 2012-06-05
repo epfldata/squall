@@ -10,12 +10,8 @@ import backtype.storm.topology.TopologyBuilder;
 import expressions.ValueExpression;
 import java.io.Serializable;
 import java.util.List;
-import operators.AggregateOperator;
 import operators.ChainOperator;
-import operators.DistinctOperator;
 import operators.Operator;
-import operators.ProjectOperator;
-import operators.SelectOperator;
 import stormComponents.StormEmitter;
 import stormComponents.synchronization.TopologyKiller;
 
@@ -51,7 +47,6 @@ public interface Component extends Serializable, StormEmitter {
     public Component[] getParents();
     public void setChild(Component child);
     public Component getChild();
-    public int getPreOpsOutputSize();
     public List<DataSourceComponent> getAncestorDataSources();
 
     //method necessary for direct grouping and load balancing:

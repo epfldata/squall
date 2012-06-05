@@ -35,7 +35,6 @@ import predicates.AndPredicate;
 import predicates.BetweenPredicate;
 import predicates.ComparisonPredicate;
 import predicates.OrPredicate;
-import queryPlans.QueryPlan;
 
 public class ThetaTPCH7Plan {
     private static Logger LOG = Logger.getLogger(ThetaTPCH7Plan.class);
@@ -76,7 +75,6 @@ public class ThetaTPCH7Plan {
         DataSourceComponent relationNation1 = new DataSourceComponent(
                 "NATION1",
                 dataPath + "nation" + extension,
-                TPCH_Schema.nation,
                 _queryPlan).setHashIndexes(hashNation1)
                            .addOperator(selectionNation1)
                            .addOperator(projectionNation1);
@@ -89,7 +87,6 @@ public class ThetaTPCH7Plan {
         DataSourceComponent relationCustomer = new DataSourceComponent(
                 "CUSTOMER",
                 dataPath + "customer" + extension,
-                TPCH_Schema.customer,
                 _queryPlan).setHashIndexes(hashCustomer)
                            .addOperator(projectionCustomer);
 
@@ -117,7 +114,6 @@ public class ThetaTPCH7Plan {
         DataSourceComponent relationOrders = new DataSourceComponent(
                 "ORDERS",
                 dataPath + "orders" + extension,
-                TPCH_Schema.orders,
                 _queryPlan).setHashIndexes(hashOrders)
                            .addOperator(projectionOrders);
 
@@ -147,7 +143,6 @@ public class ThetaTPCH7Plan {
         DataSourceComponent relationSupplier = new DataSourceComponent(
                 "SUPPLIER",
                 dataPath + "supplier" + extension,
-                TPCH_Schema.supplier,
                 _queryPlan).setHashIndexes(hashSupplier)
                            .addOperator(projectionSupplier);
 
@@ -159,7 +154,6 @@ public class ThetaTPCH7Plan {
         DataSourceComponent relationNation2 = new DataSourceComponent(
                 "NATION2",
                 dataPath + "nation" + extension,
-                TPCH_Schema.nation,
                 _queryPlan).setHashIndexes(hashNation2)
                            .addOperator(selectionNation1)
                            .addOperator(projectionNation2);
@@ -171,14 +165,12 @@ public class ThetaTPCH7Plan {
 		ComparisonPredicate S_N_comp = new ComparisonPredicate(
 				ComparisonPredicate.EQUAL_OP, colS, colN2);
                 
-        Component S_Njoin;
-
-        		S_Njoin = new ThetaJoinComponent(
-                relationSupplier,
-                relationNation2,
-                _queryPlan).addOperator(new ProjectOperator(new int[]{0, 2}))
-                .setJoinPredicate(S_N_comp);
-                           //.setHashIndexes(new ArrayList<Integer>(Arrays.asList(0)));
+                Component S_Njoin = new ThetaJoinComponent(
+                    relationSupplier,
+                    relationNation2,
+                    _queryPlan).addOperator(new ProjectOperator(new int[]{0, 2}))
+                               .setJoinPredicate(S_N_comp);
+                             //.setHashIndexes(new ArrayList<Integer>(Arrays.asList(0)));
 
 
        //-------------------------------------------------------------------------------------
@@ -214,7 +206,6 @@ public class ThetaTPCH7Plan {
         DataSourceComponent relationLineitem = new DataSourceComponent(
                 "LINEITEM",
                 dataPath + "lineitem" + extension,
-                TPCH_Schema.lineitem,
                 _queryPlan).setHashIndexes(hashLineitem)
                            .addOperator(selectionLineitem)
                            .addOperator(projectionLineitem);
@@ -226,13 +217,11 @@ public class ThetaTPCH7Plan {
 		ComparisonPredicate L_S_N_comp = new ComparisonPredicate(
 				ComparisonPredicate.EQUAL_OP, colL, colS_N);
         
-        Component L_S_Njoin;
-
-    		L_S_Njoin = new ThetaJoinComponent(
+        Component L_S_Njoin = new ThetaJoinComponent(
             relationLineitem,
             S_Njoin,
             _queryPlan).addOperator(new ProjectOperator(new int[]{5, 0, 1, 3}))
-            .setJoinPredicate(L_S_N_comp);
+                       .setJoinPredicate(L_S_N_comp);
 
         //-------------------------------------------------------------------------------------
         // set up aggregation function on the same StormComponent(Bolt) where the last join is
@@ -267,9 +256,7 @@ public class ThetaTPCH7Plan {
 				ComparisonPredicate.EQUAL_OP, colN_C_O, colL_S_N);
 
                 
-        Component N_C_O_L_S_Njoin;
-
-        	N_C_O_L_S_Njoin = new ThetaJoinComponent(
+        Component N_C_O_L_S_Njoin = new ThetaJoinComponent(
             N_C_Ojoin,
             L_S_Njoin,
             _queryPlan).addOperator(so)

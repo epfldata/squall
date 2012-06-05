@@ -23,7 +23,6 @@ import operators.SelectOperator;
 
 import org.apache.log4j.Logger;
 import predicates.ComparisonPredicate;
-import schema.RST_Schema;
 
 public class RSTPlan {
     private static Logger LOG = Logger.getLogger(RSTPlan.class);
@@ -41,7 +40,6 @@ public class RSTPlan {
             DataSourceComponent relationR = new DataSourceComponent(
                                         "R",
                                         dataPath + "r" + extension,
-                                        RST_Schema.R,
                                         _queryPlan).setHashIndexes(hashR);
 
             //-------------------------------------------------------------------------------------
@@ -50,7 +48,6 @@ public class RSTPlan {
             DataSourceComponent relationS = new DataSourceComponent(
                                             "S",
                                             dataPath + "s" + extension,
-                                            RST_Schema.S,
                                             _queryPlan).setHashIndexes(hashS) ;
 
             //-------------------------------------------------------------------------------------
@@ -67,7 +64,6 @@ public class RSTPlan {
             DataSourceComponent relationT= new DataSourceComponent(
                                             "T",
                                             dataPath + "t" + extension,
-                                            RST_Schema.T,
                                             _queryPlan).setHashIndexes(hashT);
 
             //-------------------------------------------------------------------------------------

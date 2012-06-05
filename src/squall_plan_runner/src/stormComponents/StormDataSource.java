@@ -27,10 +27,7 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 import operators.AggregateOperator;
 import operators.ChainOperator;
-import operators.DistinctOperator;
 import operators.Operator;
-import operators.ProjectOperator;
-import operators.SelectOperator;
 import utilities.SystemParameters;
 
 import org.apache.log4j.Logger;
@@ -60,14 +57,13 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 	private ChainOperator _operatorChain;
 
 	private int _numSentTuples=0;
-	private boolean _alreadyPrintedContent;
 	private boolean _printOut;
 
 	private int _fileSection, _fileParts;
 	private boolean _hasEmitted=false; //have this spout emitted at least one tuple
+        private boolean _hasSentEOF = false; //have sent EOF to TopologyKiller (AckEachTuple mode)
 
-	//NoAck
-	private boolean _hasSentLastAck = false;
+	private boolean _hasSentLastAck = false; // AckLastTuple mode
 
 	//for batch sending
 	private final Semaphore _semAgg = new Semaphore(1, true);
@@ -121,16 +117,17 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 				_firstTime = false;
 			}
 
-			if(_hasReachedEOF) {
-				eofFinalization();
-
-				Utils.sleep(SystemParameters.EOF_TIMEOUT_MILLIS);
-				return;
-			}
-
 			String line = readLine();
 			if(line==null) {
+                                if(!_hasReachedEOF){
+                                    //we reached EOF, first time this happens we invoke the method:
+                                    eofFinalization();
+                                }
 				_hasReachedEOF=true;
+                                sendEOF();
+                                //sleep since we are not goint to do useful work,
+                                //  but still are looping in nextTuple method
+				Utils.sleep(SystemParameters.EOF_TIMEOUT_MILLIS);
 				return;
 			}
 
@@ -168,11 +165,12 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                 }
 	}
 
+        /*
+         * whatever is inside this method is done only once
+         */
 	private void eofFinalization(){
-		if(!_alreadyPrintedContent){
-			_alreadyPrintedContent=true;
-			printContent();
-		}
+		printContent();
+
 		if(MyUtilities.isAckEveryTuple(_conf)){
 			if(!_hasEmitted){
 				//we never emitted anything, and we reach end of the file
@@ -197,6 +195,22 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 			}
 		}
 	}
+
+        /*
+         * sending EOF in AckEveryTuple mode when we send at least one tuple to the next component
+         */
+        private void sendEOF(){
+            if (MyUtilities.isAckEveryTuple(_conf)){
+                if(_hasEmitted){
+                    if (_pendingTuples == 0) {
+                        if(!_hasSentEOF){
+                            _hasSentEOF = true;
+                            _collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
+                        }
+                    }
+                }
+            }
+        }
 
 	@Override
 		public void tupleSend(List<String> tuple, Tuple stormTupleRcv) {
@@ -250,14 +264,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
         //ack method on spout is called only if in AckEveryTuple mode (ACKERS > 0)
 	@Override
 		public void ack(Object msgId) {
-			_pendingTuples--;	    
-			if (_hasReachedEOF) {
-				if (_pendingTuples == 0) {
-					if(MyUtilities.isAckEveryTuple(_conf)){
-						_collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
-					}
-				}
-			}
+			_pendingTuples--;
 		}
 
 	@Override

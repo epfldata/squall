@@ -14,7 +14,6 @@ import operators.ProjectOperator;
 
 import org.apache.log4j.Logger;
 import queryPlans.QueryPlan;
-import schema.TPCH_Schema;
 
 public class HyracksL1Plan {
     private static Logger LOG = Logger.getLogger(HyracksL1Plan.class);
@@ -31,7 +30,6 @@ public class HyracksL1Plan {
             DataSourceComponent relationCustomer = new DataSourceComponent(
                                             "CUSTOMER",
                                             dataPath + "customer" + extension,
-                                            TPCH_Schema.customer,
                                             _queryPlan).addOperator(projectionCustomer)
                                                        .setHashIndexes(hashCustomer)
                                                        .setPrintOut(false);
@@ -42,7 +40,6 @@ public class HyracksL1Plan {
             DataSourceComponent relationOrders = new DataSourceComponent(
                                             "ORDERS",
                                             dataPath + "orders" + extension,
-                                            TPCH_Schema.orders,
                                             _queryPlan).addOperator(projectionOrders)
                                                        .setHashIndexes(hashOrders)
                                                        .setPrintOut(false);

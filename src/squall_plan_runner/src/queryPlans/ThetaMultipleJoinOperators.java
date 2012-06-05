@@ -5,24 +5,17 @@
 
 package queryPlans;
 
-import schema.TPCH_Schema;
 import components.DataSourceComponent;
 import components.ThetaJoinComponent;
-import conversion.DateConversion;
 import conversion.DoubleConversion;
 import conversion.IntegerConversion;
 import conversion.NumericConversion;
-import conversion.StringConversion;
-import conversion.TypeConversion;
 import expressions.ColumnReference;
-import expressions.IntegerYearFromDate;
 import expressions.Multiplication;
 import expressions.Subtraction;
 import expressions.ValueExpression;
 import expressions.ValueSpecification;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import operators.AggregateOperator;
@@ -30,14 +23,9 @@ import operators.AggregateSumOperator;
 import operators.ProjectOperator;
 import operators.SelectOperator;
 import org.apache.log4j.Logger;
-import org.omg.CORBA._IDLTypeStub;
 
 import predicates.AndPredicate;
-import predicates.BetweenPredicate;
 import predicates.ComparisonPredicate;
-import predicates.OrPredicate;
-import predicates.Predicate;
-import queryPlans.QueryPlan;
 
 public class ThetaMultipleJoinOperators {
 
@@ -57,9 +45,10 @@ public class ThetaMultipleJoinOperators {
 				new int[] { 0, 1, 2 ,5, 6 });
 
 		DataSourceComponent relationLineitem = new DataSourceComponent(
-				"LINEITEM", dataPath + "lineitem" + extension,
-				TPCH_Schema.lineitem, _queryPlan).setHashIndexes(hashLineitem)
-				.addOperator(projectionLineitem);
+				"LINEITEM", 
+                                dataPath + "lineitem" + extension,
+                                _queryPlan).setHashIndexes(hashLineitem)
+				           .addOperator(projectionLineitem);
 
 		// -------------------------------------------------------------------------------------
 		List<Integer> hashOrders= Arrays.asList(0);
@@ -68,13 +57,11 @@ public class ThetaMultipleJoinOperators {
 				new int[] { 0, 3 });
 
 		DataSourceComponent relationOrders = new DataSourceComponent(
-				"ORDERS", dataPath + "orders" + extension,
-				TPCH_Schema.orders, _queryPlan).setHashIndexes(hashOrders)
-				.addOperator(projectionOrders);
+				"ORDERS", 
+                                dataPath + "orders" + extension,
+                                _queryPlan).setHashIndexes(hashOrders)
+				           .addOperator(projectionOrders);
 
-		//-------------------------------------------------------------------------------------
-
-		
 		// -------------------------------------------------------------------------------------
 		List<Integer> hashSupplier= Arrays.asList(0);
 
@@ -82,9 +69,10 @@ public class ThetaMultipleJoinOperators {
 				new int[] { 0 });
 
 		DataSourceComponent relationSupplier= new DataSourceComponent(
-				"SUPPLIER", dataPath + "supplier" + extension,
-				TPCH_Schema.supplier, _queryPlan).setHashIndexes(hashSupplier)
-				.addOperator(projectionSupplier);
+				"SUPPLIER",
+                                dataPath + "supplier" + extension,
+				_queryPlan).setHashIndexes(hashSupplier)
+				           .addOperator(projectionSupplier);
 
 		//-------------------------------------------------------------------------------------
 
@@ -96,11 +84,12 @@ public class ThetaMultipleJoinOperators {
 		/*ColumnReference colQty = new ColumnReference(_intConv, 2);
 		ValueSpecification val9990 = new ValueSpecification(_intConv, 9990);
 		SelectionOperator select = new SelectionOperator(new ComparisonPredicate(ComparisonPredicate.GREATER_OP, colQty, val9990));
-*/
+                */
 		DataSourceComponent relationPartsupp= new DataSourceComponent(
-				"PARTSUPP", dataPath + "partsupp" + extension,
-				TPCH_Schema.partsupp, _queryPlan).setHashIndexes(hashPartsSupp)
-				.addOperator(projectionPartsSupp);
+				"PARTSUPP",
+                                dataPath + "partsupp" + extension,
+				_queryPlan).setHashIndexes(hashPartsSupp)
+				           .addOperator(projectionPartsSupp);
 
 		//-------------------------------------------------------------------------------------
 
@@ -119,35 +108,30 @@ public class ThetaMultipleJoinOperators {
 		ThetaJoinComponent LINEITEMS_ORDERSjoin = new ThetaJoinComponent(
 				relationLineitem,
 				relationOrders,
-				_queryPlan)
-				.setJoinPredicate(predL_O)
-				.addOperator(new ProjectOperator(new int[]{1, 2, 3,4}))
-				;  
+				_queryPlan).setJoinPredicate(predL_O)
+				           .addOperator(new ProjectOperator(new int[]{1, 2, 3,4}));
 		//-------------------------------------------------------------------------------------
 		
-        SelectOperator selectionPartSupp = new SelectOperator(
-                new ComparisonPredicate(
-                    ComparisonPredicate.GREATER_OP,
-                    new ColumnReference(_intConv, 2), 
-                    new ValueSpecification(_intConv, 9990)
-                ));
+                SelectOperator selectionPartSupp = new SelectOperator(
+                    new ComparisonPredicate(
+                        ComparisonPredicate.GREATER_OP,
+                        new ColumnReference(_intConv, 2),
+                        new ValueSpecification(_intConv, 9990)
+                    ));
         
-        ColumnReference colRefSupplier = new ColumnReference(_intConv, 0);
+                ColumnReference colRefSupplier = new ColumnReference(_intConv, 0);
 		ColumnReference colRefPartSupp = new ColumnReference(_intConv, 1);
-        ComparisonPredicate predS_P = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP, colRefSupplier, colRefPartSupp);
+                ComparisonPredicate predS_P = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP, colRefSupplier, colRefPartSupp);
         
 
 		ThetaJoinComponent SUPPLIER_PARTSUPPjoin = new ThetaJoinComponent(
 				relationSupplier,
 				relationPartsupp,
-				_queryPlan)
-				.setJoinPredicate(predS_P)
-				.addOperator(new ProjectOperator(new int[]{0,1,3}))
-				.addOperator(selectionPartSupp)
-				;  
+				_queryPlan).setJoinPredicate(predS_P)
+				           .addOperator(new ProjectOperator(new int[]{0,1,3}))
+				           .addOperator(selectionPartSupp);
 		
 		//-------------------------------------------------------------------------------------
-		
 		
 		// set up aggregation function on the StormComponent(Bolt) where join is performed
 
@@ -177,11 +161,9 @@ public class ThetaMultipleJoinOperators {
 		ThetaJoinComponent LINEITEMS_ORDERS_SUPPLIER_PARTSUPPjoin = new ThetaJoinComponent(
 				LINEITEMS_ORDERSjoin,
 				SUPPLIER_PARTSUPPjoin,
-				_queryPlan)
-				.setJoinPredicate(predL_P)
-				.addOperator(new ProjectOperator(new int[]{0,1, 2, 3}))
-				.addOperator(agg)
-				;  
+				_queryPlan).setJoinPredicate(predL_P)
+				           .addOperator(new ProjectOperator(new int[]{0,1, 2, 3}))
+				           .addOperator(agg);
 		
 
 		//-------------------------------------------------------------------------------------

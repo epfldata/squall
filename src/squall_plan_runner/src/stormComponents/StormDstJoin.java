@@ -20,10 +20,8 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 import operators.AggregateOperator;
 import operators.ChainOperator;
-import operators.DistinctOperator;
 import operators.Operator;
 import operators.ProjectOperator;
-import operators.SelectOperator;
 import utilities.SystemParameters;
 import storage.SquallStorage;
 

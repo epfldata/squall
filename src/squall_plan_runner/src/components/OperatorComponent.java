@@ -154,11 +154,6 @@ public  class OperatorComponent implements Component{
     }
 
     @Override
-    public int getPreOpsOutputSize(){
-        return _parent.getPreOpsOutputSize();
-    }
-
-    @Override
     public List<DataSourceComponent> getAncestorDataSources(){
         List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
         list.addAll(_parent.getAncestorDataSources());

@@ -6,6 +6,8 @@
 package util;
 
 import components.Component;
+import components.DataSourceComponent;
+import components.ThetaJoinComponent;
 import expressions.ColumnReference;
 import expressions.ValueExpression;
 import java.io.BufferedReader;
@@ -19,6 +21,7 @@ import net.sf.jsqlparser.statement.select.Join;
 import operators.ChainOperator;
 import operators.Operator;
 import queryPlans.QueryPlan;
+import schema.Schema;
 import utilities.MyUtilities;
 
 
@@ -243,4 +246,36 @@ public class ParserUtil {
 
         return result;
     }
+
+    /*
+     * Used in Simple and Rule optimizer
+     * Used when index of a column has to be obtained
+     *   before EarlyProjection is performed.
+     */
+    public static int getPreOpsOutputSize(DataSourceComponent source, Schema schema, TableAliasName tan){
+        String tableName = tan.getSchemaName(source.getName());
+        return schema.getColumnNameTypes(tableName).size();
+    }
+
+    public static int getPreOpsOutputSize(Component component, Schema schema, TableAliasName tan){
+        if(component instanceof ThetaJoinComponent){
+            throw new RuntimeException("SQL generator with Theta does not work for now!");
+            //TODO similar to Equijoin, but not subtracting joinColumnsLength
+        }
+
+        Component[] parents = component.getParents();
+        if(parents == null){
+            //this is a DataSourceComponent
+            return getPreOpsOutputSize((DataSourceComponent)component, schema, tan);
+        }else if(parents.length == 1){
+            return getPreOpsOutputSize(parents[0], schema, tan);
+        }else if(parents.length == 2){
+            Component firstParent = parents[0];
+            Component secondParent = parents[1];
+            int joinColumnsLength = firstParent.getHashIndexes().size();
+            return getPreOpsOutputSize(firstParent, schema, tan) + getPreOpsOutputSize(secondParent, schema, tan) - joinColumnsLength;
+        }
+        throw new RuntimeException("More than two parents for a component " + component);
+    }
+
 }

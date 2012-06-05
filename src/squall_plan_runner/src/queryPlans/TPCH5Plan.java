@@ -4,7 +4,6 @@
  */
 
 package queryPlans;
-import schema.TPCH_Schema;
 import components.DataSourceComponent;
 import components.EquiJoinComponent;
 import components.OperatorComponent;
@@ -79,7 +78,6 @@ public class TPCH5Plan {
         DataSourceComponent relationRegion = new DataSourceComponent(
                 "REGION",
                 dataPath + "region" + extension,
-                TPCH_Schema.region,
                 _queryPlan).setHashIndexes(hashRegion)
                            .addOperator(selectionRegion)
                            .addOperator(projectionRegion);
@@ -92,7 +90,6 @@ public class TPCH5Plan {
         DataSourceComponent relationNation = new DataSourceComponent(
                 "NATION",
                 dataPath + "nation" + extension,
-                TPCH_Schema.nation,
                 _queryPlan).setHashIndexes(hashNation)
                            .addOperator(projectionNation);
 
@@ -116,7 +113,6 @@ public class TPCH5Plan {
         DataSourceComponent relationSupplier = new DataSourceComponent(
                 "SUPPLIER",
                 dataPath + "supplier" + extension,
-                TPCH_Schema.supplier,
                 _queryPlan).setHashIndexes(hashSupplier)
                            .addOperator(projectionSupplier);
 
@@ -139,7 +135,6 @@ public class TPCH5Plan {
         DataSourceComponent relationLineitem = new DataSourceComponent(
                 "LINEITEM",
                 dataPath + "lineitem" + extension,
-                TPCH_Schema.lineitem,
                 _queryPlan).setHashIndexes(hashLineitem)
                            .addOperator(projectionLineitem);
 
@@ -162,7 +157,6 @@ public class TPCH5Plan {
         DataSourceComponent relationCustomer = new DataSourceComponent(
                 "CUSTOMER",
                 dataPath + "customer" + extension,
-                TPCH_Schema.customer,
                 _queryPlan).setHashIndexes(hashCustomer)
                            .addOperator(projectionCustomer);
 
@@ -181,7 +175,6 @@ public class TPCH5Plan {
         DataSourceComponent relationOrders = new DataSourceComponent(
                 "ORDERS",
                 dataPath + "orders" + extension,
-                TPCH_Schema.orders,
                 _queryPlan).setHashIndexes(hashOrders)
                            .addOperator(selectionOrders)
                            .addOperator(projectionOrders);

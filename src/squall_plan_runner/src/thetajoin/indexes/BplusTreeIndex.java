@@ -2,8 +2,6 @@ package thetajoin.indexes;
 
 import gnu.trove.list.array.TIntArrayList;
 
-import java.util.ArrayList;
-import java.util.List;
 
 
 import predicates.ComparisonPredicate;

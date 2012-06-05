@@ -1,7 +1,6 @@
 package stormComponents;
 
 import backtype.storm.Config;
-import java.util.ArrayList;
 import java.util.Map;
 
 import backtype.storm.task.OutputCollector;

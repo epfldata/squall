@@ -14,7 +14,6 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import predicates.ComparisonPredicate;
-import schema.TPCH_Schema;
 
 public class TestThetaJoin {
     private static Logger LOG = Logger.getLogger(TestThetaJoin.class);
@@ -27,14 +26,12 @@ public class TestThetaJoin {
             DataSourceComponent relationNation = new DataSourceComponent(
                                             "NATION",
                                             dataPath + "nation" + extension,
-                                            TPCH_Schema.nation,
                                             _queryPlan);
 
             //-------------------------------------------------------------------------------------
             DataSourceComponent relationRegion = new DataSourceComponent(
                                             "REGION",
                                             dataPath + "region" + extension,
-                                            TPCH_Schema.region,
                                             _queryPlan);
 
             //-------------------------------------------------------------------------------------

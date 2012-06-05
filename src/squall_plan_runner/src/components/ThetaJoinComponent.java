@@ -163,12 +163,6 @@ public class ThetaJoinComponent implements Component {
     }
 
     @Override
-    public int getPreOpsOutputSize(){
-        int joinColumnsLength = _firstParent.getHashIndexes().size();
-        return _firstParent.getPreOpsOutputSize() + _secondParent.getPreOpsOutputSize() - joinColumnsLength;
-    }
-
-    @Override
     public List<DataSourceComponent> getAncestorDataSources(){
         List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
         for(Component parent: getParents()){

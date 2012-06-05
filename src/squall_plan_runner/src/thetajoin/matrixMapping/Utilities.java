@@ -3,14 +3,6 @@
  *  Utilities class used for mapping.
  */
 
-/*
- * BUILDING = 3706
-FURNITURE = 3007
-MACHINERY = 2536
-HOUSEHOLD = 2772
-AUTOMOBILE = 2979
- */
-
 package thetajoin.matrixMapping;
 
 import java.util.ArrayList;

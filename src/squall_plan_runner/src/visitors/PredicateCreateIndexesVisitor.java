@@ -3,9 +3,6 @@ package visitors;
 import java.util.ArrayList;
 import java.util.List;
 
-import expressions.ValueExpression;
-
-
 import predicates.AndPredicate;
 import predicates.BetweenPredicate;
 import predicates.ComparisonPredicate;

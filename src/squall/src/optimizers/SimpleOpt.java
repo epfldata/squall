@@ -5,7 +5,7 @@
 
 package optimizers;
 
-import optimizers.ruleBased.ParallelismAssigner;
+import optimizers.rule.ParallelismAssigner;
 import components.Component;
 import components.DataSourceComponent;
 import components.OperatorComponent;
@@ -33,7 +33,7 @@ public class SimpleOpt implements Optimizer {
     private Schema _schema;
     private String _dataPath;
     private String _extension;
-    private ComponentGenerator _cg;
+    private IndexComponentGenerator _cg;
     private TableAliasName _tan;
     private OptimizerTranslator _ot;
     private Map _map;
@@ -48,7 +48,7 @@ public class SimpleOpt implements Optimizer {
     }
 
     @Override
-    public ComponentGenerator generate(List<Table> tableList, List<Join> joinList, List<SelectItem> selectItems, Expression whereExpr){
+    public IndexComponentGenerator generate(List<Table> tableList, List<Join> joinList, List<SelectItem> selectItems, Expression whereExpr){
         _cg = generateTableJoins(tableList, joinList);
 
         //selectItems might add OperatorComponent, this is why it goes first
@@ -63,28 +63,21 @@ public class SimpleOpt implements Optimizer {
         return _cg;
     }
 
-    private ComponentGenerator generateTableJoins(List<Table> tableList, List<Join> joinList) {
-        ComponentGenerator cg = new ComponentGenerator(_schema, _tan, _ot, _dataPath, _extension);
+    private IndexComponentGenerator generateTableJoins(List<Table> tableList, List<Join> joinList) {
+        IndexComponentGenerator cg = new IndexComponentGenerator(_schema, _tan, _ot, _dataPath, _extension);
+
+        Component firstParent = cg.generateDataSource(ParserUtil.getComponentName(tableList.get(0)));
 
         //a special case
-        if(tableList.size()==1){
-            cg.generateDataSource(ParserUtil.getComponentName(tableList.get(0)));
+        if(tableList.size()==1){    
             return cg;
         }
 
         // This generates a lefty query plan.
-        Table first = tableList.get(0);
-        DataSourceComponent firstParent = cg.generateDataSource(ParserUtil.getComponentName(first));
-        Table second = tableList.get(1);
-        DataSourceComponent secondParent = cg.generateDataSource(ParserUtil.getComponentName(second));
-        List<Expression> joinCondition = ParserUtil.createListExp(joinList.get(0).getOnExpression());
-        Component comp = cg.generateEquiJoin(firstParent, secondParent, joinCondition);
-
-        for(int i=1; i<joinList.size(); i++){
-            Table currentTable = tableList.get(i+1);
-            DataSourceComponent currentSource = cg.generateDataSource(ParserUtil.getComponentName(currentTable));
+        for(int i=0; i<joinList.size(); i++){
+            DataSourceComponent secondParent = cg.generateDataSource(ParserUtil.getComponentName(tableList.get(i+1)));
             List<Expression> currentJoinCondition = ParserUtil.createListExp(joinList.get(i).getOnExpression());
-            comp = cg.generateEquiJoin(comp, currentSource, currentJoinCondition);
+            firstParent = cg.generateEquiJoin(firstParent, secondParent, currentJoinCondition);
         }
         return cg;
     }

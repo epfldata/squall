@@ -3,7 +3,6 @@ package thetajoin.indexes;
 import gnu.trove.list.array.TIntArrayList;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 
 
 /**
