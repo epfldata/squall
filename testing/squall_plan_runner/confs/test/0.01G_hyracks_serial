@@ -1,0 +1,26 @@
+# To change this template, choose Tools | Templates
+# and open the template in the editor.
+
+#Hyracks query
+DIP_DISTRIBUTED false
+DIP_QUERY_NAME hyracks
+DIP_TOPOLOGY_NAME_PREFIX avitorovic
+DIP_TOPOLOGY_NAME hyracks_serial
+DIP_NUM_PARALLELISM 5
+DIP_NUM_ACKERS 0
+
+DIP_DATA_PATH ../testing/data/tpch/0.01G/
+
+CUSTOMER_PAR 1
+ORDERS_PAR 1
+
+CUSTOMER_ORDERS_PAR 2
+COUNTAGG_PAR 2
+
+#below are unlikely to change
+DIP_EXTENSION .tbl
+DIP_READ_SPLIT_DELIMITER \|
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_KILL_AT_THE_END true

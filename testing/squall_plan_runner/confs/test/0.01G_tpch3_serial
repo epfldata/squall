@@ -1,0 +1,27 @@
+# To change this template, choose Tools | Templates
+# and open the template in the editor.
+
+#TPCH3 query
+DIP_DISTRIBUTED false
+DIP_QUERY_NAME tpch3
+DIP_TOPOLOGY_NAME_PREFIX avitorovic
+DIP_TOPOLOGY_NAME TPCH3Simple
+DIP_NUM_PARALLELISM 5
+DIP_NUM_ACKERS 17
+
+DIP_DATA_PATH ../testing/data/tpch/0.01G/
+
+CUSTOMER_PAR 1
+ORDERS_PAR 1
+LINEITEM_PAR 1
+
+CUSTOMER_ORDERS_PAR 2
+CUSTOMER_ORDERS_LINEITEM_PAR 3
+
+#below are unlikely to change
+DIP_EXTENSION .tbl
+DIP_READ_SPLIT_DELIMITER \|
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_KILL_AT_THE_END true

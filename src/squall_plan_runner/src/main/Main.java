@@ -24,10 +24,10 @@ import queryPlans.TPCH5Plan;
 import queryPlans.TPCH7Plan;
 import queryPlans.TPCH8Plan;
 import queryPlans.TPCH9Plan;
-import queryPlans.TestThetaJoin;
-import queryPlans.ThetaInputDominatedQuery;
-import queryPlans.ThetaMultipleJoinOperators;
-import queryPlans.ThetaOutputDominatedQuery;
+import queryPlans.ThetaHyracksPlan;
+import queryPlans.ThetaInputDominatedPlan;
+import queryPlans.ThetaMultipleJoinPlan;
+import queryPlans.ThetaOutputDominatedPlan;
 import queryPlans.ThetaTPCH7Plan;
 import stormComponents.StormJoin;
 import stormComponents.StormComponent;
@@ -114,48 +114,48 @@ public class Main {
             QueryPlan queryPlan = null;
 
             // change between this and ...
-            if(queryName.equalsIgnoreCase("RST")){
+            if(queryName.equalsIgnoreCase("rst")){
                 queryPlan = new RSTPlan(dataPath, extension, conf).getQueryPlan();
-            }else if (queryName.equalsIgnoreCase("Hyracks")){
+            }else if (queryName.equalsIgnoreCase("hyracks")){
                 queryPlan = new HyracksPlan(dataPath, extension, conf).getQueryPlan();
-            }else if (queryName.equalsIgnoreCase("HyracksPreAgg")){
+            }else if (queryName.equalsIgnoreCase("hyracks_pre_agg")){
                 queryPlan = new HyracksPreAggPlan(dataPath, extension, conf).getQueryPlan();
-            }else if (queryName.equalsIgnoreCase("HyracksL1")){
+            }else if (queryName.equalsIgnoreCase("hyracks_l1")){
                 queryPlan = new HyracksL1Plan(dataPath, extension, conf).getQueryPlan();
-            }else if (queryName.equalsIgnoreCase("HyracksL3")){
+            }else if (queryName.equalsIgnoreCase("hyracks_l3")){
                 queryPlan = new HyracksL3Plan(dataPath, extension, conf).getQueryPlan();
-            }else if (queryName.equalsIgnoreCase("HyracksL3Batch")){
+            }else if (queryName.equalsIgnoreCase("hyracks_l3_batch")){
                 queryPlan = new HyracksL3BatchPlan(dataPath, extension, conf).getQueryPlan();
-            }else if(queryName.equalsIgnoreCase("TPCH3")){
+            }else if(queryName.equalsIgnoreCase("tpch3")){
                 queryPlan = new TPCH3Plan(dataPath, extension, conf).getQueryPlan();
-            }else if(queryName.equalsIgnoreCase("TPCH3L1")){
+            }else if(queryName.equalsIgnoreCase("tcph3_l1")){
                 queryPlan = new TPCH3L1Plan(dataPath, extension, conf).getQueryPlan();
-            }else if(queryName.equalsIgnoreCase("TPCH3L2")){
+            }else if(queryName.equalsIgnoreCase("tpch3_l2")){
                 queryPlan = new TPCH3L2Plan(dataPath, extension, conf).getQueryPlan();
-            }else if(queryName.equalsIgnoreCase("TPCH3L23")){
+            }else if(queryName.equalsIgnoreCase("tpch3_l23")){
                 queryPlan = new TPCH3L23Plan(dataPath, extension, conf).getQueryPlan();
-            }else if(queryName.equalsIgnoreCase("TPCH4")){
+            }else if(queryName.equalsIgnoreCase("tpch4")){
                 queryPlan = new TPCH4Plan(dataPath, extension, conf).getQueryPlan();
-            }else if(queryName.equalsIgnoreCase("TPCH5")){
+            }else if(queryName.equalsIgnoreCase("tpch5")){
                 queryPlan = new TPCH5Plan(dataPath, extension, conf).getQueryPlan();
-            }else if(queryName.equalsIgnoreCase("TPCH7")){
+            }else if(queryName.equalsIgnoreCase("tpch7")){
                 queryPlan = new TPCH7Plan(dataPath, extension, conf).getQueryPlan();
-            }else if(queryName.equalsIgnoreCase("TPCH8")){
+            }else if(queryName.equalsIgnoreCase("tpch8")){
                 queryPlan = new TPCH8Plan(dataPath, extension, conf).getQueryPlan();
-            }else if(queryName.equalsIgnoreCase("TPCH9")){
+            }else if(queryName.equalsIgnoreCase("tpch9")){
                 queryPlan = new TPCH9Plan(dataPath, extension, conf).getQueryPlan();
-            }else if(queryName.equalsIgnoreCase("TPCH10")){
+            }else if(queryName.equalsIgnoreCase("tpch10")){
                 queryPlan = new TPCH10Plan(dataPath, extension, conf).getQueryPlan();
-            }else if (queryName.equalsIgnoreCase("TestTheta")){
-            	queryPlan = new TestThetaJoin(dataPath, extension, conf).getQueryPlan();
-            }else if (queryName.equalsIgnoreCase("ThetaTPCH7")){
+            }else if (queryName.equalsIgnoreCase("theta_tpch7")){
             	queryPlan = new ThetaTPCH7Plan(dataPath, extension, conf).getQueryPlan();
-            }else if (queryName.equalsIgnoreCase("ThetaInputDominated")){
-            	queryPlan = new ThetaInputDominatedQuery(dataPath, extension, conf).getQueryPlan();
-            }else if (queryName.equalsIgnoreCase("ThetaOutputDominated")){
-            	queryPlan = new ThetaOutputDominatedQuery(dataPath, extension, conf).getQueryPlan();
-            }else if (queryName.equalsIgnoreCase("ThetaMultipleJoin")){
-            	queryPlan = new ThetaMultipleJoinOperators(dataPath, extension, conf).getQueryPlan();
+            }else if (queryName.equalsIgnoreCase("theta_input_dominated")){
+            	queryPlan = new ThetaInputDominatedPlan(dataPath, extension, conf).getQueryPlan();
+            }else if (queryName.equalsIgnoreCase("theta_output_dominated")){
+            	queryPlan = new ThetaOutputDominatedPlan(dataPath, extension, conf).getQueryPlan();
+            }else if (queryName.equalsIgnoreCase("theta_multiple_join")){
+            	queryPlan = new ThetaMultipleJoinPlan(dataPath, extension, conf).getQueryPlan();
+            }else if (queryName.equalsIgnoreCase("theta_hyracks")){
+            	queryPlan = new ThetaHyracksPlan(dataPath, extension, conf).getQueryPlan();
             }
             // ... this line
 

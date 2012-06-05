@@ -5,7 +5,6 @@
 
 package queryPlans;
 
-import schema.TPCH_Schema;
 
 import components.Component;
 import components.DataSourceComponent;
@@ -92,19 +91,15 @@ public class ThetaTPCH7Plan {
 
         //-------------------------------------------------------------------------------------
         ColumnReference colN = new ColumnReference(_ic, 1);
-		ColumnReference colC = new ColumnReference(_ic, 1);
-		ComparisonPredicate N_C_comp = new ComparisonPredicate(
+	ColumnReference colC = new ColumnReference(_ic, 1);
+	ComparisonPredicate N_C_comp = new ComparisonPredicate(
 				ComparisonPredicate.EQUAL_OP, colN, colC);
 				
-        Component N_Cjoin;
-        
-
-        N_Cjoin = new ThetaJoinComponent(
+        Component N_Cjoin = new ThetaJoinComponent(
                 relationNation1,
                 relationCustomer,
                 _queryPlan).addOperator(new ProjectOperator(new int[]{0, 2}))
-                .setJoinPredicate(N_C_comp);
-
+                           .setJoinPredicate(N_C_comp);
 
         //-------------------------------------------------------------------------------------
         ArrayList<Integer> hashOrders = new ArrayList<Integer>(Arrays.asList(1));
@@ -120,21 +115,17 @@ public class ThetaTPCH7Plan {
         //-------------------------------------------------------------------------------------
         
         ColumnReference colN_C = new ColumnReference(_ic, 1);
-		ColumnReference colO = new ColumnReference(_ic, 1);
-		ComparisonPredicate N_C_O_comp = new ComparisonPredicate(
+	ColumnReference colO = new ColumnReference(_ic, 1);
+	ComparisonPredicate N_C_O_comp = new ComparisonPredicate(
 				ComparisonPredicate.EQUAL_OP, colN_C, colO);
                 
-        Component N_C_Ojoin;
-        
-    	N_C_Ojoin = new ThetaJoinComponent(
-        N_Cjoin,
-        relationOrders,
-        _queryPlan).addOperator(new ProjectOperator(new int[]{0, 2}))
-                   .setJoinPredicate(N_C_O_comp);
+        Component N_C_Ojoin = new ThetaJoinComponent(
+            N_Cjoin,
+            relationOrders,
+            _queryPlan).addOperator(new ProjectOperator(new int[]{0, 2}))
+                       .setJoinPredicate(N_C_O_comp);
 				 //.setHashIndexes(new ArrayList<Integer>(Arrays.asList(1)));	
         
-        
-
         //-------------------------------------------------------------------------------------
         ArrayList<Integer> hashSupplier = new ArrayList<Integer>(Arrays.asList(1));
 
@@ -161,11 +152,11 @@ public class ThetaTPCH7Plan {
         //-------------------------------------------------------------------------------------
 
         ColumnReference colS = new ColumnReference(_ic, 1);
-		ColumnReference colN2 = new ColumnReference(_ic, 1);
-		ComparisonPredicate S_N_comp = new ComparisonPredicate(
+	ColumnReference colN2 = new ColumnReference(_ic, 1);
+	ComparisonPredicate S_N_comp = new ComparisonPredicate(
 				ComparisonPredicate.EQUAL_OP, colS, colN2);
                 
-                Component S_Njoin = new ThetaJoinComponent(
+        Component S_Njoin = new ThetaJoinComponent(
                     relationSupplier,
                     relationNation2,
                     _queryPlan).addOperator(new ProjectOperator(new int[]{0, 2}))
@@ -213,8 +204,8 @@ public class ThetaTPCH7Plan {
         //-------------------------------------------------------------------------------------
         
         ColumnReference colL = new ColumnReference(_ic, 2);
-		ColumnReference colS_N = new ColumnReference(_ic, 0);
-		ComparisonPredicate L_S_N_comp = new ComparisonPredicate(
+	ColumnReference colS_N = new ColumnReference(_ic, 0);
+	ComparisonPredicate L_S_N_comp = new ComparisonPredicate(
 				ComparisonPredicate.EQUAL_OP, colL, colS_N);
         
         Component L_S_Njoin = new ThetaJoinComponent(
@@ -251,8 +242,8 @@ public class ThetaTPCH7Plan {
                 .setGroupByColumns(new ArrayList<Integer>(Arrays.asList(0, 2, 3)));
         
         ColumnReference colN_C_O = new ColumnReference(_ic, 1);
-		ColumnReference colL_S_N = new ColumnReference(_ic, 3);
-		ComparisonPredicate N_C_O_L_S_N_comp = new ComparisonPredicate(
+	ColumnReference colL_S_N = new ColumnReference(_ic, 3);
+	ComparisonPredicate N_C_O_L_S_N_comp = new ComparisonPredicate(
 				ComparisonPredicate.EQUAL_OP, colN_C_O, colL_S_N);
 
                 

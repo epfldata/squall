@@ -17,4 +17,4 @@ then
    exit
 fi
 
-java -cp ../squall-2.0-standalone.jar:../storm-0.7.0/lib/*:../storm-0.7.0/storm-0.7.0.jar main.Main $CONFIG_PATH
+java -cp ../squall-2.0-standalone.jar:../storm-0.7.0/lib/*:../storm-0.7.0/storm-0.7.0.jar -Xmx1024m main.Main $CONFIG_PATH

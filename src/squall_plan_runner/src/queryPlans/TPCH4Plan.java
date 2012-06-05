@@ -101,7 +101,7 @@ public class TPCH4Plan {
         EquiJoinComponent O_Ljoin = new EquiJoinComponent(
                 relationOrders,
                 relationLineitem,
-                _queryPlan);
+                _queryPlan).setHashIndexes(Arrays.asList(1));
 
         //-------------------------------------------------------------------------------------
         // set up aggregation function on a separate StormComponent(Bolt)

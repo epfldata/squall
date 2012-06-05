@@ -13,7 +13,8 @@ public class SystemParameters{
     private static Logger LOG = Logger.getLogger(SystemParameters.class);
 
     //in Local Mode, we compare against a file in this dir, for example with the name "hyracks.result"
-    public static final String RESULT_DIR = "../testing/results";
+    //we will concatenate DBSize to it
+    public static String RESULT_DIR = "../testing/results/";
 
     //default port, should not be changed unless some other application took this port
     public static final int NIMBUS_THRIFT_PORT = 6627;
@@ -87,6 +88,7 @@ public class SystemParameters{
     public static Config mapToStormConfig(Map map){
         Config conf = new Config();
         conf.putAll(map);
+        setResultPath(map);
         setStormVariables(conf);
         return conf;
     }
@@ -125,6 +127,17 @@ public class SystemParameters{
         return map;
     }
 
+    private static void setResultPath(Map map) {
+        String path = getString(map, "DIP_DATA_PATH");
+        if(path.endsWith("/")){
+            //removing last "/" character
+            path = path.substring(0, path.length()-1);
+        }
+        int pos = path.lastIndexOf("/");
+        String dataSize = path.substring(pos + 1, path.length());
+        RESULT_DIR += dataSize;
+    }
+
     /* Decided not to set it here, because we have to change many Squall config files
      *   this way the only change is in storm.yaml.
      *
@@ -145,4 +158,5 @@ public class SystemParameters{
 //            conf.put(Config.STORM_ZOOKEEPER_SERVERS, stormZookeeperServers);
 //        }
     }
+
 }

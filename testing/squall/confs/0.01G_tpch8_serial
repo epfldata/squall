@@ -1,0 +1,19 @@
+DIP_DISTRIBUTED false
+DIP_QUERY_NAME tpch8
+
+DIP_TOPOLOGY_NAME_PREFIX teamX
+DIP_DATA_ROOT ../testing/data/tpch/
+DIP_SQL_ROOT ../testing/squall/sql_queries/
+
+# DIP_DB_SIZE is in GBs
+DIP_DB_SIZE 0.01 
+DIP_MAX_SRC_PAR 1
+
+#below are unlikely to change
+DIP_EXTENSION .tbl
+DIP_READ_SPLIT_DELIMITER \|
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_ACK_EVERY_TUPLE false
+DIP_KILL_AT_THE_END true
