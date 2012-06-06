@@ -37,8 +37,7 @@ public class RuleTranslator implements OptimizerTranslator{
     */
     public int getColumnIndex(Column column, Component requestor, QueryPlan queryPlan, List<ColumnNameType> tupleSchema){
         String columnName = column.getColumnName();
-        Table table = column.getTable();
-        String tblCompName = ParserUtil.getComponentName(table);
+        String tblCompName = ParserUtil.getComponentName(column);
         String tableSchemaName = _tan.getSchemaName(tblCompName);
 
         int originalIndex = _schema.indexOf(tableSchemaName, columnName);

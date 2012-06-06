@@ -43,10 +43,12 @@ public class IndexComponentGenerator implements ComponentGenerator{
         _extension = extension;
     }
 
+    @Override
     public QueryPlan getQueryPlan(){
         return _queryPlan;
     }
 
+    @Override
     public List<Component> getSubPlans(){
         return _subPlans;
     }
@@ -55,6 +57,7 @@ public class IndexComponentGenerator implements ComponentGenerator{
      * adding a DataSourceComponent to the list of components
      * Necessary to call only when only one table is addresses in WHERE clause of a SQL query
      */
+    @Override
     public DataSourceComponent generateDataSource(String tableCompName){
         String tableSchemaName = _tan.getSchemaName(tableCompName);
         String sourceFile = tableSchemaName.toLowerCase();
@@ -71,6 +74,7 @@ public class IndexComponentGenerator implements ComponentGenerator{
      * Join between two components
      * List<Expression> is a set of join conditions between two components.
      */
+    @Override
     public Component generateEquiJoin(Component left, Component right, List<Expression> joinCondition){
         EquiJoinComponent joinComponent = new EquiJoinComponent(
                     left,

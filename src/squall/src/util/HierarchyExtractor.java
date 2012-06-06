@@ -9,8 +9,7 @@ import components.Component;
 import components.DataSourceComponent;
 import java.util.ArrayList;
 import java.util.List;
-import net.sf.jsqlparser.schema.Column;
-import optimizers.IndexComponentGenerator;
+import java.util.Set;
 
 /*
  * A utility class for extracting different hierarchy-(topology-)related information
@@ -46,28 +45,42 @@ public class HierarchyExtractor {
     }
 
     /*
-     * This method finds a DataSourceComponent a column refers to
-     *   columnName is in form table.column, i.e. N2.NATIONKEY
+     * Is component a child (not necessarily first generation) of all orCompNames?
+     * Used in Cost-based optimizer
      */
-    public static Component getSourcewithColumn(String columnName, IndexComponentGenerator cg){
-        String tableCompName = columnName.split("\\.")[0];
-        Component affectedComponent = cg.getQueryPlan().getComponent(tableCompName);
-        return affectedComponent;
-    }
-
-    public static Component getSourcewithColumn(Column column, IndexComponentGenerator cg) {
-        String tableCompName = ParserUtil.getComponentName(column.getTable());
-        Component affectedComponent = cg.getQueryPlan().getComponent(tableCompName);
-        return affectedComponent;
-    }
-
-    public static List<Component> getSourcewithColumn(List<Column> columns, IndexComponentGenerator cg) {
-        List<Component> compList = new ArrayList<Component>();
-        for(Column column: columns){
-            Component newComp = getSourcewithColumn(column, cg);
-            compList.add(newComp);
+    public static boolean isLCM(Component component, Set<String> orCompNames) {
+        //dealing with parents
+        Component[] parents = component.getParents();
+        int numParents = parents.length;
+        if(parents == null){
+            //if I don't have parents I can't be LCM (I am DataSourceComponent)
+            return false;
         }
-        return compList;
+
+        for(int i=0; i<numParents; i++){
+            Component parent = parents[i];
+            Set<String> parentAncestors = ParserUtil.getSourceNameSet(parent.getAncestorDataSources());
+            if(contains(parentAncestors, orCompNames)){
+                //my parent is LCM (or its parent)
+                return false;
+            }
+        }
+
+        //if I contain all the mentioned sources, and none of my parent does so, than I am LCM
+        Set<String> compAncestors = ParserUtil.getSourceNameSet(component.getAncestorDataSources());
+        return contains(compAncestors, orCompNames);
+    }
+
+    private static boolean contains(Set<String> biggerSet, Set<String> smallerSet) {
+        if (biggerSet.size() < smallerSet.size()){
+            return false;
+        }
+        for(String smallerElem: smallerSet){
+            if (!biggerSet.contains(smallerElem)){
+                return false;
+            }
+        }
+        return true;
     }
 
 }

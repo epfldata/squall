@@ -15,14 +15,13 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.Join;
 import queryPlans.QueryPlan;
 import schema.Schema;
 import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
-import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import operators.AggregateOperator;
 import operators.ProjectOperator;
@@ -35,7 +34,6 @@ import util.ParserUtil;
 import util.TableAliasName;
 import utilities.DeepCopy;
 import visitors.jsql.AndVisitor;
-import visitors.jsql.ColumnCollectVisitor;
 import visitors.jsql.JoinTablesExpVisitor;
 import visitors.squall.SelectItemsVisitor;
 import visitors.squall.WhereVisitor;
@@ -202,6 +200,10 @@ public class RuleBasedOpt implements Optimizer {
         return cg;
     }
 
+    /*************************************************************************************
+     * SELECT clause - Final Aggregation
+     *************************************************************************************/
+
     private int processSelectClause(List<SelectItem> selectItems) {
         //TODO: take care in nested case
         SelectItemsVisitor selectVisitor = new SelectItemsVisitor(_cg.getQueryPlan(), _schema, _tan, _ot, _map);
@@ -267,79 +269,74 @@ public class RuleBasedOpt implements Optimizer {
         }
     }
 
+    /*************************************************************************************
+     * WHERE clause - SelectOperator
+     *************************************************************************************/
+
     private void processWhereClause(Expression whereExpr) {
         // TODO: in non-nested case, there is a single Expression
-        if(whereExpr==null){
-            return;
+        if (whereExpr == null) return;
+
+        //assinging JSQL expressions to Components
+        Map<String, Expression> whereCompExprPairs = getWhereForComponents(whereExpr);
+
+        //Each component process its own part of JSQL whereExpression
+        for(Map.Entry<String, Expression> whereCompExprPair: whereCompExprPairs.entrySet()){
+            Component affectedComponent = _cg.getQueryPlan().getComponent(whereCompExprPair.getKey());
+            Expression whereCompExpr = whereCompExprPair.getValue();
+            processWhereForComponent(whereCompExpr, affectedComponent);
         }
+
+    }
+
+    /*
+     * this method returns a list of <ComponentName, whereCompExpression>
+     * @whereCompExpression part of JSQL expression which relates to the corresponding Component
+     */
+    private Map<String, Expression> getWhereForComponents(Expression whereExpr) {
         AndVisitor andVisitor = new AndVisitor();
         whereExpr.accept(andVisitor);
         List<Expression> atomicExprs = andVisitor.getAtomicExprs();
         List<OrExpression> orExprs = andVisitor.getOrExprs();
 
         /*
-         * we have to group atomicExpr (conjuctive terms) by tblComponentName
+         * we have to group atomicExpr (conjuctive terms) by ComponentName
          *   there might be mutliple columns from a single DataSourceComponent, and we want to group them
          *
          * conditions such as R.A + R.B = 10 are possible
          *   not possible to have ColumnReference from multiple tables,
          *   because than it would be join condition
          */
-        HashMap<String, Expression> collocatedExprs = new HashMap<String, Expression>();
-        for(Expression atomicExpr: atomicExprs){
-            List<Column> columns = invokeColumnVisitor(atomicExpr);
-            if(columns.isEmpty()){
-                //there should be at least one column, otherwise we are comparing constants
-                throw new RuntimeException("Number of expected columns for atomic expression should be non-zero!");
-            }
+        Map<String, Expression> collocatedExprs = new HashMap<String, Expression>();
+        ParserUtil.addAndExprsToComps(collocatedExprs, atomicExprs);
 
-            //all the columns will be from the same table, so we can choose any of them
-            //  (here we choose the first one)
-            Column column = columns.get(0);
-            String tableCompName = ParserUtil.getComponentName(column.getTable());
-            if(collocatedExprs.containsKey(tableCompName)){
-                Expression oldExpr = collocatedExprs.get(tableCompName);
-                Expression newExpr = new AndExpression(oldExpr, atomicExpr);
-                collocatedExprs.put(tableCompName, newExpr);
-            }else{
-                collocatedExprs.put(tableCompName, atomicExpr);
-            }
-        }
+        Map<Set<String>, Expression> collocatedOrs = new HashMap<Set<String>, Expression>();
+        ParserUtil.addOrExprsToComps(collocatedOrs, orExprs);
 
-        for(Map.Entry<String, Expression> entry: collocatedExprs.entrySet()){
-            String columnName = entry.getKey();
-            Expression exprPerColumn = entry.getValue();
-            Component affectedComponent = HierarchyExtractor.getSourcewithColumn(columnName, _cg);
-            processWhereForComponent(exprPerColumn, affectedComponent);
-        }
-
-        for(OrExpression orExpr: orExprs){
-            List<Column> columns = invokeColumnVisitor(orExpr);
-            List<Component> compList = HierarchyExtractor.getSourcewithColumn(columns, _cg);
+        for(Map.Entry<Set<String>, Expression> orEntry: collocatedOrs.entrySet()){
+            List<String> compNames = new ArrayList<String>(orEntry.getKey());
+            List<Component> compList = ParserUtil.getComponents(compNames, _cg);
             Component affectedComponent = HierarchyExtractor.getLCM(compList);
-            processWhereForComponent(orExpr, affectedComponent);
+
+            Expression orExpr = orEntry.getValue();
+            ParserUtil.addAndExprToComp(collocatedExprs, orExpr, affectedComponent.getName());
         }
+
+        return collocatedExprs;
     }
 
     /*
-     * whereExpression is the part of WHERE clause which refers to affectedComponent
+     * whereCompExpression is the part of WHERE clause which refers to affectedComponent
      * This is the only method in this class where WhereVisitor is actually instantiated and invoked
      */
-    private void processWhereForComponent(Expression whereExpression, Component affectedComponent){
+    private void processWhereForComponent(Expression whereCompExpression, Component affectedComponent){
         WhereVisitor whereVisitor = new WhereVisitor(_cg.getQueryPlan(), affectedComponent, _schema, _tan, _ot);
-        whereExpression.accept(whereVisitor);
+        whereCompExpression.accept(whereVisitor);
         attachWhereClause(whereVisitor.getSelectOperator(), affectedComponent);
     }
 
     private void attachWhereClause(SelectOperator select, Component affectedComponent) {
         affectedComponent.addOperator(select);
-    }
-
-    //HELPER
-    private List<Column> invokeColumnVisitor(Expression expr) {
-        ColumnCollectVisitor columnCollect = new ColumnCollectVisitor();
-        expr.accept(columnCollect);
-        return columnCollect.getColumns();
     }
 
     private int getNumHighLevelPairs(int numTables) {

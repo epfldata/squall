@@ -241,7 +241,7 @@ public class JoinHashVisitor implements ExpressionVisitor {
 
     @Override
     public void visit(Column column) {
-        String tableCompName = ParserUtil.getComponentName(column.getTable());
+        String tableCompName = ParserUtil.getComponentName(column);
         String tableSchemaName = _tan.getSchemaName(tableCompName);
         List<String> ancestorNames = HierarchyExtractor.getAncestorNames(_affectedComponent);
 

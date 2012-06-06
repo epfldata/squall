@@ -297,7 +297,7 @@ public class WhereVisitor implements ExpressionVisitor {
     @Override
     public void visit(Column column) {
         //extract type for the column
-        String tableSchemaName = _tan.getSchemaName(ParserUtil.getComponentName(column.getTable()));
+        String tableSchemaName = _tan.getSchemaName(ParserUtil.getComponentName(column));
         String columnName = column.getColumnName();
         TypeConversion tc = _schema.getType(tableSchemaName, columnName);
 

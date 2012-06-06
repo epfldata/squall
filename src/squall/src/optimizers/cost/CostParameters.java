@@ -12,8 +12,7 @@ public class CostParameters {
 
     //unless otherwise specified, there is no pruning tuples from a relation
     private double _selectivity = 1.0;
-    private long _cardinality;
-    private int _parallelism;
+    private long _cardinality; //total number of tuples at the output of a component
     private List<String> _schema;
 
     /**
@@ -42,20 +41,6 @@ public class CostParameters {
      */
     public void setCardinality(long cardinality) {
         _cardinality = cardinality;
-    }
-
-    /**
-     * @return the _parallelism
-     */
-    public int getParallelism() {
-        return _parallelism;
-    }
-
-    /**
-     * @param parallelism the _parallelism to set
-     */
-    public void setParallelism(int parallelism) {
-        _parallelism = parallelism;
     }
 
     /**

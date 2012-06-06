@@ -28,6 +28,7 @@ import visitors.squall.WhereVisitor;
 
 /*
  * Generate a query plan as it was parsed from the SQL.
+ * SELECT and WHERE clause are attached to the final component.
  */
 public class SimpleOpt implements Optimizer {
     private Schema _schema;

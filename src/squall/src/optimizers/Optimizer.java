@@ -14,6 +14,6 @@ import net.sf.jsqlparser.statement.select.SelectItem;
 
 public interface Optimizer {
 
-    public IndexComponentGenerator generate(List<Table> tableList, List<Join> joinList, List<SelectItem> selectItems, Expression whereExpr);
+    public ComponentGenerator generate(List<Table> tableList, List<Join> joinList, List<SelectItem> selectItems, Expression whereExpr);
 
 }

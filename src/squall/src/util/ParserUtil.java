@@ -15,14 +15,23 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
+import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
+import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.Join;
 import operators.ChainOperator;
 import operators.Operator;
+import optimizers.ComponentGenerator;
 import queryPlans.QueryPlan;
 import schema.Schema;
 import utilities.MyUtilities;
+import visitors.jsql.ColumnCollectVisitor;
 
 
 public class ParserUtil {
@@ -126,6 +135,64 @@ public class ParserUtil {
          }
          return tableName;
     }
+
+    /*
+     * This method finds a componentName a column refers to
+     *   columnName is in form table.column, i.e. N2.NATIONKEY
+     */
+    public static String getComponentName(String columnName){
+        return columnName.split("\\.")[0];
+    }
+
+    public static String getComponentName(Column column) {
+        return getComponentName(column.getTable());
+    }
+
+    public static List<String> getCompNamesFromColumns(List<Column> columns) {
+        List<String> compNameList = new ArrayList<String>();
+        for(Column column: columns){
+            String compName = getComponentName(column);
+            compNameList.add(compName);
+        }
+        return compNameList;
+    }
+
+    /*
+     * We assume all the columns refer to the same DataSourceComponent
+     */
+    public static String getComponentName(List<Column> columns){
+        //all the columns will be from the same table, so we can choose any of them
+        //  (here we choose the first one)
+        Column column = columns.get(0);
+        return getComponentName(column);
+    }
+
+    public static Set<String> getSourceNameSet(List<DataSourceComponent> components){
+        Set<String> compNames = new HashSet<String>();
+        for(Component component: components){
+            compNames.add(component.getName());
+        }
+        return compNames;
+    }
+
+    /*
+     * Find component in a query name with a given name
+     */
+    public static List<Component> getComponents(List<String> compNameList, ComponentGenerator cg) {
+        List<Component> compList = new ArrayList<Component>();
+        for(String compName: compNameList){
+            compList.add(getComponent(compName, cg));
+        }
+        return compList;
+    }
+
+    /*
+     * Find component in a query name with a given name
+     */
+    public static Component getComponent(String compName, ComponentGenerator cg){
+        return cg.getQueryPlan().getComponent(compName);
+    }
+
 
     public static List<Integer> extractColumnIndexes(List<ValueExpression> veList) {
         List<Integer> indexes = new ArrayList<Integer>();
@@ -276,6 +343,69 @@ public class ParserUtil {
             return getPreOpsOutputSize(firstParent, schema, tan) + getPreOpsOutputSize(secondParent, schema, tan) - joinColumnsLength;
         }
         throw new RuntimeException("More than two parents for a component " + component);
+    }
+
+    /*
+     * append each expr to the corresponding componentName
+     * componentName is the key for collocatedExprs
+     */
+    public static void addAndExprsToComps(Map<String, Expression> collocatedExprs,
+            List<Expression> exprs) {
+
+        for(Expression expr: exprs){
+            List<Column> columns = invokeColumnVisitor(expr);
+            String componentName = ParserUtil.getComponentName(columns.get(0).getTable());
+            addAndExprToComp(collocatedExprs, expr, componentName);
+        }
+
+    }
+
+    /*
+     * append expr to the corresponding component
+     * Used outside this class, that's why compName is not extracted from expr
+     */
+    public static void addAndExprToComp(Map<String, Expression> collocatedExprs,
+            Expression expr,
+            String compName) {
+
+        if(collocatedExprs.containsKey(compName)){
+            Expression oldExpr = collocatedExprs.get(compName);
+            Expression newExpr = new AndExpression(oldExpr, expr);
+            collocatedExprs.put(compName, newExpr);
+        }else{
+            collocatedExprs.put(compName, expr);
+        }
+
+    }
+
+    /*
+     * This has to same semantic as addAndExprToComps
+     * the only difference is that collocatedExprs is a different type
+     *   we need to keep all the ancestor DataSources which correspond to appropriate orExpr
+     */
+    public static void addOrExprsToComps(Map<Set<String>, Expression> collocatedExprs, List<OrExpression> orExprs) {
+        for(OrExpression orExpr: orExprs){
+            addOrExprToComp(collocatedExprs, orExpr);
+        }
+    }
+
+    public static void addOrExprToComp(Map<Set<String>, Expression> collocatedExprs, OrExpression expr) {
+        List<Column> columns = ParserUtil.invokeColumnVisitor(expr);
+        Set<String> compNameSet = new HashSet<String>(ParserUtil.getCompNamesFromColumns(columns));
+
+        if(collocatedExprs.containsKey(compNameSet)){
+            Expression oldExpr = collocatedExprs.get(compNameSet);
+            Expression newExpr = new AndExpression(oldExpr, expr);
+            collocatedExprs.put(compNameSet, newExpr);
+        }else{
+            collocatedExprs.put(compNameSet, expr);
+        }
+    }
+
+    public static List<Column> invokeColumnVisitor(Expression expr) {
+        ColumnCollectVisitor columnCollect = new ColumnCollectVisitor();
+        expr.accept(columnCollect);
+        return columnCollect.getColumns();
     }
 
 }

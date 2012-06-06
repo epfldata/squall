@@ -11,11 +11,10 @@ import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectItem;
-import optimizers.IndexComponentGenerator;
+import optimizers.ComponentGenerator;
 import optimizers.rule.RuleBasedOpt;
 import optimizers.Optimizer;
 import optimizers.OptimizerTranslator;
-import optimizers.SimpleOpt;
 import optimizers.rule.RuleTranslator;
 import queryPlans.QueryPlan;
 import schema.Schema;
@@ -137,7 +136,7 @@ public class ParserMain{
         //Dynamic programming query plan
         Optimizer opt = new RuleBasedOpt(schema, tan, dataPath, extension, ot, map);
 
-        IndexComponentGenerator cg = opt.generate(tableList, joinList, selectItems, whereExpr);
+        ComponentGenerator cg = opt.generate(tableList, joinList, selectItems, whereExpr);
 
         return cg.getQueryPlan();
     }
