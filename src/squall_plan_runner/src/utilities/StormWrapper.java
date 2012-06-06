@@ -9,6 +9,7 @@ import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.generated.AlreadyAliveException;
 import backtype.storm.generated.ClusterSummary;
+import backtype.storm.generated.KillOptions;
 import backtype.storm.generated.Nimbus.Client;
 import backtype.storm.generated.NotAliveException;
 import backtype.storm.generated.TaskSummary;
@@ -110,6 +111,10 @@ public class StormWrapper {
         Client client = getNimbusStub(conf);
         try {
            client.killTopology(topologyName);
+//           //Killing a topology right after all the processing is completed
+//           KillOptions options = new KillOptions();
+//           options.set_wait_secs(0);
+//           client.killTopologyWithOpts(topologyName, options);
         } catch (NotAliveException ex) {
             LOG.info(MyUtilities.getStackTrace(ex));
         } catch (TException ex) {
