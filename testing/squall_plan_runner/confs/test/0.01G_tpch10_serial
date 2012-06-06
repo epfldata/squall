@@ -1,9 +1,6 @@
-# To change this template, choose Tools | Templates
-# and open the template in the editor.
-
 DIP_DISTRIBUTED false
 DIP_QUERY_NAME tpch10
-DIP_TOPOLOGY_NAME_PREFIX avitorovic
+DIP_TOPOLOGY_NAME_PREFIX username
 DIP_TOPOLOGY_NAME TPCH10Simple
 DIP_NUM_PARALLELISM 10
 DIP_NUM_ACKERS 0

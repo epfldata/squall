@@ -1,7 +1,7 @@
 DIP_DISTRIBUTED false
 DIP_QUERY_NAME tpch10
 
-DIP_TOPOLOGY_NAME_PREFIX teamX
+DIP_TOPOLOGY_NAME_PREFIX username
 DIP_DATA_ROOT ../testing/data/tpch/
 DIP_SQL_ROOT ../testing/squall/sql_queries/
 

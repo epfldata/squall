@@ -1,10 +1,6 @@
-# To change this template, choose Tools | Templates
-# and open the template in the editor.
-
-#Hyracks query
 DIP_DISTRIBUTED false
 DIP_QUERY_NAME hyracks
-DIP_TOPOLOGY_NAME_PREFIX avitorovic
+DIP_TOPOLOGY_NAME_PREFIX username
 DIP_TOPOLOGY_NAME hyracks_serial
 DIP_NUM_PARALLELISM 5
 DIP_NUM_ACKERS 0
