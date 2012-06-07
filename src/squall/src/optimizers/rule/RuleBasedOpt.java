@@ -214,11 +214,11 @@ public class RuleBasedOpt implements Optimizer {
         List<ValueExpression> groupByVEs = selectVisitor.getGroupByVEs();
 
         Component affectedComponent = _cg.getQueryPlan().getLastComponent();
-        attachSelectClause(aggOps, groupByVEs, affectedComponent);
+        attachSelectClause(affectedComponent, aggOps, groupByVEs);
         return (aggOps.isEmpty() ? SelectItemsVisitor.NON_AGG : SelectItemsVisitor.AGG);
     }
 
-    private void attachSelectClause(List<AggregateOperator> aggOps, List<ValueExpression> groupByVEs, Component affectedComponent) {
+    private void attachSelectClause(Component affectedComponent, List<AggregateOperator> aggOps, List<ValueExpression> groupByVEs) {
         if (aggOps.isEmpty()){
             ProjectOperator project = new ProjectOperator(groupByVEs);
             affectedComponent.addOperator(project);
@@ -284,7 +284,7 @@ public class RuleBasedOpt implements Optimizer {
         for(Map.Entry<String, Expression> whereCompExprPair: whereCompExprPairs.entrySet()){
             Component affectedComponent = _cg.getQueryPlan().getComponent(whereCompExprPair.getKey());
             Expression whereCompExpr = whereCompExprPair.getValue();
-            processWhereForComponent(whereCompExpr, affectedComponent);
+            processWhereForComponent(affectedComponent, whereCompExpr);
         }
 
     }
@@ -329,13 +329,13 @@ public class RuleBasedOpt implements Optimizer {
      * whereCompExpression is the part of WHERE clause which refers to affectedComponent
      * This is the only method in this class where WhereVisitor is actually instantiated and invoked
      */
-    private void processWhereForComponent(Expression whereCompExpression, Component affectedComponent){
+    private void processWhereForComponent(Component affectedComponent, Expression whereCompExpression){
         WhereVisitor whereVisitor = new WhereVisitor(_cg.getQueryPlan(), affectedComponent, _schema, _tan, _ot);
         whereCompExpression.accept(whereVisitor);
-        attachWhereClause(whereVisitor.getSelectOperator(), affectedComponent);
+        attachWhereClause(affectedComponent, whereVisitor.getSelectOperator());
     }
 
-    private void attachWhereClause(SelectOperator select, Component affectedComponent) {
+    private void attachWhereClause(Component affectedComponent, SelectOperator select) {
         affectedComponent.addOperator(select);
     }
 

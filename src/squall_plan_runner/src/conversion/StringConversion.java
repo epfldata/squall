@@ -23,4 +23,9 @@ public class StringConversion implements TypeConversion<String>{
     public String getInitialValue() {
         return "";
     }
+
+    @Override
+    public double getDistance(String bigger, String smaller) {
+        throw new RuntimeException("Not applicable!");
+    }
 }

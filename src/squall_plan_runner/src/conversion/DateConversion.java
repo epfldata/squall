@@ -11,6 +11,8 @@ import java.util.Date;
 import utilities.MyUtilities;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.Days;
 
 public class DateConversion implements TypeConversion<Date>{
     private static final long serialVersionUID = 1L;
@@ -40,6 +42,13 @@ public class DateConversion implements TypeConversion<Date>{
     @Override
     public Date getInitialValue() {
         return new Date();
+    }
+
+    @Override
+    public double getDistance(Date bigger, Date smaller) {
+        DateTime smallerDT = new DateTime(smaller);
+        DateTime biggerDT = new DateTime(bigger);
+        return Days.daysBetween(smallerDT, biggerDT).getDays();
     }
 
 }

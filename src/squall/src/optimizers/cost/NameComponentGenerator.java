@@ -9,6 +9,8 @@ import optimizers.*;
 import components.Component;
 import components.DataSourceComponent;
 import components.EquiJoinComponent;
+import estimators.ConfigSelectivityEstimator;
+import estimators.SelingerSelectivityEstimator;
 import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,6 +39,7 @@ public class NameComponentGenerator implements ComponentGenerator{
     private Schema _schema;
     private String _dataPath;
     private String _extension;
+    private Map _map;
 
     private QueryPlan _queryPlan = new QueryPlan();
     //List of Components which are already added throughEquiJoinComponent and OperatorComponent
@@ -44,6 +47,9 @@ public class NameComponentGenerator implements ComponentGenerator{
 
     //compName, CostParameters for all the components from _queryPlan
     private Map<String, CostParameters> _compCost =  new HashMap<String, CostParameters>();
+
+    private ConfigSelectivityEstimator _fileEstimator;
+    private SelingerSelectivityEstimator _selEstimator;
 
     //used for WHERE clause
     private final HashMap<String, Expression> _compNamesAndExprs;
@@ -54,6 +60,7 @@ public class NameComponentGenerator implements ComponentGenerator{
             OptimizerTranslator ot,
             String dataPath,
             String extension,
+            Map map,
             HashMap<String, Expression> compNamesAndExprs,
             HashMap<Set<String>, Expression> compNamesOrExprs){
         _schema = schema;
@@ -61,6 +68,10 @@ public class NameComponentGenerator implements ComponentGenerator{
         _ot = ot;
         _dataPath = dataPath;
         _extension = extension;
+        _map = map;
+
+        _fileEstimator = new ConfigSelectivityEstimator(map);
+        _selEstimator = new SelingerSelectivityEstimator(schema, tan);
 
         _compNamesAndExprs = compNamesAndExprs;
         _compNamesOrExprs = compNamesOrExprs;
@@ -139,7 +150,9 @@ public class NameComponentGenerator implements ComponentGenerator{
      *************************************************************************************/
     public void addSelectOperator(Component component){
         Expression whereCompExpr = createWhereForComponent(component);
-        processWhereForComponent(whereCompExpr, component);
+
+        processWhereForComponent(component, whereCompExpr);
+        processWhereCost(component, whereCompExpr);
     }
 
     /*
@@ -169,14 +182,25 @@ public class NameComponentGenerator implements ComponentGenerator{
      * whereCompExpression is the part of WHERE clause which refers to affectedComponent
      * This is the only method in this class where WhereVisitor is actually instantiated and invoked
      */
-    private void processWhereForComponent(Expression whereCompExpression, Component affectedComponent){
+    private void processWhereForComponent(Component affectedComponent, Expression whereCompExpression){
         WhereVisitor whereVisitor = new WhereVisitor(_queryPlan, affectedComponent, _schema, _tan, _ot);
         whereCompExpression.accept(whereVisitor);
-        attachWhereClause(whereVisitor.getSelectOperator(), affectedComponent);
+        attachWhereClause(affectedComponent, whereVisitor.getSelectOperator());
     }
 
-    private void attachWhereClause(SelectOperator select, Component affectedComponent) {
+    private void attachWhereClause(Component affectedComponent, SelectOperator select) {
         affectedComponent.addOperator(select);
+    }
+
+    /*
+     * This is going to change
+     */
+    private void processWhereCost(Component component, Expression whereCompExpr) {
+        //this is going to change selectivity and cardinality
+        String compName = component.getName();
+        CostParameters costParams = _compCost.get(component.getName());
+
+        double selectivity = _selEstimator.estimate(whereCompExpr);
     }
 
     //set hash for this component, knowing its position in the query plan.
@@ -203,5 +227,4 @@ public class NameComponentGenerator implements ComponentGenerator{
                 component.setHashExpressions(hashExpressions);
             }
     }
-
 }

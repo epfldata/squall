@@ -136,14 +136,6 @@ public class ParserUtil {
          return tableName;
     }
 
-    /*
-     * This method finds a componentName a column refers to
-     *   columnName is in form table.column, i.e. N2.NATIONKEY
-     */
-    public static String getComponentName(String columnName){
-        return columnName.split("\\.")[0];
-    }
-
     public static String getComponentName(Column column) {
         return getComponentName(column.getTable());
     }

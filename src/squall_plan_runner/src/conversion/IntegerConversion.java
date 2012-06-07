@@ -34,4 +34,9 @@ public class IntegerConversion implements NumericConversion<Integer> {
     public Integer getInitialValue() {
         return new Integer(0);
     }
+
+    @Override
+    public double getDistance(Integer bigger, Integer smaller) {
+        return bigger - smaller;
+    }
 }

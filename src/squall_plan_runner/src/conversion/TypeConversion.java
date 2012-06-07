@@ -13,4 +13,6 @@ public interface TypeConversion<T> extends Serializable{
     public String toString(T obj);
 
     public T getInitialValue();
+
+    public double getDistance(T bigger, T smaller);
 }

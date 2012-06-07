@@ -33,4 +33,9 @@ public class DoubleConversion implements NumericConversion<Double> {
     public Double getInitialValue() {
         return new Double(0.0);
     }
+
+    @Override
+    public double getDistance(Double bigger, Double smaller) {
+        return bigger - smaller;
+    }
 }

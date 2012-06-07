@@ -33,4 +33,9 @@ public class LongConversion implements NumericConversion<Long> {
     public Long getInitialValue() {
         return new Long(0);
     }
+
+    @Override
+    public double getDistance(Long bigger, Long smaller) {
+        return bigger - smaller;
+    }
 }

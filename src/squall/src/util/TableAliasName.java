@@ -7,6 +7,7 @@ package util;
 
 import java.util.HashMap;
 import java.util.List;
+import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 
 /*
@@ -33,6 +34,16 @@ public class TableAliasName {
 
     public String getSchemaName(String tableCompName){
         return _nameSchemaList.get(tableCompName);
+    }
+
+    /*
+     * Returns "TableSchemaName.ColumnName"
+     */
+    public String getFullSchemaColumnName(Column column) {
+        String columnName = column.getColumnName();
+        String tableCompName = ParserUtil.getComponentName(column);
+        String tableSchemaName = getSchemaName(tableCompName);
+        return tableSchemaName + "." + columnName;
     }
 
 }
