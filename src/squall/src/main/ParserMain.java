@@ -12,10 +12,10 @@ import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import optimizers.ComponentGenerator;
-import optimizers.rule.RuleBasedOpt;
+import optimizers.rule.RuleOptimizer;
 import optimizers.Optimizer;
 import optimizers.OptimizerTranslator;
-import optimizers.rule.RuleTranslator;
+import optimizers.IndexTranslator;
 import queryPlans.QueryPlan;
 import schema.Schema;
 import schema.TPCH_Schema;
@@ -129,16 +129,15 @@ public class ParserMain{
         TableAliasName tan = new TableAliasName(tableList);
 
         //works both for simple and rule-based optimizer
-        OptimizerTranslator ot = new RuleTranslator(schema, tan);
+        OptimizerTranslator ot = new IndexTranslator(schema, tan);
 
         //Simple optimizer provides lefty plans
         //Optimizer opt = new SimpleOpt(schema, tan, dataPath, extension, ot, map);
         //Dynamic programming query plan
-        Optimizer opt = new RuleBasedOpt(schema, tan, dataPath, extension, ot, map);
+        Optimizer opt = new RuleOptimizer(schema, tan, dataPath, extension, ot, map);
 
-        ComponentGenerator cg = opt.generate(tableList, joinList, selectItems, whereExpr);
-
-        return cg.getQueryPlan();
+        return opt.generate(tableList, joinList, selectItems, whereExpr);
+        
     }
    
 }

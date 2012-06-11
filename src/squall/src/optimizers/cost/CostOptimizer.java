@@ -14,9 +14,9 @@ import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.SelectItem;
-import optimizers.IndexComponentGenerator;
 import optimizers.Optimizer;
 import optimizers.OptimizerTranslator;
+import queryPlans.QueryPlan;
 import schema.Schema;
 import util.ParserUtil;
 import util.TableAliasName;
@@ -27,26 +27,42 @@ public class CostOptimizer implements Optimizer {
     private String _dataPath;
     private String _extension;
     private TableAliasName _tan;
-    private IndexComponentGenerator _cg;
     private OptimizerTranslator _ot;
     private Map _map; //map is updates in place
     
     HashMap<String, Expression> _compNamesAndExprs = new HashMap<String, Expression>();
     HashMap<Set<String>, Expression> _compNamesOrExprs = new HashMap<Set<String>, Expression>();
+
+    //used for generating parallelism of components
+    private final CostParallelismAssigner _parAssigner;
+
+    private int _totalSourcePar;
     
-    public CostOptimizer(Schema schema, TableAliasName tan, String dataPath, String extension, OptimizerTranslator ot, Map map){
+    public CostOptimizer(Schema schema, TableAliasName tan, String dataPath, String extension, OptimizerTranslator ot, Map map, int totalSourcePar){
         _schema = schema;
         _tan = tan;
         _dataPath = dataPath;
         _extension = extension;
         _ot = ot;
         _map = map;
+
+        _parAssigner = new CostParallelismAssigner(_schema, _tan,
+                 _ot, _dataPath, _extension, _map, _compNamesAndExprs, _compNamesOrExprs);
+        _totalSourcePar = totalSourcePar;
     }
 
-    public IndexComponentGenerator generate(List<Table> tableList, List<Join> joinList, List<SelectItem> selectItems, Expression whereExpr) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public QueryPlan generate(List<Table> tableList, List<Join> joinList, List<SelectItem> selectItems, Expression whereExpr) {
+        //processWhereClause influence cardinalities of the DataSourceComponents
+        //  and the cardinalities directly influences the paralleism for DataSourceComponents
+        processWhereClause(whereExpr);
+        Map<String, Integer> sourceParallelism = _parAssigner.getSourceParallelism(tableList, _totalSourcePar);
+        //parallelism has to be set through NameComponentGenerator constructor, it's input parameter for dataSources
+        
+       
+        return null;
     }
 
+    
     /*************************************************************************************
      * SELECT/WHERE visitors
      *************************************************************************************/

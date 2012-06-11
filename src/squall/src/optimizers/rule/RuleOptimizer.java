@@ -43,7 +43,7 @@ import visitors.squall.WhereVisitor;
  * Assume no projections before the aggregation, so that EarlyProjection may impose some projections.
  * Aggregation only on the last level.
  */
-public class RuleBasedOpt implements Optimizer {
+public class RuleOptimizer implements Optimizer {
     private Schema _schema;
     private String _dataPath;
     private String _extension;
@@ -52,7 +52,7 @@ public class RuleBasedOpt implements Optimizer {
     private OptimizerTranslator _ot;
     private Map _map; //map is updates in place
 
-    public RuleBasedOpt(Schema schema, TableAliasName tan, String dataPath, String extension, OptimizerTranslator ot, Map map){
+    public RuleOptimizer(Schema schema, TableAliasName tan, String dataPath, String extension, OptimizerTranslator ot, Map map){
         _schema = schema;
         _tan = tan;
         _dataPath = dataPath;
@@ -62,7 +62,7 @@ public class RuleBasedOpt implements Optimizer {
     }
 
     @Override
-    public IndexComponentGenerator generate(List<Table> tableList, List<Join> joinList, List<SelectItem> selectItems, Expression whereExpr){
+    public QueryPlan generate(List<Table> tableList, List<Join> joinList, List<SelectItem> selectItems, Expression whereExpr){
         _cg = generateTableJoins(tableList, joinList);
 
         System.out.println("Before WHERE, SELECT and EarlyProjection: ");
@@ -79,10 +79,10 @@ public class RuleBasedOpt implements Optimizer {
         
         ParserUtil.orderOperators(_cg.getQueryPlan());
 
-        ParallelismAssigner parAssign = new ParallelismAssigner(_cg.getQueryPlan(), _tan, _schema, _map);
+        RuleParallelismAssigner parAssign = new RuleParallelismAssigner(_cg.getQueryPlan(), _tan, _schema, _map);
         parAssign.assignPar();
 
-        return _cg;
+        return _cg.getQueryPlan();
     }
 
     private IndexComponentGenerator generateTableJoins(List<Table> tableList, List<Join> joinList) {

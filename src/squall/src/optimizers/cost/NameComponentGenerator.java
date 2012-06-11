@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
+import net.sf.jsqlparser.schema.Column;
 import operators.SelectOperator;
 import queryPlans.QueryPlan;
 import schema.Schema;
@@ -45,15 +46,18 @@ public class NameComponentGenerator implements ComponentGenerator{
     //List of Components which are already added throughEquiJoinComponent and OperatorComponent
     private List<Component> _subPlans = new ArrayList<Component>();
 
-    //compName, CostParameters for all the components from _queryPlan
-    private Map<String, CostParameters> _compCost =  new HashMap<String, CostParameters>();
+    //compName, CostParams for all the components from _queryPlan
+    private Map<String, CostParams> _compCost =  new HashMap<String, CostParams>();
+
+    //needed because NameComponentGenerator creates parallelism for EquiJoinComponent
+    private final CostParallelismAssigner _parAssigner;
 
     private ConfigSelectivityEstimator _fileEstimator;
     private SelingerSelectivityEstimator _selEstimator;
 
     //used for WHERE clause
-    private final HashMap<String, Expression> _compNamesAndExprs;
-    private final HashMap<Set<String>, Expression> _compNamesOrExprs;
+    private final Map<String, Expression> _compNamesAndExprs;
+    private final Map<Set<String>, Expression> _compNamesOrExprs;
 
     public NameComponentGenerator(Schema schema,
             TableAliasName tan,
@@ -61,20 +65,27 @@ public class NameComponentGenerator implements ComponentGenerator{
             String dataPath,
             String extension,
             Map map,
-            HashMap<String, Expression> compNamesAndExprs,
-            HashMap<Set<String>, Expression> compNamesOrExprs){
+            //called from CostOptimizer, which already has CostParallellismAssigner instantiated
+            CostParallelismAssigner parAssigner,
+            Map<String, Expression> compNamesAndExprs,
+            Map<Set<String>, Expression> compNamesOrExprs){
         _schema = schema;
         _tan = tan;
         _ot = ot;
         _dataPath = dataPath;
         _extension = extension;
         _map = map;
+        _parAssigner = parAssigner;
 
         _fileEstimator = new ConfigSelectivityEstimator(map);
         _selEstimator = new SelingerSelectivityEstimator(schema, tan);
 
         _compNamesAndExprs = compNamesAndExprs;
         _compNamesOrExprs = compNamesOrExprs;
+    }
+
+    public CostParams getCostParameters(String componentName){
+        return _compCost.get(componentName);
     }
 
     @Override
@@ -89,12 +100,15 @@ public class NameComponentGenerator implements ComponentGenerator{
 
     /*
      * adding a DataSourceComponent to the list of components
-     * Necessary to call only when only one table is addresses in WHERE clause of a SQL query
      */
     @Override
     public DataSourceComponent generateDataSource(String tableCompName){
         DataSourceComponent source = createAddDataSource(tableCompName);
         createCompCost(source);
+        
+        //operators
+        addSelectOperator(source);
+
         return source;
     }
 
@@ -115,7 +129,7 @@ public class NameComponentGenerator implements ComponentGenerator{
      */
     private void createCompCost(DataSourceComponent source) {
         String compName = source.getName();
-        CostParameters costParams = new CostParameters();
+        CostParams costParams = new CostParams();
 
         costParams.setCardinality(_schema.getTableSize(compName));
         costParams.setSchema(_schema.getTableSchema(compName));
@@ -129,20 +143,80 @@ public class NameComponentGenerator implements ComponentGenerator{
      */
     @Override
     public Component generateEquiJoin(Component left, Component right, List<Expression> joinCondition){
+        EquiJoinComponent joinComponent = createAndAddEquiJoin(left, right);
+        createCompCost(joinComponent, joinCondition);
+        
+        //operators
+        addSelectOperator(joinComponent);
+        //set hashes for two parents
+        addHash(left, joinCondition);
+        addHash(right, joinCondition);
+
+        //setting parallelism
+        _parAssigner.setParallelism(joinComponent, _compCost);
+
+        return joinComponent;
+    }
+
+    private EquiJoinComponent createAndAddEquiJoin(Component left, Component right){
         EquiJoinComponent joinComponent = new EquiJoinComponent(
                     left,
                     right,
                     _queryPlan);
-
-        //set hashes for two parents
-        addHash(left, joinCondition);
-        addHash(right, joinCondition);
 
         _subPlans.remove(left);
         _subPlans.remove(right);
         _subPlans.add(joinComponent);
 
         return joinComponent;
+    }
+
+    private void createCompCost(EquiJoinComponent joinComponent, List<Expression> joinCondition) {
+        //create schema and selectivity wrt leftParent
+        String compName = joinComponent.getName();
+        CostParams costParams = new CostParams();
+        Component[] parents = joinComponent.getParents();
+
+        //set schema
+        List<String> schema = ParserUtil.joinSchema(joinComponent.getParents(), _compCost);
+        costParams.setSchema(schema);
+
+        //********* set selectivity
+        List<Column> joinColumns = ParserUtil.getJSQLColumns(joinCondition);
+        List<String> joinCompNames = ParserUtil.getCompNamesFromColumns(joinColumns);
+
+        String leftJoinTableSchemaName = getJoinSchemaName(joinCompNames, parents[0]);
+        String rightJoinTableSchemaName = getJoinSchemaName(joinCompNames, parents[1]);
+        
+        double leftCardinality = _compCost.get(parents[0].getName()).getCardinality();
+        double rightCardinality = _compCost.get(parents[1].getName()).getCardinality();
+        double selectivity;
+        if(leftJoinTableSchemaName.equals(rightJoinTableSchemaName)){
+            //we treat this as a cross-product on which some selections are performed
+            //IMPORTANT: selectivity is the output/input rate in the case of EquiJoin
+            selectivity = (leftCardinality * rightCardinality) / (leftCardinality + rightCardinality);
+        }else{
+            double ratio = _schema.getRatio(leftJoinTableSchemaName, rightJoinTableSchemaName);
+            selectivity = (leftCardinality * ratio) / (leftCardinality + rightCardinality);
+        }
+        costParams.setSelectivity(selectivity);
+        //*********
+        
+        _compCost.put(compName, costParams);
+    }
+
+    /*
+     * @allJoinCompNames - all the component names from the join condition
+     * joinCompNames - all the component names from the join condition corresponding to parent
+     */
+    private String getJoinSchemaName(List<String> allJoinCompNames, Component parent) {
+        List<DataSourceComponent> ancestorComps = parent.getAncestorDataSources();
+        List<String> ancestors = ParserUtil.getSourceNameList(ancestorComps);
+        List<String> joinCompNames = ParserUtil.getIntersection(allJoinCompNames, ancestors);
+        if(joinCompNames.size() > 1){
+            throw new RuntimeException("Cannot estimate join selectivity if a query is cyclic!");
+        }
+        return _tan.getSchemaName(joinCompNames.get(0));
     }
 
     /*************************************************************************************
@@ -192,16 +266,19 @@ public class NameComponentGenerator implements ComponentGenerator{
         affectedComponent.addOperator(select);
     }
 
-    /*
-     * This is going to change
-     */
     private void processWhereCost(Component component, Expression whereCompExpr) {
-        //this is going to change selectivity and cardinality
+        //this is going to change selectivity
         String compName = component.getName();
-        CostParameters costParams = _compCost.get(component.getName());
+        CostParams costParams = _compCost.get(compName);
+        double previousSelectivity = costParams.getSelectivity();
 
-        double selectivity = _selEstimator.estimate(whereCompExpr);
+        double selectivity = previousSelectivity * _selEstimator.estimate(whereCompExpr);
+        costParams.setSelectivity(selectivity);
     }
+
+    /*************************************************************************************
+     * HASH
+     *************************************************************************************/
 
     //set hash for this component, knowing its position in the query plan.
     //  Conditions are related only to parents of join,

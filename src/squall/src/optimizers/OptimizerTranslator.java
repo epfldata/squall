@@ -21,7 +21,7 @@ public interface OptimizerTranslator {
     * For a given component and column,
     *   find out the index of that column in a given component
     */
-    int getColumnIndex(Column column, Component requestor, QueryPlan queryPlan, List<ColumnNameType> tupleSchema);
+    public int getColumnIndex(Column column, Component requestor, QueryPlan queryPlan, List<ColumnNameType> tupleSchema);
 
     /*
      * Is component already hashed by hashIndexes

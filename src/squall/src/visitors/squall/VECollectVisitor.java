@@ -93,8 +93,10 @@ public class VECollectVisitor implements OperatorVisitor {
     @Override
     public void visit(Operator op){
         //List<Operator> is visited, thus we have to do conversion to the specific type
-        //TODO: alternative is to use methods such as
+        //TODO alternative is to use methods such as
         //  visit(Operator operator, Class SelectOperator.class), but this is also not very nice
+        //   not fixed in Java7, methods are invoked by its static type
+        //   The best way is to add visit method to all the operators, and then just call op.accept(this) here
         if (op instanceof SelectOperator){
             SelectOperator selection = (SelectOperator) op;
             visit(selection);

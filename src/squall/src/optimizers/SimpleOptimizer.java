@@ -5,7 +5,7 @@
 
 package optimizers;
 
-import optimizers.rule.ParallelismAssigner;
+import optimizers.rule.RuleParallelismAssigner;
 import components.Component;
 import components.DataSourceComponent;
 import components.OperatorComponent;
@@ -19,6 +19,7 @@ import net.sf.jsqlparser.statement.select.SelectItem;
 import operators.AggregateOperator;
 import operators.ProjectOperator;
 import operators.SelectOperator;
+import queryPlans.QueryPlan;
 import schema.Schema;
 import util.ParserUtil;
 import util.TableAliasName;
@@ -30,7 +31,7 @@ import visitors.squall.WhereVisitor;
  * Generate a query plan as it was parsed from the SQL.
  * SELECT and WHERE clause are attached to the final component.
  */
-public class SimpleOpt implements Optimizer {
+public class SimpleOptimizer implements Optimizer {
     private Schema _schema;
     private String _dataPath;
     private String _extension;
@@ -39,7 +40,7 @@ public class SimpleOpt implements Optimizer {
     private OptimizerTranslator _ot;
     private Map _map;
     
-    public SimpleOpt(Schema schema, TableAliasName tan, String dataPath, String extension, OptimizerTranslator ot, Map map){
+    public SimpleOptimizer(Schema schema, TableAliasName tan, String dataPath, String extension, OptimizerTranslator ot, Map map){
         _schema = schema;
         _tan = tan;
         _dataPath = dataPath;
@@ -49,7 +50,7 @@ public class SimpleOpt implements Optimizer {
     }
 
     @Override
-    public IndexComponentGenerator generate(List<Table> tableList, List<Join> joinList, List<SelectItem> selectItems, Expression whereExpr){
+    public QueryPlan generate(List<Table> tableList, List<Join> joinList, List<SelectItem> selectItems, Expression whereExpr){
         _cg = generateTableJoins(tableList, joinList);
 
         //selectItems might add OperatorComponent, this is why it goes first
@@ -58,10 +59,10 @@ public class SimpleOpt implements Optimizer {
 
         ParserUtil.orderOperators(_cg.getQueryPlan());
 
-        ParallelismAssigner parAssign = new ParallelismAssigner(_cg.getQueryPlan(), _tan, _schema, _map);
+        RuleParallelismAssigner parAssign = new RuleParallelismAssigner(_cg.getQueryPlan(), _tan, _schema, _map);
         parAssign.assignPar();
 
-        return _cg;
+        return _cg.getQueryPlan();
     }
 
     private IndexComponentGenerator generateTableJoins(List<Table> tableList, List<Join> joinList) {

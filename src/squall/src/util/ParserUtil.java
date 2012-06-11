@@ -28,10 +28,12 @@ import net.sf.jsqlparser.statement.select.Join;
 import operators.ChainOperator;
 import operators.Operator;
 import optimizers.ComponentGenerator;
+import optimizers.cost.CostParams;
 import queryPlans.QueryPlan;
 import schema.Schema;
 import utilities.MyUtilities;
 import visitors.jsql.ColumnCollectVisitor;
+import visitors.squall.ColumnRefCollectVisitor;
 
 
 public class ParserUtil {
@@ -121,7 +123,7 @@ public class ParserUtil {
             return table2==null;
         }else{
             if(table2!=null){
-                return ParserUtil.getComponentName(table1).equals(ParserUtil.getComponentName(table2));
+                return getComponentName(table1).equals(getComponentName(table2));
             }else{
                 return false;
             }
@@ -166,6 +168,14 @@ public class ParserUtil {
         }
         return compNames;
     }
+
+    public static List<String> getSourceNameList(List<DataSourceComponent> components){
+        List<String> compNames = new ArrayList<String>();
+        for(Component component: components){
+            compNames.add(component.getName());
+        }
+        return compNames;
+    }    
 
     /*
      * Find component in a query name with a given name
@@ -345,8 +355,8 @@ public class ParserUtil {
             List<Expression> exprs) {
 
         for(Expression expr: exprs){
-            List<Column> columns = invokeColumnVisitor(expr);
-            String componentName = ParserUtil.getComponentName(columns.get(0).getTable());
+            List<Column> columns = getJSQLColumns(expr);
+            String componentName = getComponentName(columns.get(0).getTable());
             addAndExprToComp(collocatedExprs, expr, componentName);
         }
 
@@ -382,8 +392,8 @@ public class ParserUtil {
     }
 
     public static void addOrExprToComp(Map<Set<String>, Expression> collocatedExprs, OrExpression expr) {
-        List<Column> columns = ParserUtil.invokeColumnVisitor(expr);
-        Set<String> compNameSet = new HashSet<String>(ParserUtil.getCompNamesFromColumns(columns));
+        List<Column> columns = getJSQLColumns(expr);
+        Set<String> compNameSet = new HashSet<String>(getCompNamesFromColumns(columns));
 
         if(collocatedExprs.containsKey(compNameSet)){
             Expression oldExpr = collocatedExprs.get(compNameSet);
@@ -394,10 +404,62 @@ public class ParserUtil {
         }
     }
 
-    public static List<Column> invokeColumnVisitor(Expression expr) {
+    public static List<Column> getJSQLColumns(List<Expression> exprs){
+        List<Column> result = new ArrayList<Column>();
+        for(Expression expr: exprs){
+            result.addAll(getJSQLColumns(expr));
+        }
+        return result;
+    }
+
+    public static List<Column> getJSQLColumns(Expression expr) {
         ColumnCollectVisitor columnCollect = new ColumnCollectVisitor();
         expr.accept(columnCollect);
         return columnCollect.getColumns();
+    }
+
+    public static List<ColumnReference> getColumnRefFromVEs(List<ValueExpression> veList){
+        List<ColumnReference> crList = new ArrayList<ColumnReference>();
+        for(ValueExpression ve: veList){
+            ColumnRefCollectVisitor colVisitor = new ColumnRefCollectVisitor();
+            ve.accept(colVisitor);
+            crList.addAll(colVisitor.getColumnRefs());
+        }
+        return crList;
+    }
+
+    public static List<Integer> getColumnRefIndexes(List<ColumnReference> crList){
+        List<Integer> intList = new ArrayList<Integer>();
+        for(ColumnReference cr: crList){
+            intList.add(cr.getColumnIndex());
+        }
+        return intList;
+    }
+
+    //throw away join hash indexes from the right parent
+    public static List<String> joinSchema(Component[] parents, Map<String, CostParams> compCost) {
+        Component leftParent = parents[0];
+        Component rightParent = parents[1];
+        List<String> leftSchema = compCost.get(leftParent.getName()).getSchema();
+        List<String> rightSchema = compCost.get(rightParent.getName()).getSchema();
+
+        //when HashExpressions are used the schema is a simple appending
+        List<Integer> rightHashIndexes = rightParent.getHashIndexes();
+        
+        //******************** similar to MyUtilities.createOutputTuple
+        List<String> outputSchema = new ArrayList<String>();
+
+        for (int j = 0; j < leftSchema.size(); j++){ // add all elements of the first relation (R)
+            outputSchema.add(leftSchema.get(j));
+        }
+        for (int j = 0; j < rightSchema.size(); j++) { // now add those
+            if((rightHashIndexes == null) || (!rightHashIndexes.contains(j))){ //if does not exits add the column!! (S)
+                outputSchema.add(rightSchema.get(j));
+            }
+        }
+        return outputSchema;
+        //******************** end of similar
+
     }
 
 }

@@ -8,7 +8,9 @@ package schema;
 import conversion.TypeConversion;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 public class Schema {
@@ -102,6 +104,12 @@ public class Schema {
              throw new RuntimeException("No cardinality information about " + fullSchemaColumnName);
          }
          return result;
+    }
+
+    public double getRatio(String firstTable, String secondTable){
+        int firstSize = getTableSize(firstTable);
+        int secondSize = getTableSize(secondTable);
+        return (double)secondSize/firstSize;
     }
 
     public class Range<T>{

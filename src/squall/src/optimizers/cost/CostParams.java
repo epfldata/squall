@@ -7,13 +7,19 @@ package optimizers.cost;
 
 import java.util.List;
 
-
-public class CostParameters {
+/*
+ * parallelism also has to be inside,
+ *   we cannot use Config maps to exchange parallelism,
+ *   because there are many query plans building in parallel (Selinger-style optimization)
+ * From the final choosen query plan, we fill in config maps.
+ */
+public class CostParams {
 
     //unless otherwise specified, there is no pruning tuples from a relation
     private double _selectivity = 1.0;
     private long _cardinality; //total number of tuples at the output of a component
     private List<String> _schema;
+    private int _parallelism;
 
     /**
      * @return the _selectivity
@@ -55,6 +61,20 @@ public class CostParameters {
      */
     public void setSchema(List<String> schema) {
         _schema = schema;
+    }
+
+    /**
+     * @return the _parallelism
+     */
+    public int getParallelism() {
+        return _parallelism;
+    }
+
+    /**
+     * @param parallelism the _parallelism to set
+     */
+    public void setParallelism(int parallelism) {
+        this._parallelism = parallelism;
     }
 
 }

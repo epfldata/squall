@@ -19,7 +19,6 @@ import queryPlans.QueryPlan;
 import schema.Schema;
 import util.ParserUtil;
 import util.TableAliasName;
-import visitors.squall.ColumnRefCollectVisitor;
 import visitors.squall.VECollectVisitor;
      /*
      * Eliminating unncessary indexes - applying projections wherever possible.
@@ -67,14 +66,14 @@ public class EarlyProjection {
         List<Integer> allUsedIndexes = new ArrayList<Integer>();
         allUsedIndexes.addAll(inheritedUsed);
         allUsedIndexes.addAll(directlyUsedIndexes);
-        allUsedIndexes.addAll(extractColumnRefIndexes(extractColumnRefFromVEs(allVE)));
+        allUsedIndexes.addAll(ParserUtil.getColumnRefIndexes(ParserUtil.getColumnRefFromVEs(allVE)));
         allUsedIndexes = sortElimDuplicates(allUsedIndexes);
 
         List<Integer> afterProjIndexes = new ArrayList<Integer>();
         afterProjIndexes.addAll(inheritedUsed);
         afterProjIndexes.addAll(directlyUsedIndexes);
-        List<ColumnReference> afterProjColRefs = extractColumnRefFromVEs(afterProjVE);
-        afterProjIndexes.addAll(extractColumnRefIndexes(afterProjColRefs));
+        List<ColumnReference> afterProjColRefs = ParserUtil.getColumnRefFromVEs(afterProjVE);
+        afterProjIndexes.addAll(ParserUtil.getColumnRefIndexes(afterProjColRefs));
         afterProjIndexes = sortElimDuplicates(afterProjIndexes);
 
         //set projection as if parent do not change
@@ -150,23 +149,7 @@ public class EarlyProjection {
         return veVisitor.getAfterProjExpressions();
     }
 
-    private List<ColumnReference> extractColumnRefFromVEs(List<ValueExpression> veList){
-        List<ColumnReference> crList = new ArrayList<ColumnReference>();
-        for(ValueExpression ve: veList){
-            ColumnRefCollectVisitor colVisitor = new ColumnRefCollectVisitor();
-            ve.accept(colVisitor);
-            crList.addAll(colVisitor.getColumnRefs());
-        }
-        return crList;
-    }
 
-    private List<Integer> extractColumnRefIndexes(List<ColumnReference> crList){
-        List<Integer> intList = new ArrayList<Integer>();
-        for(ColumnReference cr: crList){
-            intList.add(cr.getColumnIndex());
-        }
-        return intList;
-    }
 
     private List<Integer> sortElimDuplicates(List<Integer> indexes) {
         Collections.sort(indexes);
@@ -300,16 +283,16 @@ public class EarlyProjection {
 
             //update Selection indexes
             List<ValueExpression> beforeProjVE = getBeforeProjVEs(comp);
-            List<ColumnReference> beforeProjColRefs = extractColumnRefFromVEs(beforeProjVE);
+            List<ColumnReference> beforeProjColRefs = ParserUtil.getColumnRefFromVEs(beforeProjVE);
             updateColumnRefs(beforeProjColRefs, fromParents);
 
             //update Projection indexes
             List<ValueExpression> projVE = comp.getChainOperator().getProjection().getExpressions();
-            List<ColumnReference> projColRefs = extractColumnRefFromVEs(projVE);
+            List<ColumnReference> projColRefs = ParserUtil.getColumnRefFromVEs(projVE);
 
             //after bottom-up: projection will be set, so it will contain all the necessary fields,
             //  but later it might be moved because of up projections (total number of projections does not change)
-            List<Integer> oldProjIndexes = extractColumnRefIndexes(projColRefs);
+            List<Integer> oldProjIndexes = ParserUtil.getColumnRefIndexes(projColRefs);
             _compOldProj.put(comp, oldProjIndexes);
             updateColumnRefs(projColRefs, fromParents);
 

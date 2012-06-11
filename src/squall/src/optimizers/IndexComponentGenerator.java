@@ -55,7 +55,6 @@ public class IndexComponentGenerator implements ComponentGenerator{
 
     /*
      * adding a DataSourceComponent to the list of components
-     * Necessary to call only when only one table is addresses in WHERE clause of a SQL query
      */
     @Override
     public DataSourceComponent generateDataSource(String tableCompName){

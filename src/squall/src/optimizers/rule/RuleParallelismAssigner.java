@@ -14,7 +14,7 @@ import schema.Schema;
 import util.TableAliasName;
 import utilities.SystemParameters;
 
-public class ParallelismAssigner {
+public class RuleParallelismAssigner {
     private int THRESHOLD_TUPLES = 100; // both nation and region has less number of tuples
 
     private QueryPlan _plan;
@@ -23,7 +23,7 @@ public class ParallelismAssigner {
     private Schema _schema;
     private Map _map;
 
-    public ParallelismAssigner(QueryPlan plan, TableAliasName tan, Schema schema, Map map){
+    public RuleParallelismAssigner(QueryPlan plan, TableAliasName tan, Schema schema, Map map){
         _plan = plan;
         _tan = tan;
         _schema = schema;

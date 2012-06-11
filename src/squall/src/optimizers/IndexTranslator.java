@@ -3,14 +3,12 @@
  * and open the template in the editor.
  */
 
-package optimizers.rule;
+package optimizers;
 
 import components.Component;
 import java.util.ArrayList;
 import java.util.List;
 import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.schema.Table;
-import optimizers.OptimizerTranslator;
 import queryPlans.QueryPlan;
 import schema.ColumnNameType;
 import schema.Schema;
@@ -18,11 +16,11 @@ import util.ParserUtil;
 import util.TableAliasName;
 
 
-public class RuleTranslator implements OptimizerTranslator{
+public class IndexTranslator implements OptimizerTranslator{
     private Schema _schema;
     private TableAliasName _tan;
 
-    public RuleTranslator(Schema schema, TableAliasName tan){
+    public IndexTranslator(Schema schema, TableAliasName tan){
         _schema = schema;
         _tan = tan;
     }
