@@ -6,6 +6,7 @@
 package optimizers.cost;
 
 import java.util.List;
+import schema.ColumnNameType;
 
 /*
  * parallelism also has to be inside,
@@ -18,7 +19,7 @@ public class CostParams {
     //unless otherwise specified, there is no pruning tuples from a relation
     private double _selectivity = 1.0;
     private long _cardinality; //total number of tuples at the output of a component
-    private List<String> _schema;
+    private List<ColumnNameType> _schema;
     private int _parallelism;
 
     /**
@@ -52,14 +53,14 @@ public class CostParams {
     /**
      * @return the _schema
      */
-    public List<String> getSchema() {
+    public List<ColumnNameType> getSchema() {
         return _schema;
     }
 
     /**
      * @param schema the _schema to set
      */
-    public void setSchema(List<String> schema) {
+    public void setSchema(List<ColumnNameType> schema) {
         _schema = schema;
     }
 

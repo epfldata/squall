@@ -63,7 +63,8 @@ import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
-import optimizers.OptimizerTranslator;
+import optimizers.IndexTranslator;
+import optimizers.Translator;
 import queryPlans.QueryPlan;
 import schema.Schema;
 import util.HierarchyExtractor;
@@ -80,12 +81,14 @@ import util.TableAliasName;
  *    a) R is not a DataSourceComponent)
  *    b) many operators down the path
  */
-public class JoinHashVisitor implements ExpressionVisitor {
+public class IndexJoinHashVisitor implements ExpressionVisitor {
+    //these are only used within visit(Column) method
     private Schema _schema;
     private QueryPlan _queryPlan;
     private Component _affectedComponent;
     private TableAliasName _tan;
-    private OptimizerTranslator _ot;
+
+    private Translator _ot;
 
     //complex condition means that we will use HashExpressions, not HashIndexes.
     //   i.e. R.A=S.A+1 is complexCondition, whereas R.A=S.A and R.B=S.B is not.
@@ -103,13 +106,16 @@ public class JoinHashVisitor implements ExpressionVisitor {
     /*
      * affectedComponent is one of the parents of the join component
      */
-    public JoinHashVisitor(Schema schema, QueryPlan queryPlan, Component affectedComponent, TableAliasName tan, OptimizerTranslator ot){
+    public IndexJoinHashVisitor(Schema schema, QueryPlan queryPlan, Component affectedComponent, TableAliasName tan){
         _schema = schema;
         _queryPlan = queryPlan;
         _affectedComponent = affectedComponent;
         _tan = tan;
-        _ot = ot;
+
+        _ot = new IndexTranslator(_schema, _tan);
     }
+
+    protected IndexJoinHashVisitor(){}
 
     public List<ValueExpression> getExpressions(){
         return _hashExpressions;
@@ -117,6 +123,10 @@ public class JoinHashVisitor implements ExpressionVisitor {
 
     public boolean isComplexCondition(){
         return _complexCondition;
+    }
+
+    protected void pushToExprStack(ValueExpression ve){
+        _exprStack.push(ve);
     }
    
     @Override
@@ -251,7 +261,7 @@ public class JoinHashVisitor implements ExpressionVisitor {
             TypeConversion tc = _schema.getType(tableSchemaName, columnName);
 
             //extract the position (index) of the required column
-            int position = _ot.getColumnIndex(column, _affectedComponent, _queryPlan, null);
+            int position = _ot.getColumnIndex(column, _affectedComponent, _queryPlan);
 
             ValueExpression ve = new ColumnReference(tc, position);
             _exprStack.push(ve);

@@ -17,6 +17,7 @@ import expressions.IntegerYearFromDate;
 import expressions.ValueExpression;
 import expressions.ValueSpecification;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
@@ -55,6 +56,7 @@ import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.expression.operators.relational.IsNullExpression;
+import net.sf.jsqlparser.expression.operators.relational.ItemsListVisitor;
 import net.sf.jsqlparser.expression.operators.relational.LikeExpression;
 import net.sf.jsqlparser.expression.operators.relational.Matches;
 import net.sf.jsqlparser.expression.operators.relational.MinorThan;
@@ -63,7 +65,8 @@ import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import operators.SelectOperator;
-import optimizers.OptimizerTranslator;
+import optimizers.IndexTranslator;
+import optimizers.Translator;
 import predicates.AndPredicate;
 import predicates.ComparisonPredicate;
 import predicates.LikePredicate;
@@ -78,33 +81,41 @@ import util.TableAliasName;
  * Translates JSQL expressions to a SelectionOperator of a component.
  *   JSQL expressions *must* refer only to the component.
  */
-public class WhereVisitor implements ExpressionVisitor {
+public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
     private Stack<ValueExpression> _exprStack = new Stack<ValueExpression>();
     private Stack<Predicate> _predStack = new Stack<Predicate>();
 
-    private Schema _schema;
-    private QueryPlan _queryPlan;
-
-    //necessary for getColumnIndex in visitColumn method
+    //all of these are necessary only for getColumnIndex in visitColumn method
     private Component _affectedComponent;
+    private QueryPlan _queryPlan;
+    private Schema _schema;
     private TableAliasName _tan;
-    private OptimizerTranslator _ot;
+    private Translator _ot;
 
-    public WhereVisitor(QueryPlan queryPlan, Component affectedComponent, Schema schema, TableAliasName tan, OptimizerTranslator ot){
+    public IndexWhereVisitor(QueryPlan queryPlan, Component affectedComponent, Schema schema, TableAliasName tan){
         _queryPlan = queryPlan;
         _affectedComponent = affectedComponent;
         _schema = schema;
         _tan = tan;
-        _ot = ot;
+        _ot = new IndexTranslator(_schema, _tan);
 
         _affectedComponent = affectedComponent;
     }
+
+    /*
+     * Used from NameWhereVisitor - no parameters need to be set
+     */
+    protected IndexWhereVisitor(){}
 
     public SelectOperator getSelectOperator(){
         if(_predStack.size() != 1){
             throw new RuntimeException("After WhereVisitor is done, it should contain one predicate exactly!");
         }
         return new SelectOperator(_predStack.peek());
+    }
+
+    protected void pushToExprStack(ValueExpression ve){
+        _exprStack.push(ve);
     }
 
     @Override
@@ -272,11 +283,11 @@ public class WhereVisitor implements ExpressionVisitor {
         ExpressionList params = function.getParameters();
         int numParams = 0;
         if(params != null){
+            params.accept(this);
+
+            //in order to determine the size
             List<Expression> listParams = params.getExpressions();
             numParams = listParams.size();
-            for(Expression param: listParams){
-                param.accept(this);
-            }
         }
         List<ValueExpression> expressions = new ArrayList<ValueExpression>();
         for(int i=0; i<numParams; i++){
@@ -295,6 +306,14 @@ public class WhereVisitor implements ExpressionVisitor {
     }
 
     @Override
+    public void visit(ExpressionList el) {
+        for (Iterator iter = el.getExpressions().iterator(); iter.hasNext();) {
+            Expression expression = (Expression) iter.next();
+            expression.accept(this);
+        }
+    }
+
+    @Override
     public void visit(Column column) {
         //extract type for the column
         String tableSchemaName = _tan.getSchemaName(ParserUtil.getComponentName(column));
@@ -302,7 +321,7 @@ public class WhereVisitor implements ExpressionVisitor {
         TypeConversion tc = _schema.getType(tableSchemaName, columnName);
 
         //extract the position (index) of the required column
-        int position = _ot.getColumnIndex(column, _affectedComponent, _queryPlan, null);
+        int position = _ot.getColumnIndex(column, _affectedComponent, _queryPlan);
 
         ValueExpression ve = new ColumnReference(tc, position);
         _exprStack.push(ve);

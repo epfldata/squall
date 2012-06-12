@@ -15,7 +15,6 @@ import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import optimizers.Optimizer;
-import optimizers.OptimizerTranslator;
 import queryPlans.QueryPlan;
 import schema.Schema;
 import util.ParserUtil;
@@ -27,7 +26,7 @@ public class CostOptimizer implements Optimizer {
     private String _dataPath;
     private String _extension;
     private TableAliasName _tan;
-    private OptimizerTranslator _ot;
+    private NameTranslator _ot;
     private Map _map; //map is updates in place
     
     HashMap<String, Expression> _compNamesAndExprs = new HashMap<String, Expression>();
@@ -38,7 +37,7 @@ public class CostOptimizer implements Optimizer {
 
     private int _totalSourcePar;
     
-    public CostOptimizer(Schema schema, TableAliasName tan, String dataPath, String extension, OptimizerTranslator ot, Map map, int totalSourcePar){
+    public CostOptimizer(Schema schema, TableAliasName tan, String dataPath, String extension, NameTranslator ot, Map map, int totalSourcePar){
         _schema = schema;
         _tan = tan;
         _dataPath = dataPath;

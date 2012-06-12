@@ -26,8 +26,9 @@ import net.sf.jsqlparser.statement.select.SelectItem;
 import operators.AggregateOperator;
 import operators.ProjectOperator;
 import operators.SelectOperator;
+import optimizers.IndexTranslator;
 import optimizers.Optimizer;
-import optimizers.OptimizerTranslator;
+import optimizers.Translator;
 import util.HierarchyExtractor;
 import util.JoinTablesExp;
 import util.ParserUtil;
@@ -35,8 +36,8 @@ import util.TableAliasName;
 import utilities.DeepCopy;
 import visitors.jsql.AndVisitor;
 import visitors.jsql.JoinTablesExpVisitor;
-import visitors.squall.SelectItemsVisitor;
-import visitors.squall.WhereVisitor;
+import visitors.squall.IndexSelectItemsVisitor;
+import visitors.squall.IndexWhereVisitor;
 
 /*
  * Does not take relation cardinalities into account.
@@ -49,15 +50,15 @@ public class RuleOptimizer implements Optimizer {
     private String _extension;
     private TableAliasName _tan;
     private IndexComponentGenerator _cg;
-    private OptimizerTranslator _ot;
+    private Translator _ot;
     private Map _map; //map is updates in place
 
-    public RuleOptimizer(Schema schema, TableAliasName tan, String dataPath, String extension, OptimizerTranslator ot, Map map){
+    public RuleOptimizer(Schema schema, TableAliasName tan, String dataPath, String extension, Map map){
         _schema = schema;
         _tan = tan;
         _dataPath = dataPath;
         _extension = extension;
-        _ot = ot;
+        _ot = new IndexTranslator(_schema, _tan);
         _map = map;
     }
 
@@ -71,7 +72,7 @@ public class RuleOptimizer implements Optimizer {
         //selectItems might add OperatorComponent, this is why it goes first
         int queryType = processSelectClause(selectItems);
         processWhereClause(whereExpr);
-        if(queryType == SelectItemsVisitor.NON_AGG){
+        if(queryType == IndexSelectItemsVisitor.NON_AGG){
             System.out.println("Early projection will not be performed since the query is NON_AGG type (contains projections)!");
         }else{
             earlyProjection(_cg.getQueryPlan());
@@ -206,7 +207,7 @@ public class RuleOptimizer implements Optimizer {
 
     private int processSelectClause(List<SelectItem> selectItems) {
         //TODO: take care in nested case
-        SelectItemsVisitor selectVisitor = new SelectItemsVisitor(_cg.getQueryPlan(), _schema, _tan, _ot, _map);
+        IndexSelectItemsVisitor selectVisitor = new IndexSelectItemsVisitor(_cg.getQueryPlan(), _schema, _tan, _map);
         for(SelectItem elem: selectItems){
             elem.accept(selectVisitor);
         }
@@ -215,7 +216,7 @@ public class RuleOptimizer implements Optimizer {
 
         Component affectedComponent = _cg.getQueryPlan().getLastComponent();
         attachSelectClause(affectedComponent, aggOps, groupByVEs);
-        return (aggOps.isEmpty() ? SelectItemsVisitor.NON_AGG : SelectItemsVisitor.AGG);
+        return (aggOps.isEmpty() ? IndexSelectItemsVisitor.NON_AGG : IndexSelectItemsVisitor.AGG);
     }
 
     private void attachSelectClause(Component affectedComponent, List<AggregateOperator> aggOps, List<ValueExpression> groupByVEs) {
@@ -327,10 +328,10 @@ public class RuleOptimizer implements Optimizer {
 
     /*
      * whereCompExpression is the part of WHERE clause which refers to affectedComponent
-     * This is the only method in this class where WhereVisitor is actually instantiated and invoked
+     * This is the only method in this class where IndexWhereVisitor is actually instantiated and invoked
      */
     private void processWhereForComponent(Component affectedComponent, Expression whereCompExpression){
-        WhereVisitor whereVisitor = new WhereVisitor(_cg.getQueryPlan(), affectedComponent, _schema, _tan, _ot);
+        IndexWhereVisitor whereVisitor = new IndexWhereVisitor(_cg.getQueryPlan(), affectedComponent, _schema, _tan);
         whereCompExpression.accept(whereVisitor);
         attachWhereClause(affectedComponent, whereVisitor.getSelectOperator());
     }
