@@ -20,7 +20,7 @@ import operators.AggregateSumOperator;
 import operators.ProjectOperator;
 
 import org.apache.log4j.Logger;
-import storage.SquallStorage;
+import storage.BasicStore;
 
 public class HyracksPreAggPlan {
 	private static Logger LOG = Logger.getLogger(HyracksPreAggPlan.class);
@@ -55,10 +55,10 @@ public class HyracksPreAggPlan {
 				new ColumnReference(_sc, 1),
 				new ValueSpecification(_sc, "1"));
 		ProjectOperator projSecondOut = new ProjectOperator(new int[]{1, 2});
-		// FIXME FIXME FIXME: This should be as below, but there is an incombatibility with SquallStorage
-		// Replace with wrong SquallStorage instantiation, but will be fixed eventually
+		// FIXME FIXME FIXME: This should be as below, but there is an incombatibility with current version.
+		// Will be eventually, but for not don't run this query
 		// JoinAggStorage secondJoinStorage = new JoinAggStorage(new AggregateCountOperator(conf), conf);
-		SquallStorage secondJoinStorage = new SquallStorage();
+		BasicStore secondJoinStorage = null;
 
 		List<Integer> hashIndexes = Arrays.asList(0);
 		EquiJoinComponent CUSTOMER_ORDERSjoin = new EquiJoinComponent(

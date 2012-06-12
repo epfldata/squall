@@ -23,7 +23,8 @@ import operators.ChainOperator;
 import operators.Operator;
 import operators.ProjectOperator;
 import utilities.SystemParameters;
-import storage.SquallStorage;
+import storage.BasicStore;
+import storage.KeyValueStore;
 
 import org.apache.log4j.Logger;
 import stormComponents.synchronization.TopologyKiller;
@@ -36,7 +37,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 	private int _hierarchyPosition=INTERMEDIATE;
 
 	private StormEmitter _firstEmitter, _secondEmitter;
-	private SquallStorage _firstSquallStorage, _secondSquallStorage;
+	private BasicStore<ArrayList<String>> _firstSquallStorage, _secondSquallStorage;
 	private ProjectOperator _firstPreAggProj, _secondPreAggProj;
 	private String _ID;
         private List<String> _compIds; // a sorted list of all the components
@@ -78,8 +79,8 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			String componentName,
                         List<String> allCompNames,
 			ChainOperator chain,
-			SquallStorage firstPreAggStorage,
-			SquallStorage secondPreAggStorage,
+			BasicStore<ArrayList<String>> firstPreAggStorage,
+			BasicStore<ArrayList<String>> secondPreAggStorage,
 			ProjectOperator firstPreAggProj,
 			ProjectOperator secondPreAggProj,
 			List<Integer> hashIndexes,
@@ -159,7 +160,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			}
 
 			boolean isFromFirstEmitter = false;
-			SquallStorage affectedStorage, oppositeStorage;
+			BasicStore<ArrayList<String>> affectedStorage, oppositeStorage;
 			ProjectOperator projPreAgg;
 			if(_firstEmitterIndex.equals(inputComponentIndex)){
 				//R update
@@ -179,7 +180,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			}
 
 			//add the stormTuple to the specific storage
-			affectedStorage.put(inputTupleHash, inputTupleString);
+			affectedStorage.insert(inputTupleHash, inputTupleString);
 
 			performJoin(stormTupleRcv,
 					tuple,
@@ -195,10 +196,10 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			List<String> tuple,
 			String inputTupleHash,
 			boolean isFromFirstEmitter,
-			SquallStorage oppositeStorage,
+			BasicStore<ArrayList<String>> oppositeStorage,
 			ProjectOperator projPreAgg){
 
-		List<String> oppositeStringTupleList = (ArrayList<String>)oppositeStorage.get(inputTupleHash);
+		List<String> oppositeStringTupleList = oppositeStorage.access(inputTupleHash);
 
 		if(oppositeStringTupleList!=null)
 			for (int i = 0; i < oppositeStringTupleList.size(); i++) {
@@ -215,7 +216,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 				}
 
 				List<String> outputTuple;
-				if(oppositeStorage instanceof SquallStorage){
+				if(oppositeStorage instanceof BasicStore){
 					outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple, _joinParams);
 				}else{
 					outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);

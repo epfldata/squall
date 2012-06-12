@@ -23,7 +23,8 @@ import operators.ChainOperator;
 import operators.Operator;
 import operators.ProjectOperator;
 import utilities.SystemParameters;
-import storage.SquallStorage;
+import storage.BasicStore;
+import storage.KeyValueStore;
 
 import org.apache.log4j.Logger;
 import stormComponents.synchronization.TopologyKiller;
@@ -47,7 +48,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
 	private ChainOperator _operatorChain;
 
-	private SquallStorage _joinStorage;
+	private BasicStore<ArrayList<String>> _joinStorage;
 	private ProjectOperator _preAggProj;
 
 	private StormSrcHarmonizer _harmonizer;
@@ -75,7 +76,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 			List<Integer> joinParams,
 			boolean isFromFirstEmitter,
 			ChainOperator chain,
-			SquallStorage preAggStorage,
+			BasicStore<ArrayList<String>> preAggStorage,
 			ProjectOperator preAggProj,
 			List<Integer> hashIndexes,
 			List<ValueExpression> hashExpressions,
@@ -155,9 +156,9 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
 			if((_isFromFirstEmitter && (inputComponentIndex.equals(_firstEmitterIndex))) ||
                             (!_isFromFirstEmitter && (inputComponentIndex.equals(_secondEmitterIndex)))){//add the tuple into the datastructure!!
-				_joinStorage.put(inputTupleHash, inputTupleString);
+				_joinStorage.insert(inputTupleHash, inputTupleString);
 			} else {//JOIN
-				List<String> oppositeTupleStringList = (ArrayList<String>)_joinStorage.get(inputTupleHash);
+				List<String> oppositeTupleStringList = _joinStorage.access(inputTupleHash);
 
 				// do stuff
 				if(oppositeTupleStringList!=null)
@@ -176,7 +177,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 						}
 
 						List<String> outputTuple;
-						if(_joinStorage instanceof SquallStorage){
+						if(_joinStorage instanceof BasicStore){
 							outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple, _joinParams);
 						}else{
 							outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);

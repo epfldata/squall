@@ -4,10 +4,12 @@
  */
 package operators;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.List;
 import utilities.MyUtilities;
-import storage.SquallStorage;
+import storage.BasicStore;
+import storage.ValueStore;
 import expressions.ValueExpression;
 
 public class DistinctOperator implements Operator {
@@ -16,7 +18,7 @@ public class DistinctOperator implements Operator {
 	private int _numTuplesProcessed;
 	private ProjectOperator _projection;
 	private static final long serialVersionUID = 1L;
-	private SquallStorage _storage = new SquallStorage();
+	private BasicStore<ArrayList<String>> _storage = new ValueStore<String>();
 	/* Dummy value to associate with a tuple in the backing Storage (Since
 	 * the backing storage provides a key-value interface) */
 	private static final String dummyString = new String("dummy");
@@ -50,7 +52,7 @@ public class DistinctOperator implements Operator {
 		if ( this._storage.contains(projectedTupleString) == true ){
 			return null;
 		} else {
-			_storage.put(projectedTupleString, dummyString);
+			_storage.insert(projectedTupleString, dummyString);
 			return projectedTuple;
 		}
 	}
