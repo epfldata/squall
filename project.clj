@@ -8,7 +8,7 @@
   :dependencies [
 		     [jsqlparser "0.7.0"]
 		     [trove "3.0.2"]
-                    ])
+                    ]
 
   :dev-dependencies [
 		     [storm "0.7.0"]
