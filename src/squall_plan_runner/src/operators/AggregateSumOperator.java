@@ -1,8 +1,8 @@
 package operators;
 
-import storage.AggStorage;
+import java.util.Arrays;
+import storage.BasicStore;
 import storage.HashMapAggStorage;
-import storage.SingleEntryAggStorage;
 import conversion.NumericConversion;
 import expressions.Addition;
 import expressions.ValueExpression;
@@ -30,7 +30,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
         
         private NumericConversion<T> _wrapper;
         private ValueExpression<T> _ve;
-        private AggStorage<T> _storage;
+        private BasicStore<T> _storage;
         
         private Map _map;
 
@@ -38,8 +38,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
             _wrapper = wrapper;
             _ve=ve;
             _map = map;
-
-            _storage = new SingleEntryAggStorage<T>(this, _wrapper, _map);
+            _storage = new HashMapAggStorage<T>(this, _wrapper, _map, true);
         }
 
         //from AgregateOperator
@@ -48,7 +47,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
             if(!alreadySetOther(GB_COLUMNS)){
                 _groupByType = GB_COLUMNS;
                 _groupByColumns = groupByColumns;
-                _storage = new HashMapAggStorage<T>(this, _wrapper, _map);
+                _storage = new HashMapAggStorage<T>(this, _wrapper, _map, false);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");
@@ -60,7 +59,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
             if(!alreadySetOther(GB_PROJECTION)){
                 _groupByType = GB_PROJECTION;
                 _groupByProjection = groupByProjection;
-                _storage = new HashMapAggStorage<T>(this, _wrapper, _map);
+                _storage = new HashMapAggStorage<T>(this, _wrapper, _map, false);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");
@@ -111,7 +110,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
             }else{
                 tupleHash = MyUtilities.createHashString(tuple, _groupByColumns, _map);
             }
-            T value = _storage.updateContent(tuple, tupleHash);
+            T value = _storage.update(tuple, tupleHash);
             String strValue = _wrapper.toString(value);
 
             // propagate further the affected tupleHash-tupleValue pair
@@ -144,13 +143,13 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
         }
 
         @Override
-        public AggStorage getStorage(){
+        public BasicStore getStorage(){
             return _storage;
         }
 
         @Override
         public void clearStorage(){
-            _storage.clear();
+            _storage.reset();
         }
 
         @Override
@@ -160,14 +159,14 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
 
         @Override
 	public String printContent(){
-            return _storage.printContent();
+            return _storage.getContent();
         }
 
         //for this method it is essential that HASH_DELIMITER, which is used in tupleToString method,
         //  is the same as DIP_GLOBAL_ADD_DELIMITER
         @Override
         public List<String> getContent(){
-            return _storage.getContent();
+            return Arrays.asList(_storage.getContent().split("\\r?\\n"));
         }
 
         @Override

@@ -5,15 +5,15 @@
 
 package operators;
 
+import java.util.Arrays;
+import storage.BasicStore;
 import conversion.IntegerConversion;
 import conversion.NumericConversion;
 import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import storage.AggStorage;
 import storage.HashMapAggStorage;
-import storage.SingleEntryAggStorage;
 import org.apache.log4j.Logger;
 import utilities.MyUtilities;
 
@@ -34,14 +34,14 @@ public class AggregateCountOperator implements AggregateOperator<Integer>{
         private int _numTuplesProcessed = 0;
 
         private NumericConversion<Integer> _wrapper = new IntegerConversion();
-        private AggStorage<Integer> _storage;
+        private BasicStore<Integer> _storage;
 
         private Map _map;
 
         public AggregateCountOperator(Map map){
             _map = map;
 
-            _storage = new SingleEntryAggStorage<Integer>(this, _wrapper, _map);
+            _storage = new HashMapAggStorage<Integer>(this, _wrapper, _map, true);
         }
 
         //from AgregateOperator
@@ -50,7 +50,7 @@ public class AggregateCountOperator implements AggregateOperator<Integer>{
             if(!alreadySetOther(GB_COLUMNS)){
                 _groupByType = GB_COLUMNS;
                 _groupByColumns = groupByColumns;
-                _storage = new HashMapAggStorage<Integer>(this, _wrapper, _map);
+                _storage = new HashMapAggStorage<Integer>(this, _wrapper, _map, false);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");
@@ -62,7 +62,7 @@ public class AggregateCountOperator implements AggregateOperator<Integer>{
              if(!alreadySetOther(GB_PROJECTION)){
                 _groupByType = GB_PROJECTION;
                 _groupByProjection = groupByProjection;
-                _storage = new HashMapAggStorage<Integer>(this, _wrapper, _map);
+                _storage = new HashMapAggStorage<Integer>(this, _wrapper, _map, false);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");
@@ -111,7 +111,7 @@ public class AggregateCountOperator implements AggregateOperator<Integer>{
             }else{
                 tupleHash = MyUtilities.createHashString(tuple, _groupByColumns, _map);
             }
-            Integer value =  (Integer)_storage.updateContent(tuple, tupleHash);
+            Integer value =  (Integer)_storage.update(tuple, tupleHash);
             String strValue = _wrapper.toString(value);
             
             // propagate further the affected tupleHash-tupleValue pair
@@ -139,13 +139,13 @@ public class AggregateCountOperator implements AggregateOperator<Integer>{
         }
 
         @Override
-        public AggStorage getStorage(){
+        public BasicStore getStorage(){
             return _storage;
         }
 
         @Override
         public void clearStorage(){
-            _storage.clear();
+            _storage.reset();
         }
 
         @Override
@@ -155,14 +155,14 @@ public class AggregateCountOperator implements AggregateOperator<Integer>{
 
         @Override
 	public String printContent(){
-            return _storage.printContent();
+            return _storage.getContent();
         }
 
         //for this method it is essential that HASH_DELIMITER, which is used in tupleToString method,
         //  is the same as DIP_GLOBAL_ADD_DELIMITER
         @Override
         public List<String> getContent(){
-            return _storage.getContent();
+            return Arrays.asList(_storage.getContent().split("\\r?\\n"));
         }
 
         @Override

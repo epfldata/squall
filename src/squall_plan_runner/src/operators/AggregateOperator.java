@@ -5,10 +5,9 @@
 
 package operators;
 
-import storage.AggStorage;
 import expressions.ValueExpression;
 import java.util.List;
-
+import storage.BasicStore;
 
 public interface AggregateOperator<T> extends Operator{
     // GROUP BY ValueExpression is not part of the SQL standard, only columns can be sed.
@@ -26,7 +25,7 @@ public interface AggregateOperator<T> extends Operator{
     public List<ValueExpression> getExpressions();
 
     //internal storage class
-    public AggStorage getStorage();
+    public BasicStore getStorage();
     public void clearStorage();
 
     public T runAggregateFunction(T value, List<String> tuple);

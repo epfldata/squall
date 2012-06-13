@@ -1,5 +1,6 @@
 package storage;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -110,12 +111,28 @@ public class KeyValueStore<K, V> extends BasicStore {
 		Set<K> keys = this.keySet();
 		for (Iterator<K> it = keys.iterator() ; it.hasNext() ; ) {
 			K key = it.next();
-			List thisValues = this.access(key);
-			List storeValues = (List)store.access(key);
-			Collections.sort(thisValues);
-			Collections.sort(storeValues);
-			if (!thisValues.equals(storeValues))
-				return false;
+			List<V> thisValues = this.access(key);
+			List<V> storeValues = (List)store.access(key);
+			Collections.sort((List)thisValues);
+			Collections.sort((List)storeValues);
+			// Compare value by value
+			int index = 0;
+			Iterator<V> iterator = thisValues.iterator();
+			while (iterator.hasNext()) {
+				V value1 = iterator.next();
+				V value2 = storeValues.get(index);
+				if (value1 instanceof Number) {
+					System.out.println("Value1= " + value1 + " / Value2= " + value2);
+					if (value1 != value2) {
+						if (Math.abs(((Number)value1).floatValue() - ((Number)value2).floatValue()) > 0.0001)
+							return false;
+					}
+				} else {
+					if (!value1.equals(value1)) 
+						return false;
+				}
+				index++;
+			}
 		}
 		return true;
 	}
@@ -125,8 +142,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 		K key = (K)data[0];
 		if (_memstore.containsKey(key) == true) 
 			return true;
-		return false;
-		//return _storageManager.existsInStorage(key.toString());
+		return _storageManager.existsInStorage(key.toString());
 	}
 	
 	@Override	
@@ -177,7 +193,6 @@ public class KeyValueStore<K, V> extends BasicStore {
 	
 	@Override	
 	public void printStore(PrintStream stream) {
-		System.out.println("OEO");
 		Set<K> keys = this._memstore.keySet();
 		for (Iterator<K> it = keys.iterator(); it.hasNext(); ) {
 			K key = it.next();

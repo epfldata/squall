@@ -3,8 +3,8 @@
 rm /tmp/tmp*
 
 CONFDIR=../testing/squall_plan_runner/confs
-TESTDIR=`ls ${CONFDIR}/test/`
-COUNT=`ls -lah ${CONFDIR}/test/ | wc -l`
+TESTDIR=( `ls ${CONFDIR}/test/` )
+COUNT=${#TESTDIR[@]}
 
 declare -i i
 i=1
@@ -28,7 +28,7 @@ do
 		exit
 	fi
 	echo "Test $TEST completed successfully..."
-	rm $TMPFILE
+	#rm $TMPFILE
 	i+=1
 done
 

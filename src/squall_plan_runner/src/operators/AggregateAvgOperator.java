@@ -12,9 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import operators.AggregateAvgOperator.SumCount;
-import storage.AggStorage;
+import storage.BasicStore;
 import storage.HashMapAggStorage;
-import storage.SingleEntryAggStorage;
 import org.apache.log4j.Logger;
 import utilities.MyUtilities;
 
@@ -35,7 +34,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
         
         private NumericConversion<Double> _wrapper = new DoubleConversion();
         private ValueExpression<Double> _ve;
-        private AggStorage<SumCount> _storage;
+        private BasicStore<SumCount> _storage;
 
         private Map _map;
 
@@ -43,7 +42,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
             _ve=ve;
             _map=map;
 
-            _storage = new SingleEntryAggStorage<SumCount>(this, _wrapper, _map);
+            _storage = new HashMapAggStorage<SumCount>(this, _wrapper, _map, true);
         }
 
         //from AgregateOperator
@@ -52,7 +51,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
              if(!alreadySetOther(GB_COLUMNS)){
                 _groupByType = GB_COLUMNS;
                 _groupByColumns = groupByColumns;
-                _storage = new HashMapAggStorage<SumCount>(this, _wrapper, _map);
+                _storage = new HashMapAggStorage<SumCount>(this, _wrapper, _map, false);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");
@@ -64,7 +63,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
              if(!alreadySetOther(GB_PROJECTION)){
                 _groupByType = GB_PROJECTION;
                 _groupByProjection = groupByProjection;
-                _storage = new HashMapAggStorage<SumCount>(this, _wrapper, _map);
+                _storage = new HashMapAggStorage<SumCount>(this, _wrapper, _map, false);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");
@@ -115,7 +114,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
             }else{
                 tupleHash = MyUtilities.createHashString(tuple, _groupByColumns, _map);
             }
-            SumCount sumCount = _storage.updateContent(tuple, tupleHash);
+            SumCount sumCount = _storage.update(tuple, tupleHash);
             Double value = sumCount.getAvg();
             String strValue = _wrapper.toString(value);
 
@@ -152,13 +151,13 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
         }
 
         @Override
-        public AggStorage getStorage(){
+        public BasicStore getStorage(){
             return _storage;
         }
 
         @Override
         public void clearStorage(){
-            _storage.clear();
+            _storage.reset();
         }
 
         @Override
@@ -168,7 +167,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 
         @Override
 	public String printContent(){
-            return _storage.printContent();
+            return _storage.getContent();
         }
 
         @Override
