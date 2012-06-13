@@ -57,7 +57,6 @@ public class CostOptimizer implements Optimizer {
         Map<String, Integer> sourceParallelism = _parAssigner.getSourceParallelism(tableList, _totalSourcePar);
         //parallelism has to be set through NameComponentGenerator constructor, it's input parameter for dataSources
         
-       
         return null;
     }
 

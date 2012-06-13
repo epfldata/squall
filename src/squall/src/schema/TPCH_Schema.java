@@ -26,7 +26,6 @@ public class TPCH_Schema extends Schema {
     private static final TypeConversion sc = new StringConversion();
     private static final TypeConversion dtc = new DateConversion();
 
-
     public static final List<ColumnNameType> orders = Arrays.asList(
                 new ColumnNameType("ORDERKEY", lc),
                 new ColumnNameType("CUSTKEY", lc),

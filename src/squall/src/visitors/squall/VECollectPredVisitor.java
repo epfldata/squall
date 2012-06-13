@@ -39,7 +39,7 @@ public class VECollectPredVisitor implements PredicateVisitor{
         visit(or.getInnerPredicates());
     }
 
-    public void visit(List<Predicate> predList){
+    private void visit(List<Predicate> predList){
         for(Predicate pred: predList){
             pred.accept(this);
         }

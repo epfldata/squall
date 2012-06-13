@@ -219,10 +219,10 @@ public class RuleOptimizer implements Optimizer {
         return (aggOps.isEmpty() ? IndexSelectItemsVisitor.NON_AGG : IndexSelectItemsVisitor.AGG);
     }
 
-    private void attachSelectClause(Component affectedComponent, List<AggregateOperator> aggOps, List<ValueExpression> groupByVEs) {
+    private void attachSelectClause(Component lastComponent, List<AggregateOperator> aggOps, List<ValueExpression> groupByVEs) {
         if (aggOps.isEmpty()){
             ProjectOperator project = new ProjectOperator(groupByVEs);
-            affectedComponent.addOperator(project);
+            lastComponent.addOperator(project);
         }else if (aggOps.size() == 1){
             //all the others are group by
             AggregateOperator firstAgg = aggOps.get(0);
@@ -234,34 +234,29 @@ public class RuleOptimizer implements Optimizer {
 
                 //Setting new level of components is necessary for correctness only for distinct in aggregates
                     //  but it's certainly pleasant to have the final result grouped on nodes by group by columns.
-                boolean newLevel = !(_ot.isHashedBy(affectedComponent, groupByColumns));
+                boolean newLevel = !(_ot.isHashedBy(lastComponent, groupByColumns));
                 if(newLevel){
-                    affectedComponent.setHashIndexes(groupByColumns);
-                    OperatorComponent newComponent = new OperatorComponent(affectedComponent,
+                    lastComponent.setHashIndexes(groupByColumns);
+                    OperatorComponent newComponent = new OperatorComponent(lastComponent,
                                                                       ParserUtil.generateUniqueName("OPERATOR"),
                                                                       _cg.getQueryPlan()).addOperator(firstAgg);
 
                 }else{
-                    affectedComponent.addOperator(firstAgg);
+                    lastComponent.addOperator(firstAgg);
                 }
             }else{
                 //Sometimes groupByVEs contains other functions, so we have to use projections instead of simple groupBy
                 //always new level
-
-                if (affectedComponent.getHashExpressions()!=null && !affectedComponent.getHashExpressions().isEmpty()){
-                    //TODO: probably will be solved in cost-based optimizer
-                    throw new RuntimeException("Too complex: cannot have hashExpression both for joinCondition and groupBy!");
-                }
 
                 //WARNING: groupByVEs cannot be used on two places: that's why we do deep copy
                 ProjectOperator groupByProj = new ProjectOperator((List<ValueExpression>)DeepCopy.copy(groupByVEs));
                 firstAgg.setGroupByProjection(groupByProj);
 
                 //current component
-                affectedComponent.setHashExpressions((List<ValueExpression>)DeepCopy.copy(groupByVEs));
+                lastComponent.setHashExpressions((List<ValueExpression>)DeepCopy.copy(groupByVEs));
 
                 //next component
-                OperatorComponent newComponent = new OperatorComponent(affectedComponent,
+                OperatorComponent newComponent = new OperatorComponent(lastComponent,
                                                                       ParserUtil.generateUniqueName("OPERATOR"),
                                                                       _cg.getQueryPlan()).addOperator(firstAgg);
             }

@@ -18,7 +18,7 @@ public class DateConversion implements TypeConversion<Date>{
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(DateConversion.class);
 
-    private static String DATE_FORMAT = "yyyy-MM-dd";
+    private static final String DATE_FORMAT = "yyyy-MM-dd";
     private SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
 
     @Override

@@ -105,6 +105,15 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
     public static final int AGG = 0;
     public static final int NON_AGG = 1;
 
+    //this will not break any contracts,
+    //  even with new DateConversion() on all the places,
+    //  we will have a single object per (possibly) multiple spout/bolt threads.
+    //generating plans is done from a single thread, static additionally saves space
+    private static LongConversion _lc = new LongConversion();
+    private static DoubleConversion _dblConv = new DoubleConversion();
+    private static DateConversion _dateConv = new DateConversion();
+    private static StringConversion _sc = new StringConversion();
+
     public IndexSelectItemsVisitor(QueryPlan queryPlan, Schema schema, TableAliasName tan, Map map){
         _queryPlan = queryPlan;
         _schema = schema;
@@ -232,6 +241,10 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
         }
     }
 
+
+    /*
+     * Each of these operations create a Squall type, that's why so much similar code
+     */
     @Override
     public void visit(Addition adtn) {
         visitBinaryExpression(adtn);
@@ -315,25 +328,25 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
 
     @Override
     public void visit(DoubleValue dv) {
-        ValueExpression ve = new ValueSpecification(new DoubleConversion(), dv.getValue());
+        ValueExpression ve = new ValueSpecification(_dblConv, dv.getValue());
         _exprStack.push(ve);
     }
 
     @Override
     public void visit(LongValue lv) {
-        ValueExpression ve = new ValueSpecification(new LongConversion(), lv.getValue());
+        ValueExpression ve = new ValueSpecification(_lc, lv.getValue());
         _exprStack.push(ve);
     }
 
     @Override
     public void visit(DateValue dv) {
-        ValueExpression ve = new ValueSpecification(new DateConversion(), dv.getValue());
+        ValueExpression ve = new ValueSpecification(_dateConv, dv.getValue());
         _exprStack.push(ve);
     }
 
     @Override
     public void visit(StringValue sv) {
-        ValueExpression ve = new ValueSpecification(new StringConversion(), sv.getValue());
+        ValueExpression ve = new ValueSpecification(_sc, sv.getValue());
         _exprStack.push(ve);
     }
 

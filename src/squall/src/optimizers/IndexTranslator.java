@@ -141,6 +141,7 @@ public class IndexTranslator implements Translator{
                 return isSuperset(parentHashIndexes, hashIndexes);
             }
         }
+        //if there are HashExpressions, we don't bother to do analysis, we know it's false
         return false;
     }
 
@@ -153,6 +154,7 @@ public class IndexTranslator implements Translator{
         }else if(parentSize == affectedSize){
             return parentHashIndexes.equals(affectedHashIndexes);
         }else{
+            //parent partitions more than necessary for a child
             for(int i=0; i<affectedSize; i++){
                 if (!(affectedHashIndexes.get(i).equals(parentHashIndexes.get(i)))){
                     return false;

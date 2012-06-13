@@ -9,6 +9,7 @@ import optimizers.*;
 import components.Component;
 import components.DataSourceComponent;
 import components.EquiJoinComponent;
+import components.OperatorComponent;
 import conversion.TypeConversion;
 import estimators.ConfigSelectivityEstimator;
 import estimators.SelingerSelectivityEstimator;
@@ -21,6 +22,9 @@ import java.util.Set;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.select.SelectItem;
+import operators.AggregateOperator;
+import operators.ProjectOperator;
 import operators.SelectOperator;
 import queryPlans.QueryPlan;
 import schema.ColumnNameType;
@@ -28,7 +32,10 @@ import schema.Schema;
 import util.HierarchyExtractor;
 import util.ParserUtil;
 import util.TableAliasName;
+import utilities.DeepCopy;
+import visitors.squall.IndexSelectItemsVisitor;
 import visitors.squall.NameJoinHashVisitor;
+import visitors.squall.NameSelectItemsVisitor;
 import visitors.squall.NameWhereVisitor;
 
 /*
@@ -169,7 +176,7 @@ public class NameComponentGenerator implements ComponentGenerator{
         
         //operators
         addSelectOperator(joinComponent);
-        //set hashes for two parents
+        //set hashes for two parents, has to be after all the operators
         addHash(left, joinCondition);
         addHash(right, joinCondition);
 
@@ -298,6 +305,59 @@ public class NameComponentGenerator implements ComponentGenerator{
         double selectivity = previousSelectivity * _selEstimator.estimate(whereCompExpr);
         costParams.setSelectivity(selectivity);
     }
+
+    /*************************************************************************************
+     * SELECT clause - Final aggregation
+     *************************************************************************************/
+     public void addFinalAgg(List<SelectItem> selectItems) {
+        //TODO: take care in nested case
+        Component lastComponent = _queryPlan.getLastComponent();
+        List<ColumnNameType> tupleSchema = _compCost.get(lastComponent.getName()).getSchema();
+        NameSelectItemsVisitor selectVisitor = new NameSelectItemsVisitor(_schema, _tan, tupleSchema, _map);
+        for(SelectItem elem: selectItems){
+            elem.accept(selectVisitor);
+        }
+        List<AggregateOperator> aggOps = selectVisitor.getAggOps();
+        List<ValueExpression> groupByVEs = selectVisitor.getGroupByVEs();
+
+        attachSelectClause(lastComponent, aggOps, groupByVEs);
+    }
+
+    private void attachSelectClause(Component lastComponent, List<AggregateOperator> aggOps, List<ValueExpression> groupByVEs) {
+        if (aggOps.isEmpty()){
+            ProjectOperator project = new ProjectOperator(groupByVEs);
+            lastComponent.addOperator(project);
+        }else if (aggOps.size() == 1){
+            //all the others are group by
+            AggregateOperator firstAgg = aggOps.get(0);
+
+            if(ParserUtil.isAllColumnRefs(groupByVEs)){
+                //plain fields in select
+                List<Integer> groupByColumns = ParserUtil.extractColumnIndexes(groupByVEs);
+                firstAgg.setGroupByColumns(groupByColumns);
+
+                //Setting new level of components is necessary for correctness only for distinct in aggregates
+                    //  but it's certainly pleasant to have the final result grouped on nodes by group by columns.
+                boolean newLevel = !(_ot.isHashedBy(lastComponent, groupByColumns));
+                if(newLevel){
+                    lastComponent.setHashIndexes(groupByColumns);
+                    OperatorComponent newComponent = new OperatorComponent(lastComponent,
+                                                                      ParserUtil.generateUniqueName("OPERATOR"),
+                                                                      _queryPlan).addOperator(firstAgg);
+
+                }else{
+                    lastComponent.addOperator(firstAgg);
+                }
+            }else{
+                //on the last component there should be projection added before we add final aggregation
+                //  so we should not be here
+                throw new RuntimeException("It seems that projection on the last component has not do good job!");
+            }
+        }else{
+            throw new RuntimeException("For now only one aggregate function supported!");
+        }
+    }
+
 
     /*************************************************************************************
      * HASH

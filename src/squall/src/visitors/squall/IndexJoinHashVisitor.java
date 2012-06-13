@@ -18,6 +18,7 @@ import expressions.IntegerYearFromDate;
 import expressions.ValueExpression;
 import expressions.ValueSpecification;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
@@ -56,6 +57,7 @@ import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.expression.operators.relational.IsNullExpression;
+import net.sf.jsqlparser.expression.operators.relational.ItemsListVisitor;
 import net.sf.jsqlparser.expression.operators.relational.LikeExpression;
 import net.sf.jsqlparser.expression.operators.relational.Matches;
 import net.sf.jsqlparser.expression.operators.relational.MinorThan;
@@ -81,7 +83,7 @@ import util.TableAliasName;
  *    a) R is not a DataSourceComponent)
  *    b) many operators down the path
  */
-public class IndexJoinHashVisitor implements ExpressionVisitor {
+public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor {
     //these are only used within visit(Column) method
     private Schema _schema;
     private QueryPlan _queryPlan;
@@ -89,6 +91,15 @@ public class IndexJoinHashVisitor implements ExpressionVisitor {
     private TableAliasName _tan;
 
     private Translator _ot;
+
+    //this will not break any contracts,
+    //  even with new DateConversion() on all the places,
+    //  we will have a single object per (possibly) multiple spout/bolt threads.
+    //generating plans is done from a single thread, static additionally saves space
+    private static LongConversion _lc = new LongConversion();
+    private static DoubleConversion _dblConv = new DoubleConversion();
+    private static DateConversion _dateConv = new DateConversion();
+    private static StringConversion _sc = new StringConversion();
 
     //complex condition means that we will use HashExpressions, not HashIndexes.
     //   i.e. R.A=S.A+1 is complexCondition, whereas R.A=S.A and R.B=S.B is not.
@@ -151,6 +162,9 @@ public class IndexJoinHashVisitor implements ExpressionVisitor {
         }
     }
 
+    /*
+     * Each of these operations create a Squall type, that's why so much similar code
+     */
     @Override
     public void visit(Addition adtn) {
         _complexCondition = true;
@@ -226,11 +240,11 @@ public class IndexJoinHashVisitor implements ExpressionVisitor {
         ExpressionList params = function.getParameters();
         int numParams = 0;
         if(params != null){
+            visit(params);
+
+            //only for size
             List<Expression> listParams = params.getExpressions();
             numParams = listParams.size();
-            for(Expression param: listParams){
-                param.accept(this);
-            }
         }
         List<ValueExpression> expressions = new ArrayList<ValueExpression>();
         for(int i=0; i<numParams; i++){
@@ -245,6 +259,14 @@ public class IndexJoinHashVisitor implements ExpressionVisitor {
             ValueExpression expr = expressions.get(0);
             ValueExpression ve = new IntegerYearFromDate(expr);
             _exprStack.push(ve);
+        }
+    }
+
+    @Override
+    public void visit(ExpressionList el) {
+        for (Iterator iter = el.getExpressions().iterator(); iter.hasNext();) {
+            Expression expression = (Expression) iter.next();
+            expression.accept(this);
         }
     }
 
@@ -274,28 +296,28 @@ public class IndexJoinHashVisitor implements ExpressionVisitor {
     @Override
     public void visit(DoubleValue dv) {
         _complexCondition = true;
-        ValueExpression ve = new ValueSpecification(new DoubleConversion(), dv.getValue());
+        ValueExpression ve = new ValueSpecification(_dblConv, dv.getValue());
         _exprStack.push(ve);
     }
 
     @Override
     public void visit(LongValue lv) {
         _complexCondition = true;
-        ValueExpression ve = new ValueSpecification(new LongConversion(), lv.getValue());
+        ValueExpression ve = new ValueSpecification(_lc, lv.getValue());
         _exprStack.push(ve);
     }
 
     @Override
     public void visit(DateValue dv) {
         _complexCondition = true;
-        ValueExpression ve = new ValueSpecification(new DateConversion(), dv.getValue());
+        ValueExpression ve = new ValueSpecification(_dateConv, dv.getValue());
         _exprStack.push(ve);
     }
 
     @Override
     public void visit(StringValue sv) {
         _complexCondition = true;
-        ValueExpression ve = new ValueSpecification(new StringConversion(), sv.getValue());
+        ValueExpression ve = new ValueSpecification(_sc, sv.getValue());
         _exprStack.push(ve);
     }
 
