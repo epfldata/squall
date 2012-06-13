@@ -2,7 +2,7 @@
 
 if [ $# -ne 1 ]
 then
-CONFIG_FILE=0.1G_hyracks_serial
+CONFIG_FILE=0.01G_hyracks_serial
 else
 CONFIG_FILE=$1
 fi

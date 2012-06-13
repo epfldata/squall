@@ -24,8 +24,8 @@ import schema.Schema;
 import util.ParserUtil;
 import util.TableAliasName;
 import utilities.DeepCopy;
-import visitors.squall.SelectItemsVisitor;
-import visitors.squall.WhereVisitor;
+import visitors.squall.IndexSelectItemsVisitor;
+import visitors.squall.IndexWhereVisitor;
 
 /*
  * Generate a query plan as it was parsed from the SQL.
@@ -37,15 +37,15 @@ public class SimpleOptimizer implements Optimizer {
     private String _extension;
     private IndexComponentGenerator _cg;
     private TableAliasName _tan;
-    private OptimizerTranslator _ot;
+    private Translator _ot;
     private Map _map;
     
-    public SimpleOptimizer(Schema schema, TableAliasName tan, String dataPath, String extension, OptimizerTranslator ot, Map map){
+    public SimpleOptimizer(Schema schema, TableAliasName tan, String dataPath, String extension, Map map){
         _schema = schema;
         _tan = tan;
         _dataPath = dataPath;
         _extension = extension;
-        _ot = ot;
+        _ot = new IndexTranslator(_schema, _tan);
         _map = map;
     }
 
@@ -86,7 +86,7 @@ public class SimpleOptimizer implements Optimizer {
 
     private int processSelectClause(List<SelectItem> selectItems) {
         //TODO: take care in nested case
-        SelectItemsVisitor selectVisitor = new SelectItemsVisitor(_cg.getQueryPlan(), _schema, _tan, _ot, _map);
+        IndexSelectItemsVisitor selectVisitor = new IndexSelectItemsVisitor(_cg.getQueryPlan(), _schema, _tan, _map);
         for(SelectItem elem: selectItems){
             elem.accept(selectVisitor);
         }
@@ -95,7 +95,7 @@ public class SimpleOptimizer implements Optimizer {
 
         Component affectedComponent = _cg.getQueryPlan().getLastComponent();
         attachSelectClause(aggOps, groupByVEs, affectedComponent);
-        return (aggOps.isEmpty() ? SelectItemsVisitor.NON_AGG : SelectItemsVisitor.AGG);
+        return (aggOps.isEmpty() ? IndexSelectItemsVisitor.NON_AGG : IndexSelectItemsVisitor.AGG);
     }
 
     private void attachSelectClause(List<AggregateOperator> aggOps, List<ValueExpression> groupByVEs, Component affectedComponent) {
@@ -155,7 +155,7 @@ public class SimpleOptimizer implements Optimizer {
         
         //all the selection are performed on the last component
         Component affectedComponent = _cg.getQueryPlan().getLastComponent();
-        WhereVisitor whereVisitor = new WhereVisitor(_cg.getQueryPlan(), affectedComponent, _schema, _tan, _ot);
+        IndexWhereVisitor whereVisitor = new IndexWhereVisitor(_cg.getQueryPlan(), affectedComponent, _schema, _tan);
         if(whereExpr != null){
             whereExpr.accept(whereVisitor);
             attachWhereClause(whereVisitor.getSelectOperator(), affectedComponent);

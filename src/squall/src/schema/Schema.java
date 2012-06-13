@@ -6,11 +6,8 @@
 package schema;
 
 import conversion.TypeConversion;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 
 public class Schema {
@@ -23,6 +20,27 @@ public class Schema {
     //fullSchemaColumnName, Range
     protected HashMap<String, Range> _columnRanges = new HashMap<String, Range>();
 
+
+    public List<ColumnNameType> getTableSchema(String tableName){
+        return tables.get(tableName);
+    }
+
+    /*
+     * For a field N1.NATIONNAME, tableSchemaName is NATION, column is NATIONNAME
+     */
+    public TypeConversion getType(String tableSchemaName, String columnName){
+        List<ColumnNameType> table = tables.get(tableSchemaName);
+        if(table == null){
+            throw new RuntimeException("Table " + tableSchemaName + "doesn't exist!");
+        }
+        for(ColumnNameType cnt: table){
+            if (cnt.getName().equals(columnName)){
+                return cnt.getType();
+            }
+        }
+        throw new RuntimeException("Column " + columnName + " doesn't exist within " + tableSchemaName);
+    }
+
     public boolean contains(String tableName, String column) {
         List<ColumnNameType> columns = tables.get(tableName);
         for(ColumnNameType cnt: columns){
@@ -33,55 +51,10 @@ public class Schema {
         return false;
     }
 
-    public int indexOf(String tableName, String column) {
-        List<ColumnNameType> columns = tables.get(tableName);
-        return indexOf(columns, column);
-    }
-
-    public int indexOf(List<ColumnNameType> columns, String column){
-        for(int i=0; i<columns.size(); i++){
-            if(columns.get(i).getName().equals(column)){
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    public List<ColumnNameType> getColumnNameTypes(String tableName){
-        return tables.get(tableName);
-    }
-
-    /*
-     * Schema contains only names of the columns from a table
+    /********
+     * CARDINALITY METHODS
+     * ******
      */
-    public List<String> getTableSchema(String tableName){
-        List<ColumnNameType> columnTypes = getColumnNameTypes(tableName);
-
-        List<String> columnNames = new ArrayList<String>();
-        for(ColumnNameType cnt: columnTypes){
-            columnNames.add(cnt.getName());
-        }
-        return columnNames;
-    }
-
-    public TypeConversion getType(String fullSchemaColumnName){
-        String[] names = fullSchemaColumnName.split("\\.");
-        return getType(names[0], names[1]);
-    }
-
-    public TypeConversion getType(String tableName, String columnName){
-        List<ColumnNameType> table = tables.get(tableName);
-        if(table == null){
-            throw new RuntimeException("Table " + tableName + "doesn't exist!");
-        }
-        for(ColumnNameType cnt: table){
-            if (cnt.getName().equals(columnName)){
-                return cnt.getType();
-            }
-        }
-        throw new RuntimeException("Column " + columnName + " doesn't exist within " + tableName);
-    }
-
     public int getTableSize(String table){
         if(!tableSize.containsKey(table)){
             throw new RuntimeException("Table " + table + "does not exist!");

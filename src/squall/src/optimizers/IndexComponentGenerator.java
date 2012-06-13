@@ -16,7 +16,7 @@ import queryPlans.QueryPlan;
 import schema.Schema;
 import util.ParserUtil;
 import util.TableAliasName;
-import visitors.squall.JoinHashVisitor;
+import visitors.squall.IndexJoinHashVisitor;
 
 /*
  * It is necessary that this class operates with Tables,
@@ -24,7 +24,7 @@ import visitors.squall.JoinHashVisitor;
  */
 public class IndexComponentGenerator implements ComponentGenerator{
     private TableAliasName _tan;
-    private OptimizerTranslator _ot;
+    private Translator _ot;
 
     private Schema _schema;
     private String _dataPath;
@@ -35,7 +35,7 @@ public class IndexComponentGenerator implements ComponentGenerator{
     //List of Components which are already added throughEquiJoinComponent and OperatorComponent
     private List<Component> _subPlans = new ArrayList<Component>();
 
-    public IndexComponentGenerator(Schema schema, TableAliasName tan, OptimizerTranslator ot, String dataPath, String extension){
+    public IndexComponentGenerator(Schema schema, TableAliasName tan, Translator ot, String dataPath, String extension){
         _schema = schema;
         _tan = tan;
         _ot = ot;
@@ -95,10 +95,10 @@ public class IndexComponentGenerator implements ComponentGenerator{
 
     //set hash for this component, knowing its position in the query plan.
     //  Conditions are related only to parents of join,
-    //  but we have to filter who belongs to my branch in JoinHashVisitor.
+    //  but we have to filter who belongs to my branch in IndexJoinHashVisitor.
     //  We don't want to hash on something which will be used to join with same later component in the hierarchy.
     private void addHash(Component component, List<Expression> joinCondition) {
-            JoinHashVisitor joinOn = new JoinHashVisitor(_schema, _queryPlan, component, _tan, _ot);
+            IndexJoinHashVisitor joinOn = new IndexJoinHashVisitor(_schema, _queryPlan, component, _tan);
             for(Expression exp: joinCondition){
                 exp.accept(joinOn);
             }

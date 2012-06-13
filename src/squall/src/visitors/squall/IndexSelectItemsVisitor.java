@@ -17,6 +17,7 @@ import expressions.IntegerYearFromDate;
 import expressions.ValueExpression;
 import expressions.ValueSpecification;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -56,6 +57,7 @@ import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.expression.operators.relational.IsNullExpression;
+import net.sf.jsqlparser.expression.operators.relational.ItemsListVisitor;
 import net.sf.jsqlparser.expression.operators.relational.LikeExpression;
 import net.sf.jsqlparser.expression.operators.relational.Matches;
 import net.sf.jsqlparser.expression.operators.relational.MinorThan;
@@ -71,7 +73,8 @@ import operators.AggregateCountOperator;
 import operators.AggregateOperator;
 import operators.AggregateSumOperator;
 import operators.DistinctOperator;
-import optimizers.OptimizerTranslator;
+import optimizers.IndexTranslator;
+import optimizers.Translator;
 import queryPlans.QueryPlan;
 import schema.Schema;
 import util.ParserUtil;
@@ -81,12 +84,15 @@ import util.TableAliasName;
  * Generates Aggregations and its groupBy projections.
  *   If there is no aggregation, these groupBy projections becomes simple projections
  */
-public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
+public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor, ItemsListVisitor{
+    //all of these needed only for visit(Column) method
     private Schema _schema;
     private QueryPlan _queryPlan;
     private Component _affectedComponent;
     private TableAliasName _tan;
-    private OptimizerTranslator _ot;
+    private Translator _ot;
+
+    //needed only for visit(Function) method
     private Map _map;
 
     private Stack<ValueExpression> _exprStack;
@@ -99,14 +105,18 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
     public static final int AGG = 0;
     public static final int NON_AGG = 1;
 
-    public SelectItemsVisitor(QueryPlan queryPlan, Schema schema, TableAliasName tan, OptimizerTranslator ot, Map map){
+    public IndexSelectItemsVisitor(QueryPlan queryPlan, Schema schema, TableAliasName tan, Map map){
         _queryPlan = queryPlan;
         _schema = schema;
         _tan = tan;
-        _ot = ot;
         _map = map;
-
         _affectedComponent = queryPlan.getLastComponent();
+
+        _ot = new IndexTranslator(_schema, _tan);
+    }
+    
+    protected IndexSelectItemsVisitor(Map map){
+        _map = map;
     }
 
     public List<AggregateOperator> getAggOps(){
@@ -115,6 +125,14 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
 
     public List<ValueExpression> getGroupByVEs(){
         return _groupByVEs;
+    }
+
+    protected void pushToExprStack(ValueExpression ve){
+        _exprStack.push(ve);
+    }
+
+    protected ValueExpression popFromExprStack(){
+        return _exprStack.pop();
     }
 
     //SELECTITEMVISITOR DESIGN PATTERN
@@ -156,11 +174,11 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
         ExpressionList params = function.getParameters();
         int numParams = 0;
         if(params != null){
+            params.accept(this);
+
+            //in order to determine the size
             List<Expression> listParams = params.getExpressions();
             numParams = listParams.size();
-            for(Expression param: listParams){
-                param.accept(this);
-            }
         }
         List<ValueExpression> expressions = new ArrayList<ValueExpression>();
         for(int i=0; i<numParams; i++){
@@ -171,23 +189,9 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
         if(fnName.equalsIgnoreCase("SUM")){
             //there must be only one parameter, if not SQL parser will raise an exception
             ValueExpression expr = expressions.get(0);
-            NumericConversion numConv = (NumericConversion) expr.getType();
-            _agg = new AggregateSumOperator(numConv, expr, _map);
-
-            //DISTINCT and agg are stored on the same component.
-            if(function.isDistinct()){
-                DistinctOperator distinct = new DistinctOperator(_map, expressions);
-                _agg.setDistinct(distinct);
-            }
+            createSum(expr, function.isDistinct());
         }else if(fnName.equalsIgnoreCase("COUNT")){
-            //COUNT(R.A) and COUNT(1) have the same semantics as COUNT(*), since we do not have NULLs in R.A
-            _agg = new AggregateCountOperator(_map);
-
-            //DISTINCT and agg are stored on the same component.
-            if(function.isDistinct()){
-                DistinctOperator distinct = new DistinctOperator(_map, expressions);
-                _agg.setDistinct(distinct);
-            }
+            createCount(expressions, function.isDistinct());
         }else if (fnName.equalsIgnoreCase("EXTRACT_YEAR")) {
             if(numParams != 1){
                 throw new RuntimeException("EXTRACT_YEAR function has exactly one parameter!");
@@ -195,6 +199,36 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
             ValueExpression expr = expressions.get(0);
             ValueExpression ve = new IntegerYearFromDate(expr);
             _exprStack.push(ve);
+        }
+    }
+
+    protected void createSum(ValueExpression ve, boolean isDistinct){
+        NumericConversion numConv = (NumericConversion) ve.getType();
+        _agg = new AggregateSumOperator(numConv, ve, _map);
+
+        //DISTINCT and agg are stored on the same component.
+        if(isDistinct){
+            DistinctOperator distinct = new DistinctOperator(_map, ve);
+            _agg.setDistinct(distinct);
+        }
+    }
+
+    protected void createCount(List<ValueExpression> veList, boolean isDistinct){
+        //COUNT(R.A) and COUNT(1) have the same semantics as COUNT(*), since we do not have NULLs in R.A
+        _agg = new AggregateCountOperator(_map);
+
+        //DISTINCT and agg are stored on the same component.
+        if(isDistinct){
+            DistinctOperator distinct = new DistinctOperator(_map, veList);
+            _agg.setDistinct(distinct);
+        }
+    }
+
+    @Override
+    public void visit(ExpressionList el) {
+        for (Iterator iter = el.getExpressions().iterator(); iter.hasNext();) {
+            Expression expression = (Expression) iter.next();
+            expression.accept(this);
         }
     }
 
@@ -273,7 +307,7 @@ public class SelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor{
         TypeConversion tc = _schema.getType(tableSchemaName, columnName);
 
         //extract the position (index) of the required column
-        int position = _ot.getColumnIndex(column, _affectedComponent, _queryPlan, null);
+        int position = _ot.getColumnIndex(column, _affectedComponent, _queryPlan);
 
         ValueExpression ve = new ColumnReference(tc, position);
         _exprStack.push(ve);

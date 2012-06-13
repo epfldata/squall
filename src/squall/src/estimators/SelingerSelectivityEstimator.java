@@ -64,7 +64,9 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
     public double estimate(Expression expr) {
         //TODO without instanceof
         //  similarly to JSQLTypeConvertor, it can be done via visitor pattern, 
-        //  but result has to be read, and cannot implement SelectivityEstimator anymore
+        //  but then it cannot implement SelectivityEstimator anymore.
+        //the gap between void of visit method and double as the result here 
+        //  can be solved in a similar manner as in JSQLTypeConverter.
         if(expr instanceof EqualsTo){
             return estimate((EqualsTo)expr);
         }else if(expr instanceof NotEqualsTo){
@@ -100,10 +102,12 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
         List<Column> columns = ParserUtil.getJSQLColumns(mt);
         Column column = columns.get(0);
 
-        String fullSchemaColumnName = _tan.getFullSchemaColumnName(column);
-        TypeConversion tc = _schema.getType(fullSchemaColumnName);
+        String schemaName = _tan.getSchemaName(ParserUtil.getComponentName(column));
+        String columnName = column.getColumnName();
+        TypeConversion tc = _schema.getType(schemaName, columnName);
 
         //assume uniform distribution
+        String fullSchemaColumnName = _tan.getFullSchemaColumnName(column);
         Object minValue = _schema.getRange(fullSchemaColumnName).getMin();
         Object maxValue = _schema.getRange(fullSchemaColumnName).getMax();
         double fullRange = tc.getDistance(maxValue, minValue);

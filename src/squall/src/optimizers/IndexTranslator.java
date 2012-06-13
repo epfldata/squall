@@ -6,6 +6,7 @@
 package optimizers;
 
 import components.Component;
+import conversion.TypeConversion;
 import java.util.ArrayList;
 import java.util.List;
 import net.sf.jsqlparser.schema.Column;
@@ -16,7 +17,7 @@ import util.ParserUtil;
 import util.TableAliasName;
 
 
-public class IndexTranslator implements OptimizerTranslator{
+public class IndexTranslator implements Translator{
     private Schema _schema;
     private TableAliasName _tan;
 
@@ -24,6 +25,34 @@ public class IndexTranslator implements OptimizerTranslator{
         _schema = schema;
         _tan = tan;
     }
+
+    /*
+     *   Not used outside this class.
+     *   For a field N1.NATIONNAME, columnName is NATIONNAME
+     *   List<ColumnNameType> is from a Schema Table (TPCH.nation)
+     */
+    @Override
+    public int indexOf(List<ColumnNameType> tupleSchema, String columnName){
+        for(int i=0; i<tupleSchema.size(); i++){
+            if(tupleSchema.get(i).getName().equals(columnName)){
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /*
+     * Not used outside this class
+     * TupleSchema is a table schema (TPCH_Schema.customer, for example)
+     */
+    public TypeConversion getType(List<ColumnNameType> tupleSchema, String columnName) {
+        int index = indexOf(tupleSchema, columnName);
+        if(index == -1){
+            throw new RuntimeException("No column " + columnName + " in tupleSchema!");
+        }
+        return tupleSchema.get(index).getType();
+    }
+    
 
    /*
     * For a given component and column,
@@ -33,12 +62,13 @@ public class IndexTranslator implements OptimizerTranslator{
     * tupleSchema is not used here (it's used for Cost-based optimizer,
     *   where each component updates the schema after each operator)
     */
-    public int getColumnIndex(Column column, Component requestor, QueryPlan queryPlan, List<ColumnNameType> tupleSchema){
+    public int getColumnIndex(Column column, Component requestor, QueryPlan queryPlan){
         String columnName = column.getColumnName();
         String tblCompName = ParserUtil.getComponentName(column);
         String tableSchemaName = _tan.getSchemaName(tblCompName);
+        List<ColumnNameType> columns = _schema.getTableSchema(tableSchemaName);
 
-        int originalIndex = _schema.indexOf(tableSchemaName, columnName);
+        int originalIndex = indexOf(columns, columnName);
         Component originator = queryPlan.getComponent(tblCompName);
 
         if (originator.equals(requestor)){
@@ -130,5 +160,11 @@ public class IndexTranslator implements OptimizerTranslator{
             }
             return true;
         }
+    }
+
+    //non-used methods
+    @Override
+    public int getColumnIndex(Column column, List<ColumnNameType> tupleSchema) {
+        throw new UnsupportedOperationException("This method is not ment to be called from IndexTranslator");
     }
 }

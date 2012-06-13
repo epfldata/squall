@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Set;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Table;
-import optimizers.OptimizerTranslator;
 import schema.Schema;
 import util.ParserUtil;
 import util.TableAliasName;
@@ -24,7 +23,7 @@ import util.TableAliasName;
 public class CostParallelismAssigner {
     private final Schema _schema;
     private final TableAliasName _tan;
-    private final OptimizerTranslator _ot;
+    private final NameTranslator _ot;
     private final String _dataPath;
     private final String _extension;
     private final Map _map;
@@ -33,7 +32,7 @@ public class CostParallelismAssigner {
 
     public CostParallelismAssigner(Schema schema,
             TableAliasName tan,
-            OptimizerTranslator ot,
+            NameTranslator ot,
             String dataPath,
             String extension,
             Map map,

@@ -9,6 +9,7 @@ import optimizers.*;
 import components.Component;
 import components.DataSourceComponent;
 import components.EquiJoinComponent;
+import conversion.TypeConversion;
 import estimators.ConfigSelectivityEstimator;
 import estimators.SelingerSelectivityEstimator;
 import expressions.ValueExpression;
@@ -22,12 +23,13 @@ import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.schema.Column;
 import operators.SelectOperator;
 import queryPlans.QueryPlan;
+import schema.ColumnNameType;
 import schema.Schema;
 import util.HierarchyExtractor;
 import util.ParserUtil;
 import util.TableAliasName;
-import visitors.squall.JoinHashVisitor;
-import visitors.squall.WhereVisitor;
+import visitors.squall.NameJoinHashVisitor;
+import visitors.squall.NameWhereVisitor;
 
 /*
  * It is necessary that this class operates with Tables,
@@ -35,7 +37,7 @@ import visitors.squall.WhereVisitor;
  */
 public class NameComponentGenerator implements ComponentGenerator{
     private TableAliasName _tan;
-    private OptimizerTranslator _ot;
+    private Translator _ot;
 
     private Schema _schema;
     private String _dataPath;
@@ -61,7 +63,7 @@ public class NameComponentGenerator implements ComponentGenerator{
 
     public NameComponentGenerator(Schema schema,
             TableAliasName tan,
-            OptimizerTranslator ot,
+            NameTranslator ot,
             String dataPath,
             String extension,
             Map map,
@@ -71,7 +73,7 @@ public class NameComponentGenerator implements ComponentGenerator{
             Map<Set<String>, Expression> compNamesOrExprs){
         _schema = schema;
         _tan = tan;
-        _ot = ot;
+        _ot = new NameTranslator();
         _dataPath = dataPath;
         _extension = extension;
         _map = map;
@@ -129,12 +131,31 @@ public class NameComponentGenerator implements ComponentGenerator{
      */
     private void createCompCost(DataSourceComponent source) {
         String compName = source.getName();
+        String schemaName = _tan.getSchemaName(compName);
         CostParams costParams = new CostParams();
 
-        costParams.setCardinality(_schema.getTableSize(compName));
-        costParams.setSchema(_schema.getTableSchema(compName));
-
+        costParams.setCardinality(_schema.getTableSize(schemaName));
+        //schema is consisted of TableAlias.columnName
+        costParams.setSchema(createAliasedSchema(_schema.getTableSchema(schemaName), compName));
+                
         _compCost.put(compName, costParams);
+    }
+
+    /*
+     * From a list of <NATIONNATE, StringConversion>
+     *   it creates a list of <N1.NATIONNAME, StringConversion>
+     */
+    private List<ColumnNameType> createAliasedSchema(List<ColumnNameType> originalSchema, String aliasName){
+        List<ColumnNameType> result = new ArrayList<ColumnNameType>();
+
+        for(ColumnNameType cnt: originalSchema){
+            String name = cnt.getName();
+            name = aliasName + "." + name;
+            TypeConversion tc = cnt.getType();
+            result.add(new ColumnNameType(name, tc));
+        }
+
+        return result;
     }
 
     /*
@@ -178,7 +199,7 @@ public class NameComponentGenerator implements ComponentGenerator{
         Component[] parents = joinComponent.getParents();
 
         //set schema
-        List<String> schema = ParserUtil.joinSchema(joinComponent.getParents(), _compCost);
+        List<ColumnNameType> schema = ParserUtil.joinSchema(joinComponent.getParents(), _compCost);
         costParams.setSchema(schema);
 
         //********* set selectivity
@@ -254,10 +275,12 @@ public class NameComponentGenerator implements ComponentGenerator{
 
     /*
      * whereCompExpression is the part of WHERE clause which refers to affectedComponent
-     * This is the only method in this class where WhereVisitor is actually instantiated and invoked
+     * This is the only method in this class where IndexWhereVisitor is actually instantiated and invoked
      */
     private void processWhereForComponent(Component affectedComponent, Expression whereCompExpression){
-        WhereVisitor whereVisitor = new WhereVisitor(_queryPlan, affectedComponent, _schema, _tan, _ot);
+        //first get the current schema of the component
+        List<ColumnNameType> tupleSchema = _compCost.get(affectedComponent.getName()).getSchema();
+        NameWhereVisitor whereVisitor = new NameWhereVisitor(_schema, _tan, tupleSchema);
         whereCompExpression.accept(whereVisitor);
         attachWhereClause(affectedComponent, whereVisitor.getSelectOperator());
     }
@@ -282,26 +305,27 @@ public class NameComponentGenerator implements ComponentGenerator{
 
     //set hash for this component, knowing its position in the query plan.
     //  Conditions are related only to parents of join,
-    //  but we have to filter who belongs to my branch in JoinHashVisitor.
+    //  but we have to filter who belongs to my branch in IndexJoinHashVisitor.
     //  We don't want to hash on something which will be used to join with same later component in the hierarchy.
     private void addHash(Component component, List<Expression> joinCondition) {
-            JoinHashVisitor joinOn = new JoinHashVisitor(_schema, _queryPlan, component, _tan, _ot);
-            for(Expression exp: joinCondition){
-                exp.accept(joinOn);
-            }
-            List<ValueExpression> hashExpressions = joinOn.getExpressions();
+        List<ColumnNameType> tupleSchema = _compCost.get(component.getName()).getSchema();
+        NameJoinHashVisitor joinOn = new NameJoinHashVisitor(_schema, _tan, tupleSchema, component);
+        for(Expression exp: joinCondition){
+            exp.accept(joinOn);
+        }
+        List<ValueExpression> hashExpressions = joinOn.getExpressions();
 
-            if(!joinOn.isComplexCondition()){
-                //all the join conditions are represented through columns, no ValueExpression (neither in joined component)
-                //guaranteed that both joined components will have joined columns visited in the same order
-                //i.e R.A=S.A and R.B=S.B, the columns are (R.A, R.B), (S.A, S.B), respectively
-                List<Integer> hashIndexes = ParserUtil.extractColumnIndexes(hashExpressions);
+        if(!joinOn.isComplexCondition()){
+            //all the join conditions are represented through columns, no ValueExpression (neither in joined component)
+            //guaranteed that both joined components will have joined columns visited in the same order
+            //i.e R.A=S.A and R.B=S.B, the columns are (R.A, R.B), (S.A, S.B), respectively
+            List<Integer> hashIndexes = ParserUtil.extractColumnIndexes(hashExpressions);
 
-                //hash indexes in join condition
-                component.setHashIndexes(hashIndexes);
-            }else{
-                //hahs expressions in join condition
-                component.setHashExpressions(hashExpressions);
-            }
+            //hash indexes in join condition
+            component.setHashIndexes(hashIndexes);
+        }else{
+            //hahs expressions in join condition
+            component.setHashExpressions(hashExpressions);
+        }
     }
 }

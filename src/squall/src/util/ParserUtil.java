@@ -30,6 +30,7 @@ import operators.Operator;
 import optimizers.ComponentGenerator;
 import optimizers.cost.CostParams;
 import queryPlans.QueryPlan;
+import schema.ColumnNameType;
 import schema.Schema;
 import utilities.MyUtilities;
 import visitors.jsql.ColumnCollectVisitor;
@@ -322,8 +323,8 @@ public class ParserUtil {
      *   before EarlyProjection is performed.
      */
     public static int getPreOpsOutputSize(DataSourceComponent source, Schema schema, TableAliasName tan){
-        String tableName = tan.getSchemaName(source.getName());
-        return schema.getColumnNameTypes(tableName).size();
+        String tableSchemaName = tan.getSchemaName(source.getName());
+        return schema.getTableSchema(tableSchemaName).size();
     }
 
     public static int getPreOpsOutputSize(Component component, Schema schema, TableAliasName tan){
@@ -437,17 +438,17 @@ public class ParserUtil {
     }
 
     //throw away join hash indexes from the right parent
-    public static List<String> joinSchema(Component[] parents, Map<String, CostParams> compCost) {
+    public static List<ColumnNameType> joinSchema(Component[] parents, Map<String, CostParams> compCost) {
         Component leftParent = parents[0];
         Component rightParent = parents[1];
-        List<String> leftSchema = compCost.get(leftParent.getName()).getSchema();
-        List<String> rightSchema = compCost.get(rightParent.getName()).getSchema();
+        List<ColumnNameType> leftSchema = compCost.get(leftParent.getName()).getSchema();
+        List<ColumnNameType> rightSchema = compCost.get(rightParent.getName()).getSchema();
 
         //when HashExpressions are used the schema is a simple appending
         List<Integer> rightHashIndexes = rightParent.getHashIndexes();
         
         //******************** similar to MyUtilities.createOutputTuple
-        List<String> outputSchema = new ArrayList<String>();
+        List<ColumnNameType> outputSchema = new ArrayList<ColumnNameType>();
 
         for (int j = 0; j < leftSchema.size(); j++){ // add all elements of the first relation (R)
             outputSchema.add(leftSchema.get(j));
@@ -460,6 +461,13 @@ public class ParserUtil {
         return outputSchema;
         //******************** end of similar
 
+    }
+
+    /*
+     * returns N1.NATIONNAME
+     */
+    public static String getFullAliasedName(Column column) {
+        return ParserUtil.getComponentName(column) + "." + column.getColumnName();
     }
 
 }
