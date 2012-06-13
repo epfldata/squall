@@ -16,9 +16,9 @@ do
 		continue;
 	fi
 	# Theta joins with hyracks doesn't work either
-	if [ "$TEST" == "0.01G_theta_hyracks_serial" ]; then
-		continue;
-	fi
+#	if [ "$TEST" == "0.01G_theta_hyracks_serial" ]; then
+#		continue;
+#	fi
 	
 	TMPFILE=`mktemp`
 	echo "Running test $i ($TEST) out of ${COUNT}..."
@@ -28,7 +28,7 @@ do
 		exit
 	fi
 	echo "Test $TEST completed successfully..."
-	#rm $TMPFILE
+	rm $TMPFILE
 	i+=1
 done
 
