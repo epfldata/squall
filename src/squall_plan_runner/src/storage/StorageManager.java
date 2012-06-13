@@ -2,15 +2,19 @@ package storage;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.net.InetAddress;
 import java.io.Serializable;
 import java.io.OutputStream;
-import java.net.InetAddress;
 import java.io.FilenameFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+/* StorageManager that handles reading and writing objects from/to a
+ * filesystem. This class is instantiated as new StorageManager<R>(params)
+ * where R is the type of Objects you expect to read and write (use Object
+ * if you are using multiple types. */
 public class StorageManager<R> implements Serializable {
 
 	private boolean isRead;
@@ -23,6 +27,7 @@ public class StorageManager<R> implements Serializable {
 	private String hostname = null;
 	private String rootDir = null; 
 
+	/* Constructor. Other fields are instantiated in first r/w, to work with Storm */
 	public StorageManager(BasicStore store, String rootDir, boolean coldstart) {
 		this.store = store;
 		this.rootDir = rootDir;
@@ -168,7 +173,7 @@ public class StorageManager<R> implements Serializable {
 			System.out.println("Squall StorageManager: Couldn't erase old file during update!");	
 			System.exit(-1);
 		}
-		this.write(groupId, values);
+		this.write(groupId, values.toArray());
 	}
 
 	private void closeFile() {
@@ -187,17 +192,6 @@ public class StorageManager<R> implements Serializable {
 		} catch (java.io.IOException ioe) {
 			System.out.println("Squall StorageManager: IO Exception encountered:" + ioe.getMessage());	
 			System.exit(-1);
-		}
-	}
-
-	class AppendableObjectOutputStream extends ObjectOutputStream {
-		public AppendableObjectOutputStream(OutputStream out) throws java.io.IOException {
-			super(out);
-		}
-
-		@Override
-		protected void writeStreamHeader() throws java.io.IOException {
-			// do not write a header
 		}
 	}
 
@@ -226,5 +220,16 @@ public class StorageManager<R> implements Serializable {
 			System.exit(-1);
 		}
 		return null;
+	}
+	
+	class AppendableObjectOutputStream extends ObjectOutputStream {
+		public AppendableObjectOutputStream(OutputStream out) throws java.io.IOException {
+			super(out);
+		}
+
+		@Override
+		protected void writeStreamHeader() throws java.io.IOException {
+			// do not write a header
+		}
 	}
 }

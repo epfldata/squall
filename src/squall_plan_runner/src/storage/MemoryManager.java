@@ -1,15 +1,10 @@
 package storage;
 
-import java.lang.Integer;
-import java.lang.reflect.*;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Iterator;
-import java.util.Collection;
+import java.lang.reflect.Method;
 import java.io.ObjectOutputStream;
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import storage.*;
 
 public class MemoryManager implements Serializable {
 	
@@ -24,14 +19,11 @@ public class MemoryManager implements Serializable {
 	/* Size argument measured in MBytes */
 	public MemoryManager(long maxSize) {
 		// Setting up reflexion 
-	//	mmclass = this.getClass();
 		this.partypes = new Class[2];
 		this.partypes[0] = new Object().getClass();
 		this._currSize = 0;
-		// FIXME FIXME FIXME
 		this._maxSize = (maxSize * 1024 * 1024);
 //		this._maxSize = 256*1024;
-//		this._maxSize = 12;
 	}
 
 	/* Primitive types */
@@ -113,15 +105,6 @@ public class MemoryManager implements Serializable {
 		return ByteSize;
 	}
 
-	// FIXME FIXME FIXME: make this smarter: count of elems in list * size of elem[0]
-	/*int getSize(ArrayList list) {
-		int totalSize = 0;
-		for (Iterator<?> it = list.iterator(); it.hasNext(); ) {
-			totalSize += getSize(it.next());
-		}
-		return totalSize;
-	}*/
-
 	public int getSize(Object obj) {	
 		/* It may happen -- for special tricks (see DistinctOperator)
 		 * that we receive the null object. In this case return 0 since
@@ -130,16 +113,23 @@ public class MemoryManager implements Serializable {
 			return 0;	
 		try {
 			partypes[1] = obj.getClass();	
-			//System.out.println("-------" + obj.getClass().getName());
 			if (partypes[0].equals(partypes[1])) {
-				System.out.println("OBJECT RECURSION BUG DETECTED!");
+				// Avoid recursively calling this is you get a true Object as an argument!
 				return genericGetSize(obj);
 			}
+			// Dynamic dispatch according to type
 			Method m = this.getClass().getDeclaredMethod("getSize", partypes);
 			return ((Integer)m.invoke(this, obj)).intValue();
-		} catch (java.lang.NoSuchMethodException cnfe) { return genericGetSize(obj);
-		} catch (java.lang.IllegalAccessException cnfe2) { System.out.println("EXCEPTIOOOOOON 4"); 
-		} catch (java.lang.reflect.InvocationTargetException cnfe3) {  System.out.println(cnfe3.getMessage()); }
+		} catch (java.lang.NoSuchMethodException nsme) { 
+			// We don't have a getSize for the specific type. No problem: serialize/deserialize
+			return genericGetSize(obj);
+		} catch (java.lang.IllegalAccessException iae) { 
+			System.out.println("Squall MemoryManager:: IllegalAccessException encountered: " + iae.getMessage()); 
+			System.exit(0);
+		} catch (java.lang.reflect.InvocationTargetException ite) {
+			System.out.println("Squall MemoryManager:: InvocationTargetException encountered: " + ite.getMessage()); 
+			System.exit(0);
+		}
 		return 0;
 	}
 
@@ -147,7 +137,10 @@ public class MemoryManager implements Serializable {
 		this._baos = new ByteArrayOutputStream();
 		try {
 			this._oos = new ObjectOutputStream(this._baos);
-		} catch (IOException ioe) { System.out.println("EXCEPTIOOOOOON 2"); }
+		} catch (IOException ioe) { 
+			System.out.println("Squall MemoryManager:: Couldn't initialize memory streams. IOException encountered: " + ioe.getMessage());
+			System.exit(0);
+		}
 	}
 	
 	private int genericGetSize(Object obj) {
@@ -160,14 +153,16 @@ public class MemoryManager implements Serializable {
 			this._oos.close(); 
 			this._baos.close();
 			return _baos.toByteArray().length;
-		} catch (IOException ioe) { System.out.println("THN KATSAME!"); }
+		} catch (IOException ioe) {
+			System.out.println("Squall MemoryManager:: genericGetSize() failed. Error while serializing/deserializing Object. IOException encountered:: " + ioe.getMessage()); 
+			System.exit(-1);
+		}
 		return -1;
 	}
 
 	/* Checks if the store has enough bytes left to store bytesRequested
 	 * size of objects */
 	boolean hasExceededMaxSpace() {
-//		System.out.println(this._currSize + " " + this._maxSize);
 		return (this._currSize > this._maxSize);
 	}
 	
