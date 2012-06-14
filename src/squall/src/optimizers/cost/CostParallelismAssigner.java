@@ -18,6 +18,7 @@ import net.sf.jsqlparser.schema.Table;
 import schema.Schema;
 import util.ParserUtil;
 import util.TableAliasName;
+import utilities.SystemParameters;
 
 
 public class CostParallelismAssigner {
@@ -131,19 +132,72 @@ public class CostParallelismAssigner {
         CostParams leftParentParams = compCost.get(leftParent);
         CostParams rightParentParams = compCost.get(rightParent);
 
-        //computing TODO: does not take into account when joinComponent send tuples further down
-        double dblParallelism = leftParentParams.getSelectivity() * leftParentParams.getParallelism() +
-                            rightParentParams.getSelectivity() * rightParentParams.getParallelism() +
-                            1/8 * (leftParentParams.getParallelism() + rightParentParams.getParallelism());
-        int parallelism = (int) dblParallelism;
-        if(parallelism == dblParallelism){
-            //parallelism is ceil of dblParallelism
-            parallelism ++;
+        int leftParallelism = leftParentParams.getParallelism();
+        int rightParallelism = rightParentParams.getParallelism();
+
+        //compute
+        int parallelism = parallelismFormula(leftParentParams, rightParentParams);
+
+        //upper bound
+        int maxParallelism = estimateDistinctHashes(leftParentParams, rightParentParams);
+        if(parallelism > maxParallelism){
+            if(leftParallelism == 1 && rightParallelism == 1){
+                //if parallelism of both parents is 1, then we should not raise an exception
+                //  exception serves to force smaller parallelism at sources
+                parallelism = maxParallelism;
+            }else{
+                throw new RuntimeException("Component " + joinComponent.getName() + " cannot have parallelism more than " + maxParallelism);
+            }
         }
 
         //setting
         String currentComp = joinComponent.getName();
         compCost.get(currentComp).setParallelism(parallelism);
+    }
+
+    private int parallelismFormula(CostParams leftParentParams, CostParams rightParentParams) {
+        //computing TODO: does not take into account when joinComponent send tuples further down
+        double dblParallelism = leftParentParams.getSelectivity() * leftParentParams.getParallelism() +
+                            rightParentParams.getSelectivity() * rightParentParams.getParallelism() +
+                            1.0/8 * (leftParentParams.getParallelism() + rightParentParams.getParallelism());
+        int parallelism = (int) dblParallelism;
+        if(parallelism != dblParallelism){
+            //parallelism is ceil of dblParallelism
+            parallelism++;
+        }
+        return parallelism;
+    }
+
+    /*
+     * We take the number of tuples as the upper limit.
+     *   The real number of distinct hashes may be much smaller,
+     *   for example when having multiple tuples with the very same hash value.
+     *   This is rare in practice, in the example we tried,
+     *      it occurs only for the final aggregation when join and final aggregation are not on the last node.
+     */
+    private int estimateDistinctHashes(CostParams leftParentParams, CostParams rightParentParams) {
+        /* TODO: to implement this properly, we need to:
+         *   - find all the parent column appearing in joinCondition
+         *         - column are found by using ParserUtil.getJSQLColumns(joinCondition)
+         *         - joinCondition related to the parents is available in CostOptimizer (obtained byJoinTableExpr.getExpression(table1, table2))
+         *   - check if this column is the key, or its functional dependency
+         *          (for example NATION.NATIONNAME is a functional dependency of NATION.NATIONKEY)
+         */
+        long leftCardinality = leftParentParams.getCardinality();
+        long rightCardinality = rightParentParams.getCardinality();
+
+        long distinctValues = leftCardinality;
+        if(distinctValues > rightCardinality){
+            //we return the smaller one
+            distinctValues = rightCardinality;
+        }
+
+        int result = (int) distinctValues;
+        if(result != distinctValues){
+            //so huge that cannot fit in int, we will set to MAX_PARALLELISM
+            result = SystemParameters.getInt(_map, "DIP_NUM_PARALLELISM");
+        }
+        return result;
     }
 
     /*

@@ -118,6 +118,8 @@ public class NameComponentGenerator implements ComponentGenerator{
         //operators
         addSelectOperator(source);
 
+        finalizeCompCost(source);
+
         return source;
     }
 
@@ -166,6 +168,17 @@ public class NameComponentGenerator implements ComponentGenerator{
     }
 
     /*
+     * Works for both DataSource and EquiJoin component
+     */
+    private void finalizeCompCost(Component comp){
+        CostParams costParams = _compCost.get(comp.getName());
+        long currentCardinality = costParams.getCardinality();
+        double selectivity = costParams.getSelectivity();
+        long cardinality = (long) (selectivity * currentCardinality);
+        costParams.setCardinality(cardinality);
+    }
+
+    /*
      * Join between two components
      * List<Expression> is a set of join conditions between two components.
      */
@@ -180,6 +193,7 @@ public class NameComponentGenerator implements ComponentGenerator{
         addHash(left, joinCondition);
         addHash(right, joinCondition);
 
+        finalizeCompCost(joinComponent);
         //setting parallelism
         _parAssigner.setParallelism(joinComponent, _compCost);
 
@@ -199,52 +213,97 @@ public class NameComponentGenerator implements ComponentGenerator{
         return joinComponent;
     }
 
+    /*
+     * This can estimate selectivity/cardinality of a join between between any two components
+     *   but with a restriction - righParent has only one component mentioned in joinCondition.
+     *   If connection between any components is allowed,
+     *     we have to find a way combining multiple distinct selectivities
+     *     (for example having a component R-S and T-V, how to combine R.A=T.A and S.B=V.B?)
+     * This method is based on usual way to join tables - on their appropriate keys.
+     * It works for cyclic queries as well (TPCH5 is an example).
+     */
     private void createCompCost(EquiJoinComponent joinComponent, List<Expression> joinCondition) {
         //create schema and selectivity wrt leftParent
         String compName = joinComponent.getName();
         CostParams costParams = new CostParams();
         Component[] parents = joinComponent.getParents();
 
-        //set schema
+        //*********set schema
         List<ColumnNameType> schema = ParserUtil.joinSchema(joinComponent.getParents(), _compCost);
         costParams.setSchema(schema);
 
-        //********* set selectivity
-        List<Column> joinColumns = ParserUtil.getJSQLColumns(joinCondition);
-        List<String> joinCompNames = ParserUtil.getCompNamesFromColumns(joinColumns);
+        //********* set initial (join) selectivity and initial cardinality
+        long leftCardinality = _compCost.get(parents[0].getName()).getCardinality();
+        long rightCardinality = _compCost.get(parents[1].getName()).getCardinality();
+        double rightSelectivity = _compCost.get(parents[1].getName()).getSelectivity();
 
-        String leftJoinTableSchemaName = getJoinSchemaName(joinCompNames, parents[0]);
-        String rightJoinTableSchemaName = getJoinSchemaName(joinCompNames, parents[1]);
-        
-        double leftCardinality = _compCost.get(parents[0].getName()).getCardinality();
-        double rightCardinality = _compCost.get(parents[1].getName()).getCardinality();
-        double selectivity;
-        if(leftJoinTableSchemaName.equals(rightJoinTableSchemaName)){
-            //we treat this as a cross-product on which some selections are performed
-            //IMPORTANT: selectivity is the output/input rate in the case of EquiJoin
-            selectivity = (leftCardinality * rightCardinality) / (leftCardinality + rightCardinality);
-        }else{
-            double ratio = _schema.getRatio(leftJoinTableSchemaName, rightJoinTableSchemaName);
-            selectivity = (leftCardinality * ratio) / (leftCardinality + rightCardinality);
-        }
+        //compute
+        long inputCardinality = leftCardinality + rightCardinality;
+        double selectivity = computeSelectivity(joinComponent, joinCondition, leftCardinality, rightCardinality, rightSelectivity);
+
+        //setting
+        costParams.setCardinality(inputCardinality);
         costParams.setSelectivity(selectivity);
         //*********
         
         _compCost.put(compName, costParams);
     }
 
+    private double computeSelectivity(EquiJoinComponent joinComponent, List<Expression> joinCondition, 
+            long leftCardinality, long rightCardinality, double rightSelectivity){
+
+        Component[] parents = joinComponent.getParents();
+        double selectivity = 1;
+
+        List<Column> joinColumns = ParserUtil.getJSQLColumns(joinCondition);
+        List<String> joinCompNames = ParserUtil.getCompNamesFromColumns(joinColumns);
+
+        List<String> leftJoinTableSchemaNames = getJoinSchemaNames(joinCompNames, parents[0]);
+        List<String> rightJoinTableSchemaNames = getJoinSchemaNames(joinCompNames, parents[1]);
+
+        if(rightJoinTableSchemaNames.size() > 1){
+            throw new RuntimeException("Currently, this support only lefty plans!");
+        }
+        String rightJoinTableSchemaName = rightJoinTableSchemaNames.get(0);
+        
+        for(String leftJoinTableSchemaName: leftJoinTableSchemaNames){
+            selectivity = selectivity * 
+                    computeHashSelectivity(leftJoinTableSchemaName, rightJoinTableSchemaName, leftCardinality, rightCardinality, rightSelectivity);
+        }
+
+        return selectivity;
+    }
+
     /*
      * @allJoinCompNames - all the component names from the join condition
      * joinCompNames - all the component names from the join condition corresponding to parent
      */
-    private String getJoinSchemaName(List<String> allJoinCompNames, Component parent) {
+    private List<String> getJoinSchemaNames(List<String> allJoinCompNames, Component parent) {
         List<DataSourceComponent> ancestorComps = parent.getAncestorDataSources();
         List<String> ancestors = ParserUtil.getSourceNameList(ancestorComps);
         List<String> joinCompNames = ParserUtil.getIntersection(allJoinCompNames, ancestors);
-        if(joinCompNames.size() > 1){
-            throw new RuntimeException("Cannot estimate join selectivity if a query is cyclic!");
+
+        List<String> joinSchemaNames = new ArrayList<String>();
+        for(String joinCompName: joinCompNames){
+            joinSchemaNames.add(_tan.getSchemaName(joinCompName));
         }
-        return _tan.getSchemaName(joinCompNames.get(0));
+        return joinSchemaNames;
+    }
+
+    public double computeHashSelectivity(String leftJoinTableSchemaName, String rightJoinTableSchemaName, 
+            long leftCardinality, long rightCardinality, double rightSelectivity){
+        long inputCardinality = leftCardinality + rightCardinality;
+        double selectivity = 1;
+
+        if(leftJoinTableSchemaName.equals(rightJoinTableSchemaName)){
+            //we treat this as a cross-product on which some selections are performed
+            //IMPORTANT: selectivity is the output/input rate in the case of EquiJoin
+            selectivity = (leftCardinality * rightCardinality) / inputCardinality;
+        }else{
+            double ratio = _schema.getRatio(leftJoinTableSchemaName, rightJoinTableSchemaName);
+            selectivity = (leftCardinality * ratio * rightSelectivity) / inputCardinality;
+        }
+        return selectivity;
     }
 
     /*************************************************************************************

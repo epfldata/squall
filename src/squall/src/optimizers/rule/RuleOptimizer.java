@@ -40,6 +40,9 @@ import visitors.squall.IndexSelectItemsVisitor;
 import visitors.squall.IndexWhereVisitor;
 
 /*
+ * It generates a single query plan, adds a final aggregation,
+ *   adds selections (WHERE clause) and do early projections (all unused columns are projected away)
+ *
  * Does not take relation cardinalities into account.
  * Assume no projections before the aggregation, so that EarlyProjection may impose some projections.
  * Aggregation only on the last level.
