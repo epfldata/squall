@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package optimizers.cost;
 
 import java.util.HashMap;
@@ -17,9 +12,11 @@ import net.sf.jsqlparser.statement.select.SelectItem;
 import optimizers.Optimizer;
 import queryPlans.QueryPlan;
 import schema.Schema;
+import util.JoinTablesExprs;
 import util.ParserUtil;
 import util.TableAliasName;
 import visitors.jsql.AndVisitor;
+import visitors.jsql.JoinTablesExprsVisitor;
 
 /*
  * It generates different NameComponentGenerator for each partial query plan
@@ -31,37 +28,41 @@ public class CostOptimizer implements Optimizer {
     private String _dataPath;
     private String _extension;
     private TableAliasName _tan;
-    private NameTranslator _ot;
     private Map _map; //map is updates in place
-    
-    HashMap<String, Expression> _compNamesAndExprs = new HashMap<String, Expression>();
-    HashMap<Set<String>, Expression> _compNamesOrExprs = new HashMap<Set<String>, Expression>();
-
-    //used for generating parallelism of components
-    private final CostParallelismAssigner _parAssigner;
-
     private int _totalSourcePar;
+
+    private HashMap<String, Expression> _compNamesAndExprs = new HashMap<String, Expression>();
+    private HashMap<Set<String>, Expression> _compNamesOrExprs = new HashMap<Set<String>, Expression>();
     
-    public CostOptimizer(Schema schema, TableAliasName tan, String dataPath, String extension, NameTranslator ot, Map map, int totalSourcePar){
+    public CostOptimizer(Schema schema, TableAliasName tan, String dataPath, String extension, Map map, int totalSourcePar){
         _schema = schema;
         _tan = tan;
         _dataPath = dataPath;
         _extension = extension;
-        _ot = ot;
         _map = map;
-
-        _parAssigner = new CostParallelismAssigner(_schema, _tan,
-                 _ot, _dataPath, _extension, _map, _compNamesAndExprs, _compNamesOrExprs);
         _totalSourcePar = totalSourcePar;
     }
 
     public QueryPlan generate(List<Table> tableList, List<Join> joinList, List<SelectItem> selectItems, Expression whereExpr) {
-        //processWhereClause influence cardinalities of the DataSourceComponents
-        //  and the cardinalities directly influences the paralleism for DataSourceComponents
         processWhereClause(whereExpr);
-        Map<String, Integer> sourceParallelism = _parAssigner.getSourceParallelism(tableList, _totalSourcePar);
-        //parallelism has to be set through NameComponentGenerator constructor, it's input parameter for dataSources
-        
+        ProjGlobalCollect globalCollect = new ProjGlobalCollect(selectItems, whereExpr);
+        globalCollect.process();
+
+        //From a list of joins, create collection of elements like {R->{S, R.A=S.A}}
+        JoinTablesExprsVisitor jteVisitor = new JoinTablesExprsVisitor();
+        for(Join join: joinList){
+            join.getOnExpression().accept(jteVisitor);
+        }
+        JoinTablesExprs jte = jteVisitor.getJoinTablesExp();
+
+
+        //INITIAL PARALLELISM has to be computed after previous lines, because they initialize some variables
+        //DataSource component has to compute cardinality (WhereClause changes it)
+        //  and to set up projections (globalCollect and jte)
+        CostParallelismAssigner parAssigner = new CostParallelismAssigner(_schema, _tan,
+                 _dataPath, _extension, _map, _compNamesAndExprs, _compNamesOrExprs, globalCollect, jte);
+        Map<String, Integer> sourceParallelism = parAssigner.getSourceParallelism(tableList, _totalSourcePar);
+
         return null;
     }
 

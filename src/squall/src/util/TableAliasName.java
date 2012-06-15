@@ -1,12 +1,11 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package util;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 
@@ -44,6 +43,18 @@ public class TableAliasName {
         String tableCompName = ParserUtil.getComponentName(column);
         String tableSchemaName = getSchemaName(tableCompName);
         return tableSchemaName + "." + columnName;
+    }
+
+    /*
+     * Get all component names
+     */
+    public List<String> getComponentNames(){
+        List<String> result = new ArrayList<String>();
+        for (Iterator iter = _nameSchemaList.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry<String, String> entry = (Map.Entry<String, String>) iter.next();
+            result.add(entry.getKey());
+        }
+        return result;
     }
 
 }

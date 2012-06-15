@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package visitors.jsql;
 
 import java.util.Iterator;
@@ -51,7 +46,7 @@ import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.SubSelect;
-import util.JoinTablesExp;
+import util.JoinTablesExprs;
 import util.TableAliasName;
 import util.ParserUtil;
 
@@ -77,15 +72,11 @@ import util.ParserUtil;
  *
  * TODO: OR in join condition is not yet supported.
  */
-public class JoinTablesExpVisitor implements ExpressionVisitor, ItemsListVisitor {
+public class JoinTablesExprsVisitor implements ExpressionVisitor, ItemsListVisitor {
     private Table _sideTable;
-    private JoinTablesExp _joinTablesExp;
+    private JoinTablesExprs _joinTablesExp = new JoinTablesExprs();
 
-    public JoinTablesExpVisitor(TableAliasName tan){
-        _joinTablesExp = new JoinTablesExp(tan);
-    }
-
-    public JoinTablesExp getJoinTablesExp(){
+    public JoinTablesExprs getJoinTablesExp(){
         return _joinTablesExp;
     }
 

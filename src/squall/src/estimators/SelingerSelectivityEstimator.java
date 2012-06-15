@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package estimators;
 
 import conversion.TypeConversion;
@@ -102,9 +97,7 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
         List<Column> columns = ParserUtil.getJSQLColumns(mt);
         Column column = columns.get(0);
 
-        String schemaName = _tan.getSchemaName(ParserUtil.getComponentName(column));
-        String columnName = column.getColumnName();
-        TypeConversion tc = _schema.getType(schemaName, columnName);
+        TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
 
         //assume uniform distribution
         String fullSchemaColumnName = _tan.getFullSchemaColumnName(column);

@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package optimizers;
 
 import components.Component;
@@ -24,7 +19,6 @@ import visitors.squall.IndexJoinHashVisitor;
  */
 public class IndexComponentGenerator implements ComponentGenerator{
     private TableAliasName _tan;
-    private Translator _ot;
 
     private Schema _schema;
     private String _dataPath;
@@ -35,10 +29,9 @@ public class IndexComponentGenerator implements ComponentGenerator{
     //List of Components which are already added throughEquiJoinComponent and OperatorComponent
     private List<Component> _subPlans = new ArrayList<Component>();
 
-    public IndexComponentGenerator(Schema schema, TableAliasName tan, Translator ot, String dataPath, String extension){
+    public IndexComponentGenerator(Schema schema, TableAliasName tan, String dataPath, String extension){
         _schema = schema;
         _tan = tan;
-        _ot = ot;
         _dataPath = dataPath;
         _extension = extension;
     }

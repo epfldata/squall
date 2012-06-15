@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package optimizers;
 
 import components.Component;
@@ -21,6 +16,7 @@ public interface Translator {
     /*
      * General purpose
      */
+    public boolean contains(List<ColumnNameType> tupleSchema, String columnName);
     public int indexOf(List<ColumnNameType> tupleSchema, String columnName);
     public TypeConversion getType(List<ColumnNameType> tupleSchema, String columnName);
 

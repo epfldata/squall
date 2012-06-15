@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package visitors.squall;
 
 import components.Component;
@@ -17,7 +12,6 @@ import net.sf.jsqlparser.expression.operators.arithmetic.Division;
 import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
 import net.sf.jsqlparser.expression.operators.arithmetic.Subtraction;
 import net.sf.jsqlparser.schema.Column;
-import optimizers.Translator;
 import optimizers.cost.NameTranslator;
 import schema.ColumnNameType;
 import schema.Schema;
@@ -31,19 +25,16 @@ import visitors.jsql.PrintVisitor;
 public class NameJoinHashVisitor extends IndexJoinHashVisitor{
     private Schema _schema;
     private TableAliasName _tan;
-    private Translator _ot;
+    private NameTranslator _nt = new NameTranslator();
     private Component _affectedComponent;
 
     private List<ColumnNameType> _tupleSchema;
-    private PrintVisitor _printer = new PrintVisitor();
 
     public NameJoinHashVisitor(Schema schema, TableAliasName tan, List<ColumnNameType> tupleSchema, Component affectedComponent){
         _schema = schema;
         _tan = tan;
         _tupleSchema = tupleSchema;
         _affectedComponent = affectedComponent;
-
-        _ot = new NameTranslator();
     }
 
     @Override
@@ -93,13 +84,12 @@ public class NameJoinHashVisitor extends IndexJoinHashVisitor{
      * It has side effects - putting on exprStack
      */
     private <T extends Expression> boolean isRecognized(T expr){
-        expr.accept(_printer);
-        String strExpr = _printer.getString();
+        String strExpr = ParserUtil.getStringExpr(expr);
 
-        int position = _ot.indexOf(_tupleSchema, strExpr);
+        int position = _nt.indexOf(_tupleSchema, strExpr);
         if(position != -1){
             //we found an expression already in the tuple schema
-            TypeConversion tc = _ot.getType(_tupleSchema, strExpr);
+            TypeConversion tc = _nt.getType(_tupleSchema, strExpr);
             ValueExpression ve = new ColumnReference(tc, position);
             pushToExprStack(ve);
             return true;
@@ -114,16 +104,14 @@ public class NameJoinHashVisitor extends IndexJoinHashVisitor{
     @Override
     public void visit(Column column) {
         String tableCompName = ParserUtil.getComponentName(column);
-        String tableSchemaName = _tan.getSchemaName(tableCompName);
         List<String> ancestorNames = HierarchyExtractor.getAncestorNames(_affectedComponent);
 
         if(ancestorNames.contains(tableCompName)){
             //extract type for the column
-            String columnName = column.getColumnName();
-            TypeConversion tc = _schema.getType(tableSchemaName, columnName);
+            TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
 
             //extract the position (index) of the required column
-            int position = _ot.getColumnIndex(column, _tupleSchema);
+            int position = _nt.getColumnIndex(column, _tupleSchema);
 
             ValueExpression ve = new ColumnReference(tc, position);
             pushToExprStack(ve);

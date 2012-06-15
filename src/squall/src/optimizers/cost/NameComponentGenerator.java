@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package optimizers.cost;
 
 import optimizers.*;
@@ -30,10 +25,9 @@ import queryPlans.QueryPlan;
 import schema.ColumnNameType;
 import schema.Schema;
 import util.HierarchyExtractor;
+import util.JoinTablesExprs;
 import util.ParserUtil;
 import util.TableAliasName;
-import utilities.DeepCopy;
-import visitors.squall.IndexSelectItemsVisitor;
 import visitors.squall.NameJoinHashVisitor;
 import visitors.squall.NameSelectItemsVisitor;
 import visitors.squall.NameWhereVisitor;
@@ -44,7 +38,7 @@ import visitors.squall.NameWhereVisitor;
  */
 public class NameComponentGenerator implements ComponentGenerator{
     private TableAliasName _tan;
-    private Translator _ot;
+    private NameTranslator _nt = new NameTranslator();
 
     private Schema _schema;
     private String _dataPath;
@@ -68,19 +62,23 @@ public class NameComponentGenerator implements ComponentGenerator{
     private final Map<String, Expression> _compNamesAndExprs;
     private final Map<Set<String>, Expression> _compNamesOrExprs;
 
+    //used for Projection
+    private final ProjGlobalCollect _globalCollect;
+    private final JoinTablesExprs _jte;
+
     public NameComponentGenerator(Schema schema,
             TableAliasName tan,
-            NameTranslator ot,
             String dataPath,
             String extension,
             Map map,
             //called from CostOptimizer, which already has CostParallellismAssigner instantiated
             CostParallelismAssigner parAssigner,
             Map<String, Expression> compNamesAndExprs,
-            Map<Set<String>, Expression> compNamesOrExprs){
+            Map<Set<String>, Expression> compNamesOrExprs,
+            ProjGlobalCollect globalCollect,
+            JoinTablesExprs jte){
         _schema = schema;
         _tan = tan;
-        _ot = new NameTranslator();
         _dataPath = dataPath;
         _extension = extension;
         _map = map;
@@ -91,6 +89,9 @@ public class NameComponentGenerator implements ComponentGenerator{
 
         _compNamesAndExprs = compNamesAndExprs;
         _compNamesOrExprs = compNamesOrExprs;
+
+        _globalCollect = globalCollect;
+        _jte = jte;
     }
 
     public CostParams getCostParameters(String componentName){
@@ -117,6 +118,7 @@ public class NameComponentGenerator implements ComponentGenerator{
         
         //operators
         addSelectOperator(source);
+        addProjectOperator(source);
 
         finalizeCompCost(source);
 
@@ -189,6 +191,7 @@ public class NameComponentGenerator implements ComponentGenerator{
         
         //operators
         addSelectOperator(joinComponent);
+        addProjectOperator(joinComponent);
         //set hashes for two parents, has to be after all the operators
         addHash(left, joinCondition);
         addHash(right, joinCondition);
@@ -365,6 +368,30 @@ public class NameComponentGenerator implements ComponentGenerator{
         costParams.setSelectivity(selectivity);
     }
 
+
+    /*************************************************************************************
+     * Project operator
+     *************************************************************************************/
+    public void addProjectOperator(Component component){
+        String compName = component.getName();
+        List<ColumnNameType> tupleSchema = _compCost.get(compName).getSchema();
+        ProjSchemaCreator psc = new ProjSchemaCreator(_globalCollect, tupleSchema, component, _tan, _schema, _jte);
+        psc.create();
+
+        attachProjectOperator(component, psc.getProjectOperator());
+        processProjectCost(component, psc.getOutputSchema());
+    }
+
+    private void attachProjectOperator(Component component, ProjectOperator project){
+        component.addOperator(project);
+    }
+
+    private void processProjectCost(Component component, List<ColumnNameType> outputTupleSchema){
+        //only schema is changed
+        String compName = component.getName();
+        _compCost.get(compName).setSchema(outputTupleSchema);
+    }
+
     /*************************************************************************************
      * SELECT clause - Final aggregation
      *************************************************************************************/
@@ -397,7 +424,7 @@ public class NameComponentGenerator implements ComponentGenerator{
 
                 //Setting new level of components is necessary for correctness only for distinct in aggregates
                     //  but it's certainly pleasant to have the final result grouped on nodes by group by columns.
-                boolean newLevel = !(_ot.isHashedBy(lastComponent, groupByColumns));
+                boolean newLevel = !(_nt.isHashedBy(lastComponent, groupByColumns));
                 if(newLevel){
                     lastComponent.setHashIndexes(groupByColumns);
                     OperatorComponent newComponent = new OperatorComponent(lastComponent,
