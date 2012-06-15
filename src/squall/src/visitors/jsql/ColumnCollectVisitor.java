@@ -6,6 +6,7 @@
 package visitors.jsql;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
 import net.sf.jsqlparser.expression.AnyComparisonExpression;
@@ -43,6 +44,7 @@ import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.expression.operators.relational.IsNullExpression;
+import net.sf.jsqlparser.expression.operators.relational.ItemsListVisitor;
 import net.sf.jsqlparser.expression.operators.relational.LikeExpression;
 import net.sf.jsqlparser.expression.operators.relational.Matches;
 import net.sf.jsqlparser.expression.operators.relational.MinorThan;
@@ -52,7 +54,7 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 
 
-public class ColumnCollectVisitor implements ExpressionVisitor {
+public class ColumnCollectVisitor implements ExpressionVisitor, ItemsListVisitor {
 
     private List<Column> _listColumns = new ArrayList<Column>();
 
@@ -135,10 +137,15 @@ public class ColumnCollectVisitor implements ExpressionVisitor {
     public void visit(Function function) {
         ExpressionList params = function.getParameters();
         if(params != null){
-            List<Expression> listParams = params.getExpressions();
-            for(Expression param: listParams){
-                param.accept(this);
-            }
+            visit(params);
+        }
+    }
+
+    @Override
+    public void visit(ExpressionList el) {
+        for (Iterator iter = el.getExpressions().iterator(); iter.hasNext();) {
+            Expression expression = (Expression) iter.next();
+            expression.accept(this);
         }
     }
 

@@ -28,8 +28,8 @@ import util.TableAliasName;
 
 
 /* TODO high prio:
- * do not work when invoked on something which is not DataSourceComponent (no exception)
- *    no matter on which component we do invoke, the only important is to know previous projections(TPCH7, 8)
+ * no matter on which component we do invoke, the only important is to know previous projections
+ *   (TPCH7, 8 with pushing OR from WHERE clause)
  * AndExpression (exception) - if the columns are not the same, look at the textbook
  *
  * TODO low prio:

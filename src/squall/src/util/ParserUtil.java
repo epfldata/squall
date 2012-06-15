@@ -470,4 +470,13 @@ public class ParserUtil {
         return ParserUtil.getComponentName(column) + "." + column.getColumnName();
     }
 
+    public static List<ColumnNameType> getProjectedSchema(List<ColumnNameType> schema, List<Integer> hashIndexes) {
+        List<ColumnNameType> result = new ArrayList<ColumnNameType>();
+        for(Integer hashIndex: hashIndexes){
+            //the order is improtant
+            result.add(schema.get(hashIndex));
+        }
+        return result;
+    }
+
 }

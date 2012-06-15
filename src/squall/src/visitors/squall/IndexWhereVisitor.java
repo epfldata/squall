@@ -92,6 +92,15 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
     private TableAliasName _tan;
     private Translator _ot;
 
+    //this will not break any contracts,
+    //  even with new DateConversion() on all the places,
+    //  we will have a single object per (possibly) multiple spout/bolt threads.
+    //generating plans is done from a single thread, static additionally saves space
+    private static LongConversion _lc = new LongConversion();
+    private static DoubleConversion _dblConv = new DoubleConversion();
+    private static DateConversion _dateConv = new DateConversion();
+    private static StringConversion _sc = new StringConversion();
+
     public IndexWhereVisitor(QueryPlan queryPlan, Component affectedComponent, Schema schema, TableAliasName tan){
         _queryPlan = queryPlan;
         _affectedComponent = affectedComponent;
@@ -140,6 +149,9 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
         _predStack.push(or);
     }
 
+    /*
+     * Each of these operations create a Squall type, that's why so much similar code
+     */
     @Override
     public void visit(Addition adtn) {
         visitBinaryOperation(adtn);
@@ -329,25 +341,25 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 
     @Override
     public void visit(DoubleValue dv) {
-        ValueExpression ve = new ValueSpecification(new DoubleConversion(), dv.getValue());
+        ValueExpression ve = new ValueSpecification(_dblConv, dv.getValue());
         _exprStack.push(ve);
     }
 
     @Override
     public void visit(LongValue lv) {
-        ValueExpression ve = new ValueSpecification(new LongConversion(), lv.getValue());
+        ValueExpression ve = new ValueSpecification(_lc, lv.getValue());
         _exprStack.push(ve);
     }
 
     @Override
     public void visit(DateValue dv) {
-        ValueExpression ve = new ValueSpecification(new DateConversion(), dv.getValue());
+        ValueExpression ve = new ValueSpecification(_dateConv, dv.getValue());
         _exprStack.push(ve);
     }
 
     @Override
     public void visit(StringValue sv) {
-        ValueExpression ve = new ValueSpecification(new StringConversion(), sv.getValue());
+        ValueExpression ve = new ValueSpecification(_sc, sv.getValue());
         _exprStack.push(ve);
     }
 

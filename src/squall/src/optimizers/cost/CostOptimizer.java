@@ -21,6 +21,11 @@ import util.ParserUtil;
 import util.TableAliasName;
 import visitors.jsql.AndVisitor;
 
+/*
+ * It generates different NameComponentGenerator for each partial query plan
+ *   NameComponentGenerator is responsible for attaching operators to components
+ * Aggregation only on the last level.
+ */
 public class CostOptimizer implements Optimizer {
     private Schema _schema;
     private String _dataPath;
@@ -57,7 +62,6 @@ public class CostOptimizer implements Optimizer {
         Map<String, Integer> sourceParallelism = _parAssigner.getSourceParallelism(tableList, _totalSourcePar);
         //parallelism has to be set through NameComponentGenerator constructor, it's input parameter for dataSources
         
-       
         return null;
     }
 

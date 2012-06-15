@@ -5,7 +5,7 @@
 
 package visitors.jsql;
 
-import java.util.List;
+import java.util.Iterator;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
 import net.sf.jsqlparser.expression.AnyComparisonExpression;
 import net.sf.jsqlparser.expression.BinaryExpression;
@@ -42,6 +42,7 @@ import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.expression.operators.relational.IsNullExpression;
+import net.sf.jsqlparser.expression.operators.relational.ItemsListVisitor;
 import net.sf.jsqlparser.expression.operators.relational.LikeExpression;
 import net.sf.jsqlparser.expression.operators.relational.Matches;
 import net.sf.jsqlparser.expression.operators.relational.MinorThan;
@@ -76,7 +77,7 @@ import util.ParserUtil;
  *
  * TODO: OR in join condition is not yet supported.
  */
-public class JoinTablesExpVisitor implements ExpressionVisitor {
+public class JoinTablesExpVisitor implements ExpressionVisitor, ItemsListVisitor {
     private Table _sideTable;
     private JoinTablesExp _joinTablesExp;
 
@@ -146,13 +147,17 @@ public class JoinTablesExpVisitor implements ExpressionVisitor {
         //EXTRACT_YEAR has one parameter
         ExpressionList params = function.getParameters();
         if(params != null){
-            List<Expression> listParams = params.getExpressions();
-            for(Expression param: listParams){
-                param.accept(this);
-            }
+            visit(params);
         }
     }
 
+    @Override
+    public void visit(ExpressionList el) {
+        for (Iterator iter = el.getExpressions().iterator(); iter.hasNext();) {
+            Expression expression = (Expression) iter.next();
+            expression.accept(this);
+        }
+    }
 
     @Override
     public void visit(Column column) {

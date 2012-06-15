@@ -26,4 +26,25 @@ public class ColumnNameType implements Serializable {
     public TypeConversion getType(){
         return _type;
     }
+
+    @Override
+    public boolean equals(Object obj){
+         if(this == obj){
+            return true;
+         }
+         if (!(obj instanceof ColumnNameType)){
+            return false;
+         }
+         ColumnNameType other = (ColumnNameType) obj;
+         //we assume names are unique, so it's enough to compare for names
+         return _name.equals(other.getName());
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 97 * hash + (this._name != null ? this._name.hashCode() : 0);
+        hash = 97 * hash + (this._type != null ? this._type.hashCode() : 0);
+        return hash;
+    }
 }
