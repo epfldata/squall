@@ -13,4 +13,4 @@ fi
 SIZE_MB=$2
 
 mkdir -p $MOUNT_DIR
-sudo mount -t tmpfs -o size=${SIZE_MB}M tmpfs /tmp/ramdisk/
+sudo mount -t tmpfs -o size=${SIZE_MB}M tmpfs $MOUNT_DIR
