@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package visitors.squall;
 
 import components.Component;
@@ -74,7 +69,6 @@ import operators.AggregateOperator;
 import operators.AggregateSumOperator;
 import operators.DistinctOperator;
 import optimizers.IndexTranslator;
-import optimizers.Translator;
 import queryPlans.QueryPlan;
 import schema.Schema;
 import util.ParserUtil;
@@ -90,7 +84,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
     private QueryPlan _queryPlan;
     private Component _affectedComponent;
     private TableAliasName _tan;
-    private Translator _ot;
+    private IndexTranslator _it;
 
     //needed only for visit(Function) method
     private Map _map;
@@ -121,7 +115,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
         _map = map;
         _affectedComponent = queryPlan.getLastComponent();
 
-        _ot = new IndexTranslator(_schema, _tan);
+        _it = new IndexTranslator(_schema, _tan);
     }
     
     protected IndexSelectItemsVisitor(Map map){
@@ -148,7 +142,8 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
     @Override
     public void visit(AllColumns ac) {
         //i.e. SELECT * FROM R join S
-        //we need not to do anything in this case
+        //we need not to do anything in this case for RuleOptimizer
+        //TODO: support it for Cost-Optimizer (Each wanted column has to explicitly specified)
     }
 
     @Override
@@ -315,12 +310,10 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
     @Override
     public void visit(Column column) {
         //extract type for the column
-        String tableSchemaName = _tan.getSchemaName(ParserUtil.getComponentName(column));
-        String columnName = column.getColumnName();
-        TypeConversion tc = _schema.getType(tableSchemaName, columnName);
+        TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
 
         //extract the position (index) of the required column
-        int position = _ot.getColumnIndex(column, _affectedComponent, _queryPlan);
+        int position = _it.getColumnIndex(column, _affectedComponent, _queryPlan);
 
         ValueExpression ve = new ColumnReference(tc, position);
         _exprStack.push(ve);

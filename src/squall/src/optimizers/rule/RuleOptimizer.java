@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package optimizers.rule;
 
 import optimizers.IndexComponentGenerator;
@@ -28,14 +23,13 @@ import operators.ProjectOperator;
 import operators.SelectOperator;
 import optimizers.IndexTranslator;
 import optimizers.Optimizer;
-import optimizers.Translator;
 import util.HierarchyExtractor;
-import util.JoinTablesExp;
+import util.JoinTablesExprs;
 import util.ParserUtil;
 import util.TableAliasName;
 import utilities.DeepCopy;
 import visitors.jsql.AndVisitor;
-import visitors.jsql.JoinTablesExpVisitor;
+import visitors.jsql.JoinTablesExprsVisitor;
 import visitors.squall.IndexSelectItemsVisitor;
 import visitors.squall.IndexWhereVisitor;
 
@@ -53,7 +47,7 @@ public class RuleOptimizer implements Optimizer {
     private String _extension;
     private TableAliasName _tan;
     private IndexComponentGenerator _cg;
-    private Translator _ot;
+    private IndexTranslator _it;
     private Map _map; //map is updates in place
 
     public RuleOptimizer(Schema schema, TableAliasName tan, String dataPath, String extension, Map map){
@@ -61,7 +55,7 @@ public class RuleOptimizer implements Optimizer {
         _tan = tan;
         _dataPath = dataPath;
         _extension = extension;
-        _ot = new IndexTranslator(_schema, _tan);
+        _it = new IndexTranslator(_schema, _tan);
         _map = map;
     }
 
@@ -90,15 +84,15 @@ public class RuleOptimizer implements Optimizer {
     }
 
     private IndexComponentGenerator generateTableJoins(List<Table> tableList, List<Join> joinList) {
-        IndexComponentGenerator cg = new IndexComponentGenerator(_schema, _tan, _ot, _dataPath, _extension);
+        IndexComponentGenerator cg = new IndexComponentGenerator(_schema, _tan, _dataPath, _extension);
         TableSelector ts = new TableSelector(tableList, _schema, _tan);
 
         //From a list of joins, create collection of elements like {R->{S, R.A=S.A}}
-        JoinTablesExpVisitor jteVisitor = new JoinTablesExpVisitor(_tan);
+        JoinTablesExprsVisitor jteVisitor = new JoinTablesExprsVisitor();
         for(Join join: joinList){
             join.getOnExpression().accept(jteVisitor);
         }
-        JoinTablesExp jte = jteVisitor.getJoinTablesExp();
+        JoinTablesExprs jte = jteVisitor.getJoinTablesExp();
 
         //first phase
         //make high level pairs
@@ -237,7 +231,7 @@ public class RuleOptimizer implements Optimizer {
 
                 //Setting new level of components is necessary for correctness only for distinct in aggregates
                     //  but it's certainly pleasant to have the final result grouped on nodes by group by columns.
-                boolean newLevel = !(_ot.isHashedBy(lastComponent, groupByColumns));
+                boolean newLevel = !(_it.isHashedBy(lastComponent, groupByColumns));
                 if(newLevel){
                     lastComponent.setHashIndexes(groupByColumns);
                     OperatorComponent newComponent = new OperatorComponent(lastComponent,

@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package util;
 
 import java.util.ArrayList;
@@ -23,14 +18,9 @@ import net.sf.jsqlparser.schema.Table;
      *
      *  Expression are always EqualsTo, unless from ThetaJoinComponent
      */
-public class JoinTablesExp {
+public class JoinTablesExprs {
     
      private HashMap<String, HashMap<String, List<Expression>>> _tablesJoinExp = new HashMap<String, HashMap<String, List<Expression>>>();
-     private TableAliasName _tan;
-
-     public JoinTablesExp(TableAliasName tan){
-         _tan = tan;
-     }
 
      public void addEntry(Table leftTable, Table rightTable, Expression exp){
          String leftName = ParserUtil.getComponentName(leftTable);
@@ -65,6 +55,8 @@ public class JoinTablesExp {
      *   This might return duplicates: For example, R.A=S.A and S.B=T.B and R.A=T.C
      *   If we want to join R-S with T, then getJoinedWith(R, S) will return (T, T)
      *   To fix the problem, we used sets, and then we converted it back to List<String>
+     * For the same example R-S joined T, getJoinedWith(R, S) will (among other results) return R, S,
+     *   but this is later on filtered with intersection method
      */
     public List<String> getJoinedWith(List<String> ancestors) {
         Set<String> result = new HashSet<String>();

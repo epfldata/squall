@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package estimators;
 
 import net.sf.jsqlparser.expression.AllComparisonExpression;

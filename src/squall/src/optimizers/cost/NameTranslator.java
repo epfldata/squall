@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package optimizers.cost;
 
 import components.Component;
@@ -17,6 +12,16 @@ import util.ParserUtil;
 
 
 public class NameTranslator implements Translator{
+
+    @Override
+    public boolean contains(List<ColumnNameType> tupleSchema, String columnName){
+        for(ColumnNameType cnt: tupleSchema){
+            if (cnt.getName().equals(columnName)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /*
      *   For a field N1.NATIONNAME, columnName is N1.NATIONNAME

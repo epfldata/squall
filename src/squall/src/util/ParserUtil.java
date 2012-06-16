@@ -1,13 +1,9 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package util;
 
 import components.Component;
 import components.DataSourceComponent;
 import components.ThetaJoinComponent;
+import conversion.TypeConversion;
 import expressions.ColumnReference;
 import expressions.ValueExpression;
 import java.io.BufferedReader;
@@ -22,6 +18,7 @@ import java.util.Set;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
+import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.Join;
@@ -34,6 +31,7 @@ import schema.ColumnNameType;
 import schema.Schema;
 import utilities.MyUtilities;
 import visitors.jsql.ColumnCollectVisitor;
+import visitors.jsql.PrintVisitor;
 import visitors.squall.ColumnRefCollectVisitor;
 
 
@@ -253,13 +251,24 @@ public class ParserUtil {
         return arr;
     }
 
+    /*
+     * The result will have duplicates only if there are duplicates in list1
+     */
     public static <T> List<T> getIntersection(List<T> list1, List<T> list2) {
         List<T> result = new ArrayList<T>();
         for(T elem1: list1){
-            for(T elem2: list2){
-                if (elem1.equals(elem2)){
-                    result.add(elem1);
-                }
+            if(list2.contains(elem1)){
+                result.add(elem1);
+            }
+        }
+        return result;
+    }
+
+    public static <T> List<T> getDifference(List<T> bigger, List<T> smaller) {
+        List<T> result = new ArrayList<T>();
+        for(T elem1: bigger){
+            if(!smaller.contains(elem1)){
+                result.add(elem1);
             }
         }
         return result;
@@ -477,6 +486,25 @@ public class ParserUtil {
             result.add(schema.get(hashIndex));
         }
         return result;
+    }
+
+    public static String getStringExpr(Expression expr) {
+        PrintVisitor printer = new PrintVisitor();
+        expr.accept(printer);
+        return printer.getString();
+    }
+
+    public static String getStringExpr(ExpressionList params) {
+        PrintVisitor printer = new PrintVisitor();
+        params.accept(printer);
+        return printer.getString();
+    }
+
+    public static TypeConversion getColumnType(Column column, TableAliasName tan, Schema schema) {
+        String tableCompName = ParserUtil.getComponentName(column);
+        String tableSchemaName = tan.getSchemaName(tableCompName);
+        String columnName = column.getColumnName();
+        return schema.getType(tableSchemaName, columnName);
     }
 
 }

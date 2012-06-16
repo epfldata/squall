@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package optimizers.cost;
 
 import components.DataSourceComponent;
@@ -16,6 +11,7 @@ import java.util.Set;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Table;
 import schema.Schema;
+import util.JoinTablesExprs;
 import util.ParserUtil;
 import util.TableAliasName;
 import utilities.SystemParameters;
@@ -24,30 +20,36 @@ import utilities.SystemParameters;
 public class CostParallelismAssigner {
     private final Schema _schema;
     private final TableAliasName _tan;
-    private final NameTranslator _ot;
+    private final NameTranslator _nt = new NameTranslator();
     private final String _dataPath;
     private final String _extension;
     private final Map _map;
     private final Map<String, Expression> _compNamesAndExprs;
     private final Map<Set<String>, Expression> _compNamesOrExprs;
 
+    private final ProjGlobalCollect _globalCollect;
+    private final JoinTablesExprs _jte;
+
     public CostParallelismAssigner(Schema schema,
             TableAliasName tan,
-            NameTranslator ot,
             String dataPath,
             String extension,
             Map map,
             Map<String, Expression> compNamesAndExprs,
-            Map<Set<String>, Expression> compNamesOrExprs) {
+            Map<Set<String>, Expression> compNamesOrExprs,
+            ProjGlobalCollect globalCollect,
+            JoinTablesExprs jte) {
 
         _schema = schema;
         _tan = tan;
-        _ot = ot;
         _dataPath = dataPath;
         _extension = extension;
         _map = map;
         _compNamesAndExprs = compNamesAndExprs;
         _compNamesOrExprs = compNamesOrExprs;
+
+        _globalCollect = globalCollect;
+        _jte = jte;
     }
 
     /*
@@ -63,7 +65,7 @@ public class CostParallelismAssigner {
          *   and then proportionally assign parallelism.
          */
         NameComponentGenerator sourceCG = new NameComponentGenerator(_schema, _tan,
-                 _ot, _dataPath, _extension, _map, this, _compNamesAndExprs, _compNamesOrExprs);
+                 _dataPath, _extension, _map, this, _compNamesAndExprs, _compNamesOrExprs, _globalCollect, _jte);
 
          List<OrderedCostParams> sourceCostParams = new ArrayList<OrderedCostParams>();
          long totalCardinality = 0;

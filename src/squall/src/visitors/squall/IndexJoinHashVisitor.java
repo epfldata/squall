@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package visitors.squall;
 
 import util.NotFromMyBranchException;
@@ -66,7 +61,6 @@ import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import optimizers.IndexTranslator;
-import optimizers.Translator;
 import queryPlans.QueryPlan;
 import schema.Schema;
 import util.HierarchyExtractor;
@@ -90,7 +84,7 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
     private Component _affectedComponent;
     private TableAliasName _tan;
 
-    private Translator _ot;
+    private IndexTranslator _it;
 
     //this will not break any contracts,
     //  even with new DateConversion() on all the places,
@@ -123,7 +117,7 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
         _affectedComponent = affectedComponent;
         _tan = tan;
 
-        _ot = new IndexTranslator(_schema, _tan);
+        _it = new IndexTranslator(_schema, _tan);
     }
 
     protected IndexJoinHashVisitor(){}
@@ -270,20 +264,17 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
         }
     }
 
-
     @Override
     public void visit(Column column) {
         String tableCompName = ParserUtil.getComponentName(column);
-        String tableSchemaName = _tan.getSchemaName(tableCompName);
         List<String> ancestorNames = HierarchyExtractor.getAncestorNames(_affectedComponent);
 
         if(ancestorNames.contains(tableCompName)){
             //extract type for the column
-            String columnName = column.getColumnName();
-            TypeConversion tc = _schema.getType(tableSchemaName, columnName);
+            TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
 
             //extract the position (index) of the required column
-            int position = _ot.getColumnIndex(column, _affectedComponent, _queryPlan);
+            int position = _it.getColumnIndex(column, _affectedComponent, _queryPlan);
 
             ValueExpression ve = new ColumnReference(tc, position);
             _exprStack.push(ve);

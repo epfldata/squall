@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package optimizers;
 
 import components.Component;
@@ -24,6 +19,16 @@ public class IndexTranslator implements Translator{
     public IndexTranslator(Schema schema, TableAliasName tan){
         _schema = schema;
         _tan = tan;
+    }
+
+    @Override
+    public boolean contains(List<ColumnNameType> tupleSchema, String columnName){
+        for(ColumnNameType cnt: tupleSchema){
+            if (cnt.getName().equals(columnName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /*

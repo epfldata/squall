@@ -24,10 +24,12 @@ import utilities.SystemParameters;
 import visitors.jsql.SQLVisitor;
 
 public class ParserMain{
+    // this is an upper limit for the parallelism of a component
     private final int CLUSTER_WORKERS = 176;
     private int CLUSTER_ACKERS = 17;
-    
-    private final int LOCAL_WORKERS = 5;
+
+    // this is an upper limit for the parallelism of a component
+    private final int LOCAL_WORKERS = 176;
     private int LOCAL_ACKERS = 1;
 
     private final String sqlExtension = ".sql";

@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package visitors.squall;
 
 import components.Component;
@@ -17,6 +12,7 @@ import expressions.IntegerYearFromDate;
 import expressions.ValueExpression;
 import expressions.ValueSpecification;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
@@ -66,7 +62,6 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import operators.SelectOperator;
 import optimizers.IndexTranslator;
-import optimizers.Translator;
 import predicates.AndPredicate;
 import predicates.ComparisonPredicate;
 import predicates.LikePredicate;
@@ -90,7 +85,7 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
     private QueryPlan _queryPlan;
     private Schema _schema;
     private TableAliasName _tan;
-    private Translator _ot;
+    private IndexTranslator _it;
 
     //this will not break any contracts,
     //  even with new DateConversion() on all the places,
@@ -106,7 +101,7 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
         _affectedComponent = affectedComponent;
         _schema = schema;
         _tan = tan;
-        _ot = new IndexTranslator(_schema, _tan);
+        _it = new IndexTranslator(_schema, _tan);
 
         _affectedComponent = affectedComponent;
     }
@@ -292,6 +287,7 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
         //all aggregate functions (SUM, AVG, COUNT, MAX, MIN) have only one parameter (Expression)
         //although COUNT(*) has no parameters
         //EXTRACT_YEAR has one parameter
+        //if you change this method, NameProjectVisitor.visit(Function) has to be changed as well
         ExpressionList params = function.getParameters();
         int numParams = 0;
         if(params != null){
@@ -305,6 +301,7 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
         for(int i=0; i<numParams; i++){
             expressions.add(_exprStack.pop());
         }
+        Collections.reverse(expressions); // at the stack top is the lastly added VE
 
         String fnName = function.getName();
         if(fnName.equalsIgnoreCase("EXTRACT_YEAR")){
@@ -328,12 +325,10 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
     @Override
     public void visit(Column column) {
         //extract type for the column
-        String tableSchemaName = _tan.getSchemaName(ParserUtil.getComponentName(column));
-        String columnName = column.getColumnName();
-        TypeConversion tc = _schema.getType(tableSchemaName, columnName);
+        TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
 
         //extract the position (index) of the required column
-        int position = _ot.getColumnIndex(column, _affectedComponent, _queryPlan);
+        int position = _it.getColumnIndex(column, _affectedComponent, _queryPlan);
 
         ValueExpression ve = new ColumnReference(tc, position);
         _exprStack.push(ve);

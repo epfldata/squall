@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package optimizers;
 
 import optimizers.rule.RuleParallelismAssigner;
@@ -37,7 +32,7 @@ public class SimpleOptimizer implements Optimizer {
     private String _extension;
     private IndexComponentGenerator _cg;
     private TableAliasName _tan;
-    private Translator _ot;
+    private IndexTranslator _it;
     private Map _map;
     
     public SimpleOptimizer(Schema schema, TableAliasName tan, String dataPath, String extension, Map map){
@@ -45,7 +40,7 @@ public class SimpleOptimizer implements Optimizer {
         _tan = tan;
         _dataPath = dataPath;
         _extension = extension;
-        _ot = new IndexTranslator(_schema, _tan);
+        _it = new IndexTranslator(_schema, _tan);
         _map = map;
     }
 
@@ -66,7 +61,7 @@ public class SimpleOptimizer implements Optimizer {
     }
 
     private IndexComponentGenerator generateTableJoins(List<Table> tableList, List<Join> joinList) {
-        IndexComponentGenerator cg = new IndexComponentGenerator(_schema, _tan, _ot, _dataPath, _extension);
+        IndexComponentGenerator cg = new IndexComponentGenerator(_schema, _tan, _dataPath, _extension);
 
         Component firstParent = cg.generateDataSource(ParserUtil.getComponentName(tableList.get(0)));
 
@@ -113,7 +108,7 @@ public class SimpleOptimizer implements Optimizer {
 
                 //Setting new level of components is necessary for correctness only for distinct in aggregates
                     //  but it's certainly pleasant to have the final result grouped on nodes by group by columns.
-                boolean newLevel = !(_ot.isHashedBy(affectedComponent, groupByColumns));
+                boolean newLevel = !(_it.isHashedBy(affectedComponent, groupByColumns));
                 if(newLevel){
                     affectedComponent.setHashIndexes(groupByColumns);
                     OperatorComponent newComponent = new OperatorComponent(affectedComponent,
