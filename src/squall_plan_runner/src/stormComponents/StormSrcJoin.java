@@ -1,6 +1,8 @@
 package stormComponents;
 
-import storage.SquallStorage;
+import java.util.ArrayList;
+import storage.BasicStore;
+import storage.KeyValueStore;
 import stormComponents.synchronization.TopologyKiller;
 import backtype.storm.Config;
 import utilities.MyUtilities;
@@ -30,8 +32,8 @@ public class StormSrcJoin implements StormJoin, Serializable{
                 String componentName,
                 List<String> allCompNames,
                 ChainOperator chain,
-                SquallStorage firstPreAggStorage,
-                SquallStorage secondPreAggStorage,
+                BasicStore<ArrayList<String>> firstPreAggStorage,
+                BasicStore<ArrayList<String>> secondPreAggStorage,
                 ProjectOperator firstPreAggProj,
                 ProjectOperator secondPreAggProj,
                 List<Integer> hashIndexes,

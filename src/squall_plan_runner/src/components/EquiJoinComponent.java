@@ -21,7 +21,8 @@ import org.apache.log4j.Logger;
 import queryPlans.QueryPlan;
 import stormComponents.StormComponent;
 import utilities.MyUtilities;
-import storage.SquallStorage;
+import storage.BasicStore;
+import storage.KeyValueStore;
 
 public class EquiJoinComponent implements Component {
     private static final long serialVersionUID = 1L;
@@ -43,7 +44,7 @@ public class EquiJoinComponent implements Component {
     private ChainOperator _chain = new ChainOperator();
 
     //preAggregation
-    private SquallStorage _firstPreAggStorage, _secondPreAggStorage;
+    private BasicStore<ArrayList<String>> _firstPreAggStorage, _secondPreAggStorage;
     private ProjectOperator _firstPreAggProj, _secondPreAggProj;
 
     private boolean _printOut;
@@ -101,12 +102,12 @@ public class EquiJoinComponent implements Component {
 
 
     //next four methods are for Preaggregation
-    public EquiJoinComponent setFirstPreAggStorage(SquallStorage firstPreAggStorage){
+    public EquiJoinComponent setFirstPreAggStorage(BasicStore<ArrayList<String>> firstPreAggStorage){
         _firstPreAggStorage = firstPreAggStorage;
         return this;
     }
 
-    public EquiJoinComponent setSecondPreAggStorage(SquallStorage secondPreAggStorage){
+    public EquiJoinComponent setSecondPreAggStorage(BasicStore<ArrayList<String>> secondPreAggStorage){
         _secondPreAggStorage = secondPreAggStorage;
         return this;
     }
@@ -155,10 +156,10 @@ public class EquiJoinComponent implements Component {
         if(partitioningType == StormJoin.DST_ORDERING){
                 //In Preaggregation one or two storages can be set; otherwise no storage is set
                 if(_firstPreAggStorage == null){
-                    _firstPreAggStorage = new SquallStorage();
+                    _firstPreAggStorage = new KeyValueStore<String, String>();
                 }
                 if(_secondPreAggStorage == null){
-                    _secondPreAggStorage = new SquallStorage();
+                    _secondPreAggStorage = new KeyValueStore<String, String>();
                 }
 
                 _joiner = new StormDstJoin(_firstParent,
@@ -186,10 +187,10 @@ public class EquiJoinComponent implements Component {
             }
             //In Preaggregation one or two storages can be set; otherwise no storage is set
             if(_firstPreAggStorage == null){
-                _firstPreAggStorage = new SquallStorage();
+                _firstPreAggStorage = new KeyValueStore<String, String>();
             }
             if(_secondPreAggStorage == null){
-                _secondPreAggStorage = new SquallStorage();
+                _secondPreAggStorage = new KeyValueStore<String, String>();
             }
 
             //since we don't know how data is scattered across StormSrcStorage,

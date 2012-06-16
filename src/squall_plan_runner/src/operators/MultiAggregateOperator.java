@@ -5,11 +5,10 @@
 
 package operators;
 
+import storage.BasicStore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import storage.AggStorage;
-
 
 public class MultiAggregateOperator implements AggregateOperator {
 
@@ -123,7 +122,7 @@ public class MultiAggregateOperator implements AggregateOperator {
     }
 
     @Override
-    public AggStorage getStorage() {
+    public BasicStore getStorage() {
         throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
     }
 
