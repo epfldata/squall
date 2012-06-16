@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.io.Serializable;
 import java.util.Collections;
 
+/* Used to store a set of distinct values */
 public class ValueStore<V> extends KeyValueStore {
 	
 	private static final long serialVersionUID = 1L;
@@ -31,7 +32,7 @@ public class ValueStore<V> extends KeyValueStore {
 	
 	@Override
 	public V update(Object... data) {
-		/* No update operation supported by default */
+		/* No update operation supported (this is a set of distinct values) */
 		throw new java.lang.UnsupportedOperationException();
 	}
 	
@@ -54,6 +55,11 @@ public class ValueStore<V> extends KeyValueStore {
 	}
 	
 	@Override	
+	public void reset() {
+		super.reset();
+	}
+	
+	@Override	
 	public boolean equals(BasicStore store) {
 		List thisKeys = new ArrayList<V>(((ValueStore)this).keySet());
 		List storeKeys = new ArrayList<V>(((ValueStore)store).keySet());
@@ -62,11 +68,6 @@ public class ValueStore<V> extends KeyValueStore {
 		return thisKeys.equals(storeKeys);
 	}
 	
-	@Override	
-	public void reset() {
-		super.reset();
-	}
-
 	@Override	
 	public void printStore(PrintStream stream) {	
 		stream.println("----------------------------------------");

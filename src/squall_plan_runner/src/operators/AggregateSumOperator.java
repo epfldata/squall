@@ -2,7 +2,7 @@ package operators;
 
 import java.util.Arrays;
 import storage.BasicStore;
-import storage.HashMapAggStorage;
+import storage.AggregationStorage;
 import conversion.NumericConversion;
 import expressions.Addition;
 import expressions.ValueExpression;
@@ -38,7 +38,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
             _wrapper = wrapper;
             _ve=ve;
             _map = map;
-            _storage = new HashMapAggStorage<T>(this, _wrapper, _map, true);
+            _storage = new AggregationStorage<T>(this, _wrapper, _map, true);
         }
 
         //from AgregateOperator
@@ -47,7 +47,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
             if(!alreadySetOther(GB_COLUMNS)){
                 _groupByType = GB_COLUMNS;
                 _groupByColumns = groupByColumns;
-                _storage = new HashMapAggStorage<T>(this, _wrapper, _map, false);
+                _storage = new AggregationStorage<T>(this, _wrapper, _map, false);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");
@@ -59,7 +59,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
             if(!alreadySetOther(GB_PROJECTION)){
                 _groupByType = GB_PROJECTION;
                 _groupByProjection = groupByProjection;
-                _storage = new HashMapAggStorage<T>(this, _wrapper, _map, false);
+                _storage = new AggregationStorage<T>(this, _wrapper, _map, false);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");

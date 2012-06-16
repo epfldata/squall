@@ -7,6 +7,7 @@ import java.io.PrintStream;
 import java.io.OutputStream;
 import java.io.ByteArrayOutputStream;
 
+/* R denotes the type of objects you expect the store to return at a access or update call */
 public abstract class BasicStore<R> implements Serializable {
 
 	private String _uniqId;
@@ -58,10 +59,9 @@ public abstract class BasicStore<R> implements Serializable {
 	public abstract R update(Object... data);
 	public abstract boolean contains(Object... data);
 	public abstract R access(Object... data);
+	/* must set _objRemId */
 	public abstract Object onRemove();
-	public abstract void printStore(PrintStream stream);
 	public abstract void reset();
 	public abstract boolean equals(BasicStore store);
+	public abstract void printStore(PrintStream stream);
 }
-
-// FIXME make print store get elements from storage as well (needed for aggregations)

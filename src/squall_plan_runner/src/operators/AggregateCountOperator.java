@@ -13,7 +13,7 @@ import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import storage.HashMapAggStorage;
+import storage.AggregationStorage;
 import org.apache.log4j.Logger;
 import utilities.MyUtilities;
 
@@ -41,7 +41,7 @@ public class AggregateCountOperator implements AggregateOperator<Integer>{
         public AggregateCountOperator(Map map){
             _map = map;
 
-            _storage = new HashMapAggStorage<Integer>(this, _wrapper, _map, true);
+            _storage = new AggregationStorage<Integer>(this, _wrapper, _map, true);
         }
 
         //from AgregateOperator
@@ -50,7 +50,7 @@ public class AggregateCountOperator implements AggregateOperator<Integer>{
             if(!alreadySetOther(GB_COLUMNS)){
                 _groupByType = GB_COLUMNS;
                 _groupByColumns = groupByColumns;
-                _storage = new HashMapAggStorage<Integer>(this, _wrapper, _map, false);
+                _storage = new AggregationStorage<Integer>(this, _wrapper, _map, false);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");
@@ -62,7 +62,7 @@ public class AggregateCountOperator implements AggregateOperator<Integer>{
              if(!alreadySetOther(GB_PROJECTION)){
                 _groupByType = GB_PROJECTION;
                 _groupByProjection = groupByProjection;
-                _storage = new HashMapAggStorage<Integer>(this, _wrapper, _map, false);
+                _storage = new AggregationStorage<Integer>(this, _wrapper, _map, false);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");

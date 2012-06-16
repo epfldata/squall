@@ -14,7 +14,7 @@ import operators.AggregateOperator;
 import org.apache.log4j.Logger;
 import queryPlans.QueryPlan;
 import stormComponents.StormComponent;
-import storage.HashMapAggStorage;
+import storage.AggregationStorage;
 
 public class LocalMergeResults {
         private static Logger LOG = Logger.getLogger(LocalMergeResults.class);
@@ -91,7 +91,7 @@ public class LocalMergeResults {
                 _fileAgg = (AggregateOperator) DeepCopy.copy(_computedAgg);
                 fillAggFromResultFile(map);
             }
-            ((HashMapAggStorage)_computedAgg.getStorage()).addContent((HashMapAggStorage)(currentAgg.getStorage()));
+            ((AggregationStorage)_computedAgg.getStorage()).addContent((AggregationStorage)(currentAgg.getStorage()));
         }
 
         private static void fillAggFromResultFile(Map map){

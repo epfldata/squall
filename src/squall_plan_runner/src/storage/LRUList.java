@@ -1,8 +1,11 @@
 package storage;
+import java.io.Serializable;
 
-public class LRUList<V> implements ReplacementAlgorithm<V> {
+public class LRUList<V> implements ReplacementAlgorithm<V>, Serializable {
+	
 	LRUNode<V> head;
 	LRUNode<V> tail;
+	private static final long serialVersionUID = 1L;
 	
 	public LRUList() {
 		this.head = null;
@@ -46,6 +49,11 @@ public class LRUList<V> implements ReplacementAlgorithm<V> {
 	public V get(Object obj) {
 		return (obj == null) ? null : ((LRUNode<V>)obj).getObject();
 	}
+	
+	// Readtail
+	public V getLast() {
+		return this.get(this.tail);
+	}
 
 	// Removetail
 	public V remove() {
@@ -60,11 +68,6 @@ public class LRUList<V> implements ReplacementAlgorithm<V> {
 		oldTail.prev = null;
 		oldTail.next = null;
 		return oldTail.getObject();
-	}
-
-	// Readtail
-	public V getLast() {
-		return this.tail.getObject();
 	}
 
 	public void reset() {

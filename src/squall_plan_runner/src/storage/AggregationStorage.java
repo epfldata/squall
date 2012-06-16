@@ -19,7 +19,7 @@ import java.io.OutputStream;
 import operators.AggregateOperator;
 import utilities.MyUtilities;
 
-public class HashMapAggStorage<V> extends KeyValueStore<String, V> {
+public class AggregationStorage<V> extends KeyValueStore<String, V> {
 
 	private Map _conf;
 	private boolean _singleEntry;
@@ -27,17 +27,12 @@ public class HashMapAggStorage<V> extends KeyValueStore<String, V> {
 	private AggregateOperator _outerAggOp;
 	private static final String SINGLE_ENTRY_KEY = "SEK"; /* Single entry key */
 
-	public HashMapAggStorage(AggregateOperator outerAggOp, TypeConversion wrapper, Map map, boolean singleEntry){
+	public AggregationStorage(AggregateOperator outerAggOp, TypeConversion wrapper, Map map, boolean singleEntry){
 		super(singleEntry ? 1 : DEFAULT_INITIAL_CAPACITY);
 		_conf = map;
 		_wrapper = wrapper;
 		_outerAggOp = outerAggOp;
 		_singleEntry = singleEntry;
-	}
-
-	@Override
-	public ArrayList<V> access(Object... data) {
-		return _singleEntry ? super.access(SINGLE_ENTRY_KEY) : super.access(data);
 	}
 
 	@Override
@@ -47,7 +42,7 @@ public class HashMapAggStorage<V> extends KeyValueStore<String, V> {
 		else
 			super.onInsert(data);
 	}
-
+	
 	@Override
 	public V update(Object... data) {
 		Object obj = data[0];
@@ -70,6 +65,22 @@ public class HashMapAggStorage<V> extends KeyValueStore<String, V> {
 	}
 
 	@Override
+	public boolean contains(Object... data) {
+		return _singleEntry ? super.contains(SINGLE_ENTRY_KEY) : super.contains(data);
+	}
+	
+	@Override
+	public ArrayList<V> access(Object... data) {
+		return _singleEntry ? super.access(SINGLE_ENTRY_KEY) : super.access(data);
+	}
+	
+	@Override
+	public Object onRemove() {
+		/* Deletions are not supported for aggregations yet */
+		throw new java.lang.UnsupportedOperationException();
+	}
+
+	@Override
 	public void reset() {
 		super.reset();
 	}
@@ -85,7 +96,7 @@ public class HashMapAggStorage<V> extends KeyValueStore<String, V> {
 	}
 	
 	// FIXME --> check that this works from storage
-	public void addContent(HashMapAggStorage storage) {
+	public void addContent(AggregationStorage storage) {
 		Set keySet = storage.keySet();
 		for ( Iterator it = keySet.iterator() ; it.hasNext() ; ) {
 			Object key = it.next();

@@ -107,6 +107,66 @@ public class KeyValueStore<K, V> extends BasicStore {
 	}
 
 	@Override	
+	public boolean contains(Object... data) {
+		K key = (K)data[0];
+		if (_memstore.containsKey(key) == true) 
+			return true;
+		return _storageManager.existsInStorage(key.toString());
+	}
+
+	@Override	
+	public ArrayList<V> access(Object... data) {
+		K key = (K)data[0];
+		Object obj = this._memstore.get(key);
+		HashEntry<K, V> entry = _replAlg.get(obj);
+		boolean inMem = (entry != null);
+		boolean inDisk = (_storageManager.existsInStorage(key.toString())); 
+
+		if (!inMem && !inDisk) {
+			return null;
+		} else if (inMem && !inDisk) {
+			return entry.getValues();	
+		} else if (!inMem && inDisk) {
+			return this._storageManager.read(key.toString());
+		} else { // inmem && inDisk
+			ArrayList<V> resList = new ArrayList<V>();
+			resList.addAll(entry.getValues());
+			ArrayList<V> storageElems = this._storageManager.read(key.toString());
+			resList.addAll(storageElems);
+			return resList;
+		}
+	}
+		
+	@Override	
+	public Object onRemove() {
+		HashEntry<K, V> entry = _replAlg.getLast();
+		K key = entry.getKey();
+		ArrayList<V> values = entry.getValues(); 
+		
+		// Remove an entry from the list and free its memory 
+		V value = values.remove(0);
+		this._memoryManager.releaseMemory(value);
+
+		// Written whole list to storage
+		if (values.size() == 0) {
+			_memstore.remove(key);
+			_replAlg.remove();
+			// Release memory for key and for values
+			this._memoryManager.releaseMemory(entry.getKey());
+		}
+
+		// Set the file to write
+		_objRemId = key.toString();
+		return value;
+	}
+	
+	@Override	
+	public void reset() {
+		this._memstore.clear();
+		this._replAlg.reset();
+	}
+	
+	@Override	
 	public boolean equals(BasicStore store) {
 		Set<K> keys = this.keySet();
 		for (Iterator<K> it = keys.iterator() ; it.hasNext() ; ) {
@@ -138,60 +198,6 @@ public class KeyValueStore<K, V> extends BasicStore {
 	}
 	
 	@Override	
-	public boolean contains(Object... data) {
-		K key = (K)data[0];
-		if (_memstore.containsKey(key) == true) 
-			return true;
-		return _storageManager.existsInStorage(key.toString());
-	}
-	
-	@Override	
-	public ArrayList<V> access(Object... data) {
-		K key = (K)data[0];
-		Object obj = this._memstore.get(key);
-		HashEntry<K, V> entry = _replAlg.get(obj);
-		boolean inMem = (entry != null);
-		boolean inDisk = (_storageManager.existsInStorage(key.toString())); 
-
-		if (!inMem && !inDisk) {
-			return null;
-		} else if (inMem && !inDisk) {
-			return entry.getValues();	
-		} else if (!inMem && inDisk) {
-			return this._storageManager.read(key.toString());
-		} else { // inmem && inDisk
-			ArrayList<V> resList = new ArrayList<V>();
-			resList.addAll(entry.getValues());
-			ArrayList<V> storageElems = this._storageManager.read(key.toString());
-			resList.addAll(storageElems);
-			return resList;
-		}
-	}
-	
-	@Override	
-	public Object onRemove() {
-		HashEntry<K, V> entry = _replAlg.getLast();
-		K key = entry.getKey();
-		ArrayList<V> values = entry.getValues(); 
-		
-		// Remove an entry from the list and free its memory 
-		V value = values.remove(0);
-		this._memoryManager.releaseMemory(value);
-
-		// Written whole list to storage
-		if (values.size() == 0) {
-			_memstore.remove(key);
-			_replAlg.remove();
-			// Release memory for key and for values
-			this._memoryManager.releaseMemory(entry.getKey());
-		}
-
-		// Set the file to write
-		_objRemId = key.toString();
-		return value;
-	}
-	
-	@Override	
 	public void printStore(PrintStream stream) {
 		Set<K> keys = this._memstore.keySet();
 		for (Iterator<K> it = keys.iterator(); it.hasNext(); ) {
@@ -206,12 +212,6 @@ public class KeyValueStore<K, V> extends BasicStore {
 			}
 			stream.println("");
 		}
-	}
-
-	@Override	
-	public void reset() {
-		this._memstore.clear();
-		this._replAlg.reset();
 	}
 	
 	protected Set<K> keySet() {
