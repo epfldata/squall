@@ -54,13 +54,10 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 	private OutputCollector _collector;
 	private Map _conf;
 
-	//position to test for equality in first and second emitter
-	//join params of current storage then other relation interchangably !!
-	List<Integer> _joinParams;
-
 	//output has hash formed out of these indexes
 	private List<Integer> _hashIndexes;
 	private List<ValueExpression> _hashExpressions;
+        private List<Integer> _rightHashIndexes; //hash indexes from the right parent
 
 	//for load-balancing
 	private List<String> _fullHashList;
@@ -111,7 +108,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 
 		_hashIndexes = hashIndexes;
 		_hashExpressions = hashExpressions;
-		_joinParams = MyUtilities.combineHashIndexes(_firstEmitter, _secondEmitter);
+                _rightHashIndexes = secondEmitter.getHashIndexes();
 
 		_hierarchyPosition = hierarchyPosition;
 
@@ -217,7 +214,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 
 				List<String> outputTuple;
 				if(oppositeStorage instanceof BasicStore){
-					outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple, _joinParams);
+					outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple, _rightHashIndexes);
 				}else{
 					outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);
 				}

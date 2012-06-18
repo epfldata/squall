@@ -19,6 +19,8 @@ public class DateConversion implements TypeConversion<Date>{
     private static Logger LOG = Logger.getLogger(DateConversion.class);
 
     private static final String DATE_FORMAT = "yyyy-MM-dd";
+
+    //this cannot be static, because a static field with a constructor cannot be serialized
     private SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
 
     @Override

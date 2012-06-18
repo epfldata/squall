@@ -57,13 +57,11 @@ public class StormSrcJoin implements StormJoin, Serializable{
                     killer,
                     conf);
 		
-            List<Integer> joinParams = MyUtilities.combineHashIndexes(firstEmitter, secondEmitter);
             _firstStorage = new StormSrcStorage(firstEmitter,
                     secondEmitter,
                     componentName,
                     allCompNames,
                     _harmonizer,
-                    joinParams,
                     true,
                     chain,
                     firstPreAggStorage,
@@ -81,7 +79,6 @@ public class StormSrcJoin implements StormJoin, Serializable{
                     componentName,
                     allCompNames,
                     _harmonizer,
-                    joinParams,
                     false,
                     chain,
                     secondPreAggStorage,

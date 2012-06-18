@@ -42,9 +42,9 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 	private boolean _isFromFirstEmitter; // receive R updates
 	private boolean _printOut;
 	private int _hierarchyPosition=INTERMEDIATE;
-	private List<Integer> _joinParams; //join params of current storage then other relation interchangably !!
 	private List<Integer> _hashIndexes;
 	private List<ValueExpression> _hashExpressions;
+        private List<Integer> _rightHashIndexes; // hashIndexes from the righ parent
 
 	private ChainOperator _operatorChain;
 
@@ -73,7 +73,6 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
                         String componentName,
                         List<String> allCompNames,
 			StormSrcHarmonizer harmonizer,
-			List<Integer> joinParams,
 			boolean isFromFirstEmitter,
 			ChainOperator chain,
 			BasicStore<ArrayList<String>> preAggStorage,
@@ -94,7 +93,6 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 		_componentName = componentName;
                 _componentIndex = String.valueOf(allCompNames.indexOf(componentName));
 		_tableName = (isFromFirstEmitter ? firstEmitter.getName(): secondEmitter.getName());
-		_joinParams= joinParams;
 		_isFromFirstEmitter=isFromFirstEmitter;
 		_harmonizer = harmonizer;
 		_batchOutputMillis = batchOutputMillis;
@@ -103,6 +101,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 		_hashIndexes=hashIndexes;
 		_hashExpressions = hashExpressions;
 		_hierarchyPosition=hierarchyPosition;
+                _rightHashIndexes = secondEmitter.getHashIndexes();
 
 		_printOut = printOut;
 
@@ -178,7 +177,8 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
 						List<String> outputTuple;
 						if(_joinStorage instanceof BasicStore){
-							outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple, _joinParams);
+
+							outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple, _rightHashIndexes);
 						}else{
 							outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);
 						}
