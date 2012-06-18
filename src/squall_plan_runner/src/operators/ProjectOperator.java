@@ -5,6 +5,7 @@ import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import visitors.OperatorVisitor;
 
 public class ProjectOperator implements Operator {
 	private static final long serialVersionUID = 1L;
@@ -76,5 +77,10 @@ public class ProjectOperator implements Operator {
                 }
             }
             return sb.toString();
+        }
+
+        @Override
+        public void accept(OperatorVisitor ov){
+            ov.visit(this);
         }
 }

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
 import utilities.MyUtilities;
+import visitors.OperatorVisitor;
 
 public class AggregateSumOperator<T extends Number & Comparable<T>> implements AggregateOperator<T> {
         private static final long serialVersionUID = 1L;
@@ -203,6 +204,11 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
 
     private boolean alreadySetOther(int GB_COLUMNS) {
         return (_groupByType != GB_COLUMNS && _groupByType != GB_UNSET);
+    }
+
+    @Override
+    public void accept(OperatorVisitor ov){
+        ov.visit(this);
     }
                 
 }

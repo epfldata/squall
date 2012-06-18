@@ -11,6 +11,7 @@ import utilities.MyUtilities;
 import storage.BasicStore;
 import storage.ValueStore;
 import expressions.ValueExpression;
+import visitors.OperatorVisitor;
 
 public class DistinctOperator implements Operator {
 
@@ -87,5 +88,10 @@ public class DistinctOperator implements Operator {
 		sb.append(_projection.toString());
 		return sb.toString();
 	}
+
+        @Override
+        public void accept(OperatorVisitor ov){
+            ov.visit(this);
+        }
 
 }

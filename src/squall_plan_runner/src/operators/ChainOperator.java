@@ -7,6 +7,7 @@ package operators;
 
 import java.util.ArrayList;
 import java.util.List;
+import visitors.OperatorVisitor;
 
 
 public class ChainOperator implements Operator {
@@ -170,4 +171,8 @@ public class ChainOperator implements Operator {
         return sb.toString();
     }
 
+    @Override
+    public void accept(OperatorVisitor ov){
+        ov.visit(this);
+    }
 }

@@ -16,6 +16,7 @@ import storage.BasicStore;
 import storage.AggregationStorage;
 import org.apache.log4j.Logger;
 import utilities.MyUtilities;
+import visitors.OperatorVisitor;
 
 public class AggregateAvgOperator implements AggregateOperator<SumCount> {
         private static final long serialVersionUID = 1L;
@@ -268,5 +269,10 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 
         private boolean alreadySetOther(int GB_COLUMNS) {
             return (_groupByType != GB_COLUMNS && _groupByType != GB_UNSET);
+        }
+
+        @Override
+        public void accept(OperatorVisitor ov){
+            ov.visit(this);
         }
 }
