@@ -2,12 +2,11 @@ package storage;
 
 import java.util.Set;
 import java.util.List;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.io.Serializable;
 import java.util.Collections;
+import java.util.Map;
 
 /* Used to store a set of distinct values */
 public class ValueStore<V> extends KeyValueStore {
@@ -17,12 +16,12 @@ public class ValueStore<V> extends KeyValueStore {
 	/* Dummy value to associate with a key in the key-value backing store */
 	private static final Object dummyObj = null;
 
-	public ValueStore() {
-		this(BasicStore.DEFAULT_SIZE_MB);
+	public ValueStore(Map map) {
+		this(BasicStore.DEFAULT_SIZE_MB, map);
 	}
 
-	public ValueStore(int storesizemb) {
-		super(storesizemb);
+	public ValueStore(int storesizemb, Map map) {
+		super(storesizemb, map);
 	}	
 
 	@Override

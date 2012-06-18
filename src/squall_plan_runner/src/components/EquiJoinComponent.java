@@ -156,10 +156,10 @@ public class EquiJoinComponent implements Component {
         if(partitioningType == StormJoin.DST_ORDERING){
                 //In Preaggregation one or two storages can be set; otherwise no storage is set
                 if(_firstPreAggStorage == null){
-                    _firstPreAggStorage = new KeyValueStore<String, String>();
+                    _firstPreAggStorage = new KeyValueStore<String, String>(conf);
                 }
                 if(_secondPreAggStorage == null){
-                    _secondPreAggStorage = new KeyValueStore<String, String>();
+                    _secondPreAggStorage = new KeyValueStore<String, String>(conf);
                 }
 
                 _joiner = new StormDstJoin(_firstParent,
@@ -187,10 +187,10 @@ public class EquiJoinComponent implements Component {
             }
             //In Preaggregation one or two storages can be set; otherwise no storage is set
             if(_firstPreAggStorage == null){
-                _firstPreAggStorage = new KeyValueStore<String, String>();
+                _firstPreAggStorage = new KeyValueStore<String, String>(conf);
             }
             if(_secondPreAggStorage == null){
-                _secondPreAggStorage = new KeyValueStore<String, String>();
+                _secondPreAggStorage = new KeyValueStore<String, String>(conf);
             }
 
             //since we don't know how data is scattered across StormSrcStorage,

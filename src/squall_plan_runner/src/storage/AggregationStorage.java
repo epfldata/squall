@@ -28,7 +28,7 @@ public class AggregationStorage<V> extends KeyValueStore<String, V> {
 	private static final String SINGLE_ENTRY_KEY = "SEK"; /* Single entry key */
 
 	public AggregationStorage(AggregateOperator outerAggOp, TypeConversion wrapper, Map map, boolean singleEntry){
-		super(singleEntry ? 1 : DEFAULT_INITIAL_CAPACITY);
+		super(singleEntry ? 1 : DEFAULT_INITIAL_CAPACITY, map);
 		_conf = map;
 		_wrapper = wrapper;
 		_outerAggOp = outerAggOp;

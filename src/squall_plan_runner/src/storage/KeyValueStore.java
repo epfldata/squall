@@ -1,16 +1,14 @@
 package storage;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.ArrayList;
-import java.io.Serializable;
 import java.io.PrintStream;
 import java.util.Collections;
-import storage.LRUList;
+import utilities.SystemParameters;
 
 public class KeyValueStore<K, V> extends BasicStore {
 	
@@ -19,17 +17,24 @@ public class KeyValueStore<K, V> extends BasicStore {
 	protected ReplacementAlgorithm<HashEntry<K, V>> _replAlg;
 
 	/* Constructors */
-	public KeyValueStore() {
-		this(BasicStore.DEFAULT_SIZE_MB, DEFAULT_INITIAL_CAPACITY);
+	public KeyValueStore(Map map) {
+		this(BasicStore.DEFAULT_SIZE_MB, DEFAULT_INITIAL_CAPACITY, map);
 	}
 
-	public KeyValueStore(int initialCapacity) {
-		this(BasicStore.DEFAULT_SIZE_MB, initialCapacity);
+	public KeyValueStore(int initialCapacity, Map map) {
+		this(BasicStore.DEFAULT_SIZE_MB, initialCapacity, map);
 	}
 
-	public KeyValueStore(int storesizemb, int initialCapacity) {
+	public KeyValueStore(int storesizemb, int initialCapacity, Map map) {
 		super(storesizemb);
-		this._storageManager = new StorageManager<V>(this, "/tmp/ramdisk/", true);
+
+                String storagePath;
+                if(SystemParameters.getBoolean(map, "DIP_DISTRIBUTED")){
+                    storagePath = "/export/home/iklonatos/storage/";
+                }else{
+                    storagePath = "/tmp/ramdisk/";
+                }
+		this._storageManager = new StorageManager<V>(this, storagePath, true);
 		this._memoryManager = new MemoryManager(storesizemb);
 		this._replAlg  = new LRUList<HashEntry<K, V>>();
 		this._memstore = new HashMap<K, Object>(initialCapacity);
