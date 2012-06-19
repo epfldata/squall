@@ -2,8 +2,10 @@ DIP_DISTRIBUTED true
 DIP_QUERY_NAME tpch3
 DIP_TOPOLOGY_NAME_PREFIX username
 DIP_TOPOLOGY_NAME 1G_tpch3_parallel_4
-DIP_NUM_PARALLELISM 176
-DIP_NUM_ACKERS 17
+
+# the following two are optional, by default they use topology.workers and topology.ackers from storm.yaml
+#DIP_NUM_PARALLELISM 176
+#DIP_NUM_ACKERS 0
 
 DIP_DATA_PATH /export/home/avitorovic/queries/tpch/1G/
 

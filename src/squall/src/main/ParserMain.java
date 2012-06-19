@@ -24,12 +24,9 @@ import utilities.SystemParameters;
 import visitors.jsql.SQLVisitor;
 
 public class ParserMain{
-    // this is an upper limit for the parallelism of a component
-    private final int CLUSTER_WORKERS = 176;
-    private int CLUSTER_ACKERS = 17;
+    //private final int CLUSTER_WORKERS = 176;
+    private int CLUSTER_ACKERS = 17; //could be 10% of CLUSTER_WORKERS, but this is a magic number in our system
 
-    // this is an upper limit for the parallelism of a component
-    private final int LOCAL_WORKERS = 176;
     private int LOCAL_ACKERS = 1;
 
     private final String sqlExtension = ".sql";
@@ -53,11 +50,11 @@ public class ParserMain{
         String mode = "";
         if (SystemParameters.getBoolean(map, "DIP_DISTRIBUTED")){
             mode = "parallel";
-            SystemParameters.putInMap(map, "DIP_NUM_PARALLELISM", CLUSTER_WORKERS);
+            //default value is already set, but for scheduling we might need to change that
+            //SystemParameters.putInMap(map, "DIP_NUM_WORKERS", CLUSTER_WORKERS);
             SystemParameters.putInMap(map, "DIP_NUM_ACKERS", CLUSTER_ACKERS);
         }else{
             mode = "serial";
-            SystemParameters.putInMap(map, "DIP_NUM_PARALLELISM", LOCAL_WORKERS);
             SystemParameters.putInMap(map, "DIP_NUM_ACKERS", LOCAL_ACKERS);
         }
 

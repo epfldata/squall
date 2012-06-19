@@ -44,6 +44,11 @@ public class SystemParameters{
     public static final String EOF = "EOF";
     public static final String DUMP_RESULTS = "DumpResults";
     
+    public static boolean isExisting(Map conf, String key){
+        String result =  (String) conf.get(key);
+        return result != null;
+    }
+
     public static String getString(Map conf, String key){
         String result =  (String) conf.get(key);
         if (result == null || result.equals(""))

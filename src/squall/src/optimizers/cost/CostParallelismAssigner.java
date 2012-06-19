@@ -197,7 +197,7 @@ public class CostParallelismAssigner {
         int result = (int) distinctValues;
         if(result != distinctValues){
             //so huge that cannot fit in int, we will set to MAX_PARALLELISM
-            result = SystemParameters.getInt(_map, "DIP_NUM_PARALLELISM");
+            result = SystemParameters.getInt(_map, "DIP_NUM_WORKERS");
         }
         return result;
     }

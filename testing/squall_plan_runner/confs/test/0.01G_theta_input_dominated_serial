@@ -2,7 +2,6 @@ DIP_DISTRIBUTED false
 DIP_QUERY_NAME theta_input_dominated
 DIP_TOPOLOGY_NAME_PREFIX username
 DIP_TOPOLOGY_NAME ThetaInputDominatedSimple
-DIP_NUM_PARALLELISM 5
 DIP_NUM_ACKERS 1
 
 DIP_DATA_PATH ../testing/data/tpch/0.01G/
