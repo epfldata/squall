@@ -26,7 +26,7 @@ public class SystemParameters{
     //used in StormWrapper for submitting topology, for both local and clustered mode
     //local mode: TPCH7 1GB needs 3000sec, TPCH8 100MB needs 1000s
     //clustered mode: TPCH7 1GB needs 30sec, 2GB needs 60sec, 8GB needs 90sec, 10GB needs 150sec
-    //                all TPCH3 are done with 150sec
+    //                all TPCH3 are done within 150sec
     public static final int MESSAGE_TIMEOUT_SECS = 150;
     //used in StormDataSource, for both local and clustered mode
     public static final long EOF_TIMEOUT_MILLIS = 1000;
@@ -43,6 +43,9 @@ public class SystemParameters{
     public static final String LAST_ACK = "LAST_ACK";
     public static final String EOF = "EOF";
     public static final String DUMP_RESULTS = "DumpResults";
+
+    //the content of ~/.storm/storm.yaml
+    public static final int DEFAULT_NUM_ACKERS = 0;
     
     public static boolean isExisting(Map conf, String key){
         String result =  (String) conf.get(key);

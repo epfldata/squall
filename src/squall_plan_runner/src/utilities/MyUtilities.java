@@ -290,7 +290,14 @@ public class MyUtilities{
         //if this is false, we have a specific mechanism to ensure all the tuples are fully processed
         //  it is based on CustomStreamGrouping
         public static boolean isAckEveryTuple(Map map){
-            return (SystemParameters.getInt(map, "DIP_NUM_ACKERS") > 0);
+            int ackers;
+            if(!SystemParameters.isExisting(map, "DIP_NUM_ACKERS")){
+                //number of ackers is defined in storm.yaml
+                ackers = SystemParameters.DEFAULT_NUM_ACKERS;
+            }else{
+                ackers = SystemParameters.getInt(map, "DIP_NUM_ACKERS");
+            }
+            return (ackers > 0);
         }
 
         public static boolean isFinalAck(List<String> tuple, Map map){
