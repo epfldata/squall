@@ -15,6 +15,7 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+import components.ComponentProperties;
 import expressions.ValueExpression;
 import java.util.List;
 import java.util.concurrent.Semaphore;
@@ -24,7 +25,6 @@ import operators.Operator;
 import operators.ProjectOperator;
 import utilities.SystemParameters;
 import storage.BasicStore;
-import storage.KeyValueStore;
 
 import org.apache.log4j.Logger;
 import stormComponents.synchronization.TopologyKiller;
@@ -70,18 +70,13 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
 	public StormSrcStorage(StormEmitter firstEmitter,
                         StormEmitter secondEmitter,
-                        String componentName,
+                        ComponentProperties cp,
                         List<String> allCompNames,
 			StormSrcHarmonizer harmonizer,
 			boolean isFromFirstEmitter,
-			ChainOperator chain,
 			BasicStore<ArrayList<String>> preAggStorage,
 			ProjectOperator preAggProj,
-			List<Integer> hashIndexes,
-			List<ValueExpression> hashExpressions,
 			int hierarchyPosition,
-			boolean printOut,
-			long batchOutputMillis,
 			TopologyBuilder builder,
 			TopologyKiller killer,
 			Config conf) {
@@ -90,23 +85,23 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
                _secondEmitterIndex = String.valueOf(allCompNames.indexOf(secondEmitter.getName()));
 
 		_conf = conf;
-		_componentName = componentName;
-                _componentIndex = String.valueOf(allCompNames.indexOf(componentName));
+		_componentName = cp.getName();
+                _componentIndex = String.valueOf(allCompNames.indexOf(_componentName));
 		_tableName = (isFromFirstEmitter ? firstEmitter.getName(): secondEmitter.getName());
 		_isFromFirstEmitter=isFromFirstEmitter;
 		_harmonizer = harmonizer;
-		_batchOutputMillis = batchOutputMillis;
+		_batchOutputMillis = cp.getBatchOutputMillis();
 
-		_operatorChain = chain;
-		_hashIndexes=hashIndexes;
-		_hashExpressions = hashExpressions;
+		_operatorChain = cp.getChainOperator();
+		_hashIndexes=cp.getHashIndexes();
+		_hashExpressions = cp.getHashExpressions();
 		_hierarchyPosition=hierarchyPosition;
-                _rightHashIndexes = secondEmitter.getHashIndexes();
+                _rightHashIndexes = cp.getParents()[1].getHashIndexes();
 
-		_printOut = printOut;
+		_printOut = cp.getPrintOut();
 
 		int parallelism = SystemParameters.getInt(conf, _componentName+"_PAR");
-		_ID = componentName + "_" + _tableName;
+		_ID = _componentName + "_" + _tableName;
 		InputDeclarer currentBolt = builder.setBolt(_ID, this, parallelism);
 		currentBolt.fieldsGrouping(_harmonizer.getID(), new Fields("Hash"));
 
@@ -318,16 +313,6 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 		public String getName() {
 			return _componentName;
 		}
-
-	@Override
-		public List<Integer> getHashIndexes(){
-			return _hashIndexes;
-		}
-
-	@Override
-		public List<ValueExpression> getHashExpressions() {
-			return _hashExpressions;
-		}        
 
 	@Override
 		public String getInfoID() {

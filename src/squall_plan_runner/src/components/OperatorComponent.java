@@ -102,7 +102,7 @@ public  class OperatorComponent implements Component{
     }
 
     @Override
-    public OperatorComponent setBatchOutputMode(long millis){
+    public OperatorComponent setBatchOutputMillis(long millis){
         _batchOutputMillis = millis;
         return this;
     }
@@ -124,15 +124,9 @@ public  class OperatorComponent implements Component{
         MyUtilities.checkBatchOutput(_batchOutputMillis, _chain.getAggregation(), conf);
 
         _stormOperator = new StormOperator(_parent,
-                _componentName,
+                this,
                 allCompNames,
-                _chain,
-                _hashIndexes,
-                _hashExpressions,
                 hierarchyPosition,
-                _printOut,
-                _batchOutputMillis,
-                _fullHashList,
                 builder,
                 killer,
                 conf);
@@ -184,6 +178,16 @@ public  class OperatorComponent implements Component{
     @Override
     public String getInfoID() {
         return _stormOperator.getInfoID();
+    }
+
+    @Override
+    public boolean getPrintOut() {
+        return _printOut;
+    }
+
+    @Override
+    public long getBatchOutputMillis() {
+        return _batchOutputMillis;
     }
 
     @Override

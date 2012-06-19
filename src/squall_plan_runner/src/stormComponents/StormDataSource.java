@@ -21,6 +21,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
+import components.ComponentProperties;
 import expressions.ValueExpression;
 import java.util.Arrays;
 import java.util.List;
@@ -71,31 +72,26 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 	private PeriodicBatchSend _periodicBatch;
 	private long _batchOutputMillis;
 
-	public StormDataSource(String componentName,
+	public StormDataSource(ComponentProperties cp,
                         List<String> allCompNames,
 			String inputPath,
-			List<Integer> hashIndexes,
-			List<ValueExpression> hashExpressions,
-			ChainOperator chain,
 			int hierarchyPosition,
-			boolean printOut,
-			long batchOutputMillis,
 			int parallelism,
 			TopologyBuilder	builder,
 			TopologyKiller killer,
 			Config conf) {
 		_conf = conf;
-		_operatorChain = chain;
+		_operatorChain = cp.getChainOperator();
 		_hierarchyPosition = hierarchyPosition;
-		_ID=componentName;
-                _componentIndex = String.valueOf(allCompNames.indexOf(componentName));
+		_ID=cp.getName();
+                _componentIndex = String.valueOf(allCompNames.indexOf(_ID));
 		_inputPath=inputPath;
-		_batchOutputMillis = batchOutputMillis;
+		_batchOutputMillis = cp.getBatchOutputMillis();
 
-		_hashIndexes=hashIndexes;
-		_hashExpressions = hashExpressions;
+		_hashIndexes=cp.getHashIndexes();
+		_hashExpressions = cp.getHashExpressions();
 
-		_printOut = printOut;
+		_printOut = cp.getPrintOut();
 
 		_fileParts = parallelism;
 
@@ -345,15 +341,6 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 			return _ID;
 		}
 
-	@Override
-		public List<Integer> getHashIndexes(){
-			return _hashIndexes;
-		}
-
-	@Override
-		public List<ValueExpression> getHashExpressions() {
-			return _hashExpressions;
-		}
 
 	@Override
 		public String getInfoID() {

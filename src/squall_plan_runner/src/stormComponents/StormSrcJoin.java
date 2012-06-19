@@ -2,11 +2,11 @@ package stormComponents;
 
 import java.util.ArrayList;
 import storage.BasicStore;
-import storage.KeyValueStore;
 import stormComponents.synchronization.TopologyKiller;
 import backtype.storm.Config;
 import utilities.MyUtilities;
 import backtype.storm.topology.TopologyBuilder;
+import components.ComponentProperties;
 import expressions.ValueExpression;
 import java.io.Serializable;
 import java.util.List;
@@ -29,28 +29,23 @@ public class StormSrcJoin implements StormJoin, Serializable{
 
 	public StormSrcJoin(StormEmitter firstEmitter,
                 StormEmitter secondEmitter,
-                String componentName,
+                ComponentProperties cp,
                 List<String> allCompNames,
-                ChainOperator chain,
                 BasicStore<ArrayList<String>> firstPreAggStorage,
                 BasicStore<ArrayList<String>> secondPreAggStorage,
                 ProjectOperator firstPreAggProj,
                 ProjectOperator secondPreAggProj,
-                List<Integer> hashIndexes,
-                List<ValueExpression> hashExpressions,
                 int hierarchyPosition,
-                boolean printOut,
-                long batchOutputMillis,
                 TopologyBuilder builder,
                 TopologyKiller killer,
                 Config conf){
 
-            _componentName = componentName;
-            _hashIndexes = hashIndexes;
-            _hashExpressions = hashExpressions;
+            _componentName = cp.getName();
+            _hashIndexes = cp.getHashIndexes();
+            _hashExpressions = cp.getHashExpressions();
 		
             //set the harmonizer
-            _harmonizer= new StormSrcHarmonizer(componentName,
+            _harmonizer= new StormSrcHarmonizer(_componentName,
                     firstEmitter,
                     secondEmitter,
                     builder,
@@ -59,35 +54,25 @@ public class StormSrcJoin implements StormJoin, Serializable{
 		
             _firstStorage = new StormSrcStorage(firstEmitter,
                     secondEmitter,
-                    componentName,
+                    cp,
                     allCompNames,
                     _harmonizer,
                     true,
-                    chain,
                     firstPreAggStorage,
                     firstPreAggProj,
-                    hashIndexes,
-                    hashExpressions,
                     hierarchyPosition,
-                    printOut,
-                    batchOutputMillis,
                     builder,
                     killer,
                     conf);
             _secondStorage = new StormSrcStorage(firstEmitter,
                     secondEmitter,
-                    componentName,
+                    cp,
                     allCompNames,
                     _harmonizer,
                     false,
-                    chain,
                     secondPreAggStorage,
                     secondPreAggProj,
-                    hashIndexes,
-                    hashExpressions,
                     hierarchyPosition,
-                    printOut,
-                    batchOutputMillis,
                     builder,
                     killer,
                     conf);
@@ -106,16 +91,6 @@ public class StormSrcJoin implements StormJoin, Serializable{
         @Override
         public String[] getEmitterIDs() {
             return new String[]{_firstStorage.getID(), _secondStorage.getID()};
-        }
-
-        @Override
-        public List<Integer> getHashIndexes() {
-            return _hashIndexes;
-        }
-
-        @Override
-        public List<ValueExpression> getHashExpressions() {
-            return _hashExpressions;
         }
 
         @Override

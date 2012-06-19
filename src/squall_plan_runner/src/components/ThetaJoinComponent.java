@@ -110,7 +110,7 @@ public class ThetaJoinComponent implements Component {
     }
 
     @Override
-    public ThetaJoinComponent setBatchOutputMode(long millis){
+    public ThetaJoinComponent setBatchOutputMillis(long millis){
         _batchOutputMillis = millis;
         return this;
     }
@@ -133,15 +133,10 @@ public class ThetaJoinComponent implements Component {
 
         _joiner = new StormThetaJoin(_firstParent,
                             _secondParent,
-                            _componentName,
+                            this,
                             allCompNames,
-                            _chain,
-                            _hashIndexes,
-                            _hashExpressions,
                             _joinPredicate,
                             hierarchyPosition,
-                            _printOut,
-                            _batchOutputMillis,
                             builder,
                             killer,
                             conf);   
@@ -195,6 +190,16 @@ public class ThetaJoinComponent implements Component {
     @Override
     public String getInfoID() {
         return _joiner.getInfoID();
+    }
+
+    @Override
+    public boolean getPrintOut() {
+        return _printOut;
+    }
+
+    @Override
+    public long getBatchOutputMillis() {
+        return _batchOutputMillis;
     }
 
     @Override

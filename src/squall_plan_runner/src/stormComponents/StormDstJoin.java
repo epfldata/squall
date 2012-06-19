@@ -15,6 +15,7 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+import components.ComponentProperties;
 import expressions.ValueExpression;
 import java.util.List;
 import java.util.concurrent.Semaphore;
@@ -24,7 +25,6 @@ import operators.Operator;
 import operators.ProjectOperator;
 import utilities.SystemParameters;
 import storage.BasicStore;
-import storage.KeyValueStore;
 
 import org.apache.log4j.Logger;
 import stormComponents.synchronization.TopologyKiller;
@@ -73,30 +73,24 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 
 	public StormDstJoin(StormEmitter firstEmitter,
 			StormEmitter secondEmitter,
-			String componentName,
+                        ComponentProperties cp,
                         List<String> allCompNames,
-			ChainOperator chain,
 			BasicStore<ArrayList<String>> firstPreAggStorage,
 			BasicStore<ArrayList<String>> secondPreAggStorage,
 			ProjectOperator firstPreAggProj,
 			ProjectOperator secondPreAggProj,
-			List<Integer> hashIndexes,
-			List<ValueExpression> hashExpressions,
 			int hierarchyPosition,
-			boolean printOut,
-			long batchOutputMillis,
-			List<String> fullHashList,
 			TopologyBuilder builder,
 			TopologyKiller killer,
 			Config conf) {
 		_conf = conf;
 		_firstEmitter = firstEmitter;
 		_secondEmitter = secondEmitter;
-		_ID = componentName;
-                _componentIndex = String.valueOf(allCompNames.indexOf(componentName));
+		_ID = cp.getName();
+                _componentIndex = String.valueOf(allCompNames.indexOf(_ID));
                 _firstEmitterIndex = String.valueOf(allCompNames.indexOf(_firstEmitter.getName()));
                 _secondEmitterIndex = String.valueOf(allCompNames.indexOf(_secondEmitter.getName()));
-		_batchOutputMillis = batchOutputMillis;
+		_batchOutputMillis = cp.getBatchOutputMillis();
 
 		int parallelism = SystemParameters.getInt(conf, _ID+"_PAR");
 
@@ -104,15 +98,15 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 		//                throw new RuntimeException(_componentName + ": Distinct operator cannot be specified for multiThreaded bolts!");
 		//            }
 
-		_operatorChain = chain;
+		_operatorChain = cp.getChainOperator();
 
-		_hashIndexes = hashIndexes;
-		_hashExpressions = hashExpressions;
-                _rightHashIndexes = secondEmitter.getHashIndexes();
+		_hashIndexes = cp.getHashIndexes();
+		_hashExpressions = cp.getHashExpressions();
+                _rightHashIndexes = cp.getParents()[1].getHashIndexes();
 
 		_hierarchyPosition = hierarchyPosition;
 
-		_fullHashList = fullHashList;
+		_fullHashList = cp.getFullHashList();
 		InputDeclarer currentBolt = builder.setBolt(_ID, this, parallelism);
 		currentBolt = MyUtilities.attachEmitterCustom(conf, _fullHashList, currentBolt, firstEmitter, secondEmitter);
 
@@ -120,7 +114,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			killer.registerComponent(this, parallelism);
 		}
 
-		_printOut= printOut;
+		_printOut = cp.getPrintOut();
 		if (_printOut && _operatorChain.isBlocking()){
 			currentBolt.allGrouping(killer.getID(), SystemParameters.DUMP_RESULTS_STREAM);
 		}
@@ -366,16 +360,6 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 	@Override
 		public String getName() {
 			return _ID;
-		}
-
-	@Override
-		public List<Integer> getHashIndexes(){
-			return _hashIndexes;
-		}
-
-	@Override
-		public List<ValueExpression> getHashExpressions() {
-			return _hashExpressions;
 		}
 
 	@Override
