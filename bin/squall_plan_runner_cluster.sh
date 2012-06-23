@@ -1,5 +1,7 @@
 #!/bin/bash
 
+. ./storm_version.sh
+
 if [ $# -ne 1 ]
 then
 CONFIG_FILE=1G_hyracks_parallel
@@ -17,4 +19,12 @@ then
    exit
 fi
 
-../storm-0.7.0/bin/storm jar ../squall-2.0-standalone.jar main.Main $CONFIG_PATH
+../$STORMNAME/bin/storm jar ../deploy/squall-2.0-standalone.jar main.Main $CONFIG_PATH
+
+
+
+
+
+
+
+

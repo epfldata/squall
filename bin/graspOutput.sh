@@ -1,6 +1,6 @@
 #!/bin/bash
 
-STORMNAME=storm-0.7.0
+. ./storm_version.sh
 
 MACHINE=team11@icdatasrv2
 STORM_HOME=/opt/storm
