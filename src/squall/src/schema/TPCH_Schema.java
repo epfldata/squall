@@ -1,10 +1,6 @@
 package schema;
 
-import conversion.DateConversion;
-import conversion.DoubleConversion;
-import conversion.LongConversion;
-import conversion.StringConversion;
-import conversion.TypeConversion;
+import conversion.*;
 import expressions.DateSum;
 import expressions.ValueSpecification;
 import java.util.Arrays;

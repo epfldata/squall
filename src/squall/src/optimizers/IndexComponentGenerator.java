@@ -6,11 +6,13 @@ import components.EquiJoinComponent;
 import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import net.sf.jsqlparser.expression.Expression;
 import queryPlans.QueryPlan;
 import schema.Schema;
 import util.ParserUtil;
 import util.TableAliasName;
+import utilities.SystemParameters;
 import visitors.squall.IndexJoinHashVisitor;
 
 /*
@@ -29,11 +31,11 @@ public class IndexComponentGenerator implements ComponentGenerator{
     //List of Components which are already added throughEquiJoinComponent and OperatorComponent
     private List<Component> _subPlans = new ArrayList<Component>();
 
-    public IndexComponentGenerator(Schema schema, TableAliasName tan, String dataPath, String extension){
+    public IndexComponentGenerator(Schema schema, TableAliasName tan, Map map){
         _schema = schema;
         _tan = tan;
-        _dataPath = dataPath;
-        _extension = extension;
+        _dataPath = SystemParameters.getString(map, "DIP_DATA_PATH");
+        _extension = SystemParameters.getString(map, "DIP_EXTENSION");
     }
 
     @Override

@@ -1,6 +1,5 @@
 package optimizers;
 
-import optimizers.rule.RuleParallelismAssigner;
 import components.Component;
 import components.DataSourceComponent;
 import components.OperatorComponent;
@@ -14,11 +13,14 @@ import net.sf.jsqlparser.statement.select.SelectItem;
 import operators.AggregateOperator;
 import operators.ProjectOperator;
 import operators.SelectOperator;
+import optimizers.rule.RuleParallelismAssigner;
 import queryPlans.QueryPlan;
 import schema.Schema;
+import schema.TPCH_Schema;
 import util.ParserUtil;
-import util.TableAliasName;
 import utilities.DeepCopy;
+import utilities.SystemParameters;
+import visitors.jsql.SQLVisitor;
 import visitors.squall.IndexSelectItemsVisitor;
 import visitors.squall.IndexWhereVisitor;
 
@@ -27,42 +29,43 @@ import visitors.squall.IndexWhereVisitor;
  * SELECT and WHERE clause are attached to the final component.
  */
 public class SimpleOptimizer implements Optimizer {
+    private SQLVisitor _pq;
     private Schema _schema;
-    private String _dataPath;
-    private String _extension;
-    private IndexComponentGenerator _cg;
-    private TableAliasName _tan;
-    private IndexTranslator _it;
     private Map _map;
     
-    public SimpleOptimizer(Schema schema, TableAliasName tan, String dataPath, String extension, Map map){
-        _schema = schema;
-        _tan = tan;
-        _dataPath = dataPath;
-        _extension = extension;
-        _it = new IndexTranslator(_schema, _tan);
+    private IndexComponentGenerator _cg;
+    private IndexTranslator _it;
+    
+    public SimpleOptimizer(SQLVisitor pq, Map map){
+        _pq = pq;
         _map = map;
+        
+        double scallingFactor = SystemParameters.getDouble(map, "DIP_DB_SIZE");
+        _schema = new TPCH_Schema(scallingFactor);
+        _it = new IndexTranslator(_schema, pq.getTan());
     }
 
     @Override
-    public QueryPlan generate(List<Table> tableList, List<Join> joinList, List<SelectItem> selectItems, Expression whereExpr){
-        _cg = generateTableJoins(tableList, joinList);
+    public QueryPlan generate(){
+        _cg = generateTableJoins();
 
         //selectItems might add OperatorComponent, this is why it goes first
-        processSelectClause(selectItems);
-        processWhereClause(whereExpr);
+        processSelectClause(_pq.getSelectItems());
+        processWhereClause(_pq.getWhereExpr());
 
         ParserUtil.orderOperators(_cg.getQueryPlan());
 
-        RuleParallelismAssigner parAssign = new RuleParallelismAssigner(_cg.getQueryPlan(), _tan, _schema, _map);
+        RuleParallelismAssigner parAssign = new RuleParallelismAssigner(_cg.getQueryPlan(), _pq.getTan(), _schema, _map);
         parAssign.assignPar();
 
         return _cg.getQueryPlan();
     }
 
-    private IndexComponentGenerator generateTableJoins(List<Table> tableList, List<Join> joinList) {
-        IndexComponentGenerator cg = new IndexComponentGenerator(_schema, _tan, _dataPath, _extension);
-
+    private IndexComponentGenerator generateTableJoins() {
+        List<Table> tableList = _pq.getTableList();
+        List<Join> joinList = _pq.getJoinList();
+        
+        IndexComponentGenerator cg = new IndexComponentGenerator(_schema, _pq.getTan(), _map);
         Component firstParent = cg.generateDataSource(ParserUtil.getComponentName(tableList.get(0)));
 
         //a special case
@@ -81,7 +84,7 @@ public class SimpleOptimizer implements Optimizer {
 
     private int processSelectClause(List<SelectItem> selectItems) {
         //TODO: take care in nested case
-        IndexSelectItemsVisitor selectVisitor = new IndexSelectItemsVisitor(_cg.getQueryPlan(), _schema, _tan, _map);
+        IndexSelectItemsVisitor selectVisitor = new IndexSelectItemsVisitor(_cg.getQueryPlan(), _schema, _pq.getTan(), _map);
         for(SelectItem elem: selectItems){
             elem.accept(selectVisitor);
         }
@@ -150,7 +153,7 @@ public class SimpleOptimizer implements Optimizer {
         
         //all the selection are performed on the last component
         Component affectedComponent = _cg.getQueryPlan().getLastComponent();
-        IndexWhereVisitor whereVisitor = new IndexWhereVisitor(_cg.getQueryPlan(), affectedComponent, _schema, _tan);
+        IndexWhereVisitor whereVisitor = new IndexWhereVisitor(_cg.getQueryPlan(), affectedComponent, _schema, _pq.getTan());
         if(whereExpr != null){
             whereExpr.accept(whereVisitor);
             attachWhereClause(whereVisitor.getSelectOperator(), affectedComponent);

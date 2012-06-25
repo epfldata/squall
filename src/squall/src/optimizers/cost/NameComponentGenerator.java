@@ -1,6 +1,5 @@
 package optimizers.cost;
 
-import optimizers.*;
 import components.Component;
 import components.DataSourceComponent;
 import components.EquiJoinComponent;
@@ -9,11 +8,7 @@ import conversion.TypeConversion;
 import estimators.ConfigSelectivityEstimator;
 import estimators.SelingerSelectivityEstimator;
 import expressions.ValueExpression;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.schema.Column;
@@ -21,6 +16,7 @@ import net.sf.jsqlparser.statement.select.SelectItem;
 import operators.AggregateOperator;
 import operators.ProjectOperator;
 import operators.SelectOperator;
+import optimizers.ComponentGenerator;
 import queryPlans.QueryPlan;
 import schema.ColumnNameType;
 import schema.Schema;
@@ -28,6 +24,7 @@ import util.HierarchyExtractor;
 import util.JoinTablesExprs;
 import util.ParserUtil;
 import util.TableAliasName;
+import utilities.SystemParameters;
 import visitors.squall.NameJoinHashVisitor;
 import visitors.squall.NameSelectItemsVisitor;
 import visitors.squall.NameWhereVisitor;
@@ -68,8 +65,6 @@ public class NameComponentGenerator implements ComponentGenerator{
 
     public NameComponentGenerator(Schema schema,
             TableAliasName tan,
-            String dataPath,
-            String extension,
             Map map,
             //called from CostOptimizer, which already has CostParallellismAssigner instantiated
             CostParallelismAssigner parAssigner,
@@ -79,8 +74,8 @@ public class NameComponentGenerator implements ComponentGenerator{
             JoinTablesExprs jte){
         _schema = schema;
         _tan = tan;
-        _dataPath = dataPath;
-        _extension = extension;
+        _dataPath = SystemParameters.getString(map, "DIP_DATA_PATH");
+        _extension = SystemParameters.getString(map, "DIP_EXTENSION");
         _map = map;
         _parAssigner = parAssigner;
 
@@ -296,7 +291,7 @@ public class NameComponentGenerator implements ComponentGenerator{
     public double computeHashSelectivity(String leftJoinTableSchemaName, String rightJoinTableSchemaName, 
             long leftCardinality, long rightCardinality, double rightSelectivity){
         long inputCardinality = leftCardinality + rightCardinality;
-        double selectivity = 1;
+        double selectivity;
 
         if(leftJoinTableSchemaName.equals(rightJoinTableSchemaName)){
             //we treat this as a cross-product on which some selections are performed

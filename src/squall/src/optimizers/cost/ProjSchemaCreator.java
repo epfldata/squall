@@ -21,7 +21,7 @@ import visitors.squall.NameProjectVisitor;
  * This class takes expressions from GlobalProjExpr,
  *   add to them those from Hashes,
  *   and create an output schema based on which expressions are required down the topology.
- * DOES NOT work with subexpressions (if we have (R.A +5) * 3 never R.A + 5 will be recognized as subexpression).
+ * DOES NOT work with subexpressions (if we have (R.A + 5) * 3 never R.A + 5 will be recognized as subexpression).
  */
 public class ProjSchemaCreator {
     private final ProjGlobalCollect _globalProject; // this is shared by all the ProjSchemaCreator objects

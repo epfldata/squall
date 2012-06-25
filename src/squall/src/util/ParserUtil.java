@@ -9,12 +9,7 @@ import expressions.ValueExpression;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
@@ -498,6 +493,22 @@ public class ParserUtil {
         PrintVisitor printer = new PrintVisitor();
         params.accept(printer);
         return printer.getString();
+    }
+    
+    //we use this method for List<OrExpression> as well
+    public static <T extends Expression> String getStringExpr(List<T> listExpr){
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        int size = listExpr.size();
+        for(int i=0; i<size; i++){
+            sb.append(getStringExpr(listExpr.get(i)));
+            if(i != size - 1){
+                //not the last element
+                sb.append(", ");
+            }
+        }
+        sb.append("]");
+        return sb.toString();
     }
 
     public static TypeConversion getColumnType(Column column, TableAliasName tan, Schema schema) {

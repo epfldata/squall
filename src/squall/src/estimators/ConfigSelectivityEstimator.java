@@ -13,7 +13,7 @@ public class ConfigSelectivityEstimator{
     }
 
     /*
-     * read selectivity from a config file
+     * read selectivity from the config file
      */
     public double estimate(String compName) {
         String selStr = compName + "_SEL";

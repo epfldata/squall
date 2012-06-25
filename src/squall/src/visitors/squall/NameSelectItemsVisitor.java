@@ -19,7 +19,6 @@ import schema.ColumnNameType;
 import schema.Schema;
 import util.ParserUtil;
 import util.TableAliasName;
-import visitors.jsql.PrintVisitor;
 
 
 public class NameSelectItemsVisitor extends IndexSelectItemsVisitor{

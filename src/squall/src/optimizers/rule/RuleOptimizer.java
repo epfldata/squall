@@ -1,35 +1,32 @@
 package optimizers.rule;
 
-import optimizers.IndexComponentGenerator;
 import components.Component;
 import components.DataSourceComponent;
 import components.OperatorComponent;
 import expressions.ValueExpression;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.select.Join;
-import queryPlans.QueryPlan;
-import schema.Schema;
+import java.util.*;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
+import net.sf.jsqlparser.schema.Table;
+import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import operators.AggregateOperator;
 import operators.ProjectOperator;
 import operators.SelectOperator;
+import optimizers.IndexComponentGenerator;
 import optimizers.IndexTranslator;
 import optimizers.Optimizer;
+import queryPlans.QueryPlan;
+import schema.Schema;
+import schema.TPCH_Schema;
 import util.HierarchyExtractor;
 import util.JoinTablesExprs;
 import util.ParserUtil;
-import util.TableAliasName;
 import utilities.DeepCopy;
+import utilities.SystemParameters;
 import visitors.jsql.AndVisitor;
 import visitors.jsql.JoinTablesExprsVisitor;
+import visitors.jsql.SQLVisitor;
 import visitors.squall.IndexSelectItemsVisitor;
 import visitors.squall.IndexWhereVisitor;
 
@@ -43,32 +40,30 @@ import visitors.squall.IndexWhereVisitor;
  */
 public class RuleOptimizer implements Optimizer {
     private Schema _schema;
-    private String _dataPath;
-    private String _extension;
-    private TableAliasName _tan;
+    private SQLVisitor _pq;
     private IndexComponentGenerator _cg;
     private IndexTranslator _it;
     private Map _map; //map is updates in place
 
-    public RuleOptimizer(Schema schema, TableAliasName tan, String dataPath, String extension, Map map){
-        _schema = schema;
-        _tan = tan;
-        _dataPath = dataPath;
-        _extension = extension;
-        _it = new IndexTranslator(_schema, _tan);
+    public RuleOptimizer(SQLVisitor pq, Map map){
+        _pq = pq;
         _map = map;
+        
+        double scallingFactor = SystemParameters.getDouble(map, "DIP_DB_SIZE");
+        _schema = new TPCH_Schema(scallingFactor);
+        _it = new IndexTranslator(_schema, _pq.getTan());
     }
 
     @Override
-    public QueryPlan generate(List<Table> tableList, List<Join> joinList, List<SelectItem> selectItems, Expression whereExpr){
-        _cg = generateTableJoins(tableList, joinList);
+    public QueryPlan generate(){
+        _cg = generateTableJoins();
 
         System.out.println("Before WHERE, SELECT and EarlyProjection: ");
         ParserUtil.printQueryPlan(_cg.getQueryPlan());
 
         //selectItems might add OperatorComponent, this is why it goes first
-        int queryType = processSelectClause(selectItems);
-        processWhereClause(whereExpr);
+        int queryType = processSelectClause(_pq.getSelectItems());
+        processWhereClause(_pq.getWhereExpr());
         if(queryType == IndexSelectItemsVisitor.NON_AGG){
             System.out.println("Early projection will not be performed since the query is NON_AGG type (contains projections)!");
         }else{
@@ -77,19 +72,21 @@ public class RuleOptimizer implements Optimizer {
         
         ParserUtil.orderOperators(_cg.getQueryPlan());
 
-        RuleParallelismAssigner parAssign = new RuleParallelismAssigner(_cg.getQueryPlan(), _tan, _schema, _map);
+        RuleParallelismAssigner parAssign = new RuleParallelismAssigner(_cg.getQueryPlan(), _pq.getTan(), _schema, _map);
         parAssign.assignPar();
 
         return _cg.getQueryPlan();
     }
 
-    private IndexComponentGenerator generateTableJoins(List<Table> tableList, List<Join> joinList) {
-        IndexComponentGenerator cg = new IndexComponentGenerator(_schema, _tan, _dataPath, _extension);
-        TableSelector ts = new TableSelector(tableList, _schema, _tan);
+    private IndexComponentGenerator generateTableJoins() {
+        List<Table> tableList = _pq.getTableList();
+        
+        IndexComponentGenerator cg = new IndexComponentGenerator(_schema, _pq.getTan(), _map);
+        TableSelector ts = new TableSelector(tableList, _schema, _pq.getTan());
 
         //From a list of joins, create collection of elements like {R->{S, R.A=S.A}}
         JoinTablesExprsVisitor jteVisitor = new JoinTablesExprsVisitor();
-        for(Join join: joinList){
+        for(Join join: _pq.getJoinList()){
             join.getOnExpression().accept(jteVisitor);
         }
         JoinTablesExprs jte = jteVisitor.getJoinTablesExp();
@@ -204,7 +201,7 @@ public class RuleOptimizer implements Optimizer {
 
     private int processSelectClause(List<SelectItem> selectItems) {
         //TODO: take care in nested case
-        IndexSelectItemsVisitor selectVisitor = new IndexSelectItemsVisitor(_cg.getQueryPlan(), _schema, _tan, _map);
+        IndexSelectItemsVisitor selectVisitor = new IndexSelectItemsVisitor(_cg.getQueryPlan(), _schema, _pq.getTan(), _map);
         for(SelectItem elem: selectItems){
             elem.accept(selectVisitor);
         }
@@ -323,7 +320,7 @@ public class RuleOptimizer implements Optimizer {
      * This is the only method in this class where IndexWhereVisitor is actually instantiated and invoked
      */
     private void processWhereForComponent(Component affectedComponent, Expression whereCompExpression){
-        IndexWhereVisitor whereVisitor = new IndexWhereVisitor(_cg.getQueryPlan(), affectedComponent, _schema, _tan);
+        IndexWhereVisitor whereVisitor = new IndexWhereVisitor(_cg.getQueryPlan(), affectedComponent, _schema, _pq.getTan());
         whereCompExpression.accept(whereVisitor);
         attachWhereClause(affectedComponent, whereVisitor.getSelectOperator());
     }
@@ -343,7 +340,7 @@ public class RuleOptimizer implements Optimizer {
     }
 
     private void earlyProjection(QueryPlan queryPlan) {
-        EarlyProjection early = new EarlyProjection(_schema, _tan);
+        EarlyProjection early = new EarlyProjection(_schema, _pq.getTan());
         early.operate(queryPlan);
     }
 

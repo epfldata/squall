@@ -2,12 +2,7 @@ package optimizers.cost;
 
 import components.DataSourceComponent;
 import components.EquiJoinComponent;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Table;
 import schema.Schema;
@@ -21,8 +16,6 @@ public class CostParallelismAssigner {
     private final Schema _schema;
     private final TableAliasName _tan;
     private final NameTranslator _nt = new NameTranslator();
-    private final String _dataPath;
-    private final String _extension;
     private final Map _map;
     private final Map<String, Expression> _compNamesAndExprs;
     private final Map<Set<String>, Expression> _compNamesOrExprs;
@@ -32,8 +25,6 @@ public class CostParallelismAssigner {
 
     public CostParallelismAssigner(Schema schema,
             TableAliasName tan,
-            String dataPath,
-            String extension,
             Map map,
             Map<String, Expression> compNamesAndExprs,
             Map<Set<String>, Expression> compNamesOrExprs,
@@ -42,8 +33,6 @@ public class CostParallelismAssigner {
 
         _schema = schema;
         _tan = tan;
-        _dataPath = dataPath;
-        _extension = extension;
         _map = map;
         _compNamesAndExprs = compNamesAndExprs;
         _compNamesOrExprs = compNamesOrExprs;
@@ -65,7 +54,7 @@ public class CostParallelismAssigner {
          *   and then proportionally assign parallelism.
          */
         NameComponentGenerator sourceCG = new NameComponentGenerator(_schema, _tan,
-                 _dataPath, _extension, _map, this, _compNamesAndExprs, _compNamesOrExprs, _globalCollect, _jte);
+                 _map, this, _compNamesAndExprs, _compNamesOrExprs, _globalCollect, _jte);
 
          List<OrderedCostParams> sourceCostParams = new ArrayList<OrderedCostParams>();
          long totalCardinality = 0;

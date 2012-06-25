@@ -19,7 +19,6 @@ import util.HierarchyExtractor;
 import util.NotFromMyBranchException;
 import util.ParserUtil;
 import util.TableAliasName;
-import visitors.jsql.PrintVisitor;
 
 
 public class NameJoinHashVisitor extends IndexJoinHashVisitor{

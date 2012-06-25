@@ -4,12 +4,7 @@ import components.Component;
 import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
-import operators.AggregateOperator;
-import operators.ChainOperator;
-import operators.DistinctOperator;
-import operators.Operator;
-import operators.ProjectOperator;
-import operators.SelectOperator;
+import operators.*;
 import predicates.Predicate;
 import visitors.OperatorVisitor;
 

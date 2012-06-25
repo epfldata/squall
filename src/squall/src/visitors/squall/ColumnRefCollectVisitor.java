@@ -1,15 +1,6 @@
 package visitors.squall;
 
-import expressions.Addition;
-import expressions.ColumnReference;
-import expressions.DateSum;
-import expressions.Division;
-import expressions.IntegerYearFromDate;
-import expressions.Multiplication;
-import expressions.StringConcatenate;
-import expressions.Subtraction;
-import expressions.ValueExpression;
-import expressions.ValueSpecification;
+import expressions.*;
 import java.util.ArrayList;
 import java.util.List;
 import visitors.ValueExpressionVisitor;
