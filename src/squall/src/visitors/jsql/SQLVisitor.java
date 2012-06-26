@@ -11,19 +11,22 @@ import net.sf.jsqlparser.expression.operators.relational.*;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.*;
+import util.JoinTablesExprs;
 import util.TableAliasName;
 
 public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVisitor, ItemsListVisitor {
-	private List<Table> _tables;
-        private List<Join> _joins;
+	private List<Table> _tableList;
+        private List<Join> _joinList;
         private List<SelectItem> _selectItems;
         private Expression _whereExpr;
+        
         private TableAliasName _tan;
+        private JoinTablesExprs _jte;
 
         // CUSTOM METHODS
 	public void visit(Select select) {
-            _tables = new ArrayList<Table>();
-            _joins = new ArrayList<Join>();
+            _tableList = new ArrayList<Table>();
+            _joinList = new ArrayList<Join>();
             _selectItems = new ArrayList<SelectItem>();
             _whereExpr = null;
             select.getSelectBody().accept(this);
@@ -31,24 +34,32 @@ public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVis
         
         public void doneVisiting() {
             //fill in tan
-            _tan = new TableAliasName(_tables);
+            _tan = new TableAliasName(_tableList);
+            
+            //create JoinTableExpr
+            //From a list of joins, create collection of elements like {R->{S, R.A=S.A}}
+            JoinTablesExprsVisitor jteVisitor = new JoinTablesExprsVisitor();
+            for(Join join: _joinList){
+                join.getOnExpression().accept(jteVisitor);
+            }
+            _jte = jteVisitor.getJoinTablesExp();
         }
 
         @Override
         public void visit(Table table) {
-            _tables.add(table);
+            _tableList.add(table);
 	}
 
         public void visit(Join join){
-            _joins.add(join);
+            _joinList.add(join);
         }
 
         public List<Table> getTableList(){
-            return _tables;
+            return _tableList;
         }
 
 	public List<Join> getJoinList() {
-            return _joins;
+            return _joinList;
 	}
 
         public List<SelectItem> getSelectItems(){
@@ -61,6 +72,10 @@ public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVis
         
         public TableAliasName getTan(){
             return _tan;
+        }
+        
+        public JoinTablesExprs getJte(){
+            return _jte;
         }
 
         // VISITOR DESIGN PATTERN

@@ -51,8 +51,8 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor{
 
     public List<ValueExpression> getExprs(){
         List<ValueExpression> veList = new ArrayList<ValueExpression>();
-        for(ValueExpression ve= _exprStack.pop();_exprStack.size()>0;){
-            veList.add(ve);
+        while(!_exprStack.isEmpty()){
+            veList.add(_exprStack.pop());
         }
         Collections.reverse(veList); // stack inverse the order of elements
         return veList;
@@ -107,7 +107,11 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor{
 
     @Override
     public void visit(Parenthesis prnths) {
-        prnths.getExpression().accept(this);
+        //ValueExpression tree contains information about precedence
+        //  this is why ValueExpression there is no ParenthesisValueExpression
+        if(!isRecognized(prnths)){
+            prnths.getExpression().accept(this);
+        }
     }
 
     @Override

@@ -7,6 +7,7 @@ import expressions.ValueExpression;
 import java.util.List;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.Function;
+import net.sf.jsqlparser.expression.Parenthesis;
 import net.sf.jsqlparser.expression.operators.arithmetic.Addition;
 import net.sf.jsqlparser.expression.operators.arithmetic.Division;
 import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
@@ -76,6 +77,13 @@ public class NameJoinHashVisitor extends IndexJoinHashVisitor{
         }
     }
 
+    @Override
+    public void visit(Parenthesis prnths) {
+        if(!isRecognized(prnths)){
+            //normal call to parent
+            super.visit(prnths);
+        }
+    }
 
     /*
      * returns true if an expression was found in tupleSchema

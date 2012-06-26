@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.Function;
+import net.sf.jsqlparser.expression.Parenthesis;
 import net.sf.jsqlparser.expression.operators.arithmetic.Addition;
 import net.sf.jsqlparser.expression.operators.arithmetic.Division;
 import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
@@ -35,6 +36,14 @@ public class NameSelectItemsVisitor extends IndexSelectItemsVisitor{
         _tan = tan;
         _tupleSchema = tupleSchema;
     }
+    
+    @Override
+    public void visit(Parenthesis prnths) {
+        if(!isRecognized(prnths)){
+            //normal call to parent
+            super.visit(prnths);
+        }
+    }    
 
     @Override
     public void visit(Addition adtn) {

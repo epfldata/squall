@@ -113,7 +113,9 @@ public class PrintVisitor implements ExpressionVisitor, ItemsListVisitor {
 
     @Override
     public void visit(Parenthesis prnths) {
+        _sb.append("(");
         prnths.getExpression().accept(this);
+        _sb.append(")");
     }
 
     //private visitor methods

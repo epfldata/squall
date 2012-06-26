@@ -42,4 +42,10 @@ public class ColumnNameType implements Serializable {
         hash = 97 * hash + (this._type != null ? this._type.hashCode() : 0);
         return hash;
     }
+    
+    @Override
+    public String toString(){
+        //return "<" + _name + ", " + _type + ">";
+        return _name;
+    }
 }

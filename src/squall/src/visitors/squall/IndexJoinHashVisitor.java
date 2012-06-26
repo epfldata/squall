@@ -6,10 +6,7 @@ import expressions.ColumnReference;
 import expressions.IntegerYearFromDate;
 import expressions.ValueExpression;
 import expressions.ValueSpecification;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
@@ -202,7 +199,8 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
         for(int i=0; i<numParams; i++){
             expressions.add(_exprStack.pop());
         }
-
+        Collections.reverse(expressions); // at the stack top is the lastly added VE
+        
         String fnName = function.getName();
         if(fnName.equalsIgnoreCase("EXTRACT_YEAR")){
             if(numParams != 1){

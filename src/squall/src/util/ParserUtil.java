@@ -10,7 +10,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.*;
-import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
@@ -483,6 +483,7 @@ public class ParserUtil {
         return result;
     }
 
+    //We couldn't change toString methods without invasion to JSQL classes
     public static String getStringExpr(Expression expr) {
         PrintVisitor printer = new PrintVisitor();
         expr.accept(printer);
@@ -498,7 +499,6 @@ public class ParserUtil {
     //we use this method for List<OrExpression> as well
     public static <T extends Expression> String getStringExpr(List<T> listExpr){
         StringBuilder sb = new StringBuilder();
-        sb.append("[");
         int size = listExpr.size();
         for(int i=0; i<size; i++){
             sb.append(getStringExpr(listExpr.get(i)));
@@ -507,7 +507,6 @@ public class ParserUtil {
                 sb.append(", ");
             }
         }
-        sb.append("]");
         return sb.toString();
     }
 
@@ -518,4 +517,42 @@ public class ParserUtil {
         return schema.getType(tableSchemaName, columnName);
     }
 
+       /*
+     * From a list of <NATIONNAME, StringConversion>
+     *   it creates a list of <N1.NATIONNAME, StringConversion>
+     */
+    public static List<ColumnNameType> createAliasedSchema(List<ColumnNameType> originalSchema, String aliasName) {
+        List<ColumnNameType> result = new ArrayList<ColumnNameType>();
+
+        for(ColumnNameType cnt: originalSchema){
+            String name = cnt.getName();
+            name = aliasName + "." + name;
+            TypeConversion tc = cnt.getType();
+            result.add(new ColumnNameType(name, tc));
+        }
+
+        return result;
+    }
+    
+    //has to be with instanceof because we don't want one more visitor
+    public static List<Expression> getSubExpressions(Expression expr){
+        List<Expression> result = new ArrayList<Expression>();
+        if(expr instanceof BinaryExpression){
+            BinaryExpression be = (BinaryExpression) expr;
+            result.add(be.getLeftExpression());
+            result.add(be.getRightExpression());
+        }else if(expr instanceof Parenthesis){
+            Parenthesis prnths = (Parenthesis) expr;
+            result.add(prnths.getExpression());
+        }else if(expr instanceof Function){
+            Function fun = (Function) expr;
+            ExpressionList params = fun.getParameters();
+            if(params != null){
+                result.addAll(params.getExpressions());
+            }
+        }else{
+            return null;
+        }
+        return result;
+    }
 }

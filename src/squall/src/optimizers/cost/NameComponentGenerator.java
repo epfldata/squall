@@ -21,10 +21,10 @@ import queryPlans.QueryPlan;
 import schema.ColumnNameType;
 import schema.Schema;
 import util.HierarchyExtractor;
-import util.JoinTablesExprs;
 import util.ParserUtil;
 import util.TableAliasName;
 import utilities.SystemParameters;
+import visitors.jsql.SQLVisitor;
 import visitors.squall.NameJoinHashVisitor;
 import visitors.squall.NameSelectItemsVisitor;
 import visitors.squall.NameWhereVisitor;
@@ -34,13 +34,13 @@ import visitors.squall.NameWhereVisitor;
  *   since we don't want multiple CG sharing the same copy of DataSourceComponent.
  */
 public class NameComponentGenerator implements ComponentGenerator{
-    private TableAliasName _tan;
+    private SQLVisitor _pq;
     private NameTranslator _nt = new NameTranslator();
 
+    private Map _map;
     private Schema _schema;
     private String _dataPath;
     private String _extension;
-    private Map _map;
 
     private QueryPlan _queryPlan = new QueryPlan();
     //List of Components which are already added throughEquiJoinComponent and OperatorComponent
@@ -61,32 +61,31 @@ public class NameComponentGenerator implements ComponentGenerator{
 
     //used for Projection
     private final ProjGlobalCollect _globalCollect;
-    private final JoinTablesExprs _jte;
 
     public NameComponentGenerator(Schema schema,
-            TableAliasName tan,
+            SQLVisitor pq,
             Map map,
             //called from CostOptimizer, which already has CostParallellismAssigner instantiated
             CostParallelismAssigner parAssigner,
             Map<String, Expression> compNamesAndExprs,
             Map<Set<String>, Expression> compNamesOrExprs,
-            ProjGlobalCollect globalCollect,
-            JoinTablesExprs jte){
+            ProjGlobalCollect globalCollect){
+        _pq = pq;
+        _map = map;
         _schema = schema;
-        _tan = tan;
+        
         _dataPath = SystemParameters.getString(map, "DIP_DATA_PATH");
         _extension = SystemParameters.getString(map, "DIP_EXTENSION");
-        _map = map;
+        
         _parAssigner = parAssigner;
 
         _fileEstimator = new ConfigSelectivityEstimator(map);
-        _selEstimator = new SelingerSelectivityEstimator(schema, tan);
+        _selEstimator = new SelingerSelectivityEstimator(schema, _pq.getTan());
 
         _compNamesAndExprs = compNamesAndExprs;
         _compNamesOrExprs = compNamesOrExprs;
 
         _globalCollect = globalCollect;
-        _jte = jte;
     }
 
     public CostParams getCostParameters(String componentName){
@@ -121,7 +120,7 @@ public class NameComponentGenerator implements ComponentGenerator{
     }
 
     private DataSourceComponent createAddDataSource(String tableCompName) {
-        String tableSchemaName = _tan.getSchemaName(tableCompName);
+        String tableSchemaName = _pq.getTan().getSchemaName(tableCompName);
         String sourceFile = tableSchemaName.toLowerCase();
 
         DataSourceComponent relation = new DataSourceComponent(
@@ -137,31 +136,14 @@ public class NameComponentGenerator implements ComponentGenerator{
      */
     private void createCompCost(DataSourceComponent source) {
         String compName = source.getName();
-        String schemaName = _tan.getSchemaName(compName);
+        String schemaName = _pq.getTan().getSchemaName(compName);
         CostParams costParams = new CostParams();
 
         costParams.setCardinality(_schema.getTableSize(schemaName));
         //schema is consisted of TableAlias.columnName
-        costParams.setSchema(createAliasedSchema(_schema.getTableSchema(schemaName), compName));
+        costParams.setSchema(ParserUtil.createAliasedSchema(_schema.getTableSchema(schemaName), compName));
                 
         _compCost.put(compName, costParams);
-    }
-
-    /*
-     * From a list of <NATIONNATE, StringConversion>
-     *   it creates a list of <N1.NATIONNAME, StringConversion>
-     */
-    private List<ColumnNameType> createAliasedSchema(List<ColumnNameType> originalSchema, String aliasName){
-        List<ColumnNameType> result = new ArrayList<ColumnNameType>();
-
-        for(ColumnNameType cnt: originalSchema){
-            String name = cnt.getName();
-            name = aliasName + "." + name;
-            TypeConversion tc = cnt.getType();
-            result.add(new ColumnNameType(name, tc));
-        }
-
-        return result;
     }
 
     /*
@@ -283,7 +265,7 @@ public class NameComponentGenerator implements ComponentGenerator{
 
         List<String> joinSchemaNames = new ArrayList<String>();
         for(String joinCompName: joinCompNames){
-            joinSchemaNames.add(_tan.getSchemaName(joinCompName));
+            joinSchemaNames.add(_pq.getTan().getSchemaName(joinCompName));
         }
         return joinSchemaNames;
     }
@@ -344,7 +326,7 @@ public class NameComponentGenerator implements ComponentGenerator{
     private void processWhereForComponent(Component affectedComponent, Expression whereCompExpression){
         //first get the current schema of the component
         List<ColumnNameType> tupleSchema = _compCost.get(affectedComponent.getName()).getSchema();
-        NameWhereVisitor whereVisitor = new NameWhereVisitor(_schema, _tan, tupleSchema);
+        NameWhereVisitor whereVisitor = new NameWhereVisitor(_schema, _pq.getTan(), tupleSchema);
         whereCompExpression.accept(whereVisitor);
         attachWhereClause(affectedComponent, whereVisitor.getSelectOperator());
     }
@@ -370,7 +352,7 @@ public class NameComponentGenerator implements ComponentGenerator{
     public void addProjectOperator(Component component){
         String compName = component.getName();
         List<ColumnNameType> tupleSchema = _compCost.get(compName).getSchema();
-        ProjSchemaCreator psc = new ProjSchemaCreator(_globalCollect, tupleSchema, component, _tan, _schema, _jte);
+        ProjSchemaCreator psc = new ProjSchemaCreator(_globalCollect, tupleSchema, component, _pq, _schema);
         psc.create();
 
         attachProjectOperator(component, psc.getProjectOperator());
@@ -394,7 +376,7 @@ public class NameComponentGenerator implements ComponentGenerator{
         //TODO: take care in nested case
         Component lastComponent = _queryPlan.getLastComponent();
         List<ColumnNameType> tupleSchema = _compCost.get(lastComponent.getName()).getSchema();
-        NameSelectItemsVisitor selectVisitor = new NameSelectItemsVisitor(_schema, _tan, tupleSchema, _map);
+        NameSelectItemsVisitor selectVisitor = new NameSelectItemsVisitor(_schema, _pq.getTan(), tupleSchema, _map);
         for(SelectItem elem: selectItems){
             elem.accept(selectVisitor);
         }
@@ -450,7 +432,7 @@ public class NameComponentGenerator implements ComponentGenerator{
     //  We don't want to hash on something which will be used to join with same later component in the hierarchy.
     private void addHash(Component component, List<Expression> joinCondition) {
         List<ColumnNameType> tupleSchema = _compCost.get(component.getName()).getSchema();
-        NameJoinHashVisitor joinOn = new NameJoinHashVisitor(_schema, _tan, tupleSchema, component);
+        NameJoinHashVisitor joinOn = new NameJoinHashVisitor(_schema, _pq.getTan(), tupleSchema, component);
         for(Expression exp: joinCondition){
             exp.accept(joinOn);
         }

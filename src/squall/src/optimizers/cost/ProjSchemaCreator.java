@@ -15,6 +15,8 @@ import schema.Schema;
 import util.JoinTablesExprs;
 import util.ParserUtil;
 import util.TableAliasName;
+import visitors.jsql.SQLVisitor;
+import visitors.jsql.SubExpressionVisitor;
 import visitors.squall.NameProjectVisitor;
 
 /*
@@ -39,13 +41,13 @@ public class ProjSchemaCreator {
     private List<ValueExpression> _veList;
 
     public ProjSchemaCreator(ProjGlobalCollect globalProject, List<ColumnNameType> inputTupleSchema, Component component, 
-            TableAliasName tan, Schema schema, JoinTablesExprs jte){
+            SQLVisitor pq, Schema schema){
 
         _globalProject = globalProject;
         _inputTupleSchema = inputTupleSchema;
-        _tan = tan;
+        _tan = pq.getTan();
         _schema = schema;
-        _jte = jte;
+        _jte = pq.getJte();
         _component = component;
 
         _npv = new NameProjectVisitor(_inputTupleSchema, _tan, _schema);
@@ -64,7 +66,7 @@ public class ProjSchemaCreator {
 
         //choose for which expressions we do projection, and create a schema out of that
         List<Expression> chosenExprs = chooseProjections(exprList);
-        _outputTupleSchema = createSchema(chooseProjections(chosenExprs));
+        _outputTupleSchema = createSchema(chosenExprs);
 
         //convert JSQL to Squall expressions
         _npv.visit(chosenExprs);
@@ -88,36 +90,9 @@ public class ProjSchemaCreator {
      *   add the appropriate subexpressions to _exprList
      */
     private void processGlobalExprs(List<Expression> exprList) {
-        for(Expression globalExpr: _globalProject.getExprList()){
-            String globalExprStr = ParserUtil.getStringExpr(globalExpr);
-
-            if(_nt.contains(_inputTupleSchema, globalExprStr)){
-                //check if I have the same expression from the inputTupleSchema
-                exprList.add(globalExpr);
-            }else{
-                List<Column> columns = ParserUtil.getJSQLColumns(globalExpr);
-
-                boolean isAllMine = true;
-                List<Column> mineColumns = new ArrayList<Column>();
-                for(Column column: columns){
-                    String exprStr = ParserUtil.getStringExpr(column);
-                    if(!_nt.contains(_inputTupleSchema, exprStr)){
-                        isAllMine = false;
-                    }else{
-                        mineColumns.add(column);
-                    }
-                }
-
-                //if I have all the columns, just add the expr to the schema
-                if(isAllMine){
-                    exprList.add(globalExpr);
-                }else{
-                    //add columns which are mine
-                    exprList.addAll(mineColumns);
-                }
-
-            }
-        }
+        SubExpressionVisitor sev = new SubExpressionVisitor(_nt, _inputTupleSchema);
+        sev.visit(_globalProject.getExprList());
+        exprList.addAll(sev.getExprs());
     }
 
     /*
@@ -131,6 +106,8 @@ public class ProjSchemaCreator {
             boolean isAllMine = true;
             List<Column> mineColumns = new ArrayList<Column>();
             for(Column column: columns){
+                //This is fine: in R component, if WHERE clause is (R.A + 2 = 10) or (S.A + 5 = 40)
+                //  we'll send R.A and 2 will be added ON R_S component
                 String exprStr = ParserUtil.getStringExpr(column);
                 if(!_nt.contains(_inputTupleSchema, exprStr)){
                     isAllMine = false;
@@ -164,7 +141,9 @@ public class ProjSchemaCreator {
         //joinExprs is a list of EqualsTo
         List<Expression> joinExprs = _jte.getExpressions(ancestorNames, otherCompNames);
 
-        //TODO: for now we only collect columns, we anyway don't have cardinality estimation for complex HashExpressions
+        //TODO(but fine): for now we only collect columns, we anyway don't have cardinality estimation for complex HashExpressions
+        //  In R component R.A + 4 = S.A, R.A is anyway in inputSchema
+        //          and in R.A = S.A + 4 we anyway don't care o RHS
         List<Column> columns = ParserUtil.getJSQLColumns(joinExprs);
         for(Column column: columns){
             String exprStr = ParserUtil.getStringExpr(column);
@@ -176,6 +155,12 @@ public class ProjSchemaCreator {
         }
     }
 
+    /*
+     * Expressions from exprList are all appeapring somewhere in the query plan
+     *   This method never can raise an exception, it can only cause suboptimality
+     *   For example, if inputTupleSchema is "R.A, R.A + R.B" in expression like (R.A + R.B) * S.C
+     *     then R.A + R.B will be in exprList (thanks to SubExpressionVisitor)
+     */
     private List<Expression> chooseProjections(List<Expression> exprList) {
         //colect all the columnNames from JSQL Column Expressions
         List<String> aloneColumnNames = getAloneColumnNames(exprList);

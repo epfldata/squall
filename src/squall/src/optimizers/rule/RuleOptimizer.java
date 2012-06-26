@@ -8,7 +8,6 @@ import java.util.*;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import operators.AggregateOperator;
 import operators.ProjectOperator;
@@ -25,7 +24,6 @@ import util.ParserUtil;
 import utilities.DeepCopy;
 import utilities.SystemParameters;
 import visitors.jsql.AndVisitor;
-import visitors.jsql.JoinTablesExprsVisitor;
 import visitors.jsql.SQLVisitor;
 import visitors.squall.IndexSelectItemsVisitor;
 import visitors.squall.IndexWhereVisitor;
@@ -80,17 +78,11 @@ public class RuleOptimizer implements Optimizer {
 
     private IndexComponentGenerator generateTableJoins() {
         List<Table> tableList = _pq.getTableList();
+        TableSelector ts = new TableSelector(tableList, _schema, _pq.getTan());
+        JoinTablesExprs jte = _pq.getJte();
         
         IndexComponentGenerator cg = new IndexComponentGenerator(_schema, _pq.getTan(), _map);
-        TableSelector ts = new TableSelector(tableList, _schema, _pq.getTan());
-
-        //From a list of joins, create collection of elements like {R->{S, R.A=S.A}}
-        JoinTablesExprsVisitor jteVisitor = new JoinTablesExprsVisitor();
-        for(Join join: _pq.getJoinList()){
-            join.getOnExpression().accept(jteVisitor);
-        }
-        JoinTablesExprs jte = jteVisitor.getJoinTablesExp();
-
+        
         //first phase
         //make high level pairs
         List<String> skippedBestTableNames = new ArrayList<String>();

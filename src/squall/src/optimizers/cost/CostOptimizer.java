@@ -7,7 +7,6 @@ import java.util.Set;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.select.Join;
 import optimizers.Optimizer;
 import queryPlans.QueryPlan;
 import schema.Schema;
@@ -16,7 +15,6 @@ import util.JoinTablesExprs;
 import util.ParserUtil;
 import utilities.SystemParameters;
 import visitors.jsql.AndVisitor;
-import visitors.jsql.JoinTablesExprsVisitor;
 import visitors.jsql.SQLVisitor;
 
 /*
@@ -47,20 +45,15 @@ public class CostOptimizer implements Optimizer {
         ProjGlobalCollect globalCollect = new ProjGlobalCollect(_pq.getSelectItems(), _pq.getWhereExpr());
         globalCollect.process();
 
-        //From a list of joins, create collection of elements like {R->{S, R.A=S.A}}
-        JoinTablesExprsVisitor jteVisitor = new JoinTablesExprsVisitor();
-        for(Join join: _pq.getJoinList()){
-            join.getOnExpression().accept(jteVisitor);
-        }
-        JoinTablesExprs jte = jteVisitor.getJoinTablesExp();
+        JoinTablesExprs jte = _pq.getJte();
 
 
         //INITIAL PARALLELISM has to be computed after previous lines, because they initialize some variables
         //DataSource component has to compute cardinality (WhereClause changes it)
         //  and to set up projections (globalCollect and jte)
         List<Table> tableList = _pq.getTableList();
-        CostParallelismAssigner parAssigner = new CostParallelismAssigner(_schema, _pq.getTan(),
-                 _map, _compNamesAndExprs, _compNamesOrExprs, globalCollect, jte);
+        CostParallelismAssigner parAssigner = new CostParallelismAssigner(_schema, _pq,
+                 _map, _compNamesAndExprs, _compNamesOrExprs, globalCollect);
         Map<String, Integer> sourceParallelism = parAssigner.getSourceParallelism(tableList, _totalSourcePar);
 
         return null;

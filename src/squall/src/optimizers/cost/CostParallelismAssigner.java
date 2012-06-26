@@ -6,39 +6,34 @@ import java.util.*;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Table;
 import schema.Schema;
-import util.JoinTablesExprs;
 import util.ParserUtil;
-import util.TableAliasName;
 import utilities.SystemParameters;
+import visitors.jsql.SQLVisitor;
 
 
 public class CostParallelismAssigner {
-    private final Schema _schema;
-    private final TableAliasName _tan;
-    private final NameTranslator _nt = new NameTranslator();
+    private final SQLVisitor _pq;
     private final Map _map;
+    private final Schema _schema;
+    private final NameTranslator _nt = new NameTranslator();
     private final Map<String, Expression> _compNamesAndExprs;
     private final Map<Set<String>, Expression> _compNamesOrExprs;
 
     private final ProjGlobalCollect _globalCollect;
-    private final JoinTablesExprs _jte;
 
     public CostParallelismAssigner(Schema schema,
-            TableAliasName tan,
+            SQLVisitor pq,
             Map map,
             Map<String, Expression> compNamesAndExprs,
             Map<Set<String>, Expression> compNamesOrExprs,
-            ProjGlobalCollect globalCollect,
-            JoinTablesExprs jte) {
-
+            ProjGlobalCollect globalCollect) {
+        _pq = pq;
         _schema = schema;
-        _tan = tan;
         _map = map;
         _compNamesAndExprs = compNamesAndExprs;
         _compNamesOrExprs = compNamesOrExprs;
 
         _globalCollect = globalCollect;
-        _jte = jte;
     }
 
     /*
@@ -53,8 +48,8 @@ public class CostParallelismAssigner {
          *   So we will generate all the sources witihin a fake sourceCG,
          *   and then proportionally assign parallelism.
          */
-        NameComponentGenerator sourceCG = new NameComponentGenerator(_schema, _tan,
-                 _map, this, _compNamesAndExprs, _compNamesOrExprs, _globalCollect, _jte);
+        NameComponentGenerator sourceCG = new NameComponentGenerator(_schema, _pq,
+                 _map, this, _compNamesAndExprs, _compNamesOrExprs, _globalCollect);
 
          List<OrderedCostParams> sourceCostParams = new ArrayList<OrderedCostParams>();
          long totalCardinality = 0;

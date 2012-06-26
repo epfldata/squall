@@ -138,6 +138,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
         for(int i=0; i<numParams; i++){
             expressions.add(_exprStack.pop());
         }
+        Collections.reverse(expressions); // at the stack top is the lastly added VE
 
         String fnName = function.getName();
         if(fnName.equalsIgnoreCase("SUM")){
