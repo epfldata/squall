@@ -20,15 +20,17 @@ import util.ParserUtil;
  *   AND can be built out of inputTupleSchema
  * For example, if visited expression is LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)
  *   and input schema is (LINEITEM.EXTENDEDPRICE, 1.0 - LINEITEM.DISCOUNT)
- *   _exprList will constis of a single expression LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)
+ *   _exprList will consist of a single expression LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)
+ * Other example: If in R component we have two expressions in inpuTupleSchema: "R.A + 4, 50", 
+ *   this class will return "R.A + 4" expression
  * Used in ProjSchemaCreator
  */
-public class SubExpressionVisitor implements ExpressionVisitor, ItemsListVisitor{
+public class MaxSubExpressionsVisitor implements ExpressionVisitor, ItemsListVisitor{
     private NameTranslator _nt;
     private List<ColumnNameType> _inputTupleSchema;
     private List<Expression> _exprList =  new ArrayList<Expression>();
     
-    public SubExpressionVisitor(NameTranslator nt, List<ColumnNameType> inputTupleSchema){
+    public MaxSubExpressionsVisitor(NameTranslator nt, List<ColumnNameType> inputTupleSchema){
         _nt = nt;
         _inputTupleSchema = inputTupleSchema;
     }
@@ -127,6 +129,52 @@ public class SubExpressionVisitor implements ExpressionVisitor, ItemsListVisitor
         }
     }    
     
+    //this is for WHERE clause and HASH
+    @Override
+    public void visit(AndExpression ae) {
+        visitBinaryOp(ae);
+    }
+
+    @Override
+    public void visit(OrExpression oe) {
+        visitBinaryOp(oe);
+    }    
+    
+    @Override
+    public void visit(EqualsTo et) {
+        visitBinaryOp(et);
+    }
+
+    @Override
+    public void visit(GreaterThan gt) {
+        visitBinaryOp(gt);
+    }
+
+    @Override
+    public void visit(GreaterThanEquals gte) {
+        visitBinaryOp(gte);
+    }    
+
+    @Override
+    public void visit(LikeExpression le) {
+        visitBinaryOp(le);
+    }
+
+    @Override
+    public void visit(MinorThan mt) {
+        visitBinaryOp(mt);
+    }
+
+    @Override
+    public void visit(MinorThanEquals mte) {
+        visitBinaryOp(mte);
+    }
+
+    @Override
+    public void visit(NotEqualsTo net) {
+        visitBinaryOp(net);
+    }
+    
     private boolean isRecognized(Expression expr){
         if(isAllSubsMine(expr)){
             //if the same expression exists in inputTupleSchema, add it to the output schema
@@ -138,10 +186,11 @@ public class SubExpressionVisitor implements ExpressionVisitor, ItemsListVisitor
     }
     
     /*
-     * This returns true if expr is availabe in inputTupleSchema, 
+     * This returns true if expr is available in inputTupleSchema, 
      *   or if all of its subexpressions are availabe in inputTupleSchema
+     *   so that expr can be built out of subexpressions and constants
      */
-    private boolean isAllSubsMine(Expression expr){
+    public boolean isAllSubsMine(Expression expr){
         String strExpr = ParserUtil.getStringExpr(expr);
         if(_nt.contains(_inputTupleSchema, strExpr)){
             return true;
@@ -152,9 +201,9 @@ public class SubExpressionVisitor implements ExpressionVisitor, ItemsListVisitor
             return false;
         }
         
-        //subExprs will be null if it's a constant
         List<Expression> subExprs = ParserUtil.getSubExpressions(expr);
         if(subExprs == null){
+            //constants - it can be built from my inputTupleSchema
             return true;
         }
         
@@ -168,7 +217,6 @@ public class SubExpressionVisitor implements ExpressionVisitor, ItemsListVisitor
         //all of subexpressions are mine
         return true;
     }
-    
     
     //not used
     @Override
@@ -197,32 +245,7 @@ public class SubExpressionVisitor implements ExpressionVisitor, ItemsListVisitor
     }
 
     @Override
-    public void visit(AndExpression ae) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void visit(OrExpression oe) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
     public void visit(Between btwn) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void visit(EqualsTo et) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void visit(GreaterThan gt) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void visit(GreaterThanEquals gte) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -233,26 +256,6 @@ public class SubExpressionVisitor implements ExpressionVisitor, ItemsListVisitor
 
     @Override
     public void visit(IsNullExpression ine) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void visit(LikeExpression le) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void visit(MinorThan mt) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void visit(MinorThanEquals mte) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void visit(NotEqualsTo net) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

@@ -534,7 +534,6 @@ public class ParserUtil {
         return result;
     }
     
-    //has to be with instanceof because we don't want one more visitor
     public static List<Expression> getSubExpressions(Expression expr){
         List<Expression> result = new ArrayList<Expression>();
         if(expr instanceof BinaryExpression){

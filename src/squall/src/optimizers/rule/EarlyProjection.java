@@ -99,7 +99,7 @@ public class EarlyProjection {
     }
 
     private void addToLevelCollection(Component component, int level) {
-        if(!(component instanceof DataSourceComponent)){
+        if(component.getParents() != null){
             CompPackage cp = new CompPackage(component, level);
             _cpList.add(cp);
         }
@@ -318,7 +318,7 @@ public class EarlyProjection {
     }
 
     private List<Integer> extractProjIndexesAfterBottomUp(Component comp){
-        if(comp instanceof DataSourceComponent){
+        if(comp.getParents() == null){
             return ParserUtil.extractColumnIndexes(comp.getChainOperator().getProjection().getExpressions());
         }else{
             return _compOldProj.get(comp);

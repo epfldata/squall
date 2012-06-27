@@ -4,7 +4,6 @@ import components.Component;
 import components.DataSourceComponent;
 import components.EquiJoinComponent;
 import components.OperatorComponent;
-import conversion.TypeConversion;
 import estimators.ConfigSelectivityEstimator;
 import estimators.SelingerSelectivityEstimator;
 import expressions.ValueExpression;
@@ -22,7 +21,6 @@ import schema.ColumnNameType;
 import schema.Schema;
 import util.HierarchyExtractor;
 import util.ParserUtil;
-import util.TableAliasName;
 import utilities.SystemParameters;
 import visitors.jsql.SQLVisitor;
 import visitors.squall.NameJoinHashVisitor;
@@ -438,8 +436,9 @@ public class NameComponentGenerator implements ComponentGenerator{
         }
         List<ValueExpression> hashExpressions = joinOn.getExpressions();
 
+        //if joinCondition is a R.A + 5 = S.A, and "R.A + 5" is in inputTupleSchema, this is NOT a complex condition
         if(!joinOn.isComplexCondition()){
-            //all the join conditions are represented through columns, no ValueExpression (neither in joined component)
+            //all the join conditions are represented through columns, no ValueExpression
             //guaranteed that both joined components will have joined columns visited in the same order
             //i.e R.A=S.A and R.B=S.B, the columns are (R.A, R.B), (S.A, S.B), respectively
             List<Integer> hashIndexes = ParserUtil.extractColumnIndexes(hashExpressions);
@@ -447,7 +446,7 @@ public class NameComponentGenerator implements ComponentGenerator{
             //hash indexes in join condition
             component.setHashIndexes(hashIndexes);
         }else{
-            //hahs expressions in join condition
+            //hash expressions in join condition
             component.setHashExpressions(hashExpressions);
         }
     }
