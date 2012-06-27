@@ -93,7 +93,7 @@ public class IndexComponentGenerator implements ComponentGenerator{
     //  but we have to filter who belongs to my branch in IndexJoinHashVisitor.
     //  We don't want to hash on something which will be used to join with same later component in the hierarchy.
     private void addHash(Component component, List<Expression> joinCondition) {
-            IndexJoinHashVisitor joinOn = new IndexJoinHashVisitor(_schema, _queryPlan, component, _tan);
+            IndexJoinHashVisitor joinOn = new IndexJoinHashVisitor(_schema, component, _tan);
             for(Expression exp: joinCondition){
                 exp.accept(joinOn);
             }

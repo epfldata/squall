@@ -33,7 +33,7 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
     }
 
     public double estimate(List<Expression> exprs){
-        //this is threated as a list of AndExpressions
+        //this is treated as a list of AndExpressions
         if(exprs.size() == 1){
             return estimate(exprs.get(0));
         }

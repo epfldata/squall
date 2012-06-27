@@ -35,7 +35,7 @@ public class NameSelectItemsVisitor extends IndexSelectItemsVisitor{
         _schema = schema;
         _tan = tan;
         _tupleSchema = tupleSchema;
-    }
+    }    
     
     @Override
     public void visit(Parenthesis prnths) {
@@ -174,4 +174,5 @@ public class NameSelectItemsVisitor extends IndexSelectItemsVisitor{
         ValueExpression ve = new ColumnReference(tc, position);
         pushToExprStack(ve);
     }
+
 }

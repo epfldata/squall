@@ -153,7 +153,7 @@ public class SimpleOptimizer implements Optimizer {
         
         //all the selection are performed on the last component
         Component affectedComponent = _cg.getQueryPlan().getLastComponent();
-        IndexWhereVisitor whereVisitor = new IndexWhereVisitor(_cg.getQueryPlan(), affectedComponent, _schema, _pq.getTan());
+        IndexWhereVisitor whereVisitor = new IndexWhereVisitor(affectedComponent, _schema, _pq.getTan());
         if(whereExpr != null){
             whereExpr.accept(whereVisitor);
             attachWhereClause(whereVisitor.getSelectOperator(), affectedComponent);

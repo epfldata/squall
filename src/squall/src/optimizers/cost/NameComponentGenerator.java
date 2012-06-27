@@ -380,39 +380,33 @@ public class NameComponentGenerator implements ComponentGenerator{
         }
         List<AggregateOperator> aggOps = selectVisitor.getAggOps();
         List<ValueExpression> groupByVEs = selectVisitor.getGroupByVEs();
+        List<Expression> groupByExprs = selectVisitor.getGroupByExprs();
 
-        attachSelectClause(lastComponent, aggOps, groupByVEs);
+        attachSelectClause(lastComponent, aggOps, groupByVEs, groupByExprs);
     }
 
-    private void attachSelectClause(Component lastComponent, List<AggregateOperator> aggOps, List<ValueExpression> groupByVEs) {
+    private void attachSelectClause(Component lastComponent, List<AggregateOperator> aggOps, List<ValueExpression> groupByVEs, List<Expression> groupByExprs) {
+        ProjectOperator project = new ProjectOperator(groupByVEs);
         if (aggOps.isEmpty()){
-            ProjectOperator project = new ProjectOperator(groupByVEs);
             lastComponent.addOperator(project);
         }else if (aggOps.size() == 1){
             //all the others are group by
             AggregateOperator firstAgg = aggOps.get(0);
-
-            if(ParserUtil.isAllColumnRefs(groupByVEs)){
-                //plain fields in select
-                List<Integer> groupByColumns = ParserUtil.extractColumnIndexes(groupByVEs);
-                firstAgg.setGroupByColumns(groupByColumns);
-
-                //Setting new level of components is necessary for correctness only for distinct in aggregates
-                    //  but it's certainly pleasant to have the final result grouped on nodes by group by columns.
-                boolean newLevel = !(_nt.isHashedBy(lastComponent, groupByColumns));
-                if(newLevel){
-                    lastComponent.setHashIndexes(groupByColumns);
-                    OperatorComponent newComponent = new OperatorComponent(lastComponent,
-                                                                      ParserUtil.generateUniqueName("OPERATOR"),
-                                                                      _queryPlan).addOperator(firstAgg);
-
-                }else{
-                    lastComponent.addOperator(firstAgg);
-                }
+            firstAgg.setGroupByProjection(project);
+            
+            if(firstAgg.getDistinct() == null){
+                lastComponent.addOperator(firstAgg);
             }else{
-                //on the last component there should be projection added before we add final aggregation
-                //  so we should not be here
-                throw new RuntimeException("It seems that projection on the last component has not do good job!");
+                //Setting new level of components is only necessary for distinct in aggregates
+                
+                //in general groupByVEs is not a ColumnReference (it can be an addition, for example). 
+                //  ProjectOperator is not obliged to create schema which fully fits in what FinalAggregation wants
+                addHash(lastComponent, groupByExprs);
+                OperatorComponent newComponent = new OperatorComponent(lastComponent,
+                                                                 ParserUtil.generateUniqueName("OPERATOR"),
+                                                                 _queryPlan).addOperator(firstAgg);    
+                //we can use the same firstAgg, because we no tupleSchema change occurred after LAST_COMPONENT:FinalAgg and NEW_COMPONENT:FinalAgg
+                //  Namely, NEW_COMPONENT has only FinalAgg operator
             }
         }else{
             throw new RuntimeException("For now only one aggregate function supported!");
@@ -426,7 +420,7 @@ public class NameComponentGenerator implements ComponentGenerator{
 
     //set hash for this component, knowing its position in the query plan.
     //  Conditions are related only to parents of join,
-    //  but we have to filter who belongs to my branch in IndexJoinHashVisitor.
+    //  but we have to filter who belongs to my branch in NameJoinHashVisitor.
     //  We don't want to hash on something which will be used to join with same later component in the hierarchy.
     private void addHash(Component component, List<Expression> joinCondition) {
         List<ColumnNameType> tupleSchema = _compCost.get(component.getName()).getSchema();
@@ -436,7 +430,8 @@ public class NameComponentGenerator implements ComponentGenerator{
         }
         List<ValueExpression> hashExpressions = joinOn.getExpressions();
 
-        //if joinCondition is a R.A + 5 = S.A, and "R.A + 5" is in inputTupleSchema, this is NOT a complex condition
+        //if joinCondition is a R.A + 5 = S.A, and inputTupleSchema is "R.A + 5", this is NOT a complex condition
+        //  HashExpression is a ColumnReference(0)
         if(!joinOn.isComplexCondition()){
             //all the join conditions are represented through columns, no ValueExpression
             //guaranteed that both joined components will have joined columns visited in the same order

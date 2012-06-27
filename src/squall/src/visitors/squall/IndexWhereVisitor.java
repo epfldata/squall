@@ -17,7 +17,6 @@ import net.sf.jsqlparser.statement.select.SubSelect;
 import operators.SelectOperator;
 import optimizers.IndexTranslator;
 import predicates.*;
-import queryPlans.QueryPlan;
 import schema.Schema;
 import util.ParserUtil;
 import util.TableAliasName;
@@ -32,7 +31,6 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 
     //all of these are necessary only for getColumnIndex in visitColumn method
     private Component _affectedComponent;
-    private QueryPlan _queryPlan;
     private Schema _schema;
     private TableAliasName _tan;
     private IndexTranslator _it;
@@ -46,8 +44,7 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
     private static DateConversion _dateConv = new DateConversion();
     private static StringConversion _sc = new StringConversion();
 
-    public IndexWhereVisitor(QueryPlan queryPlan, Component affectedComponent, Schema schema, TableAliasName tan){
-        _queryPlan = queryPlan;
+    public IndexWhereVisitor(Component affectedComponent, Schema schema, TableAliasName tan){
         _affectedComponent = affectedComponent;
         _schema = schema;
         _tan = tan;
@@ -278,7 +275,7 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
         TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
 
         //extract the position (index) of the required column
-        int position = _it.getColumnIndex(column, _affectedComponent, _queryPlan);
+        int position = _it.getColumnIndex(column, _affectedComponent);
 
         ValueExpression ve = new ColumnReference(tc, position);
         _exprStack.push(ve);

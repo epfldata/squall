@@ -312,7 +312,7 @@ public class RuleOptimizer implements Optimizer {
      * This is the only method in this class where IndexWhereVisitor is actually instantiated and invoked
      */
     private void processWhereForComponent(Component affectedComponent, Expression whereCompExpression){
-        IndexWhereVisitor whereVisitor = new IndexWhereVisitor(_cg.getQueryPlan(), affectedComponent, _schema, _pq.getTan());
+        IndexWhereVisitor whereVisitor = new IndexWhereVisitor(affectedComponent, _schema, _pq.getTan());
         whereCompExpression.accept(whereVisitor);
         attachWhereClause(affectedComponent, whereVisitor.getSelectOperator());
     }

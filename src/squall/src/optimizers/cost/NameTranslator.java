@@ -112,7 +112,7 @@ public class NameTranslator implements Translator{
 
     
     //non-used methods
-    public int getColumnIndex(Column column, Component requestor, QueryPlan queryPlan) {
+    public int getColumnIndex(Column column, Component requestor) {
         throw new UnsupportedOperationException("This method is not ment to be called from NameTranslator");
     }
 

@@ -35,7 +35,6 @@ import util.TableAliasName;
 public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor {
     //these are only used within visit(Column) method
     private Schema _schema;
-    private QueryPlan _queryPlan;
     private Component _affectedComponent;
     private TableAliasName _tan;
 
@@ -66,9 +65,8 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
     /*
      * affectedComponent is one of the parents of the join component
      */
-    public IndexJoinHashVisitor(Schema schema, QueryPlan queryPlan, Component affectedComponent, TableAliasName tan){
+    public IndexJoinHashVisitor(Schema schema, Component affectedComponent, TableAliasName tan){
         _schema = schema;
-        _queryPlan = queryPlan;
         _affectedComponent = affectedComponent;
         _tan = tan;
 
@@ -230,7 +228,7 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
             TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
 
             //extract the position (index) of the required column
-            int position = _it.getColumnIndex(column, _affectedComponent, _queryPlan);
+            int position = _it.getColumnIndex(column, _affectedComponent);
 
             ValueExpression ve = new ColumnReference(tc, position);
             _exprStack.push(ve);

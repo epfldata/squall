@@ -31,7 +31,6 @@ import util.TableAliasName;
 public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor, ItemsListVisitor{
     //all of these needed only for visit(Column) method
     private Schema _schema;
-    private QueryPlan _queryPlan;
     private Component _affectedComponent;
     private TableAliasName _tan;
     private IndexTranslator _it;
@@ -45,6 +44,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
     //these two are of interest for the invoker
     private List<AggregateOperator> _aggOps = new ArrayList<AggregateOperator>();
     private List<ValueExpression> _groupByVEs = new ArrayList<ValueExpression>();
+    private List<Expression> _groupByExprs = new ArrayList<Expression>();
 
     public static final int AGG = 0;
     public static final int NON_AGG = 1;
@@ -59,7 +59,6 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
     private static StringConversion _sc = new StringConversion();
 
     public IndexSelectItemsVisitor(QueryPlan queryPlan, Schema schema, TableAliasName tan, Map map){
-        _queryPlan = queryPlan;
         _schema = schema;
         _tan = tan;
         _map = map;
@@ -79,6 +78,10 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
     public List<ValueExpression> getGroupByVEs(){
         return _groupByVEs;
     }
+    
+    public List<Expression> getGroupByExprs() {
+        return _groupByExprs;
+    }    
 
     protected void pushToExprStack(ValueExpression ve){
         _exprStack.push(ve);
@@ -107,12 +110,14 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
     public void visit(SelectExpressionItem sei) {
         _exprStack = new Stack<ValueExpression>();
         _agg = null;
-        sei.getExpression().accept(this);
-        doneSingleItem();
+        Expression expr = sei.getExpression();
+        expr.accept(this);
+        doneSingleItem(expr);
     }
 
-    private void doneSingleItem(){
+    private void doneSingleItem(Expression expr){
         if(_agg == null){
+            _groupByExprs.add(expr);
             _groupByVEs.add(_exprStack.peek());
         }else{
             _aggOps.add(_agg);
@@ -264,7 +269,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
         TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
 
         //extract the position (index) of the required column
-        int position = _it.getColumnIndex(column, _affectedComponent, _queryPlan);
+        int position = _it.getColumnIndex(column, _affectedComponent);
 
         ValueExpression ve = new ColumnReference(tc, position);
         _exprStack.push(ve);

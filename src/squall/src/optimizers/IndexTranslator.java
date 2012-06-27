@@ -1,11 +1,11 @@
 package optimizers;
 
 import components.Component;
+import components.DataSourceComponent;
 import conversion.TypeConversion;
 import java.util.ArrayList;
 import java.util.List;
 import net.sf.jsqlparser.schema.Column;
-import queryPlans.QueryPlan;
 import schema.ColumnNameType;
 import schema.Schema;
 import util.ParserUtil;
@@ -67,16 +67,25 @@ public class IndexTranslator implements Translator{
     * tupleSchema is not used here (it's used for Cost-based optimizer,
     *   where each component updates the schema after each operator)
     */
-    public int getColumnIndex(Column column, Component requestor, QueryPlan queryPlan){
+    public int getColumnIndex(Column column, Component requestor){
         String columnName = column.getColumnName();
         String tblCompName = ParserUtil.getComponentName(column);
         String tableSchemaName = _tan.getSchemaName(tblCompName);
         List<ColumnNameType> columns = _schema.getTableSchema(tableSchemaName);
 
         int originalIndex = indexOf(columns, columnName);
-        Component originator = queryPlan.getComponent(tblCompName);
-
-        if (originator.equals(requestor)){
+        
+        //finding originator by name in the list of ancestors
+        List<DataSourceComponent> sources = requestor.getAncestorDataSources();
+        Component originator = null;
+        for(DataSourceComponent source: sources){
+            if (source.getName().equals(tblCompName)){
+                originator = source;
+                break;
+            }
+        }
+        
+        if (requestor.equals(originator)){
             return originalIndex;
         }else{
             return getChildIndex(originalIndex, originator, requestor);
