@@ -164,12 +164,17 @@ public class NameComponentGenerator implements ComponentGenerator{
         EquiJoinComponent joinComponent = createAndAddEquiJoin(left, right);
         createCompCost(joinComponent, joinCondition);
         
+        //set hashes for two parents
+        addHash(left, joinCondition);
+        addHash(right, joinCondition);
+        
         //operators
         addSelectOperator(joinComponent);
         addProjectOperator(joinComponent);
-        //set hashes for two parents, has to be after all the operators
-        addHash(left, joinCondition);
-        addHash(right, joinCondition);
+        if(ParserUtil.isFinalJoin(joinComponent, _pq)){
+            //final component in terms of joins
+            addFinalAgg(joinComponent);
+        }
 
         finalizeCompCost(joinComponent);
         //setting parallelism
@@ -268,7 +273,7 @@ public class NameComponentGenerator implements ComponentGenerator{
         return joinSchemaNames;
     }
 
-    public double computeHashSelectivity(String leftJoinTableSchemaName, String rightJoinTableSchemaName, 
+    private double computeHashSelectivity(String leftJoinTableSchemaName, String rightJoinTableSchemaName, 
             long leftCardinality, long rightCardinality, double rightSelectivity){
         long inputCardinality = leftCardinality + rightCardinality;
         double selectivity;
@@ -287,7 +292,7 @@ public class NameComponentGenerator implements ComponentGenerator{
     /*************************************************************************************
      * WHERE clause - SelectOperator
      *************************************************************************************/
-    public void addSelectOperator(Component component){
+    private void addSelectOperator(Component component){
         Expression whereCompExpr = createWhereForComponent(component);
 
         processWhereForComponent(component, whereCompExpr);
@@ -347,7 +352,7 @@ public class NameComponentGenerator implements ComponentGenerator{
     /*************************************************************************************
      * Project operator
      *************************************************************************************/
-    public void addProjectOperator(Component component){
+    private void addProjectOperator(Component component){
         String compName = component.getName();
         List<ColumnNameType> tupleSchema = _compCost.get(compName).getSchema();
         ProjSchemaCreator psc = new ProjSchemaCreator(_globalCollect, tupleSchema, component, _pq, _schema);
@@ -370,12 +375,11 @@ public class NameComponentGenerator implements ComponentGenerator{
     /*************************************************************************************
      * SELECT clause - Final aggregation
      *************************************************************************************/
-     public void addFinalAgg(List<SelectItem> selectItems) {
+     private void addFinalAgg(Component lastComponent) {
         //TODO: take care in nested case
-        Component lastComponent = _queryPlan.getLastComponent();
         List<ColumnNameType> tupleSchema = _compCost.get(lastComponent.getName()).getSchema();
         NameSelectItemsVisitor selectVisitor = new NameSelectItemsVisitor(_schema, _pq.getTan(), tupleSchema, _map);
-        for(SelectItem elem: selectItems){
+        for(SelectItem elem: _pq.getSelectItems()){
             elem.accept(selectVisitor);
         }
         List<AggregateOperator> aggOps = selectVisitor.getAggOps();
