@@ -48,13 +48,13 @@ public class CostOptimizer implements Optimizer {
         _globalCollect = new ProjGlobalCollect(_pq.getSelectItems(), _pq.getWhereExpr());
         _globalCollect.process();
 
+        double scallingFactor = SystemParameters.getDouble(_map, "DIP_DB_SIZE");
+        _schema = new TPCH_Schema(scallingFactor);
+        
         //in general there might be many NameComponentGenerators, 
         //  that's why CPA is computed before of NCG
         _parAssigner = new CostParallelismAssigner(_schema, _pq,
                  _map, _compNamesAndExprs, _compNamesOrExprs, _globalCollect);
-        
-        double scallingFactor = SystemParameters.getDouble(_map, "DIP_DB_SIZE");
-        _schema = new TPCH_Schema(scallingFactor);
     }
     
     public final void setSourceParallelism(int totalSourcePar){

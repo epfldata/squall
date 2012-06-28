@@ -31,7 +31,7 @@ public class ParserMain{
         SQLVisitor parsedQuery = pm.parseQuery(map);
         QueryPlan plan = pm.generatePlan(parsedQuery, map);
         
-        new Main(plan, map);    
+        new Main(plan, map); 
     }
     
     //String[] sizes: {"1G", "2G", "4G", ...}

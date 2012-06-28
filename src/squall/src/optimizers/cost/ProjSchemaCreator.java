@@ -34,6 +34,7 @@ public class ProjSchemaCreator {
     private final Schema _schema;
     private final JoinTablesExprs _jte; //used for getting joinCondition
     private final Component _component;
+    private final SQLVisitor _pq;
     private final NameProjectVisitor _npv;
 
     //output of this class
@@ -49,6 +50,7 @@ public class ProjSchemaCreator {
         _schema = schema;
         _jte = pq.getJte();
         _component = component;
+        _pq = pq;
 
         _npv = new NameProjectVisitor(_inputTupleSchema, _tan, _schema);
     }
@@ -63,7 +65,10 @@ public class ProjSchemaCreator {
         //each added expression is either present in inputTupleSchema, or can be built out of it
         processGlobalExprs(exprList);
         processGlobalOrs(exprList);
-        processHashes(exprList);
+        if(!ParserUtil.isFinalJoin(_component, _pq)){
+            //last component does not have hashes, because it's joined with noone
+            processHashes(exprList);
+        }
 
         //choose for which expressions we do projection, and create a schema out of that
         List<Expression> chosenExprs = chooseProjections(exprList);
