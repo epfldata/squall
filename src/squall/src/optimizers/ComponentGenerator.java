@@ -3,7 +3,6 @@ package optimizers;
 import components.Component;
 import components.DataSourceComponent;
 import java.util.List;
-import net.sf.jsqlparser.expression.Expression;
 import queryPlans.QueryPlan;
 
 
@@ -21,9 +20,8 @@ public interface ComponentGenerator {
 
     /*
      * Join between two components
-     * List<Expression> is a set of join conditions between two components.
      */
-    public Component generateEquiJoin(Component left, Component right, List<Expression> joinCondition);
+    public Component generateEquiJoin(Component left, Component right);
 
 
 }

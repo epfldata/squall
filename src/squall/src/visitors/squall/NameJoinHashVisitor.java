@@ -111,7 +111,7 @@ public class NameJoinHashVisitor extends IndexJoinHashVisitor{
     @Override
     public void visit(Column column) {
         String tableCompName = ParserUtil.getComponentName(column);
-        List<String> ancestorNames = HierarchyExtractor.getAncestorNames(_affectedComponent);
+        List<String> ancestorNames = ParserUtil.getSourceNameList(_affectedComponent);
 
         if(ancestorNames.contains(tableCompName)){
             //extract type for the column

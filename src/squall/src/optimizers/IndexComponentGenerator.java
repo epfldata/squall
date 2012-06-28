@@ -11,8 +11,8 @@ import net.sf.jsqlparser.expression.Expression;
 import queryPlans.QueryPlan;
 import schema.Schema;
 import util.ParserUtil;
-import util.TableAliasName;
 import utilities.SystemParameters;
+import visitors.jsql.SQLVisitor;
 import visitors.squall.IndexJoinHashVisitor;
 
 /*
@@ -20,7 +20,7 @@ import visitors.squall.IndexJoinHashVisitor;
  *   since we don't want multiple CG sharing the same copy of DataSourceComponent.
  */
 public class IndexComponentGenerator implements ComponentGenerator{
-    private TableAliasName _tan;
+    private SQLVisitor _pq;
 
     private Schema _schema;
     private String _dataPath;
@@ -31,9 +31,9 @@ public class IndexComponentGenerator implements ComponentGenerator{
     //List of Components which are already added throughEquiJoinComponent and OperatorComponent
     private List<Component> _subPlans = new ArrayList<Component>();
 
-    public IndexComponentGenerator(Schema schema, TableAliasName tan, Map map){
+    public IndexComponentGenerator(Schema schema, SQLVisitor pq, Map map){
         _schema = schema;
-        _tan = tan;
+        _pq = pq;
         _dataPath = SystemParameters.getString(map, "DIP_DATA_PATH");
         _extension = SystemParameters.getString(map, "DIP_EXTENSION");
     }
@@ -53,7 +53,7 @@ public class IndexComponentGenerator implements ComponentGenerator{
      */
     @Override
     public DataSourceComponent generateDataSource(String tableCompName){
-        String tableSchemaName = _tan.getSchemaName(tableCompName);
+        String tableSchemaName = _pq.getTan().getSchemaName(tableCompName);
         String sourceFile = tableSchemaName.toLowerCase();
 
         DataSourceComponent relation = new DataSourceComponent(
@@ -69,12 +69,15 @@ public class IndexComponentGenerator implements ComponentGenerator{
      * List<Expression> is a set of join conditions between two components.
      */
     @Override
-    public Component generateEquiJoin(Component left, Component right, List<Expression> joinCondition){
+    public Component generateEquiJoin(Component left, Component right){
         EquiJoinComponent joinComponent = new EquiJoinComponent(
                     left,
                     right,
                     _queryPlan);
 
+        //compute join condition
+        List<Expression> joinCondition = ParserUtil.getJoinCondition(_pq, left, right);
+        
         //set hashes for two parents
         addHash(left, joinCondition);
         addHash(right, joinCondition);
@@ -93,7 +96,7 @@ public class IndexComponentGenerator implements ComponentGenerator{
     //  but we have to filter who belongs to my branch in IndexJoinHashVisitor.
     //  We don't want to hash on something which will be used to join with same later component in the hierarchy.
     private void addHash(Component component, List<Expression> joinCondition) {
-            IndexJoinHashVisitor joinOn = new IndexJoinHashVisitor(_schema, component, _tan);
+            IndexJoinHashVisitor joinOn = new IndexJoinHashVisitor(_schema, component, _pq.getTan());
             for(Expression exp: joinCondition){
                 exp.accept(joinOn);
             }

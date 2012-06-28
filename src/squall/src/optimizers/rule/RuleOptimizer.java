@@ -81,7 +81,7 @@ public class RuleOptimizer implements Optimizer {
         TableSelector ts = new TableSelector(tableList, _schema, _pq.getTan());
         JoinTablesExprs jte = _pq.getJte();
         
-        IndexComponentGenerator cg = new IndexComponentGenerator(_schema, _pq.getTan(), _map);
+        IndexComponentGenerator cg = new IndexComponentGenerator(_schema, _pq, _map);
         
         //first phase
         //make high level pairs
@@ -104,8 +104,7 @@ public class RuleOptimizer implements Optimizer {
                     //we found a pair
                     DataSourceComponent bestSource = cg.generateDataSource(bestTableName);
                     DataSourceComponent bestPairedSource = cg.generateDataSource(bestPairedTable);
-                    List<Expression> joinCondition = jte.getExpressions(bestTableName, bestPairedTable);
-                    cg.generateEquiJoin(bestSource, bestPairedSource, joinCondition);
+                    cg.generateEquiJoin(bestSource, bestPairedSource);
                 }else{
                     //we have to keep this table for latter processing
                     skippedBestTableNames.add(bestTableName);
@@ -116,10 +115,6 @@ public class RuleOptimizer implements Optimizer {
         //second phase
         //join (2-way join components) with unused tables, until there is no more tables
         List<Component> subPlans = cg.getSubPlans();
-        LinkedHashMap<Component, List<String>> subPlanAncestors = new LinkedHashMap<Component, List<String>>();
-        for(Component comp: subPlans){
-            subPlanAncestors.put(comp, HierarchyExtractor.getAncestorNames(comp));
-        }
 
         /*
          * Why outer loop is unpairedTables, and inner is subPlans:
@@ -137,20 +132,10 @@ public class RuleOptimizer implements Optimizer {
             //that's why we have while outer loop
             for(String unpaired: unpairedTableNames){
                 boolean processed = false;
-                List<String> joinedWith = jte.getJoinedWith(unpaired);
-                for(Map.Entry<Component, List<String>> entry: subPlanAncestors.entrySet()){
-                    Component currentComp = entry.getKey();
-                    List<String> ancestors = entry.getValue();
-                    List<String> intersection = ParserUtil.getIntersection(joinedWith, ancestors);
-                    if(!intersection.isEmpty()){
-                        List<Expression> joinCondition = jte.getExpressions(unpaired, intersection);
+                for(Component currentComp: subPlans){
+                    if(_pq.getJte().joinExistsBetween(unpaired, ParserUtil.getSourceNameList(currentComp))){
                         DataSourceComponent unpairedSource = cg.generateDataSource(unpaired);
-                        Component newComp = cg.generateEquiJoin(currentComp, unpairedSource, joinCondition);
-
-                        //update subPlanAncestor
-                        subPlanAncestors.remove(currentComp);
-                        //an alternative is concatenation of ancestors + unpairedName
-                        subPlanAncestors.put(newComp, HierarchyExtractor.getAncestorNames(newComp));
+                        Component newComp = cg.generateEquiJoin(currentComp, unpairedSource);
 
                         processed = true;
                         break;
@@ -168,15 +153,12 @@ public class RuleOptimizer implements Optimizer {
         while(subPlans.size() > 1){
                 //this is joining of components having approximately the same number of ancestors - the same level
                 Component firstComp = subPlans.get(0);
-                List<String> firstAncestors = HierarchyExtractor.getAncestorNames(firstComp);
-                List<String> firstJoinedWith = jte.getJoinedWith(firstAncestors);
+                List<String> firstAncestors = ParserUtil.getSourceNameList(firstComp);
                 for(int i=1; i<subPlans.size(); i++){
                     Component otherComp = subPlans.get(i);
-                    List<String> otherAncestors = HierarchyExtractor.getAncestorNames(otherComp);
-                    List<String> intersection = ParserUtil.getIntersection(firstJoinedWith, otherAncestors);
-                    if(!intersection.isEmpty()){
-                        List<Expression> joinCondition = jte.getExpressions(firstAncestors, intersection);
-                        Component newComp = cg.generateEquiJoin(firstComp, otherComp, joinCondition);
+                    List<String> otherAncestors = ParserUtil.getSourceNameList(otherComp);
+                    if(_pq.getJte().joinExistsBetween(firstAncestors, otherAncestors)){
+                        Component newComp = cg.generateEquiJoin(firstComp, otherComp);
                         break;
                     }
                 }
@@ -335,6 +317,5 @@ public class RuleOptimizer implements Optimizer {
         EarlyProjection early = new EarlyProjection(_schema, _pq.getTan());
         early.operate(queryPlan);
     }
-
 
 }

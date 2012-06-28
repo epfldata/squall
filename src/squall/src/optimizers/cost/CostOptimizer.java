@@ -6,12 +6,10 @@ import java.util.Map;
 import java.util.Set;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
-import net.sf.jsqlparser.schema.Table;
 import optimizers.Optimizer;
 import queryPlans.QueryPlan;
 import schema.Schema;
 import schema.TPCH_Schema;
-import util.JoinTablesExprs;
 import util.ParserUtil;
 import utilities.SystemParameters;
 import visitors.jsql.AndVisitor;
@@ -26,37 +24,54 @@ public class CostOptimizer implements Optimizer {
     private Schema _schema;
     private SQLVisitor _pq;
     private Map _map; //map is updates in place
-    private int _totalSourcePar;
+    
+    private CostParallelismAssigner _parAssigner;
+    private ProjGlobalCollect _globalCollect;
 
     private HashMap<String, Expression> _compNamesAndExprs = new HashMap<String, Expression>();
     private HashMap<Set<String>, Expression> _compNamesOrExprs = new HashMap<Set<String>, Expression>();
     
-    public CostOptimizer(SQLVisitor pq, Map map, int totalSourcePar){
+    public CostOptimizer(SQLVisitor pq, Map map){
         _pq = pq;
         _map = map;
-        _totalSourcePar = totalSourcePar;
+        init();
+    }
+    
+    public CostOptimizer(SQLVisitor pq, Map map, int totalSourcePar){
+        this(pq, map);
+        setSourceParallelism(totalSourcePar);
+    }    
+    
+    private void init(){
+        //we need to compute cardinalities (WHERE clause) before instantiating CPA
+        processWhereClause(_pq.getWhereExpr());
+        _globalCollect = new ProjGlobalCollect(_pq.getSelectItems(), _pq.getWhereExpr());
+        _globalCollect.process();
+
+        //in general there might be many NameComponentGenerators, 
+        //  that's why CPA is computed before of NCG
+        _parAssigner = new CostParallelismAssigner(_schema, _pq,
+                 _map, _compNamesAndExprs, _compNamesOrExprs, _globalCollect);
         
-        double scallingFactor = SystemParameters.getDouble(map, "DIP_DB_SIZE");
+        double scallingFactor = SystemParameters.getDouble(_map, "DIP_DB_SIZE");
         _schema = new TPCH_Schema(scallingFactor);
     }
+    
+    public final void setSourceParallelism(int totalSourcePar){
+        //for the same _parAssigner, we might try with different totalSourcePar
+        _parAssigner.computeSourcePar(totalSourcePar);
+    }    
 
-    public QueryPlan generate() {
-        processWhereClause(_pq.getWhereExpr());
-        ProjGlobalCollect globalCollect = new ProjGlobalCollect(_pq.getSelectItems(), _pq.getWhereExpr());
-        globalCollect.process();
-
-        JoinTablesExprs jte = _pq.getJte();
-
-
-        //INITIAL PARALLELISM has to be computed after previous lines, because they initialize some variables
-        //DataSource component has to compute cardinality (WhereClause changes it)
-        //  and to set up projections (globalCollect and jte)
-        List<Table> tableList = _pq.getTableList();
-        CostParallelismAssigner parAssigner = new CostParallelismAssigner(_schema, _pq,
-                 _map, _compNamesAndExprs, _compNamesOrExprs, globalCollect);
-        Map<String, Integer> sourceParallelism = parAssigner.getSourceParallelism(tableList, _totalSourcePar);
-
-        return null;
+    public QueryPlan generate() {   
+        NameComponentGenerator cg = generateEmptyCG();
+        
+        return cg.getQueryPlan();
+    }
+    
+    //can be useful when manually specifying the order of joins
+    public NameComponentGenerator generateEmptyCG(){
+        return new NameComponentGenerator(_schema, _pq,
+                 _map, _parAssigner, _compNamesAndExprs, _compNamesOrExprs, _globalCollect);
     }
 
     

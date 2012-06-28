@@ -47,8 +47,9 @@ public class NameComponentGenerator implements ComponentGenerator{
     //compName, CostParams for all the components from _queryPlan
     private Map<String, CostParams> _compCost =  new HashMap<String, CostParams>();
 
-    //needed because NameComponentGenerator creates parallelism for EquiJoinComponent
+    //needed because NameComponentGenerator sets parallelism for all the components
     private final CostParallelismAssigner _parAssigner;
+    private boolean _isForSourcesOnly = false; //instantiated from CostParallelismAssigner
 
     private ConfigSelectivityEstimator _fileEstimator;
     private SelingerSelectivityEstimator _selEstimator;
@@ -85,6 +86,19 @@ public class NameComponentGenerator implements ComponentGenerator{
 
         _globalCollect = globalCollect;
     }
+    
+    public NameComponentGenerator(Schema schema,
+            SQLVisitor pq,
+            Map map,
+            //called from CostOptimizer, which already has CostParallellismAssigner instantiated
+            CostParallelismAssigner parAssigner,
+            Map<String, Expression> compNamesAndExprs,
+            Map<Set<String>, Expression> compNamesOrExprs,
+            ProjGlobalCollect globalCollect,
+            boolean isForSourcesOnly){
+        this(schema, pq, map, parAssigner, compNamesAndExprs, compNamesOrExprs, globalCollect);
+        _isForSourcesOnly = isForSourcesOnly;
+    }    
 
     public CostParams getCostParameters(String componentName){
         return _compCost.get(componentName);
@@ -113,6 +127,11 @@ public class NameComponentGenerator implements ComponentGenerator{
         addProjectOperator(source);
 
         finalizeCompCost(source);
+        
+        //setting parallelism if this is not used for determining source parallelism
+        if(!_isForSourcesOnly){
+            _parAssigner.setParallelism(source, _compCost);
+        }
 
         return source;
     }
@@ -160,8 +179,12 @@ public class NameComponentGenerator implements ComponentGenerator{
      * List<Expression> is a set of join conditions between two components.
      */
     @Override
-    public Component generateEquiJoin(Component left, Component right, List<Expression> joinCondition){
+    public Component generateEquiJoin(Component left, Component right){
         EquiJoinComponent joinComponent = createAndAddEquiJoin(left, right);
+        
+        //compute join condition
+        List<Expression> joinCondition = ParserUtil.getJoinCondition(_pq, left, right);
+        
         createCompCost(joinComponent, joinCondition);
         
         //set hashes for two parents
@@ -262,8 +285,7 @@ public class NameComponentGenerator implements ComponentGenerator{
      * joinCompNames - all the component names from the join condition corresponding to parent
      */
     private List<String> getJoinSchemaNames(List<String> allJoinCompNames, Component parent) {
-        List<DataSourceComponent> ancestorComps = parent.getAncestorDataSources();
-        List<String> ancestors = ParserUtil.getSourceNameList(ancestorComps);
+        List<String> ancestors = ParserUtil.getSourceNameList(parent);
         List<String> joinCompNames = ParserUtil.getIntersection(allJoinCompNames, ancestors);
 
         List<String> joinSchemaNames = new ArrayList<String>();
@@ -325,13 +347,18 @@ public class NameComponentGenerator implements ComponentGenerator{
     /*
      * whereCompExpression is the part of WHERE clause which refers to affectedComponent
      * This is the only method in this class where IndexWhereVisitor is actually instantiated and invoked
+     * 
+     * SelectOperator is able to deal with ValueExpressions (and not only with ColumnReferences),
+     *   but here we recognize JSQL expressions here which can be built of inputTupleSchema (constants included)
      */
-    private void processWhereForComponent(Component affectedComponent, Expression whereCompExpression){
-        //first get the current schema of the component
-        List<ColumnNameType> tupleSchema = _compCost.get(affectedComponent.getName()).getSchema();
-        NameWhereVisitor whereVisitor = new NameWhereVisitor(_schema, _pq.getTan(), tupleSchema);
-        whereCompExpression.accept(whereVisitor);
-        attachWhereClause(affectedComponent, whereVisitor.getSelectOperator());
+    private void processWhereForComponent(Component affectedComponent, Expression whereCompExpr){
+        if(whereCompExpr != null){
+            //first get the current schema of the component
+            List<ColumnNameType> tupleSchema = _compCost.get(affectedComponent.getName()).getSchema();
+            NameWhereVisitor whereVisitor = new NameWhereVisitor(_schema, _pq.getTan(), tupleSchema);
+            whereCompExpr.accept(whereVisitor);
+            attachWhereClause(affectedComponent, whereVisitor.getSelectOperator());
+        }
     }
 
     private void attachWhereClause(Component affectedComponent, SelectOperator select) {
@@ -339,13 +366,15 @@ public class NameComponentGenerator implements ComponentGenerator{
     }
 
     private void processWhereCost(Component component, Expression whereCompExpr) {
-        //this is going to change selectivity
-        String compName = component.getName();
-        CostParams costParams = _compCost.get(compName);
-        double previousSelectivity = costParams.getSelectivity();
+        if(whereCompExpr != null){
+            //this is going to change selectivity
+            String compName = component.getName();
+            CostParams costParams = _compCost.get(compName);
+            double previousSelectivity = costParams.getSelectivity();
 
-        double selectivity = previousSelectivity * _selEstimator.estimate(whereCompExpr);
-        costParams.setSelectivity(selectivity);
+            double selectivity = previousSelectivity * _selEstimator.estimate(whereCompExpr);
+            costParams.setSelectivity(selectivity);
+        }
     }
 
 
@@ -354,12 +383,17 @@ public class NameComponentGenerator implements ComponentGenerator{
      *************************************************************************************/
     private void addProjectOperator(Component component){
         String compName = component.getName();
-        List<ColumnNameType> tupleSchema = _compCost.get(compName).getSchema();
-        ProjSchemaCreator psc = new ProjSchemaCreator(_globalCollect, tupleSchema, component, _pq, _schema);
+        List<ColumnNameType> inputTupleSchema = _compCost.get(compName).getSchema();
+        ProjSchemaCreator psc = new ProjSchemaCreator(_globalCollect, inputTupleSchema, component, _pq, _schema);
         psc.create();
 
-        attachProjectOperator(component, psc.getProjectOperator());
-        processProjectCost(component, psc.getOutputSchema());
+        List<ColumnNameType> outputTupleSchema = psc.getOutputSchema();
+        
+        if(!ParserUtil.isSameSchema(inputTupleSchema, outputTupleSchema)){
+            //no need to add projectOperator unless it changes something
+            attachProjectOperator(component, psc.getProjectOperator());
+            processProjectCost(component, outputTupleSchema);
+        }
     }
 
     private void attachProjectOperator(Component component, ProjectOperator project){

@@ -17,6 +17,7 @@ import optimizers.rule.RuleParallelismAssigner;
 import queryPlans.QueryPlan;
 import schema.Schema;
 import schema.TPCH_Schema;
+import util.JoinTablesExprs;
 import util.ParserUtil;
 import utilities.DeepCopy;
 import utilities.SystemParameters;
@@ -65,7 +66,7 @@ public class SimpleOptimizer implements Optimizer {
         List<Table> tableList = _pq.getTableList();
         List<Join> joinList = _pq.getJoinList();
         
-        IndexComponentGenerator cg = new IndexComponentGenerator(_schema, _pq.getTan(), _map);
+        IndexComponentGenerator cg = new IndexComponentGenerator(_schema, _pq, _map);
         Component firstParent = cg.generateDataSource(ParserUtil.getComponentName(tableList.get(0)));
 
         //a special case
@@ -76,8 +77,7 @@ public class SimpleOptimizer implements Optimizer {
         // This generates a lefty query plan.
         for(int i=0; i<joinList.size(); i++){
             DataSourceComponent secondParent = cg.generateDataSource(ParserUtil.getComponentName(tableList.get(i+1)));
-            List<Expression> currentJoinCondition = ParserUtil.createListExp(joinList.get(i).getOnExpression());
-            firstParent = cg.generateEquiJoin(firstParent, secondParent, currentJoinCondition);
+            firstParent = cg.generateEquiJoin(firstParent, secondParent);
         }
         return cg;
     }

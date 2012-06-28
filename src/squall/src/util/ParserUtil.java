@@ -157,18 +157,20 @@ public class ParserUtil {
         return getComponentName(column);
     }
 
-    public static Set<String> getSourceNameSet(List<DataSourceComponent> components){
+    public static Set<String> getSourceNameSet(Component component){
+        List<DataSourceComponent> sources = component.getAncestorDataSources();
         Set<String> compNames = new HashSet<String>();
-        for(Component component: components){
-            compNames.add(component.getName());
+        for(DataSourceComponent source: sources){
+            compNames.add(source.getName());
         }
         return compNames;
     }
 
-    public static List<String> getSourceNameList(List<DataSourceComponent> components){
+    public static List<String> getSourceNameList(Component component){
+        List<DataSourceComponent> sources = component.getAncestorDataSources();
         List<String> compNames = new ArrayList<String>();
-        for(Component component: components){
-            compNames.add(component.getName());
+        for(DataSourceComponent source: sources){
+            compNames.add(source.getName());
         }
         return compNames;
     }    
@@ -355,15 +357,18 @@ public class ParserUtil {
     }
 
     /*
-     * append each expr to the corresponding componentName
-     * componentName is the key for collocatedExprs
+     * append each expr to the corresponding componentName.
+     * componentName is the key for collocatedExprs.
      */
     public static void addAndExprsToComps(Map<String, Expression> collocatedExprs,
             List<Expression> exprs) {
 
         for(Expression expr: exprs){
+            //first we determine which component it belongs to
+            //  In "R.A = S.A AND T.A = 4", "R.A = S.A" is not WHERE clause, it's a join condition
             List<Column> columns = getJSQLColumns(expr);
             String componentName = getComponentName(columns.get(0).getTable());
+            
             addAndExprToComp(collocatedExprs, expr, componentName);
         }
 
@@ -562,7 +567,19 @@ public class ParserUtil {
      */
     public static boolean isFinalJoin(EquiJoinComponent joinComponent, SQLVisitor _pq) {
         Set<String> allSources = new HashSet<String>(_pq.getTan().getComponentNames());
-        Set<String> actuallPlanSources = getSourceNameSet(joinComponent.getAncestorDataSources());
+        Set<String> actuallPlanSources = getSourceNameSet(joinComponent);
         return allSources.equals(actuallPlanSources);
+    }
+
+    public static boolean isSameSchema(List<ColumnNameType> listSchema1, List<ColumnNameType> listSchema2) {
+        Set<ColumnNameType> setSchema1 = new HashSet<ColumnNameType>(listSchema1);
+        Set<ColumnNameType> setSchema2 = new HashSet<ColumnNameType>(listSchema2);
+        return setSchema1.equals(setSchema2);
+    }
+
+    public static List<Expression> getJoinCondition(SQLVisitor _pq, Component left, Component right) {
+        List<String> leftAncestors = ParserUtil.getSourceNameList(left);
+        List<String> rightAncestors = ParserUtil.getSourceNameList(right);
+        return _pq.getJte().getExpressions(leftAncestors, rightAncestors);
     }
 }
