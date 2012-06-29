@@ -50,7 +50,7 @@ public abstract class BasicStore<R> implements Serializable {
 		} else {
 			this._baos.reset();
 		}
-		this.printStore(this._ps);
+		this.printStore(this._ps, true);
 		return this._baos.toString();
 	}
 	
@@ -63,5 +63,5 @@ public abstract class BasicStore<R> implements Serializable {
 	public abstract Object onRemove();
 	public abstract void reset();
 	public abstract boolean equals(BasicStore store);
-	public abstract void printStore(PrintStream stream);
+	public abstract void printStore(PrintStream stream, boolean printStorage);
 }

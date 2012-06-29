@@ -52,6 +52,18 @@ public class StorageManager<R> implements Serializable {
 			f.mkdir();
 	}
 
+	public String[] getGroupIds() {
+		File directory = new File(rootDir);
+		// Get file names ending with .ssf in rootDir
+		return directory.list(new FilenameFilter() {
+						@Override
+						public boolean accept(File dir, String name) {
+        						return name.endsWith(".ssf");
+ 						}
+				      });
+
+	}
+
 	private void deleteAllFilesRootDir() {
 		File directory = new File(rootDir);
 		// Get file ending with .ssf in rootDir

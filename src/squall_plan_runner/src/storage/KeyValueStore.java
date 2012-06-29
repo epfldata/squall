@@ -182,7 +182,6 @@ public class KeyValueStore<K, V> extends BasicStore {
 				V value1 = iterator.next();
 				V value2 = storeValues.get(index);
 				if (value1 instanceof Number) {
-					System.out.println("Value1= " + value1 + " / Value2= " + value2);
 					if (value1 != value2) {
 						if (Math.abs(((Number)value1).floatValue() - ((Number)value2).floatValue()) > 0.0001)
 							return false;
@@ -198,7 +197,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 	}
 	
 	@Override	
-	public void printStore(PrintStream stream) {
+	public void printStore(PrintStream stream, boolean printStorage) {
 		Set<K> keys = this._memstore.keySet();
 		for (Iterator<K> it = keys.iterator(); it.hasNext(); ) {
 			K key = it.next();

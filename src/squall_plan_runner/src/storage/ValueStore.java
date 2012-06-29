@@ -69,7 +69,7 @@ public class ValueStore<V> extends KeyValueStore {
 	}
 	
 	@Override	
-	public void printStore(PrintStream stream) {	
+	public void printStore(PrintStream stream, boolean printStorage) {	
 		stream.println("----------------------------------------");
 		stream.println("          PRINTING STORE: " + this.getUniqId());
 		Set<V> values = super.keySet();

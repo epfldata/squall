@@ -91,8 +91,8 @@ public class AggregationStorage<V> extends KeyValueStore<String, V> {
 	}
 
 	@Override
-	public void printStore(PrintStream stream) {
-		super.printStore(stream);
+	public void printStore(PrintStream stream, boolean printStorage) {
+		super.printStore(stream, printStorage);
 	}
 	
 	// FIXME --> check that this works from storage
