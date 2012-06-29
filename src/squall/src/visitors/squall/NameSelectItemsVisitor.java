@@ -129,7 +129,7 @@ public class NameSelectItemsVisitor extends IndexSelectItemsVisitor{
         if(position != -1){
             //we found an expression already in the tuple schema
             TypeConversion tc = _nt.getType(_tupleSchema, strExpr);
-            ValueExpression ve = new ColumnReference(tc, position);
+            ValueExpression ve = new ColumnReference(tc, position, strExpr);
             pushToExprStack(ve);
             return true;
         }else{
@@ -152,7 +152,7 @@ public class NameSelectItemsVisitor extends IndexSelectItemsVisitor{
         if(position != -1){
             //we found an expression already in the tuple schema
             TypeConversion tc = _nt.getType(_tupleSchema, strExpr);
-            ValueExpression ve = new ColumnReference(tc, position);
+            ValueExpression ve = new ColumnReference(tc, position, strExpr);
             pushToExprStack(ve);
             return true;
         }else{
@@ -171,7 +171,7 @@ public class NameSelectItemsVisitor extends IndexSelectItemsVisitor{
         //extract the position (index) of the required column
         int position = _nt.getColumnIndex(column, _tupleSchema);
 
-        ValueExpression ve = new ColumnReference(tc, position);
+        ValueExpression ve = new ColumnReference(tc, position, ParserUtil.getFullAliasedName(column));
         pushToExprStack(ve);
     }
 

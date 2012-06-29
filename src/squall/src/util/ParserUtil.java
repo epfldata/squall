@@ -22,10 +22,12 @@ import operators.ChainOperator;
 import operators.Operator;
 import optimizers.ComponentGenerator;
 import optimizers.cost.CostParams;
+import optimizers.cost.NameComponentGenerator;
 import queryPlans.QueryPlan;
 import schema.ColumnNameType;
 import schema.Schema;
 import utilities.MyUtilities;
+import utilities.SystemParameters;
 import visitors.jsql.ColumnCollectVisitor;
 import visitors.jsql.PrintVisitor;
 import visitors.jsql.SQLVisitor;
@@ -45,6 +47,20 @@ public class ParserUtil {
             return nameBase + "0";
         }
      }
+     
+    /*
+     * JSQL printing
+     */
+    public static void printParsedQuery(SQLVisitor pq){
+        for(Table table: pq.getTableList()){
+            String tableStr = ParserUtil.toString(table);
+            System.out.println(tableStr);
+        }
+        for(Join join: pq.getJoinList()){
+            String joinStr = ParserUtil.toString(join);
+            System.out.println(joinStr);
+        }
+    }     
 
      public static String toString(Table table){
         return table.getWholeTableName();
@@ -83,13 +99,47 @@ public class ParserUtil {
         String joinStr = joinSB.toString();
         return joinStr;
     }
+     
+    //We couldn't change toString methods without invasion to JSQL classes
+    public static String getStringExpr(Expression expr) {
+        PrintVisitor printer = new PrintVisitor();
+        expr.accept(printer);
+        return printer.getString();
+    }
 
+    public static String getStringExpr(ExpressionList params) {
+        PrintVisitor printer = new PrintVisitor();
+        params.accept(printer);
+        return printer.getString();
+    }
+    
+    //we use this method for List<OrExpression> as well
+    public static <T extends Expression> String getStringExpr(List<T> listExpr){
+        StringBuilder sb = new StringBuilder();
+        int size = listExpr.size();
+        for(int i=0; i<size; i++){
+            sb.append(getStringExpr(listExpr.get(i)));
+            if(i != size - 1){
+                //not the last element
+                sb.append(", ");
+            }
+        }
+        return sb.toString();
+    }     
+
+    /*
+     * Squall query plan printing - Indexes
+     */    
     public static void printQueryPlan(QueryPlan queryPlan) {
         StringBuilder sb = new StringBuilder("QUERY PLAN");
         for(Component comp: queryPlan.getPlan()){
             sb.append("\n\nComponent ").append(comp.getName());
 
-            sb.append("\n").append(comp.getChainOperator());
+            ChainOperator chain = comp.getChainOperator();
+            if(!chain.isEmpty()){
+                sb.append("\n").append(chain);
+            }
+            
             if(comp.getHashIndexes()!=null && !comp.getHashIndexes().isEmpty()){
                 sb.append("\n HashIndexes: ").append(listToStr(comp.getHashIndexes()));
             }
@@ -97,6 +147,7 @@ public class ParserUtil {
                 sb.append("\n HashExpressions: ").append(listToStr(comp.getHashExpressions()));
             }
         }
+        sb.append("\n\nEND of QUERY PLAN\n\n");
         System.out.println(sb.toString());
     }
 
@@ -490,33 +541,6 @@ public class ParserUtil {
         return result;
     }
 
-    //We couldn't change toString methods without invasion to JSQL classes
-    public static String getStringExpr(Expression expr) {
-        PrintVisitor printer = new PrintVisitor();
-        expr.accept(printer);
-        return printer.getString();
-    }
-
-    public static String getStringExpr(ExpressionList params) {
-        PrintVisitor printer = new PrintVisitor();
-        params.accept(printer);
-        return printer.getString();
-    }
-    
-    //we use this method for List<OrExpression> as well
-    public static <T extends Expression> String getStringExpr(List<T> listExpr){
-        StringBuilder sb = new StringBuilder();
-        int size = listExpr.size();
-        for(int i=0; i<size; i++){
-            sb.append(getStringExpr(listExpr.get(i)));
-            if(i != size - 1){
-                //not the last element
-                sb.append(", ");
-            }
-        }
-        return sb.toString();
-    }
-
     public static TypeConversion getColumnType(Column column, TableAliasName tan, Schema schema) {
         String tableCompName = ParserUtil.getComponentName(column);
         String tableSchemaName = tan.getSchemaName(tableCompName);
@@ -581,5 +605,13 @@ public class ParserUtil {
         List<String> leftAncestors = ParserUtil.getSourceNameList(left);
         List<String> rightAncestors = ParserUtil.getSourceNameList(right);
         return _pq.getJte().getExpressions(leftAncestors, rightAncestors);
+    }
+
+    public static void parallelismToMap(NameComponentGenerator cg, Map _map) {
+        for(Component comp: cg.getQueryPlan().getPlan()){
+            String compName = comp.getName();
+            int parallelism = cg.getCostParameters(compName).getParallelism();
+            SystemParameters.putInMap(_map, compName + "_PAR", parallelism);
+        }
     }
 }

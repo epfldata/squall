@@ -139,8 +139,12 @@ public class ChainOperator implements Operator {
         }
     }    
     
-    private int size(){
+    public int size(){
         return _operators.size();
+    }
+    
+    public boolean isEmpty(){
+        return size() == 0;
     }
 
     @Override

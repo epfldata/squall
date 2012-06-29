@@ -1,5 +1,6 @@
 package main;
 
+import components.DataSourceComponent;
 import java.io.StringReader;
 import java.util.Map;
 import net.sf.jsqlparser.JSQLParserException;
@@ -9,6 +10,8 @@ import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.Select;
 import optimizers.Optimizer;
+import optimizers.cost.CostOptimizer;
+import optimizers.cost.NameComponentGenerator;
 import optimizers.rule.RuleOptimizer;
 import queryPlans.QueryPlan;
 import util.ParserUtil;
@@ -23,7 +26,7 @@ public class ParserMain{
 
     private final static String sqlExtension = ".sql";
 
-    public static void main(String[] args){
+    public static void main(String[] args){        
         String parserConfPath = args[0];
         ParserMain pm = new ParserMain();
         
@@ -31,7 +34,7 @@ public class ParserMain{
         SQLVisitor parsedQuery = pm.parseQuery(map);
         QueryPlan plan = pm.generatePlan(parsedQuery, map);
         
-        new Main(plan, map); 
+        new Main(plan, map);
     }
     
     //String[] sizes: {"1G", "2G", "4G", ...}
@@ -99,7 +102,7 @@ public class ParserMain{
         return ParserUtil.readStringFromFile(sqlPath);
     }    
 
-    private QueryPlan generatePlan(SQLVisitor pq, Map map){
+    public QueryPlan generatePlan(SQLVisitor pq, Map map){
         //Simple optimizer provides lefty plans
         //Optimizer opt = new SimpleOpt(pq, map);
         //Dynamic programming query plan
@@ -108,14 +111,4 @@ public class ParserMain{
         return opt.generate();
     }
     
-    public static void printParsedQuery(SQLVisitor pq){
-        for(Table table: pq.getTableList()){
-            String tableStr = ParserUtil.toString(table);
-            System.out.println(tableStr);
-        }
-        for(Join join: pq.getJoinList()){
-            String joinStr = ParserUtil.toString(join);
-            System.out.println(joinStr);
-        }
-    }
 }

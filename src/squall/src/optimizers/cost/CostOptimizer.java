@@ -1,5 +1,6 @@
 package optimizers.cost;
 
+import components.Component;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +66,8 @@ public class CostOptimizer implements Optimizer {
     public QueryPlan generate() {   
         NameComponentGenerator cg = generateEmptyCG();
         
+        //for the one which is returned, parallelism has to be set in _map
+        ParserUtil.parallelismToMap(cg, _map);
         return cg.getQueryPlan();
     }
     

@@ -12,9 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import operators.AggregateAvgOperator.SumCount;
-import storage.BasicStore;
-import storage.AggregationStorage;
 import org.apache.log4j.Logger;
+import storage.AggregationStorage;
+import storage.BasicStore;
 import utilities.MyUtilities;
 import visitors.OperatorVisitor;
 

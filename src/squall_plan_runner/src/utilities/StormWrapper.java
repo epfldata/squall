@@ -70,7 +70,7 @@ public class StormWrapper {
             conf.setNumAckers(numAckers);
 
             conf.setFallBackOnJavaSerialization(false);
-            cluster = new LocalCluster();
+            LocalCluster cluster = new LocalCluster();
             startTime = System.currentTimeMillis();
             cluster.submitTopology(topologyName, conf, builder.createTopology());
         }
@@ -87,8 +87,6 @@ public class StormWrapper {
     }
     
     // all the staff below are only for local execution
-    private static LocalCluster cluster;
-
     private static void localKillCluster(Map conf, String topologyName){
     	long endTime = System.currentTimeMillis();
         LOG.info("Running time (sec):" + ((endTime - startTime) / 1000));
