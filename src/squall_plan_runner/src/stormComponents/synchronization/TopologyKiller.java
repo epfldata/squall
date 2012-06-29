@@ -63,9 +63,12 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
             //  WHEN ALL THE TASKS FROM THE LAST COMPONENTS SENT EOF SIGNAL
             // Instrument all the components for which printOut is set to dump their results
             _collector.emit(SystemParameters.DUMP_RESULTS_STREAM, new Values(SystemParameters.DUMP_RESULTS));
-            //write down statistics (the same which is shown in Storm UI web interface)
+            
+            long timeout = SystemParameters.LOCAL_SLEEP_BEFORE_KILL_MILLIS;
             if(SystemParameters.getBoolean(_conf, "DIP_DISTRIBUTED")){
+                //write down statistics (the same which is shown in Storm UI web interface)
                 StormWrapper.writeStats(_conf);
+                timeout = SystemParameters.CLUSTER_SLEEP_BEFORE_KILL_MILLIS;
             }
             if(SystemParameters.getBoolean(_conf, "DIP_KILL_AT_THE_END")){
                 /*  Give enough time to dump the results
@@ -74,7 +77,7 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
                 *    Spouts cannot send ack to other spout (TopologyKiller spout).
                 *    They use EOF boolean to indicate when done.
                 */
-                Utils.sleep(SystemParameters.SLEEP_BEFORE_KILL_MILLIS);
+                Utils.sleep(timeout);
                 StormWrapper.killExecution(_conf);
             }
 

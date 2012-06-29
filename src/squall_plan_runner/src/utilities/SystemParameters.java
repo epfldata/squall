@@ -32,8 +32,9 @@ public class SystemParameters{
     public static final long EOF_TIMEOUT_MILLIS = 1000;
     // Period between figuring out code is finished and
     //   killing the execution
-    // used for both local and clustered mode execution
-    public static final long SLEEP_BEFORE_KILL_MILLIS = 2000;
+    // In Local Mode needed more time because we also need to compare results (LocalMergeResults)
+    public static final long LOCAL_SLEEP_BEFORE_KILL_MILLIS = 4000;
+    public static final long CLUSTER_SLEEP_BEFORE_KILL_MILLIS = 2000;
 
     //DO NOT MODIFY OR MOVE ANYWHERE ELSE. THESE ARE NOT CONFIGURATION VARIABLES
     public static final String DATA_STREAM = Utils.DEFAULT_STREAM_ID; /* "default" */
