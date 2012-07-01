@@ -19,7 +19,7 @@ then
    exit
 fi
 
-../$STORMNAME/bin/storm jar ../deploy/squall-2.0-standalone.jar main.Main $CONFIG_PATH
+../$STORMNAME/bin/storm jar ../deploy/squall-2.0-standalone.jar plan_runner.main.Main $CONFIG_PATH
 
 
 
