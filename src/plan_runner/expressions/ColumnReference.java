@@ -43,8 +43,7 @@ public class ColumnReference<T extends Comparable<T>> implements ValueExpression
 
     @Override
     public String evalString(List<String> tuple) {
-         T value = eval(tuple);
-         return _wrapper.toString(value);
+        return tuple.get(_columnIndex);
     }
 
     @Override

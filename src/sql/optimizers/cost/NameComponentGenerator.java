@@ -179,17 +179,17 @@ public class NameComponentGenerator implements ComponentGenerator{
      * List<Expression> is a set of join conditions between two components.
      */
     @Override
-    public Component generateEquiJoin(Component left, Component right){
+    public EquiJoinComponent generateEquiJoin(Component left, Component right){
         EquiJoinComponent joinComponent = createAndAddEquiJoin(left, right);
         
         //compute join condition
         List<Expression> joinCondition = ParserUtil.getJoinCondition(_pq, left, right);
         
-        createCompCost(joinComponent, joinCondition);
-        
-        //set hashes for two parents
+        //set hashes for two parents, has to be before createCompCost
         addHash(left, joinCondition);
-        addHash(right, joinCondition);
+        addHash(right, joinCondition);        
+        
+        createCompCost(joinComponent, joinCondition);
         
         //operators
         addSelectOperator(joinComponent);

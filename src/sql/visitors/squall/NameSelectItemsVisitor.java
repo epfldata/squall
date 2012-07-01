@@ -15,6 +15,7 @@ import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
 import net.sf.jsqlparser.expression.operators.arithmetic.Subtraction;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.schema.Column;
+import plan_runner.conversion.StringConversion;
 import sql.optimizers.cost.NameTranslator;
 import sql.schema.ColumnNameType;
 import sql.schema.Schema;
@@ -28,6 +29,8 @@ public class NameSelectItemsVisitor extends IndexSelectItemsVisitor{
     private NameTranslator _nt = new NameTranslator();
 
     private List<ColumnNameType> _tupleSchema;
+    
+    private final static StringConversion _sc = new StringConversion();
 
     public NameSelectItemsVisitor(Schema schema, TableAliasName tan, List<ColumnNameType> tupleSchema, Map map){
         super(map);
@@ -166,8 +169,15 @@ public class NameSelectItemsVisitor extends IndexSelectItemsVisitor{
     @Override
     public void visit(Column column) {
         //extract type for the column
-        TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
+        //TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
 
+        //TODO: Due to the fact that Project prepares columns for FinalAgg on last component
+        //        and that for SUM or COUNT we are not going to this method (recognize is true),
+        //        this method is invoked only for GroupByProjections as the top level method.
+        //      That is, we can safely assume StringConversion method.
+        //      Permanent fix is to create StringConversion over overallAggregation.
+        TypeConversion tc = _sc;
+        
         //extract the position (index) of the required column
         int position = _nt.getColumnIndex(column, _tupleSchema);
 

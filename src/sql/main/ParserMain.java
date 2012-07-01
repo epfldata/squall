@@ -8,6 +8,7 @@ import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Select;
+import plan_runner.components.Component;
 import sql.optimizers.Optimizer;
 import sql.optimizers.cost.CostOptimizer;
 import sql.optimizers.cost.NameComponentGenerator;
@@ -24,8 +25,8 @@ public class ParserMain{
     private static int LOCAL_ACKERS = 1;
 
     private final static String sqlExtension = ".sql";
-
-    public static void main(String[] args){        
+ 
+    public static void main(String[] args){     
         String parserConfPath = args[0];
         ParserMain pm = new ParserMain();
         
@@ -34,7 +35,7 @@ public class ParserMain{
         QueryPlan plan = pm.generatePlan(parsedQuery, map);
         
         new Main(plan, map);
-    }
+    }    
     
     //String[] sizes: {"1G", "2G", "4G", ...}
     public Map createConfig(String parserConfPath){

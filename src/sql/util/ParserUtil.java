@@ -529,12 +529,12 @@ public class ParserUtil {
         //******************** similar to MyUtilities.createOutputTuple
         List<ColumnNameType> outputSchema = new ArrayList<ColumnNameType>();
 
-        for (int j = 0; j < leftSchema.size(); j++){ // add all elements of the first relation (R)
-            outputSchema.add(leftSchema.get(j));
+        for (int i = 0; i < leftSchema.size(); i++){ // add all elements of the first relation (R)
+            outputSchema.add(leftSchema.get(i));
         }
-        for (int j = 0; j < rightSchema.size(); j++) { // now add those
-            if((rightHashIndexes == null) || (!rightHashIndexes.contains(j))){ //if does not exits add the column!! (S)
-                outputSchema.add(rightSchema.get(j));
+        for (int i = 0; i < rightSchema.size(); i++) { // now add those
+            if((rightHashIndexes == null) || (!rightHashIndexes.contains(i))){ //if does not exits add the column!! (S)
+                outputSchema.add(rightSchema.get(i));
             }
         }
         return outputSchema;

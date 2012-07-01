@@ -8,11 +8,10 @@ package plan_runner.conversion;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import plan_runner.utilities.MyUtilities;
-
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
+import plan_runner.utilities.MyUtilities;
 
 public class DateConversion implements TypeConversion<Date>{
     private static final long serialVersionUID = 1L;
