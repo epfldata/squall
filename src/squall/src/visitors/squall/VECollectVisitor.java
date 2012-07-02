@@ -4,11 +4,7 @@ import components.Component;
 import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
-import operators.AggregateOperator;
-import operators.DistinctOperator;
-import operators.Operator;
-import operators.ProjectOperator;
-import operators.SelectOperator;
+import operators.*;
 import predicates.Predicate;
 import visitors.OperatorVisitor;
 
@@ -42,7 +38,7 @@ public class VECollectVisitor implements OperatorVisitor {
 
         List<Operator> operators = component.getChainOperator().getOperators();
         for(Operator op: operators){
-            visit(op);
+            op.accept(this);
         }
     }
 
@@ -86,26 +82,9 @@ public class VECollectVisitor implements OperatorVisitor {
     }
 
     @Override
-    public void visit(Operator op){
-        //List<Operator> is visited, thus we have to do conversion to the specific type
-        //TODO alternative is to use methods such as
-        //  visit(Operator operator, Class SelectOperator.class), but this is also not very nice
-        //   not fixed in Java7, methods are invoked by its static type
-        //   The best way is to add visit method to all the operators, and then just call op.accept(this) here
-        if (op instanceof SelectOperator){
-            SelectOperator selection = (SelectOperator) op;
-            visit(selection);
-        }else if(op instanceof DistinctOperator){
-            DistinctOperator distinct = (DistinctOperator) op;
-            visit(distinct);
-        }else if(op instanceof ProjectOperator){
-            ProjectOperator projection = (ProjectOperator) op;
-            visit(projection);
-        }else if(op instanceof AggregateOperator){
-            AggregateOperator agg = (AggregateOperator) op;
-            visit(agg);
-        }else{
-            throw new RuntimeException("Should not be here in operator!");
+    public void visit(ChainOperator chain){
+        for(Operator op: chain.getOperators()){
+            op.accept(this);
         }
     }
 

@@ -61,7 +61,7 @@ public class ValueSpecification<T extends Comparable<T>> implements ValueExpress
     @Override
     public String toString(){
         StringBuilder sb = new StringBuilder();
-        sb.append("ValueSpecification - constant ").append(_constant.toString());
+        sb.append("Constant ").append(_constant.toString());
         return sb.toString();
     }
 

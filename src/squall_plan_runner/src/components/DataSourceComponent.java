@@ -91,7 +91,7 @@ public class DataSourceComponent implements Component {
     }
 
     @Override
-    public DataSourceComponent setBatchOutputMode(long millis){
+    public DataSourceComponent setBatchOutputMillis(long millis){
         _batchOutputMillis = millis;
         return this;
     }
@@ -118,15 +118,10 @@ public class DataSourceComponent implements Component {
         MyUtilities.checkBatchOutput(_batchOutputMillis, _chain.getAggregation(), conf);
 
         _dataSource = new StormDataSource(
-                _componentName,
+                this,
                 allCompNames,
                _inputPath,
-               _hashIndexes,
-               _hashExpressions,
-               _chain,
                hierarchyPosition,
-               _printOut,
-               _batchOutputMillis,
                parallelism,
                builder,
                killer,
@@ -179,6 +174,16 @@ public class DataSourceComponent implements Component {
     @Override
     public String getInfoID() {
         return _dataSource.getInfoID() + "\n";
+    }
+
+    @Override
+    public boolean getPrintOut() {
+        return _printOut;
+    }
+
+    @Override
+    public long getBatchOutputMillis() {
+        return _batchOutputMillis;
     }
     
     @Override

@@ -2,7 +2,6 @@ DIP_DISTRIBUTED false
 DIP_QUERY_NAME theta_multiple_join
 DIP_TOPOLOGY_NAME_PREFIX username
 DIP_TOPOLOGY_NAME ThetaMultipleJoinSimple
-DIP_NUM_PARALLELISM 5
 DIP_NUM_ACKERS 0
 
 DIP_DATA_PATH ../testing/data/tpch/0.01G/
@@ -33,3 +32,10 @@ PARTSUPP_CARD 50
 
 LINEITEM_ORDERS_CARD 50
 SUPPLIER_PARTSUPP_CARD 50
+
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_DIP_DIR /export/home/iklonatos/storage 
+STORAGE_COLD_START true

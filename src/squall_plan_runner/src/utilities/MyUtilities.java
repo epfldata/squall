@@ -188,41 +188,6 @@ public class MyUtilities{
             return topologyName;
         }
 
-
-    /*
-     * Method for creating joinParams (R.A=S.B) out of hashIndexes from the emitters from above.
-     * If hash of R are fields 3,7 and out of S are 2,4, the final result is (3, 2, 7, 4)
-     */
-    public static List<Integer> combineHashIndexes(StormEmitter firstEmitter, StormEmitter secondEmitter) {
-        List<Integer> hash1 = firstEmitter.getHashIndexes();
-        List<Integer> hash2 = secondEmitter.getHashIndexes();
-
-        if(hash1 == null || hash2 == null){
-            // they are using hashExpressions only, no need for creating joinParams
-            //   which is used for saving the space
-            return null;
-        }
-
-        // check whether they are of eqaul size
-        int hash1size = hash1.size();
-        int hash2size = hash2.size();
-        if(hash1size!=hash2size){
-            throw new RuntimeException("Hash index size mismatch between " +
-                    firstEmitter.getName() + " and " + secondEmitter.getName());
-        }
-
-        // take one HashIndex from each emitter at a time
-        List<Integer> result = new ArrayList<Integer>();
-        for(int i=0; i<2*hash1size; i++){
-            if(i % 2 == 0){
-                result.add(hash1.get(i/2));
-            }else{
-                result.add(hash2.get(i/2));
-            }
-        }
-        return result;
-    }
-
     public static List<String> createOutputTuple(List<String> firstTuple, List<String> secondTuple, List<Integer> joinParams) {
         List<String> outputTuple = new ArrayList<String>();
 
@@ -230,7 +195,7 @@ public class MyUtilities{
             outputTuple.add(firstTuple.get(j));
         }
         for (int j = 0; j < secondTuple.size(); j++) { // now add those
-            if((joinParams == null) || (!joinIndexExist(joinParams, j, 1))){ //if does not exits add the column!! (S)
+            if((joinParams == null) || (!joinParams.contains(j))){ //if does not exits add the column!! (S)
                 outputTuple.add(secondTuple.get(j));
             }
         }
@@ -249,30 +214,6 @@ public class MyUtilities{
         return outputTuple;
     }
 
-
-    private static boolean joinIndexExist(List<Integer> joinParams, int joinIndex, int beginIndex){
-        boolean exists=false;
-	for (int i = beginIndex; i < joinParams.size(); i++){
-            if(joinParams.get(i)==joinIndex){
-                exists=true;
-                break;
-            }
-            i++;
-	}
-	return exists;
-    }
-
-   	public static boolean joinIndexExist(int[] joinParams, int joinIndex, int beginIndex){
-		boolean exists=false;
-		for (int i = beginIndex; i < joinParams.length; i++) {
-			if(joinParams[i]==joinIndex){
-                            exists=true;
-                            break;
-                        }
-			i++;
-		}
-		return exists;
-	}
 
         /* For each emitter component (there are two input emitters for each join),
          *   appropriately connect with all of its inner Components that emits tuples to StormDestinationJoin.
@@ -349,7 +290,14 @@ public class MyUtilities{
         //if this is false, we have a specific mechanism to ensure all the tuples are fully processed
         //  it is based on CustomStreamGrouping
         public static boolean isAckEveryTuple(Map map){
-            return (SystemParameters.getInt(map, "DIP_NUM_ACKERS") > 0);
+            int ackers;
+            if(!SystemParameters.isExisting(map, "DIP_NUM_ACKERS")){
+                //number of ackers is defined in storm.yaml
+                ackers = SystemParameters.DEFAULT_NUM_ACKERS;
+            }else{
+                ackers = SystemParameters.getInt(map, "DIP_NUM_ACKERS");
+            }
+            return (ackers > 0);
         }
 
         public static boolean isFinalAck(List<String> tuple, Map map){

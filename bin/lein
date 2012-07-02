@@ -1,7 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-LEIN_VERSION="1.6.1.1"
-export LEIN_VERSION
+export LEIN_VERSION="1.7.1"
 
 case $LEIN_VERSION in
     *SNAPSHOT) SNAPSHOT="YES" ;;
@@ -33,15 +32,25 @@ do
 done
 
 if [ "$LEIN_HOME" = "" ]; then
-    LEIN_HOME="$HOME/.lein"
+  if [ -d "$PWD/.lein" ] && [ "$PWD" != "$HOME" ]; then
+    echo "Leiningen is running in bundled mode."
+    export LEIN_HOME="$PWD/.lein"
+  else
+    export LEIN_HOME="$HOME/.lein"
+  fi
 fi
 
-DEV_PLUGINS="$(ls -1 lib/dev/*jar 2> /dev/null)"
+DEV_PLUGINS="$(ls -1 lib/dev/*jar .lein-plugins/*jar 2> /dev/null)"
 USER_PLUGINS="$(ls -1 "$LEIN_HOME"/plugins/*jar 2> /dev/null)"
 
 artifact_name () {
-    echo "$1" | sed -e "s/.*\/\(.*\)/\1/" | \
-        rev | sed -e "s/raj[-[:digit:].]*-\(.*\)/\1/" | rev
+    which rev > /dev/null
+    if [ $? -eq 0 ]; then
+        echo "$1" | sed -e "s/.*\/\(.*\)/\1/" | \
+            rev | sed -e "s/raj[-[:digit:].]*-\(.*\)/\1/" | rev
+    else
+        echo "$1"
+    fi
 }
 
 unique_user_plugins () {
@@ -67,14 +76,14 @@ unique_user_plugins () {
 
 LEIN_PLUGIN_PATH="$(echo "$DEV_PLUGINS" | tr \\n :)"
 LEIN_USER_PLUGIN_PATH="$(echo "$(unique_user_plugins)" | tr \\n :)"
-CLASSPATH="$CLASSPATH:$LEIN_PLUGIN_PATH:$LEIN_USER_PLUGIN_PATH:test/:src/"
-LEIN_JAR="$HOME/.lein/self-installs/leiningen-$LEIN_VERSION-standalone.jar"
+CLASSPATH="$CLASSPATH:$LEIN_PLUGIN_PATH:$LEIN_USER_PLUGIN_PATH:test/:src/:resources/"
+LEIN_JAR="$LEIN_HOME/self-installs/leiningen-$LEIN_VERSION-standalone.jar"
 CLOJURE_JAR="$HOME/.m2/repository/org/clojure/clojure/1.2.1/clojure-1.2.1.jar"
 NULL_DEVICE=/dev/null
 
 # apply context specific CLASSPATH entries
-if [ -f .classpath ]; then
-    CLASSPATH="`cat .classpath`:$CLASSPATH"
+if [ -f .lein-classpath ]; then
+    CLASSPATH="`cat .lein-classpath`:$CLASSPATH"
 fi
 
 # normalize $0 on certain BSDs
@@ -124,15 +133,35 @@ if type -p curl >/dev/null 2>&1; then
     HTTP_CLIENT="curl $CURL_PROXY --insecure -f -L -o"
 fi
 
+# If we don't have Leiningen's own Clojure on the bootclasspath, boot
+# will be slower, and versions of Clojure in :dev-dependencies can
+# take precedence.
+if [ ! -r "$CLOJURE_JAR" ]; then
+    CLOJURE_JAR_URL=http://build.clojure.org/releases/org/clojure/clojure/1.2.1/clojure-1.2.1.jar
+    CLOJURE_HASH="be088d20c078ce48d42afba05984f1ef7c02142b"
+    mkdir -p "$(dirname $CLOJURE_JAR)"
+    $HTTP_CLIENT $CLOJURE_JAR $CLOJURE_JAR_URL
+    if [ "`shasum -a 1 $CLOJURE_JAR | cut -f 1 -d \" \"`" != "$CLOJURE_HASH" ]; then
+        echo "WARNING: Clojure jar failed to download from $CLOJURE_JAR_URL"
+    fi
+fi
+
 export JAVA_CMD=${JAVA_CMD:-"java"}
+export LEIN_JAVA_CMD=${LEIN_JAVA_CMD:-$JAVA_CMD}
 
 # Support $JAVA_OPTS for backwards-compatibility.
-export JVM_OPTS=${JVM_OPTS:-"$JAVA_OPTS"}
+export JVM_OPTS="${JVM_OPTS:-"$JAVA_OPTS"}"
+export LEIN_JVM_OPTS=${LEIN_JVM_OPTS:-$JVM_OPTS}
 
 # TODO: investigate http://skife.org/java/unix/2011/06/20/really_executable_jars.html
 # If you're packaging this for a package manager (.deb, homebrew, etc)
 # you need to remove the self-install and upgrade functionality.
 if [ "$1" = "self-install" ]; then
+    if [ -r "$LEIN_JAR" ]; then
+      echo "The self-install jar already exists at $LEIN_JAR."
+      echo "If you wish to re-download, delete it and rerun \"$0 self-install\"."
+      exit 1
+    fi
     echo "Downloading Leiningen now..."
     LEIN_DIR=`dirname "$LEIN_JAR"`
     mkdir -p "$LEIN_DIR"
@@ -162,19 +191,20 @@ elif [ "$1" = "upgrade" ]; then
         echo "You do not have permission to upgrade the installation in $SCRIPT"
         exit 1
     else
-        echo "The script at $SCRIPT will be upgraded to the latest stable version."
+        TARGET_VERSION="${2:-"stable"}"
+        echo "The script at $SCRIPT will be upgraded to the latest $TARGET_VERSION version."
         echo -n "Do you want to continue [Y/n]? "
         read RESP
         case "$RESP" in
             y|Y|"")
                 echo
-                echo "Upgrading..."
+                echo "Upgrading from $LEIN_VERSION..."
                 TARGET="/tmp/lein-$$-upgrade"
-                LEIN_SCRIPT_URL="https://github.com/technomancy/leiningen/raw/stable/bin/lein"
+                LEIN_SCRIPT_URL="https://github.com/technomancy/leiningen/raw/$TARGET_VERSION/bin/lein"
                 $HTTP_CLIENT "$TARGET" "$LEIN_SCRIPT_URL" \
                     && mv "$TARGET" "$SCRIPT" \
                     && chmod +x "$SCRIPT" \
-                    && echo && $SCRIPT self-install && echo && echo "Now running" `$SCRIPT version`
+                    && echo && "$SCRIPT" self-install && echo && echo "Now running" `$SCRIPT version`
                 exit $?;;
             *)
                 echo "Aborted."
@@ -196,8 +226,7 @@ else
     fi
 
     JLINE=""
-    if ([ "$1" = "repl" ] || [ "$1" = "interactive" ] || [ "$1" = "int" ]) &&
-        [ -z $INSIDE_EMACS ] && [ "$TERM" != "dumb" ]; then
+    if [ -z $INSIDE_EMACS ] && [ "$TERM" != "dumb" ]; then
         # Use rlwrap if it's available, otherwise fall back to JLine
         RLWRAP=`which rlwrap`
         if [ ! -x "$RLWRAP" ] || [ "$RLWRAP" = "" ]; then
@@ -215,33 +244,49 @@ else
             # Test to see if rlwrap supports custom quote chars
             rlwrap -m -q '"' echo "hi" > /dev/null 2>&1
             if [ $? -eq 0 ]; then
-                RLWRAP="$RLWRAP -m -q '\"'"
+                RLWRAP="$RLWRAP -r -m -q '\"'"
             fi
+            # see if there is a clojure-completion-file
+            RLWRAP_CLJ_WORDS_FILE=${RLWRAP_CLJ_WORDS_FILE:-"${HOME}/.clj_completions"}
+            RLWRAP_CLJ_WORDS_OPTION=""
+            if [ -r "${RLWRAP_CLJ_WORDS_FILE}" ]; then
+                RLWRAP_CLJ_WORDS_OPTION="-f ${RLWRAP_CLJ_WORDS_FILE}";
+            fi
+            RLWRAP="${RLWRAP} $RLWRAP_OPTIONS -b \"(){}[],^%$#@\";:'\" ${RLWRAP_CLJ_WORDS_OPTION}"
         fi
+    fi
+
+    test $CYGWIN_JLINE && stty -icanon min 1 -echo
+
+    TRAMPOLINE_FILE="/tmp/lein-trampoline-$$"
+    if [ "$OSTYPE" = "cygwin" ]; then
+        TRAMPOLINE_FILE=`cygpath -w $TRAMPOLINE_FILE`
     fi
 
     # The -Xbootclasspath argument is optional here: if the jar
     # doesn't exist everything will still work, it will just have a
     # slower JVM boot.
-    test $CYGWIN_JLINE && stty -icanon min 1 -echo
-    if [ "$1" = "trampoline" ]; then
-        TRAMPOLINE_FILE="/tmp/lein-trampoline-$$"
-        $JAVA_CMD -Xbootclasspath/a:"$CLOJURE_JAR" -client $JVM_OPTS \
-            -Dleiningen.original.pwd="$ORIGINAL_PWD" \
-            -Dleiningen.trampoline-file=$TRAMPOLINE_FILE -cp "$CLASSPATH" \
-            $JLINE clojure.main -e "(use 'leiningen.core)(-main)" \
-            $NULL_DEVICE "$@"
-        if [ -r $TRAMPOLINE_FILE ]; then
-            TRAMPOLINE="$(cat $TRAMPOLINE_FILE)"
-            rm $TRAMPOLINE_FILE
-            exec sh -c "$TRAMPOLINE"
-        fi
+
+    ## TODO: -XX:+UseCompressedOops only works on 64 bit jvm
+    # is there some way of detecting 64bit at this stage? - tavisrudd
+    $RLWRAP $LEIN_JAVA_CMD \
+        -Xbootclasspath/a:"$CLOJURE_JAR" \
+        -client $LEIN_JVM_OPTS \
+        -XX:+TieredCompilation \
+        -Dleiningen.original.pwd="$ORIGINAL_PWD" \
+        -Dleiningen.trampoline-file=$TRAMPOLINE_FILE \
+        -cp "$CLASSPATH" \
+        $JLINE clojure.main \
+        -e "(use 'leiningen.core)(-main)" \
+        $NULL_DEVICE "$@"
+    EXIT_CODE=$?
+
+    if [ -r $TRAMPOLINE_FILE ]; then
+        TRAMPOLINE="$(cat $TRAMPOLINE_FILE)"
+        rm $TRAMPOLINE_FILE
+        exec sh -c "exec $TRAMPOLINE"
     else
-        exec $RLWRAP $JAVA_CMD -Xbootclasspath/a:"$CLOJURE_JAR" -client $JVM_OPTS \
-            -Dleiningen.original.pwd="$ORIGINAL_PWD" \
-            -cp "$CLASSPATH" $JLINE clojure.main -e "(use 'leiningen.core)(-main)" \
-            $NULL_DEVICE "$@"
         test $CYGWIN_JLINE && stty icanon echo
+        exit $EXIT_CODE
     fi
 fi
-

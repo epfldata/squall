@@ -2,6 +2,7 @@ package util;
 
 import components.Component;
 import components.DataSourceComponent;
+import components.EquiJoinComponent;
 import components.ThetaJoinComponent;
 import conversion.TypeConversion;
 import expressions.ColumnReference;
@@ -9,13 +10,8 @@ import expressions.ValueExpression;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import net.sf.jsqlparser.expression.Expression;
+import java.util.*;
+import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
@@ -26,12 +22,15 @@ import operators.ChainOperator;
 import operators.Operator;
 import optimizers.ComponentGenerator;
 import optimizers.cost.CostParams;
+import optimizers.cost.NameComponentGenerator;
 import queryPlans.QueryPlan;
 import schema.ColumnNameType;
 import schema.Schema;
 import utilities.MyUtilities;
+import utilities.SystemParameters;
 import visitors.jsql.ColumnCollectVisitor;
 import visitors.jsql.PrintVisitor;
+import visitors.jsql.SQLVisitor;
 import visitors.squall.ColumnRefCollectVisitor;
 
 
@@ -48,6 +47,20 @@ public class ParserUtil {
             return nameBase + "0";
         }
      }
+     
+    /*
+     * JSQL printing
+     */
+    public static void printParsedQuery(SQLVisitor pq){
+        for(Table table: pq.getTableList()){
+            String tableStr = ParserUtil.toString(table);
+            System.out.println(tableStr);
+        }
+        for(Join join: pq.getJoinList()){
+            String joinStr = ParserUtil.toString(join);
+            System.out.println(joinStr);
+        }
+    }     
 
      public static String toString(Table table){
         return table.getWholeTableName();
@@ -86,13 +99,47 @@ public class ParserUtil {
         String joinStr = joinSB.toString();
         return joinStr;
     }
+     
+    //We couldn't change toString methods without invasion to JSQL classes
+    public static String getStringExpr(Expression expr) {
+        PrintVisitor printer = new PrintVisitor();
+        expr.accept(printer);
+        return printer.getString();
+    }
 
+    public static String getStringExpr(ExpressionList params) {
+        PrintVisitor printer = new PrintVisitor();
+        params.accept(printer);
+        return printer.getString();
+    }
+    
+    //we use this method for List<OrExpression> as well
+    public static <T extends Expression> String getStringExpr(List<T> listExpr){
+        StringBuilder sb = new StringBuilder();
+        int size = listExpr.size();
+        for(int i=0; i<size; i++){
+            sb.append(getStringExpr(listExpr.get(i)));
+            if(i != size - 1){
+                //not the last element
+                sb.append(", ");
+            }
+        }
+        return sb.toString();
+    }     
+
+    /*
+     * Squall query plan printing - Indexes
+     */    
     public static void printQueryPlan(QueryPlan queryPlan) {
         StringBuilder sb = new StringBuilder("QUERY PLAN");
         for(Component comp: queryPlan.getPlan()){
             sb.append("\n\nComponent ").append(comp.getName());
 
-            sb.append("\n").append(comp.getChainOperator());
+            ChainOperator chain = comp.getChainOperator();
+            if(!chain.isEmpty()){
+                sb.append("\n").append(chain);
+            }
+            
             if(comp.getHashIndexes()!=null && !comp.getHashIndexes().isEmpty()){
                 sb.append("\n HashIndexes: ").append(listToStr(comp.getHashIndexes()));
             }
@@ -100,6 +147,7 @@ public class ParserUtil {
                 sb.append("\n HashExpressions: ").append(listToStr(comp.getHashExpressions()));
             }
         }
+        sb.append("\n\nEND of QUERY PLAN\n\n");
         System.out.println(sb.toString());
     }
 
@@ -160,18 +208,20 @@ public class ParserUtil {
         return getComponentName(column);
     }
 
-    public static Set<String> getSourceNameSet(List<DataSourceComponent> components){
+    public static Set<String> getSourceNameSet(Component component){
+        List<DataSourceComponent> sources = component.getAncestorDataSources();
         Set<String> compNames = new HashSet<String>();
-        for(Component component: components){
-            compNames.add(component.getName());
+        for(DataSourceComponent source: sources){
+            compNames.add(source.getName());
         }
         return compNames;
     }
 
-    public static List<String> getSourceNameList(List<DataSourceComponent> components){
+    public static List<String> getSourceNameList(Component component){
+        List<DataSourceComponent> sources = component.getAncestorDataSources();
         List<String> compNames = new ArrayList<String>();
-        for(Component component: components){
-            compNames.add(component.getName());
+        for(DataSourceComponent source: sources){
+            compNames.add(source.getName());
         }
         return compNames;
     }    
@@ -358,15 +408,18 @@ public class ParserUtil {
     }
 
     /*
-     * append each expr to the corresponding componentName
-     * componentName is the key for collocatedExprs
+     * append each expr to the corresponding componentName.
+     * componentName is the key for collocatedExprs.
      */
     public static void addAndExprsToComps(Map<String, Expression> collocatedExprs,
             List<Expression> exprs) {
 
         for(Expression expr: exprs){
+            //first we determine which component it belongs to
+            //  In "R.A = S.A AND T.A = 4", "R.A = S.A" is not WHERE clause, it's a join condition
             List<Column> columns = getJSQLColumns(expr);
             String componentName = getComponentName(columns.get(0).getTable());
+            
             addAndExprToComp(collocatedExprs, expr, componentName);
         }
 
@@ -488,18 +541,6 @@ public class ParserUtil {
         return result;
     }
 
-    public static String getStringExpr(Expression expr) {
-        PrintVisitor printer = new PrintVisitor();
-        expr.accept(printer);
-        return printer.getString();
-    }
-
-    public static String getStringExpr(ExpressionList params) {
-        PrintVisitor printer = new PrintVisitor();
-        params.accept(printer);
-        return printer.getString();
-    }
-
     public static TypeConversion getColumnType(Column column, TableAliasName tan, Schema schema) {
         String tableCompName = ParserUtil.getComponentName(column);
         String tableSchemaName = tan.getSchemaName(tableCompName);
@@ -507,4 +548,70 @@ public class ParserUtil {
         return schema.getType(tableSchemaName, columnName);
     }
 
+       /*
+     * From a list of <NATIONNAME, StringConversion>
+     *   it creates a list of <N1.NATIONNAME, StringConversion>
+     */
+    public static List<ColumnNameType> createAliasedSchema(List<ColumnNameType> originalSchema, String aliasName) {
+        List<ColumnNameType> result = new ArrayList<ColumnNameType>();
+
+        for(ColumnNameType cnt: originalSchema){
+            String name = cnt.getName();
+            name = aliasName + "." + name;
+            TypeConversion tc = cnt.getType();
+            result.add(new ColumnNameType(name, tc));
+        }
+
+        return result;
+    }
+    
+    public static List<Expression> getSubExpressions(Expression expr){
+        List<Expression> result = new ArrayList<Expression>();
+        if(expr instanceof BinaryExpression){
+            BinaryExpression be = (BinaryExpression) expr;
+            result.add(be.getLeftExpression());
+            result.add(be.getRightExpression());
+        }else if(expr instanceof Parenthesis){
+            Parenthesis prnths = (Parenthesis) expr;
+            result.add(prnths.getExpression());
+        }else if(expr instanceof Function){
+            Function fun = (Function) expr;
+            ExpressionList params = fun.getParameters();
+            if(params != null){
+                result.addAll(params.getExpressions());
+            }
+        }else{
+            return null;
+        }
+        return result;
+    }
+
+    /*
+     * is joinComponent the last component in the query plan, in terms of no more joins to perform
+     */
+    public static boolean isFinalJoin(Component comp, SQLVisitor _pq) {
+        Set<String> allSources = new HashSet<String>(_pq.getTan().getComponentNames());
+        Set<String> actuallPlanSources = getSourceNameSet(comp);
+        return allSources.equals(actuallPlanSources);
+    }
+
+    public static boolean isSameSchema(List<ColumnNameType> listSchema1, List<ColumnNameType> listSchema2) {
+        Set<ColumnNameType> setSchema1 = new HashSet<ColumnNameType>(listSchema1);
+        Set<ColumnNameType> setSchema2 = new HashSet<ColumnNameType>(listSchema2);
+        return setSchema1.equals(setSchema2);
+    }
+
+    public static List<Expression> getJoinCondition(SQLVisitor _pq, Component left, Component right) {
+        List<String> leftAncestors = ParserUtil.getSourceNameList(left);
+        List<String> rightAncestors = ParserUtil.getSourceNameList(right);
+        return _pq.getJte().getExpressions(leftAncestors, rightAncestors);
+    }
+
+    public static void parallelismToMap(NameComponentGenerator cg, Map _map) {
+        for(Component comp: cg.getQueryPlan().getPlan()){
+            String compName = comp.getName();
+            int parallelism = cg.getCostParameters(compName).getParallelism();
+            SystemParameters.putInMap(_map, compName + "_PAR", parallelism);
+        }
+    }
 }

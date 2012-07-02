@@ -1,22 +1,20 @@
 package optimizers.cost;
 
+import components.Component;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
-import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.select.Join;
-import net.sf.jsqlparser.statement.select.SelectItem;
 import optimizers.Optimizer;
 import queryPlans.QueryPlan;
 import schema.Schema;
-import util.JoinTablesExprs;
+import schema.TPCH_Schema;
 import util.ParserUtil;
-import util.TableAliasName;
+import utilities.SystemParameters;
 import visitors.jsql.AndVisitor;
-import visitors.jsql.JoinTablesExprsVisitor;
+import visitors.jsql.SQLVisitor;
 
 /*
  * It generates different NameComponentGenerator for each partial query plan
@@ -25,45 +23,58 @@ import visitors.jsql.JoinTablesExprsVisitor;
  */
 public class CostOptimizer implements Optimizer {
     private Schema _schema;
-    private String _dataPath;
-    private String _extension;
-    private TableAliasName _tan;
+    private SQLVisitor _pq;
     private Map _map; //map is updates in place
-    private int _totalSourcePar;
+    
+    private CostParallelismAssigner _parAssigner;
+    private ProjGlobalCollect _globalCollect;
 
     private HashMap<String, Expression> _compNamesAndExprs = new HashMap<String, Expression>();
     private HashMap<Set<String>, Expression> _compNamesOrExprs = new HashMap<Set<String>, Expression>();
     
-    public CostOptimizer(Schema schema, TableAliasName tan, String dataPath, String extension, Map map, int totalSourcePar){
-        _schema = schema;
-        _tan = tan;
-        _dataPath = dataPath;
-        _extension = extension;
+    public CostOptimizer(SQLVisitor pq, Map map){
+        _pq = pq;
         _map = map;
-        _totalSourcePar = totalSourcePar;
+        init();
     }
+    
+    public CostOptimizer(SQLVisitor pq, Map map, int totalSourcePar){
+        this(pq, map);
+        setSourceParallelism(totalSourcePar);
+    }    
+    
+    private void init(){
+        //we need to compute cardinalities (WHERE clause) before instantiating CPA
+        processWhereClause(_pq.getWhereExpr());
+        _globalCollect = new ProjGlobalCollect(_pq.getSelectItems(), _pq.getWhereExpr());
+        _globalCollect.process();
 
-    public QueryPlan generate(List<Table> tableList, List<Join> joinList, List<SelectItem> selectItems, Expression whereExpr) {
-        processWhereClause(whereExpr);
-        ProjGlobalCollect globalCollect = new ProjGlobalCollect(selectItems, whereExpr);
-        globalCollect.process();
+        double scallingFactor = SystemParameters.getDouble(_map, "DIP_DB_SIZE");
+        _schema = new TPCH_Schema(scallingFactor);
+        
+        //in general there might be many NameComponentGenerators, 
+        //  that's why CPA is computed before of NCG
+        _parAssigner = new CostParallelismAssigner(_schema, _pq,
+                 _map, _compNamesAndExprs, _compNamesOrExprs, _globalCollect);
+    }
+    
+    public final void setSourceParallelism(int totalSourcePar){
+        //for the same _parAssigner, we might try with different totalSourcePar
+        _parAssigner.computeSourcePar(totalSourcePar);
+    }    
 
-        //From a list of joins, create collection of elements like {R->{S, R.A=S.A}}
-        JoinTablesExprsVisitor jteVisitor = new JoinTablesExprsVisitor();
-        for(Join join: joinList){
-            join.getOnExpression().accept(jteVisitor);
-        }
-        JoinTablesExprs jte = jteVisitor.getJoinTablesExp();
-
-
-        //INITIAL PARALLELISM has to be computed after previous lines, because they initialize some variables
-        //DataSource component has to compute cardinality (WhereClause changes it)
-        //  and to set up projections (globalCollect and jte)
-        CostParallelismAssigner parAssigner = new CostParallelismAssigner(_schema, _tan,
-                 _dataPath, _extension, _map, _compNamesAndExprs, _compNamesOrExprs, globalCollect, jte);
-        Map<String, Integer> sourceParallelism = parAssigner.getSourceParallelism(tableList, _totalSourcePar);
-
-        return null;
+    public QueryPlan generate() {   
+        NameComponentGenerator cg = generateEmptyCG();
+        
+        //for the one which is returned, parallelism has to be set in _map
+        ParserUtil.parallelismToMap(cg, _map);
+        return cg.getQueryPlan();
+    }
+    
+    //can be useful when manually specifying the order of joins
+    public NameComponentGenerator generateEmptyCG(){
+        return new NameComponentGenerator(_schema, _pq,
+                 _map, _parAssigner, _compNamesAndExprs, _compNamesOrExprs, _globalCollect);
     }
 
     

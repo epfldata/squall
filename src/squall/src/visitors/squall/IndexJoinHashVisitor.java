@@ -1,69 +1,24 @@
 package visitors.squall;
 
-import util.NotFromMyBranchException;
 import components.Component;
-import conversion.DateConversion;
-import conversion.DoubleConversion;
-import conversion.LongConversion;
-import conversion.NumericConversion;
-import conversion.StringConversion;
-import conversion.TypeConversion;
+import conversion.*;
 import expressions.ColumnReference;
 import expressions.IntegerYearFromDate;
 import expressions.ValueExpression;
 import expressions.ValueSpecification;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Stack;
-import net.sf.jsqlparser.expression.AllComparisonExpression;
-import net.sf.jsqlparser.expression.AnyComparisonExpression;
-import net.sf.jsqlparser.expression.BinaryExpression;
-import net.sf.jsqlparser.expression.CaseExpression;
-import net.sf.jsqlparser.expression.DateValue;
-import net.sf.jsqlparser.expression.DoubleValue;
-import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.ExpressionVisitor;
-import net.sf.jsqlparser.expression.Function;
-import net.sf.jsqlparser.expression.InverseExpression;
-import net.sf.jsqlparser.expression.JdbcParameter;
-import net.sf.jsqlparser.expression.LongValue;
-import net.sf.jsqlparser.expression.NullValue;
-import net.sf.jsqlparser.expression.Parenthesis;
-import net.sf.jsqlparser.expression.StringValue;
-import net.sf.jsqlparser.expression.TimeValue;
-import net.sf.jsqlparser.expression.TimestampValue;
-import net.sf.jsqlparser.expression.WhenClause;
-import net.sf.jsqlparser.expression.operators.arithmetic.Addition;
-import net.sf.jsqlparser.expression.operators.arithmetic.BitwiseAnd;
-import net.sf.jsqlparser.expression.operators.arithmetic.BitwiseOr;
-import net.sf.jsqlparser.expression.operators.arithmetic.BitwiseXor;
-import net.sf.jsqlparser.expression.operators.arithmetic.Concat;
-import net.sf.jsqlparser.expression.operators.arithmetic.Division;
-import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
-import net.sf.jsqlparser.expression.operators.arithmetic.Subtraction;
+import java.util.*;
+import net.sf.jsqlparser.expression.*;
+import net.sf.jsqlparser.expression.operators.arithmetic.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
-import net.sf.jsqlparser.expression.operators.relational.Between;
-import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
-import net.sf.jsqlparser.expression.operators.relational.ExistsExpression;
-import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
-import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
-import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
-import net.sf.jsqlparser.expression.operators.relational.InExpression;
-import net.sf.jsqlparser.expression.operators.relational.IsNullExpression;
-import net.sf.jsqlparser.expression.operators.relational.ItemsListVisitor;
-import net.sf.jsqlparser.expression.operators.relational.LikeExpression;
-import net.sf.jsqlparser.expression.operators.relational.Matches;
-import net.sf.jsqlparser.expression.operators.relational.MinorThan;
-import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
-import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
+import net.sf.jsqlparser.expression.operators.relational.*;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import optimizers.IndexTranslator;
 import queryPlans.QueryPlan;
 import schema.Schema;
 import util.HierarchyExtractor;
+import util.NotFromMyBranchException;
 import util.ParserUtil;
 import util.TableAliasName;
 
@@ -80,7 +35,6 @@ import util.TableAliasName;
 public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor {
     //these are only used within visit(Column) method
     private Schema _schema;
-    private QueryPlan _queryPlan;
     private Component _affectedComponent;
     private TableAliasName _tan;
 
@@ -111,9 +65,8 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
     /*
      * affectedComponent is one of the parents of the join component
      */
-    public IndexJoinHashVisitor(Schema schema, QueryPlan queryPlan, Component affectedComponent, TableAliasName tan){
+    public IndexJoinHashVisitor(Schema schema, Component affectedComponent, TableAliasName tan){
         _schema = schema;
-        _queryPlan = queryPlan;
         _affectedComponent = affectedComponent;
         _tan = tan;
 
@@ -244,7 +197,8 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
         for(int i=0; i<numParams; i++){
             expressions.add(_exprStack.pop());
         }
-
+        Collections.reverse(expressions); // at the stack top is the lastly added VE
+        
         String fnName = function.getName();
         if(fnName.equalsIgnoreCase("EXTRACT_YEAR")){
             if(numParams != 1){
@@ -267,14 +221,14 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
     @Override
     public void visit(Column column) {
         String tableCompName = ParserUtil.getComponentName(column);
-        List<String> ancestorNames = HierarchyExtractor.getAncestorNames(_affectedComponent);
+        List<String> ancestorNames = ParserUtil.getSourceNameList(_affectedComponent);
 
         if(ancestorNames.contains(tableCompName)){
             //extract type for the column
             TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
 
             //extract the position (index) of the required column
-            int position = _it.getColumnIndex(column, _affectedComponent, _queryPlan);
+            int position = _it.getColumnIndex(column, _affectedComponent);
 
             ValueExpression ve = new ColumnReference(tc, position);
             _exprStack.push(ve);

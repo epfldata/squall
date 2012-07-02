@@ -26,7 +26,7 @@ public interface Translator {
      * For a given component and column,
      *   find out the index of that column in a given component
      */
-    public int getColumnIndex(Column column, Component requestor, QueryPlan queryPlan);
+    public int getColumnIndex(Column column, Component requestor);
 
     /*
      * Is component already hashed by hashIndexes

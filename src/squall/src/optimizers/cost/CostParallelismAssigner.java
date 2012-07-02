@@ -2,70 +2,60 @@ package optimizers.cost;
 
 import components.DataSourceComponent;
 import components.EquiJoinComponent;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Table;
 import schema.Schema;
-import util.JoinTablesExprs;
 import util.ParserUtil;
-import util.TableAliasName;
 import utilities.SystemParameters;
+import visitors.jsql.SQLVisitor;
 
 
 public class CostParallelismAssigner {
-    private final Schema _schema;
-    private final TableAliasName _tan;
-    private final NameTranslator _nt = new NameTranslator();
-    private final String _dataPath;
-    private final String _extension;
+    private final SQLVisitor _pq;
     private final Map _map;
+    private final Schema _schema;
+    private final NameTranslator _nt = new NameTranslator();
     private final Map<String, Expression> _compNamesAndExprs;
     private final Map<Set<String>, Expression> _compNamesOrExprs;
-
+    
     private final ProjGlobalCollect _globalCollect;
-    private final JoinTablesExprs _jte;
+    
+    private Map<String, Integer> _sourcePars;
 
     public CostParallelismAssigner(Schema schema,
-            TableAliasName tan,
-            String dataPath,
-            String extension,
+            SQLVisitor pq,
             Map map,
             Map<String, Expression> compNamesAndExprs,
             Map<Set<String>, Expression> compNamesOrExprs,
-            ProjGlobalCollect globalCollect,
-            JoinTablesExprs jte) {
-
+            ProjGlobalCollect globalCollect) {
+        _pq = pq;
         _schema = schema;
-        _tan = tan;
-        _dataPath = dataPath;
-        _extension = extension;
         _map = map;
         _compNamesAndExprs = compNamesAndExprs;
         _compNamesOrExprs = compNamesOrExprs;
-
+        
         _globalCollect = globalCollect;
-        _jte = jte;
     }
 
     /*
-     * This is done on fake ComponentGenerator, so there is no setSourceParallelism
+     * This is done on fake ComponentGenerator, so there is no computeSourcePar
      *   parallelism on source components is input variable
      * This method is idempotent, no side effects, can be called multiple times.
      */
-    public Map<String, Integer> getSourceParallelism(List<Table> tableList, int totalSourcePar){
+    public Map<String, Integer> computeSourcePar(int totalSourcePar){
+        List<Table> tableList = _pq.getTableList();
+        if(totalSourcePar < tableList.size()){
+            throw new RuntimeException("There is not enought nodes such that all the sources get at least parallelism = 1");
+        }
         /*
          * We need a way to generate parallelism for all the DataSources
          *   This depends on its selectivity/cardinality of each dataSource
          *   So we will generate all the sources witihin a fake sourceCG,
          *   and then proportionally assign parallelism.
          */
-        NameComponentGenerator sourceCG = new NameComponentGenerator(_schema, _tan,
-                 _dataPath, _extension, _map, this, _compNamesAndExprs, _compNamesOrExprs, _globalCollect, _jte);
+        NameComponentGenerator sourceCG = new NameComponentGenerator(_schema, _pq,
+                 _map, this, _compNamesAndExprs, _compNamesOrExprs, _globalCollect, true);
 
          List<OrderedCostParams> sourceCostParams = new ArrayList<OrderedCostParams>();
          long totalCardinality = 0;
@@ -77,39 +67,63 @@ public class CostParallelismAssigner {
              sourceCostParams.add(new OrderedCostParams(compName, cardinality));
          }
 
-         /* Sort by cardinalities, so that the smallest tables does not end up with parallelism = 0
+         /* 
+          * Sort by incresing cardinalities, 
+          *   the tables with dblNumNodes = 0 is assigned 1
+          *   and all other proportionally shares the number of nodes
           * We divide by its output cardinality, because network traffic is the dominant cost
-          */
-         int availableNodes = totalSourcePar;
+         */
          Collections.sort(sourceCostParams);
+         int remainingPhysicalNodes = totalSourcePar;
+         int remainingLogicalNodes = sourceCostParams.size();
+         double remainingCardinality = totalCardinality;
          for(OrderedCostParams cnc: sourceCostParams){
              long cardinality = cnc.getCardinality();
-             double ratioNodes = (double)cardinality/totalCardinality;
-             double dblNumNodes = ratioNodes * totalSourcePar;
-             int numNodes = (int) (dblNumNodes + 0.5); // rounding effect out of the default flooring
+             double ratioNodes = (double)cardinality/remainingCardinality;
+             double dblNumNodes = ratioNodes * remainingPhysicalNodes;
+             int nodeParallelism = (int) (dblNumNodes + 0.5); // rounding effect out of the default flooring
 
-             if(availableNodes == 0){
-                 throw new RuntimeException("There is not enought nodes such that all the sources get at least parallelism = 1");
-             }
-             if(numNodes == 0){
+             if(nodeParallelism == 0){
                  //lower bounds
-                 numNodes = 1;
+                 nodeParallelism++;
              }
-             if(numNodes > availableNodes){
-                 //upper bounds, we already checked if _totalSourcePar is not 0
-                 numNodes = availableNodes;
+             if(nodeParallelism + remainingLogicalNodes > remainingPhysicalNodes){
+                 //upper bound is that all the following sources has at least parallelism = 1
+                 if(nodeParallelism > 1){
+                     nodeParallelism--;
+                 }
+             }
+             if(remainingPhysicalNodes == 0 || nodeParallelism == 0){
+                 throw new RuntimeException("Not enough nodes, should not be here!");
              }
 
-             cnc.setParallelism(numNodes);
-             availableNodes -= numNodes;
+             remainingLogicalNodes--;
+             remainingPhysicalNodes -= nodeParallelism;
+             remainingCardinality -= cardinality;
+             
+             //if I am the last guy, I will take all the remaining HW slots
+             if(remainingLogicalNodes == 0){
+                 nodeParallelism += remainingPhysicalNodes;
+             }
+             cnc.setParallelism(nodeParallelism);
          }
 
          /*
           * Now convert it to a Map, so that parallelism for source can be easier obtained
           */
-         Map<String, Integer> compParallelism = convertListToMap(sourceCostParams);
+         _sourcePars = convertListToMap(sourceCostParams);
+         return _sourcePars;
+    }
 
-         return compParallelism;
+
+    public void setParallelism(DataSourceComponent source, Map<String, CostParams> compCost){
+        if(_sourcePars == null){
+            throw new RuntimeException("CostParallelismAssigner.computeSourcePar has to be invoked before setting parallelism of sources!");
+        }
+                
+        String sourceName = source.getName();        
+        int parallelism = _sourcePars.get(sourceName);
+        compCost.get(sourceName).setParallelism(parallelism);
     }
 
     private Map<String, Integer> convertListToMap(List<OrderedCostParams> sourceCostParams) {
@@ -197,7 +211,7 @@ public class CostParallelismAssigner {
         int result = (int) distinctValues;
         if(result != distinctValues){
             //so huge that cannot fit in int, we will set to MAX_PARALLELISM
-            result = SystemParameters.getInt(_map, "DIP_NUM_PARALLELISM");
+            result = SystemParameters.getInt(_map, "DIP_NUM_WORKERS");
         }
         return result;
     }

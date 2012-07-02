@@ -7,6 +7,7 @@ package operators;
 
 import java.util.ArrayList;
 import java.util.List;
+import visitors.OperatorVisitor;
 
 
 public class ChainOperator implements Operator {
@@ -138,8 +139,12 @@ public class ChainOperator implements Operator {
         }
     }    
     
-    private int size(){
+    public int size(){
         return _operators.size();
+    }
+    
+    public boolean isEmpty(){
+        return size() == 0;
     }
 
     @Override
@@ -170,4 +175,8 @@ public class ChainOperator implements Operator {
         return sb.toString();
     }
 
+    @Override
+    public void accept(OperatorVisitor ov){
+        ov.visit(this);
+    }
 }

@@ -9,7 +9,6 @@ import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.generated.AlreadyAliveException;
 import backtype.storm.generated.ClusterSummary;
-import backtype.storm.generated.KillOptions;
 import backtype.storm.generated.Nimbus.Client;
 import backtype.storm.generated.NotAliveException;
 import backtype.storm.generated.TaskSummary;
@@ -32,22 +31,29 @@ public class StormWrapper {
     public static void submitTopology(Config conf, TopologyBuilder builder) {
         //transform mine parameters into theirs
         boolean distributed = SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED");
-        int numParallelism = SystemParameters.getInt(conf, "DIP_NUM_PARALLELISM");
         String topologyName = MyUtilities.getFullTopologyName(conf);
-        int numAckers = SystemParameters.getInt(conf, "DIP_NUM_ACKERS");
 
         conf.setDebug(false);
-        conf.setNumAckers(numAckers);
         if(MyUtilities.isAckEveryTuple(conf)){
             //otherwise this parameter is used only at the end,
             //  and represents the time topology is shown as killed (will be set to default: 30s)
             //Messages are failling if we do not specify timeout (proven for TPCH8)
             conf.setMessageTimeoutSecs(SystemParameters.MESSAGE_TIMEOUT_SECS);
+            conf.setMaxSpoutPending(SystemParameters.MAX_SPOUT_PENDING);
         }
 
         if(distributed){
-            conf.setNumWorkers(numParallelism);
-            conf.setMaxSpoutPending(SystemParameters.MAX_SPOUT_PENDING);
+            if(SystemParameters.isExisting(conf, "DIP_NUM_WORKERS")){
+                //by default we use existing value from storm.yaml
+                // still, a user can specify other total number of workers
+                int numParallelism = SystemParameters.getInt(conf, "DIP_NUM_WORKERS");
+                conf.setNumWorkers(numParallelism);
+            }
+            if(SystemParameters.isExisting(conf, "DIP_NUM_ACKERS")){
+                //if not set, it's by default the value from storm.yaml
+                int numAckers = SystemParameters.getInt(conf, "DIP_NUM_ACKERS");
+                conf.setNumAckers(numAckers);
+            }
 
             try{
                 StormSubmitter.submitTopology(topologyName, conf, builder.createTopology());
@@ -59,9 +65,12 @@ public class StormWrapper {
                  LOG.info(error);
             }
         }else{
-            conf.setMaxTaskParallelism(numParallelism);
+            //number of ackers has to be specified in Local Mode
+            int numAckers = SystemParameters.getInt(conf, "DIP_NUM_ACKERS");
+            conf.setNumAckers(numAckers);
+
             conf.setFallBackOnJavaSerialization(false);
-            cluster = new LocalCluster();
+            LocalCluster cluster = new LocalCluster();
             startTime = System.currentTimeMillis();
             cluster.submitTopology(topologyName, conf, builder.createTopology());
         }
@@ -78,8 +87,6 @@ public class StormWrapper {
     }
     
     // all the staff below are only for local execution
-    private static LocalCluster cluster;
-
     private static void localKillCluster(Map conf, String topologyName){
     	long endTime = System.currentTimeMillis();
         LOG.info("Running time (sec):" + ((endTime - startTime) / 1000));

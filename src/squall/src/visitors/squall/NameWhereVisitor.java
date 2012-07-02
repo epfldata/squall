@@ -6,6 +6,7 @@ import expressions.ValueExpression;
 import java.util.List;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.Function;
+import net.sf.jsqlparser.expression.Parenthesis;
 import net.sf.jsqlparser.expression.operators.arithmetic.Addition;
 import net.sf.jsqlparser.expression.operators.arithmetic.Division;
 import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
@@ -16,7 +17,6 @@ import schema.ColumnNameType;
 import schema.Schema;
 import util.ParserUtil;
 import util.TableAliasName;
-import visitors.jsql.PrintVisitor;
 
 
 public class NameWhereVisitor extends IndexWhereVisitor{
@@ -31,6 +31,14 @@ public class NameWhereVisitor extends IndexWhereVisitor{
         _tan = tan;
         _tupleSchema = tupleSchema;
     }
+    
+    @Override
+    public void visit(Parenthesis prnths) {
+        if(!isRecognized(prnths)){
+            //normal call to parent
+            super.visit(prnths);
+        }
+    }    
 
     @Override
     public void visit(Addition adtn) {
@@ -85,7 +93,7 @@ public class NameWhereVisitor extends IndexWhereVisitor{
         if(position != -1){
             //we found an expression already in the tuple schema
             TypeConversion tc = _nt.getType(_tupleSchema, strExpr);
-            ValueExpression ve = new ColumnReference(tc, position);
+            ValueExpression ve = new ColumnReference(tc, position, strExpr);
             pushToExprStack(ve);
             return true;
         }else{
@@ -104,7 +112,7 @@ public class NameWhereVisitor extends IndexWhereVisitor{
         //extract the position (index) of the required column
         int position = _nt.getColumnIndex(column, _tupleSchema);
 
-        ValueExpression ve = new ColumnReference(tc, position);
+        ValueExpression ve = new ColumnReference(tc, position, ParserUtil.getFullAliasedName(column));
         pushToExprStack(ve);
     }
 }

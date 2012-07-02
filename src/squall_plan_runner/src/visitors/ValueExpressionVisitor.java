@@ -5,15 +5,7 @@
 
 package visitors;
 
-import expressions.Addition;
-import expressions.ColumnReference;
-import expressions.DateSum;
-import expressions.Division;
-import expressions.IntegerYearFromDate;
-import expressions.Multiplication;
-import expressions.StringConcatenate;
-import expressions.Subtraction;
-import expressions.ValueSpecification;
+import expressions.*;
 
 
 public interface ValueExpressionVisitor {

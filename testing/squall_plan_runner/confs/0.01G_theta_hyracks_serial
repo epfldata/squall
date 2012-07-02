@@ -2,7 +2,6 @@ DIP_DISTRIBUTED false
 DIP_QUERY_NAME theta_hyracks
 DIP_TOPOLOGY_NAME_PREFIX username
 DIP_TOPOLOGY_NAME ThetaHyracks_serial
-DIP_NUM_PARALLELISM 100
 DIP_NUM_ACKERS 0
 
 DIP_DATA_PATH ../testing/data/tpch/0.01G/
@@ -26,4 +25,9 @@ DIP_GLOBAL_SPLIT_DELIMITER \|
 
 DIP_KILL_AT_THE_END true
 
-
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_DIP_DIR /export/home/iklonatos/storage 
+STORAGE_COLD_START true

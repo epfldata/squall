@@ -1,35 +1,33 @@
 package storage;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.ArrayList;
-import java.io.Serializable;
 import java.io.PrintStream;
 import java.util.Collections;
-import storage.LRUList;
+import utilities.SystemParameters;
 
 public class KeyValueStore<K, V> extends BasicStore {
 	
 	private HashMap<K, Object> _memstore;
-	protected static final int DEFAULT_INITIAL_CAPACITY = 256;
+	protected static final int DEFAULT_HASH_INDICES = 256;
 	protected ReplacementAlgorithm<HashEntry<K, V>> _replAlg;
 
 	/* Constructors */
-	public KeyValueStore() {
-		this(BasicStore.DEFAULT_SIZE_MB, DEFAULT_INITIAL_CAPACITY);
+	public KeyValueStore(Map conf) {
+		this(BasicStore.DEFAULT_SIZE_MB, DEFAULT_HASH_INDICES, conf);
 	}
 
-	public KeyValueStore(int initialCapacity) {
-		this(BasicStore.DEFAULT_SIZE_MB, initialCapacity);
+	public KeyValueStore(int initialCapacity, Map conf) {
+		this(BasicStore.DEFAULT_SIZE_MB, initialCapacity, conf);
 	}
 
-	public KeyValueStore(int storesizemb, int initialCapacity) {
+	public KeyValueStore(int storesizemb, int initialCapacity, Map conf) {
 		super(storesizemb);
-		this._storageManager = new StorageManager<V>(this, "/tmp/ramdisk/", true);
+		this._storageManager = new StorageManager<V>(this, conf);
 		this._memoryManager = new MemoryManager(storesizemb);
 		this._replAlg  = new LRUList<HashEntry<K, V>>();
 		this._memstore = new HashMap<K, Object>(initialCapacity);

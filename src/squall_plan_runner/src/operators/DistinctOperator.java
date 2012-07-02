@@ -11,6 +11,7 @@ import utilities.MyUtilities;
 import storage.BasicStore;
 import storage.ValueStore;
 import expressions.ValueExpression;
+import visitors.OperatorVisitor;
 
 public class DistinctOperator implements Operator {
 
@@ -18,22 +19,25 @@ public class DistinctOperator implements Operator {
 	private int _numTuplesProcessed;
 	private ProjectOperator _projection;
 	private static final long serialVersionUID = 1L;
-	private BasicStore<ArrayList<String>> _storage = new ValueStore<String>();
+	private BasicStore<ArrayList<String>> _storage;
 	/* Dummy value to associate with a tuple in the backing Storage (Since
 	 * the backing storage provides a key-value interface) */
 	private static final String dummyString = new String("dummy");
 
 	public DistinctOperator(Map conf, ValueExpression ... veArray){
+                _storage = new ValueStore<String>(conf);
 		_projection = new ProjectOperator(veArray);
 		_conf = conf;
 	}
 
 	public DistinctOperator(Map conf, List<ValueExpression> veList){
+                _storage = new ValueStore<String>(conf);
 		_projection = new ProjectOperator(veList);
 		_conf = conf;
 	}
 
 	public DistinctOperator(Map conf, int[] projectionIndexes){
+                _storage = new ValueStore<String>(conf);
 		_projection = new ProjectOperator(projectionIndexes);
 		_conf = conf;
 	}
@@ -84,5 +88,10 @@ public class DistinctOperator implements Operator {
 		sb.append(_projection.toString());
 		return sb.toString();
 	}
+
+        @Override
+        public void accept(OperatorVisitor ov){
+            ov.visit(this);
+        }
 
 }

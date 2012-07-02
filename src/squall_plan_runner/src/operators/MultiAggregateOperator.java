@@ -9,6 +9,7 @@ import storage.BasicStore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import visitors.OperatorVisitor;
 
 public class MultiAggregateOperator implements AggregateOperator {
 
@@ -84,6 +85,11 @@ public class MultiAggregateOperator implements AggregateOperator {
             //the result of the first operator, but this is the same for all the AggregateOperators
         }
         return 0;
+    }
+
+    @Override
+    public void accept(OperatorVisitor ov){
+        ov.visit(this);
     }
 
     @Override

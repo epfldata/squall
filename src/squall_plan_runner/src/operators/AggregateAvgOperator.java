@@ -12,10 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import operators.AggregateAvgOperator.SumCount;
-import storage.BasicStore;
-import storage.AggregationStorage;
 import org.apache.log4j.Logger;
+import storage.AggregationStorage;
+import storage.BasicStore;
 import utilities.MyUtilities;
+import visitors.OperatorVisitor;
 
 public class AggregateAvgOperator implements AggregateOperator<SumCount> {
         private static final long serialVersionUID = 1L;
@@ -268,5 +269,10 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 
         private boolean alreadySetOther(int GB_COLUMNS) {
             return (_groupByType != GB_COLUMNS && _groupByType != GB_UNSET);
+        }
+
+        @Override
+        public void accept(OperatorVisitor ov){
+            ov.visit(this);
         }
 }

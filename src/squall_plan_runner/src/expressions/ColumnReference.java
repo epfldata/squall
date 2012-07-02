@@ -13,17 +13,26 @@ import visitors.ValueExpressionVisitor;
 public class ColumnReference<T extends Comparable<T>> implements ValueExpression<T> {
     private static final long serialVersionUID = 1L;
 
-    private int _column;
+    private int _columnIndex;
+    private String _columnStr;
     private TypeConversion<T> _wrapper;
 
-    public ColumnReference(TypeConversion<T> wrapper, int column){
-        _column = column;
+    public ColumnReference(TypeConversion<T> wrapper, int columnIndex){
+        _columnIndex = columnIndex;
         _wrapper = wrapper;
     }
 
+    /*
+     * columnStr is optional, used only in toString method
+     */
+    public ColumnReference(TypeConversion<T> wrapper, int columnIndex, String columnStr){
+        this(wrapper, columnIndex);
+        _columnStr = columnStr;
+    }    
+    
     @Override
     public T eval(List<String> tuple){
-        String value = tuple.get(_column);
+        String value = tuple.get(_columnIndex);
         return _wrapper.fromString(value);
     }
     
@@ -45,11 +54,11 @@ public class ColumnReference<T extends Comparable<T>> implements ValueExpression
 
 
     public int getColumnIndex(){
-        return _column;
+        return _columnIndex;
     }
 
     public void setColumnIndex(int column){
-        _column = column;
+        _columnIndex = column;
     }
 
     @Override
@@ -65,7 +74,10 @@ public class ColumnReference<T extends Comparable<T>> implements ValueExpression
     @Override
     public String toString(){
         StringBuilder sb = new StringBuilder();
-        sb.append("ColumnReference ").append(_column);
+        if(_columnStr != null){
+            sb.append("\"").append(_columnStr).append("\" - ");
+        }
+        sb.append("Col ").append(_columnIndex);
         return sb.toString();
     }
 

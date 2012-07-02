@@ -3,12 +3,7 @@ package visitors.squall;
 import expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
-import predicates.AndPredicate;
-import predicates.BetweenPredicate;
-import predicates.ComparisonPredicate;
-import predicates.LikePredicate;
-import predicates.OrPredicate;
-import predicates.Predicate;
+import predicates.*;
 import visitors.PredicateVisitor;
 
 

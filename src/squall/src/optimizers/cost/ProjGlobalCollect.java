@@ -59,15 +59,18 @@ public class ProjGlobalCollect {
             if(si instanceof SelectExpressionItem){
                 Expression selectExpr = ((SelectExpressionItem)si).getExpression();
                 if(!(selectExpr instanceof Function)){
-                    getExprList().add(selectExpr);
+                    _exprList.add(selectExpr);
                 }else{
                     Function fun = (Function) selectExpr;
                     if (fun.getName().equalsIgnoreCase("SUM") || fun.getName().equalsIgnoreCase("COUNT")){
                         //collect internal expressions
                         ExpressionList params = fun.getParameters();
                         if(params!=null){
-                            getExprList().addAll(params.getExpressions());
+                            _exprList.addAll(params.getExpressions());
                         }
+                    }else{
+                        //add whole function, might be processed earlier than at the final agg
+                        _exprList.add(selectExpr);
                     }
                 }
             }else{

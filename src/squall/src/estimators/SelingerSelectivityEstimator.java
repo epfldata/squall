@@ -1,23 +1,13 @@
 package estimators;
 
 import conversion.TypeConversion;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import net.sf.jsqlparser.expression.DateValue;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
-import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
-import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
-import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
-import net.sf.jsqlparser.expression.operators.relational.MinorThan;
-import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
-import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
+import net.sf.jsqlparser.expression.operators.relational.*;
 import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.schema.Table;
 import schema.Schema;
-import schema.TPCH_Schema;
 import util.ParserUtil;
 import util.TableAliasName;
 
@@ -43,7 +33,7 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
     }
 
     public double estimate(List<Expression> exprs){
-        //this is threated as a list of AndExpressions
+        //this is treated as a list of AndExpressions
         if(exprs.size() == 1){
             return estimate(exprs.get(0));
         }
@@ -188,25 +178,5 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
         }
 
     }
-
-    //just for testing purposes
-    public static void main(String[] args){
-
-        Table table = new Table();
-        table.setName("ORDERS");
-        List<Table> tableList = new ArrayList<Table>(Arrays.asList(table));
-
-        Column column = new Column();
-        column.setTable(table);
-        column.setColumnName("ORDERDATE");
-
-        MinorThan mt = new MinorThan();
-        mt.setLeftExpression(column);
-        mt.setRightExpression(new DateValue("d" + "1995-01-01" + "d"));
-        
-        SelingerSelectivityEstimator selEstimator = new SelingerSelectivityEstimator(new TPCH_Schema(), new TableAliasName(tableList));
-        System.out.println(selEstimator.estimate(mt)); 
-    }
-
 
 }

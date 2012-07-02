@@ -7,6 +7,7 @@ package operators;
 
 import java.io.Serializable;
 import java.util.List;
+import visitors.OperatorVisitor;
 
 public interface Operator extends Serializable {
     public List<String> process(List<String> tuple);
@@ -32,5 +33,7 @@ public interface Operator extends Serializable {
      * This is now decoupled from printContent
      */
     public int getNumTuplesProcessed();
+
+    public void accept(OperatorVisitor ov);
     
 }

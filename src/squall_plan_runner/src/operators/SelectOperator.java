@@ -7,6 +7,7 @@ package operators;
 
 import java.util.List;
 import predicates.Predicate;
+import visitors.OperatorVisitor;
 
 public class SelectOperator implements Operator {
     private static final long serialVersionUID = 1L;
@@ -59,5 +60,10 @@ public class SelectOperator implements Operator {
         sb.append("SelectionOperator with Predicate: ");
         sb.append(_predicate.toString());
         return sb.toString();
+    }
+
+    @Override
+    public void accept(OperatorVisitor ov){
+        ov.visit(this);
     }
 }

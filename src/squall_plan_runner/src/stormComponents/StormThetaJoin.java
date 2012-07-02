@@ -17,6 +17,7 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+import components.ComponentProperties;
 import expressions.ValueExpression;
 import gnu.trove.list.array.TIntArrayList;
 import java.util.List;
@@ -27,10 +28,7 @@ import thetajoin.matrixMapping.Matrix;
 import thetajoin.matrixMapping.OptimalPartition;
 import operators.AggregateOperator;
 import operators.ChainOperator;
-import operators.DistinctOperator;
 import operators.Operator;
-import operators.ProjectOperator;
-import operators.SelectOperator;
 import utilities.SystemParameters;
 import storage.TupleStorage;
 
@@ -94,24 +92,19 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 
 	public StormThetaJoin(StormEmitter firstEmitter,
 			StormEmitter secondEmitter,
-			String componentName,
+			ComponentProperties cp,
                         List<String> allCompNames,
-			ChainOperator chain,
-			List<Integer> hashIndexes,
-			List<ValueExpression> hashExpressions,
 			Predicate joinPredicate,
 			int hierarchyPosition,
-			boolean printOut,
-			long batchOutputMillis,
 			TopologyBuilder builder,
 			TopologyKiller killer,
 			Config conf) {
 		_conf = conf;
 		_firstEmitter = firstEmitter;
 		_secondEmitter = secondEmitter;
-		_ID = componentName;
-                _componentIndex = String.valueOf(allCompNames.indexOf(componentName));
-		_batchOutputMillis = batchOutputMillis;
+		_ID = cp.getName();
+                _componentIndex = String.valueOf(allCompNames.indexOf(_ID));
+		_batchOutputMillis = cp.getBatchOutputMillis();
 		
                 _firstEmitterIndex = String.valueOf(allCompNames.indexOf(_firstEmitter.getName()));
                 _secondEmitterIndex = String.valueOf(allCompNames.indexOf(_secondEmitter.getName()));
@@ -125,10 +118,10 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 		//                throw new RuntimeException(_componentName + ": Distinct operator cannot be specified for multiThreaded bolts!");
 		//            }
 
-		_operatorChain = chain;
+		_operatorChain = cp.getChainOperator();
 
-		_hashIndexes = hashIndexes;
-		_hashExpressions = hashExpressions;
+		_hashIndexes = cp.getHashIndexes();
+		_hashExpressions = cp.getHashExpressions();
 		_joinPredicate = joinPredicate;
 
 		_hierarchyPosition = hierarchyPosition;
@@ -144,7 +137,7 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 			killer.registerComponent(this, parallelism);
 		}
 
-		_printOut= printOut;
+		_printOut= cp.getPrintOut();
 		if (_printOut && _operatorChain.isBlocking()){
 			currentBolt.allGrouping(killer.getID(), SystemParameters.DUMP_RESULTS_STREAM);
 		}
@@ -570,16 +563,6 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 	@Override
 		public String getName() {
 			return _ID;
-		}
-
-	@Override
-		public List<Integer> getHashIndexes(){
-			return _hashIndexes;
-		}
-
-	@Override
-		public List<ValueExpression> getHashExpressions() {
-			return _hashExpressions;
 		}
 
 	@Override

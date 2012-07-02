@@ -1,69 +1,19 @@
 package visitors.squall;
 
 import components.Component;
-import conversion.DateConversion;
-import conversion.DoubleConversion;
-import conversion.LongConversion;
-import conversion.NumericConversion;
-import conversion.StringConversion;
-import conversion.TypeConversion;
+import conversion.*;
 import expressions.ColumnReference;
 import expressions.IntegerYearFromDate;
 import expressions.ValueExpression;
 import expressions.ValueSpecification;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
-import net.sf.jsqlparser.expression.AllComparisonExpression;
-import net.sf.jsqlparser.expression.AnyComparisonExpression;
-import net.sf.jsqlparser.expression.BinaryExpression;
-import net.sf.jsqlparser.expression.CaseExpression;
-import net.sf.jsqlparser.expression.DateValue;
-import net.sf.jsqlparser.expression.DoubleValue;
-import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.ExpressionVisitor;
-import net.sf.jsqlparser.expression.Function;
-import net.sf.jsqlparser.expression.InverseExpression;
-import net.sf.jsqlparser.expression.JdbcParameter;
-import net.sf.jsqlparser.expression.LongValue;
-import net.sf.jsqlparser.expression.NullValue;
-import net.sf.jsqlparser.expression.Parenthesis;
-import net.sf.jsqlparser.expression.StringValue;
-import net.sf.jsqlparser.expression.TimeValue;
-import net.sf.jsqlparser.expression.TimestampValue;
-import net.sf.jsqlparser.expression.WhenClause;
-import net.sf.jsqlparser.expression.operators.arithmetic.Addition;
-import net.sf.jsqlparser.expression.operators.arithmetic.BitwiseAnd;
-import net.sf.jsqlparser.expression.operators.arithmetic.BitwiseOr;
-import net.sf.jsqlparser.expression.operators.arithmetic.BitwiseXor;
-import net.sf.jsqlparser.expression.operators.arithmetic.Concat;
-import net.sf.jsqlparser.expression.operators.arithmetic.Division;
-import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
-import net.sf.jsqlparser.expression.operators.arithmetic.Subtraction;
+import java.util.*;
+import net.sf.jsqlparser.expression.*;
+import net.sf.jsqlparser.expression.operators.arithmetic.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
-import net.sf.jsqlparser.expression.operators.relational.Between;
-import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
-import net.sf.jsqlparser.expression.operators.relational.ExistsExpression;
-import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
-import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
-import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
-import net.sf.jsqlparser.expression.operators.relational.InExpression;
-import net.sf.jsqlparser.expression.operators.relational.IsNullExpression;
-import net.sf.jsqlparser.expression.operators.relational.ItemsListVisitor;
-import net.sf.jsqlparser.expression.operators.relational.LikeExpression;
-import net.sf.jsqlparser.expression.operators.relational.Matches;
-import net.sf.jsqlparser.expression.operators.relational.MinorThan;
-import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
-import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
+import net.sf.jsqlparser.expression.operators.relational.*;
 import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.statement.select.AllColumns;
-import net.sf.jsqlparser.statement.select.AllTableColumns;
-import net.sf.jsqlparser.statement.select.SelectExpressionItem;
-import net.sf.jsqlparser.statement.select.SelectItemVisitor;
-import net.sf.jsqlparser.statement.select.SubSelect;
+import net.sf.jsqlparser.statement.select.*;
 import operators.AggregateCountOperator;
 import operators.AggregateOperator;
 import operators.AggregateSumOperator;
@@ -81,7 +31,6 @@ import util.TableAliasName;
 public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor, ItemsListVisitor{
     //all of these needed only for visit(Column) method
     private Schema _schema;
-    private QueryPlan _queryPlan;
     private Component _affectedComponent;
     private TableAliasName _tan;
     private IndexTranslator _it;
@@ -95,6 +44,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
     //these two are of interest for the invoker
     private List<AggregateOperator> _aggOps = new ArrayList<AggregateOperator>();
     private List<ValueExpression> _groupByVEs = new ArrayList<ValueExpression>();
+    private List<Expression> _groupByExprs = new ArrayList<Expression>();
 
     public static final int AGG = 0;
     public static final int NON_AGG = 1;
@@ -109,7 +59,6 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
     private static StringConversion _sc = new StringConversion();
 
     public IndexSelectItemsVisitor(QueryPlan queryPlan, Schema schema, TableAliasName tan, Map map){
-        _queryPlan = queryPlan;
         _schema = schema;
         _tan = tan;
         _map = map;
@@ -129,6 +78,10 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
     public List<ValueExpression> getGroupByVEs(){
         return _groupByVEs;
     }
+    
+    public List<Expression> getGroupByExprs() {
+        return _groupByExprs;
+    }    
 
     protected void pushToExprStack(ValueExpression ve){
         _exprStack.push(ve);
@@ -157,12 +110,14 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
     public void visit(SelectExpressionItem sei) {
         _exprStack = new Stack<ValueExpression>();
         _agg = null;
-        sei.getExpression().accept(this);
-        doneSingleItem();
+        Expression expr = sei.getExpression();
+        expr.accept(this);
+        doneSingleItem(expr);
     }
 
-    private void doneSingleItem(){
+    private void doneSingleItem(Expression expr){
         if(_agg == null){
+            _groupByExprs.add(expr);
             _groupByVEs.add(_exprStack.peek());
         }else{
             _aggOps.add(_agg);
@@ -188,6 +143,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
         for(int i=0; i<numParams; i++){
             expressions.add(_exprStack.pop());
         }
+        Collections.reverse(expressions); // at the stack top is the lastly added VE
 
         String fnName = function.getName();
         if(fnName.equalsIgnoreCase("SUM")){
@@ -313,7 +269,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
         TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
 
         //extract the position (index) of the required column
-        int position = _it.getColumnIndex(column, _affectedComponent, _queryPlan);
+        int position = _it.getColumnIndex(column, _affectedComponent);
 
         ValueExpression ve = new ColumnReference(tc, position);
         _exprStack.push(ve);

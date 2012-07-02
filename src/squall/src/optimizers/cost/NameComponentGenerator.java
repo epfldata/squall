@@ -1,19 +1,13 @@
 package optimizers.cost;
 
-import optimizers.*;
 import components.Component;
 import components.DataSourceComponent;
 import components.EquiJoinComponent;
 import components.OperatorComponent;
-import conversion.TypeConversion;
 import estimators.ConfigSelectivityEstimator;
 import estimators.SelingerSelectivityEstimator;
 import expressions.ValueExpression;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.schema.Column;
@@ -21,13 +15,14 @@ import net.sf.jsqlparser.statement.select.SelectItem;
 import operators.AggregateOperator;
 import operators.ProjectOperator;
 import operators.SelectOperator;
+import optimizers.ComponentGenerator;
 import queryPlans.QueryPlan;
 import schema.ColumnNameType;
 import schema.Schema;
 import util.HierarchyExtractor;
-import util.JoinTablesExprs;
 import util.ParserUtil;
-import util.TableAliasName;
+import utilities.SystemParameters;
+import visitors.jsql.SQLVisitor;
 import visitors.squall.NameJoinHashVisitor;
 import visitors.squall.NameSelectItemsVisitor;
 import visitors.squall.NameWhereVisitor;
@@ -37,13 +32,13 @@ import visitors.squall.NameWhereVisitor;
  *   since we don't want multiple CG sharing the same copy of DataSourceComponent.
  */
 public class NameComponentGenerator implements ComponentGenerator{
-    private TableAliasName _tan;
+    private SQLVisitor _pq;
     private NameTranslator _nt = new NameTranslator();
 
+    private Map _map;
     private Schema _schema;
     private String _dataPath;
     private String _extension;
-    private Map _map;
 
     private QueryPlan _queryPlan = new QueryPlan();
     //List of Components which are already added throughEquiJoinComponent and OperatorComponent
@@ -52,8 +47,9 @@ public class NameComponentGenerator implements ComponentGenerator{
     //compName, CostParams for all the components from _queryPlan
     private Map<String, CostParams> _compCost =  new HashMap<String, CostParams>();
 
-    //needed because NameComponentGenerator creates parallelism for EquiJoinComponent
+    //needed because NameComponentGenerator sets parallelism for all the components
     private final CostParallelismAssigner _parAssigner;
+    private boolean _isForSourcesOnly = false; //instantiated from CostParallelismAssigner
 
     private ConfigSelectivityEstimator _fileEstimator;
     private SelingerSelectivityEstimator _selEstimator;
@@ -64,35 +60,45 @@ public class NameComponentGenerator implements ComponentGenerator{
 
     //used for Projection
     private final ProjGlobalCollect _globalCollect;
-    private final JoinTablesExprs _jte;
 
     public NameComponentGenerator(Schema schema,
-            TableAliasName tan,
-            String dataPath,
-            String extension,
+            SQLVisitor pq,
+            Map map,
+            //called from CostOptimizer, which already has CostParallellismAssigner instantiated
+            CostParallelismAssigner parAssigner,
+            Map<String, Expression> compNamesAndExprs,
+            Map<Set<String>, Expression> compNamesOrExprs,
+            ProjGlobalCollect globalCollect){
+        _pq = pq;
+        _map = map;
+        _schema = schema;
+        
+        _dataPath = SystemParameters.getString(map, "DIP_DATA_PATH");
+        _extension = SystemParameters.getString(map, "DIP_EXTENSION");
+        
+        _parAssigner = parAssigner;
+
+        _fileEstimator = new ConfigSelectivityEstimator(map);
+        _selEstimator = new SelingerSelectivityEstimator(schema, _pq.getTan());
+
+        _compNamesAndExprs = compNamesAndExprs;
+        _compNamesOrExprs = compNamesOrExprs;
+
+        _globalCollect = globalCollect;
+    }
+    
+    public NameComponentGenerator(Schema schema,
+            SQLVisitor pq,
             Map map,
             //called from CostOptimizer, which already has CostParallellismAssigner instantiated
             CostParallelismAssigner parAssigner,
             Map<String, Expression> compNamesAndExprs,
             Map<Set<String>, Expression> compNamesOrExprs,
             ProjGlobalCollect globalCollect,
-            JoinTablesExprs jte){
-        _schema = schema;
-        _tan = tan;
-        _dataPath = dataPath;
-        _extension = extension;
-        _map = map;
-        _parAssigner = parAssigner;
-
-        _fileEstimator = new ConfigSelectivityEstimator(map);
-        _selEstimator = new SelingerSelectivityEstimator(schema, tan);
-
-        _compNamesAndExprs = compNamesAndExprs;
-        _compNamesOrExprs = compNamesOrExprs;
-
-        _globalCollect = globalCollect;
-        _jte = jte;
-    }
+            boolean isForSourcesOnly){
+        this(schema, pq, map, parAssigner, compNamesAndExprs, compNamesOrExprs, globalCollect);
+        _isForSourcesOnly = isForSourcesOnly;
+    }    
 
     public CostParams getCostParameters(String componentName){
         return _compCost.get(componentName);
@@ -121,12 +127,17 @@ public class NameComponentGenerator implements ComponentGenerator{
         addProjectOperator(source);
 
         finalizeCompCost(source);
+        
+        //setting parallelism if this is not used for determining source parallelism
+        if(!_isForSourcesOnly){
+            _parAssigner.setParallelism(source, _compCost);
+        }
 
         return source;
     }
 
     private DataSourceComponent createAddDataSource(String tableCompName) {
-        String tableSchemaName = _tan.getSchemaName(tableCompName);
+        String tableSchemaName = _pq.getTan().getSchemaName(tableCompName);
         String sourceFile = tableSchemaName.toLowerCase();
 
         DataSourceComponent relation = new DataSourceComponent(
@@ -142,31 +153,14 @@ public class NameComponentGenerator implements ComponentGenerator{
      */
     private void createCompCost(DataSourceComponent source) {
         String compName = source.getName();
-        String schemaName = _tan.getSchemaName(compName);
+        String schemaName = _pq.getTan().getSchemaName(compName);
         CostParams costParams = new CostParams();
 
         costParams.setCardinality(_schema.getTableSize(schemaName));
         //schema is consisted of TableAlias.columnName
-        costParams.setSchema(createAliasedSchema(_schema.getTableSchema(schemaName), compName));
+        costParams.setSchema(ParserUtil.createAliasedSchema(_schema.getTableSchema(schemaName), compName));
                 
         _compCost.put(compName, costParams);
-    }
-
-    /*
-     * From a list of <NATIONNATE, StringConversion>
-     *   it creates a list of <N1.NATIONNAME, StringConversion>
-     */
-    private List<ColumnNameType> createAliasedSchema(List<ColumnNameType> originalSchema, String aliasName){
-        List<ColumnNameType> result = new ArrayList<ColumnNameType>();
-
-        for(ColumnNameType cnt: originalSchema){
-            String name = cnt.getName();
-            name = aliasName + "." + name;
-            TypeConversion tc = cnt.getType();
-            result.add(new ColumnNameType(name, tc));
-        }
-
-        return result;
     }
 
     /*
@@ -185,16 +179,25 @@ public class NameComponentGenerator implements ComponentGenerator{
      * List<Expression> is a set of join conditions between two components.
      */
     @Override
-    public Component generateEquiJoin(Component left, Component right, List<Expression> joinCondition){
+    public Component generateEquiJoin(Component left, Component right){
         EquiJoinComponent joinComponent = createAndAddEquiJoin(left, right);
+        
+        //compute join condition
+        List<Expression> joinCondition = ParserUtil.getJoinCondition(_pq, left, right);
+        
         createCompCost(joinComponent, joinCondition);
+        
+        //set hashes for two parents
+        addHash(left, joinCondition);
+        addHash(right, joinCondition);
         
         //operators
         addSelectOperator(joinComponent);
         addProjectOperator(joinComponent);
-        //set hashes for two parents, has to be after all the operators
-        addHash(left, joinCondition);
-        addHash(right, joinCondition);
+        if(ParserUtil.isFinalJoin(joinComponent, _pq)){
+            //final component in terms of joins
+            addFinalAgg(joinComponent);
+        }
 
         finalizeCompCost(joinComponent);
         //setting parallelism
@@ -282,21 +285,20 @@ public class NameComponentGenerator implements ComponentGenerator{
      * joinCompNames - all the component names from the join condition corresponding to parent
      */
     private List<String> getJoinSchemaNames(List<String> allJoinCompNames, Component parent) {
-        List<DataSourceComponent> ancestorComps = parent.getAncestorDataSources();
-        List<String> ancestors = ParserUtil.getSourceNameList(ancestorComps);
+        List<String> ancestors = ParserUtil.getSourceNameList(parent);
         List<String> joinCompNames = ParserUtil.getIntersection(allJoinCompNames, ancestors);
 
         List<String> joinSchemaNames = new ArrayList<String>();
         for(String joinCompName: joinCompNames){
-            joinSchemaNames.add(_tan.getSchemaName(joinCompName));
+            joinSchemaNames.add(_pq.getTan().getSchemaName(joinCompName));
         }
         return joinSchemaNames;
     }
 
-    public double computeHashSelectivity(String leftJoinTableSchemaName, String rightJoinTableSchemaName, 
+    private double computeHashSelectivity(String leftJoinTableSchemaName, String rightJoinTableSchemaName, 
             long leftCardinality, long rightCardinality, double rightSelectivity){
         long inputCardinality = leftCardinality + rightCardinality;
-        double selectivity = 1;
+        double selectivity;
 
         if(leftJoinTableSchemaName.equals(rightJoinTableSchemaName)){
             //we treat this as a cross-product on which some selections are performed
@@ -312,7 +314,7 @@ public class NameComponentGenerator implements ComponentGenerator{
     /*************************************************************************************
      * WHERE clause - SelectOperator
      *************************************************************************************/
-    public void addSelectOperator(Component component){
+    private void addSelectOperator(Component component){
         Expression whereCompExpr = createWhereForComponent(component);
 
         processWhereForComponent(component, whereCompExpr);
@@ -345,13 +347,18 @@ public class NameComponentGenerator implements ComponentGenerator{
     /*
      * whereCompExpression is the part of WHERE clause which refers to affectedComponent
      * This is the only method in this class where IndexWhereVisitor is actually instantiated and invoked
+     * 
+     * SelectOperator is able to deal with ValueExpressions (and not only with ColumnReferences),
+     *   but here we recognize JSQL expressions here which can be built of inputTupleSchema (constants included)
      */
-    private void processWhereForComponent(Component affectedComponent, Expression whereCompExpression){
-        //first get the current schema of the component
-        List<ColumnNameType> tupleSchema = _compCost.get(affectedComponent.getName()).getSchema();
-        NameWhereVisitor whereVisitor = new NameWhereVisitor(_schema, _tan, tupleSchema);
-        whereCompExpression.accept(whereVisitor);
-        attachWhereClause(affectedComponent, whereVisitor.getSelectOperator());
+    private void processWhereForComponent(Component affectedComponent, Expression whereCompExpr){
+        if(whereCompExpr != null){
+            //first get the current schema of the component
+            List<ColumnNameType> tupleSchema = _compCost.get(affectedComponent.getName()).getSchema();
+            NameWhereVisitor whereVisitor = new NameWhereVisitor(_schema, _pq.getTan(), tupleSchema);
+            whereCompExpr.accept(whereVisitor);
+            attachWhereClause(affectedComponent, whereVisitor.getSelectOperator());
+        }
     }
 
     private void attachWhereClause(Component affectedComponent, SelectOperator select) {
@@ -359,27 +366,34 @@ public class NameComponentGenerator implements ComponentGenerator{
     }
 
     private void processWhereCost(Component component, Expression whereCompExpr) {
-        //this is going to change selectivity
-        String compName = component.getName();
-        CostParams costParams = _compCost.get(compName);
-        double previousSelectivity = costParams.getSelectivity();
+        if(whereCompExpr != null){
+            //this is going to change selectivity
+            String compName = component.getName();
+            CostParams costParams = _compCost.get(compName);
+            double previousSelectivity = costParams.getSelectivity();
 
-        double selectivity = previousSelectivity * _selEstimator.estimate(whereCompExpr);
-        costParams.setSelectivity(selectivity);
+            double selectivity = previousSelectivity * _selEstimator.estimate(whereCompExpr);
+            costParams.setSelectivity(selectivity);
+        }
     }
 
 
     /*************************************************************************************
      * Project operator
      *************************************************************************************/
-    public void addProjectOperator(Component component){
+    private void addProjectOperator(Component component){
         String compName = component.getName();
-        List<ColumnNameType> tupleSchema = _compCost.get(compName).getSchema();
-        ProjSchemaCreator psc = new ProjSchemaCreator(_globalCollect, tupleSchema, component, _tan, _schema, _jte);
+        List<ColumnNameType> inputTupleSchema = _compCost.get(compName).getSchema();
+        ProjSchemaCreator psc = new ProjSchemaCreator(_globalCollect, inputTupleSchema, component, _pq, _schema);
         psc.create();
 
-        attachProjectOperator(component, psc.getProjectOperator());
-        processProjectCost(component, psc.getOutputSchema());
+        List<ColumnNameType> outputTupleSchema = psc.getOutputSchema();
+        
+        if(!ParserUtil.isSameSchema(inputTupleSchema, outputTupleSchema)){
+            //no need to add projectOperator unless it changes something
+            attachProjectOperator(component, psc.getProjectOperator());
+            processProjectCost(component, outputTupleSchema);
+        }
     }
 
     private void attachProjectOperator(Component component, ProjectOperator project){
@@ -395,49 +409,42 @@ public class NameComponentGenerator implements ComponentGenerator{
     /*************************************************************************************
      * SELECT clause - Final aggregation
      *************************************************************************************/
-     public void addFinalAgg(List<SelectItem> selectItems) {
+     private void addFinalAgg(Component lastComponent) {
         //TODO: take care in nested case
-        Component lastComponent = _queryPlan.getLastComponent();
         List<ColumnNameType> tupleSchema = _compCost.get(lastComponent.getName()).getSchema();
-        NameSelectItemsVisitor selectVisitor = new NameSelectItemsVisitor(_schema, _tan, tupleSchema, _map);
-        for(SelectItem elem: selectItems){
+        NameSelectItemsVisitor selectVisitor = new NameSelectItemsVisitor(_schema, _pq.getTan(), tupleSchema, _map);
+        for(SelectItem elem: _pq.getSelectItems()){
             elem.accept(selectVisitor);
         }
         List<AggregateOperator> aggOps = selectVisitor.getAggOps();
         List<ValueExpression> groupByVEs = selectVisitor.getGroupByVEs();
+        List<Expression> groupByExprs = selectVisitor.getGroupByExprs();
 
-        attachSelectClause(lastComponent, aggOps, groupByVEs);
+        attachSelectClause(lastComponent, aggOps, groupByVEs, groupByExprs);
     }
 
-    private void attachSelectClause(Component lastComponent, List<AggregateOperator> aggOps, List<ValueExpression> groupByVEs) {
+    private void attachSelectClause(Component lastComponent, List<AggregateOperator> aggOps, List<ValueExpression> groupByVEs, List<Expression> groupByExprs) {
+        ProjectOperator project = new ProjectOperator(groupByVEs);
         if (aggOps.isEmpty()){
-            ProjectOperator project = new ProjectOperator(groupByVEs);
             lastComponent.addOperator(project);
         }else if (aggOps.size() == 1){
             //all the others are group by
             AggregateOperator firstAgg = aggOps.get(0);
-
-            if(ParserUtil.isAllColumnRefs(groupByVEs)){
-                //plain fields in select
-                List<Integer> groupByColumns = ParserUtil.extractColumnIndexes(groupByVEs);
-                firstAgg.setGroupByColumns(groupByColumns);
-
-                //Setting new level of components is necessary for correctness only for distinct in aggregates
-                    //  but it's certainly pleasant to have the final result grouped on nodes by group by columns.
-                boolean newLevel = !(_nt.isHashedBy(lastComponent, groupByColumns));
-                if(newLevel){
-                    lastComponent.setHashIndexes(groupByColumns);
-                    OperatorComponent newComponent = new OperatorComponent(lastComponent,
-                                                                      ParserUtil.generateUniqueName("OPERATOR"),
-                                                                      _queryPlan).addOperator(firstAgg);
-
-                }else{
-                    lastComponent.addOperator(firstAgg);
-                }
+            firstAgg.setGroupByProjection(project);
+            
+            if(firstAgg.getDistinct() == null){
+                lastComponent.addOperator(firstAgg);
             }else{
-                //on the last component there should be projection added before we add final aggregation
-                //  so we should not be here
-                throw new RuntimeException("It seems that projection on the last component has not do good job!");
+                //Setting new level of components is only necessary for distinct in aggregates
+                
+                //in general groupByVEs is not a ColumnReference (it can be an addition, for example). 
+                //  ProjectOperator is not obliged to create schema which fully fits in what FinalAggregation wants
+                addHash(lastComponent, groupByExprs);
+                OperatorComponent newComponent = new OperatorComponent(lastComponent,
+                                                                 ParserUtil.generateUniqueName("OPERATOR"),
+                                                                 _queryPlan).addOperator(firstAgg);    
+                //we can use the same firstAgg, because we no tupleSchema change occurred after LAST_COMPONENT:FinalAgg and NEW_COMPONENT:FinalAgg
+                //  Namely, NEW_COMPONENT has only FinalAgg operator
             }
         }else{
             throw new RuntimeException("For now only one aggregate function supported!");
@@ -451,18 +458,20 @@ public class NameComponentGenerator implements ComponentGenerator{
 
     //set hash for this component, knowing its position in the query plan.
     //  Conditions are related only to parents of join,
-    //  but we have to filter who belongs to my branch in IndexJoinHashVisitor.
+    //  but we have to filter who belongs to my branch in NameJoinHashVisitor.
     //  We don't want to hash on something which will be used to join with same later component in the hierarchy.
     private void addHash(Component component, List<Expression> joinCondition) {
         List<ColumnNameType> tupleSchema = _compCost.get(component.getName()).getSchema();
-        NameJoinHashVisitor joinOn = new NameJoinHashVisitor(_schema, _tan, tupleSchema, component);
+        NameJoinHashVisitor joinOn = new NameJoinHashVisitor(_schema, _pq.getTan(), tupleSchema, component);
         for(Expression exp: joinCondition){
             exp.accept(joinOn);
         }
         List<ValueExpression> hashExpressions = joinOn.getExpressions();
 
+        //if joinCondition is a R.A + 5 = S.A, and inputTupleSchema is "R.A + 5", this is NOT a complex condition
+        //  HashExpression is a ColumnReference(0)
         if(!joinOn.isComplexCondition()){
-            //all the join conditions are represented through columns, no ValueExpression (neither in joined component)
+            //all the join conditions are represented through columns, no ValueExpression
             //guaranteed that both joined components will have joined columns visited in the same order
             //i.e R.A=S.A and R.B=S.B, the columns are (R.A, R.B), (S.A, S.B), respectively
             List<Integer> hashIndexes = ParserUtil.extractColumnIndexes(hashExpressions);
@@ -470,7 +479,7 @@ public class NameComponentGenerator implements ComponentGenerator{
             //hash indexes in join condition
             component.setHashIndexes(hashIndexes);
         }else{
-            //hahs expressions in join condition
+            //hash expressions in join condition
             component.setHashExpressions(hashExpressions);
         }
     }

@@ -1,6 +1,7 @@
 package storage;
 
 import java.io.File;
+import java.util.Map;
 import java.util.ArrayList;
 import java.net.InetAddress;
 import java.io.Serializable;
@@ -10,6 +11,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import utilities.SystemParameters;
 
 /* StorageManager that handles reading and writing objects from/to a
  * filesystem. This class is instantiated as new StorageManager<R>(params)
@@ -28,10 +30,14 @@ public class StorageManager<R> implements Serializable {
 	private String rootDir = null; 
 
 	/* Constructor. Other fields are instantiated in first r/w, to work with Storm */
-	public StorageManager(BasicStore store, String rootDir, boolean coldstart) {
+	public StorageManager(BasicStore store, Map conf) {
 		this.store = store;
-		this.rootDir = rootDir;
-		this.coldStart = coldstart;
+		if (SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED")) {
+			this.rootDir = SystemParameters.getString(conf, "STORAGE_DIP_DIR");
+		} else {
+			this.rootDir = SystemParameters.getString(conf, "STORAGE_LOCAL_DIR");
+		}
+		this.coldStart = SystemParameters.getBoolean(conf, "STORAGE_COLD_START");
 	}
 
 	private void checkRootDir() {

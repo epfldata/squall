@@ -6,8 +6,8 @@
 package visitors;
 
 import operators.AggregateOperator;
+import operators.ChainOperator;
 import operators.DistinctOperator;
-import operators.Operator;
 import operators.ProjectOperator;
 import operators.SelectOperator;
 
@@ -22,6 +22,6 @@ public interface OperatorVisitor {
 
     public void visit(AggregateOperator aggregation);
     
-    public void visit(Operator operator);
+    public void visit(ChainOperator chain);
 
 }

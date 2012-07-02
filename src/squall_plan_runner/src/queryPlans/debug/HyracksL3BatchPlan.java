@@ -58,7 +58,7 @@ public class HyracksL3BatchPlan {
                     relationOrders,
                     _queryPlan).addOperator(postAgg)
                                .setHashIndexes(hashIndexes)
-                               .setBatchOutputMode(1000);
+                               .setBatchOutputMillis(1000);
 
             //-------------------------------------------------------------------------------------
             AggregateSumOperator agg = new AggregateSumOperator(_ic, new ColumnReference(_ic, 1), conf)

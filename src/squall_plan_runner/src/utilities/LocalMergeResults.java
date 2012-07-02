@@ -13,8 +13,8 @@ import main.Main;
 import operators.AggregateOperator;
 import org.apache.log4j.Logger;
 import queryPlans.QueryPlan;
-import stormComponents.StormComponent;
 import storage.AggregationStorage;
+import stormComponents.StormComponent;
 
 public class LocalMergeResults {
         private static Logger LOG = Logger.getLogger(LocalMergeResults.class);

@@ -1,46 +1,44 @@
 package main;
 
+import components.DataSourceComponent;
 import java.io.StringReader;
-import java.util.List;
 import java.util.Map;
 import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.Select;
-import net.sf.jsqlparser.statement.select.SelectItem;
-import optimizers.rule.RuleOptimizer;
 import optimizers.Optimizer;
-import optimizers.IndexTranslator;
-import optimizers.Translator;
+import optimizers.cost.CostOptimizer;
+import optimizers.cost.NameComponentGenerator;
+import optimizers.rule.RuleOptimizer;
 import queryPlans.QueryPlan;
-import schema.Schema;
-import schema.TPCH_Schema;
 import util.ParserUtil;
-import util.TableAliasName;
 import utilities.SystemParameters;
 import visitors.jsql.SQLVisitor;
 
 public class ParserMain{
-    // this is an upper limit for the parallelism of a component
-    private final int CLUSTER_WORKERS = 176;
-    private int CLUSTER_ACKERS = 17;
+    //private final int CLUSTER_WORKERS = 176;
+    private static int CLUSTER_ACKERS = 17; //could be 10% of CLUSTER_WORKERS, but this is a magic number in our system
 
-    // this is an upper limit for the parallelism of a component
-    private final int LOCAL_WORKERS = 176;
-    private int LOCAL_ACKERS = 1;
+    private static int LOCAL_ACKERS = 1;
 
-    private final String sqlExtension = ".sql";
+    private final static String sqlExtension = ".sql";
 
-    public static void main(String[] args){
+    public static void main(String[] args){        
         String parserConfPath = args[0];
-        new ParserMain(parserConfPath);
+        ParserMain pm = new ParserMain();
+        
+        Map map = pm.createConfig(parserConfPath);
+        SQLVisitor parsedQuery = pm.parseQuery(map);
+        QueryPlan plan = pm.generatePlan(parsedQuery, map);
+        
+        new Main(plan, map);
     }
-
+    
     //String[] sizes: {"1G", "2G", "4G", ...}
-    public ParserMain(String parserConfPath){
+    public Map createConfig(String parserConfPath){
         Map map = SystemParameters.fileToMap(parserConfPath);
 
         if(!SystemParameters.getBoolean(map, "DIP_ACK_EVERY_TUPLE")){
@@ -50,95 +48,67 @@ public class ParserMain{
             LOCAL_ACKERS = 0;
         }
 
-        String mode = "";
+        String mode;
         if (SystemParameters.getBoolean(map, "DIP_DISTRIBUTED")){
             mode = "parallel";
-            SystemParameters.putInMap(map, "DIP_NUM_PARALLELISM", CLUSTER_WORKERS);
+            //default value is already set, but for scheduling we might need to change that
+            //SystemParameters.putInMap(map, "DIP_NUM_WORKERS", CLUSTER_WORKERS);
             SystemParameters.putInMap(map, "DIP_NUM_ACKERS", CLUSTER_ACKERS);
         }else{
             mode = "serial";
-            SystemParameters.putInMap(map, "DIP_NUM_PARALLELISM", LOCAL_WORKERS);
             SystemParameters.putInMap(map, "DIP_NUM_ACKERS", LOCAL_ACKERS);
         }
-
-        String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
-        String sqlPath = SystemParameters.getString(map, "DIP_SQL_ROOT") + queryName + sqlExtension;
-        String sqlstring = ParserUtil.readStringFromFile(sqlPath);
 
         String dbSize = SystemParameters.getString(map, "DIP_DB_SIZE") + "G";
         String srcParallelism = SystemParameters.getString(map, "DIP_MAX_SRC_PAR");
         String dataRoot = SystemParameters.getString(map, "DIP_DATA_ROOT");
         String dataPath = dataRoot + "/" + dbSize + "/";
 
+        String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
         SystemParameters.putInMap(map, "DIP_DATA_PATH" , dataPath);
         String topologyName = dbSize + "_" + queryName + "_" + mode + "_" + srcParallelism;
         SystemParameters.putInMap(map, "DIP_TOPOLOGY_NAME", topologyName);
 
-        String extension = SystemParameters.getString(map, "DIP_EXTENSION");
-        QueryPlan plan = sqlToPlan(sqlstring, dataPath, extension, map);
-        new Main(plan, map);
+        return map;
     }
-
-    private QueryPlan sqlToPlan(String sql, String dataPath, String extension, Map map){
+    
+    public SQLVisitor parseQuery(Map map){
+        String sqlString = readSQL(map);
+        
         CCJSqlParserManager pm = new CCJSqlParserManager();
         Statement statement=null;
         try {
-            statement = pm.parse(new StringReader(sql));
+            statement = pm.parse(new StringReader(sqlString));
         } catch (JSQLParserException ex) {
             System.out.println("JSQLParserException");
         }
 
         if (statement instanceof Select) {
             Select selectStatement = (Select) statement;
-            SQLVisitor parser = new SQLVisitor();
+            SQLVisitor parsedQuery = new SQLVisitor();
 
             //visit whole SELECT statement
-            parser.visit(selectStatement);
+            parsedQuery.visit(selectStatement);
+            parsedQuery.doneVisiting();
 
-            // print out all the tables
-            List<Table> tableList = parser.getTableList();
-            for(Table table: tableList){
-                String tableStr = ParserUtil.toString(table);
-                System.out.println(tableStr);
-            }
-
-            //print all the joins
-            List<Join> joinList = parser.getJoinList();
-            for(Join join: joinList){
-                String joinStr = ParserUtil.toString(join);
-                System.out.println(joinStr);
-            }
-
-            List<SelectItem> selectItems = parser.getSelectItems();
-
-            Expression whereExpr = parser.getWhereExpr();
-
-            double scallingFactor = SystemParameters.getDouble(map, "DIP_DB_SIZE");
-            return generatePlan(tableList, joinList, selectItems, whereExpr, new TPCH_Schema(scallingFactor), dataPath, extension, map);
+            return parsedQuery;
         }
         throw new RuntimeException("Please provide SELECT statement!");
     }
+    
+    private static String readSQL(Map map){
+        String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
+        String sqlPath = SystemParameters.getString(map, "DIP_SQL_ROOT") + queryName + sqlExtension;
+        return ParserUtil.readStringFromFile(sqlPath);
+    }    
 
-    private final QueryPlan generatePlan(List<Table> tableList,
-            List<Join> joinList,
-            List<SelectItem> selectItems,
-            Expression whereExpr,
-            Schema schema,
-            String dataPath,
-            String extension,
-            Map map){
-        TableAliasName tan = new TableAliasName(tableList);
-
-        //works both for simple and rule-based optimizer
-        Translator ot = new IndexTranslator(schema, tan);
-
+    public QueryPlan generatePlan(SQLVisitor pq, Map map){
         //Simple optimizer provides lefty plans
-        //Optimizer opt = new SimpleOpt(schema, tan, dataPath, extension, map);
+        //Optimizer opt = new SimpleOpt(pq, map);
         //Dynamic programming query plan
-        Optimizer opt = new RuleOptimizer(schema, tan, dataPath, extension, map);
+        Optimizer opt = new RuleOptimizer(pq, map);
 
-        return opt.generate(tableList, joinList, selectItems, whereExpr);
-        
+        return opt.generate();
     }
-   
+    
 }

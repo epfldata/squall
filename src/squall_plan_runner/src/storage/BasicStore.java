@@ -19,7 +19,7 @@ public abstract class BasicStore<R> implements Serializable {
 	protected StorageManager _storageManager;
 	private ByteArrayOutputStream _baos = null;
 	private static final long serialVersionUID = 1L;
-	protected static final int DEFAULT_SIZE_MB = 64;
+	protected static final int DEFAULT_SIZE_MB = 256;
 	private static final String _uniqIdPrefix = "Store#";
 	
 	public BasicStore(int storesizemb) {

@@ -1,11 +1,6 @@
 package util;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Table;
 
@@ -91,9 +86,16 @@ public class JoinTablesExprs {
    public List<Expression> getExpressions(List<String> tables1, List<String> tables2) {
         List<Expression> result = new ArrayList<Expression>();
         for(String table1: tables1){
-            result.addAll(getExpressions(table1, tables2));
+            List<Expression> delta = getExpressions(table1, tables2);
+            if(delta != null){
+                result.addAll(delta);
+            }
         }
-        return result;
+        if (result.isEmpty()){
+            return null;
+        }else{
+            return result;
+        }
     }
 
     public List<Expression> getExpressions(String table1, List<String> tables2){
@@ -104,11 +106,30 @@ public class JoinTablesExprs {
                 result.addAll(delta);
             }
         }
-        return result;
+        if (result.isEmpty()){
+            return null;
+        }else{
+            return result;
+        }
     }
 
     public List<Expression> getExpressions(String tableName1, String tableName2){
         HashMap<String, List<Expression>> inner =_tablesJoinExp.get(tableName1);
         return inner.get(tableName2);
+    }
+
+    public boolean joinExistsBetween(String firstSource, List<String> secondAncestors) {
+        List<String> joinedWith = getJoinedWith(firstSource);
+        List<String> intersection = ParserUtil.getIntersection(joinedWith, secondAncestors);
+        return !intersection.isEmpty();
+    }
+
+    public boolean joinExistsBetween(List<String> firstAncestors, List<String> secondAncestors) {
+        for(String firstSource: firstAncestors){
+            if (joinExistsBetween(firstSource, secondAncestors)){
+                return true;
+            }
+        }
+        return false;
     }
 }

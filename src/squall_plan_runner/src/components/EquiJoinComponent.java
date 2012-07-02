@@ -132,7 +132,7 @@ public class EquiJoinComponent implements Component {
     }
 
     @Override
-    public EquiJoinComponent setBatchOutputMode(long millis){
+    public EquiJoinComponent setBatchOutputMillis(long millis){
         _batchOutputMillis = millis;
         return this;
     }
@@ -156,27 +156,21 @@ public class EquiJoinComponent implements Component {
         if(partitioningType == StormJoin.DST_ORDERING){
                 //In Preaggregation one or two storages can be set; otherwise no storage is set
                 if(_firstPreAggStorage == null){
-                    _firstPreAggStorage = new KeyValueStore<String, String>();
+                    _firstPreAggStorage = new KeyValueStore<String, String>(conf);
                 }
                 if(_secondPreAggStorage == null){
-                    _secondPreAggStorage = new KeyValueStore<String, String>();
+                    _secondPreAggStorage = new KeyValueStore<String, String>(conf);
                 }
 
                 _joiner = new StormDstJoin(_firstParent,
                                     _secondParent,
-                                    _componentName,
+                                    this,
                                     allCompNames,
-                                    _chain,
                                     _firstPreAggStorage,
                                     _secondPreAggStorage,
                                     _firstPreAggProj,
                                     _secondPreAggProj,
-                                    _hashIndexes,
-                                    _hashExpressions,
                                     hierarchyPosition,
-                                    _printOut,
-                                    _batchOutputMillis,
-                                    _fullHashList,
                                     builder,
                                     killer,
                                     conf);
@@ -187,28 +181,23 @@ public class EquiJoinComponent implements Component {
             }
             //In Preaggregation one or two storages can be set; otherwise no storage is set
             if(_firstPreAggStorage == null){
-                _firstPreAggStorage = new KeyValueStore<String, String>();
+                _firstPreAggStorage = new KeyValueStore<String, String>(conf);
             }
             if(_secondPreAggStorage == null){
-                _secondPreAggStorage = new KeyValueStore<String, String>();
+                _secondPreAggStorage = new KeyValueStore<String, String>(conf);
             }
 
             //since we don't know how data is scattered across StormSrcStorage,
             //  we cannot do customStreamGrouping from the previous level
             _joiner = new StormSrcJoin(_firstParent,
                                     _secondParent,
-                                    _componentName,
+                                    this,
                                     allCompNames,
-                                    _chain,
                                     _firstPreAggStorage,
                                     _secondPreAggStorage,
                                     _firstPreAggProj,
                                     _secondPreAggProj,
-                                    _hashIndexes,
-                                    _hashExpressions,
                                     hierarchyPosition,
-                                    _printOut,
-                                    _batchOutputMillis,
                                     builder,
                                     killer,
                                     conf);
@@ -266,6 +255,16 @@ public class EquiJoinComponent implements Component {
     @Override
     public String getInfoID() {
         return _joiner.getInfoID();
+    }
+
+    @Override
+    public boolean getPrintOut() {
+        return _printOut;
+    }
+
+    @Override
+    public long getBatchOutputMillis() {
+        return _batchOutputMillis;
     }
 
     @Override

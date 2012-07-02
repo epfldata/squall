@@ -1,63 +1,17 @@
 
 package visitors.squall;
 
-import conversion.DateConversion;
-import conversion.DoubleConversion;
-import conversion.LongConversion;
-import conversion.NumericConversion;
-import conversion.StringConversion;
-import conversion.TypeConversion;
+import conversion.*;
 import expressions.ColumnReference;
 import expressions.IntegerYearFromDate;
 import expressions.ValueExpression;
 import expressions.ValueSpecification;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Stack;
-import net.sf.jsqlparser.expression.AllComparisonExpression;
-import net.sf.jsqlparser.expression.AnyComparisonExpression;
-import net.sf.jsqlparser.expression.BinaryExpression;
-import net.sf.jsqlparser.expression.CaseExpression;
-import net.sf.jsqlparser.expression.DateValue;
-import net.sf.jsqlparser.expression.DoubleValue;
-import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.ExpressionVisitor;
-import net.sf.jsqlparser.expression.Function;
-import net.sf.jsqlparser.expression.InverseExpression;
-import net.sf.jsqlparser.expression.JdbcParameter;
-import net.sf.jsqlparser.expression.LongValue;
-import net.sf.jsqlparser.expression.NullValue;
-import net.sf.jsqlparser.expression.Parenthesis;
-import net.sf.jsqlparser.expression.StringValue;
-import net.sf.jsqlparser.expression.TimeValue;
-import net.sf.jsqlparser.expression.TimestampValue;
-import net.sf.jsqlparser.expression.WhenClause;
-import net.sf.jsqlparser.expression.operators.arithmetic.Addition;
-import net.sf.jsqlparser.expression.operators.arithmetic.BitwiseAnd;
-import net.sf.jsqlparser.expression.operators.arithmetic.BitwiseOr;
-import net.sf.jsqlparser.expression.operators.arithmetic.BitwiseXor;
-import net.sf.jsqlparser.expression.operators.arithmetic.Concat;
-import net.sf.jsqlparser.expression.operators.arithmetic.Division;
-import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
-import net.sf.jsqlparser.expression.operators.arithmetic.Subtraction;
+import java.util.*;
+import net.sf.jsqlparser.expression.*;
+import net.sf.jsqlparser.expression.operators.arithmetic.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
-import net.sf.jsqlparser.expression.operators.relational.Between;
-import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
-import net.sf.jsqlparser.expression.operators.relational.ExistsExpression;
-import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
-import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
-import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
-import net.sf.jsqlparser.expression.operators.relational.InExpression;
-import net.sf.jsqlparser.expression.operators.relational.IsNullExpression;
-import net.sf.jsqlparser.expression.operators.relational.ItemsListVisitor;
-import net.sf.jsqlparser.expression.operators.relational.LikeExpression;
-import net.sf.jsqlparser.expression.operators.relational.Matches;
-import net.sf.jsqlparser.expression.operators.relational.MinorThan;
-import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
-import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
+import net.sf.jsqlparser.expression.operators.relational.*;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import optimizers.cost.NameTranslator;
@@ -67,7 +21,7 @@ import util.ParserUtil;
 import util.TableAliasName;
 
 /*
- * Used for Cost-optmizer(nameTranslator)
+ * Used for Cost-optimizer(nameTranslator)
  *   to convert a list of JSQL expressions to a list of Squall ValueExpressions
  * Similar to IndexWhereVisitor, but does not use predStack
  */
@@ -97,8 +51,8 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor{
 
     public List<ValueExpression> getExprs(){
         List<ValueExpression> veList = new ArrayList<ValueExpression>();
-        for(ValueExpression ve= _exprStack.pop();_exprStack.size()>0;){
-            veList.add(ve);
+        while(!_exprStack.isEmpty()){
+            veList.add(_exprStack.pop());
         }
         Collections.reverse(veList); // stack inverse the order of elements
         return veList;
@@ -123,7 +77,7 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor{
 
         int position = _nt.getColumnIndex(column, _inputTupleSchema);
 
-        ValueExpression ve = new ColumnReference(tc, position);
+        ValueExpression ve = new ColumnReference(tc, position, ParserUtil.getFullAliasedName(column));
         pushToExprStack(ve);
     }
 
@@ -153,7 +107,11 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor{
 
     @Override
     public void visit(Parenthesis prnths) {
-        prnths.getExpression().accept(this);
+        //ValueExpression tree contains information about precedence
+        //  this is why ValueExpression there is no ParenthesisValueExpression
+        if(!isRecognized(prnths)){
+            prnths.getExpression().accept(this);
+        }
     }
 
     @Override
@@ -283,7 +241,7 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor{
         if(position != -1){
             //we found an expression already in the tuple schema
             TypeConversion tc = _nt.getType(_inputTupleSchema, strExpr);
-            ValueExpression ve = new ColumnReference(tc, position);
+            ValueExpression ve = new ColumnReference(tc, position, strExpr);
             pushToExprStack(ve);
             return true;
         }else{

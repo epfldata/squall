@@ -2,7 +2,6 @@ DIP_DISTRIBUTED false
 DIP_QUERY_NAME theta_input_dominated
 DIP_TOPOLOGY_NAME_PREFIX username
 DIP_TOPOLOGY_NAME ThetaInputDominatedSimple
-DIP_NUM_PARALLELISM 5
 DIP_NUM_ACKERS 0
 
 DIP_DATA_PATH ../testing/data/tpch/0.01G/
@@ -28,3 +27,10 @@ ORDERS_CARD 50
 LINEITEM_CARD 50
 
 LINEITEM_ORDERS_CARD 50
+
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_DIP_DIR /export/home/iklonatos/storage 
+STORAGE_COLD_START true

@@ -16,6 +16,7 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+import components.ComponentProperties;
 import expressions.ValueExpression;
 import java.util.List;
 import java.util.Map;
@@ -63,47 +64,41 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
     private long _batchOutputMillis;
 
     public StormOperator(StormEmitter emitter,
-            String componentName,
+            ComponentProperties cp,
             List<String> allCompNames,
-            ChainOperator chain,
-            List<Integer> hashIndexes,
-            List<ValueExpression> hashExpressions,
             int hierarchyPosition,
-            boolean printOut,
-            long batchOutputMillis,
-            List<String> fullHashList,
             TopologyBuilder builder,
             TopologyKiller killer,
             Config conf) {
 
         _conf = conf;
         _emitter = emitter;
-        _ID = componentName;
-        _componentIndex = String.valueOf(allCompNames.indexOf(componentName));
-        _batchOutputMillis = batchOutputMillis;
+        _ID = cp.getName();
+        _componentIndex = String.valueOf(allCompNames.indexOf(_ID));
+        _batchOutputMillis = cp.getBatchOutputMillis();
 
         int parallelism = SystemParameters.getInt(conf, _ID+"_PAR");
 
 //        if(parallelism > 1 && distinct != null){
 //            throw new RuntimeException(_componentName + ": Distinct operator cannot be specified for multiThreaded bolts!");
 //        }
-        _operatorChain = chain;
+        _operatorChain = cp.getChainOperator();
 
-        _hashIndexes = hashIndexes;
-        _hashExpressions = hashExpressions;
+        _hashIndexes = cp.getHashIndexes();
+        _hashExpressions = cp.getHashExpressions();
 
         _hierarchyPosition = hierarchyPosition;
 
         InputDeclarer currentBolt = builder.setBolt(_ID, this, parallelism);
         
-        _fullHashList = fullHashList;
+        _fullHashList = cp.getFullHashList();
         currentBolt = MyUtilities.attachEmitterCustom(conf, _fullHashList, currentBolt, _emitter);
 
         if( _hierarchyPosition == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf))){
             killer.registerComponent(this, parallelism);
         }
 
-        _printOut= printOut;
+        _printOut= cp.getPrintOut();
         if (_printOut && _operatorChain.isBlocking()){
            currentBolt.allGrouping(killer.getID(), SystemParameters.DUMP_RESULTS_STREAM);
         }
@@ -267,16 +262,6 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
     @Override
     public String[] getEmitterIDs() {
         return new String[]{_ID};
-    }
-
-    @Override
-    public List<Integer> getHashIndexes() {
-        return _hashIndexes;
-    }
-
-    @Override
-    public List<ValueExpression> getHashExpressions() {
-        return _hashExpressions;
     }
 
     @Override

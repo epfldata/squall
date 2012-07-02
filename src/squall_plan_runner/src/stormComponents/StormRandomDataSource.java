@@ -18,6 +18,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
+import components.ComponentProperties;
 import expressions.ValueExpression;
 import java.util.Arrays;
 import java.util.List;
@@ -86,34 +87,26 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
         private int _customerProduced;
         private int _ordersProduced;
 
-	public StormRandomDataSource(String componentName,
+	public StormRandomDataSource(ComponentProperties cp,
                         List<String> allCompNames,
                         String inputPath,
-                        List<Integer> hashIndexes,
-                        List<ValueExpression> hashExpressions,
-                        SelectOperator selection,
-                        DistinctOperator distinct,
-                        ProjectOperator projection,
-                        AggregateOperator aggregation,
                         int hierarchyPosition,
-                        boolean printOut,
-                        long batchOutputMillis,
                         int parallelism,
                         TopologyBuilder	builder,
                         TopologyKiller killer,
                         Config conf) {
                 _conf = conf;
-                _operatorChain = new ChainOperator(selection, distinct, projection, aggregation);
+                _operatorChain = cp.getChainOperator();
                 _hierarchyPosition = hierarchyPosition;
-		_ID=componentName;
-		_componentIndex = String.valueOf(allCompNames.indexOf(componentName));
+		_ID=cp.getName();
+		_componentIndex = String.valueOf(allCompNames.indexOf(cp.getName()));
                 _inputPath=inputPath;
-                _batchOutputMillis = batchOutputMillis;
+                _batchOutputMillis = cp.getBatchOutputMillis();
 
-                _hashIndexes=hashIndexes;
-                _hashExpressions = hashExpressions;
+                _hashIndexes=cp.getHashIndexes();
+                _hashExpressions = cp.getHashExpressions();
 		
-                _printOut = printOut;
+                _printOut = cp.getPrintOut();
 
                 _fileParts = parallelism;
 
@@ -350,16 +343,6 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
 		// TODO Auto-generated method stub
 		return _ID;
 	}
-
-        @Override
-        public List<Integer> getHashIndexes(){
-            return _hashIndexes;
-        }
-
-        @Override
-        public List<ValueExpression> getHashExpressions() {
-            return _hashExpressions;
-        }
 
         @Override
         public String getInfoID() {
