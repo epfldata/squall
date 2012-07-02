@@ -1,13 +1,13 @@
 package sql.optimizers.cost;
 
-import plan_runner.components.DataSourceComponent;
-import plan_runner.components.EquiJoinComponent;
 import java.util.*;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Table;
+import plan_runner.components.DataSourceComponent;
+import plan_runner.components.EquiJoinComponent;
+import plan_runner.utilities.SystemParameters;
 import sql.schema.Schema;
 import sql.util.ParserUtil;
-import plan_runner.utilities.SystemParameters;
 import sql.visitors.jsql.SQLVisitor;
 
 

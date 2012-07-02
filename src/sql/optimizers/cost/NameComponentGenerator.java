@@ -8,8 +8,11 @@ import sql.estimators.ConfigSelectivityEstimator;
 import sql.estimators.SelingerSelectivityEstimator;
 import plan_runner.expressions.ValueExpression;
 import java.util.*;
+import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.Parenthesis;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
+import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import plan_runner.operators.AggregateOperator;
@@ -249,11 +252,10 @@ public class NameComponentGenerator implements ComponentGenerator{
         //********* set initial (join) selectivity and initial cardinality
         long leftCardinality = _compCost.get(parents[0].getName()).getCardinality();
         long rightCardinality = _compCost.get(parents[1].getName()).getCardinality();
-        double rightSelectivity = _compCost.get(parents[1].getName()).getSelectivity();
 
         //compute
         long inputCardinality = leftCardinality + rightCardinality;
-        double selectivity = computeSelectivity(joinComponent, joinCondition, leftCardinality, rightCardinality, rightSelectivity);
+        double selectivity = computeSelectivity(joinComponent, joinCondition, leftCardinality, rightCardinality);
 
         //setting
         costParams.setCardinality(inputCardinality);
@@ -264,7 +266,7 @@ public class NameComponentGenerator implements ComponentGenerator{
     }
 
     private double computeSelectivity(EquiJoinComponent joinComponent, List<Expression> joinCondition, 
-            long leftCardinality, long rightCardinality, double rightSelectivity){
+            long leftCardinality, long rightCardinality){
 
         Component[] parents = joinComponent.getParents();
         double selectivity = 1;
@@ -279,10 +281,17 @@ public class NameComponentGenerator implements ComponentGenerator{
             throw new RuntimeException("Currently, this support only lefty plans!");
         }
         String rightJoinTableSchemaName = rightJoinTableSchemaNames.get(0);
-        
+
+        int i=0;
         for(String leftJoinTableSchemaName: leftJoinTableSchemaNames){
-            selectivity = selectivity * 
-                    computeHashSelectivity(leftJoinTableSchemaName, rightJoinTableSchemaName, leftCardinality, rightCardinality);
+            double hashSelectivity = computeHashSelectivity(leftJoinTableSchemaName, rightJoinTableSchemaName, leftCardinality, rightCardinality);
+            if(i > 0 && hashSelectivity > 1){
+                //having multiple hashSelectivities means that we have AndCondition between them,
+                //  so they cannot amplify each other.
+                hashSelectivity = 1;
+            }
+            selectivity *= hashSelectivity;
+            i++;
         }
 
         return selectivity;
@@ -346,19 +355,82 @@ public class NameComponentGenerator implements ComponentGenerator{
         for(Map.Entry<Set<String>, Expression> orEntry: _compNamesOrExprs.entrySet()){
             Set<String> orCompNames = orEntry.getKey();
 
+            //TODO: the full solution would be that OrExpressions are splitted into subexpressions
+            //  which might be executed on their LCM
+            //  Not implemented because it's quite rare - only TPCH7
+            //TODO: selectivityEstimation for pushing OR need to be improved
+            Expression orExpr = orEntry.getValue();
             if(HierarchyExtractor.isLCM(component, orCompNames)){
-                Expression orExpr = orEntry.getValue();
-                if (expr != null){
-                    //appending to previous expressions
-                    expr = new AndExpression(expr, orExpr);
-                }else{
-                    //this is the first expression for this component
-                    expr = orExpr;
-                }
+                expr = appendAnd(expr, orExpr);
+            }else if(component instanceof DataSourceComponent){
+                DataSourceComponent source = (DataSourceComponent) component;
+                Expression addedExpr = getMineSubset(source, orExpr);
+                expr = appendAnd(expr, addedExpr);
             }
         }
         return expr;
     }
+    
+    private Expression appendAnd(Expression fullExpr, Expression atomicExpr){
+        if(atomicExpr != null){
+            if (fullExpr != null){
+                //appending to previous expressions
+                fullExpr = new AndExpression(fullExpr, atomicExpr);
+            }else{
+                //this is the first expression for this component
+                fullExpr = atomicExpr;
+            }
+        }
+        return fullExpr;
+    }
+    
+    /*
+     * get a list of WhereExpressions (connected by OR) belonging to source
+     * For example (N1.NATION = FRANCE AND N2.NATION = GERMANY) OR (N1.NATION = GERMANY AND N2.NATION = FRANCE)
+     *   returns N1.NATION = FRANCE OR N1.NATION = GERMANY
+     */
+    public Expression getMineSubset(DataSourceComponent source, Expression expr){
+        List<String> compNames = ParserUtil.getCompNamesFromColumns(ParserUtil.getJSQLColumns(expr));
+        
+        boolean mine = true;
+        for(String compName: compNames){
+            if(!compName.equals(source.getName())){
+                mine = false;
+                break;
+            }
+        }
+        
+        if(mine){
+            return expr;
+        }
+        
+        Expression result = null;
+        if(expr instanceof OrExpression || expr instanceof AndExpression){
+            BinaryExpression be = (BinaryExpression) expr;
+            result = appendOr(result, getMineSubset(source, be.getLeftExpression()));
+            result = appendOr(result, getMineSubset(source, be.getRightExpression()));
+        }else if(expr instanceof Parenthesis){
+            Parenthesis prnth = (Parenthesis) expr;
+            result = getMineSubset(source, prnth.getExpression());
+        }
+        
+        //whatever is not fully recognized (all the compNames = source), and is not And or Or, returns null
+        return result;
+    }
+    
+    private Expression appendOr(Expression fullExpr, Expression atomicExpr){
+        if(atomicExpr != null){
+            if (fullExpr != null){
+                //appending to previous expressions
+                fullExpr = new OrExpression(fullExpr, atomicExpr);
+            }else{
+                //this is the first expression for this component
+                fullExpr = atomicExpr;
+            }
+        }
+        return fullExpr;
+    }    
+
 
     /*
      * whereCompExpression is the part of WHERE clause which refers to affectedComponent

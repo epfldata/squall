@@ -56,10 +56,6 @@ public class ParserUtil {
             String tableStr = ParserUtil.toString(table);
             System.out.println(tableStr);
         }
-        for(Join join: pq.getJoinList()){
-            String joinStr = ParserUtil.toString(join);
-            System.out.println(joinStr);
-        }
     }     
 
      public static String toString(Table table){

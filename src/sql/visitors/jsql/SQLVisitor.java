@@ -58,10 +58,6 @@ public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVis
             return _tableList;
         }
 
-	public List<Join> getJoinList() {
-            return _joinList;
-	}
-
         public List<SelectItem> getSelectItems(){
             return _selectItems;
         }

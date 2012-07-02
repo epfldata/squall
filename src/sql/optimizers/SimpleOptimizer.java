@@ -64,7 +64,6 @@ public class SimpleOptimizer implements Optimizer {
 
     private IndexComponentGenerator generateTableJoins() {
         List<Table> tableList = _pq.getTableList();
-        List<Join> joinList = _pq.getJoinList();
         
         IndexComponentGenerator cg = new IndexComponentGenerator(_schema, _pq, _map);
         Component firstParent = cg.generateDataSource(ParserUtil.getComponentName(tableList.get(0)));
@@ -75,7 +74,7 @@ public class SimpleOptimizer implements Optimizer {
         }
 
         // This generates a lefty query plan.
-        for(int i=0; i<joinList.size(); i++){
+        for(int i=0; i<tableList.size() - 1; i++){
             DataSourceComponent secondParent = cg.generateDataSource(ParserUtil.getComponentName(tableList.get(i+1)));
             firstParent = cg.generateEquiJoin(firstParent, secondParent);
         }
