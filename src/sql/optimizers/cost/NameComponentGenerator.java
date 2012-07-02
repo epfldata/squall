@@ -193,11 +193,15 @@ public class NameComponentGenerator implements ComponentGenerator{
         
         //operators
         addSelectOperator(joinComponent);
-        if(!ParserUtil.isFinalJoin(joinComponent, _pq)){
-            addProjectOperator(joinComponent);
+        
+        //TODO decomment when NSIV.visit(Column) is fixed 
+        //  - issue in TPCH9
+        //if(!ParserUtil.isFinalJoin(joinComponent, _pq)){
+        addProjectOperator(joinComponent);
             //assume no operators between projection and final aggregation
             // final aggregation is able to do projection in GroupByProjection
-        }
+        //}
+            
         if(ParserUtil.isFinalJoin(joinComponent, _pq)){
             //final component in terms of joins
             addFinalAgg(joinComponent);
@@ -225,7 +229,7 @@ public class NameComponentGenerator implements ComponentGenerator{
 
     /*
      * This can estimate selectivity/cardinality of a join between between any two components
-     *   but with a restriction - righParent has only one component mentioned in joinCondition.
+     *   but with a restriction - rightParent has only one component mentioned in joinCondition.
      *   If connection between any components is allowed,
      *     we have to find a way combining multiple distinct selectivities
      *     (for example having a component R-S and T-V, how to combine R.A=T.A and S.B=V.B?)
@@ -278,7 +282,7 @@ public class NameComponentGenerator implements ComponentGenerator{
         
         for(String leftJoinTableSchemaName: leftJoinTableSchemaNames){
             selectivity = selectivity * 
-                    computeHashSelectivity(leftJoinTableSchemaName, rightJoinTableSchemaName, leftCardinality, rightCardinality, rightSelectivity);
+                    computeHashSelectivity(leftJoinTableSchemaName, rightJoinTableSchemaName, leftCardinality, rightCardinality);
         }
 
         return selectivity;
@@ -290,7 +294,7 @@ public class NameComponentGenerator implements ComponentGenerator{
      */
     private List<String> getJoinSchemaNames(List<String> allJoinCompNames, Component parent) {
         List<String> ancestors = ParserUtil.getSourceNameList(parent);
-        List<String> joinCompNames = ParserUtil.getIntersection(allJoinCompNames, ancestors);
+        List<String> joinCompNames = ParserUtil.getIntersection(ancestors, allJoinCompNames);
 
         List<String> joinSchemaNames = new ArrayList<String>();
         for(String joinCompName: joinCompNames){
@@ -300,7 +304,7 @@ public class NameComponentGenerator implements ComponentGenerator{
     }
 
     private double computeHashSelectivity(String leftJoinTableSchemaName, String rightJoinTableSchemaName, 
-            long leftCardinality, long rightCardinality, double rightSelectivity){
+            long leftCardinality, long rightCardinality){
         long inputCardinality = leftCardinality + rightCardinality;
         double selectivity;
 
@@ -310,6 +314,14 @@ public class NameComponentGenerator implements ComponentGenerator{
             selectivity = (leftCardinality * rightCardinality) / inputCardinality;
         }else{
             double ratio = _schema.getRatio(leftJoinTableSchemaName, rightJoinTableSchemaName);
+            if(ratio < 1){
+                //if we are joining bigger and smaller relation, the size of join does not decrease
+                //if has to be 1
+                ratio = 1;
+            }
+            //in case of bushy plans it's proportion of sizes
+            //for lefty plans it's enough to be selectivity of the right parent component (from compCost)
+            double rightSelectivity = ((double) rightCardinality) / _schema.getTableSize(rightJoinTableSchemaName);
             selectivity = (leftCardinality * ratio * rightSelectivity) / inputCardinality;
         }
         return selectivity;

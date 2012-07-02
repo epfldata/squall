@@ -35,7 +35,35 @@ public class ParserMain{
         QueryPlan plan = pm.generatePlan(parsedQuery, map);
         
         new Main(plan, map);
-    }    
+    }  
+    
+    //for testing purposes
+//    private static final String CONF_PATH = "../testing/squall/confs/manual/serial/";
+//    public static void main(String[] args){
+//        String parserConfPath = CONF_PATH + "0.1G_tpch10_serial";
+//        ParserMain pm = new ParserMain();
+//        Map map = pm.createConfig(parserConfPath);
+//        SQLVisitor parsedQuery = pm.parseQuery(map);
+//        
+//        CostOptimizer co = new CostOptimizer(parsedQuery, map, 20);
+//        NameComponentGenerator ncg = co.generateEmptyCG();
+//
+//        DataSourceComponent lineitemSource = ncg.generateDataSource("LINEITEM");
+//        DataSourceComponent ordersSource = ncg.generateDataSource("ORDERS");
+//        Component L_Ojoin = ncg.generateEquiJoin(lineitemSource, ordersSource);
+//        DataSourceComponent customerSource = ncg.generateDataSource("CUSTOMER");
+//        Component L_O_Cjoin = ncg.generateEquiJoin(L_Ojoin, customerSource);
+//        DataSourceComponent nationSource = ncg.generateDataSource("NATION");
+//        ncg.generateEquiJoin(L_O_Cjoin, nationSource);
+//        
+//        String planStr = ParserUtil.toString(ncg.getQueryPlan());
+//        System.out.println(planStr);
+//        
+//        //parallelism has to be set in _map
+//        int totalParallelism = ParserUtil.parallelismToMap(ncg, map);
+//        System.out.println("Total parallelism is " + totalParallelism);
+//        new Main(ncg.getQueryPlan(), map);        
+//    }
     
     //String[] sizes: {"1G", "2G", "4G", ...}
     public Map createConfig(String parserConfPath){

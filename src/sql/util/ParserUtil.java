@@ -624,11 +624,14 @@ public class ParserUtil {
         return _pq.getJte().getExpressions(leftAncestors, rightAncestors);
     }
 
-    public static void parallelismToMap(NameComponentGenerator cg, Map _map) {
+    public static int parallelismToMap(NameComponentGenerator cg, Map _map) {
+        int totalParallelism = 0;
         for(Component comp: cg.getQueryPlan().getPlan()){
             String compName = comp.getName();
             int parallelism = cg.getCostParameters(compName).getParallelism();
+            totalParallelism += parallelism;
             SystemParameters.putInMap(_map, compName + "_PAR", parallelism);
         }
+        return totalParallelism;
     }
 }

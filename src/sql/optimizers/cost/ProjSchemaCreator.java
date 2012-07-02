@@ -1,14 +1,15 @@
 package sql.optimizers.cost;
 
 import plan_runner.components.Component;
-import plan_runner.components.DataSourceComponent;
 import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
+import plan_runner.conversion.IntegerConversion;
 import plan_runner.operators.ProjectOperator;
 import sql.schema.ColumnNameType;
 import sql.schema.Schema;
@@ -40,6 +41,8 @@ public class ProjSchemaCreator {
     //output of this class
     private List<ColumnNameType> _outputTupleSchema;
     private List<ValueExpression> _veList;
+    
+    private static final IntegerConversion _ic = new IntegerConversion();
 
     public ProjSchemaCreator(ProjGlobalCollect globalProject, List<ColumnNameType> inputTupleSchema, Component component, 
             SQLVisitor pq, Schema schema){
@@ -233,9 +236,8 @@ public class ProjSchemaCreator {
 
         for(Expression expr: choosenExprs){
             //first to determine the type, we use the first column for that
-            List<Column> columns = ParserUtil.getJSQLColumns(expr);
-            Column column = columns.get(0);
-            TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
+            
+            TypeConversion tc = getTC(expr);
 
             //attach the TypeConversion
             String exprStr = ParserUtil.getStringExpr(expr);
@@ -244,6 +246,23 @@ public class ProjSchemaCreator {
         }
 
         return result;
+    }
+
+    /*
+     * Have to distinguish special cases from normal ones
+     */
+    private TypeConversion getTC(Expression expr) {
+        if(expr instanceof Function){
+            Function fun = (Function) expr;
+            if(fun.getName().equalsIgnoreCase("EXTRACT_YEAR")){
+                return _ic;
+            }
+        }
+        
+        //non special cases
+        List<Column> columns = ParserUtil.getJSQLColumns(expr);
+        Column column = columns.get(0);
+        return ParserUtil.getColumnType(column, _tan, _schema);
     }
 
 }

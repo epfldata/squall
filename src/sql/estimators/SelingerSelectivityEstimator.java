@@ -3,6 +3,7 @@ package sql.estimators;
 import plan_runner.conversion.TypeConversion;
 import java.util.List;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.Parenthesis;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.*;
@@ -68,6 +69,12 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
             return estimate((AndExpression)expr);
         }else if(expr instanceof OrExpression){
             return estimate((OrExpression)expr);
+        }else if(expr instanceof Parenthesis){
+            Parenthesis pnths = (Parenthesis) expr;
+            return estimate(pnths.getExpression());
+        }else if(expr instanceof LikeExpression){
+            //TODO: this is for TPCH9
+            return 0.052;
         }
         throw new RuntimeException("We should be in a more specific method!");
     }
@@ -173,8 +180,9 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
             //not using leftExpr and rightExpr, because we want to preserve type
             return 1 - (1 - estimate(and.getLeftExpression())) - (1 - estimate(and.getRightExpression()));
         }else{
-            throw new RuntimeException("And expressions with different columns on two sides are not supported!");
-            //for implementing this take a look at textbook and tpch7
+            return estimate(and.getLeftExpression()) * estimate(and.getRightExpression());
+            //throw new RuntimeException("And expressions with different columns on two sides are not supported!");
+            //TODO: for implementing this take a look at textbook and tpch7
         }
 
     }
