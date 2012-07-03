@@ -32,7 +32,7 @@ public class CostOptimizer implements Optimizer {
     private HashMap<String, Expression> _compNamesAndExprs = new HashMap<String, Expression>();
     private HashMap<Set<String>, Expression> _compNamesOrExprs = new HashMap<Set<String>, Expression>();
     
-    public CostOptimizer(SQLVisitor pq, Map map){
+    private CostOptimizer(SQLVisitor pq, Map map){
         _pq = pq;
         _map = map;
         init();

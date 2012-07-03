@@ -1,16 +1,6 @@
 
 package sql.visitors.squall;
 
-import plan_runner.conversion.DoubleConversion;
-import plan_runner.conversion.StringConversion;
-import plan_runner.conversion.DateConversion;
-import plan_runner.conversion.LongConversion;
-import plan_runner.conversion.TypeConversion;
-import plan_runner.conversion.NumericConversion;
-import plan_runner.expressions.ColumnReference;
-import plan_runner.expressions.IntegerYearFromDate;
-import plan_runner.expressions.ValueExpression;
-import plan_runner.expressions.ValueSpecification;
 import java.util.*;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.*;
@@ -19,11 +9,17 @@ import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.*;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
+import plan_runner.components.Component;
+import plan_runner.conversion.*;
+import plan_runner.expressions.ColumnReference;
+import plan_runner.expressions.IntegerYearFromDate;
+import plan_runner.expressions.ValueExpression;
+import plan_runner.expressions.ValueSpecification;
 import sql.optimizers.cost.NameTranslator;
-import sql.schema.ColumnNameType;
 import sql.schema.Schema;
 import sql.util.ParserUtil;
 import sql.util.TableAliasName;
+import sql.util.TupleSchema;
 
 /*
  * Used for Cost-optimizer(nameTranslator)
@@ -32,11 +28,11 @@ import sql.util.TableAliasName;
  */
 public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor{
 
-    private final NameTranslator _nt = new NameTranslator();
+    private final NameTranslator _nt;
     private final TableAliasName _tan;
     private final Schema _schema;
 
-    private final List<ColumnNameType> _inputTupleSchema;
+    private final TupleSchema _inputTupleSchema;
     private Stack<ValueExpression> _exprStack = new Stack<ValueExpression>();
 
     //this will not break any contracts,
@@ -48,10 +44,12 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor{
     private static DateConversion _dateConv = new DateConversion();
     private static StringConversion _sc = new StringConversion();
 
-    public NameProjectVisitor(List<ColumnNameType> inputTupleSchema, TableAliasName tan, Schema schema){
+    public NameProjectVisitor(TupleSchema inputTupleSchema, TableAliasName tan, Schema schema, Component affectedComponent){
         _inputTupleSchema = inputTupleSchema;
         _tan = tan;
         _schema = schema;
+        
+        _nt = new NameTranslator(affectedComponent.getName());
     }
 
     public List<ValueExpression> getExprs(){
@@ -80,9 +78,9 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor{
 
         //extract the position (index) of the required column
 
-        int position = _nt.getColumnIndex(column, _inputTupleSchema);
+        int position = _nt.getColumnIndex(_inputTupleSchema, column);
 
-        ValueExpression ve = new ColumnReference(tc, position, ParserUtil.getFullAliasedName(column));
+        ValueExpression ve = new ColumnReference(tc, position, ParserUtil.getStringExpr(column));
         pushToExprStack(ve);
     }
 
@@ -240,13 +238,12 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor{
      * It has side effects - putting on exprStack
      */
     private <T extends Expression> boolean isRecognized(T expr){
-        String strExpr = ParserUtil.getStringExpr(expr);
-
-        int position = _nt.indexOf(_inputTupleSchema, strExpr);
-        if(position != -1){
+        //expr is changed in place, so that it does not contain synonims
+        int position = _nt.indexOf(_inputTupleSchema, expr);
+        if(position != ParserUtil.NOT_FOUND){
             //we found an expression already in the tuple schema
-            TypeConversion tc = _nt.getType(_inputTupleSchema, strExpr);
-            ValueExpression ve = new ColumnReference(tc, position, strExpr);
+            TypeConversion tc = _nt.getType(_inputTupleSchema, expr);
+            ValueExpression ve = new ColumnReference(tc, position, ParserUtil.getStringExpr(expr));
             pushToExprStack(ve);
             return true;
         }else{

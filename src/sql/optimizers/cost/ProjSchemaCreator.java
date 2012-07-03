@@ -1,21 +1,23 @@
 package sql.optimizers.cost;
 
-import plan_runner.components.Component;
-import plan_runner.conversion.TypeConversion;
-import plan_runner.expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
+import plan_runner.components.Component;
 import plan_runner.conversion.IntegerConversion;
+import plan_runner.conversion.TypeConversion;
+import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ProjectOperator;
 import sql.schema.ColumnNameType;
 import sql.schema.Schema;
 import sql.util.JoinTablesExprs;
 import sql.util.ParserUtil;
 import sql.util.TableAliasName;
+import sql.util.TupleSchema;
 import sql.visitors.jsql.MaxSubExpressionsVisitor;
 import sql.visitors.jsql.SQLVisitor;
 import sql.visitors.squall.NameProjectVisitor;
@@ -28,9 +30,9 @@ import sql.visitors.squall.NameProjectVisitor;
  */
 public class ProjSchemaCreator {
     private final ProjGlobalCollect _globalProject; // this is shared by all the ProjSchemaCreator objects
-    private final List<ColumnNameType> _inputTupleSchema;
+    private final TupleSchema _inputTupleSchema;
 
-    private final NameTranslator _nt = new NameTranslator();
+    private final NameTranslator _nt;
     private final TableAliasName _tan; //used for getting a list of all the tableCompNames
     private final Schema _schema;
     private final JoinTablesExprs _jte; //used for getting joinCondition
@@ -39,12 +41,12 @@ public class ProjSchemaCreator {
     private final NameProjectVisitor _npv;
 
     //output of this class
-    private List<ColumnNameType> _outputTupleSchema;
+    private TupleSchema _outputTupleSchema;
     private List<ValueExpression> _veList;
     
     private static final IntegerConversion _ic = new IntegerConversion();
 
-    public ProjSchemaCreator(ProjGlobalCollect globalProject, List<ColumnNameType> inputTupleSchema, Component component, 
+    public ProjSchemaCreator(ProjGlobalCollect globalProject, TupleSchema inputTupleSchema, Component component, 
             SQLVisitor pq, Schema schema){
 
         _globalProject = globalProject;
@@ -55,7 +57,8 @@ public class ProjSchemaCreator {
         _component = component;
         _pq = pq;
 
-        _npv = new NameProjectVisitor(_inputTupleSchema, _tan, _schema);
+        _nt = new NameTranslator(component.getName());
+        _npv = new NameProjectVisitor(_inputTupleSchema, _tan, _schema, component);
     }
 
     /*
@@ -83,7 +86,7 @@ public class ProjSchemaCreator {
 
     }
 
-    public List<ColumnNameType> getOutputSchema(){
+    public TupleSchema getOutputSchema(){
         return _outputTupleSchema;
     }
 
@@ -231,8 +234,11 @@ public class ProjSchemaCreator {
         return result;
     }
 
-    private List<ColumnNameType> createSchema(List<Expression> choosenExprs) {
-        List<ColumnNameType> result = new ArrayList<ColumnNameType>();
+    /*
+     * Create new schema, but preserve all the synonims from _inputTupleSchema
+     */
+    private TupleSchema createSchema(List<Expression> choosenExprs) {
+        List<ColumnNameType> cnts = new ArrayList<ColumnNameType>();
 
         for(Expression expr: choosenExprs){
             //first to determine the type, we use the first column for that
@@ -242,9 +248,16 @@ public class ProjSchemaCreator {
             //attach the TypeConversion
             String exprStr = ParserUtil.getStringExpr(expr);
             ColumnNameType cnt = new ColumnNameType(exprStr, tc);
-            result.add(cnt);
+            cnts.add(cnt);
         }
 
+        //copying all the synonims from inputTupleSchema
+        TupleSchema result = new TupleSchema(cnts);
+        Map<String, Column> inputSynonims = _inputTupleSchema.getSynonims();
+        if(inputSynonims != null){
+            result.setSynonims(inputSynonims);
+        }
+        
         return result;
     }
 

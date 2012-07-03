@@ -15,8 +15,6 @@ import sql.visitors.jsql.AndVisitor;
  * We collect expressions appearing in FinalAgg(SELECT clause), including terms inside SUM and COUNT
  *   and from SelectOperator(WHERE clause) we collect OR expressions,
  *   because SelectOperator for this component is done before projections.
- * DOES NOT work with partial expressions - too complex and rarely necessary.
- *   (if we have (R.A +5) * 3 never R.A + 5 will be recognized as subexpression).
  */
 public class ProjGlobalCollect {
     private List<Expression> _exprList;
@@ -64,12 +62,13 @@ public class ProjGlobalCollect {
                     Function fun = (Function) selectExpr;
                     if (fun.getName().equalsIgnoreCase("SUM")){
                         //collect internal expressions
-                        ExpressionList params = fun.getParameters();
-                        if(params!=null){
-                            _exprList.addAll(params.getExpressions());
-                        }
+                        collectInternalExprs(fun);
                     }else if(fun.getName().equalsIgnoreCase("COUNT")){
-                        //TODO: ignore, we assume it's COUNT(*)
+                        if(fun.isDistinct()){
+                            //It's of interest only if isDistinct is set to true
+                            //  otherwise, it's the same as COUNT(*)
+                            collectInternalExprs(fun);
+                        }
                     }else{
                         //add whole function, might be processed earlier than at the final agg
                         _exprList.add(selectExpr);
@@ -83,6 +82,16 @@ public class ProjGlobalCollect {
             }
         }
     }
+    
+    private void collectInternalExprs(Function fun) {
+        ExpressionList params = fun.getParameters();
+        if(params!=null){
+            List<Expression> exprs = params.getExpressions();
+            if(exprs != null && !exprs.isEmpty()){
+                _exprList.addAll(exprs);
+            }
+        }
+    }    
 
     /*
      * WHERE clause - SelectOperator

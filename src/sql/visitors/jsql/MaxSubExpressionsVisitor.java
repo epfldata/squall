@@ -12,8 +12,8 @@ import net.sf.jsqlparser.expression.operators.relational.*;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import sql.optimizers.cost.NameTranslator;
-import sql.schema.ColumnNameType;
 import sql.util.ParserUtil;
+import sql.util.TupleSchema;
 
 /*
  * This class return a list of (sub)expressions which corresponds to visited expressions
@@ -27,10 +27,10 @@ import sql.util.ParserUtil;
  */
 public class MaxSubExpressionsVisitor implements ExpressionVisitor, ItemsListVisitor{
     private NameTranslator _nt;
-    private List<ColumnNameType> _inputTupleSchema;
+    private TupleSchema _inputTupleSchema;
     private List<Expression> _exprList =  new ArrayList<Expression>();
     
-    public MaxSubExpressionsVisitor(NameTranslator nt, List<ColumnNameType> inputTupleSchema){
+    public MaxSubExpressionsVisitor(NameTranslator nt, TupleSchema inputTupleSchema){
         _nt = nt;
         _inputTupleSchema = inputTupleSchema;
     }
@@ -48,8 +48,7 @@ public class MaxSubExpressionsVisitor implements ExpressionVisitor, ItemsListVis
     @Override
     public void visit(Column column) {
         //no subexpression recognized, still we add only mine columns
-        String strExpr = ParserUtil.getStringExpr(column);
-        if(_nt.contains(_inputTupleSchema, strExpr)){
+        if(_nt.contains(_inputTupleSchema, column)){
             _exprList.add(column);
         }
     }    
@@ -191,8 +190,7 @@ public class MaxSubExpressionsVisitor implements ExpressionVisitor, ItemsListVis
      *   so that expr can be built out of subexpressions and constants
      */
     public boolean isAllSubsMine(Expression expr){
-        String strExpr = ParserUtil.getStringExpr(expr);
-        if(_nt.contains(_inputTupleSchema, strExpr)){
+        if(_nt.contains(_inputTupleSchema, expr)){
             return true;
         }
         

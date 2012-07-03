@@ -40,25 +40,21 @@ public class ParserMain{
     //for testing purposes
 //    private static final String CONF_PATH = "../testing/squall/confs/manual/serial/";
 //    public static void main(String[] args){
-//        String parserConfPath = CONF_PATH + "0.1G_tpch7_serial";
+//        String parserConfPath = CONF_PATH + "0.1G_tpch10_serial";
 //        ParserMain pm = new ParserMain();
 //        Map map = pm.createConfig(parserConfPath);
 //        SQLVisitor parsedQuery = pm.parseQuery(map);
 //        
-//        CostOptimizer co = new CostOptimizer(parsedQuery, map, 11);
+//        CostOptimizer co = new CostOptimizer(parsedQuery, map, 20);
 //        NameComponentGenerator ncg = co.generateEmptyCG();
 //
-//        DataSourceComponent supplierSource = ncg.generateDataSource("SUPPLIER");
-//        DataSourceComponent n1Source = ncg.generateDataSource("N1");
-//        Component S_N1join = ncg.generateEquiJoin(supplierSource, n1Source);
 //        DataSourceComponent lineitemSource = ncg.generateDataSource("LINEITEM");
-//        Component S_N1_Ljoin = ncg.generateEquiJoin(S_N1join, lineitemSource);
 //        DataSourceComponent ordersSource = ncg.generateDataSource("ORDERS");
-//        Component S_N1_L_Ojoin = ncg.generateEquiJoin(S_N1_Ljoin, ordersSource);
+//        Component L_Ojoin = ncg.generateEquiJoin(lineitemSource, ordersSource);
 //        DataSourceComponent customerSource = ncg.generateDataSource("CUSTOMER");
-//        Component S_N1_L_O_Cjoin = ncg.generateEquiJoin(S_N1_L_Ojoin, customerSource);
-//        DataSourceComponent n2Source = ncg.generateDataSource("N2");
-//        ncg.generateEquiJoin(S_N1_L_O_Cjoin, n2Source);
+//        Component L_O_Cjoin = ncg.generateEquiJoin(L_Ojoin, customerSource);
+//        DataSourceComponent nationSource = ncg.generateDataSource("NATION");
+//        ncg.generateEquiJoin(L_O_Cjoin, nationSource);
 //        
 //        String planStr = ParserUtil.toString(ncg.getQueryPlan());
 //        System.out.println(planStr);
@@ -117,7 +113,8 @@ public class ParserMain{
 
         if (statement instanceof Select) {
             Select selectStatement = (Select) statement;
-            SQLVisitor parsedQuery = new SQLVisitor();
+            String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
+            SQLVisitor parsedQuery = new SQLVisitor(queryName);
 
             //visit whole SELECT statement
             parsedQuery.visit(selectStatement);

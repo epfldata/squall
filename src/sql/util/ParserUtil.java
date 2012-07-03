@@ -1,33 +1,35 @@
 package sql.util;
 
-import plan_runner.components.Component;
-import plan_runner.components.DataSourceComponent;
-import plan_runner.components.EquiJoinComponent;
-import plan_runner.components.ThetaJoinComponent;
-import plan_runner.conversion.TypeConversion;
-import plan_runner.expressions.ColumnReference;
-import plan_runner.expressions.ValueExpression;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.*;
-import net.sf.jsqlparser.expression.*;
+import net.sf.jsqlparser.expression.BinaryExpression;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.Function;
+import net.sf.jsqlparser.expression.Parenthesis;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.Join;
+import plan_runner.components.Component;
+import plan_runner.components.DataSourceComponent;
+import plan_runner.components.ThetaJoinComponent;
+import plan_runner.conversion.TypeConversion;
+import plan_runner.expressions.ColumnReference;
+import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
+import plan_runner.queryPlans.QueryPlan;
+import plan_runner.utilities.MyUtilities;
+import plan_runner.utilities.SystemParameters;
 import sql.optimizers.ComponentGenerator;
 import sql.optimizers.cost.CostParams;
 import sql.optimizers.cost.NameComponentGenerator;
-import plan_runner.queryPlans.QueryPlan;
 import sql.schema.ColumnNameType;
 import sql.schema.Schema;
-import plan_runner.utilities.MyUtilities;
-import plan_runner.utilities.SystemParameters;
 import sql.visitors.jsql.ColumnCollectVisitor;
 import sql.visitors.jsql.PrintVisitor;
 import sql.visitors.jsql.SQLVisitor;
@@ -35,6 +37,7 @@ import sql.visitors.squall.ColumnRefCollectVisitor;
 
 
 public class ParserUtil {
+     public static final int NOT_FOUND = -1;
      private static HashMap<String, Integer> _uniqueNumbers = new HashMap<String, Integer>();
 
      public static String generateUniqueName(String nameBase) {
@@ -340,7 +343,7 @@ public class ParserUtil {
     public static String readSQLFromFile(String sqlPath) {
         StringBuilder sqlstring = new StringBuilder();
         try {
-            String line="";
+            String line;
             BufferedReader reader = new BufferedReader(new FileReader(new File(sqlPath)));
             while( (line = reader.readLine()) != null){
 
@@ -513,29 +516,46 @@ public class ParserUtil {
     }
 
     //throw away join hash indexes from the right parent
-    public static List<ColumnNameType> joinSchema(Component[] parents, Map<String, CostParams> compCost) {
+    public static TupleSchema joinSchema(Component[] parents, Map<String, CostParams> compCost) {
         Component leftParent = parents[0];
         Component rightParent = parents[1];
-        List<ColumnNameType> leftSchema = compCost.get(leftParent.getName()).getSchema();
-        List<ColumnNameType> rightSchema = compCost.get(rightParent.getName()).getSchema();
-
+        TupleSchema leftSchema = compCost.get(leftParent.getName()).getSchema();
+        TupleSchema rightSchema = compCost.get(rightParent.getName()).getSchema();
+        List<ColumnNameType> leftCnts = leftSchema.getSchema();
+        List<ColumnNameType> rightCnts = rightSchema.getSchema();
+        
         //when HashExpressions are used the schema is a simple appending
+        List<Integer> leftHashIndexes = leftParent.getHashIndexes();
         List<Integer> rightHashIndexes = rightParent.getHashIndexes();
         
         //******************** similar to MyUtilities.createOutputTuple
         List<ColumnNameType> outputSchema = new ArrayList<ColumnNameType>();
 
-        for (int i = 0; i < leftSchema.size(); i++){ // add all elements of the first relation (R)
-            outputSchema.add(leftSchema.get(i));
+        for (int i = 0; i < leftCnts.size(); i++){ // add all elements of the first relation (R)
+            outputSchema.add(leftCnts.get(i));
         }
-        for (int i = 0; i < rightSchema.size(); i++) { // now add those
+        for (int i = 0; i < rightCnts.size(); i++) { // now add those
             if((rightHashIndexes == null) || (!rightHashIndexes.contains(i))){ //if does not exits add the column!! (S)
-                outputSchema.add(rightSchema.get(i));
+                outputSchema.add(rightCnts.get(i));
             }
         }
-        return outputSchema;
+        TupleSchema result = new TupleSchema(outputSchema);
         //******************** end of similar
-
+        
+        //creating a list of synonims - TODO: works only for lefty plans
+        Map<String, Column> synonims = new HashMap<String, Column>();
+        for(int i=0; i<rightHashIndexes.size(); i++){
+            int leftHash = leftHashIndexes.get(i);
+            int rightHash = rightHashIndexes.get(i);
+            String rightColStr = rightCnts.get(rightHash).getName();
+            Column originalColumn = ParserUtil.nameToColumn(leftCnts.get(leftHash).getName());
+            synonims.put(rightColStr, originalColumn);
+        }
+        if(!synonims.isEmpty()){
+            result.setSynonims(synonims);
+        }
+        
+        return result;
     }
 
     /*
@@ -544,6 +564,19 @@ public class ParserUtil {
     public static String getFullAliasedName(Column column) {
         return ParserUtil.getComponentName(column) + "." + column.getColumnName();
     }
+    
+    public static Column nameToColumn(String name) {
+        String[] nameParts = name.split("\\.");
+        String compName = nameParts[0];
+        String columnName = nameParts[1];
+        
+        Table table = new Table();
+        table.setAlias(compName);
+        Column column = new Column();
+        column.setColumnName(columnName);
+        column.setTable(table);
+        return column;
+    }    
 
     public static List<ColumnNameType> getProjectedSchema(List<ColumnNameType> schema, List<Integer> hashIndexes) {
         List<ColumnNameType> result = new ArrayList<ColumnNameType>();
@@ -565,17 +598,17 @@ public class ParserUtil {
      * From a list of <NATIONNAME, StringConversion>
      *   it creates a list of <N1.NATIONNAME, StringConversion>
      */
-    public static List<ColumnNameType> createAliasedSchema(List<ColumnNameType> originalSchema, String aliasName) {
-        List<ColumnNameType> result = new ArrayList<ColumnNameType>();
+    public static TupleSchema createAliasedSchema(List<ColumnNameType> originalSchema, String aliasName) {
+        List<ColumnNameType> cnts = new ArrayList<ColumnNameType>();
 
         for(ColumnNameType cnt: originalSchema){
             String name = cnt.getName();
             name = aliasName + "." + name;
             TypeConversion tc = cnt.getType();
-            result.add(new ColumnNameType(name, tc));
+            cnts.add(new ColumnNameType(name, tc));
         }
 
-        return result;
+        return new TupleSchema(cnts);
     }
     
     public static List<Expression> getSubExpressions(Expression expr){
@@ -608,9 +641,9 @@ public class ParserUtil {
         return allSources.equals(actuallPlanSources);
     }
 
-    public static boolean isSameSchema(List<ColumnNameType> listSchema1, List<ColumnNameType> listSchema2) {
-        Set<ColumnNameType> setSchema1 = new HashSet<ColumnNameType>(listSchema1);
-        Set<ColumnNameType> setSchema2 = new HashSet<ColumnNameType>(listSchema2);
+    public static boolean isSameSchema(TupleSchema listSchema1, TupleSchema listSchema2) {
+        Set<ColumnNameType> setSchema1 = new HashSet<ColumnNameType>(listSchema1.getSchema());
+        Set<ColumnNameType> setSchema2 = new HashSet<ColumnNameType>(listSchema2.getSchema());
         return setSchema1.equals(setSchema2);
     }
 

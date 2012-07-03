@@ -15,7 +15,6 @@ public class CostParallelismAssigner {
     private final SQLVisitor _pq;
     private final Map _map;
     private final Schema _schema;
-    private final NameTranslator _nt = new NameTranslator();
     private final Map<String, Expression> _compNamesAndExprs;
     private final Map<Set<String>, Expression> _compNamesOrExprs;
     

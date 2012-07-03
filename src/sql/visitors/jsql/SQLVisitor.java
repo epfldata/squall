@@ -20,9 +20,15 @@ public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVis
         private List<SelectItem> _selectItems;
         private Expression _whereExpr;
         
+        private String _queryName;
+        
         private TableAliasName _tan;
         private JoinTablesExprs _jte;
 
+        public SQLVisitor(String queryName){
+            _queryName = queryName;
+        }
+        
         // CUSTOM METHODS
 	public void visit(Select select) {
             _tableList = new ArrayList<Table>();
@@ -34,7 +40,7 @@ public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVis
         
         public void doneVisiting() {
             //fill in tan
-            _tan = new TableAliasName(_tableList);
+            _tan = new TableAliasName(_tableList, _queryName);
             
             //create JoinTableExpr
             //From a list of joins, create collection of elements like {R->{S, R.A=S.A}}

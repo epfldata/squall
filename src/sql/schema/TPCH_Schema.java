@@ -1,16 +1,12 @@
 package sql.schema;
 
-import plan_runner.conversion.DoubleConversion;
-import plan_runner.conversion.StringConversion;
-import plan_runner.conversion.DateConversion;
-import plan_runner.conversion.TypeConversion;
-import plan_runner.conversion.LongConversion;
-import plan_runner.expressions.DateSum;
-import plan_runner.expressions.ValueSpecification;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import plan_runner.conversion.*;
+import plan_runner.expressions.DateSum;
+import plan_runner.expressions.ValueSpecification;
 
 /*
  * This class is used only from parser. Because of JSQL limitations, wherever int is required, we use long.

@@ -1,12 +1,5 @@
 package sql.optimizers.cost;
 
-import plan_runner.components.Component;
-import plan_runner.components.DataSourceComponent;
-import plan_runner.components.EquiJoinComponent;
-import plan_runner.components.OperatorComponent;
-import sql.estimators.ConfigSelectivityEstimator;
-import sql.estimators.SelingerSelectivityEstimator;
-import plan_runner.expressions.ValueExpression;
 import java.util.*;
 import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
@@ -15,16 +8,24 @@ import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SelectItem;
+import plan_runner.components.Component;
+import plan_runner.components.DataSourceComponent;
+import plan_runner.components.EquiJoinComponent;
+import plan_runner.components.OperatorComponent;
+import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
-import sql.optimizers.ComponentGenerator;
 import plan_runner.queryPlans.QueryPlan;
+import plan_runner.utilities.SystemParameters;
+import sql.estimators.ConfigSelectivityEstimator;
+import sql.estimators.SelingerSelectivityEstimator;
+import sql.optimizers.ComponentGenerator;
 import sql.schema.ColumnNameType;
 import sql.schema.Schema;
 import sql.util.HierarchyExtractor;
 import sql.util.ParserUtil;
-import plan_runner.utilities.SystemParameters;
+import sql.util.TupleSchema;
 import sql.visitors.jsql.SQLVisitor;
 import sql.visitors.squall.NameJoinHashVisitor;
 import sql.visitors.squall.NameSelectItemsVisitor;
@@ -36,7 +37,6 @@ import sql.visitors.squall.NameWhereVisitor;
  */
 public class NameComponentGenerator implements ComponentGenerator{
     private SQLVisitor _pq;
-    private NameTranslator _nt = new NameTranslator();
 
     private Map _map;
     private Schema _schema;
@@ -246,7 +246,7 @@ public class NameComponentGenerator implements ComponentGenerator{
         Component[] parents = joinComponent.getParents();
 
         //*********set schema
-        List<ColumnNameType> schema = ParserUtil.joinSchema(joinComponent.getParents(), _compCost);
+        TupleSchema schema = ParserUtil.joinSchema(joinComponent.getParents(), _compCost);
         costParams.setSchema(schema);
 
         //********* set initial (join) selectivity and initial cardinality
@@ -358,6 +358,7 @@ public class NameComponentGenerator implements ComponentGenerator{
             //TODO: the full solution would be that OrExpressions are splitted into subexpressions
             //  which might be executed on their LCM
             //  Not implemented because it's quite rare - only TPCH7
+            //  Even in TPCH7 there is no need for multiple LCM.
             //TODO: selectivityEstimation for pushing OR need to be improved
             Expression orExpr = orEntry.getValue();
             if(HierarchyExtractor.isLCM(component, orCompNames)){
@@ -442,8 +443,8 @@ public class NameComponentGenerator implements ComponentGenerator{
     private void processWhereForComponent(Component affectedComponent, Expression whereCompExpr){
         if(whereCompExpr != null){
             //first get the current schema of the component
-            List<ColumnNameType> tupleSchema = _compCost.get(affectedComponent.getName()).getSchema();
-            NameWhereVisitor whereVisitor = new NameWhereVisitor(_schema, _pq.getTan(), tupleSchema);
+            TupleSchema tupleSchema = _compCost.get(affectedComponent.getName()).getSchema();
+            NameWhereVisitor whereVisitor = new NameWhereVisitor(_schema, _pq.getTan(), tupleSchema, affectedComponent);
             whereCompExpr.accept(whereVisitor);
             attachWhereClause(affectedComponent, whereVisitor.getSelectOperator());
         }
@@ -471,11 +472,11 @@ public class NameComponentGenerator implements ComponentGenerator{
      *************************************************************************************/
     private void addProjectOperator(Component component){
         String compName = component.getName();
-        List<ColumnNameType> inputTupleSchema = _compCost.get(compName).getSchema();
+        TupleSchema inputTupleSchema = _compCost.get(compName).getSchema();
         ProjSchemaCreator psc = new ProjSchemaCreator(_globalCollect, inputTupleSchema, component, _pq, _schema);
         psc.create();
 
-        List<ColumnNameType> outputTupleSchema = psc.getOutputSchema();
+        TupleSchema outputTupleSchema = psc.getOutputSchema();
         
         if(!ParserUtil.isSameSchema(inputTupleSchema, outputTupleSchema)){
             //no need to add projectOperator unless it changes something
@@ -488,7 +489,7 @@ public class NameComponentGenerator implements ComponentGenerator{
         component.addOperator(project);
     }
 
-    private void processProjectCost(Component component, List<ColumnNameType> outputTupleSchema){
+    private void processProjectCost(Component component, TupleSchema outputTupleSchema){
         //only schema is changed
         String compName = component.getName();
         _compCost.get(compName).setSchema(outputTupleSchema);
@@ -499,8 +500,8 @@ public class NameComponentGenerator implements ComponentGenerator{
      *************************************************************************************/
      private void addFinalAgg(Component lastComponent) {
         //TODO: take care in nested case
-        List<ColumnNameType> tupleSchema = _compCost.get(lastComponent.getName()).getSchema();
-        NameSelectItemsVisitor selectVisitor = new NameSelectItemsVisitor(_schema, _pq.getTan(), tupleSchema, _map);
+        TupleSchema tupleSchema = _compCost.get(lastComponent.getName()).getSchema();
+        NameSelectItemsVisitor selectVisitor = new NameSelectItemsVisitor(tupleSchema, _map, lastComponent);
         for(SelectItem elem: _pq.getSelectItems()){
             elem.accept(selectVisitor);
         }
@@ -549,7 +550,7 @@ public class NameComponentGenerator implements ComponentGenerator{
     //  but we have to filter who belongs to my branch in NameJoinHashVisitor.
     //  We don't want to hash on something which will be used to join with same later component in the hierarchy.
     private void addHash(Component component, List<Expression> joinCondition) {
-        List<ColumnNameType> tupleSchema = _compCost.get(component.getName()).getSchema();
+        TupleSchema tupleSchema = _compCost.get(component.getName()).getSchema();
         NameJoinHashVisitor joinOn = new NameJoinHashVisitor(_schema, _pq.getTan(), tupleSchema, component);
         for(Expression exp: joinCondition){
             exp.accept(joinOn);

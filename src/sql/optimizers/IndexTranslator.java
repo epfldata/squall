@@ -1,11 +1,11 @@
 package sql.optimizers;
 
-import plan_runner.components.Component;
-import plan_runner.components.DataSourceComponent;
-import plan_runner.conversion.TypeConversion;
 import java.util.ArrayList;
 import java.util.List;
 import net.sf.jsqlparser.schema.Column;
+import plan_runner.components.Component;
+import plan_runner.components.DataSourceComponent;
+import plan_runner.conversion.TypeConversion;
 import sql.schema.ColumnNameType;
 import sql.schema.Schema;
 import sql.util.ParserUtil;
@@ -43,7 +43,7 @@ public class IndexTranslator implements Translator{
                 return i;
             }
         }
-        return -1;
+        return ParserUtil.NOT_FOUND;
     }
 
     /*
@@ -52,7 +52,7 @@ public class IndexTranslator implements Translator{
      */
     public TypeConversion getType(List<ColumnNameType> tupleSchema, String columnName) {
         int index = indexOf(tupleSchema, columnName);
-        if(index == -1){
+        if(index == ParserUtil.NOT_FOUND){
             throw new RuntimeException("No column " + columnName + " in tupleSchema!");
         }
         return tupleSchema.get(index).getType();

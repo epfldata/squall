@@ -1,7 +1,6 @@
 package sql.optimizers.cost;
 
-import java.util.List;
-import sql.schema.ColumnNameType;
+import sql.util.TupleSchema;
 
 /*
  * parallelism also has to be inside,
@@ -14,7 +13,7 @@ public class CostParams {
     //unless otherwise specified, there is no pruning tuples from a relation
     private double _selectivity = 1.0;
     private long _cardinality; //total number of tuples at the output of a component
-    private List<ColumnNameType> _schema;
+    private TupleSchema _schema;
     private int _parallelism;
 
     /**
@@ -48,14 +47,14 @@ public class CostParams {
     /**
      * @return the _schema
      */
-    public List<ColumnNameType> getSchema() {
+    public TupleSchema getSchema() {
         return _schema;
     }
 
     /**
      * @param schema the _schema to set
      */
-    public void setSchema(List<ColumnNameType> schema) {
+    public void setSchema(TupleSchema schema) {
         _schema = schema;
     }
 

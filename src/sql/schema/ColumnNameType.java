@@ -1,12 +1,12 @@
 package sql.schema;
 
-import plan_runner.conversion.TypeConversion;
 import java.io.Serializable;
+import plan_runner.conversion.TypeConversion;
 
 public class ColumnNameType implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private String _name;
+    private String _name; //Column's fullAliasedName, i.e. N1.NAME
     private TypeConversion _type;
 
     public ColumnNameType(String name, TypeConversion type){
