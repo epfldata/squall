@@ -16,9 +16,7 @@ import plan_runner.expressions.IntegerYearFromDate;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.expressions.ValueSpecification;
 import sql.optimizers.cost.NameTranslator;
-import sql.schema.Schema;
 import sql.util.ParserUtil;
-import sql.util.TableAliasName;
 import sql.util.TupleSchema;
 
 /*
@@ -27,10 +25,7 @@ import sql.util.TupleSchema;
  * Similar to IndexWhereVisitor, but does not use predStack
  */
 public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor{
-
     private final NameTranslator _nt;
-    private final TableAliasName _tan;
-    private final Schema _schema;
 
     private final TupleSchema _inputTupleSchema;
     private Stack<ValueExpression> _exprStack = new Stack<ValueExpression>();
@@ -44,10 +39,8 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor{
     private static DateConversion _dateConv = new DateConversion();
     private static StringConversion _sc = new StringConversion();
 
-    public NameProjectVisitor(TupleSchema inputTupleSchema, TableAliasName tan, Schema schema, Component affectedComponent){
+    public NameProjectVisitor(TupleSchema inputTupleSchema, Component affectedComponent){
         _inputTupleSchema = inputTupleSchema;
-        _tan = tan;
-        _schema = schema;
         
         _nt = new NameTranslator(affectedComponent.getName());
     }
@@ -73,13 +66,13 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor{
 
     @Override
     public void visit(Column column) {
-        //extract type for the column
-        TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
-
         //extract the position (index) of the required column
-
+        //column might be changed, due to the synonim effect
         int position = _nt.getColumnIndex(_inputTupleSchema, column);
 
+        //extract type for the column
+        TypeConversion tc = _nt.getType(_inputTupleSchema, column);
+        
         ValueExpression ve = new ColumnReference(tc, position, ParserUtil.getStringExpr(column));
         pushToExprStack(ve);
     }

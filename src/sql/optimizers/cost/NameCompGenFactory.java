@@ -1,27 +1,24 @@
 package sql.optimizers.cost;
 
-import plan_runner.components.Component;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
-import sql.optimizers.Optimizer;
-import plan_runner.queryPlans.QueryPlan;
+import plan_runner.utilities.SystemParameters;
 import sql.schema.Schema;
 import sql.schema.TPCH_Schema;
 import sql.util.ParserUtil;
-import plan_runner.utilities.SystemParameters;
 import sql.visitors.jsql.AndVisitor;
 import sql.visitors.jsql.SQLVisitor;
 
 /*
- * It generates different NameComponentGenerator for each partial query plan
- *   NameComponentGenerator is responsible for attaching operators to components
+ * It generates different NameCompGen for each partial query plan
+ *   NameCompGen is responsible for attaching operators to components
  * Aggregation only on the last level.
  */
-public class CostOptimizer implements Optimizer {
+public class NameCompGenFactory {
     private Schema _schema;
     private SQLVisitor _pq;
     private Map _map; //map is updates in place
@@ -32,16 +29,22 @@ public class CostOptimizer implements Optimizer {
     private HashMap<String, Expression> _compNamesAndExprs = new HashMap<String, Expression>();
     private HashMap<Set<String>, Expression> _compNamesOrExprs = new HashMap<Set<String>, Expression>();
     
-    private CostOptimizer(SQLVisitor pq, Map map){
+    /*
+     * only plan, no parallelism
+     */
+    public NameCompGenFactory(SQLVisitor pq, Map map){
         _pq = pq;
         _map = map;
         init();
     }
     
-    public CostOptimizer(SQLVisitor pq, Map map, int totalSourcePar){
+    /*
+     * generating plan + parallelism
+     */
+    public NameCompGenFactory(SQLVisitor pq, Map map, int totalSourcePar){
         this(pq, map);
-        setSourceParallelism(totalSourcePar);
-    }    
+        setParAssignerMode(totalSourcePar);
+    }
     
     private void init(){
         //we need to compute cardinalities (WHERE clause) before instantiating CPA
@@ -51,29 +54,21 @@ public class CostOptimizer implements Optimizer {
 
         double scallingFactor = SystemParameters.getDouble(_map, "DIP_DB_SIZE");
         _schema = new TPCH_Schema(scallingFactor);
-        
+    }
+    
+    public final void setParAssignerMode(int totalSourcePar){
         //in general there might be many NameComponentGenerators, 
         //  that's why CPA is computed before of NCG
         _parAssigner = new CostParallelismAssigner(_schema, _pq,
                  _map, _compNamesAndExprs, _compNamesOrExprs, _globalCollect);
-    }
-    
-    public final void setSourceParallelism(int totalSourcePar){
+        
         //for the same _parAssigner, we might try with different totalSourcePar
         _parAssigner.computeSourcePar(totalSourcePar);
-    }    
-
-    public QueryPlan generate() {   
-        NameComponentGenerator cg = generateEmptyCG();
-        
-        //for the one which is returned, parallelism has to be set in _map
-        ParserUtil.parallelismToMap(cg, _map);
-        return cg.getQueryPlan();
     }
     
     //can be useful when manually specifying the order of joins
-    public NameComponentGenerator generateEmptyCG(){
-        return new NameComponentGenerator(_schema, _pq,
+    public NameCompGen generate(){
+        return new NameCompGen(_schema, _pq,
                  _map, _parAssigner, _compNamesAndExprs, _compNamesOrExprs, _globalCollect);
     }
 

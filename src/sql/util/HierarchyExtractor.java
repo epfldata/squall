@@ -1,8 +1,8 @@
 package sql.util;
 
-import plan_runner.components.Component;
 import java.util.List;
 import java.util.Set;
+import plan_runner.components.Component;
 
 /*
  * A utility class for extracting different hierarchy-(topology-)related information

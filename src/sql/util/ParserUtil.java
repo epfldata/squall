@@ -25,9 +25,9 @@ import plan_runner.operators.Operator;
 import plan_runner.queryPlans.QueryPlan;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
-import sql.optimizers.ComponentGenerator;
+import sql.optimizers.CompGen;
 import sql.optimizers.cost.CostParams;
-import sql.optimizers.cost.NameComponentGenerator;
+import sql.optimizers.cost.NameCompGen;
 import sql.schema.ColumnNameType;
 import sql.schema.Schema;
 import sql.visitors.jsql.ColumnCollectVisitor;
@@ -228,7 +228,7 @@ public class ParserUtil {
     /*
      * Find component in a query name with a given name
      */
-    public static List<Component> getComponents(List<String> compNameList, ComponentGenerator cg) {
+    public static List<Component> getComponents(List<String> compNameList, CompGen cg) {
         List<Component> compList = new ArrayList<Component>();
         for(String compName: compNameList){
             compList.add(getComponent(compName, cg));
@@ -239,7 +239,7 @@ public class ParserUtil {
     /*
      * Find component in a query name with a given name
      */
-    public static Component getComponent(String compName, ComponentGenerator cg){
+    public static Component getComponent(String compName, CompGen cg){
         return cg.getQueryPlan().getComponent(compName);
     }
 
@@ -653,11 +653,14 @@ public class ParserUtil {
         return _pq.getJte().getExpressions(leftAncestors, rightAncestors);
     }
 
-    public static int parallelismToMap(NameComponentGenerator cg, Map _map) {
+    public static int parallelismToMap(NameCompGen cg, Map _map) {
         int totalParallelism = 0;
         for(Component comp: cg.getQueryPlan().getPlan()){
             String compName = comp.getName();
             int parallelism = cg.getCostParameters(compName).getParallelism();
+            if(parallelism == 0){
+                throw new RuntimeException("Unset parallelism for component " + compName + " !");
+            }
             totalParallelism += parallelism;
             SystemParameters.putInMap(_map, compName + "_PAR", parallelism);
         }

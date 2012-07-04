@@ -1,10 +1,10 @@
 package sql.optimizers.rule;
 
-import plan_runner.components.Component;
-import plan_runner.components.DataSourceComponent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import plan_runner.components.Component;
+import plan_runner.components.DataSourceComponent;
 
 
 public class LevelAssigner {

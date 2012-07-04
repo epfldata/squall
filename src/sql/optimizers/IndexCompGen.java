@@ -1,17 +1,17 @@
 package sql.optimizers;
 
-import plan_runner.components.Component;
-import plan_runner.components.DataSourceComponent;
-import plan_runner.components.EquiJoinComponent;
-import plan_runner.expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.sf.jsqlparser.expression.Expression;
+import plan_runner.components.Component;
+import plan_runner.components.DataSourceComponent;
+import plan_runner.components.EquiJoinComponent;
+import plan_runner.expressions.ValueExpression;
 import plan_runner.queryPlans.QueryPlan;
+import plan_runner.utilities.SystemParameters;
 import sql.schema.Schema;
 import sql.util.ParserUtil;
-import plan_runner.utilities.SystemParameters;
 import sql.visitors.jsql.SQLVisitor;
 import sql.visitors.squall.IndexJoinHashVisitor;
 
@@ -19,7 +19,7 @@ import sql.visitors.squall.IndexJoinHashVisitor;
  * It is necessary that this class operates with Tables,
  *   since we don't want multiple CG sharing the same copy of DataSourceComponent.
  */
-public class IndexComponentGenerator implements ComponentGenerator{
+public class IndexCompGen implements CompGen{
     private SQLVisitor _pq;
 
     private Schema _schema;
@@ -31,7 +31,7 @@ public class IndexComponentGenerator implements ComponentGenerator{
     //List of Components which are already added throughEquiJoinComponent and OperatorComponent
     private List<Component> _subPlans = new ArrayList<Component>();
 
-    public IndexComponentGenerator(Schema schema, SQLVisitor pq, Map map){
+    public IndexCompGen(Schema schema, SQLVisitor pq, Map map){
         _schema = schema;
         _pq = pq;
         _dataPath = SystemParameters.getString(map, "DIP_DATA_PATH");

@@ -12,7 +12,7 @@ import sql.util.ParserUtil;
 import sql.util.TableAliasName;
 
 
-public class IndexTranslator implements Translator{
+public class IndexTranslator{
     private Schema _schema;
     private TableAliasName _tan;
 
@@ -21,14 +21,9 @@ public class IndexTranslator implements Translator{
         _tan = tan;
     }
 
-    @Override
     public boolean contains(List<ColumnNameType> tupleSchema, String columnName){
-        for(ColumnNameType cnt: tupleSchema){
-            if (cnt.getName().equals(columnName)) {
-                return true;
-            }
-        }
-        return false;
+        int index = indexOf(tupleSchema, columnName);
+        return index != ParserUtil.NOT_FOUND;
     }
 
     /*
@@ -36,7 +31,6 @@ public class IndexTranslator implements Translator{
      *   For a field N1.NATIONNAME, columnName is NATIONNAME
      *   List<ColumnNameType> is from a Schema Table (TPCH.nation)
      */
-    @Override
     public int indexOf(List<ColumnNameType> tupleSchema, String columnName){
         for(int i=0; i<tupleSchema.size(); i++){
             if(tupleSchema.get(i).getName().equals(columnName)){
@@ -50,7 +44,7 @@ public class IndexTranslator implements Translator{
      * Not used outside this class
      * TupleSchema is a table schema (TPCH_Schema.customer, for example)
      */
-    public TypeConversion getType(List<ColumnNameType> tupleSchema, String columnName) {
+    private TypeConversion getType(List<ColumnNameType> tupleSchema, String columnName) {
         int index = indexOf(tupleSchema, columnName);
         if(index == ParserUtil.NOT_FOUND){
             throw new RuntimeException("No column " + columnName + " in tupleSchema!");
@@ -178,9 +172,4 @@ public class IndexTranslator implements Translator{
         }
     }
 
-    //non-used methods
-    @Override
-    public int getColumnIndex(Column column, List<ColumnNameType> tupleSchema) {
-        throw new UnsupportedOperationException("This method is not ment to be called from IndexTranslator");
-    }
 }

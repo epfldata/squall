@@ -98,7 +98,10 @@ public class NameTranslator{
     /* TRANSLATOR methods
      * 
      * all the synonim columns are exchanged with our columns
-     *   Done in place.
+     *   Done in place, in order to 
+     *   1)ProjSchemaCreator.chooseProjections does not work with synonims, which simplifies the function
+     *   2)avoid doing it multiple times 
+     *     (getType and getStringExpr usually follow indexOf)
      */
     private void translateExpr(TupleSchema tupleSchema, Expression expr){
         List<Column> columns = ParserUtil.getJSQLColumns(expr);

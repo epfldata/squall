@@ -1,15 +1,10 @@
 package sql.visitors.squall;
 
-import plan_runner.operators.ChainOperator;
-import plan_runner.operators.DistinctOperator;
-import plan_runner.operators.SelectOperator;
-import plan_runner.operators.Operator;
-import plan_runner.operators.AggregateOperator;
-import plan_runner.operators.ProjectOperator;
-import plan_runner.components.Component;
-import plan_runner.expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
+import plan_runner.components.Component;
+import plan_runner.expressions.ValueExpression;
+import plan_runner.operators.*;
 import plan_runner.predicates.Predicate;
 import plan_runner.visitors.OperatorVisitor;
 

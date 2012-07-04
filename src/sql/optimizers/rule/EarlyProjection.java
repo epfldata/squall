@@ -1,13 +1,12 @@
 package sql.optimizers.rule;
 
-import plan_runner.components.Component;
-import plan_runner.components.DataSourceComponent;
-import plan_runner.expressions.ColumnReference;
-import plan_runner.expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import plan_runner.components.Component;
+import plan_runner.expressions.ColumnReference;
+import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.queryPlans.QueryPlan;

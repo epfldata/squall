@@ -1,28 +1,28 @@
 package sql.optimizers.rule;
 
-import plan_runner.components.Component;
-import plan_runner.components.DataSourceComponent;
-import plan_runner.components.OperatorComponent;
-import plan_runner.expressions.ValueExpression;
 import java.util.*;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.SelectItem;
+import plan_runner.components.Component;
+import plan_runner.components.DataSourceComponent;
+import plan_runner.components.OperatorComponent;
+import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
-import sql.optimizers.IndexComponentGenerator;
+import plan_runner.queryPlans.QueryPlan;
+import plan_runner.utilities.DeepCopy;
+import plan_runner.utilities.SystemParameters;
+import sql.optimizers.IndexCompGen;
 import sql.optimizers.IndexTranslator;
 import sql.optimizers.Optimizer;
-import plan_runner.queryPlans.QueryPlan;
 import sql.schema.Schema;
 import sql.schema.TPCH_Schema;
 import sql.util.HierarchyExtractor;
 import sql.util.JoinTablesExprs;
 import sql.util.ParserUtil;
-import plan_runner.utilities.DeepCopy;
-import plan_runner.utilities.SystemParameters;
 import sql.visitors.jsql.AndVisitor;
 import sql.visitors.jsql.SQLVisitor;
 import sql.visitors.squall.IndexSelectItemsVisitor;
@@ -39,7 +39,7 @@ import sql.visitors.squall.IndexWhereVisitor;
 public class RuleOptimizer implements Optimizer {
     private Schema _schema;
     private SQLVisitor _pq;
-    private IndexComponentGenerator _cg;
+    private IndexCompGen _cg;
     private IndexTranslator _it;
     private Map _map; //map is updates in place
 
@@ -76,12 +76,12 @@ public class RuleOptimizer implements Optimizer {
         return _cg.getQueryPlan();
     }
 
-    private IndexComponentGenerator generateTableJoins() {
+    private IndexCompGen generateTableJoins() {
         List<Table> tableList = _pq.getTableList();
         TableSelector ts = new TableSelector(tableList, _schema, _pq.getTan());
         JoinTablesExprs jte = _pq.getJte();
         
-        IndexComponentGenerator cg = new IndexComponentGenerator(_schema, _pq, _map);
+        IndexCompGen cg = new IndexCompGen(_schema, _pq, _map);
         
         //first phase
         //make high level pairs

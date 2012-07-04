@@ -14,24 +14,18 @@ import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ColumnReference;
 import plan_runner.expressions.ValueExpression;
 import sql.optimizers.cost.NameTranslator;
-import sql.schema.Schema;
 import sql.util.NotFromMyBranchException;
 import sql.util.ParserUtil;
-import sql.util.TableAliasName;
 import sql.util.TupleSchema;
 
 
 public class NameJoinHashVisitor extends IndexJoinHashVisitor{
-    private Schema _schema;
-    private TableAliasName _tan;
     private NameTranslator _nt;
     private Component _affectedComponent;
 
     private TupleSchema _tupleSchema;
 
-    public NameJoinHashVisitor(Schema schema, TableAliasName tan, TupleSchema tupleSchema, Component affectedComponent){
-        _schema = schema;
-        _tan = tan;
+    public NameJoinHashVisitor(TupleSchema tupleSchema, Component affectedComponent){
         _tupleSchema = tupleSchema;
         _affectedComponent = affectedComponent;
         
@@ -114,18 +108,18 @@ public class NameJoinHashVisitor extends IndexJoinHashVisitor{
         List<String> ancestorNames = ParserUtil.getSourceNameList(_affectedComponent);
 
         if(ancestorNames.contains(tableCompName)){
-            //extract type for the column
-            TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
-
             //extract the position (index) of the required column
+            //column might be changed, due to the synonim effect
             int position = _nt.getColumnIndex(_tupleSchema, column);
 
+            //extract type for the column
+            TypeConversion tc = _nt.getType(_tupleSchema, column);
+            
             ValueExpression ve = new ColumnReference(tc, position, ParserUtil.getStringExpr(column));
             pushToExprStack(ve);
         }else{
             throw new NotFromMyBranchException();
         }
     }
-
 
 }

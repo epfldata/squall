@@ -173,19 +173,20 @@ public class NameSelectItemsVisitor extends IndexSelectItemsVisitor{
      * only getColumnIndex method invocation is different than in parent
      */
     @Override
-    public void visit(Column column) {
+    public void visit(Column column) {    
+        //extract the position (index) of the required column
+        //column might be changed, due to the synonim effect
+        int position = _nt.getColumnIndex(_tupleSchema, column);
+        
         //extract type for the column
-        //TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
+        //TypeConversion tc = _nt.getType(_tupleSchema, column);
 
         //TODO: Due to the fact that Project prepares columns for FinalAgg on last component
         //        and that for SUM or COUNT we are not going to this method (recognize is true),
         //        this method is invoked only for GroupByProjections as the top level method.
         //      That is, we can safely assume StringConversion method.
         //      Permanent fix is to create StringConversion over overallAggregation.
-        TypeConversion tc = _sc;
-        
-        //extract the position (index) of the required column
-        int position = _nt.getColumnIndex(_tupleSchema, column);
+        TypeConversion tc = _sc;        
 
         ValueExpression ve = new ColumnReference(tc, position, ParserUtil.getStringExpr(column));
         pushToExprStack(ve);

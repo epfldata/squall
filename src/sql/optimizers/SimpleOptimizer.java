@@ -1,26 +1,24 @@
 package sql.optimizers;
 
-import plan_runner.components.Component;
-import plan_runner.components.DataSourceComponent;
-import plan_runner.components.OperatorComponent;
-import plan_runner.expressions.ValueExpression;
 import java.util.List;
 import java.util.Map;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.SelectItem;
+import plan_runner.components.Component;
+import plan_runner.components.DataSourceComponent;
+import plan_runner.components.OperatorComponent;
+import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
-import sql.optimizers.rule.RuleParallelismAssigner;
 import plan_runner.queryPlans.QueryPlan;
-import sql.schema.Schema;
-import sql.schema.TPCH_Schema;
-import sql.util.JoinTablesExprs;
-import sql.util.ParserUtil;
 import plan_runner.utilities.DeepCopy;
 import plan_runner.utilities.SystemParameters;
+import sql.optimizers.rule.RuleParallelismAssigner;
+import sql.schema.Schema;
+import sql.schema.TPCH_Schema;
+import sql.util.ParserUtil;
 import sql.visitors.jsql.SQLVisitor;
 import sql.visitors.squall.IndexSelectItemsVisitor;
 import sql.visitors.squall.IndexWhereVisitor;
@@ -34,7 +32,7 @@ public class SimpleOptimizer implements Optimizer {
     private Schema _schema;
     private Map _map;
     
-    private IndexComponentGenerator _cg;
+    private IndexCompGen _cg;
     private IndexTranslator _it;
     
     public SimpleOptimizer(SQLVisitor pq, Map map){
@@ -62,10 +60,10 @@ public class SimpleOptimizer implements Optimizer {
         return _cg.getQueryPlan();
     }
 
-    private IndexComponentGenerator generateTableJoins() {
+    private IndexCompGen generateTableJoins() {
         List<Table> tableList = _pq.getTableList();
         
-        IndexComponentGenerator cg = new IndexComponentGenerator(_schema, _pq, _map);
+        IndexCompGen cg = new IndexCompGen(_schema, _pq, _map);
         Component firstParent = cg.generateDataSource(ParserUtil.getComponentName(tableList.get(0)));
 
         //a special case

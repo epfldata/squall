@@ -1,21 +1,21 @@
 package sql.main;
 
-import plan_runner.components.DataSourceComponent;
 import java.io.StringReader;
 import java.util.Map;
-import plan_runner.main.Main;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Select;
 import plan_runner.components.Component;
-import sql.optimizers.Optimizer;
-import sql.optimizers.cost.CostOptimizer;
-import sql.optimizers.cost.NameComponentGenerator;
-import sql.optimizers.rule.RuleOptimizer;
+import plan_runner.components.DataSourceComponent;
+import plan_runner.main.Main;
 import plan_runner.queryPlans.QueryPlan;
-import sql.util.ParserUtil;
 import plan_runner.utilities.SystemParameters;
+import sql.optimizers.Optimizer;
+import sql.optimizers.cost.NameCompGenFactory;
+import sql.optimizers.cost.NameCompGen;
+import sql.optimizers.rule.RuleOptimizer;
+import sql.util.ParserUtil;
 import sql.visitors.jsql.SQLVisitor;
 
 public class ParserMain{
@@ -37,7 +37,7 @@ public class ParserMain{
         new Main(plan, map);
     }  
     
-    //for testing purposes
+//    for testing purposes
 //    private static final String CONF_PATH = "../testing/squall/confs/manual/serial/";
 //    public static void main(String[] args){
 //        String parserConfPath = CONF_PATH + "0.1G_tpch10_serial";
@@ -45,8 +45,8 @@ public class ParserMain{
 //        Map map = pm.createConfig(parserConfPath);
 //        SQLVisitor parsedQuery = pm.parseQuery(map);
 //        
-//        CostOptimizer co = new CostOptimizer(parsedQuery, map, 20);
-//        NameComponentGenerator ncg = co.generateEmptyCG();
+//        NameCompGenFactory co = new NameCompGenFactory(parsedQuery, map, 20);
+//        NameCompGen ncg = co.generate();
 //
 //        DataSourceComponent lineitemSource = ncg.generateDataSource("LINEITEM");
 //        DataSourceComponent ordersSource = ncg.generateDataSource("ORDERS");

@@ -58,7 +58,7 @@ public class ProjSchemaCreator {
         _pq = pq;
 
         _nt = new NameTranslator(component.getName());
-        _npv = new NameProjectVisitor(_inputTupleSchema, _tan, _schema, component);
+        _npv = new NameProjectVisitor(_inputTupleSchema,  component);
     }
 
     /*

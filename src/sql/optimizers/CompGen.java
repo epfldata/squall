@@ -1,12 +1,12 @@
 package sql.optimizers;
 
+import java.util.List;
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
-import java.util.List;
 import plan_runner.queryPlans.QueryPlan;
 
 
-public interface ComponentGenerator {
+public interface CompGen {
 
      public QueryPlan getQueryPlan();
 

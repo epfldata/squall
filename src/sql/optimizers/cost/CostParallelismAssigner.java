@@ -53,8 +53,8 @@ public class CostParallelismAssigner {
          *   So we will generate all the sources witihin a fake sourceCG,
          *   and then proportionally assign parallelism.
          */
-        NameComponentGenerator sourceCG = new NameComponentGenerator(_schema, _pq,
-                 _map, this, _compNamesAndExprs, _compNamesOrExprs, _globalCollect, true);
+        NameCompGen sourceCG = new NameCompGen(_schema, _pq,
+                 _map, this, _compNamesAndExprs, _compNamesOrExprs, _globalCollect);
 
          List<OrderedCostParams> sourceCostParams = new ArrayList<OrderedCostParams>();
          long totalCardinality = 0;
@@ -117,7 +117,8 @@ public class CostParallelismAssigner {
 
     public void setParallelism(DataSourceComponent source, Map<String, CostParams> compCost){
         if(_sourcePars == null){
-            throw new RuntimeException("CostParallelismAssigner.computeSourcePar has to be invoked before setting parallelism of sources!");
+            //if we are here, it was invoked from fake sourceCG, so just return
+            return;
         }
                 
         String sourceName = source.getName();        

@@ -1,9 +1,9 @@
 package sql.schema;
 
-import plan_runner.conversion.IntegerConversion;
-import plan_runner.conversion.TypeConversion;
 import java.util.Arrays;
 import java.util.List;
+import plan_runner.conversion.IntegerConversion;
+import plan_runner.conversion.TypeConversion;
 
 
 public class RST_Schema extends Schema {
