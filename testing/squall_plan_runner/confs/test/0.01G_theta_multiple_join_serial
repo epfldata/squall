@@ -32,3 +32,10 @@ PARTSUPP_CARD 50
 
 LINEITEM_ORDERS_CARD 50
 SUPPLIER_PARTSUPP_CARD 50
+
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_DIP_DIR /export/home/squalldata/storage 
+STORAGE_COLD_START true

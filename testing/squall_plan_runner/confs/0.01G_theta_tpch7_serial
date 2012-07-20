@@ -51,5 +51,5 @@ LINEITEM_SUPPLIER_NATION2_CARD 50
 # Storage directory for local runs
 STORAGE_LOCAL_DIR /tmp/ramdisk
 # Storage directory for cluster runs
-STORAGE_DIP_DIR /export/home/iklonatos/storage 
+STORAGE_DIP_DIR /export/home/squalldata/storage 
 STORAGE_COLD_START true
