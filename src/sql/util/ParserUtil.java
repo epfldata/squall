@@ -3,7 +3,9 @@ package sql.util;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.StringReader;
 import java.util.*;
+import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.Function;
@@ -11,9 +13,12 @@ import net.sf.jsqlparser.expression.Parenthesis;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
+import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
+import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Join;
+import net.sf.jsqlparser.statement.select.Select;
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
 import plan_runner.components.ThetaJoinComponent;
@@ -26,8 +31,8 @@ import plan_runner.queryPlans.QueryPlan;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.CompGen;
-import sql.optimizers.cost.CostParams;
-import sql.optimizers.cost.NameCompGen;
+import sql.optimizers.name.CostParams;
+import sql.optimizers.name.NameCompGen;
 import sql.schema.ColumnNameType;
 import sql.schema.Schema;
 import sql.visitors.jsql.ColumnCollectVisitor;
@@ -38,6 +43,8 @@ import sql.visitors.squall.ColumnRefCollectVisitor;
 
 public class ParserUtil {
      public static final int NOT_FOUND = -1;
+     private final static String SQL_EXTENSION = ".sql";
+     
      private static HashMap<String, Integer> _uniqueNumbers = new HashMap<String, Integer>();
 
      public static String generateUniqueName(String nameBase) {
@@ -543,13 +550,15 @@ public class ParserUtil {
         //******************** end of similar
         
         //creating a list of synonims - TODO: works only for lefty plans
-        Map<String, Column> synonims = new HashMap<String, Column>();
+        Map<String, String> synonims = new HashMap<String, String>();
+        Map<String, String> leftSynonims = leftSchema.getSynonims();
+        if(leftSynonims!=null) synonims.putAll(leftSynonims); //have to add all the synonims from left parent
         for(int i=0; i<rightHashIndexes.size(); i++){
             int leftHash = leftHashIndexes.get(i);
             int rightHash = rightHashIndexes.get(i);
             String rightColStr = rightCnts.get(rightHash).getName();
-            Column originalColumn = ParserUtil.nameToColumn(leftCnts.get(leftHash).getName());
-            synonims.put(rightColStr, originalColumn);
+            String originalColumnStr = leftCnts.get(leftHash).getName();
+            synonims.put(rightColStr, originalColumnStr);
         }
         if(!synonims.isEmpty()){
             result.setSynonims(synonims);
@@ -653,17 +662,94 @@ public class ParserUtil {
         return _pq.getJte().getExpressions(leftAncestors, rightAncestors);
     }
 
-    public static int parallelismToMap(NameCompGen cg, Map _map) {
-        int totalParallelism = 0;
+    public static int parallelismToMap(NameCompGen cg, Map map) {
+        Map<String, Integer> compNamePars = new HashMap<String, Integer>();
         for(Component comp: cg.getQueryPlan().getPlan()){
             String compName = comp.getName();
             int parallelism = cg.getCostParameters(compName).getParallelism();
+            compNamePars.put(compName, parallelism);
+        }
+        return parallelismToMap(compNamePars, map);
+    }
+
+    public static int parallelismToMap(Map<String, Integer> compNamePars, Map map) {
+        int totalParallelism = 0;
+        for(Map.Entry<String, Integer> compNamePar: compNamePars.entrySet()){
+            String compName = compNamePar.getKey();
+            int parallelism = compNamePar.getValue();
+            
             if(parallelism == 0){
                 throw new RuntimeException("Unset parallelism for component " + compName + " !");
+            }else if (parallelism < 0){
+                throw new RuntimeException("Negative parallelism for component " + compName + " !");
             }
+            
             totalParallelism += parallelism;
-            SystemParameters.putInMap(_map, compName + "_PAR", parallelism);
+            SystemParameters.putInMap(map, compName + "_PAR", parallelism);
         }
         return totalParallelism;
     }
+    
+    public static String parToString(QueryPlan plan, Map<String, String> map){
+        StringBuilder sb = new StringBuilder("\n\nPARALLELISM:\n");
+        for(String compName: plan.getComponentNames()){
+            String parallelism = SystemParameters.getString(map, compName +"_PAR");
+            sb.append(compName).append(" = ").append(parallelism).append("\n");
+        }
+        sb.append("END OF PARALLELISM\n\n");
+        return sb.toString();
+    }
+
+    public static int getTotalParallelism(Map<String, CostParams> compCost) {
+        int totalParallelism = 0;
+        for(Map.Entry<String, CostParams> compNameCost: compCost.entrySet()){
+            totalParallelism += compNameCost.getValue().getParallelism();
+        }
+        return totalParallelism;
+    }
+    
+    public static SQLVisitor parseQuery(Map map){
+        String sqlString = readSQL(map);
+        
+        CCJSqlParserManager pm = new CCJSqlParserManager();
+        Statement statement=null;
+        try {
+            statement = pm.parse(new StringReader(sqlString));
+        } catch (JSQLParserException ex) {
+            System.out.println("JSQLParserException");
+        }
+
+        if (statement instanceof Select) {
+            Select selectStatement = (Select) statement;
+            String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
+            SQLVisitor parsedQuery = new SQLVisitor(queryName);
+
+            //visit whole SELECT statement
+            parsedQuery.visit(selectStatement);
+            parsedQuery.doneVisiting();
+
+            return parsedQuery;
+        }
+        throw new RuntimeException("Please provide SELECT statement!");
+    }    
+    
+    private static String readSQL(Map map){
+        String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
+        String sqlPath = SystemParameters.getString(map, "DIP_SQL_ROOT") + queryName + SQL_EXTENSION;
+        return ParserUtil.readSQLFromFile(sqlPath);
+    }
+
+    /*
+     * This is a deep copy of fromColumn to toColumn
+     */
+    public static void copyColumn(Column toColumn, Column fromColumn){
+        toColumn.setColumnName(fromColumn.getColumnName());
+        toColumn.setTable(fromColumn.getTable());
+    }
+
+    public static void copyColumn(Column toColumn, String fromColumnStr) {
+        Column fromColumn = nameToColumn(fromColumnStr);
+        copyColumn(toColumn, fromColumn);
+    }
+    
 }

@@ -15,19 +15,24 @@ import net.sf.jsqlparser.schema.Table;
      */
 public class JoinTablesExprs {
     
-     private HashMap<String, HashMap<String, List<Expression>>> _tablesJoinExp = new HashMap<String, HashMap<String, List<Expression>>>();
+     private Map<String, Map<String, List<Expression>>> _tablesJoinExp = new HashMap<String, Map<String, List<Expression>>>();
+     private Map<String, Map<String, List<Expression>>> _singleDirTablesJoinExp = new HashMap<String, Map<String, List<Expression>>>();
 
      public void addEntry(Table leftTable, Table rightTable, Expression exp){
          String leftName = ParserUtil.getComponentName(leftTable);
          String rightName = ParserUtil.getComponentName(rightTable);
 
-         addToJoinMap(leftName, rightName, exp);
-         addToJoinMap(rightName, leftName, exp);
+         //adding to bi-directional data structure - structure used by default in methods of this class
+         addToJoinMap(leftName, rightName, exp, _tablesJoinExp);
+         addToJoinMap(rightName, leftName, exp, _tablesJoinExp);
+         
+         //adding to a single-directional data strucure
+         addToJoinMap(leftName, rightName, exp, _singleDirTablesJoinExp);
      }
 
-    private void addToJoinMap(String tblName1, String tblName2, Expression exp) {
-        if(_tablesJoinExp.containsKey(tblName1)){
-             HashMap<String, List<Expression>> inner = _tablesJoinExp.get(tblName1);
+    private void addToJoinMap(String tblName1, String tblName2, Expression exp, Map<String, Map<String, List<Expression>>> collection) {
+        if(collection.containsKey(tblName1)){
+             Map<String, List<Expression>> inner = collection.get(tblName1);
              if(inner.containsKey(tblName2)){
                 List<Expression> expList = inner.get(tblName2);
                 expList.add(exp);
@@ -39,9 +44,9 @@ public class JoinTablesExprs {
          }else{
              List<Expression> expList = new ArrayList<Expression>();
              expList.add(exp);
-             HashMap<String, List<Expression>> newInner = new HashMap<String, List<Expression>>();
+             Map<String, List<Expression>> newInner = new HashMap<String, List<Expression>>();
              newInner.put(tblName2, expList);
-             _tablesJoinExp.put(tblName1, newInner);
+             collection.put(tblName1, newInner);
          }
     }
 
@@ -66,17 +71,30 @@ public class JoinTablesExprs {
      * Get a list of tables DataSourceComponent named tblCompName can join with
      */
     public List<String> getJoinedWith(String tblCompName){
-        if(!_tablesJoinExp.containsKey(tblCompName)){
+        List<String> result = getJoinedWith(_tablesJoinExp, tblCompName);
+        if(result == null){
             throw new RuntimeException("Table doesn't exist in JoinTablesExp: "+tblCompName);
+        }
+        return result;
+    }
+    
+    //single-directional method
+    public List<String> getJoinedWithSingleDir(String tblCompName){
+        return getJoinedWith(_singleDirTablesJoinExp, tblCompName);
+    }
+    
+    private List<String> getJoinedWith(Map<String, Map<String, List<Expression>>> collection, String tblCompName) {
+        if(!collection.containsKey(tblCompName)){
+            return null;
         }
 
         List<String> joinedWith = new ArrayList<String>();
-        HashMap<String, List<Expression>> innerMap = _tablesJoinExp.get(tblCompName);
+        Map<String, List<Expression>> innerMap = collection.get(tblCompName);
         for(Map.Entry<String, List<Expression>> entry: innerMap.entrySet()){
             joinedWith.add(entry.getKey());
         }
         return joinedWith;
-    }
+    }    
 
     /*
      * Get a list of join condition expressions.
@@ -114,7 +132,7 @@ public class JoinTablesExprs {
     }
 
     public List<Expression> getExpressions(String tableName1, String tableName2){
-        HashMap<String, List<Expression>> inner =_tablesJoinExp.get(tableName1);
+        Map<String, List<Expression>> inner =_tablesJoinExp.get(tableName1);
         return inner.get(tableName2);
     }
 
@@ -132,4 +150,5 @@ public class JoinTablesExprs {
         }
         return false;
     }
+
 }

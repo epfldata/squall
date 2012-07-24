@@ -16,7 +16,7 @@ import plan_runner.expressions.ValueExpression;
 import plan_runner.expressions.ValueSpecification;
 import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.*;
-import sql.optimizers.IndexTranslator;
+import sql.optimizers.index.IndexTranslator;
 import sql.schema.Schema;
 import sql.util.ParserUtil;
 import sql.util.TableAliasName;

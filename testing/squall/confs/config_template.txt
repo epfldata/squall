@@ -7,7 +7,29 @@ DIP_SQL_ROOT String
 
 # DIP_DB_SIZE is in GBs
 DIP_DB_SIZE double
-DIP_MAX_SRC_PAR int
+
+#One of the following optimizers has to be selected:
+########################################
+#DIP_OPTIMIZER_TYPE INDEX_SIMPLE
+#DIP_MAX_SRC_PAR int
+
+#DIP_OPTIMIZER_TYPE INDEX_RULE_BUSHY
+#DIP_MAX_SRC_PAR int
+
+#DIP_OPTIMIZER_TYPE NAME_MANUAL_PAR_LEFTY
+#DIP_PLAN CUSTOMER:int,ORDERS:int:int
+
+#DIP_OPTIMIZER_TYPE NAME_MANUAL_COST_LEFTY
+#DIP_PLAN String,String,...
+#DIP_TOTAL_SRC_PAR int
+
+#DIP_OPTIMIZER_TYPE NAME_RULE_LEFTY
+#DIP_TOTAL_SRC_PAR int
+
+DIP_OPTIMIZER_TYPE NAME_COST_LEFTY
+DIP_TOTAL_SRC_PAR int
+
+########################################
 
 #below are unlikely to change
 DIP_EXTENSION String

@@ -2,6 +2,7 @@ package plan_runner.main;
 
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
+import java.util.Collections;
 import org.apache.log4j.Logger;
 
 import plan_runner.components.Component;
@@ -67,6 +68,7 @@ public class Main {
 
             List<Component> queryPlan = qp.getPlan();
             List<String> allCompNames = qp.getComponentNames();
+            Collections.sort(allCompNames);
             int planSize = queryPlan.size();
             for(int i=0;i<planSize;i++){
                 Component component = queryPlan.get(i);

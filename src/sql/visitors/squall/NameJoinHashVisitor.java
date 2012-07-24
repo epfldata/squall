@@ -13,7 +13,7 @@ import plan_runner.components.Component;
 import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ColumnReference;
 import plan_runner.expressions.ValueExpression;
-import sql.optimizers.cost.NameTranslator;
+import sql.optimizers.name.NameTranslator;
 import sql.util.NotFromMyBranchException;
 import sql.util.ParserUtil;
 import sql.util.TupleSchema;

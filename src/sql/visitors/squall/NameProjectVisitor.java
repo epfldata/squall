@@ -15,7 +15,7 @@ import plan_runner.expressions.ColumnReference;
 import plan_runner.expressions.IntegerYearFromDate;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.expressions.ValueSpecification;
-import sql.optimizers.cost.NameTranslator;
+import sql.optimizers.name.NameTranslator;
 import sql.util.ParserUtil;
 import sql.util.TupleSchema;
 

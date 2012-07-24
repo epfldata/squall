@@ -1,5 +1,6 @@
 package sql.visitors.jsql;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -14,7 +15,9 @@ import net.sf.jsqlparser.statement.select.*;
 import sql.util.JoinTablesExprs;
 import sql.util.TableAliasName;
 
-public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVisitor, ItemsListVisitor {
+public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVisitor, ItemsListVisitor, Serializable {
+        private static final long serialVersionUID = 1L;
+    
 	private List<Table> _tableList;
         private List<Join> _joinList;
         private List<SelectItem> _selectItems;

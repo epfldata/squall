@@ -14,7 +14,7 @@ import plan_runner.expressions.ColumnReference;
 import plan_runner.expressions.IntegerYearFromDate;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.expressions.ValueSpecification;
-import sql.optimizers.IndexTranslator;
+import sql.optimizers.index.IndexTranslator;
 import sql.schema.Schema;
 import sql.util.NotFromMyBranchException;
 import sql.util.ParserUtil;

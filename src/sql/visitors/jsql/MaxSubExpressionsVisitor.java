@@ -11,7 +11,7 @@ import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.*;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
-import sql.optimizers.cost.NameTranslator;
+import sql.optimizers.name.NameTranslator;
 import sql.util.ParserUtil;
 import sql.util.TupleSchema;
 

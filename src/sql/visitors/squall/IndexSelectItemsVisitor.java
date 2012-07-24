@@ -19,7 +19,7 @@ import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.AggregateSumOperator;
 import plan_runner.operators.DistinctOperator;
 import plan_runner.queryPlans.QueryPlan;
-import sql.optimizers.IndexTranslator;
+import sql.optimizers.index.IndexTranslator;
 import sql.schema.Schema;
 import sql.util.ParserUtil;
 import sql.util.TableAliasName;
