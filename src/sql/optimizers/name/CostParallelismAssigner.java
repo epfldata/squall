@@ -6,6 +6,7 @@ import plan_runner.components.DataSourceComponent;
 import plan_runner.components.EquiJoinComponent;
 import plan_runner.utilities.SystemParameters;
 import sql.schema.Schema;
+import sql.util.OverParallelizedException;
 import sql.util.ParserUtil;
 import sql.visitors.jsql.SQLVisitor;
 
@@ -162,13 +163,21 @@ public class CostParallelismAssigner {
                 //  exception serves to force smaller parallelism at sources
                 parallelism = maxParallelism;
             }else{
-                throw new RuntimeException("Component " + joinComponent.getName() + " cannot have parallelism more than " + maxParallelism);
+                throw new OverParallelizedException("Component " + joinComponent.getName() + 
+                        " cannot have parallelism more than " + maxParallelism);
             }
         }
 
         //setting
         String currentComp = joinComponent.getName();
         compCost.get(currentComp).setParallelism(parallelism);
+        
+        //TODO: we should also check 
+        //  if the sum of all the parallelisms in the subplan 
+        //    is bigger than DIP_NUM_WORKERS (this is set only for PlanRunner).
+        //At the time of deciding of parallelism, we are *not* dealing with Storm Config class, but with a plain map.
+        //  This prevents from reading NUM_WORKERS from Storm Config class.
+        //  If it works in local mode, it might not work in cluster mode - depending where and when the setting is read. 
     }
 
     private int parallelismFormula(CostParams leftParentParams, CostParams rightParentParams) {
@@ -183,12 +192,12 @@ public class CostParallelismAssigner {
         }
         return parallelism;
     }
-
+    
     /*
      * We take the number of tuples as the upper limit.
      *   The real number of distinct hashes may be much smaller,
      *   for example when having multiple tuples with the very same hash value.
-     *   This is rare in practice, in the example we tried,
+     *   This is rare in practice, in the examplesw we tried,
      *      it occurs only for the final aggregation when join and final aggregation are not on the last node.
      */
     private int estimateDistinctHashes(CostParams leftParentParams, CostParams rightParentParams) {
@@ -208,12 +217,12 @@ public class CostParallelismAssigner {
             distinctValues = rightCardinality;
         }
 
-        int result = (int) distinctValues;
-        if(result != distinctValues){
-            //so huge that cannot fit in int, we will set to MAX_PARALLELISM
-            result = SystemParameters.getInt(_map, "DIP_NUM_WORKERS");
+        if(distinctValues > Integer.MAX_VALUE){
+            return Integer.MAX_VALUE;
+        }else{
+            return (int) distinctValues;
         }
-        return result;
+
     }
 
     /*

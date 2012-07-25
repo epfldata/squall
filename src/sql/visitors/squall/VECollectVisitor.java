@@ -10,7 +10,7 @@ import plan_runner.visitors.OperatorVisitor;
 
 /*
  * Collects all the VE inside a component.
- *   Lists refering to VE appearing after and before projection are necessary only for rule-based optimization.
+ * Used only from EarlyProjection(sql.optimizers.index package).
  */
 public class VECollectVisitor implements OperatorVisitor {
     private List<ValueExpression> _veList = new ArrayList<ValueExpression>();

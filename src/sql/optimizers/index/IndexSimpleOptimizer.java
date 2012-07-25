@@ -123,7 +123,6 @@ public class IndexSimpleOptimizer implements Optimizer {
                 //always new level
 
                 if (affectedComponent.getHashExpressions()!=null && !affectedComponent.getHashExpressions().isEmpty()){
-                    //TODO: probably will be solved in cost-based optimizer
                     throw new RuntimeException("Too complex: cannot have hashExpression both for joinCondition and groupBy!");
                 }
 

@@ -78,6 +78,10 @@ public class IndexCompGen implements CompGen{
 
         //compute join condition
         List<Expression> joinCondition = ParserUtil.getJoinCondition(_pq, left, right);
+        if(joinCondition == null){
+            throw new RuntimeException("There is no join conditition between components " 
+                    + left.getName() + " and " + right.getName());
+        }        
         
         //set hashes for two parents
         addHash(left, joinCondition);

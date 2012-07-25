@@ -106,7 +106,7 @@ public class SystemParameters{
         Map map = new HashMap<String, String>();
 
         try {
-            String line="";
+            String line;
             BufferedReader reader = new BufferedReader(new FileReader(new File(propertiesFile)));
             while( (line = reader.readLine()) != null){
 

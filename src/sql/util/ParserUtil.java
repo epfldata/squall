@@ -63,7 +63,7 @@ public class ParserUtil {
      */
     public static void printParsedQuery(SQLVisitor pq){
         for(Table table: pq.getTableList()){
-            String tableStr = ParserUtil.toString(table);
+            String tableStr = toString(table);
             System.out.println(tableStr);
         }
     }     
@@ -233,7 +233,7 @@ public class ParserUtil {
     }    
 
     /*
-     * Find component in a query name with a given name
+     * Find a list of components in a query with a given list of names
      */
     public static List<Component> getComponents(List<String> compNameList, CompGen cg) {
         List<Component> compList = new ArrayList<Component>();
@@ -244,7 +244,7 @@ public class ParserUtil {
     }
 
     /*
-     * Find component in a query name with a given name
+     * Find component in a query with a given name
      */
     public static Component getComponent(String compName, CompGen cg){
         return cg.getQueryPlan().getComponent(compName);
@@ -489,6 +489,17 @@ public class ParserUtil {
             collocatedExprs.put(compNameSet, expr);
         }
     }
+    
+    public static <K, V> void addToCollection(K key, V singleValue, Map<K, List<V>> collection) {
+        List<V> valueList;
+        if(collection.containsKey(key)){
+            valueList = collection.get(key);
+        }else{
+            valueList = new ArrayList<V>();
+            collection.put(key, valueList);
+        }
+        valueList.add(singleValue);
+    }    
 
     public static List<Column> getJSQLColumns(List<Expression> exprs){
         List<Column> result = new ArrayList<Column>();
@@ -571,7 +582,7 @@ public class ParserUtil {
      * returns N1.NATIONNAME
      */
     public static String getFullAliasedName(Column column) {
-        return ParserUtil.getComponentName(column) + "." + column.getColumnName();
+        return getComponentName(column) + "." + column.getColumnName();
     }
     
     public static Column nameToColumn(String name) {
@@ -597,7 +608,7 @@ public class ParserUtil {
     }
 
     public static TypeConversion getColumnType(Column column, TableAliasName tan, Schema schema) {
-        String tableCompName = ParserUtil.getComponentName(column);
+        String tableCompName = getComponentName(column);
         String tableSchemaName = tan.getSchemaName(tableCompName);
         String columnName = column.getColumnName();
         return schema.getType(tableSchemaName, columnName);
@@ -644,8 +655,8 @@ public class ParserUtil {
     /*
      * is joinComponent the last component in the query plan, in terms of no more joins to perform
      */
-    public static boolean isFinalJoin(Component comp, SQLVisitor _pq) {
-        Set<String> allSources = new HashSet<String>(_pq.getTan().getComponentNames());
+    public static boolean isFinalJoin(Component comp, SQLVisitor pq) {
+        Set<String> allSources = new HashSet<String>(pq.getTan().getComponentNames());
         Set<String> actuallPlanSources = getSourceNameSet(comp);
         return allSources.equals(actuallPlanSources);
     }
@@ -656,10 +667,10 @@ public class ParserUtil {
         return setSchema1.equals(setSchema2);
     }
 
-    public static List<Expression> getJoinCondition(SQLVisitor _pq, Component left, Component right) {
-        List<String> leftAncestors = ParserUtil.getSourceNameList(left);
-        List<String> rightAncestors = ParserUtil.getSourceNameList(right);
-        return _pq.getJte().getExpressions(leftAncestors, rightAncestors);
+    public static List<Expression> getJoinCondition(SQLVisitor pq, Component left, Component right) {
+        List<String> leftAncestors = getSourceNameList(left);
+        List<String> rightAncestors = getSourceNameList(right);
+        return pq.getJte().getExpressions(leftAncestors, rightAncestors);
     }
 
     public static int parallelismToMap(NameCompGen cg, Map map) {
@@ -690,18 +701,28 @@ public class ParserUtil {
         return totalParallelism;
     }
     
+    //used after parallelismToMap method is invoked
     public static String parToString(QueryPlan plan, Map<String, String> map){
+        int totalParallelism = 0;
+        
         StringBuilder sb = new StringBuilder("\n\nPARALLELISM:\n");
         for(String compName: plan.getComponentNames()){
-            String parallelism = SystemParameters.getString(map, compName +"_PAR");
-            sb.append(compName).append(" = ").append(parallelism).append("\n");
+            String parallelismStr = SystemParameters.getString(map, compName +"_PAR");
+            sb.append(compName).append(" = ").append(parallelismStr).append("\n");
+            
+            int parallelism = Integer.valueOf(parallelismStr);
+            totalParallelism += parallelism;
         }
-        sb.append("END OF PARALLELISM\n\n");
+        sb.append("END OF PARALLELISM\n");
+        
+        sb.append("Total parallelism is ").append(totalParallelism).append("\n\n");
         return sb.toString();
     }
 
-    public static int getTotalParallelism(Map<String, CostParams> compCost) {
+    //can be used before parallelismToMap method is invoked
+    public static int getTotalParallelism(NameCompGen ncg) {
         int totalParallelism = 0;
+        Map<String, CostParams> compCost = ncg.getCompCost();
         for(Map.Entry<String, CostParams> compNameCost: compCost.entrySet()){
             totalParallelism += compNameCost.getValue().getParallelism();
         }
@@ -736,7 +757,7 @@ public class ParserUtil {
     private static String readSQL(Map map){
         String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
         String sqlPath = SystemParameters.getString(map, "DIP_SQL_ROOT") + queryName + SQL_EXTENSION;
-        return ParserUtil.readSQLFromFile(sqlPath);
+        return readSQLFromFile(sqlPath);
     }
 
     /*

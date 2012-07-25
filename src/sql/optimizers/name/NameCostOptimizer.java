@@ -1,13 +1,12 @@
 
 package sql.optimizers.name;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import plan_runner.components.Component;
 import plan_runner.queryPlans.QueryPlan;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.Optimizer;
+import sql.util.OverParallelizedException;
 import sql.util.ParserUtil;
 import sql.visitors.jsql.SQLVisitor;
 
@@ -24,8 +23,8 @@ public class NameCostOptimizer implements Optimizer{
     }
     
     public QueryPlan generate() {
-        int totalParallelism = SystemParameters.getInt(_map, "DIP_TOTAL_SRC_PAR");
-        NameCompGenFactory factory = new NameCompGenFactory(_map, totalParallelism);
+        int totalSourcePar = SystemParameters.getInt(_map, "DIP_TOTAL_SRC_PAR");
+        NameCompGenFactory factory = new NameCompGenFactory(_map, totalSourcePar);
         List<String> sourceNames = factory.getParAssigner().getSortedSourceNames();
         int numSources = sourceNames.size();
         NameCompGen optimal = null;
@@ -62,7 +61,6 @@ public class NameCostOptimizer implements Optimizer{
                 Component firstComp = ncg.getQueryPlan().getLastComponent();
                 List<String> ancestors = ParserUtil.getSourceNameList(firstComp);
                 List<String> joinedWith = _pq.getJte().getJoinedWith(ancestors);
-                joinedWith = ParserUtil.getDifference(joinedWith, ancestors);
                 for(String compName: joinedWith){
                     NameCompGen newNcg = ncg; 
                     if(joinedWith.size() > 1){
@@ -76,12 +74,12 @@ public class NameCostOptimizer implements Optimizer{
                 }
             }
         
-            //filtering
             if(level == numSources - 1){
                 //last level, chooseOptimal
                 optimal = chooseBest(ncgListSecond);
             }else{
-                
+                //filtering - for NCGs with the same ancestor set, choose the one with the smallest totalParallelism
+                ncgListSecond = pruneSubplans(ncgListSecond);
             }
             
             ncgListFirst = ncgListSecond;
@@ -99,7 +97,7 @@ public class NameCostOptimizer implements Optimizer{
         boolean isExc = false;
         try{
             ncg.generateEquiJoin(firstComp, secondComp);
-        }catch(RuntimeException exc){
+        }catch(OverParallelizedException exc){
             StringBuilder errorMsg = new StringBuilder();
             errorMsg.append("This subplan will never generated the optimal query plan, so it's thrown:").append("\n");
             errorMsg.append(exc.getMessage()).append("\n");
@@ -122,15 +120,60 @@ public class NameCostOptimizer implements Optimizer{
             System.out.println(errorMsg);
             System.exit(1);
         }
-        int parallelism = ParserUtil.getTotalParallelism(ncgList.get(0).getCompCost());
-        int index = 0;
-        for(int i = 0; i< ncgList.size(); i++){
-            NameCompGen ncg = ncgList.get(i);
-            if(ParserUtil.getTotalParallelism(ncg.getCompCost()) < parallelism){
-                index = i;
+        
+        int index = getMinTotalParIndex(ncgList);
+        return ncgList.get(index);
+    }
+
+    private List<NameCompGen> pruneSubplans(List<NameCompGen> ncgList) {
+        Map<Set<String>, List<NameCompGen>> collection = new HashMap<Set<String>, List<NameCompGen>>();
+        
+        //filling in the collection with the appropriate key-value structure
+        for(NameCompGen ncg: ncgList){
+            Set<String> ancestors = ParserUtil.getSourceNameSet(ncg.getQueryPlan().getLastComponent());
+            ParserUtil.addToCollection(ancestors, ncg, collection);
+        }
+        
+        List<NameCompGen> pruned = new ArrayList<NameCompGen>();
+        //for each key(which is set of ancestors) choose only the best one
+        for(Map.Entry<Set<String>, List<NameCompGen>> entrySet:collection.entrySet()){
+            List<NameCompGen> valueList = entrySet.getValue();
+            
+            //all the equivalent plans having minimum totalParallelism are added
+            //  there might be muptiple of them
+            int minTotalPar = getMinTotalPar(valueList);
+            for(NameCompGen ncg: valueList){
+                int totalPar = ParserUtil.getTotalParallelism(ncg);
+                if(totalPar == minTotalPar){
+                    pruned.add(ncg);
+                }
             }
         }
-        return ncgList.get(index);
+        return pruned;
+    }
+
+    private int getMinTotalParIndex(List<NameCompGen> ncgList) {
+        int totalPar = ParserUtil.getTotalParallelism(ncgList.get(0));
+        int minParIndex = 0;
+        for(int i = 1; i< ncgList.size(); i++){
+            int currentTotalPar = ParserUtil.getTotalParallelism(ncgList.get(i));
+            if(currentTotalPar < totalPar){
+                minParIndex = i;
+                totalPar = currentTotalPar;
+            }
+        }
+        return minParIndex;
+    }
+    
+    private int getMinTotalPar(List<NameCompGen> ncgList){
+        int minTotalPar = ParserUtil.getTotalParallelism(ncgList.get(0));
+        for(int i = 1; i< ncgList.size(); i++){
+            int currentTotalPar = ParserUtil.getTotalParallelism(ncgList.get(i));
+            if(currentTotalPar < minTotalPar){
+                minTotalPar = currentTotalPar;
+            }
+        }
+        return minTotalPar;
     }
 
 }

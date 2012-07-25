@@ -55,8 +55,9 @@ public class JoinTablesExprs {
      *   This might return duplicates: For example, R.A=S.A and S.B=T.B and R.A=T.C
      *   If we want to join R-S with T, then getJoinedWith(R, S) will return (T, T)
      *   To fix the problem, we used sets, and then we converted it back to List<String>
-     * For the same example R-S joined T, getJoinedWith(R, S) will (among other results) return R, S,
-     *   but this is later on filtered with intersection method
+     * For the same example R-S joined T, getJoinedWith(R, S) could (among other results) return R, S,
+     *   but this is filtered at the end of this method.
+     *   We don't want Sources in the results which are already in ancestors.
      */
     public List<String> getJoinedWith(List<String> ancestors) {
         Set<String> result = new HashSet<String>();
@@ -64,7 +65,8 @@ public class JoinTablesExprs {
             List<String> singleJoinedWith = getJoinedWith(ancestor);
             result.addAll(singleJoinedWith);
         }
-        return new ArrayList<String>(result);
+        List<String> resultList = new ArrayList<String>(result);
+        return ParserUtil.getDifference(resultList, ancestors);
     }
 
     /*

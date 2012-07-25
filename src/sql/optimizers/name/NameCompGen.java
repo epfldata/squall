@@ -223,6 +223,10 @@ public class NameCompGen implements CompGen{
         
         //compute join condition
         List<Expression> joinCondition = ParserUtil.getJoinCondition(_pq, left, right);
+        if(joinCondition == null){
+            throw new RuntimeException("There is no join conditition between components " 
+                    + left.getName() + " and " + right.getName());
+        }
         
         //set hashes for two parents, has to be before createCompCost
         addHash(left, joinCondition);
@@ -234,7 +238,7 @@ public class NameCompGen implements CompGen{
         //operators
         addSelectOperator(joinComponent);
         
-        //TODO decomment when NSIV.visit(Column) is fixed 
+        //TODO when single last component: decomment when NSIV.visit(Column) is fixed
         //  - issue in TPCH9
         //if(!ParserUtil.isFinalJoin(joinComponent, _pq)){
         addProjectOperator(joinComponent);

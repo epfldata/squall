@@ -73,6 +73,7 @@ public class ParserMain{
 
     private Optimizer pickOptimizer(Map map) {
         String optStr = SystemParameters.getString(map, "DIP_OPTIMIZER_TYPE");
+        System.out.println("Selected optimizer: " + optStr);
         if("INDEX_SIMPLE".equalsIgnoreCase(optStr)){
             //Simple optimizer provides lefty plans
             return new IndexSimpleOptimizer(map); 

@@ -16,7 +16,6 @@ import sql.util.TableAliasName;
 /* TODO high prio:
  * no matter on which component we do invoke, the only important is to know previous projections
  *   (TPCH7, 8 with pushing OR from WHERE clause)
- * AndExpression (exception) - if the columns are not the same, look at the textbook
  *
  * TODO low prio:
  * do not support R.A + 4 < 2, we will need ValueExpression with ranges to support that, and a user can rewrite it itself
