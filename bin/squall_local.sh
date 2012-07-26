@@ -24,4 +24,4 @@ fi
 ../bin/lein run -m sql.main.ParserMain $CONFIG_PATH
 
 #Old version implies specifying libraries explicitly
-#java -cp ../deploy/squall-2.0-standalone.jar:../$STORMNAME/lib/*:../contrib/*:../$STORMNAME/$STORMNAME.jar main.ParserMain $CONFIG_PATH
+#java -cp ../deploy/squall-2.0-standalone.jar:../$STORMNAME/lib/*:../contrib/*:../$STORMNAME/$STORMNAME.jar sql.main.ParserMain $CONFIG_PATH

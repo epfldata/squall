@@ -13,7 +13,6 @@ CUSTOMER_PAR 8
 ORDERS_PAR 8
 
 CUSTOMER_ORDERS_PAR 8
-COUNTAGG_PAR 5
 
 #below are unlikely to change
 DIP_EXTENSION .tbl

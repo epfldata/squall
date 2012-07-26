@@ -6,7 +6,7 @@ DIP_DATA_ROOT ../testing/data/tpch/
 DIP_SQL_ROOT ../testing/squall/sql_queries/
 
 # DIP_DB_SIZE is in GBs
-DIP_DB_SIZE 0.1 
+DIP_DB_SIZE 0.01 
 
 ########################################
 #DIP_OPTIMIZER_TYPE INDEX_SIMPLE

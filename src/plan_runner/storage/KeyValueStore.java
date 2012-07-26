@@ -30,7 +30,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 
                 String storagePath;
                 if(SystemParameters.getBoolean(map, "DIP_DISTRIBUTED")){
-                    storagePath = "/export/home/iklonatos/storage/";
+                    storagePath = "/export/home/squalldata/storage/";
                 }else{
                     storagePath = "/tmp/ramdisk/";
                 }
