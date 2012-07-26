@@ -1,0 +1,18 @@
+DIP_DISTRIBUTED boolean(either true or false)
+DIP_QUERY_NAME String
+DIP_TOPOLOGY_NAME_PREFIX String
+DIP_TOPOLOGY_NAME String
+DIP_NUM_ACKERS int
+
+DIP_DATA_PATH String
+
+# for a component with name 'X' dedicate a line with:
+X_PAR int
+
+#below are unlikely to change
+DIP_EXTENSION String
+DIP_READ_SPLIT_DELIMITER String
+DIP_GLOBAL_ADD_DELIMITER String
+DIP_GLOBAL_SPLIT_DELIMITER String
+
+DIP_KILL_AT_THE_END true
