@@ -1,14 +1,9 @@
 package sql.visitors.squall;
 
-import plan_runner.predicates.ComparisonPredicate;
-import plan_runner.predicates.BetweenPredicate;
-import plan_runner.predicates.AndPredicate;
-import plan_runner.predicates.OrPredicate;
-import plan_runner.predicates.LikePredicate;
-import plan_runner.predicates.Predicate;
-import plan_runner.expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
+import plan_runner.expressions.ValueExpression;
+import plan_runner.predicates.*;
 import plan_runner.visitors.PredicateVisitor;
 
 

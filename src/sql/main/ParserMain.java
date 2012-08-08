@@ -1,41 +1,36 @@
 package sql.main;
 
-import plan_runner.components.DataSourceComponent;
-import java.io.StringReader;
 import java.util.Map;
 import plan_runner.main.Main;
-import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.parser.CCJSqlParserManager;
-import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.select.Select;
-import plan_runner.components.Component;
-import sql.optimizers.Optimizer;
-import sql.optimizers.cost.CostOptimizer;
-import sql.optimizers.cost.NameComponentGenerator;
-import sql.optimizers.rule.RuleOptimizer;
 import plan_runner.queryPlans.QueryPlan;
-import sql.util.ParserUtil;
 import plan_runner.utilities.SystemParameters;
-import sql.visitors.jsql.SQLVisitor;
+import sql.optimizers.Optimizer;
+import sql.optimizers.index.IndexRuleOptimizer;
+import sql.optimizers.index.IndexSimpleOptimizer;
+import sql.optimizers.name.NameCostOptimizer;
+import sql.optimizers.name.NameManualOptimizer;
+import sql.optimizers.name.NameManualParOptimizer;
+import sql.optimizers.name.NameRuleOptimizer;
+import sql.util.ParserUtil;
 
 public class ParserMain{
     //private final int CLUSTER_WORKERS = 176;
     private static int CLUSTER_ACKERS = 17; //could be 10% of CLUSTER_WORKERS, but this is a magic number in our system
 
     private static int LOCAL_ACKERS = 1;
-
-    private final static String sqlExtension = ".sql";
  
     public static void main(String[] args){     
         String parserConfPath = args[0];
         ParserMain pm = new ParserMain();
         
         Map map = pm.createConfig(parserConfPath);
-        SQLVisitor parsedQuery = pm.parseQuery(map);
-        QueryPlan plan = pm.generatePlan(parsedQuery, map);
+        QueryPlan plan = pm.generatePlan(map);
+        
+        System.out.println(ParserUtil.toString(plan));
+        System.out.println(ParserUtil.parToString(plan, map));
         
         new Main(plan, map);
-    }    
+    }
     
     //String[] sizes: {"1G", "2G", "4G", ...}
     public Map createConfig(String parserConfPath){
@@ -60,55 +55,40 @@ public class ParserMain{
         }
 
         String dbSize = SystemParameters.getString(map, "DIP_DB_SIZE") + "G";
-        String srcParallelism = SystemParameters.getString(map, "DIP_MAX_SRC_PAR");
         String dataRoot = SystemParameters.getString(map, "DIP_DATA_ROOT");
         String dataPath = dataRoot + "/" + dbSize + "/";
 
         String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
         SystemParameters.putInMap(map, "DIP_DATA_PATH" , dataPath);
-        String topologyName = dbSize + "_" + queryName + "_" + mode + "_" + srcParallelism;
+        String topologyName = dbSize + "_" + queryName + "_" + mode;
         SystemParameters.putInMap(map, "DIP_TOPOLOGY_NAME", topologyName);
 
         return map;
     }
-    
-    public SQLVisitor parseQuery(Map map){
-        String sqlString = readSQL(map);
-        
-        CCJSqlParserManager pm = new CCJSqlParserManager();
-        Statement statement=null;
-        try {
-            statement = pm.parse(new StringReader(sqlString));
-        } catch (JSQLParserException ex) {
-            System.out.println("JSQLParserException");
-        }
 
-        if (statement instanceof Select) {
-            Select selectStatement = (Select) statement;
-            SQLVisitor parsedQuery = new SQLVisitor();
-
-            //visit whole SELECT statement
-            parsedQuery.visit(selectStatement);
-            parsedQuery.doneVisiting();
-
-            return parsedQuery;
-        }
-        throw new RuntimeException("Please provide SELECT statement!");
-    }
-    
-    private static String readSQL(Map map){
-        String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
-        String sqlPath = SystemParameters.getString(map, "DIP_SQL_ROOT") + queryName + sqlExtension;
-        return ParserUtil.readSQLFromFile(sqlPath);
-    }    
-
-    public QueryPlan generatePlan(SQLVisitor pq, Map map){
-        //Simple optimizer provides lefty plans
-        //Optimizer opt = new SimpleOpt(pq, map);
-        //Dynamic programming query plan
-        Optimizer opt = new RuleOptimizer(pq, map);
-
+    public QueryPlan generatePlan(Map map){
+        Optimizer opt = pickOptimizer(map);
         return opt.generate();
+    }
+
+    private Optimizer pickOptimizer(Map map) {
+        String optStr = SystemParameters.getString(map, "DIP_OPTIMIZER_TYPE");
+        System.out.println("Selected optimizer: " + optStr);
+        if("INDEX_SIMPLE".equalsIgnoreCase(optStr)){
+            //Simple optimizer provides lefty plans
+            return new IndexSimpleOptimizer(map); 
+        }else if("INDEX_RULE_BUSHY".equalsIgnoreCase(optStr)){
+            return new IndexRuleOptimizer(map);
+        }else if("NAME_MANUAL_PAR_LEFTY".equalsIgnoreCase(optStr)){
+            return new NameManualParOptimizer(map);
+        }else if("NAME_MANUAL_COST_LEFTY".equalsIgnoreCase(optStr)){
+            return new NameManualOptimizer(map);
+        }else if("NAME_RULE_LEFTY".equalsIgnoreCase(optStr)){
+            return new NameRuleOptimizer(map);
+        }else if("NAME_COST_LEFTY".equalsIgnoreCase(optStr)){
+            return new NameCostOptimizer(map);
+        }
+        throw new RuntimeException("Unknown " + optStr + " optimizer!");
     }
     
 }

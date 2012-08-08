@@ -1,5 +1,6 @@
 package sql.visitors.jsql;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -14,15 +15,23 @@ import net.sf.jsqlparser.statement.select.*;
 import sql.util.JoinTablesExprs;
 import sql.util.TableAliasName;
 
-public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVisitor, ItemsListVisitor {
+public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVisitor, ItemsListVisitor, Serializable {
+        private static final long serialVersionUID = 1L;
+    
 	private List<Table> _tableList;
         private List<Join> _joinList;
         private List<SelectItem> _selectItems;
         private Expression _whereExpr;
         
+        private String _queryName;
+        
         private TableAliasName _tan;
         private JoinTablesExprs _jte;
 
+        public SQLVisitor(String queryName){
+            _queryName = queryName;
+        }
+        
         // CUSTOM METHODS
 	public void visit(Select select) {
             _tableList = new ArrayList<Table>();
@@ -34,7 +43,7 @@ public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVis
         
         public void doneVisiting() {
             //fill in tan
-            _tan = new TableAliasName(_tableList);
+            _tan = new TableAliasName(_tableList, _queryName);
             
             //create JoinTableExpr
             //From a list of joins, create collection of elements like {R->{S, R.A=S.A}}
@@ -57,10 +66,6 @@ public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVis
         public List<Table> getTableList(){
             return _tableList;
         }
-
-	public List<Join> getJoinList() {
-            return _joinList;
-	}
 
         public List<SelectItem> getSelectItems(){
             return _selectItems;

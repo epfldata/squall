@@ -1,12 +1,13 @@
 package sql.estimators;
 
-import plan_runner.conversion.TypeConversion;
 import java.util.List;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.Parenthesis;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.*;
 import net.sf.jsqlparser.schema.Column;
+import plan_runner.conversion.TypeConversion;
 import sql.schema.Schema;
 import sql.util.ParserUtil;
 import sql.util.TableAliasName;
@@ -15,7 +16,6 @@ import sql.util.TableAliasName;
 /* TODO high prio:
  * no matter on which component we do invoke, the only important is to know previous projections
  *   (TPCH7, 8 with pushing OR from WHERE clause)
- * AndExpression (exception) - if the columns are not the same, look at the textbook
  *
  * TODO low prio:
  * do not support R.A + 4 < 2, we will need ValueExpression with ranges to support that, and a user can rewrite it itself
@@ -68,6 +68,12 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
             return estimate((AndExpression)expr);
         }else if(expr instanceof OrExpression){
             return estimate((OrExpression)expr);
+        }else if(expr instanceof Parenthesis){
+            Parenthesis pnths = (Parenthesis) expr;
+            return estimate(pnths.getExpression());
+        }else if(expr instanceof LikeExpression){
+            //TODO: this is for TPCH9
+            return 0.052;
         }
         throw new RuntimeException("We should be in a more specific method!");
     }
@@ -173,8 +179,9 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
             //not using leftExpr and rightExpr, because we want to preserve type
             return 1 - (1 - estimate(and.getLeftExpression())) - (1 - estimate(and.getRightExpression()));
         }else{
-            throw new RuntimeException("And expressions with different columns on two sides are not supported!");
-            //for implementing this take a look at textbook and tpch7
+            return estimate(and.getLeftExpression()) * estimate(and.getRightExpression());
+            //throw new RuntimeException("And expressions with different columns on two sides are not supported!");
+            //TODO: for implementing this take a look at textbook and tpch7
         }
 
     }

@@ -1,16 +1,5 @@
 package sql.visitors.squall;
 
-import plan_runner.conversion.DoubleConversion;
-import plan_runner.conversion.StringConversion;
-import plan_runner.conversion.DateConversion;
-import plan_runner.conversion.LongConversion;
-import plan_runner.conversion.NumericConversion;
-import plan_runner.conversion.TypeConversion;
-import plan_runner.components.Component;
-import plan_runner.expressions.ColumnReference;
-import plan_runner.expressions.IntegerYearFromDate;
-import plan_runner.expressions.ValueExpression;
-import plan_runner.expressions.ValueSpecification;
 import java.util.*;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.*;
@@ -19,12 +8,18 @@ import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.*;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.*;
+import plan_runner.components.Component;
+import plan_runner.conversion.*;
+import plan_runner.expressions.ColumnReference;
+import plan_runner.expressions.IntegerYearFromDate;
+import plan_runner.expressions.ValueExpression;
+import plan_runner.expressions.ValueSpecification;
 import plan_runner.operators.AggregateCountOperator;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.AggregateSumOperator;
 import plan_runner.operators.DistinctOperator;
-import sql.optimizers.IndexTranslator;
 import plan_runner.queryPlans.QueryPlan;
+import sql.optimizers.index.IndexTranslator;
 import sql.schema.Schema;
 import sql.util.ParserUtil;
 import sql.util.TableAliasName;
@@ -178,6 +173,9 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
         }
     }
 
+    /*
+     * veList used only in DISTINCT mode
+     */
     protected void createCount(List<ValueExpression> veList, boolean isDistinct){
         //COUNT(R.A) and COUNT(1) have the same semantics as COUNT(*), since we do not have NULLs in R.A
         _agg = new AggregateCountOperator(_map);

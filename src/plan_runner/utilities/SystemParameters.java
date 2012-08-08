@@ -33,7 +33,7 @@ public class SystemParameters{
     // Period between figuring out code is finished and
     //   killing the execution
     // In Local Mode needed more time because we also need to compare results (LocalMergeResults)
-    public static final long LOCAL_SLEEP_BEFORE_KILL_MILLIS = 4000;
+    public static final long LOCAL_SLEEP_BEFORE_KILL_MILLIS = 8000;
     public static final long CLUSTER_SLEEP_BEFORE_KILL_MILLIS = 2000;
 
     //DO NOT MODIFY OR MOVE ANYWHERE ELSE. THESE ARE NOT CONFIGURATION VARIABLES
@@ -106,7 +106,7 @@ public class SystemParameters{
         Map map = new HashMap<String, String>();
 
         try {
-            String line="";
+            String line;
             BufferedReader reader = new BufferedReader(new FileReader(new File(propertiesFile)));
             while( (line = reader.readLine()) != null){
 

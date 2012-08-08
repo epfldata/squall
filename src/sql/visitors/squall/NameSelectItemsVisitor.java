@@ -1,8 +1,5 @@
 package sql.visitors.squall;
 
-import plan_runner.conversion.TypeConversion;
-import plan_runner.expressions.ColumnReference;
-import plan_runner.expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,29 +12,28 @@ import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
 import net.sf.jsqlparser.expression.operators.arithmetic.Subtraction;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.schema.Column;
+import plan_runner.components.Component;
 import plan_runner.conversion.StringConversion;
-import sql.optimizers.cost.NameTranslator;
-import sql.schema.ColumnNameType;
-import sql.schema.Schema;
+import plan_runner.conversion.TypeConversion;
+import plan_runner.expressions.ColumnReference;
+import plan_runner.expressions.ValueExpression;
+import sql.optimizers.name.NameTranslator;
 import sql.util.ParserUtil;
-import sql.util.TableAliasName;
+import sql.util.TupleSchema;
 
 
 public class NameSelectItemsVisitor extends IndexSelectItemsVisitor{
-    private Schema _schema;
-    private TableAliasName _tan;
-    private NameTranslator _nt = new NameTranslator();
+    private NameTranslator _nt;
 
-    private List<ColumnNameType> _tupleSchema;
+    private TupleSchema _tupleSchema;
     
     private final static StringConversion _sc = new StringConversion();
 
-    public NameSelectItemsVisitor(Schema schema, TableAliasName tan, List<ColumnNameType> tupleSchema, Map map){
+    public NameSelectItemsVisitor(TupleSchema tupleSchema, Map map, Component affectedComponent){
         super(map);
         
-        _schema = schema;
-        _tan = tan;
         _tupleSchema = tupleSchema;
+        _nt = new NameTranslator(affectedComponent.getName());
     }    
     
     @Override
@@ -94,25 +90,34 @@ public class NameSelectItemsVisitor extends IndexSelectItemsVisitor{
                     createSum(expr, function.isDistinct());
                 }
             }else if(fnName.equalsIgnoreCase("COUNT")){
-                recognized = isRecognized(function.getParameters());
-                if(recognized){
+                List<ValueExpression> expressions = new ArrayList<ValueExpression>();
+                
+                if(function.isDistinct()){
+                    //putting something on stack only if isDistinct is set to true
+                    recognized = isRecognized(function.getParameters());
+                    //it might happen that we put on stack something we don't use
+                    //  this is the case only when some exprs are recognized and the others not
+                    if(recognized){
                     
-                    //create a list of expressions
-                    int numParams = 0;
-                    ExpressionList params = function.getParameters();
-                    if(params != null){
-                        numParams = params.getExpressions().size();
+                        //create a list of expressions
+                        int numParams = 0;
+                        ExpressionList params = function.getParameters();
+                        if(params != null){
+                            numParams = params.getExpressions().size();
+                        }
+                        
+                        for(int i=0; i<numParams; i++){
+                            expressions.add(popFromExprStack());
+                        }
                     }
-                    List<ValueExpression> expressions = new ArrayList<ValueExpression>();
-                    for(int i=0; i<numParams; i++){
-                        expressions.add(popFromExprStack());
-                    }
-
-                    //finally, create CountAgg out of it
+                }else{
+                    recognized = true;
+                }
+                if(recognized){
+                    //finally, create CountAgg out of expressions (empty if nonDistinct)
                     createCount(expressions, function.isDistinct());
                 }
             }
-
         }
         if(!recognized){
             //normal call to parent
@@ -126,13 +131,12 @@ public class NameSelectItemsVisitor extends IndexSelectItemsVisitor{
      * It has side effects - putting on exprStack
      */
     private <T extends Expression> boolean isRecognized(T expr){
-        String strExpr = ParserUtil.getStringExpr(expr);
-
-        int position = _nt.indexOf(_tupleSchema, strExpr);
-        if(position != -1){
+        //expr is changed in place, so that it does not contain synonims
+        int position = _nt.indexOf(_tupleSchema, expr);
+        if(position != ParserUtil.NOT_FOUND){
             //we found an expression already in the tuple schema
-            TypeConversion tc = _nt.getType(_tupleSchema, strExpr);
-            ValueExpression ve = new ColumnReference(tc, position, strExpr);
+            TypeConversion tc = _nt.getType(_tupleSchema, expr);
+            ValueExpression ve = new ColumnReference(tc, position, ParserUtil.getStringExpr(expr));
             pushToExprStack(ve);
             return true;
         }else{
@@ -142,46 +146,49 @@ public class NameSelectItemsVisitor extends IndexSelectItemsVisitor{
 
     /*
      * Has to be separate because ExpressionList does not extend Expression
-     * Exactly the same code as above
      */
     private boolean isRecognized(ExpressionList params) {
         if(params == null){
-            return false;
-        }
-
-        String strExpr = ParserUtil.getStringExpr(params);
-
-        int position = _nt.indexOf(_tupleSchema, strExpr);
-        if(position != -1){
-            //we found an expression already in the tuple schema
-            TypeConversion tc = _nt.getType(_tupleSchema, strExpr);
-            ValueExpression ve = new ColumnReference(tc, position, strExpr);
-            pushToExprStack(ve);
             return true;
-        }else{
-            return false;
         }
+        
+        List<Expression> exprs = params.getExpressions();
+        if(exprs == null || exprs.isEmpty()){
+            return true;
+        }
+        
+        //if any of the children is not recognized, we have to go to super
+        //  TODO(but fine): if some of exprs are recognized and some not, we will have some extra elements on stack
+        for(Expression expr: exprs){
+            if(!isRecognized(expr)){
+                return false;
+            }
+        }
+        
+        //all exprs recognized
+        return true;
     }
 
     /*
      * only getColumnIndex method invocation is different than in parent
      */
     @Override
-    public void visit(Column column) {
+    public void visit(Column column) {    
+        //extract the position (index) of the required column
+        //column might be changed, due to the synonim effect
+        int position = _nt.getColumnIndex(_tupleSchema, column);
+        
         //extract type for the column
-        //TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
+        //TypeConversion tc = _nt.getType(_tupleSchema, column);
 
         //TODO: Due to the fact that Project prepares columns for FinalAgg on last component
         //        and that for SUM or COUNT we are not going to this method (recognize is true),
         //        this method is invoked only for GroupByProjections as the top level method.
         //      That is, we can safely assume StringConversion method.
         //      Permanent fix is to create StringConversion over overallAggregation.
-        TypeConversion tc = _sc;
-        
-        //extract the position (index) of the required column
-        int position = _nt.getColumnIndex(column, _tupleSchema);
+        TypeConversion tc = _sc;        
 
-        ValueExpression ve = new ColumnReference(tc, position, ParserUtil.getFullAliasedName(column));
+        ValueExpression ve = new ColumnReference(tc, position, ParserUtil.getStringExpr(column));
         pushToExprStack(ve);
     }
 

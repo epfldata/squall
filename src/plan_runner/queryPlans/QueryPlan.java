@@ -5,13 +5,14 @@
 
 package plan_runner.queryPlans;
 
-import plan_runner.components.Component;
+import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import plan_runner.components.Component;
 import plan_runner.operators.AggregateOperator;
 
-public class QueryPlan {
+public class QueryPlan implements Serializable{
+    private static final long serialVersionUID = 1L;
     private List<Component> _plan = new ArrayList<Component>();
 
     //this is aggregation performed on the results from multiple tasks of the same last component
@@ -57,13 +58,11 @@ public class QueryPlan {
         return _plan.get(_plan.size()-1);
     }
 
-    //returns a sorted list of component names
     public List<String> getComponentNames(){
         List<String> result = new ArrayList<String>();
         for(Component component:_plan){
             result.add(component.getName());
         }
-        Collections.sort(result);
         return result;
     }
 

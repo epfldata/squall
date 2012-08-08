@@ -1,8 +1,8 @@
 package sql.schema;
 
-import plan_runner.conversion.TypeConversion;
 import java.util.HashMap;
 import java.util.List;
+import plan_runner.conversion.TypeConversion;
 
 
 public class Schema {
