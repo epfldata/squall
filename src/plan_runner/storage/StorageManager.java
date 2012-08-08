@@ -44,8 +44,8 @@ public class StorageManager<R> implements Serializable {
 		// First check that directory exists
 		File f = new File(this.rootDir);
 		if (f.exists() == false) {
-			System.out.println("Squall StorageManager: Failure during initialization: rootDir " + rootDir + "does not exist.");
-			System.exit(-1);
+			System.out.println("Squall StorageManager: WARNING: rootDir " + rootDir + " does not exist. Creating root dir");
+			f.mkdir();
 		}
 		// Then check if the rootDir string ends with an '/'
 		if (this.rootDir.endsWith("/") == false) {
