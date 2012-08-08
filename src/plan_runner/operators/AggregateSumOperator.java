@@ -31,7 +31,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
         
         private NumericConversion<T> _wrapper;
         private ValueExpression<T> _ve;
-        private BasicStore<T> _storage;
+        private AggregationStorage<T> _storage;
         
         private Map _map;
 
@@ -48,7 +48,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
             if(!alreadySetOther(GB_COLUMNS)){
                 _groupByType = GB_COLUMNS;
                 _groupByColumns = groupByColumns;
-                _storage = new AggregationStorage<T>(this, _wrapper, _map, false);
+                _storage.setSingleEntry(false);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");
@@ -60,7 +60,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
             if(!alreadySetOther(GB_PROJECTION)){
                 _groupByType = GB_PROJECTION;
                 _groupByProjection = groupByProjection;
-                _storage = new AggregationStorage<T>(this, _wrapper, _map, false);
+                _storage.setSingleEntry(false);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");

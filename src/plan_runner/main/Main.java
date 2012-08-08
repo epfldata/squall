@@ -36,9 +36,9 @@ import plan_runner.stormComponents.synchronization.TopologyKiller;
 import plan_runner.utilities.StormWrapper;
 import plan_runner.utilities.SystemParameters;
 
-
 public class Main {
 	private static Logger LOG = Logger.getLogger(Main.class);
+	public static QueryPlan queryPlan = null;
 
         public static void main(String[] args) {
            new Main(args);
@@ -47,9 +47,8 @@ public class Main {
         public Main(String[] args){
             String propertiesPath = args[0];
             Config conf = SystemParameters.fileToStormConfig(propertiesPath);
-
-            QueryPlan queryPlan = chooseQueryPlan(conf);
-            TopologyBuilder builder = createTopology(queryPlan, conf);
+            queryPlan = chooseQueryPlan(conf);
+	    TopologyBuilder builder = createTopology(queryPlan, conf);
             StormWrapper.submitTopology(conf, builder);
         }
 

@@ -12,21 +12,20 @@ public abstract class BasicStore<R> implements Serializable {
 
 	private String _uniqId;
 	private PrintStream _ps;
-	protected String _hostname;
 	protected String _objRemId;
 	private static int _uniqIdCounter = 0;
 	protected MemoryManager _memoryManager;
 	protected StorageManager _storageManager;
 	private ByteArrayOutputStream _baos = null;
 	private static final long serialVersionUID = 1L;
-	protected static final int DEFAULT_SIZE_MB = 64;
+	protected static final int DEFAULT_SIZE_MB = 256;
 	private static final String _uniqIdPrefix = "Store#";
-	
+
 	public BasicStore(int storesizemb) {
 		_uniqIdCounter++;
 		this._uniqId = this._uniqIdPrefix + Integer.toString(BasicStore._uniqIdCounter);
 		System.out.println("SquallStorage: Initializing store of size "
-					+ storesizemb + " with UniqStoreId: " + _uniqId); 
+					+ storesizemb + " MB with UniqStoreId: " + _uniqId); 
 	}
 
 	public void insert(Object... obj) {
@@ -50,7 +49,7 @@ public abstract class BasicStore<R> implements Serializable {
 		} else {
 			this._baos.reset();
 		}
-		this.printStore(this._ps);
+		this.printStore(this._ps, true);
 		return this._baos.toString();
 	}
 	
@@ -63,5 +62,5 @@ public abstract class BasicStore<R> implements Serializable {
 	public abstract Object onRemove();
 	public abstract void reset();
 	public abstract boolean equals(BasicStore store);
-	public abstract void printStore(PrintStream stream);
+	public abstract void printStore(PrintStream stream, boolean printStorage);
 }

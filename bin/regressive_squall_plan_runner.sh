@@ -13,6 +13,9 @@ ALL_OK=true
 echo ""
 for TEST in ${TESTCONFS[@]} 
 do
+	# Cleanup directory
+	rm -rf /tmp/ramdisk/*
+	sync; sync; sync
 	# Pre aggregation is broken, do not run it for now
 	if [ "$TEST" == "0.01G_hyracks_pre_agg_serial" ]; then
 		continue;
@@ -26,8 +29,9 @@ do
                 ALL_OK=false
 	else
 		echo "Test $TEST completed successfully..."
-		rm $TMPFILE
 	fi
+#	echo "There were `cat $TMPFILE | grep "Generic get size" | wc -l` calls to genericGetSize during execution of ${TEST}..." 
+	rm $TMPFILE
 	i+=1
 done
 

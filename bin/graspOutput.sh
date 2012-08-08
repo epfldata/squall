@@ -1,8 +1,12 @@
 #!/bin/bash
+BIN_PATH=/home/klonatos/Desktop/squall/squall/bin
+if [ ! -d $BIN_PATH ]; then
+	echo "Bin directory '$BIN_PATH' does not exit. Exiting..."
+	exit
+fi
+. ${BIN_PATH}/storm_version.sh
 
-. ./storm_version.sh
-
-MACHINE=team11@icdatasrv2
+MACHINE=squalldata@icdatasrv2
 STORM_HOME=/opt/storm
 STORM_DATA=$STORM_HOME/storm_data
 ZOOKEEPER_DATA=$STORM_HOME/zookeeper_data

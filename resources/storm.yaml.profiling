@@ -1,0 +1,40 @@
+# PROFILING STORM.YAML
+# This file has to be stored on ~/.storm/storm.yaml
+# No blank spaces before keys. Exactly one space after a key.
+
+storm.zookeeper.servers:
+     - "icdatasrv1"
+     - "icdatasrv3"
+
+nimbus.host: "icdatasrv2"
+ 
+storm.local.dir: "/opt/storm/storm_data"
+
+supervisor.slots.ports:
+    - 6700
+    - 6701
+#    - 6702
+#    - 6703
+ 
+# ##### These may optionally be filled in:
+
+nimbus.task.launch.secs: 240
+supervisor.worker.start.timeout.secs: 240
+supervisor.worker.timeout.secs: 240
+
+java.library.path: "/opt/storm/deps/lib"
+#java.library.path: "/usr/local/lib:/opt/local/lib:/usr/lib"
+
+# these are defaults, but can be changed from config files/from code directly
+topology.ackers: 0
+topology.workers: 176
+
+topology.fall.back.on.java.serialization: false
+
+worker.childopts: "-Xmx1024m -agentpath:/opt/storm/profiling/yjp-11.0.2/bin/solaris-x86-32/libyjpagent.so=sampling,periodicperf=20,noj2ee,dir=/opt/storm/profiling/output"
+#     
+## Map of tokens to a serialization class. tokens less than 32 are reserved by storm.
+## Tokens are written on the wire to identify the field.
+# topology.serializations: 
+#     33: "org.mycompany.MyObjectSerialization"
+#     34: "org.mycompany.MyOtherObjectSerialization"
