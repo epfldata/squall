@@ -35,7 +35,7 @@ public class AggregateCountOperator implements AggregateOperator<Integer>{
         private int _numTuplesProcessed = 0;
 
         private NumericConversion<Integer> _wrapper = new IntegerConversion();
-        private BasicStore<Integer> _storage;
+        private AggregationStorage<Integer> _storage;
 
         private Map _map;
 
@@ -51,7 +51,7 @@ public class AggregateCountOperator implements AggregateOperator<Integer>{
             if(!alreadySetOther(GB_COLUMNS)){
                 _groupByType = GB_COLUMNS;
                 _groupByColumns = groupByColumns;
-                _storage = new AggregationStorage<Integer>(this, _wrapper, _map, false);
+                _storage.setSingleEntry(false);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");
@@ -63,7 +63,7 @@ public class AggregateCountOperator implements AggregateOperator<Integer>{
              if(!alreadySetOther(GB_PROJECTION)){
                 _groupByType = GB_PROJECTION;
                 _groupByProjection = groupByProjection;
-                _storage = new AggregationStorage<Integer>(this, _wrapper, _map, false);
+                _storage.setSingleEntry(false);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");

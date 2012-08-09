@@ -39,4 +39,10 @@ public class IntegerConversion implements NumericConversion<Integer> {
     public double getDistance(Integer bigger, Integer smaller) {
         return bigger - smaller;
     }
+    
+    //for printing(debugging) purposes
+    @Override
+    public String toString(){
+        return  "INTEGER";
+    }    
 }

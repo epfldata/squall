@@ -1,0 +1,6 @@
+TABLE orderDifferent1 [100:S] (
+ c11 LONG   DISTINCT=11 MAX=111 MIN=1                   ,
+ c12 DOUBLE DISTINCT=12 MAX=121.21 MIN=1.2              ,
+ C13 STRING DISTINCT=133:S	  			       ,
+ c14 DATE   MAX=2015-12-23 MIN=1985-11-28 DISTINCT=144
+);

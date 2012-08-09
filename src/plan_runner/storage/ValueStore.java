@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.Map;
 
 /* Used to store a set of distinct values */
-public class ValueStore<V> extends KeyValueStore {
+public class ValueStore<V> extends KeyValueStore<V, Object> {
 	
 	private static final long serialVersionUID = 1L;
 
@@ -41,7 +41,7 @@ public class ValueStore<V> extends KeyValueStore {
 	}
 
 	@Override
-	public ArrayList<V> access(Object... data) {
+	public ArrayList<Object> access(Object... data) {
 		/* Well... accessing a tuple you already know is pretty stupid
 		 * isn't it? We could return the tuple itself, but why bother? */
 		throw new java.lang.UnsupportedOperationException();
@@ -68,7 +68,7 @@ public class ValueStore<V> extends KeyValueStore {
 	}
 	
 	@Override	
-	public void printStore(PrintStream stream) {	
+	public void printStore(PrintStream stream, boolean printStorage) {	
 		stream.println("----------------------------------------");
 		stream.println("          PRINTING STORE: " + this.getUniqId());
 		Set<V> values = super.keySet();

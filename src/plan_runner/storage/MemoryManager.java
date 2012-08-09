@@ -7,7 +7,8 @@ import java.io.ObjectOutputStream;
 import java.io.ByteArrayOutputStream;
 
 public class MemoryManager implements Serializable {
-	
+
+	Class thisClass;	
 	Class partypes[];
 	private Class mmclass;
 	private long _maxSize;
@@ -20,10 +21,11 @@ public class MemoryManager implements Serializable {
 	public MemoryManager(long maxSize) {
 		// Setting up reflexion 
 		this.partypes = new Class[2];
+		this.thisClass = this.getClass();
 		this.partypes[0] = new Object().getClass();
 		this._currSize = 0;
 		this._maxSize = (maxSize * 1024 * 1024);
-//		this._maxSize = 256*1024;
+//		this._maxSize = 2;
 	}
 
 	/* Primitive types */
@@ -115,13 +117,15 @@ public class MemoryManager implements Serializable {
 			partypes[1] = obj.getClass();	
 			if (partypes[0].equals(partypes[1])) {
 				// Avoid recursively calling this is you get a true Object as an argument!
+				System.out.println("Generic get size called with object type " + partypes[1].getName());
 				return genericGetSize(obj);
 			}
 			// Dynamic dispatch according to type
-			Method m = this.getClass().getDeclaredMethod("getSize", partypes);
+			Method m = thisClass.getDeclaredMethod("getSize", partypes[1]);
 			return ((Integer)m.invoke(this, obj)).intValue();
 		} catch (java.lang.NoSuchMethodException nsme) { 
 			// We don't have a getSize for the specific type. No problem: serialize/deserialize
+			System.out.println("Generic get size called with object type " + partypes[1].getName());
 			return genericGetSize(obj);
 		} catch (java.lang.IllegalAccessException iae) { 
 			System.out.println("Squall MemoryManager:: IllegalAccessException encountered: " + iae.getMessage()); 
