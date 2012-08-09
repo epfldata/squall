@@ -39,3 +39,10 @@ DIP_GLOBAL_SPLIT_DELIMITER String
 
 DIP_ACK_EVERY_TUPLE boolean (true or false)
 DIP_KILL_AT_THE_END boolean (true or false)
+
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR String
+# Storage directory for cluster runs
+STORAGE_DIP_DIR String
+STORAGE_COLD_START boolean
