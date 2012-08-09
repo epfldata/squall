@@ -51,5 +51,11 @@ public class DateConversion implements TypeConversion<Date>{
         DateTime biggerDT = new DateTime(bigger);
         return Days.daysBetween(smallerDT, biggerDT).getDays();
     }
+    
+    //for printing(debugging) purposes
+    @Override
+    public String toString(){
+        return  "DATE";
+    }
 
 }

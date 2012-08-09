@@ -177,15 +177,19 @@ public class TPCH_Schema extends Schema {
         Date END_DATE = _dateConv.fromString("1998-12-31");
 
         Date orderDateEnd = new DateSum(new ValueSpecification(_dateConv, END_DATE), Calendar.DATE, -151).eval(null);
+        //the range is ["1992-01-01", "1998-08-02"]
         _columnRanges.put("ORDERS.ORDERDATE", new Range(START_DATE, orderDateEnd));
 
         Date lineitemShipDateEnd = new DateSum(new ValueSpecification(_dateConv, END_DATE), Calendar.DATE, -30).eval(null);
+        //the range is ["1992-01-01", "1998-12-01"]
         _columnRanges.put("LINEITEM.SHIPDATE", new Range(START_DATE, lineitemShipDateEnd));
 
         Date lineitemCommitDateEnd = new DateSum(new ValueSpecification(_dateConv, END_DATE), Calendar.DATE, -61).eval(null);
+        //the range is ["1992-01-01", "1998-10-31"]
         _columnRanges.put("LINEITEM.COMMITDATE", new Range(START_DATE, lineitemCommitDateEnd));
 
         Date lineitemReceiptDateEnd = new DateSum(new ValueSpecification(_dateConv, END_DATE), Calendar.DATE, -121).eval(null);
+        //the range is ["1992-01-01", "1998-09-01"]
         _columnRanges.put("LINEITEM.RECEIPTDATE", new Range(START_DATE, lineitemReceiptDateEnd));
 
     }

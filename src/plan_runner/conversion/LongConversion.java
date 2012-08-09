@@ -38,4 +38,10 @@ public class LongConversion implements NumericConversion<Long> {
     public double getDistance(Long bigger, Long smaller) {
         return bigger - smaller;
     }
+    
+    //for printing(debugging) purposes
+    @Override
+    public String toString(){
+        return  "LONG";
+    }        
 }
