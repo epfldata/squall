@@ -35,14 +35,13 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
         
         private NumericConversion<Double> _wrapper = new DoubleConversion();
         private ValueExpression<Double> _ve;
-        private BasicStore<SumCount> _storage;
+        private AggregationStorage<SumCount> _storage;
 
         private Map _map;
 
         public AggregateAvgOperator(ValueExpression<Double> ve, Map map){
             _ve=ve;
             _map=map;
-
             _storage = new AggregationStorage<SumCount>(this, _wrapper, _map, true);
         }
 
@@ -52,7 +51,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
              if(!alreadySetOther(GB_COLUMNS)){
                 _groupByType = GB_COLUMNS;
                 _groupByColumns = groupByColumns;
-                _storage = new AggregationStorage<SumCount>(this, _wrapper, _map, false);
+                _storage.setSingleEntry(false);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");
@@ -64,7 +63,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
              if(!alreadySetOther(GB_PROJECTION)){
                 _groupByType = GB_PROJECTION;
                 _groupByProjection = groupByProjection;
-                _storage = new AggregationStorage<SumCount>(this, _wrapper, _map, false);
+                _storage.setSingleEntry(false);
                 return this;
             }else{
                 throw new RuntimeException("Aggragation already has groupBy set!");

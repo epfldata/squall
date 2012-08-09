@@ -47,7 +47,7 @@ public class RuleParallelismAssigner {
         }
     }
 
-    private int getNumOfTuples(String compName){
+    private long getNumOfTuples(String compName){
         String schemaName = _tan.getSchemaName(compName);
         return _schema.getTableSize(schemaName);
     }

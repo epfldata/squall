@@ -17,7 +17,6 @@ import plan_runner.utilities.DeepCopy;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.Optimizer;
 import sql.schema.Schema;
-import sql.schema.TPCH_Schema;
 import sql.util.HierarchyExtractor;
 import sql.util.JoinTablesExprs;
 import sql.util.ParserUtil;
@@ -45,8 +44,7 @@ public class IndexRuleOptimizer implements Optimizer {
         _map = map;
         _pq = ParserUtil.parseQuery(map);
         
-        double scallingFactor = SystemParameters.getDouble(map, "DIP_DB_SIZE");
-        _schema = new TPCH_Schema(scallingFactor);
+        _schema = new Schema(map);
         _it = new IndexTranslator(_schema, _pq.getTan());
     }
 

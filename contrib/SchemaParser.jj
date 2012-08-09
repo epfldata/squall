@@ -1,0 +1,426 @@
+/* Copyright (c) 2006, Sun Microsystems, Inc.
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ *     * Redistributions of source code must retain the above copyright notice,
+ *       this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the Sun Microsystems, Inc. nor the names of its
+ *       contributors may be used to endorse or promote products derived from
+ *       this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+options {
+  STATIC = false;
+  IGNORE_CASE = true;
+}
+
+PARSER_BEGIN(SchemaParser)
+
+/** Schema + cardinality information extractor. */
+package sql.schema.parser;
+
+import java.util.*;
+import java.io.*;
+import plan_runner.conversion.*;
+import sql.schema.*;
+
+public class SchemaParser {
+
+  /** Main entry point. */
+  public static void main(String args[]) throws ParseException {
+    String path = args[0];
+    double scallingFactor = Double.valueOf(args[1]);
+    Map<String, TableInfo> tables = getSchemaInfo(path, scallingFactor);
+    System.out.println(getParsedString(tables));
+  }
+  
+  public static Map<String,TableInfo> getSchemaInfo(String path, double scallingFactor) throws ParseException{
+      SchemaParser parser = new SchemaParser(getFileInputStream(path));
+      return parser.Input(scallingFactor);
+  }
+
+  public static InputStream getFileInputStream(String path){
+        // create file object
+        File file = new File(path);
+
+        FileInputStream fin = null;
+
+        try {
+            fin = new FileInputStream(file);
+        } catch (FileNotFoundException e) {
+            System.out.println("File " + file.getAbsolutePath()
+            + " could not be found on filesystem");
+        }
+        
+        return fin;
+    }
+
+  /** Printing for debugging purposes. */
+  public static String getParsedString(Map<String, TableInfo> tables){
+	StringBuilder sb = new StringBuilder("PARSED result:");
+  	for(Map.Entry<String, TableInfo> entry: tables.entrySet()){
+ 		sb.append(entry.getValue());
+        }
+	return sb.toString();
+  }
+
+  public static class TableInfo{
+	private static long INVALID = -1;
+
+  	private String _name;
+	private long _tableSize = INVALID;
+	private Map<String, ColumnInfo> _columns = new HashMap<String, ColumnInfo>();
+
+	//we need to provide efficient access to tableSchema
+	private List<ColumnNameType> _cnts = new ArrayList<ColumnNameType>();
+
+	public void setName(String name){
+		_name = name;
+	}
+
+	public void setTableSize(long tableSize){
+		_tableSize = tableSize;
+	}
+
+	public void addColumn(ColumnInfo ci){
+		_columns.put(ci.getName(), ci);
+		_cnts.add(new ColumnNameType(ci.getName(), ci.getType()));
+	}
+
+	public String getName(){
+		return _name;
+	}
+
+	public long getTableSize(){
+		return _tableSize;
+	}
+
+	public Map<String, ColumnInfo> getColumnInfos(){
+		return _columns;
+	}
+
+        public List<ColumnNameType> getTableSchema(){
+		return _cnts;
+	}
+
+        public String toString(){
+		StringBuilder sb = new StringBuilder();
+		sb.append("\nTABLE NAME ").append(_name);
+		sb.append(", SIZE ").append(_tableSize);
+		sb.append("\n  with COLUMNS:\n");
+		for(Map.Entry<String, ColumnInfo> entry: _columns.entrySet()){
+			sb.append("    ").append(entry.getValue()).append("\n");
+		}
+		return sb.toString();
+	}
+  }
+
+  public static class ColumnInfo{
+	private static long INVALID = -1;
+
+	private String _name;
+	private TypeConversion _type;
+	private long _distinctValues = INVALID;
+	private Object _minValue, _maxValue; //used for ranges
+
+	private static final TypeConversion _lc = new LongConversion();
+    	private static final TypeConversion _dbc = new DoubleConversion();
+	private static final TypeConversion _sc = new StringConversion();
+	private static final TypeConversion _dtc = new DateConversion();
+
+	public void setName(String name){
+		_name = name;
+	}
+	
+	public void setType(String type){
+		_type = strToTypeConv(type);
+	}
+
+	public TypeConversion strToTypeConv(String type){
+		if(type.equalsIgnoreCase("LONG")){
+			return _lc;
+		}else if(type.equalsIgnoreCase("DOUBLE")){
+			return _dbc;
+		}else if(type.equalsIgnoreCase("STRING")){
+			return _sc;
+		}else if(type.equalsIgnoreCase("DATE")){
+			return _dtc;
+		}else{
+			throw new RuntimeException("Error setting type for column " + _name + ". Only LONG, DOUBLE, STRING or DATE are allowed.");
+		}
+	}
+
+	public void setDistinctValues(long distinctValues){
+		_distinctValues = distinctValues;
+	}
+
+	public void setMinValue(Object minValue){
+		_minValue = minValue;
+	}
+
+	public void setMaxValue(Object maxValue){
+		_maxValue = maxValue;
+	}
+
+	public String getName(){
+		return _name;
+	}
+
+	public TypeConversion getType(){
+		return _type;
+	}
+
+	public long getDistinctValues(){
+		return _distinctValues;
+	}
+
+	public Object getMinValue(){
+		return _minValue;
+	}
+
+	public Object getMaxValue(){
+		return _maxValue;
+	}
+
+	public String toString(){
+		StringBuilder sb = new StringBuilder();
+		sb.append(_name).append(" of type ").append(_type);
+		sb.append(" Distinct Values = ").append(_distinctValues);
+		sb.append(" Range [").append(_minValue).append(", ").append(_maxValue).append("]");
+		return sb.toString();
+	}
+  }
+}
+
+PARSER_END(SchemaParser)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+TOKEN :
+{
+  <LPAREN: "(">
+| <RPAREN: ")">
+| <LSQUARE: "[">
+| <RSQUARE: "]">
+| <TABLE_DELIM: ";">
+| <COL_DELIM: ",">
+| <EQ: "=">
+| <SCALLED: ":S">
+| <MAXVAL: "MAX">
+| <MINVAL: "MIN">
+| <TABLE: "TABLE">
+| <DISTINCTVAL: "DISTINCT">
+
+/**		In case of adding types, make changes in
+			- TypeConversion definitions in ColumnInfo
+			- ColumnInfo.strToTypeConv
+			- MatchedObject, part with Scalled
+			- TYPE TOKEN (here)
+*/
+| < TYPE: ("LONG" | "DOUBLE" | "STRING" | "DATE" ) >
+
+| < LONG_NUM: ( ["0"-"9"] )+  >
+| < ID: ["a"-"z","A"-"Z","_"] ( ["a"-"z","A"-"Z","_","0"-"9"] )+ >
+| < STR: ( ["a"-"z","A"-"Z","0"-"9","_","-","."] )+ >
+}
+
+/** Root production. */
+Map<String, TableInfo> Input(double scallingFactor) :
+{
+	Map<String, TableInfo> _tables = new HashMap<String, TableInfo>();	
+	TableInfo ti;
+}
+{
+  (ti = MatchedTable(scallingFactor)
+	{
+  	_tables.put(ti.getName(), ti);
+  	}
+  )+ <EOF>
+	{
+	return _tables;
+	}
+}
+
+/** Matching long and any other value types. */
+long MatchedLong(double scallingFactor) :
+{
+	Token token;
+	long value;
+}
+{
+	token = <LONG_NUM>
+		{
+		value = Long.valueOf(token.image);
+		}
+	[<SCALLED>
+		{
+		value = (long) (value * scallingFactor);
+		}
+	]
+		{
+		return value;	
+		}
+}
+
+Object MatchedObject(ColumnInfo ci, double scallingFactor) :
+{
+	Token token;
+	Object value;
+}
+{
+	(token = <LONG_NUM>
+		{
+		value = ci.getType().fromString(token.image);
+		}
+	| token = <ID>
+		{
+		value = ci.getType().fromString(token.image);
+		}
+	| token = <STR>)
+		{
+		value = ci.getType().fromString(token.image);
+		}
+	[<SCALLED>
+		{
+		TypeConversion tc = ci.getType();
+		if(tc instanceof LongConversion){
+			LongConversion lc = (LongConversion) tc;
+			Long lvalue = (Long) value;
+			value = (long)(lc.toDouble(lvalue) * scallingFactor);
+		}else if(tc instanceof DoubleConversion){
+			DoubleConversion dbc = (DoubleConversion) tc;
+			Double dvalue = (Double) value;
+			value = (double)(dbc.toDouble(dvalue) * scallingFactor);
+		}else{
+			throw new RuntimeException("Only Long and Double can be scalled out!");
+		}
+		}
+	]
+		{
+		return value;	
+		}
+}
+
+/** Table recognition */
+TableInfo MatchedTable(double scallingFactor) :
+{
+        TableInfo ti = new TableInfo();
+	ColumnInfo ci;
+	Token token;
+	long numValue;
+}
+{
+  <TABLE> token = <ID> 
+  	{
+  	ti.setName(token.image);
+  	}
+  
+  /** Number of tuples in table is optional. */
+  [ <LSQUARE> numValue = MatchedLong(scallingFactor) <RSQUARE> 
+	{
+	ti.setTableSize(numValue);
+	}
+  ] 
+
+  /** Recognizing columns, at least column is mandatory. Separated by COL_DELIM character. */
+  <LPAREN> ci = MatchedColumn(scallingFactor) 
+	{
+	ti.addColumn(ci);
+	}
+  (<COL_DELIM> ci = MatchedColumn(scallingFactor) 
+	{
+	ti.addColumn(ci);
+	}
+  )*
+
+  /** Returning the table to the invoking method. */
+  <RPAREN> <TABLE_DELIM>
+  	{
+	return ti;
+  	}
+}
+
+/** Column recognition */
+ColumnInfo MatchedColumn(double scallingFactor) :
+{
+	ColumnInfo ci = new ColumnInfo();
+	Token token;
+}
+{
+  token = <ID>
+	{
+	ci.setName(token.image);
+	}
+  token = <TYPE>
+	{
+	ci.setType(token.image);
+	}
+  OptionalColumn(ci, scallingFactor)
+	{
+	return ci;
+	}
+}
+
+void OptionalColumn(ColumnInfo ci, double scallingFactor) :
+{}
+{ 
+  /** The order of optional parameters is optional, but repetition is, unfortunatelly, allowed. */
+  ( DistinctValues(ci, scallingFactor) | MinValue(ci, scallingFactor) | MaxValue(ci, scallingFactor) )*
+}
+
+void DistinctValues(ColumnInfo ci, double scallingFactor):
+{
+	long numValue;
+}
+{
+  <DISTINCTVAL> <EQ> numValue = MatchedLong(scallingFactor)
+	{
+	ci.setDistinctValues(numValue);
+	}
+
+}
+
+void MinValue(ColumnInfo ci, double scallingFactor):
+{
+	Object obj;	
+}
+{
+  <MINVAL> <EQ> obj = MatchedObject(ci, scallingFactor)
+	{
+	ci.setMinValue(obj);
+	}
+}
+
+void MaxValue(ColumnInfo ci, double scallingFactor):
+{
+	Object obj;	
+}
+{
+  <MAXVAL> <EQ> obj = MatchedObject(ci, scallingFactor)
+	{
+	ci.setMaxValue(obj);
+	} 
+}

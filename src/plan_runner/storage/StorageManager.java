@@ -1,6 +1,7 @@
 package plan_runner.storage;
 
 import java.io.File;
+import java.util.Map;
 import java.util.ArrayList;
 import java.net.InetAddress;
 import java.io.Serializable;
@@ -10,6 +11,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import plan_runner.utilities.SystemParameters;
 
 /* StorageManager that handles reading and writing objects from/to a
  * filesystem. This class is instantiated as new StorageManager<R>(params)
@@ -28,18 +30,22 @@ public class StorageManager<R> implements Serializable {
 	private String rootDir = null; 
 
 	/* Constructor. Other fields are instantiated in first r/w, to work with Storm */
-	public StorageManager(BasicStore store, String rootDir, boolean coldstart) {
+	public StorageManager(BasicStore store, Map conf) {
 		this.store = store;
-		this.rootDir = rootDir;
-		this.coldStart = coldstart;
+		if (SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED")) {
+			this.rootDir = SystemParameters.getString(conf, "STORAGE_DIP_DIR");
+		} else {
+			this.rootDir = SystemParameters.getString(conf, "STORAGE_LOCAL_DIR");
+		}
+		this.coldStart = SystemParameters.getBoolean(conf, "STORAGE_COLD_START");
 	}
 
 	private void checkRootDir() {
 		// First check that directory exists
 		File f = new File(this.rootDir);
 		if (f.exists() == false) {
-			System.out.println("Squall StorageManager: Failure during initialization: rootDir " + rootDir + "does not exist.");
-			System.exit(-1);
+			System.out.println("Squall StorageManager: WARNING: rootDir " + rootDir + " does not exist. Creating root dir");
+			f.mkdir();
 		}
 		// Then check if the rootDir string ends with an '/'
 		if (this.rootDir.endsWith("/") == false) {
@@ -52,7 +58,25 @@ public class StorageManager<R> implements Serializable {
 			f.mkdir();
 	}
 
-	private void deleteAllFilesRootDir() {
+	public String[] getGroupIds() {
+		File directory = new File(rootDir);
+		// Get file names ending with .ssf in rootDir
+		String[] groupIds = directory.list(new FilenameFilter() {
+							@Override
+							public boolean accept(File dir, String name) {
+        							return name.endsWith(".ssf");
+ 							}
+				      		   });
+		// Get groupId from each of those files
+		for (int i = 0 ; i < groupIds.length ; i++) {
+			int startIndex = groupIds[i].lastIndexOf("#") + 1;
+			int lastIndex = groupIds[i].lastIndexOf(".");
+			groupIds[i] = groupIds[i].substring(startIndex, lastIndex);
+		}
+		return groupIds;
+	}
+
+	public void deleteAllFilesRootDir() {
 		File directory = new File(rootDir);
 		// Get file ending with .ssf in rootDir
 		File[] files = directory.listFiles(new FilenameFilter() {

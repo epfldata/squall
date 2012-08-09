@@ -38,4 +38,11 @@ public class DoubleConversion implements NumericConversion<Double> {
     public double getDistance(Double bigger, Double smaller) {
         return bigger - smaller;
     }
+    
+    //for printing(debugging) purposes
+    @Override
+    public String toString(){
+        return  "DATE";
+    }    
+    
 }

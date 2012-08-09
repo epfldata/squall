@@ -19,4 +19,5 @@ then
    exit
 fi
 
+
 ../$STORMNAME/bin/storm jar ../deploy/squall-2.0-standalone.jar sql.main.ParserMain $CONFIG_PATH

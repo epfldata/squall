@@ -7,7 +7,7 @@ DIP_TOPOLOGY_NAME 1G_tpch7_parallel_4
 #DIP_NUM_WORKERS 176
 #DIP_NUM_ACKERS 0
 
-DIP_DATA_PATH /export/home/avitorovic/queries/tpch/1G/
+DIP_DATA_PATH /export/home/squalldata/tpchdb/1G
 
 NATION1_PAR 1
 NATION2_PAR 1
@@ -30,3 +30,9 @@ DIP_GLOBAL_SPLIT_DELIMITER \|
 
 DIP_KILL_AT_THE_END true
 
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_DIP_DIR /export/home/squalldata/storage 
+STORAGE_COLD_START true

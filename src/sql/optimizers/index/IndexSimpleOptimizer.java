@@ -14,10 +14,8 @@ import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
 import plan_runner.queryPlans.QueryPlan;
 import plan_runner.utilities.DeepCopy;
-import plan_runner.utilities.SystemParameters;
 import sql.optimizers.Optimizer;
 import sql.schema.Schema;
-import sql.schema.TPCH_Schema;
 import sql.util.ParserUtil;
 import sql.visitors.jsql.SQLVisitor;
 import sql.visitors.squall.IndexSelectItemsVisitor;
@@ -39,8 +37,7 @@ public class IndexSimpleOptimizer implements Optimizer {
         _map = map;
         _pq = ParserUtil.parseQuery(map);        
         
-        double scallingFactor = SystemParameters.getDouble(map, "DIP_DB_SIZE");
-        _schema = new TPCH_Schema(scallingFactor);
+        _schema = new Schema(map);
         _it = new IndexTranslator(_schema, _pq.getTan());
     }
 

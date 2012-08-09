@@ -28,4 +28,10 @@ public class StringConversion implements TypeConversion<String>{
     public double getDistance(String bigger, String smaller) {
         throw new RuntimeException("Not applicable!");
     }
+    
+    //for printing(debugging) purposes
+    @Override
+    public String toString(){
+        return  "STRING";
+    }        
 }

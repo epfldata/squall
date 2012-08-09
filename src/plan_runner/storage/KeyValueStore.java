@@ -1,5 +1,7 @@
 package plan_runner.storage;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -11,33 +13,27 @@ import java.util.Collections;
 import plan_runner.utilities.SystemParameters;
 
 public class KeyValueStore<K, V> extends BasicStore {
-	
+
+	private static int DEBUG_COUNTER = 0 ;	
 	private HashMap<K, Object> _memstore;
-	protected static final int DEFAULT_INITIAL_CAPACITY = 256;
+	protected static final int DEFAULT_HASH_INDICES = 256;
 	protected ReplacementAlgorithm<HashEntry<K, V>> _replAlg;
 
 	/* Constructors */
-	public KeyValueStore(Map map) {
-		this(BasicStore.DEFAULT_SIZE_MB, DEFAULT_INITIAL_CAPACITY, map);
+	public KeyValueStore(Map conf) {
+		this(BasicStore.DEFAULT_SIZE_MB, DEFAULT_HASH_INDICES, conf);
 	}
 
-	public KeyValueStore(int initialCapacity, Map map) {
-		this(BasicStore.DEFAULT_SIZE_MB, initialCapacity, map);
+	public KeyValueStore(int hash_indices, Map conf) {
+		this(BasicStore.DEFAULT_SIZE_MB, hash_indices, conf);
 	}
 
-	public KeyValueStore(int storesizemb, int initialCapacity, Map map) {
+	public KeyValueStore(int storesizemb, int hash_indices, Map conf) {
 		super(storesizemb);
-
-                String storagePath;
-                if(SystemParameters.getBoolean(map, "DIP_DISTRIBUTED")){
-                    storagePath = "/export/home/squalldata/storage/";
-                }else{
-                    storagePath = "/tmp/ramdisk/";
-                }
-		this._storageManager = new StorageManager<V>(this, storagePath, true);
+		this._storageManager = new StorageManager<V>(this, conf);
 		this._memoryManager = new MemoryManager(storesizemb);
 		this._replAlg  = new LRUList<HashEntry<K, V>>();
-		this._memstore = new HashMap<K, Object>(initialCapacity);
+		this._memstore = new HashMap<K, Object>(hash_indices);
 	}
 
 	@Override	
@@ -72,7 +68,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 			HashEntry<K, V> entry = _replAlg.get(obj);
 			entry.getValues().add(value);
 			((LRUList)_replAlg).moveToFront(obj);
-		}
+		}		
 	}
 	
 	@Override	
@@ -102,6 +98,10 @@ public class KeyValueStore<K, V> extends BasicStore {
 			int index = values.indexOf(oldValue);
 			if (index != -1)
 				values.set(index, newValue);
+			else {
+				System.out.println("KeyValueStore: BUG: No element for key " + key + " found in store, but store's metadata register elements.");
+				System.exit(0);
+			}
 		}
 
 		// Now update storage if necessary
@@ -147,7 +147,6 @@ public class KeyValueStore<K, V> extends BasicStore {
 		HashEntry<K, V> entry = _replAlg.getLast();
 		K key = entry.getKey();
 		ArrayList<V> values = entry.getValues(); 
-		
 		// Remove an entry from the list and free its memory 
 		V value = values.remove(0);
 		this._memoryManager.releaseMemory(value);
@@ -169,6 +168,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 	public void reset() {
 		this._memstore.clear();
 		this._replAlg.reset();
+		this._storageManager.deleteAllFilesRootDir();
 	}
 	
 	@Override	
@@ -187,7 +187,6 @@ public class KeyValueStore<K, V> extends BasicStore {
 				V value1 = iterator.next();
 				V value2 = storeValues.get(index);
 				if (value1 instanceof Number) {
-					System.out.println("Value1= " + value1 + " / Value2= " + value2);
 					if (value1 != value2) {
 						if (Math.abs(((Number)value1).floatValue() - ((Number)value2).floatValue()) > 0.0001)
 							return false;
@@ -203,24 +202,43 @@ public class KeyValueStore<K, V> extends BasicStore {
 	}
 	
 	@Override	
-	public void printStore(PrintStream stream) {
-		Set<K> keys = this._memstore.keySet();
+	public void printStore(PrintStream stream, boolean printStorage) {	
+		ArrayList<V> values;
+		Set<K> keys = this.keySet();
 		for (Iterator<K> it = keys.iterator(); it.hasNext(); ) {
 			K key = it.next();
+			// Check memory
 			Object obj = this._memstore.get(key);
-			HashEntry<K, V> entry = _replAlg.get(obj);
-			stream.print(entry.getKey());
-			stream.print(" = ");
-			ArrayList<V> values = entry.getValues();
-			for (V v : values) {
-				stream.print(v.toString() + " ");
+			if (obj != null) {
+				HashEntry<K, V> entry = _replAlg.get(obj);
+				stream.print(entry.getKey());
+				stream.print(" = ");
+				values = entry.getValues();
+				for (V v : values) {
+					stream.print(v.toString() + " ");
+				}
+				stream.println("");
 			}
-			stream.println("");
+			// Check storage
+			values = this._storageManager.read(key.toString());
+			if (values != null) {
+				stream.print(key.toString());
+				stream.print(" = ");
+				for (V v : values) {
+					stream.print(v.toString() + " ");
+				}
+				stream.println("");
+			}
 		}
 	}
 	
 	protected Set<K> keySet() {
-		return this._memstore.keySet();
+		Set<K> memKeys = this._memstore.keySet();
+		String[] storageGroupIds = this._storageManager.getGroupIds();
+		Set<String> storageKeys = new HashSet<String>(Arrays.asList(storageGroupIds));
+		Set finalSet = new HashSet(memKeys);
+		finalSet.addAll(storageKeys);	
+		return finalSet;
 	}
 
 	/* Private class to store LRUNode along with key */

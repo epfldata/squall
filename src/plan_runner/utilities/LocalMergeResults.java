@@ -86,6 +86,7 @@ public class LocalMergeResults {
             if(_computedAgg == null){
                 //first task of the last component asked to be added
                 //we create empty aggregations, which we later fill, one from tasks, other from a file
+                //QueryPlan currentPlan = Main.queryPlan;
                 QueryPlan currentPlan = Main.chooseQueryPlan(map);
                 _computedAgg = currentPlan.getOverallAggregation();
                 _fileAgg = (AggregateOperator) DeepCopy.copy(_computedAgg);
