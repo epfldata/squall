@@ -1,9 +1,7 @@
 package sql.optimizers.name;
 
 import java.util.Map;
-import plan_runner.utilities.SystemParameters;
 import sql.schema.Schema;
-import sql.schema.TPCH_Schema;
 
 /*
  * It generates different NameCompGen for each partial query plan
@@ -21,9 +19,7 @@ public class NameCompGenFactory {
      */
     public NameCompGenFactory(Map map){
         _map = map;
-        
-        double scallingFactor = SystemParameters.getDouble(_map, "DIP_DB_SIZE");
-        _schema = new TPCH_Schema(scallingFactor);
+        _schema = new Schema(map);
     }
     
     /*

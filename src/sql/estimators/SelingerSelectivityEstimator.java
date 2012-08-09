@@ -84,7 +84,7 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
         Column column = columns.get(0);
         String fullSchemaColumnName = _tan.getFullSchemaColumnName(column);
 
-        int distinctValues = _schema.getNumDistinctValues(fullSchemaColumnName);
+        long distinctValues = _schema.getNumDistinctValues(fullSchemaColumnName);
         return 1.0/distinctValues;
     }
 

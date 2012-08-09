@@ -1,0 +1,27 @@
+TABLE typesOnly1 [100:S] (
+ c11 LONG   ,
+ c12 DOUBLE ,
+ C13 STRING ,
+ c14 DATE
+);
+
+TABLE distinct2 [200] (
+ c21 LONG   DISTINCT=21 ,
+ c22 DOUBLE DISTINCT=22 ,
+ c23 STRING DISTINCT=23 ,
+ c24 DATE   DISTINCT=24
+);
+
+TABLE min3 [300] (
+ c31 LONG   MIN=31          ,
+ c32 DOUBLE MIN=32.32       ,
+ c33 STRING MIN=33A         ,
+ c34 DATE   MIN=1983-11-28
+);
+
+TABLE max4 (
+ c41 LONG   MAX=41          ,
+ c42 DOUBLE MAX=42.42       ,
+ c43 STRING MAX=43A         ,
+ c44 DATE   MAX=1984-12-23
+);

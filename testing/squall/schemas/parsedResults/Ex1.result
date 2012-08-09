@@ -1,0 +1,29 @@
+PARSED result:
+TABLE NAME typesOnly1, SIZE 1000
+  with COLUMNS:
+    c11 of type LONG Distinct Values = -1 Range [null, null]
+    C13 of type STRING Distinct Values = -1 Range [null, null]
+    c12 of type DATE Distinct Values = -1 Range [null, null]
+    c14 of type DATE Distinct Values = -1 Range [null, null]
+
+TABLE NAME distinct2, SIZE 200
+  with COLUMNS:
+    c22 of type DATE Distinct Values = 22 Range [null, null]
+    c21 of type LONG Distinct Values = 21 Range [null, null]
+    c24 of type DATE Distinct Values = 24 Range [null, null]
+    c23 of type STRING Distinct Values = 23 Range [null, null]
+
+TABLE NAME max4, SIZE -1
+  with COLUMNS:
+    c41 of type LONG Distinct Values = -1 Range [null, 41]
+    c42 of type DATE Distinct Values = -1 Range [null, 42.42]
+    c43 of type STRING Distinct Values = -1 Range [null, 43A]
+    c44 of type DATE Distinct Values = -1 Range [null, Sun Dec 23 00:00:00 CET 1984]
+
+TABLE NAME min3, SIZE 300
+  with COLUMNS:
+    c32 of type DATE Distinct Values = -1 Range [32.32, null]
+    c33 of type STRING Distinct Values = -1 Range [33A, null]
+    c31 of type LONG Distinct Values = -1 Range [31, null]
+    c34 of type DATE Distinct Values = -1 Range [Mon Nov 28 00:00:00 CET 1983, null]
+

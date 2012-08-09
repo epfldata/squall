@@ -52,7 +52,7 @@ public class TableSelector {
         List<PairTableNameSize> pairsTableSize = new ArrayList<PairTableNameSize>();
         for(Table table: listTables){
             String schemaName = _tan.getSchemaName(ParserUtil.getComponentName(table));
-            int tableSize = schema.getTableSize(schemaName);
+            long tableSize = schema.getTableSize(schemaName);
 
             PairTableNameSize pts = new PairTableNameSize(table, tableSize);
             pairsTableSize.add(pts);
@@ -66,9 +66,9 @@ public class TableSelector {
 
     public class PairTableNameSize implements Comparable<PairTableNameSize>{
         private String _tableName;
-        private int _size;
+        private long _size;
 
-        public PairTableNameSize(Table table, int size){
+        public PairTableNameSize(Table table, long size){
             _tableName = ParserUtil.getComponentName(table);
             _size = size;
         }
@@ -77,14 +77,14 @@ public class TableSelector {
             return _tableName;
         }
 
-        public int getSize(){
+        public long getSize(){
             return _size;
         }
 
         @Override
         public int compareTo(PairTableNameSize t) {
-            int otherSize = t.getSize();
-            return (new Integer(_size)).compareTo(new Integer(otherSize));
+            long otherSize = t.getSize();
+            return (new Long(_size)).compareTo(new Long(otherSize));
         }
      }
 
