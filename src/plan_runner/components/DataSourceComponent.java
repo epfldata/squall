@@ -1,22 +1,17 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package plan_runner.components;
 
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
-import plan_runner.expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.log4j.Logger;
+import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
-import plan_runner.stormComponents.StormDataSource;
-import plan_runner.stormComponents.synchronization.TopologyKiller;
-import org.apache.log4j.Logger;
-import plan_runner.queryPlans.QueryPlan;
-import plan_runner.stormComponents.StormComponent;
+import plan_runner.query_plans.QueryPlan;
+import plan_runner.storm_components.StormComponent;
+import plan_runner.storm_components.StormDataSource;
+import plan_runner.storm_components.synchronization.TopologyKiller;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
 

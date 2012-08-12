@@ -2,15 +2,14 @@
 
 . ./storm_version.sh
 
+CONFIG_DIR=../test/squall/confs/cluster
+
 if [ $# -ne 1 ]
 then
-CONFIG_FILE=1G_hyracks_parallel
+CONFIG_PATH=$CONFIG_DIR/1G_hyracks_parallel
 else
-CONFIG_FILE=$1
+CONFIG_PATH=$1
 fi
-
-CONFIG_DIR=../testing/squall/confs
-CONFIG_PATH=$CONFIG_DIR/$CONFIG_FILE
 
 # check if your configuration file exists
 if ! [ -f $CONFIG_PATH ];

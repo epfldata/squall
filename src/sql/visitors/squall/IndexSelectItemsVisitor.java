@@ -18,7 +18,7 @@ import plan_runner.operators.AggregateCountOperator;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.AggregateSumOperator;
 import plan_runner.operators.DistinctOperator;
-import plan_runner.queryPlans.QueryPlan;
+import plan_runner.query_plans.QueryPlan;
 import sql.optimizers.index.IndexTranslator;
 import sql.schema.Schema;
 import sql.util.ParserUtil;

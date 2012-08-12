@@ -1,12 +1,13 @@
 package plan_runner.storage;
 
-import java.util.Set;
-import java.util.List;
-import java.util.Iterator;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import plan_runner.utilities.SystemParameters;
 
 /* Used to store a set of distinct values */
 public class ValueStore<V> extends KeyValueStore<V, Object> {
@@ -17,7 +18,7 @@ public class ValueStore<V> extends KeyValueStore<V, Object> {
 	private static final Object dummyObj = null;
 
 	public ValueStore(Map map) {
-		this(BasicStore.DEFAULT_SIZE_MB, map);
+		this(SystemParameters.getInt(map, "MEMORY_SIZE_MB"), map);
 	}
 
 	public ValueStore(int storesizemb, Map map) {

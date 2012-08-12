@@ -1,9 +1,8 @@
-
 package plan_runner.components;
 
-import plan_runner.expressions.ValueExpression;
 import java.io.Serializable;
 import java.util.List;
+import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 
 

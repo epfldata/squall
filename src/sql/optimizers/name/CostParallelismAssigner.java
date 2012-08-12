@@ -4,7 +4,6 @@ import java.util.*;
 import net.sf.jsqlparser.schema.Table;
 import plan_runner.components.DataSourceComponent;
 import plan_runner.components.EquiJoinComponent;
-import plan_runner.utilities.SystemParameters;
 import sql.schema.Schema;
 import sql.util.OverParallelizedException;
 import sql.util.ParserUtil;

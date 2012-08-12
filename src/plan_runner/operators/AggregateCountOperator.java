@@ -1,20 +1,15 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package plan_runner.operators;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import plan_runner.storage.BasicStore;
+import java.util.List;
+import java.util.Map;
+import org.apache.log4j.Logger;
 import plan_runner.conversion.IntegerConversion;
 import plan_runner.conversion.NumericConversion;
 import plan_runner.expressions.ValueExpression;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import plan_runner.storage.AggregationStorage;
-import org.apache.log4j.Logger;
+import plan_runner.storage.BasicStore;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.visitors.OperatorVisitor;
 

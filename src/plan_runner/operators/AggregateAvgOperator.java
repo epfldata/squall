@@ -1,18 +1,13 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package plan_runner.operators;
 
-import plan_runner.conversion.DoubleConversion;
-import plan_runner.conversion.NumericConversion;
-import plan_runner.expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import plan_runner.operators.AggregateAvgOperator.SumCount;
 import org.apache.log4j.Logger;
+import plan_runner.conversion.DoubleConversion;
+import plan_runner.conversion.NumericConversion;
+import plan_runner.expressions.ValueExpression;
+import plan_runner.operators.AggregateAvgOperator.SumCount;
 import plan_runner.storage.AggregationStorage;
 import plan_runner.storage.BasicStore;
 import plan_runner.utilities.MyUtilities;

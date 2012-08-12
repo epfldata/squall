@@ -1,10 +1,10 @@
 package plan_runner.utilities;
 
 import java.io.File;
-import java.io.InputStream;
 import java.io.FileInputStream;
-import java.io.Serializable;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
 
 public class SerializableFileInputStream extends    InputStream
                                          implements Serializable, CustomReader

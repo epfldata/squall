@@ -9,6 +9,8 @@ import sql.schema.*;
 
 public class SchemaParser implements SchemaParserConstants {
 
+  public static long INVALID = -1;
+
   /** Main entry point. */
   public static void main(String args[]) throws ParseException {
     String path = args[0];
@@ -48,7 +50,6 @@ public class SchemaParser implements SchemaParserConstants {
   }
 
   public static class TableInfo{
-        private static long INVALID = -1;
 
         private String _name;
         private long _tableSize = INVALID;
@@ -99,7 +100,6 @@ public class SchemaParser implements SchemaParserConstants {
   }
 
   public static class ColumnInfo{
-        private static long INVALID = -1;
 
         private String _name;
         private TypeConversion _type;

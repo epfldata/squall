@@ -1,12 +1,7 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package plan_runner.operators;
 
-import plan_runner.expressions.ValueExpression;
 import java.util.List;
+import plan_runner.expressions.ValueExpression;
 import plan_runner.storage.BasicStore;
 
 public interface AggregateOperator<T> extends Operator{

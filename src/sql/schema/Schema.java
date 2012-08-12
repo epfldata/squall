@@ -12,7 +12,6 @@ import sql.schema.parser.SchemaParser.TableInfo;
 
 
 public class Schema {
-    private static long INVALID = -1;
     
     private String _path;
     private double _scallingFactor;
@@ -62,7 +61,7 @@ public class Schema {
     public long getTableSize(String tableSchemaName){
         TableInfo table = getTableInfo(tableSchemaName);
         long tableSize = table.getTableSize();
-        if(tableSize == INVALID){
+        if(tableSize == SchemaParser.INVALID){
             throw new RuntimeException("No information about size for table " + tableSchemaName + 
                     "\n Either add required information to schema " + _path + " ,"
                     + "\n or try NMPL optimizer, which does not require any cardinality information.");
@@ -73,7 +72,7 @@ public class Schema {
     public long getNumDistinctValues(String fullSchemaColumnName){
         ColumnInfo column = getColumnInfo(fullSchemaColumnName);
         long distinct = column.getDistinctValues();
-        if(distinct == INVALID){
+        if(distinct == SchemaParser.INVALID){
              throw new RuntimeException("No information about the number of distinct values for column " + fullSchemaColumnName +
                      "\n Either add required information to schema " + _path + " ,"
                     + "\n or try NMPL optimizer, which does not require any cardinality information.");

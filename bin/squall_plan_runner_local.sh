@@ -2,17 +2,16 @@
 
 . ./storm_version.sh
 
+CONFIG_DIR=../test/squall_plan_runner/confs/local
+
 if [ $# -ne 1 ]
 then
-CONFIG_FILE=0.01G_hyracks_serial
+CONFIG_PATH=$CONFIG_DIR/0.01G_hyracks_serial
 else
-CONFIG_FILE=$1
+CONFIG_PATH=$1
 fi
 
 cd ../deploy
-
-CONFIG_DIR=../testing/squall_plan_runner/confs
-CONFIG_PATH=$CONFIG_DIR/$CONFIG_FILE
 
 # check if your configuration file exists
 if ! [ -f $CONFIG_PATH ];

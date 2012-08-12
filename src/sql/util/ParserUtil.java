@@ -1,8 +1,5 @@
 package sql.util;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.StringReader;
 import java.util.*;
 import net.sf.jsqlparser.JSQLParserException;
@@ -27,7 +24,7 @@ import plan_runner.expressions.ColumnReference;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
-import plan_runner.queryPlans.QueryPlan;
+import plan_runner.query_plans.QueryPlan;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.CompGen;
@@ -328,46 +325,6 @@ public class ParserUtil {
             }
         }
         return result;
-    }
-
-    public static String readFile(String path) {
-        StringBuilder sb = new StringBuilder();
-        try {
-            String line;
-            BufferedReader reader = new BufferedReader(new FileReader(new File(path)));
-            while( (line = reader.readLine()) != null){
-                sb.append(line).append("\n");
-            }
-            sb.deleteCharAt(sb.length() - 1); //last \n is unnecessary 
-            reader.close();
-	} catch (Exception e) {
-            String error=MyUtilities.getStackTrace(e);
-            throw new RuntimeException(error);
-	}
-        return sb.toString();
-    }
-    
-    public static String readSQLFromFile(String sqlPath) {
-        StringBuilder sqlstring = new StringBuilder();
-        try {
-            String line;
-            BufferedReader reader = new BufferedReader(new FileReader(new File(sqlPath)));
-            while( (line = reader.readLine()) != null){
-
-                // remove leading and trailing whitespaces
-                line = line.trim();
-            	if (line.length()!=0 && line.charAt(0)!='\n' //empty line
-                        && line.charAt(0)!='\r' //empty line
-                        && line.charAt(0)!='#'){  //commented line
-                    sqlstring.append(line).append(" ");
-                }
-            }
-            reader.close();
-	} catch (Exception e) {
-            String error=MyUtilities.getStackTrace(e);
-            throw new RuntimeException(error);
-	}
-        return sqlstring.toString();
     }
 
     /*
@@ -757,7 +714,7 @@ public class ParserUtil {
     private static String readSQL(Map map){
         String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
         String sqlPath = SystemParameters.getString(map, "DIP_SQL_ROOT") + queryName + SQL_EXTENSION;
-        return readSQLFromFile(sqlPath);
+        return MyUtilities.readFileSkipEmptyAndComments(sqlPath);
     }
 
     /*

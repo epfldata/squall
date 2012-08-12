@@ -1,14 +1,9 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package plan_runner.operators;
 
-import plan_runner.storage.BasicStore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import plan_runner.storage.BasicStore;
 import plan_runner.visitors.OperatorVisitor;
 
 public class MultiAggregateOperator implements AggregateOperator {

@@ -1,16 +1,16 @@
 package plan_runner.operators;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import plan_runner.storage.BasicStore;
-import plan_runner.storage.AggregationStorage;
+import java.util.List;
+import java.util.Map;
+import org.apache.log4j.Logger;
 import plan_runner.conversion.NumericConversion;
 import plan_runner.expressions.Addition;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.expressions.ValueSpecification;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import org.apache.log4j.Logger;
+import plan_runner.storage.AggregationStorage;
+import plan_runner.storage.BasicStore;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.visitors.OperatorVisitor;
 

@@ -2,7 +2,7 @@ package sql.main;
 
 import java.util.Map;
 import plan_runner.main.Main;
-import plan_runner.queryPlans.QueryPlan;
+import plan_runner.query_plans.QueryPlan;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.Optimizer;
 import sql.optimizers.index.IndexRuleOptimizer;

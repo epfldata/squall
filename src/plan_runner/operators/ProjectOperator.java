@@ -1,10 +1,11 @@
 package plan_runner.operators;
-import plan_runner.conversion.StringConversion;
-import plan_runner.expressions.ColumnReference;
-import plan_runner.expressions.ValueExpression;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import plan_runner.conversion.StringConversion;
+import plan_runner.expressions.ColumnReference;
+import plan_runner.expressions.ValueExpression;
 import plan_runner.visitors.OperatorVisitor;
 
 public class ProjectOperator implements Operator {

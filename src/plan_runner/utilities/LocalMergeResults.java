@@ -1,20 +1,16 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package plan_runner.utilities;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
+import org.apache.log4j.Logger;
 import plan_runner.main.Main;
 import plan_runner.operators.AggregateOperator;
-import org.apache.log4j.Logger;
-import plan_runner.queryPlans.QueryPlan;
+import plan_runner.query_plans.QueryPlan;
 import plan_runner.storage.AggregationStorage;
-import plan_runner.stormComponents.StormComponent;
+import plan_runner.storm_components.StormComponent;
 
 public class LocalMergeResults {
         private static Logger LOG = Logger.getLogger(LocalMergeResults.class);
@@ -68,7 +64,9 @@ public class LocalMergeResults {
 
         private static void localCompare(Map map){
             if(_fileAgg == null){
-                LOG.info("\nCannot validate the result, " + getResultFilePath(map) + " doesn't exist.");
+                LOG.info("\nCannot validate the result, result file " + getResultFilePath(map) + " does not exist."
+                        + "\n  Make sure you specified correct DIP_RESULT_ROOT and"
+                        + "\n  created result file with correct name.");
                 return;
             }
             if(_computedAgg.getStorage().equals(_fileAgg.getStorage())){
@@ -96,9 +94,10 @@ public class LocalMergeResults {
         }
 
         private static void fillAggFromResultFile(Map map){
-            String path = getResultFilePath(map);
-            List<String> lines = MyUtilities.getLinesFromFile(path);
-            if(lines!=null){
+            try {
+                String path = getResultFilePath(map);
+                List<String> lines = MyUtilities.readFileLinesSkipEmpty(path);
+
                 for(String line: lines){
                     //List<String> tuple = Arrays.asList(line.split("\\s+=\\s+"));
                     //we want to catch exactly one space between and after =.
@@ -106,7 +105,7 @@ public class LocalMergeResults {
                     List<String> tuple = Arrays.asList(line.split(" = "));
                     _fileAgg.process(tuple);
                 }
-            }else{
+            } catch (IOException ex) {
                 //problem with finding the result file
                 _fileAgg = null;
             }
@@ -114,6 +113,29 @@ public class LocalMergeResults {
 
         private static String getResultFilePath(Map map){
             String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
-            return System.getProperty("user.dir") + "/" + SystemParameters.RESULT_DIR + "/" + queryName + ".result";
+            return getResultDir(map) + "/" + queryName + ".result";
+        }
+        
+        private static String getResultDir(Map map) {
+            String dataSize = getDataSizeInfo(map);
+            
+            String resultRoot = "";
+            if (SystemParameters.isExisting(map, "DIP_RESULT_ROOT")){
+                resultRoot = SystemParameters.getString(map, "DIP_RESULT_ROOT");
+            }
+            
+            return resultRoot + "/" + dataSize;
+        }        
+
+        //getting size information - from path "../test/data/tpch/0.01G", 
+        //  it extracts dataSize = 0.01G        
+        private static String getDataSizeInfo(Map map) {
+            String path = SystemParameters.getString(map, "DIP_DATA_PATH");
+            if(path.endsWith("/")){
+                //removing last "/" character
+                path = path.substring(0, path.length()-1);
+            }
+            int pos = path.lastIndexOf("/");
+            return path.substring(pos + 1, path.length());
         }
 }

@@ -1,16 +1,13 @@
 package plan_runner.utilities;
 
+import backtype.storm.grouping.CustomStreamGrouping;
+import backtype.storm.tuple.Fields;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-
-import plan_runner.thetajoin.matrixMapping.MatrixAssignment;
-import plan_runner.thetajoin.matrixMapping.MatrixAssignment.Dimension;
-
-import backtype.storm.grouping.CustomStreamGrouping;
-import backtype.storm.tuple.Fields;
 import org.apache.log4j.Logger;
+import plan_runner.thetajoin.matrix_mapping.MatrixAssignment;
+import plan_runner.thetajoin.matrix_mapping.MatrixAssignment.Dimension;
 
 public class ThetaJoinStaticMapping implements CustomStreamGrouping{
 	private static final long serialVersionUID = 1L;

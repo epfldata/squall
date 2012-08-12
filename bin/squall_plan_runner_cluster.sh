@@ -1,5 +1,5 @@
 #!/bin/bash
-BIN_PATH=/home/klonatos/Desktop/squall/squall/bin
+BIN_PATH=../bin
 if [ ! -d $BIN_PATH ]; then
 	echo "Bin directory '$BIN_PATH' does not exit. Exiting..."
 	exit
@@ -10,8 +10,8 @@ fi
 
 # Set whether you want profiling information gathered
 declare -i PROFILE_ENABLED
-PROFILE_ENABLED=1
-SNAPSHOT_DIR=/home/klonatos/Desktop/squall/squallSnapshots #Required for profiling
+PROFILE_ENABLED=0
+SNAPSHOT_DIR=../squallSnapshots #Required for profiling
 STORM_OUTPUT=$SNAPSHOT_DIR/stormOutput
 
 # Initialize profiling
@@ -28,16 +28,15 @@ if [ $PROFILE_ENABLED -eq 1 ]; then
 	./profiling.sh START
 fi
 
+CONFIG_DIR=../test/squall_plan_runner/confs/cluster
+
 # If no configuration file is given, use default
 if [ $# -ne 1 ]
 then
-	CONFIG_FILE=1G_hyracks_parallel
+	CONFIG_PATH=$CONFIG_DIR/1G_hyracks_parallel
 else
-	CONFIG_FILE=$1
+	CONFIG_PATH=$1
 fi
-
-CONFIG_DIR=../testing/squall_plan_runner/confs
-CONFIG_PATH=$CONFIG_DIR/$CONFIG_FILE
 
 # check if your configuration file exists
 if ! [ -f $CONFIG_PATH ];

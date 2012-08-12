@@ -15,7 +15,7 @@ import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
-import plan_runner.queryPlans.QueryPlan;
+import plan_runner.query_plans.QueryPlan;
 import plan_runner.utilities.DeepCopy;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.CompGen;

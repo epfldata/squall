@@ -1,18 +1,13 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package plan_runner.components;
 
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
-import plan_runner.expressions.ValueExpression;
 import java.io.Serializable;
 import java.util.List;
+import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.Operator;
-import plan_runner.stormComponents.StormEmitter;
-import plan_runner.stormComponents.synchronization.TopologyKiller;
+import plan_runner.storm_components.StormEmitter;
+import plan_runner.storm_components.synchronization.TopologyKiller;
 
 
 public interface Component extends Serializable, ComponentProperties, StormEmitter {

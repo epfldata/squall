@@ -1,8 +1,8 @@
 package plan_runner.predicates;
 
-import plan_runner.expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
+import plan_runner.expressions.ValueExpression;
 import plan_runner.visitors.PredicateVisitor;
 
 public  class ComparisonPredicate<T extends Comparable<T>> implements Predicate {

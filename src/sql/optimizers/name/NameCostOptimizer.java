@@ -3,7 +3,7 @@ package sql.optimizers.name;
 
 import java.util.*;
 import plan_runner.components.Component;
-import plan_runner.queryPlans.QueryPlan;
+import plan_runner.query_plans.QueryPlan;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.Optimizer;
 import sql.util.OverParallelizedException;

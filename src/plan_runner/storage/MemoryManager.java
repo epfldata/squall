@@ -1,10 +1,10 @@
 package plan_runner.storage;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.io.ObjectOutputStream;
-import java.io.ByteArrayOutputStream;
 
 public class MemoryManager implements Serializable {
 

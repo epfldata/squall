@@ -2,9 +2,8 @@
 ./recompile.sh
 rm /tmp/tmp*
 
-CONFDIR=../testing/squall_plan_runner/confs
-TESTDIR=test
-TESTCONFS=( `ls ${CONFDIR}/${TESTDIR}/` )
+CONFDIR=../test/squall_plan_runner/confs/local
+TESTCONFS=( `ls ${CONFDIR}/` )
 COUNT=${#TESTCONFS[@]}
 
 declare -i i
@@ -23,7 +22,7 @@ do
 	
 	TMPFILE=`mktemp`
 	echo "Running test $i ($TEST) out of ${COUNT}..."
-	./squall_plan_runner_local.sh $TESTDIR/$TEST > $TMPFILE 
+	./squall_plan_runner_local.sh $CONFDIR/$TEST > $TMPFILE 
 	if [ "`cat $TMPFILE | tail -n 1 | cut -d' ' -f1`" != "OK:" ]; then
 		echo "Error: Test $TEST failed. Error log in $TMPFILE"
                 ALL_OK=false

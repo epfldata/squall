@@ -1,0 +1,58 @@
+QUERY PLAN
+
+Component PART
+SelectOperator with Predicate: "PART.NAME" - Col 1 LIKE Constant green
+ProjectOperator ("PART.PARTKEY" - Col 0)
+
+ HashIndexes: (0)
+
+Component LINEITEM
+ProjectOperator (("LINEITEM.EXTENDEDPRICE" - Col 5) * ((Constant 1.0) - ("LINEITEM.DISCOUNT" - Col 6)), "LINEITEM.QUANTITY" - Col 4, "LINEITEM.ORDERKEY" - Col 0, "LINEITEM.SUPPKEY" - Col 2, "LINEITEM.PARTKEY" - Col 1)
+
+ HashIndexes: (4)
+
+Component PART_LINEITEM
+ HashIndexes: (0, 4)
+
+Component PARTSUPP
+ProjectOperator ("PARTSUPP.SUPPLYCOST" - Col 3, "PARTSUPP.PARTKEY" - Col 0, "PARTSUPP.SUPPKEY" - Col 1)
+
+ HashIndexes: (1, 2)
+
+Component PART_LINEITEM_PARTSUPP
+ProjectOperator (("(LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT))" - Col 1) - (("PARTSUPP.SUPPLYCOST" - Col 5) * ("LINEITEM.QUANTITY" - Col 2)), "LINEITEM.ORDERKEY" - Col 3, "LINEITEM.SUPPKEY" - Col 4)
+
+ HashIndexes: (1)
+
+Component ORDERS
+ProjectOperator (IntegerYearFromDate "ORDERS.ORDERDATE" - Col 4, "ORDERS.ORDERKEY" - Col 0)
+
+ HashIndexes: (1)
+
+Component PART_LINEITEM_PARTSUPP_ORDERS
+ProjectOperator ("EXTRACT_YEAR(ORDERS.ORDERDATE)" - Col 3, "(LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)) - (PARTSUPP.SUPPLYCOST * LINEITEM.QUANTITY)" - Col 0, "LINEITEM.SUPPKEY" - Col 2)
+
+ HashIndexes: (2)
+
+Component SUPPLIER
+ProjectOperator ("SUPPLIER.NATIONKEY" - Col 3, "SUPPLIER.SUPPKEY" - Col 0)
+
+ HashIndexes: (1)
+
+Component PART_LINEITEM_PARTSUPP_ORDERS_SUPPLIER
+ProjectOperator ("EXTRACT_YEAR(ORDERS.ORDERDATE)" - Col 0, "(LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)) - (PARTSUPP.SUPPLYCOST * LINEITEM.QUANTITY)" - Col 1, "SUPPLIER.NATIONKEY" - Col 3)
+
+ HashIndexes: (2)
+
+Component NATION
+ProjectOperator ("NATION.NAME" - Col 1, "NATION.NATIONKEY" - Col 0)
+
+ HashIndexes: (1)
+
+Component PART_LINEITEM_PARTSUPP_ORDERS_SUPPLIER_NATION
+ProjectOperator ("NATION.NAME" - Col 3, "EXTRACT_YEAR(ORDERS.ORDERDATE)" - Col 0, "(LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)) - (PARTSUPP.SUPPLYCOST * LINEITEM.QUANTITY)" - Col 1)
+AggregateSumOperator with VE: "(LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)) - (PARTSUPP.SUPPLYCOST * LINEITEM.QUANTITY)" - Col 2
+  GroupByProjection is ProjectOperator ("NATION.NAME" - Col 0, "EXTRACT_YEAR(ORDERS.ORDERDATE)" - Col 1).
+
+
+END of QUERY PLAN

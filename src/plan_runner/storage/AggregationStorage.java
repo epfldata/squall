@@ -1,23 +1,14 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package plan_runner.storage;
 
-import plan_runner.storage.BasicStore;
-import plan_runner.conversion.TypeConversion;
+import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
-import java.io.PrintStream;
-import java.io.OutputStream;
+import plan_runner.conversion.TypeConversion;
 import plan_runner.operators.AggregateOperator;
-import plan_runner.utilities.MyUtilities;
+import plan_runner.utilities.SystemParameters;
 
 public class AggregationStorage<V> extends KeyValueStore<String, V> {
 
@@ -29,7 +20,7 @@ public class AggregationStorage<V> extends KeyValueStore<String, V> {
 	private static final int FINAL_AGGREGATION_TIMEOUT = 10000; /* msecs */
 
 	public AggregationStorage(AggregateOperator outerAggOp, TypeConversion wrapper, Map map, boolean singleEntry){
-		super(singleEntry ? 1 : DEFAULT_SIZE_MB, map);
+		super(singleEntry ? 1 : SystemParameters.getInt(map, "MEMORY_SIZE_MB"), map);
 		_conf = map;
 		_wrapper = wrapper;
 		_outerAggOp = outerAggOp;

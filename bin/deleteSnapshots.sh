@@ -1,5 +1,5 @@
 #!/bin/bash
-BIN_PATH=/home/klonatos/Desktop/squall/squall/bin
+BIN_PATH=../bin
 if [ ! -d $BIN_PATH ]; then
 	echo "Bin directory '$BIN_PATH' does not exit. Exiting..."
 	exit

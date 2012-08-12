@@ -47,13 +47,13 @@ public class NameTranslator{
         }
         
         translateExpr(tupleSchema, expr);
-        //if after changing synonims still not found, return -1
+        //if after changing synonims still not found, return ParserUtil.NOT_FOUND
         return indexOf(tupleSchema.getSchema(), ParserUtil.getStringExpr(expr));
     }
 
          
     /*
-     * This method differs from getColumnIndex since it might return -1 (and user know how to deal with -1)
+     * This method differs from getColumnIndex since it might return ParserUtil.NOT_FOUND (and user know how to deal with it)
      * tupleSchema.getSchema() contains a list of TableAlias.ColumnName
      */
     public int getColumnIndex(TupleSchema tupleSchema, Column column) {

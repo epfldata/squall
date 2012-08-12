@@ -1,15 +1,15 @@
 package plan_runner.storage;
 
+import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.ArrayList;
-import java.io.PrintStream;
-import java.util.Collections;
 import plan_runner.utilities.SystemParameters;
 
 public class KeyValueStore<K, V> extends BasicStore {
@@ -21,11 +21,11 @@ public class KeyValueStore<K, V> extends BasicStore {
 
 	/* Constructors */
 	public KeyValueStore(Map conf) {
-		this(BasicStore.DEFAULT_SIZE_MB, DEFAULT_HASH_INDICES, conf);
+		this(SystemParameters.getInt(conf, "MEMORY_SIZE_MB"), DEFAULT_HASH_INDICES, conf);
 	}
 
 	public KeyValueStore(int hash_indices, Map conf) {
-		this(BasicStore.DEFAULT_SIZE_MB, hash_indices, conf);
+		this(SystemParameters.getInt(conf, "MEMORY_SIZE_MB"), hash_indices, conf);
 	}
 
 	public KeyValueStore(int storesizemb, int hash_indices, Map conf) {
