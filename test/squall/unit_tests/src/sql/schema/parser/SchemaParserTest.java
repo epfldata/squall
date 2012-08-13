@@ -14,7 +14,7 @@ public class SchemaParserTest {
     
     private static final String SCHEMA_PATH = "../test/squall/schemas/";
     private static final String SCHEMA_EXT = ".txt";
-    private static final String RESULT_PATH = SCHEMA_PATH + "parsedResults/";
+    private static final String RESULT_PATH = "../test/squall/unit_tests/printouts/schemas/";
     private static final String RESULT_EXT = ".result";
     
     public SchemaParserTest() {
@@ -49,7 +49,7 @@ public class SchemaParserTest {
         String result = SchemaParser.getParsedString(tables);
         //System.out.print(result);
         
-        String expected = MyUtilities.readFile(RESULT_PATH + fileName + RESULT_EXT);
+        String expected = MyUtilities.readFile(RESULT_PATH + "/" + fileName + RESULT_EXT);
         assertEquals(expected, result);
     }
 }

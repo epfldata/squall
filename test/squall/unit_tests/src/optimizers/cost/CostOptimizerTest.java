@@ -17,7 +17,7 @@ import sql.util.ParserUtil;
  */
 public class CostOptimizerTest {
     private static final String CONF_PATH = "../test/squall/unit_tests/confs/";
-    private static final String PLAN_PATH = "../test/squall/unit_tests/query_plans/";
+    private static final String PLAN_PATH = "../test/squall/unit_tests/printouts/query_plans/";
     
     private Map _map;
     
