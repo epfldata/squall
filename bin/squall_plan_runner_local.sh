@@ -23,4 +23,4 @@ fi
 ../bin/lein run -m plan_runner.main.Main $CONFIG_PATH
 
 #Old version implies specifying libraries explicitly
-#java -cp ../deploy/squall-2.0-standalone.jar:../$STORMNAME/lib/*:../contrib/*:../$STORMNAME/$STORMNAME.jar plan_runner.main.Main $CONFIG_PATH
+#java -Xmx128m -cp ../deploy/squall-2.0-standalone.jar:../$STORMNAME/lib/*:../contrib/*:../$STORMNAME/$STORMNAME.jar plan_runner.main.Main $CONFIG_PATH

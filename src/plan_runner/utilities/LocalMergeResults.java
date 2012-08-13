@@ -132,6 +132,12 @@ public class LocalMergeResults {
          * from "$PATH/tpch.txt", it returns "tpch"
          */
         private static String getSchemaName(Map map) {
+            if(!SystemParameters.isExisting(map, "DIP_SCHEMA_PATH")){
+                //DIP_SCHEMA_PATH does not exist when PlanRunner is directly invoked
+                //  but we know that all of them are tpch
+                return "tpch";
+                
+            }
             String schemaPath = SystemParameters.getString(map, "DIP_SCHEMA_PATH");
             
             int pos = schemaPath.lastIndexOf("/");
