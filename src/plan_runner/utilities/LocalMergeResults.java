@@ -129,22 +129,12 @@ public class LocalMergeResults {
         }
         
         /*
-         * from "$PATH/tpch.txt", it returns "tpch"
+         * from "../test/data/tpch/0.01G" as dataPath,
+         *   return tpch
          */
         private static String getSchemaName(Map map) {
-            if(!SystemParameters.isExisting(map, "DIP_SCHEMA_PATH")){
-                //DIP_SCHEMA_PATH does not exist when PlanRunner is directly invoked
-                //  but we know that all of them are tpch
-                return "tpch";
-                
-            }
-            String schemaPath = SystemParameters.getString(map, "DIP_SCHEMA_PATH");
-            
-            int pos = schemaPath.lastIndexOf("/");
-            String schemaFilename = schemaPath.substring(pos + 1, schemaPath.length());
-            
-            String parts[] = schemaFilename.split("\\.");
-            return parts[0];
+            String path = SystemParameters.getString(map, "DIP_DATA_PATH");
+            return getPartFromEnd(path, 1);
         }        
 
         //getting size information - from path "../test/data/tpch/0.01G", 
@@ -153,11 +143,18 @@ public class LocalMergeResults {
         //  but this method has to be used for PlanRunner as well.
         private static String getDataSizeInfo(Map map) {
             String path = SystemParameters.getString(map, "DIP_DATA_PATH");
-            if(path.endsWith("/")){
-                //removing last "/" character
-                path = path.substring(0, path.length()-1);
-            }
-            int pos = path.lastIndexOf("/");
-            return path.substring(pos + 1, path.length());
+            return getPartFromEnd(path, 0);
+        }
+        
+        /*
+         * Method invoked with arguments "a/b//c/e//f", 0
+         *   return "f"         
+         * Method invoked with arguments "a/b//c/e//f", 1
+         *   return "e"
+         */
+        private static String getPartFromEnd(String path, int fromEnd){
+            String parts[] = path.split("\\/+");
+            int length = parts.length;
+            return parts[length - (fromEnd +1)];
         }
 }
