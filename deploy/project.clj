@@ -2,7 +2,7 @@
   :java-source-path "../src"
   :javac-options {:debug "true" :fork "true"}
   :aot :all
-  :jvm-opts ["-Djava.library.path=/usr/local/lib:/opt/local/lib:/usr/lib"
+  :jvm-opts ["-Xmx128m" "-Djava.library.path=/usr/local/lib:/opt/local/lib:/usr/lib"
             ]
 
   :dependencies [

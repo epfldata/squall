@@ -112,23 +112,39 @@ public class LocalMergeResults {
         }
 
         private static String getResultFilePath(Map map){
+            String rootDir = getResultDir(map);
+            String schemaName = getSchemaName(map);
+            String dataSize = getDataSizeInfo(map);
             String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
-            return getResultDir(map) + "/" + queryName + ".result";
+            return  rootDir + "/" + schemaName + "/" + dataSize + "/" + queryName + ".result";
         }
         
+        // this has to be a separate method, because we don't want Exception if DIP_RESULT_ROOT is not set
         private static String getResultDir(Map map) {
-            String dataSize = getDataSizeInfo(map);
-            
             String resultRoot = "";
             if (SystemParameters.isExisting(map, "DIP_RESULT_ROOT")){
                 resultRoot = SystemParameters.getString(map, "DIP_RESULT_ROOT");
             }
+            return resultRoot;
+        }
+        
+        /*
+         * from "$PATH/tpch.txt", it returns "tpch"
+         */
+        private static String getSchemaName(Map map) {
+            String schemaPath = SystemParameters.getString(map, "DIP_SCHEMA_PATH");
             
-            return resultRoot + "/" + dataSize;
+            int pos = schemaPath.lastIndexOf("/");
+            String schemaFilename = schemaPath.substring(pos + 1, schemaPath.length());
+            
+            String parts[] = schemaFilename.split("\\.");
+            return parts[0];
         }        
 
         //getting size information - from path "../test/data/tpch/0.01G", 
         //  it extracts dataSize = 0.01G        
+        //For Squall (not in Squall Plan Runner) there is DIP_DB_SIZE, 
+        //  but this method has to be used for PlanRunner as well.
         private static String getDataSizeInfo(Map map) {
             String path = SystemParameters.getString(map, "DIP_DATA_PATH");
             if(path.endsWith("/")){
