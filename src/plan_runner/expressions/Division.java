@@ -27,12 +27,12 @@ public class Division<T extends Number & Comparable<T>> implements ValueExpressi
     private List<ValueExpression<T>> _veList = new ArrayList<ValueExpression<T>>();
     private NumericConversion<T> _wrapper;
 
-    public Division(NumericConversion<T> wrapper, ValueExpression<T> ve1, ValueExpression<T> ve2,
+    public Division(ValueExpression<T> ve1, ValueExpression<T> ve2,
             ValueExpression<T>... veArray){
         _veList.add(ve1);
         _veList.add(ve2);
         _veList.addAll(Arrays.asList(veArray));
-        _wrapper = wrapper;
+        _wrapper = (NumericConversion<T>) MyUtilities.getDominantNumericType(MyUtilities.listTypeErasure(_veList));
     }
 
     @Override

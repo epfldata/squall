@@ -133,15 +133,13 @@ public class TPCH10Plan {
 
 	//1 - discount
 	ValueExpression<Double> substract = new Subtraction(
-			_doubleConv,
 			new ValueSpecification(_doubleConv, 1.0),
 			new ColumnReference(_doubleConv, 8));
 	//extendedPrice*(1-discount)
 	ValueExpression<Double> product = new Multiplication(
-			_doubleConv,
 			new ColumnReference(_doubleConv, 7),
 			substract);
-	AggregateOperator agg = new AggregateSumOperator(_doubleConv, product, conf)
+	AggregateOperator agg = new AggregateSumOperator(product, conf)
 		.setGroupByColumns(Arrays.asList(0, 1, 4, 6, 2, 3, 5));
 
         EquiJoinComponent C_O_N_Ljoin = new EquiJoinComponent(
@@ -152,7 +150,7 @@ public class TPCH10Plan {
         //-------------------------------------------------------------------------------------
 
         AggregateOperator overallAgg =
-                    new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 1), conf)
+                    new AggregateSumOperator(new ColumnReference(_doubleConv, 1), conf)
                         .setGroupByColumns(Arrays.asList(0));
 
         _queryPlan.setOverallAggregation(overallAgg);

@@ -201,16 +201,14 @@ public class TPCH5Plan {
         // set up aggregation function on a separate StormComponent(Bolt)
 
         ValueExpression<Double> substract = new Subtraction(
-                _doubleConv,
                 new ValueSpecification(_doubleConv, 1.0),
                 new ColumnReference(_doubleConv, 2));
             //extendedPrice*(1-discount)
         ValueExpression<Double> product = new Multiplication(
-                _doubleConv,
                 new ColumnReference(_doubleConv, 1),
                 substract);
 
-        AggregateOperator aggOp = new AggregateSumOperator(_doubleConv, product, conf).setGroupByColumns(Arrays.asList(0));
+        AggregateOperator aggOp = new AggregateSumOperator(product, conf).setGroupByColumns(Arrays.asList(0));
         OperatorComponent finalComponent = new OperatorComponent(
                 R_N_S_L_C_Ojoin,
                 "FINAL_RESULT",
@@ -218,7 +216,7 @@ public class TPCH5Plan {
 
         //-------------------------------------------------------------------------------------
         AggregateOperator overallAgg =
-                    new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 1), conf)
+                    new AggregateSumOperator(new ColumnReference(_doubleConv, 1), conf)
                         .setGroupByColumns(Arrays.asList(0));
 
         _queryPlan.setOverallAggregation(overallAgg);

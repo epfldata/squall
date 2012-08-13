@@ -174,12 +174,10 @@ public class ThetaTPCH7Plan {
         //second field in projection
             //1 - discount
         ValueExpression<Double> substract = new Subtraction(
-                _doubleConv,
                 new ValueSpecification(_doubleConv, 1.0),
                 new ColumnReference(_doubleConv, 6));
             //extendedPrice*(1-discount)
         ValueExpression<Double> product = new Multiplication(
-                _doubleConv,
                 new ColumnReference(_doubleConv, 5),
                 substract);
         //third field in projection
@@ -232,7 +230,7 @@ public class ThetaTPCH7Plan {
                     )
                 ));
 
-        AggregateOperator agg = new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 4), conf)
+        AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_doubleConv, 4), conf)
                 .setGroupByColumns(new ArrayList<Integer>(Arrays.asList(0, 2, 3)));
         
         ColumnReference colN_C_O = new ColumnReference(_ic, 1);
@@ -248,7 +246,7 @@ public class ThetaTPCH7Plan {
                        .addOperator(agg).setJoinPredicate(N_C_O_L_S_N_comp);
         //-------------------------------------------------------------------------------------
         AggregateOperator overallAgg =
-                    new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 1), conf)
+                    new AggregateSumOperator(new ColumnReference(_doubleConv, 1), conf)
                         .setGroupByColumns(Arrays.asList(0));
 
         _queryPlan.setOverallAggregation(overallAgg);

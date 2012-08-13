@@ -143,28 +143,24 @@ public class TPCH9Plan {
 
 	//1 - discount
 	ValueExpression<Double> substract1 = new Subtraction(
-			_doubleConv,
 			new ValueSpecification(_doubleConv, 1.0),
 			new ColumnReference(_doubleConv, 2));
 	//extendedPrice*(1-discount)
 	ValueExpression<Double> product1 = new Multiplication(
-			_doubleConv,
 			new ColumnReference(_doubleConv, 1),
 			substract1);
 
         //ps_supplycost * l_quantity
 	ValueExpression<Double> product2 = new Multiplication(
-			_doubleConv,
 			new ColumnReference(_doubleConv, 3),
 			new ColumnReference(_doubleConv, 0));
 
         //all together
         ValueExpression<Double> substract2 = new Subtraction(
-			_doubleConv,
 			product1,
 			product2);
 
-	AggregateOperator agg = new AggregateSumOperator(_doubleConv, substract2, conf)
+	AggregateOperator agg = new AggregateSumOperator(substract2, conf)
 		.setGroupByColumns(Arrays.asList(5, 4));
 
 
@@ -177,7 +173,7 @@ public class TPCH9Plan {
 
 
         AggregateOperator overallAgg =
-                    new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 1), conf)
+                    new AggregateSumOperator(new ColumnReference(_doubleConv, 1), conf)
                         .setGroupByColumns(Arrays.asList(0));
 
         _queryPlan.setOverallAggregation(overallAgg);

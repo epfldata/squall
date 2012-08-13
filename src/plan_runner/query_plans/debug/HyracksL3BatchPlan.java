@@ -55,7 +55,7 @@ public class HyracksL3BatchPlan {
                                .setBatchOutputMillis(1000);
 
             //-------------------------------------------------------------------------------------
-            AggregateSumOperator agg = new AggregateSumOperator(_ic, new ColumnReference(_ic, 1), conf)
+            AggregateSumOperator agg = new AggregateSumOperator(new ColumnReference(_ic, 1), conf)
                     .setGroupByColumns(Arrays.asList(0));
 
             OperatorComponent oc = new OperatorComponent(CUSTOMER_ORDERSjoin, "COUNTAGG", _queryPlan)
@@ -65,7 +65,7 @@ public class HyracksL3BatchPlan {
             //-------------------------------------------------------------------------------------
 
             AggregateOperator overallAgg =
-                    new AggregateSumOperator(_ic, new ColumnReference(_ic, 1), conf)
+                    new AggregateSumOperator(new ColumnReference(_ic, 1), conf)
                         .setGroupByColumns(Arrays.asList(0));
 
             _queryPlan.setOverallAggregation(overallAgg);

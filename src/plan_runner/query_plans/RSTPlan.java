@@ -62,11 +62,10 @@ public class RSTPlan {
 
             //-------------------------------------------------------------------------------------
             ValueExpression<Double> aggVe = new Multiplication(
-                    _dc,
                     new ColumnReference(_dc, 0),
                     new ColumnReference(_dc, 3));
 
-            AggregateSumOperator sp = new AggregateSumOperator(_dc, aggVe, conf);
+            AggregateSumOperator sp = new AggregateSumOperator(aggVe, conf);
 
             EquiJoinComponent R_S_Tjoin= new EquiJoinComponent(
                     R_Sjoin,
@@ -80,7 +79,7 @@ public class RSTPlan {
             //-------------------------------------------------------------------------------------
 
             AggregateOperator overallAgg =
-                    new AggregateSumOperator(_dc, new ColumnReference(_dc, 0), conf);
+                    new AggregateSumOperator(new ColumnReference(_dc, 0), conf);
 
             _queryPlan.setOverallAggregation(overallAgg);
             

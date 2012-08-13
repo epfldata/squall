@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
-import plan_runner.conversion.IntegerConversion;
+import plan_runner.conversion.LongConversion;
 import plan_runner.conversion.NumericConversion;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.storage.AggregationStorage;
@@ -14,7 +14,7 @@ import plan_runner.utilities.MyUtilities;
 import plan_runner.visitors.OperatorVisitor;
 
 
-public class AggregateCountOperator implements AggregateOperator<Integer>{
+public class AggregateCountOperator implements AggregateOperator<Long>{
         private static final long serialVersionUID = 1L;
         private static Logger LOG = Logger.getLogger(AggregateCountOperator.class);
 
@@ -29,15 +29,15 @@ public class AggregateCountOperator implements AggregateOperator<Integer>{
         private ProjectOperator _groupByProjection;
         private int _numTuplesProcessed = 0;
 
-        private NumericConversion<Integer> _wrapper = new IntegerConversion();
-        private AggregationStorage<Integer> _storage;
+        private NumericConversion<Long> _wrapper = new LongConversion();
+        private AggregationStorage<Long> _storage;
 
         private Map _map;
 
         public AggregateCountOperator(Map map){
             _map = map;
 
-            _storage = new AggregationStorage<Integer>(this, _wrapper, _map, true);
+            _storage = new AggregationStorage<Long>(this, _wrapper, _map, true);
         }
 
         //from AgregateOperator
@@ -107,7 +107,7 @@ public class AggregateCountOperator implements AggregateOperator<Integer>{
             }else{
                 tupleHash = MyUtilities.createHashString(tuple, _groupByColumns, _map);
             }
-            Integer value =  (Integer)_storage.update(tuple, tupleHash);
+            Long value =  (Long)_storage.update(tuple, tupleHash);
             String strValue = _wrapper.toString(value);
             
             // propagate further the affected tupleHash-tupleValue pair
@@ -120,12 +120,12 @@ public class AggregateCountOperator implements AggregateOperator<Integer>{
 
         //actual operator implementation
         @Override
-        public Integer runAggregateFunction(Integer value, List<String> tuple) {
+        public Long runAggregateFunction(Long value, List<String> tuple) {
             return value + 1;
         }
 
         @Override
-        public Integer runAggregateFunction(Integer value1, Integer value2) {
+        public Long runAggregateFunction(Long value1, Long value2) {
             return value1 + value2;
         }
 

@@ -96,11 +96,11 @@ public class PredicateAnalyser {
 		if (CleanPart[0] != null)
 		{
 			if  (CleanPart[1] != null)
-				fullClean = new Subtraction<Double>(numConv, CleanPart[1], CleanPart[0]);
+				fullClean = new Subtraction<Double>(CleanPart[1], CleanPart[0]);
 			else if (CleanPart[1] == null)
 			{
 				ValueExpression temp1 = new ValueSpecification<Double>(numConv, 0.0);
-				fullClean = new Subtraction<Double>(numConv, temp1, CleanPart[0]);
+				fullClean = new Subtraction<Double>(temp1, CleanPart[0]);
 			}
 		}
 		else if (CleanPart[0] == null)
@@ -112,14 +112,14 @@ public class PredicateAnalyser {
 		}
 		
 		fullClean = combine(null, 0, fullClean);
-		ValueExpression finalA = new Multiplication<Double>(numConv, Parameter[0], Parameter[1]);
+		ValueExpression finalA = new Multiplication<Double>(Parameter[0], Parameter[1]);
 		finalA = combine(null, 0, finalA);
-		ValueExpression finalB = new Multiplication<Double>(numConv, Parameter[0], fullClean);
+		ValueExpression finalB = new Multiplication<Double>(Parameter[0], fullClean);
 		finalB = combine(null, 0, finalB);
 		
 		
-		ValueExpression withVariable = new Multiplication<Double>(numConv, finalA, Variable[1]);
-		ValueExpression finalRightPart = new Addition<Double>(numConv, withVariable, finalB);
+		ValueExpression withVariable = new Multiplication<Double>(finalA, Variable[1]);
+		ValueExpression finalRightPart = new Addition<Double>(withVariable, finalB);
 		
 		Predicate finalPred;
 		if (Parameter[0].isNegative())
@@ -184,9 +184,9 @@ public class PredicateAnalyser {
 							cleanPartOfInner = 1;
 						}						
 						
-						ValueExpression extraClean = new Multiplication<Double>(numConv, toCombine2, clean);
+						ValueExpression extraClean = new Multiplication<Double>(toCombine2, clean);
 						extraClean = combine(null, 0, extraClean);						
-						multResult = new Multiplication<Double>(numConv, extraClean, dirty);
+						multResult = new Multiplication<Double>(extraClean, dirty);
 						return multResult;
 					}
 					else if (toCombine1 instanceof Addition)
@@ -202,10 +202,10 @@ public class PredicateAnalyser {
 							dirty = toComb1List.get(0);
 							cleanPartOfInner = 1;
 						}
-						ValueExpression extraClean = new Multiplication<Double>(numConv, toCombine2, clean);
+						ValueExpression extraClean = new Multiplication<Double>(toCombine2, clean);
 						extraClean = combine(null, 0, extraClean);						
-						ValueExpression variableCont = new Multiplication<Double>(numConv, toCombine2, dirty);
-						multResult = new Addition<Double>(numConv,	extraClean, variableCont);
+						ValueExpression variableCont = new Multiplication<Double>(toCombine2, dirty);
+						multResult = new Addition<Double>(extraClean, variableCont);
 						return multResult;
 					}
 					else if (toCombine1 instanceof Subtraction)
@@ -221,13 +221,13 @@ public class PredicateAnalyser {
 							dirty = toComb1List.get(0);
 							cleanPartOfInner = 1;
 						}
-						ValueExpression extraClean = new Multiplication<Double>(numConv, toCombine2, clean);
+						ValueExpression extraClean = new Multiplication<Double>(toCombine2, clean);
 						extraClean = combine(null, 0, extraClean);						
-						ValueExpression variableCont = new Multiplication<Double>(numConv, toCombine2, dirty);
+						ValueExpression variableCont = new Multiplication<Double>(toCombine2, dirty);
 						if (cleanPartOfInner == 0)
-							multResult = new Subtraction<Double>(numConv,	extraClean, variableCont);
+							multResult = new Subtraction<Double>(extraClean, variableCont);
 						else
-							multResult = new Subtraction<Double>(numConv,	variableCont, extraClean);
+							multResult = new Subtraction<Double>(variableCont, extraClean);
 						return multResult;
 					}
 					else if (toCombine1 instanceof ColumnReference)
@@ -249,7 +249,7 @@ public class PredicateAnalyser {
 							dirty = toComb1List.get(0);
 							cleanPartOfInner = 1;
 						}						
-						finalAdd = new Addition<Double>(numConv, toCombine1, toCombine2);
+						finalAdd = new Addition<Double>(toCombine1, toCombine2);
 						return finalAdd;
 					}					
 					else if (toCombine1 instanceof Addition)
@@ -265,9 +265,9 @@ public class PredicateAnalyser {
 							dirty = toComb1List.get(0);
 							cleanPartOfInner = 1;
 						}						
-						extraClean = new Addition<Double>(numConv, toCombine2, clean);
+						extraClean = new Addition<Double>(toCombine2, clean);
 						extraClean = combine(null, 0, extraClean);
-						finalAdd = new Addition<Double>(numConv, extraClean, dirty);
+						finalAdd = new Addition<Double>(extraClean, dirty);
 						return finalAdd;
 					}
 					else if (toCombine1 instanceof Subtraction)
@@ -285,15 +285,15 @@ public class PredicateAnalyser {
 						}						
 						if (cleanPartOfInner == 0)
 						{
-							extraClean = new Addition<Double>(numConv, toCombine2, clean);
+							extraClean = new Addition<Double>(toCombine2, clean);
 							extraClean = combine(null, 0, extraClean);
-							finalAdd = new Subtraction<Double>(numConv,	extraClean, dirty);
+							finalAdd = new Subtraction<Double>(extraClean, dirty);
 						}
 						else
 						{
-							extraClean = new Subtraction<Double>(numConv, toCombine2, clean);
+							extraClean = new Subtraction<Double>(toCombine2, clean);
 							extraClean = combine(null, 0, extraClean);
-							finalAdd = new Addition<Double>(numConv, dirty, extraClean);
+							finalAdd = new Addition<Double>(dirty, extraClean);
 						}				 
 						return finalAdd;						
 					}
@@ -317,9 +317,9 @@ public class PredicateAnalyser {
 							cleanPartOfInner = 1;
 						}
 						
-						ValueExpression extraClean = new Subtraction<Double>(numConv, clean, toCombine2);
+						ValueExpression extraClean = new Subtraction<Double>(clean, toCombine2);
 						extraClean = combine(null, 0, extraClean);
-						finalSub = new Addition<Double>(numConv, dirty, extraClean);
+						finalSub = new Addition<Double>(dirty, extraClean);
 						return finalSub;
 					}
 					else if (toCombine1 instanceof Subtraction)
@@ -338,15 +338,15 @@ public class PredicateAnalyser {
 						
 						if (cleanPartOfInner == 0)
 						{
-							ValueExpression extraClean = new Subtraction<Double>(numConv, clean, toCombine2);
+							ValueExpression extraClean = new Subtraction<Double>(clean, toCombine2);
 							extraClean = combine(null, 0, extraClean);
-							finalSub = new Subtraction<Double>(numConv, extraClean, dirty);
+							finalSub = new Subtraction<Double>(extraClean, dirty);
 						}
 						else
 						{
-							ValueExpression extraClean = new Subtraction<Double>(numConv, toCombine2, clean);
+							ValueExpression extraClean = new Subtraction<Double>(toCombine2, clean);
 							extraClean = combine(null, 0, extraClean);
-							finalSub = new Subtraction<Double>(numConv, dirty, extraClean);
+							finalSub = new Subtraction<Double>(dirty, extraClean);
 						}
 						return finalSub;
 					}
@@ -363,10 +363,10 @@ public class PredicateAnalyser {
 							dirty = toComb1List.get(0);
 							cleanPartOfInner = 1;
 						}
-						ValueExpression extraClean = new Multiplication<Double>(numConv, toCombine2, clean);
+						ValueExpression extraClean = new Multiplication<Double>(toCombine2, clean);
 						extraClean = combine(null, 0, extraClean);
 						
-						finalSub = new Multiplication<Double>(numConv, extraClean, dirty);
+						finalSub = new Multiplication<Double>(extraClean, dirty);
 						return finalSub;
 					}
 					else if (toCombine1 instanceof ColumnReference)
@@ -444,17 +444,17 @@ public class PredicateAnalyser {
 		else if (other instanceof Addition)
 		{
 			List<ValueExpression> followUps = other.getInnerExpressions();
-			return new Addition<Double>(numConv, changeToDouble(followUps.get(0)),changeToDouble(followUps.get(1)));
+			return new Addition<Double>(changeToDouble(followUps.get(0)),changeToDouble(followUps.get(1)));
 		}
 		else if (other instanceof Subtraction)
 		{			
 			List<ValueExpression> followUps = other.getInnerExpressions();
-			return new Subtraction<Double>(numConv, changeToDouble(followUps.get(0)),changeToDouble(followUps.get(1)));			
+			return new Subtraction<Double>(changeToDouble(followUps.get(0)),changeToDouble(followUps.get(1)));			
 		}
 		else if (other instanceof Multiplication)
 		{		
 			List<ValueExpression> followUps = other.getInnerExpressions();
-			return new Multiplication<Double>(numConv, changeToDouble(followUps.get(0)),changeToDouble(followUps.get(1)));			
+			return new Multiplication<Double>(changeToDouble(followUps.get(0)),changeToDouble(followUps.get(1)));			
 		}
 		return null;
 	}

@@ -159,12 +159,10 @@ public class TPCH8Plan {
         ColumnReference suppKey = new ColumnReference(_sc, 2);
         //forth field in projection
         ValueExpression<Double> substract = new Subtraction(
-                _doubleConv,
                 new ValueSpecification(_doubleConv, 1.0),
                 new ColumnReference(_doubleConv, 6));
             //extendedPrice*(1-discount)
         ValueExpression<Double> product = new Multiplication(
-                _doubleConv,
                 new ColumnReference(_doubleConv, 5),
                 substract);
         ProjectOperator projectionLineitem = new ProjectOperator(orderKey, partKey, suppKey, product);
@@ -223,7 +221,7 @@ public class TPCH8Plan {
                            .setHashIndexes(Arrays.asList(2));
 
         //-------------------------------------------------------------------------------------
-        AggregateOperator agg = new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 2), conf)
+        AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_doubleConv, 2), conf)
                 .setGroupByColumns(Arrays.asList(1, 3));
 
         EquiJoinComponent R_N_C_S_N_P_L_Ojoin = new EquiJoinComponent(
@@ -233,7 +231,7 @@ public class TPCH8Plan {
 
         //-------------------------------------------------------------------------------------
         AggregateOperator overallAgg =
-                    new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 1), conf)
+                    new AggregateSumOperator(new ColumnReference(_doubleConv, 1), conf)
                         .setGroupByColumns(Arrays.asList(0));
 
         _queryPlan.setOverallAggregation(overallAgg);

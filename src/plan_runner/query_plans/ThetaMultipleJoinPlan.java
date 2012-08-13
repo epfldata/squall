@@ -104,7 +104,7 @@ public class ThetaMultipleJoinPlan {
 		ColumnReference colRefLineItemExtPrice = new ColumnReference(_doubleConv, 3);
 		ColumnReference colRefOrdersTotalPrice = new ColumnReference(_doubleConv, 1);
 		ValueSpecification val10 = new ValueSpecification(_doubleConv, 10.0);
-		Multiplication mult = new Multiplication(_doubleConv, val10, colRefLineItemExtPrice);
+		Multiplication mult = new Multiplication(val10, colRefLineItemExtPrice);
 		ComparisonPredicate predL_O2 = new ComparisonPredicate(ComparisonPredicate.LESS_OP, mult, colRefOrdersTotalPrice);
 		
 		AndPredicate predL_O = new AndPredicate(predL_O1, predL_O2);
@@ -141,15 +141,13 @@ public class ThetaMultipleJoinPlan {
 
 		//1 - discount
 		ValueExpression<Double> substract = new Subtraction(
-				_doubleConv,
 				new ValueSpecification(_doubleConv, 1.0),
 				new ColumnReference(_doubleConv, 3));
 		//extendedPrice*(1-discount)
 		ValueExpression<Double> product = new Multiplication(
-				_doubleConv,
 				new ColumnReference(_doubleConv, 2),
 				substract);
-		AggregateOperator agg = new AggregateSumOperator(_doubleConv, product, conf);
+		AggregateOperator agg = new AggregateSumOperator(product, conf);
 		
 	
 		ColumnReference colRefL_OPartKey = new ColumnReference(_intConv, 0);
@@ -173,7 +171,7 @@ public class ThetaMultipleJoinPlan {
 		//-------------------------------------------------------------------------------------
 
 		AggregateOperator overallAgg =
-			new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 0), conf); //WHAT COLUMN HERE??
+			new AggregateSumOperator(new ColumnReference(_doubleConv, 0), conf); //WHAT COLUMN HERE??
 
 		_queryPlan.setOverallAggregation(overallAgg);
 

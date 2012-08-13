@@ -52,7 +52,7 @@ public class HyracksPlan {
             //-------------------------------------------------------------------------------------
 
             AggregateOperator overallAgg =
-                    new AggregateSumOperator(_ic, new ColumnReference(_ic, 1), conf)
+                    new AggregateSumOperator(new ColumnReference(_ic, 1), conf)
                         .setGroupByColumns(Arrays.asList(0));
 
             _queryPlan.setOverallAggregation(overallAgg);

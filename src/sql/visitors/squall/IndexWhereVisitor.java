@@ -101,9 +101,7 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
         ValueExpression right = _exprStack.pop();
         ValueExpression left = _exprStack.pop();
 
-        NumericConversion nc = (NumericConversion) left.getType();
-
-        ValueExpression add = new plan_runner.expressions.Addition(nc, left, right);
+        ValueExpression add = new plan_runner.expressions.Addition(left, right);
         _exprStack.push(add);
     }
 
@@ -114,9 +112,7 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
         ValueExpression right = _exprStack.pop();
         ValueExpression left = _exprStack.pop();
 
-        NumericConversion nc = (NumericConversion) left.getType();
-
-        ValueExpression mult = new plan_runner.expressions.Multiplication(nc, left, right);
+        ValueExpression mult = new plan_runner.expressions.Multiplication(left, right);
         _exprStack.push(mult);
     }
 
@@ -127,9 +123,7 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
         ValueExpression right = _exprStack.pop();
         ValueExpression left = _exprStack.pop();
 
-        NumericConversion nc = (NumericConversion) left.getType();
-
-        ValueExpression division = new plan_runner.expressions.Division(nc, left, right);
+        ValueExpression division = new plan_runner.expressions.Division(left, right);
         _exprStack.push(division);
     }    
 
@@ -140,9 +134,7 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
         ValueExpression right = _exprStack.pop();
         ValueExpression left = _exprStack.pop();
 
-        NumericConversion nc = (NumericConversion) left.getType();
-
-        ValueExpression sub = new plan_runner.expressions.Subtraction(nc, left, right);
+        ValueExpression sub = new plan_runner.expressions.Subtraction(left, right);
         _exprStack.push(sub);
     }
 

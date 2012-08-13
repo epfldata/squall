@@ -124,7 +124,7 @@ public class ProjSchemaCreatorTest {
         expOutputTupleSchema.add(new ColumnNameType("LINEITEM.ORDERKEY", _lc)); //2
         ProjectOperator expProjectOperator = new ProjectOperator(new ColumnReference(_sc, 1, "N1.NAME"), 
                                                                 new IntegerYearFromDate(new ColumnReference(_dateConv, 5, "LINEITEM.SHIPDATE")),
-                                                                new Multiplication(_dblConv,
+                                                                new Multiplication(
                                                                     new ColumnReference(_dblConv, 3, "LINEITEM.EXTENDEDPRICE"),
                                                                     new ColumnReference(_dblConv, 4, "1.0 - LINEITEM.DISCOUNT")
                                                                 ),
@@ -167,9 +167,9 @@ public class ProjSchemaCreatorTest {
         expOutputTupleSchema.add(new ColumnNameType("LINEITEM.ORDERKEY", _lc)); //2
         ProjectOperator expProjectOperator = new ProjectOperator(new ColumnReference(_sc, 1, "N1.NAME"), 
                                                                 new IntegerYearFromDate(new ColumnReference(_dateConv, 5, "LINEITEM.SHIPDATE")),
-                                                                new Multiplication(_dblConv, 
+                                                                new Multiplication(
                                                                     new ColumnReference(_dblConv, 3, "LINEITEM.EXTENDEDPRICE"),
-                                                                    new Subtraction(_dblConv,
+                                                                    new Subtraction(
                                                                         new ValueSpecification(_dblConv, "1.0"),
                                                                         new ColumnReference(_dblConv, 4, "LINEITEM.DISCOUNT")
                                                                     )

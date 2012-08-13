@@ -64,7 +64,7 @@ public class HyracksPreAggPlan {
                                            .setHashIndexes(hashIndexes);
 
 		//-------------------------------------------------------------------------------------           
-		AggregateSumOperator agg = new AggregateSumOperator(_dc, new ColumnReference(_dc, 1), conf)
+		AggregateSumOperator agg = new AggregateSumOperator(new ColumnReference(_dc, 1), conf)
 			.setGroupByColumns(Arrays.asList(0));
 
 		OperatorComponent oc = new OperatorComponent(CUSTOMER_ORDERSjoin, "COUNTAGG", _queryPlan)
@@ -73,7 +73,7 @@ public class HyracksPreAggPlan {
 		//-------------------------------------------------------------------------------------
 
 		AggregateOperator overallAgg =
-			new AggregateSumOperator(_dc, new ColumnReference(_dc, 1), conf)
+			new AggregateSumOperator(new ColumnReference(_dc, 1), conf)
 			.setGroupByColumns(Arrays.asList(0));
 
 		_queryPlan.setOverallAggregation(overallAgg);
