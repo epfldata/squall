@@ -1,6 +1,7 @@
 package plan_runner.operators;
 
 import java.util.List;
+import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.storage.BasicStore;
 
@@ -19,6 +20,9 @@ public interface AggregateOperator<T> extends Operator{
     //this is null for AggregateCountOperator
     public List<ValueExpression> getExpressions();
 
+    public TypeConversion getType();
+    public boolean hasGroupBy();
+    
     //internal storage class
     public BasicStore getStorage();
     public void clearStorage();

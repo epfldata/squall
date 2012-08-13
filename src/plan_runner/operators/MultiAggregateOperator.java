@@ -3,6 +3,7 @@ package plan_runner.operators;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import plan_runner.conversion.TypeConversion;
 import plan_runner.storage.BasicStore;
 import plan_runner.visitors.OperatorVisitor;
 
@@ -141,4 +142,14 @@ public class MultiAggregateOperator implements AggregateOperator {
     public Object runAggregateFunction(Object value1, Object value2) {
         throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
     }
+    
+    @Override
+    public TypeConversion getType(){
+        throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
+    }    
+    
+    @Override
+    public boolean hasGroupBy(){
+        throw new UnsupportedOperationException("You are not supposed to call this method from MultiAggregateOperator.");
+    }    
 }

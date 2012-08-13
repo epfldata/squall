@@ -6,9 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 import org.apache.log4j.Logger;
-import plan_runner.main.Main;
+import plan_runner.conversion.TypeConversion;
+import plan_runner.expressions.ColumnReference;
 import plan_runner.operators.AggregateOperator;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.operators.AggregateSumOperator;
 import plan_runner.storage.AggregationStorage;
 import plan_runner.storm_components.StormComponent;
 
@@ -26,15 +27,15 @@ public class LocalMergeResults {
 
         //The following 2 methods are crucial for collecting, printing and comparing the results in Local Mode
         //called on the component task level, when all Spouts fully propagated their tuples
-        public static void localCollectFinalResult(AggregateOperator currentAgg, int hierarchyPosition, Map map, Logger log){
+        public static void localCollectFinalResult(AggregateOperator lastAgg, int hierarchyPosition, Map map, Logger log){
             if((!SystemParameters.getBoolean(map, "DIP_DISTRIBUTED")) && hierarchyPosition == StormComponent.FINAL_COMPONENT){
                 try {
                     //prepare it for printing at the end of the execution
                     _semFullResult.acquire();
 
                     _collectedLastComponents++;
-                    _numTuplesProcessed += currentAgg.getNumTuplesProcessed();
-                    addMoreResults(currentAgg, map);
+                    _numTuplesProcessed += lastAgg.getNumTuplesProcessed();
+                    addMoreResults(lastAgg, map);
 
                     _semFullResult.release();
                 } catch (InterruptedException ex) {
@@ -80,17 +81,28 @@ public class LocalMergeResults {
             }
         }
 
-        private static void addMoreResults(AggregateOperator currentAgg, Map map){
+        private static void addMoreResults(AggregateOperator lastAgg, Map map){
             if(_computedAgg == null){
                 //first task of the last component asked to be added
                 //we create empty aggregations, which we later fill, one from tasks, other from a file
-                //QueryPlan currentPlan = Main.queryPlan;
-                QueryPlan currentPlan = Main.chooseQueryPlan(map);
-                _computedAgg = currentPlan.getOverallAggregation();
+                _computedAgg = createOverallAgg(lastAgg, map);
                 _fileAgg = (AggregateOperator) DeepCopy.copy(_computedAgg);
                 fillAggFromResultFile(map);
             }
-            ((AggregationStorage)_computedAgg.getStorage()).addContent((AggregationStorage)(currentAgg.getStorage()));
+            ((AggregationStorage)_computedAgg.getStorage()).addContent((AggregationStorage)(lastAgg.getStorage()));
+        }
+        
+        private static AggregateOperator createOverallAgg(AggregateOperator lastAgg, Map map){
+            TypeConversion wrapper = lastAgg.getType();
+            
+            AggregateOperator overallAgg;
+            if(lastAgg.hasGroupBy()){
+                overallAgg = new AggregateSumOperator(new ColumnReference(wrapper, 1), map)
+                        .setGroupByColumns(Arrays.asList(0));
+            }else{
+                overallAgg = new AggregateSumOperator(new ColumnReference(wrapper, 0), map);
+            }
+            return overallAgg;
         }
 
         private static void fillAggFromResultFile(Map map){

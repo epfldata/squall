@@ -11,7 +11,6 @@ import plan_runner.conversion.DoubleConversion;
 import plan_runner.conversion.StringConversion;
 import plan_runner.expressions.ColumnReference;
 import plan_runner.expressions.ValueSpecification;
-import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.AggregateSumOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.storage.BasicStore;
@@ -71,12 +70,6 @@ public class HyracksPreAggPlan {
 			.addOperator(agg);
 
 		//-------------------------------------------------------------------------------------
-
-		AggregateOperator overallAgg =
-			new AggregateSumOperator(new ColumnReference(_dc, 1), conf)
-			.setGroupByColumns(Arrays.asList(0));
-
-		_queryPlan.setOverallAggregation(overallAgg);
 
 	}
 

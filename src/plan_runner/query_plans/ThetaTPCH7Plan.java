@@ -245,11 +245,6 @@ public class ThetaTPCH7Plan {
             _queryPlan).addOperator(so)
                        .addOperator(agg).setJoinPredicate(N_C_O_L_S_N_comp);
         //-------------------------------------------------------------------------------------
-        AggregateOperator overallAgg =
-                    new AggregateSumOperator(new ColumnReference(_doubleConv, 1), conf)
-                        .setGroupByColumns(Arrays.asList(0));
-
-        _queryPlan.setOverallAggregation(overallAgg);
 
     }
 

@@ -78,10 +78,6 @@ public class RSTPlan {
                                .addOperator(sp);
             //-------------------------------------------------------------------------------------
 
-            AggregateOperator overallAgg =
-                    new AggregateSumOperator(new ColumnReference(_dc, 0), conf);
-
-            _queryPlan.setOverallAggregation(overallAgg);
             
     }
 

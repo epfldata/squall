@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
 import plan_runner.conversion.NumericConversion;
+import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.Addition;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.expressions.ValueSpecification;
@@ -94,6 +95,16 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
             result.add(_ve);
             return result;
         }
+        
+        @Override
+        public boolean hasGroupBy(){
+            return _groupByType != GB_UNSET;
+        }        
+        
+        @Override
+        public TypeConversion getType(){
+            return _wrapper;
+        }        
 
         //from Operator
         @Override

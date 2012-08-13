@@ -99,12 +99,6 @@ public class ThetaInputDominatedPlan {
 		
 		//-------------------------------------------------------------------------------------
 
-		AggregateOperator overallAgg =
-			new AggregateSumOperator(new ColumnReference(_doubleConv, 0), conf);
-
-		_queryPlan.setOverallAggregation(overallAgg);
-
-
 	}
 
 	public QueryPlan getQueryPlan() {

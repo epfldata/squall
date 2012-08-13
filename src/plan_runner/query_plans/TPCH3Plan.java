@@ -122,11 +122,6 @@ public class TPCH3Plan {
 
 		//-------------------------------------------------------------------------------------
 
-		AggregateOperator overallAgg =
-			new AggregateSumOperator(new ColumnReference(_doubleConv, 1), conf)
-			.setGroupByColumns(Arrays.asList(0));
-
-		_queryPlan.setOverallAggregation(overallAgg);
 
 	}
 

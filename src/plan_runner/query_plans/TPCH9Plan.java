@@ -171,12 +171,6 @@ public class TPCH9Plan {
                                            .addOperator(agg);
         //-------------------------------------------------------------------------------------
 
-
-        AggregateOperator overallAgg =
-                    new AggregateSumOperator(new ColumnReference(_doubleConv, 1), conf)
-                        .setGroupByColumns(Arrays.asList(0));
-
-        _queryPlan.setOverallAggregation(overallAgg);
     }
 
     public QueryPlan getQueryPlan() {

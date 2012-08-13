@@ -64,11 +64,6 @@ public class HyracksL3BatchPlan {
 
             //-------------------------------------------------------------------------------------
 
-            AggregateOperator overallAgg =
-                    new AggregateSumOperator(new ColumnReference(_ic, 1), conf)
-                        .setGroupByColumns(Arrays.asList(0));
-
-            _queryPlan.setOverallAggregation(overallAgg);
     }
 
     public QueryPlan getQueryPlan() {

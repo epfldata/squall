@@ -170,11 +170,6 @@ public class ThetaMultipleJoinPlan {
 
 		//-------------------------------------------------------------------------------------
 
-		AggregateOperator overallAgg =
-			new AggregateSumOperator(new ColumnReference(_doubleConv, 0), conf); //WHAT COLUMN HERE??
-
-		_queryPlan.setOverallAggregation(overallAgg);
-
 
 	}
 

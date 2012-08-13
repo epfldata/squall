@@ -7,6 +7,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import plan_runner.conversion.LongConversion;
 import plan_runner.conversion.NumericConversion;
+import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.storage.AggregationStorage;
 import plan_runner.storage.BasicStore;
@@ -89,6 +90,16 @@ public class AggregateCountOperator implements AggregateOperator<Long>{
         @Override
         public List<ValueExpression> getExpressions() {
             return new ArrayList<ValueExpression>();
+        }
+        
+        @Override
+        public TypeConversion getType(){
+            return _wrapper;
+        }
+
+        @Override
+        public boolean hasGroupBy(){
+            return _groupByType != GB_UNSET;
         }
 
          //from Operator
