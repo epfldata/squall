@@ -110,8 +110,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
                 tupleHash = MyUtilities.createHashString(tuple, _groupByColumns, _map);
             }
             SumCount sumCount = _storage.update(tuple, tupleHash);
-            Double value = sumCount.getAvg();
-            String strValue = _wrapper.toString(value);
+            String strValue = sumCount.toString();
 
             // propagate further the affected tupleHash-tupleValue pair
             List<String> affectedTuple = new ArrayList<String>();
@@ -205,7 +204,14 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 
             @Override
             public String toString(){
-                return String.valueOf(getAvg());
+                return _sum + "|" + _count;
+            }
+            
+            public SumCount fromString(String sc){
+                String parts[] = sc.split("\\|");
+                Double sum = Double.valueOf(parts[0]);
+                Integer count = Integer.valueOf(parts[1]);
+                return new SumCount(sum, count);
             }
 
             @Override

@@ -118,6 +118,8 @@ public class Main {
                 queryPlan = new RSTPlan(dataPath, extension, conf).getQueryPlan();
             }else if (queryName.equalsIgnoreCase("hyracks")){
                 queryPlan = new HyracksPlan(dataPath, extension, conf).getQueryPlan();
+            }else if (queryName.equalsIgnoreCase("distinct_hyracks")){ //TODO: to be removed
+                queryPlan = new HyracksPlan(dataPath, extension, conf).getQueryPlan();
             }else if (queryName.equalsIgnoreCase("hyracks_pre_agg")){
                 queryPlan = new HyracksPreAggPlan(dataPath, extension, conf).getQueryPlan();
             }else if (queryName.equalsIgnoreCase("hyracks_l1")){

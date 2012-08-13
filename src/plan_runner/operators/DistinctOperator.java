@@ -53,7 +53,7 @@ public class DistinctOperator implements Operator {
 			return null;
 		} else {
 			_storage.insert(projectedTupleString, dummyString);
-			return projectedTuple;
+			return tuple;
 		}
 	}
 
