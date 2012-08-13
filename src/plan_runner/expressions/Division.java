@@ -3,9 +3,9 @@ package plan_runner.expressions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import plan_runner.conversion.DoubleConversion;
 import plan_runner.conversion.NumericConversion;
 import plan_runner.conversion.TypeConversion;
-import plan_runner.utilities.MyUtilities;
 import plan_runner.visitors.ValueExpressionVisitor;
 
 /*
@@ -20,30 +20,32 @@ import plan_runner.visitors.ValueExpressionVisitor;
  *   does not result in exception in the constructor,
  *   but rather in eval method.
  */
-public class Division<T extends Number & Comparable<T>> implements ValueExpression<T> {
+public class Division implements ValueExpression<Double> {
 
     private static final long serialVersionUID = 1L;
 
-    private List<ValueExpression<T>> _veList = new ArrayList<ValueExpression<T>>();
-    private NumericConversion<T> _wrapper;
+    private List<ValueExpression> _veList = new ArrayList<ValueExpression>();
+    private NumericConversion<Double> _wrapper = new DoubleConversion();
 
-    public Division(ValueExpression<T> ve1, ValueExpression<T> ve2,
-            ValueExpression<T>... veArray){
+    public Division(ValueExpression ve1, ValueExpression ve2,
+            ValueExpression... veArray){
         _veList.add(ve1);
         _veList.add(ve2);
         _veList.addAll(Arrays.asList(veArray));
-        _wrapper = (NumericConversion<T>) MyUtilities.getDominantNumericType(MyUtilities.listTypeErasure(_veList));
     }
 
     @Override
-    public T eval(List<String> tuple){
-        T first = _veList.get(0).eval(tuple);
-        double result = _wrapper.toDouble(first);
+    public Double eval(List<String> tuple){
+        ValueExpression firstVE = _veList.get(0);
+        Object firstObj = firstVE.eval(tuple);
+        NumericConversion firstType = (NumericConversion) firstVE.getType();
+        double result = firstType.toDouble(firstObj);
 
         for(int i = 1; i < _veList.size(); i++){
-            ValueExpression<T> factor = _veList.get(i);
-            T value = (T)factor.eval(tuple);
-            result /= _wrapper.toDouble(value);
+            ValueExpression currentVE = _veList.get(i);
+            Object currentObj = currentVE.eval(tuple);
+            NumericConversion currentType = (NumericConversion) currentVE.getType();
+            result /= currentType.toDouble(currentObj);
         }
         return _wrapper.fromDouble(result);
     }
@@ -64,7 +66,7 @@ public class Division<T extends Number & Comparable<T>> implements ValueExpressi
 */
      @Override
     public String evalString(List<String> tuple) {
-        T result = eval(tuple);
+        Double result = eval(tuple);
         return _wrapper.toString(result);
     }
 
@@ -80,7 +82,7 @@ public class Division<T extends Number & Comparable<T>> implements ValueExpressi
 
     @Override
     public List<ValueExpression> getInnerExpressions() {
-        return MyUtilities.listTypeErasure(_veList);
+        return _veList;
     }
 
     @Override
@@ -96,7 +98,7 @@ public class Division<T extends Number & Comparable<T>> implements ValueExpressi
     }
 
 	@Override
-	public void changeValues(int i, ValueExpression<T> newExpr) {
+	public void changeValues(int i, ValueExpression<Double> newExpr) {
 		// TODO Auto-generated method stub
 		
 	}
