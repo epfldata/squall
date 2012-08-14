@@ -51,7 +51,7 @@ public class ThetaOutputDominatedPlan {
                                 _queryPlan).addOperator(projectionNation)
                                            .setHashIndexes(hashNation);
 
-		AggregateOperator agg = new AggregateSumOperator(_doubleConv,
+		AggregateOperator agg = new AggregateSumOperator(
 				new ColumnReference(_doubleConv, 0), conf);
 		// Empty parameters = Cartesian Product
 
@@ -60,10 +60,6 @@ public class ThetaOutputDominatedPlan {
 				new ProjectOperator(new int[] { 0 })).addOperator(agg);
 
 		// -------------------------------------------------------------------------------------
-
-		AggregateOperator overallAgg = new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 0), conf);
-
-		_queryPlan.setOverallAggregation(overallAgg);
 
 	}
 

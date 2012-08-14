@@ -6,6 +6,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import plan_runner.conversion.DoubleConversion;
 import plan_runner.conversion.NumericConversion;
+import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.AggregateAvgOperator.SumCount;
 import plan_runner.storage.AggregationStorage;
@@ -91,6 +92,16 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
             List<ValueExpression> result = new ArrayList<ValueExpression>();
             result.add(_ve);
             return result;
+        }
+        
+        @Override
+        public TypeConversion getType(){
+            return _wrapper;
+        }
+        
+        @Override
+        public boolean hasGroupBy(){
+            return _groupByType != GB_UNSET;
         }
 
         //from Operator

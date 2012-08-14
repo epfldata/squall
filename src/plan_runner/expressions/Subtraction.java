@@ -25,30 +25,34 @@ import plan_runner.visitors.ValueExpressionVisitor;
 public class Subtraction<T extends Number & Comparable<T>> implements ValueExpression<T> {
     private static final long serialVersionUID = 1L;
 
-    private List<ValueExpression<T>> _veList = new ArrayList<ValueExpression<T>>();
+    private List<ValueExpression> _veList = new ArrayList<ValueExpression>();
     private NumericConversion<T> _wrapper;
 
-    public Subtraction(NumericConversion<T> wrapper, ValueExpression<T> ve1, ValueExpression<T> ve2,
-            ValueExpression<T>... veArray){
+    public Subtraction(ValueExpression ve1, ValueExpression ve2,
+            ValueExpression... veArray){
         _veList.add(ve1);
         _veList.add(ve2);
         _veList.addAll(Arrays.asList(veArray));
-        _wrapper = wrapper;
+        _wrapper = (NumericConversion<T>) MyUtilities.getDominantNumericType(_veList);
     }
 
     @Override
     public T eval(List<String> tuple){
-        T first = _veList.get(0).eval(tuple);
-        double result = _wrapper.toDouble(first);
+        ValueExpression firstVE = _veList.get(0);
+        Object firstObj = firstVE.eval(tuple);
+        NumericConversion firstType = (NumericConversion) firstVE.getType();
+        double result = firstType.toDouble(firstObj);
 
         for(int i = 1; i < _veList.size(); i++){
-            ValueExpression<T> factor = _veList.get(i);
-            T value = (T)factor.eval(tuple);
-            result -= _wrapper.toDouble(value);
+            ValueExpression currentVE = _veList.get(i);
+            Object currentObj = currentVE.eval(tuple);
+            NumericConversion currentType = (NumericConversion) currentVE.getType();
+            result -= currentType.toDouble(currentObj);
         }
         return _wrapper.fromDouble(result);
         
     }
+    
     
   /*  @Override
     public T eval(List<String> firstTuple, List<String> secondTuple){
@@ -79,7 +83,7 @@ public class Subtraction<T extends Number & Comparable<T>> implements ValueExpre
 
     @Override
     public List<ValueExpression> getInnerExpressions() {
-        return MyUtilities.listTypeErasure(_veList);
+        return _veList;
     }
 
     @Override

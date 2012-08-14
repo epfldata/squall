@@ -19,6 +19,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
+import plan_runner.conversion.DoubleConversion;
+import plan_runner.conversion.NumericConversion;
+import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.storm_components.StormComponent;
@@ -447,6 +450,30 @@ public class MyUtilities{
                 result.add(ve);
             }
             return result;
+        }
+        
+        public static TypeConversion getDominantNumericType(List<ValueExpression> veList){
+            TypeConversion wrapper = veList.get(0).getType();
+            for(int i = 1; i < veList.size(); i++){
+                TypeConversion currentType = veList.get(1).getType();
+                if(isDominant(currentType, wrapper)){
+                    wrapper = currentType;
+                }
+            }
+            return wrapper;
+        }
+
+        /*
+         * Does bigger dominates over smaller? 
+         *   For (bigger, smaller) = (double, long) answer is yes.
+         */
+        private static boolean isDominant(TypeConversion bigger, TypeConversion smaller) {
+            //for now we only have two numeric types: double and long
+            if (bigger instanceof DoubleConversion){
+                return true;
+            }else{
+                return false;
+            }
         }
 	
 }

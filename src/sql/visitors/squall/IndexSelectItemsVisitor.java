@@ -163,8 +163,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
     }
 
     protected void createSum(ValueExpression ve, boolean isDistinct){
-        NumericConversion numConv = (NumericConversion) ve.getType();
-        _agg = new AggregateSumOperator(numConv, ve, _map);
+        _agg = new AggregateSumOperator(ve, _map);
 
         //DISTINCT and agg are stored on the same component.
         if(isDistinct){
@@ -206,10 +205,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
         ValueExpression right = _exprStack.pop();
         ValueExpression left = _exprStack.pop();
 
-        NumericConversion numConv = (NumericConversion) left.getType();
-        //TODO: check whether they are both of the same type
-
-        ValueExpression ve = new plan_runner.expressions.Addition(numConv, left, right);
+        ValueExpression ve = new plan_runner.expressions.Addition(left, right);
         _exprStack.push(ve);
     }
 
@@ -220,10 +216,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
         ValueExpression right = _exprStack.pop();
         ValueExpression left = _exprStack.pop();
 
-        NumericConversion numConv = (NumericConversion) left.getType();
-        //TODO: check whether they are both of the same type
-
-        ValueExpression ve = new plan_runner.expressions.Multiplication(numConv, left, right);
+        ValueExpression ve = new plan_runner.expressions.Multiplication(left, right);
         _exprStack.push(ve);
     }
 
@@ -234,10 +227,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
         ValueExpression right = _exprStack.pop();
         ValueExpression left = _exprStack.pop();
 
-        NumericConversion numConv = (NumericConversion) left.getType();
-        //TODO: check whether they are both of the same type
-
-        ValueExpression ve = new plan_runner.expressions.Division(numConv, left, right);
+        ValueExpression ve = new plan_runner.expressions.Division(left, right);
         _exprStack.push(ve);
     }
 
@@ -248,10 +238,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
         ValueExpression right = _exprStack.pop();
         ValueExpression left = _exprStack.pop();
 
-        NumericConversion numConv = (NumericConversion) left.getType();
-        //TODO: check whether they are both of the same type
-
-        ValueExpression ve = new plan_runner.expressions.Subtraction(numConv, left, right);
+        ValueExpression ve = new plan_runner.expressions.Subtraction(left, right);
         _exprStack.push(ve);
 
     }

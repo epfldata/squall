@@ -67,15 +67,13 @@ public class ThetaInputDominatedPlan {
 
 		//1 - discount
 		ValueExpression<Double> substract = new Subtraction(
-				_doubleConv,
 				new ValueSpecification(_doubleConv, 1.0),
 				new ColumnReference(_doubleConv, 1));
 		//extendedPrice*(1-discount)
 		ValueExpression<Double> product = new Multiplication(
-				_doubleConv,
 				new ColumnReference(_doubleConv, 0),
 				substract);
-		AggregateOperator agg = new AggregateSumOperator(_doubleConv, product, conf);
+		AggregateOperator agg = new AggregateSumOperator(product, conf);
 		
 		ColumnReference colLineItems = new ColumnReference(_ic, 0);
 		ColumnReference colOrders = new ColumnReference(_ic, 0);
@@ -84,7 +82,7 @@ public class ThetaInputDominatedPlan {
 		
 		ValueSpecification value10 = new ValueSpecification(_doubleConv,10.0);
 		ColumnReference colLineItemsInequality = new ColumnReference(_doubleConv, 1);
-		Multiplication mult = new Multiplication(_doubleConv, value10,colLineItemsInequality);
+		Multiplication mult = new Multiplication(value10, colLineItemsInequality);
 		ColumnReference colOrdersInequality = new ColumnReference(_doubleConv, 1);
 		//ComparisonPredicate pred2 = new ComparisonPredicate(ComparisonPredicate.LESS_OP,mult, colOrdersInequality);
 		ComparisonPredicate pred2 = new ComparisonPredicate(ComparisonPredicate.LESS_OP, mult, colOrdersInequality);
@@ -100,12 +98,6 @@ public class ThetaInputDominatedPlan {
 				           .addOperator(agg);
 		
 		//-------------------------------------------------------------------------------------
-
-		AggregateOperator overallAgg =
-			new AggregateSumOperator(_doubleConv, new ColumnReference(_doubleConv, 0), conf);
-
-		_queryPlan.setOverallAggregation(overallAgg);
-
 
 	}
 

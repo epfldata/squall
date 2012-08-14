@@ -20,7 +20,7 @@ public class DoubleConversion implements NumericConversion<Double> {
     }
 
     @Override
-    public double toDouble(Double obj) {
+    public double toDouble(Object obj) {
         return (Double) obj;
     }
 

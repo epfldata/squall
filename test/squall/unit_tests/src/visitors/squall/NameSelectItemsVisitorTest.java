@@ -68,7 +68,7 @@ public class NameSelectItemsVisitorTest {
         List<ValueExpression> groupByVEs = selectVisitor.getGroupByVEs();
         
         //expected
-        AggregateOperator agg = new AggregateSumOperator(_dblConv, 
+        AggregateOperator agg = new AggregateSumOperator(
                 new ColumnReference(_dblConv, 3, "LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)"), 
                 _map);
         List<AggregateOperator> expAggOps = Arrays.asList(agg);

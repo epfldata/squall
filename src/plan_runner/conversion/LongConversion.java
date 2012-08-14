@@ -19,7 +19,7 @@ public class LongConversion implements NumericConversion<Long> {
     }
 
     @Override
-    public double toDouble(Long obj) {
+    public double toDouble(Object obj) {
         long value = (Long)obj;
         return (double)value;
     }
