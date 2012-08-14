@@ -6,7 +6,7 @@ CONFIG_DIR=../test/squall/confs/local
 
 if [ $# -ne 1 ]
 then
-CONFIG_PATH=$CONFIG_DIR/0.01G_hyracks_ncl_serial
+CONFIG_PATH=$CONFIG_DIR/0_01G_hyracks_ncl
 else
 CONFIG_PATH=$1
 fi

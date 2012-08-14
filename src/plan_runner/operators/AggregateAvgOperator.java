@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
-import plan_runner.conversion.DoubleConversion;
 import plan_runner.conversion.NumericConversion;
+import plan_runner.conversion.SumCount;
+import plan_runner.conversion.SumCountConversion;
 import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ValueExpression;
-import plan_runner.operators.AggregateAvgOperator.SumCount;
 import plan_runner.storage.AggregationStorage;
 import plan_runner.storage.BasicStore;
 import plan_runner.utilities.MyUtilities;
@@ -29,8 +29,8 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
         private ProjectOperator _groupByProjection;
         private int _numTuplesProcessed = 0;
         
-        private NumericConversion<Double> _wrapper = new DoubleConversion();
-        private ValueExpression<Double> _ve;
+        private SumCountConversion _wrapper = new SumCountConversion();
+        private ValueExpression _ve;
         private AggregationStorage<SumCount> _storage;
 
         private Map _map;
@@ -121,7 +121,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
                 tupleHash = MyUtilities.createHashString(tuple, _groupByColumns, _map);
             }
             SumCount sumCount = _storage.update(tuple, tupleHash);
-            String strValue = sumCount.toString();
+            String strValue = _wrapper.toString(sumCount);
 
             // propagate further the affected tupleHash-tupleValue pair
             List<String> affectedTuple = new ArrayList<String>();
@@ -134,11 +134,12 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
         //actual operator implementation
         @Override
         public SumCount runAggregateFunction(SumCount value, List<String> tuple) {
-            Double sumDelta = _ve.eval(tuple);
+            NumericConversion veType = (NumericConversion) _ve.getType();
+            Double sumDelta = veType.toDouble(_ve.eval(tuple));
             Integer countDelta = 1;
             
             Double sumNew = sumDelta + value.getSum();
-            Integer countNew = countDelta + value.getCount();
+            Long countNew = countDelta + value.getCount();
             
             return new SumCount(sumNew, countNew);
         }
@@ -146,7 +147,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
         @Override
         public SumCount runAggregateFunction(SumCount value1, SumCount value2) {
             Double sumNew = value1.getSum() + value2.getSum();
-            Integer countNew = value1.getCount() + value2.getCount();
+            Long countNew = value1.getCount() + value2.getCount();
             return new SumCount(sumNew, countNew);
         }
 
@@ -180,71 +181,6 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
             throw new UnsupportedOperationException("getContent for AggregateAvgOperator is not supported yet.");
         }
 
-        public class SumCount{
-            private Double _sum;
-            private Integer _count;
-
-            public SumCount(Double sum, Integer count){
-                _sum = sum;
-                _count = count;
-            }
-
-            public SumCount(){
-                this(0.0,0);
-            }
- 
-            public Double getSum() {
-                return _sum;
-            }
-
-            public void setSum(Double sum) {
-                _sum = sum;
-            }
-     
-            public Integer getCount() {
-                return _count;
-            }
-
-            public void setCount(Integer count) {
-                _count = count;
-            }
-
-            public double getAvg(){
-                return _sum/_count;
-            }
-
-            @Override
-            public String toString(){
-                return _sum + "|" + _count;
-            }
-            
-            public SumCount fromString(String sc){
-                String parts[] = sc.split("\\|");
-                Double sum = Double.valueOf(parts[0]);
-                Integer count = Integer.valueOf(parts[1]);
-                return new SumCount(sum, count);
-            }
-
-            @Override
-            public boolean equals(Object obj){
-                if(this == obj){
-                    return true;
-                }
-                if (!(obj instanceof SumCount)){
-                    return false;
-                }
-                SumCount otherSumCount = (SumCount) obj;
-                return getAvg() == otherSumCount.getAvg();
-            }
-
-            @Override
-            public int hashCode() {
-                int hash = 7;
-                hash = 89 * hash + (_sum != null ? _sum.hashCode() : 0);
-                hash = 89 * hash + (_count != null ? _count.hashCode() : 0);
-                return hash;
-            }
-        }
 
         @Override
         public String toString(){

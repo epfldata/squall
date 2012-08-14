@@ -10,7 +10,6 @@ import plan_runner.components.OperatorComponent;
 import plan_runner.conversion.IntegerConversion;
 import plan_runner.expressions.ColumnReference;
 import plan_runner.operators.AggregateCountOperator;
-import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.AggregateSumOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.query_plans.QueryPlan;

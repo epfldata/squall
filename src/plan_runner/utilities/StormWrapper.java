@@ -5,9 +5,10 @@ import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.generated.AlreadyAliveException;
 import backtype.storm.generated.ClusterSummary;
+import backtype.storm.generated.ExecutorInfo;
+import backtype.storm.generated.ExecutorSummary;
 import backtype.storm.generated.Nimbus.Client;
 import backtype.storm.generated.NotAliveException;
-import backtype.storm.generated.TaskSummary;
 import backtype.storm.generated.TopologyInfo;
 import backtype.storm.generated.TopologySummary;
 import backtype.storm.topology.TopologyBuilder;
@@ -27,7 +28,7 @@ public class StormWrapper {
     public static void submitTopology(Config conf, TopologyBuilder builder) {
         //transform mine parameters into theirs
         boolean distributed = SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED");
-        String topologyName = MyUtilities.getFullTopologyName(conf);
+        String topologyName = SystemParameters.getString(conf, "DIP_TOPOLOGY_NAME");
 
         conf.setDebug(false);
         if(MyUtilities.isAckEveryTuple(conf)){
@@ -74,7 +75,7 @@ public class StormWrapper {
 
     public static void killExecution(Map conf){
         boolean distributed = SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED");
-        String topologyName = MyUtilities.getFullTopologyName(conf);
+        String topologyName = SystemParameters.getString(conf, "DIP_TOPOLOGY_NAME");
         if(!distributed){
             localKillCluster(conf, topologyName);
         }else{
@@ -158,37 +159,29 @@ public class StormWrapper {
 
                 TopologyInfo topologyInfo = client.getTopologyInfo(topologyID);
                 //print more about each task
-                Iterator<TaskSummary> infoIter = topologyInfo.get_tasks_iterator();
-                while(infoIter.hasNext()){
-                    TaskSummary summary = infoIter.next();
+                Iterator<ExecutorSummary> execIter = topologyInfo.get_executors_iterator();
+                while(execIter.hasNext()){
+                    ExecutorSummary execSummary = execIter.next();
 
-                    String componentId = summary.get_component_id();
+                    String componentId = execSummary.get_component_id();
                     stats.append("component_id:").append(componentId).append(", ");
-                    int taskId = summary.get_task_id();
-                    stats.append("task_id:").append(taskId).append(", ");
-                    String host = summary.get_host();
+                    ExecutorInfo execInfo = execSummary.get_executor_info();
+                    int taskStart = execInfo.get_task_start();
+                    int taskEnd = execInfo.get_task_end();
+                    stats.append("task_id(s) for this executor:").append(taskStart).append("-").append(taskEnd).append(", ");
+                    String host = execSummary.get_host();
                     stats.append("host:").append(host).append(", ");
-                    int port = summary.get_port();
+                    int port = execSummary.get_port();
                     stats.append("port:").append(port).append(", ");
-                    int uptime = summary.get_uptime_secs();
+                    int uptime = execSummary.get_uptime_secs();
                     stats.append("uptime:").append(uptime).append("\n");
-                    String errors = summary.get_errors().toString();
-                    stats.append("Errors: ").append(errors).append("\n");
-
-//                    //TaskStats ts = (TaskStats)summary.getFieldValue(7);
-//                    TaskStats ts = summary.get_stats();
-//                    if(ts!=null){
-//                        stats.append(ts.toString());
-//                        /* Furter decomposition: the interface changed from that time
-//                            TasksStats
-//                            1: required map<string, map<i32, i64>> emitted;
-//                            2: required map<string, map<i32, i64>> transferred;
-//                            3: required TaskSpecificStats specific;
-//                        */
-//                        stats.append("\n");
-//                    }
+                    //original location of errors
                     stats.append("\n");
                 }
+                //TODO - fix when stable version goes out
+                //didn't print out errors in order not to break scripts for reading results
+                //Map<String, List<ErrorInfo>> errors = topologyInfo.get_errors();
+                //int _errors_size = topologyInfo.get_errors_size();
             }
 
             String strStats = stats.toString();
@@ -199,5 +192,4 @@ public class StormWrapper {
             LOG.info(MyUtilities.getStackTrace(ex));
         }
     }
-
 }

@@ -56,7 +56,7 @@ public class LocalMergeResults {
         private static void localPrint(String finalResult, Map map){
             StringBuilder sb = new StringBuilder();
             sb.append("\nThe full result for topology ");
-            sb.append(MyUtilities.getFullTopologyName(map)).append(".");
+            sb.append(SystemParameters.getString(map, "DIP_TOPOLOGY_NAME")).append(".");
             sb.append("\nCollected from ").append(_collectedLastComponents).append(" component tasks of the last component.");
             sb.append("\nAll the tasks of the last component in total received ").append(_numTuplesProcessed).append(" tuples.");
             sb.append("\n").append(finalResult);
@@ -71,10 +71,10 @@ public class LocalMergeResults {
                 return;
             }
             if(_computedAgg.getStorage().equals(_fileAgg.getStorage())){
-                LOG.info("\nOK: Expected result achieved for " + MyUtilities.getFullTopologyName(map));
+                LOG.info("\nOK: Expected result achieved for " + SystemParameters.getString(map, "DIP_TOPOLOGY_NAME"));
             }else{
                 StringBuilder sb = new StringBuilder();
-                sb.append("\nPROBLEM: Not expected result achieved for ").append(MyUtilities.getFullTopologyName(map));
+                sb.append("\nPROBLEM: Not expected result achieved for ").append(SystemParameters.getString(map, "DIP_TOPOLOGY_NAME"));
                 sb.append("\nCOMPUTED: \n").append(_computedAgg.printContent());
                 sb.append("\nFROM THE RESULT FILE: \n").append(_fileAgg.printContent());
                 LOG.info(sb.toString());
@@ -146,7 +146,7 @@ public class LocalMergeResults {
          */
         private static String getSchemaName(Map map) {
             String path = SystemParameters.getString(map, "DIP_DATA_PATH");
-            return getPartFromEnd(path, 1);
+            return MyUtilities.getPartFromEnd(path, 1);
         }        
 
         //getting size information - from path "../test/data/tpch/0.01G", 
@@ -155,18 +155,6 @@ public class LocalMergeResults {
         //  but this method has to be used for PlanRunner as well.
         private static String getDataSizeInfo(Map map) {
             String path = SystemParameters.getString(map, "DIP_DATA_PATH");
-            return getPartFromEnd(path, 0);
-        }
-        
-        /*
-         * Method invoked with arguments "a/b//c/e//f", 0
-         *   return "f"         
-         * Method invoked with arguments "a/b//c/e//f", 1
-         *   return "e"
-         */
-        private static String getPartFromEnd(String path, int fromEnd){
-            String parts[] = path.split("\\/+");
-            int length = parts.length;
-            return parts[length - (fromEnd +1)];
+            return MyUtilities.getPartFromEnd(path, 0);
         }
 }

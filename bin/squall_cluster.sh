@@ -6,7 +6,7 @@ CONFIG_DIR=../test/squall/confs/cluster
 
 if [ $# -ne 1 ]
 then
-CONFIG_PATH=$CONFIG_DIR/1G_hyracks_parallel
+CONFIG_PATH=$CONFIG_DIR/1G_hyracks
 else
 CONFIG_PATH=$1
 fi

@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
 import plan_runner.conversion.DoubleConversion;
-import plan_runner.conversion.NumericConversion;
 import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.AggregateOperator;
@@ -71,7 +70,7 @@ public class MyUtilities{
                                                Logger log) {
             StringBuilder sb = new StringBuilder();
             sb.append("\nThe result for topology ");
-            sb.append(MyUtilities.getFullTopologyName(map));
+            sb.append(SystemParameters.getString(map, "DIP_TOPOLOGY_NAME"));
             sb.append("\nComponent ").append(componentName).append(":\n");
             sb.append("\nThis task received ").append(numProcessedTuples);
             sb.append("\n").append(compContent);
@@ -219,15 +218,6 @@ public class MyUtilities{
             int fullLength = hashStrBuf.length();
             return hashStrBuf.substring(0, fullLength - hdLength);
 
-        }
-
-        public static String getFullTopologyName(Map map){
-            String topologyName = SystemParameters.getString(map, "DIP_TOPOLOGY_NAME");
-            String topologyPrefix = SystemParameters.getString(map, "DIP_TOPOLOGY_NAME_PREFIX");
-            if(topologyPrefix != null){
-                topologyName = topologyPrefix + "_" + topologyName;
-            }
-            return topologyName;
         }
 
     public static List<String> createOutputTuple(List<String> firstTuple, List<String> secondTuple, List<Integer> joinParams) {
@@ -475,5 +465,16 @@ public class MyUtilities{
                 return false;
             }
         }
-	
+        
+        /*
+         * Method invoked with arguments "a/b//c/e//f", 0
+         *   return "f"         
+         * Method invoked with arguments "a/b//c/e//f", 1
+         *   return "e"
+         */
+        public static String getPartFromEnd(String path, int fromEnd){
+            String parts[] = path.split("\\/+");
+            int length = parts.length;
+            return parts[length - (fromEnd +1)];
+        }
 }

@@ -19,7 +19,7 @@ public class ParserMain{
 
     private static int LOCAL_ACKERS = 1;
  
-    public static void main(String[] args){     
+    public static void main(String[] args){
         String parserConfPath = args[0];
         ParserMain pm = new ParserMain();
         
@@ -29,7 +29,7 @@ public class ParserMain{
         System.out.println(ParserUtil.toString(plan));
         System.out.println(ParserUtil.parToString(plan, map));
         
-        new Main(plan, map);
+        new Main(plan, map, parserConfPath);
     }
     
     //String[] sizes: {"1G", "2G", "4G", ...}
@@ -43,14 +43,11 @@ public class ParserMain{
             LOCAL_ACKERS = 0;
         }
 
-        String mode;
         if (SystemParameters.getBoolean(map, "DIP_DISTRIBUTED")){
-            mode = "parallel";
             //default value is already set, but for scheduling we might need to change that
             //SystemParameters.putInMap(map, "DIP_NUM_WORKERS", CLUSTER_WORKERS);
             SystemParameters.putInMap(map, "DIP_NUM_ACKERS", CLUSTER_ACKERS);
         }else{
-            mode = "serial";
             SystemParameters.putInMap(map, "DIP_NUM_ACKERS", LOCAL_ACKERS);
         }
 
@@ -58,10 +55,7 @@ public class ParserMain{
         String dataRoot = SystemParameters.getString(map, "DIP_DATA_ROOT");
         String dataPath = dataRoot + "/" + dbSize + "/";
 
-        String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
         SystemParameters.putInMap(map, "DIP_DATA_PATH" , dataPath);
-        String topologyName = dbSize + "_" + queryName + "_" + mode;
-        SystemParameters.putInMap(map, "DIP_TOPOLOGY_NAME", topologyName);
 
         return map;
     }

@@ -32,6 +32,7 @@ import plan_runner.query_plans.debug.TPCH3L2Plan;
 import plan_runner.storm_components.StormComponent;
 import plan_runner.storm_components.StormJoin;
 import plan_runner.storm_components.synchronization.TopologyKiller;
+import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.StormWrapper;
 import plan_runner.utilities.SystemParameters;
 
@@ -44,17 +45,29 @@ public class Main {
         }
 
         public Main(String[] args){
-            String propertiesPath = args[0];
-            Config conf = SystemParameters.fileToStormConfig(propertiesPath);
+            String confPath = args[0];
+            Config conf = SystemParameters.fileToStormConfig(confPath);
             queryPlan = chooseQueryPlan(conf);
+            
+            addVariablesToMap(conf, confPath);
 	    TopologyBuilder builder = createTopology(queryPlan, conf);
             StormWrapper.submitTopology(conf, builder);
         }
 
-        public Main(QueryPlan queryPlan, Map map){
+        public Main(QueryPlan queryPlan, Map map, String confPath){
             Config conf = SystemParameters.mapToStormConfig(map);
+            
+            addVariablesToMap(conf, confPath);
             TopologyBuilder builder = createTopology(queryPlan, conf);
             StormWrapper.submitTopology(conf, builder);
+        }
+        
+        private static void addVariablesToMap(Map map, String confPath){
+            //setting topologyName: DIP_TOPOLOGY_NAME_PREFIX + CONFIG_FILE_NAME
+            String confFilename = MyUtilities.getPartFromEnd(confPath, 0);
+            String prefix = SystemParameters.getString(map, "DIP_TOPOLOGY_NAME_PREFIX");
+            String topologyName = prefix + "_" + confFilename;
+            SystemParameters.putInMap(map, "DIP_TOPOLOGY_NAME", topologyName);
         }
 
         private static TopologyBuilder createTopology(QueryPlan qp, Config conf) {

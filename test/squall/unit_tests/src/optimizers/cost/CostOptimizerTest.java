@@ -51,7 +51,7 @@ public class CostOptimizerTest {
     */
     @Test
     public void testHyracksManual() {
-        String parserConfPath = CONF_PATH + "0.1G_hyracks_ncl_serial";
+        String parserConfPath = CONF_PATH + "0_1G_hyracks_ncl";
         NameCompGen ncg = createCG(parserConfPath);
         
         DataSourceComponent customerSource = ncg.generateDataSource("CUSTOMER");
@@ -77,7 +77,7 @@ public class CostOptimizerTest {
     
     @Test
     public void testTPCH3Manual() {
-        String parserConfPath = CONF_PATH + "0.1G_tpch3_ncl_serial";
+        String parserConfPath = CONF_PATH + "0_1G_tpch3_ncl";
         NameCompGen ncg = createCG(parserConfPath);
         
         DataSourceComponent customerSource = ncg.generateDataSource("CUSTOMER");
@@ -105,7 +105,7 @@ public class CostOptimizerTest {
     
     @Test
     public void testTPCH5Manual() {
-        String parserConfPath = CONF_PATH + "0.1G_tpch5_ncl_serial";
+        String parserConfPath = CONF_PATH + "0_1G_tpch5_ncl";
         NameCompGen ncg = createCG(parserConfPath);
         
         /*
@@ -145,7 +145,7 @@ public class CostOptimizerTest {
     
     @Test
     public void testTPCH7Manual() {
-        String parserConfPath = CONF_PATH + "0.1G_tpch7_ncl_serial";
+        String parserConfPath = CONF_PATH + "0_1G_tpch7_ncl";
         
         //maxPar with pushing up Or is 11
         NameCompGen ncg = createCG(parserConfPath, 11);
@@ -187,7 +187,7 @@ public class CostOptimizerTest {
     
     @Test
     public void testTPCH8Manual() {
-        String parserConfPath = CONF_PATH + "0.1G_tpch8_ncl_serial";
+        String parserConfPath = CONF_PATH + "0_1G_tpch8_ncl";
         NameCompGen ncg = createCG(parserConfPath);
         
          /*
@@ -233,7 +233,7 @@ public class CostOptimizerTest {
     
     @Test
     public void testTPCH9Manual() {
-        String parserConfPath = CONF_PATH + "0.1G_tpch9_ncl_serial";
+        String parserConfPath = CONF_PATH + "0_1G_tpch9_ncl";
         NameCompGen ncg = createCG(parserConfPath);
         
           /*
@@ -275,7 +275,7 @@ public class CostOptimizerTest {
     
     @Test
     public void testTPCH10Manual() {
-        String parserConfPath = CONF_PATH + "0.1G_tpch10_ncl_serial";
+        String parserConfPath = CONF_PATH + "0_1G_tpch10_ncl";
         NameCompGen ncg = createCG(parserConfPath);
         
         /*
