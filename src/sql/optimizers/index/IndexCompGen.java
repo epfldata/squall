@@ -107,7 +107,7 @@ public class IndexCompGen implements CompGen{
             }
             List<ValueExpression> hashExpressions = joinOn.getExpressions();
 
-            if(!joinOn.isComplexCondition()){
+            if(ParserUtil.isAllColumnRefs(hashExpressions)){
                 //all the join conditions are represented through columns, no ValueExpression (neither in joined component)
                 //guaranteed that both joined components will have joined columns visited in the same order
                 //i.e R.A=S.A and R.B=S.B, the columns are (R.A, R.B), (S.A, S.B), respectively

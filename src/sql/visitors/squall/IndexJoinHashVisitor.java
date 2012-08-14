@@ -47,15 +47,6 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
     private static DateConversion _dateConv = new DateConversion();
     private static StringConversion _sc = new StringConversion();
 
-    //complex condition means that we will use HashExpressions, not HashIndexes.
-    //   i.e. R.A=S.A+1 is complexCondition, whereas R.A=S.A and R.B=S.B is not.
-    //if complex condition appeared at least once,
-    //   we decide to use HashExpressions all over the place,
-    //   because of unspecified order of HashIndexes and HashExpression,
-    //   when they are interleaved.
-
-    private boolean _complexCondition = false;
-
     private Stack<ValueExpression> _exprStack = new Stack<ValueExpression>();
 
     private List<ValueExpression> _hashExpressions = new ArrayList<ValueExpression>();
@@ -75,10 +66,6 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
 
     public List<ValueExpression> getExpressions(){
         return _hashExpressions;
-    }
-
-    public boolean isComplexCondition(){
-        return _complexCondition;
     }
 
     protected void pushToExprStack(ValueExpression ve){
@@ -112,7 +99,6 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
      */
     @Override
     public void visit(Addition adtn) {
-        _complexCondition = true;
         visitBinaryOperation(adtn);
 
         ValueExpression right = _exprStack.pop();
@@ -126,7 +112,6 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
 
     @Override
     public void visit(Multiplication m) {
-        _complexCondition = true;
         visitBinaryOperation(m);
 
         ValueExpression right = _exprStack.pop();
@@ -140,7 +125,6 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
 
     @Override
     public void visit(Division dvsn) {
-        _complexCondition = true;
         visitBinaryOperation(dvsn);
 
         ValueExpression right = _exprStack.pop();
@@ -154,7 +138,6 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
 
     @Override
     public void visit(Subtraction s) {
-        _complexCondition = true;
         visitBinaryOperation(s);
 
         ValueExpression right = _exprStack.pop();
@@ -178,7 +161,6 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
 
     @Override
     public void visit(Function function) {
-        _complexCondition = true;
         //all aggregate functions (SUM, AVG, COUNT, MAX, MIN) have only one parameter (Expression)
         //although COUNT(*) has no parameters
         //EXTRACT_YEAR has one parameter
@@ -223,7 +205,7 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
 
         if(ancestorNames.contains(tableCompName)){
             //extract type for the column
-            TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
+            TypeConversion tc = _schema.getType(ParserUtil.getFullSchemaColumnName(column, _tan));
 
             //extract the position (index) of the required column
             int position = _it.getColumnIndex(column, _affectedComponent);
@@ -238,28 +220,24 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
     //all of ValueSpecifications (constants) guarantee we have some expressions in join conditions
     @Override
     public void visit(DoubleValue dv) {
-        _complexCondition = true;
         ValueExpression ve = new ValueSpecification(_dblConv, dv.getValue());
         _exprStack.push(ve);
     }
 
     @Override
     public void visit(LongValue lv) {
-        _complexCondition = true;
         ValueExpression ve = new ValueSpecification(_lc, lv.getValue());
         _exprStack.push(ve);
     }
 
     @Override
     public void visit(DateValue dv) {
-        _complexCondition = true;
         ValueExpression ve = new ValueSpecification(_dateConv, dv.getValue());
         _exprStack.push(ve);
     }
 
     @Override
     public void visit(StringValue sv) {
-        _complexCondition = true;
         ValueExpression ve = new ValueSpecification(_sc, sv.getValue());
         _exprStack.push(ve);
     }

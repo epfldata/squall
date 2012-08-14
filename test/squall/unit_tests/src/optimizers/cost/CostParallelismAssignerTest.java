@@ -40,7 +40,7 @@ public class CostParallelismAssignerTest {
         
         processWhereClause(_parsedQuery.getWhereExpr());
         
-        _cpa = new CostParallelismAssigner(schema, map);
+        _cpa = new CostParallelismAssigner(schema, _parsedQuery.getTan(), map);
     }
     
     @Test(expected=RuntimeException.class)

@@ -272,7 +272,7 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
     @Override
     public void visit(Column column) {
         //extract type for the column
-        TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
+        TypeConversion tc = _schema.getType(ParserUtil.getFullSchemaColumnName(column, _tan));
 
         //extract the position (index) of the required column
         int position = _it.getColumnIndex(column, _affectedComponent);

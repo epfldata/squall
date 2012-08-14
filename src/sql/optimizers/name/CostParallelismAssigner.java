@@ -9,20 +9,23 @@ import plan_runner.components.OperatorComponent;
 import sql.schema.Schema;
 import sql.util.OverParallelizedException;
 import sql.util.ParserUtil;
+import sql.util.TableAliasName;
 import sql.visitors.jsql.SQLVisitor;
 
 
 public class CostParallelismAssigner {
     private final Map _map;
     private final Schema _schema;
+    private final TableAliasName _tan;
     
     //computed only once
     private List<String> _sortedSourceNames;// sorted by increasing cardinalities
     private Map<String, Integer> _sourcePars;
 
-    public CostParallelismAssigner(Schema schema, Map map) {
+    public CostParallelismAssigner(Schema schema, TableAliasName tan, Map map) {
         _schema = schema;
         _map = map;
+        _tan = tan;
     }
 
     /*
@@ -241,6 +244,25 @@ public class CostParallelismAssigner {
         int parentPar = compCost.get(parentName).getParallelism();
         
         int parallelism = parentPar;
+        //
+        List<Integer> hashIndexes = parent.getHashIndexes();
+        if((hashIndexes) != null && (hashIndexes.size() == 1)){
+            int index = hashIndexes.get(0);
+            String aliasedColumnName = compCost.get(parentName).getSchema().getSchema().get(index).getName();
+            String fullSchemaColumnName = ParserUtil.getFullSchemaColumnName(aliasedColumnName, _tan);
+            
+            try{
+                long distinctValues = _schema.getNumDistinctValues(fullSchemaColumnName);
+                if(distinctValues < parallelism){
+                    parallelism = (int) distinctValues;
+                }
+            }catch(RuntimeException ex){}
+        }
+        
+        //cannot be less than 1
+        if(parallelism < 1){
+            parallelism = 1;
+        }
         
         //setting
         String currentComp = opComp.getName();

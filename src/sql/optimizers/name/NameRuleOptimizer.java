@@ -24,7 +24,7 @@ public class NameRuleOptimizer implements Optimizer{
     
     public QueryPlan generate() {
         int totalParallelism = SystemParameters.getInt(_map, "DIP_TOTAL_SRC_PAR");
-        NameCompGenFactory factory = new NameCompGenFactory(_map, totalParallelism);
+        NameCompGenFactory factory = new NameCompGenFactory(_map, _pq.getTan(), totalParallelism);
         
         //sorted by increasing cardinalities
         List<String> sourceNames = factory.getParAssigner().getSortedSourceNames();

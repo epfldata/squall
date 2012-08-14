@@ -93,7 +93,7 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
         List<Column> columns = ParserUtil.getJSQLColumns(mt);
         Column column = columns.get(0);
 
-        TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
+        TypeConversion tc = _schema.getType(ParserUtil.getFullSchemaColumnName(column, _tan));
 
         //assume uniform distribution
         String fullSchemaColumnName = _tan.getFullSchemaColumnName(column);

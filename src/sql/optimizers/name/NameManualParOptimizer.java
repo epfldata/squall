@@ -10,17 +10,21 @@ import plan_runner.query_plans.QueryPlan;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.Optimizer;
 import sql.util.ParserUtil;
+import sql.visitors.jsql.SQLVisitor;
 
 /*
  * For lefty plans with explicitly specified parallelism
  */
 public class NameManualParOptimizer implements Optimizer{
     private Map _map;
+    private SQLVisitor _pq;
+    
     private List<String> _compNames = new ArrayList<String>(); // all the sources in the appropriate order
     private Map<String, Integer> _compNamePar = new HashMap<String, Integer>(); // all components(including joins) with its parallelism
     
     public NameManualParOptimizer(Map map) {
         _map = map;
+        _pq = ParserUtil.parseQuery(map);
 
         try{
             parse();
@@ -30,7 +34,7 @@ public class NameManualParOptimizer implements Optimizer{
     }
     
     public QueryPlan generate() {
-        NameCompGenFactory factory = new NameCompGenFactory(_map);
+        NameCompGenFactory factory = new NameCompGenFactory(_map, _pq.getTan());
         NameCompGen ncg = factory.create();
         
         Component first = ncg.generateDataSource(_compNames.get(0));

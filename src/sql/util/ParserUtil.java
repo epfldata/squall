@@ -534,12 +534,30 @@ public class ParserUtil {
         
         return result;
     }
-
+    
+    public static String getFullName(String tableCompName, String columnName) {
+        return tableCompName + "." + columnName;
+    }    
+    
+    public static String getFullSchemaColumnName(Column column, TableAliasName tan) {
+        String tableCompName = getComponentName(column);
+        String tableSchemaName = tan.getSchemaName(tableCompName);
+        String columnName = column.getColumnName();
+        return getFullName(tableSchemaName, columnName);
+    }
+    
+    public static String getFullSchemaColumnName(String fullAliasedName, TableAliasName tan){
+        String[] parts = fullAliasedName.split("\\.");
+        String tableCompName = parts[0];
+        String columnName = parts[1];
+        return getFullName(tan.getSchemaName(tableCompName), columnName);
+    }
+    
     /*
      * returns N1.NATIONNAME
      */
     public static String getFullAliasedName(Column column) {
-        return getComponentName(column) + "." + column.getColumnName();
+        return getFullName(getComponentName(column), column.getColumnName());
     }
     
     public static Column nameToColumn(String name) {
@@ -553,7 +571,24 @@ public class ParserUtil {
         column.setColumnName(columnName);
         column.setTable(table);
         return column;
-    }    
+    }
+    
+       /*
+     * From a list of <NATIONNAME, StringConversion>
+     *   it creates a list of <N1.NATIONNAME, StringConversion>
+     */
+    public static TupleSchema createAliasedSchema(List<ColumnNameType> originalSchema, String tableCompName) {
+        List<ColumnNameType> cnts = new ArrayList<ColumnNameType>();
+
+        for(ColumnNameType cnt: originalSchema){
+            String columnName = cnt.getName();
+            columnName = getFullName(tableCompName, columnName);
+            TypeConversion tc = cnt.getType();
+            cnts.add(new ColumnNameType(columnName, tc));
+        }
+
+        return new TupleSchema(cnts);
+    }
 
     public static List<ColumnNameType> getProjectedSchema(List<ColumnNameType> schema, List<Integer> hashIndexes) {
         List<ColumnNameType> result = new ArrayList<ColumnNameType>();
@@ -562,30 +597,6 @@ public class ParserUtil {
             result.add(schema.get(hashIndex));
         }
         return result;
-    }
-
-    public static TypeConversion getColumnType(Column column, TableAliasName tan, Schema schema) {
-        String tableCompName = getComponentName(column);
-        String tableSchemaName = tan.getSchemaName(tableCompName);
-        String columnName = column.getColumnName();
-        return schema.getType(tableSchemaName, columnName);
-    }
-
-       /*
-     * From a list of <NATIONNAME, StringConversion>
-     *   it creates a list of <N1.NATIONNAME, StringConversion>
-     */
-    public static TupleSchema createAliasedSchema(List<ColumnNameType> originalSchema, String aliasName) {
-        List<ColumnNameType> cnts = new ArrayList<ColumnNameType>();
-
-        for(ColumnNameType cnt: originalSchema){
-            String name = cnt.getName();
-            name = aliasName + "." + name;
-            TypeConversion tc = cnt.getType();
-            cnts.add(new ColumnNameType(name, tc));
-        }
-
-        return new TupleSchema(cnts);
     }
     
     public static List<Expression> getSubExpressions(Expression expr){

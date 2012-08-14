@@ -8,6 +8,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import plan_runner.conversion.*;
+import sql.util.ParserUtil;
 
 /**
  *
@@ -42,14 +43,14 @@ public class SchemaTest {
 
     @Test
     public void testGetType() {
-        TypeConversion tc = _schema.getType("LINEITEM", "EXTENDEDPRICE");
+        TypeConversion tc = _schema.getType("LINEITEM.EXTENDEDPRICE");
         assertEquals(_dbc.toString(), tc.toString());
     }
 
     @Test
     public void testContains() {
-        assertTrue(_schema.contains("ORDERS", "CUSTKEY"));
-        assertFalse(_schema.contains("ORDERS", "PARTKEY"));
+        assertTrue(_schema.contains("ORDERS.CUSTKEY"));
+        assertFalse(_schema.contains("ORDERS.PARTKEY"));
     }
 
     @Test

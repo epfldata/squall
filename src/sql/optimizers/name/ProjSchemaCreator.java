@@ -275,7 +275,7 @@ public class ProjSchemaCreator {
         //non special cases
         List<Column> columns = ParserUtil.getJSQLColumns(expr);
         Column column = columns.get(0);
-        return ParserUtil.getColumnType(column, _tan, _schema);
+        return _schema.getType(ParserUtil.getFullSchemaColumnName(column, _tan));
     }
 
 }

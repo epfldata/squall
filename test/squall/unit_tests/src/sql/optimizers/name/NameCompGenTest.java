@@ -4,6 +4,8 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 import sql.main.ParserMain;
+import sql.util.ParserUtil;
+import sql.visitors.jsql.SQLVisitor;
 
 /**
  *
@@ -39,8 +41,9 @@ public class NameCompGenTest {
     private NameCompGen createCG(String parserConfPath) {
         ParserMain pm = new ParserMain();
         Map map = pm.createConfig(parserConfPath);
+        SQLVisitor pq = ParserUtil.parseQuery(map);
         
-        NameCompGenFactory factory = new NameCompGenFactory(map, 20);
+        NameCompGenFactory factory = new NameCompGenFactory(map, pq.getTan(), 20);
         return factory.create();
     }        
   

@@ -10,6 +10,7 @@ import sql.main.ParserMain;
 import sql.optimizers.name.NameCompGen;
 import sql.optimizers.name.NameCompGenFactory;
 import sql.util.ParserUtil;
+import sql.visitors.jsql.SQLVisitor;
 
 /**
  *
@@ -20,6 +21,7 @@ public class CostOptimizerTest {
     private static final String PLAN_PATH = "../test/squall/unit_tests/printouts/query_plans/";
     
     private Map _map;
+    private SQLVisitor _pq;
     
     public CostOptimizerTest() {
     }
@@ -27,8 +29,9 @@ public class CostOptimizerTest {
     private NameCompGen createCG(String parserConfPath) {
         ParserMain pm = new ParserMain();
         _map = pm.createConfig(parserConfPath);
+        _pq = ParserUtil.parseQuery(_map);
         
-        NameCompGenFactory factory = new NameCompGenFactory(_map, 20);
+        NameCompGenFactory factory = new NameCompGenFactory(_map, _pq.getTan(), 20);
         return factory.create();
     }    
 
@@ -36,8 +39,9 @@ public class CostOptimizerTest {
     private NameCompGen createCG(String parserConfPath, int parallelism) {
         ParserMain pm = new ParserMain();
         _map = pm.createConfig(parserConfPath);
+        _pq = ParserUtil.parseQuery(_map);
         
-        NameCompGenFactory factory = new NameCompGenFactory(_map, parallelism);
+        NameCompGenFactory factory = new NameCompGenFactory(_map, _pq.getTan(), parallelism);
         return factory.create();
     }    
     

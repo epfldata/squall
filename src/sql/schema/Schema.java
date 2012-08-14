@@ -39,18 +39,18 @@ public class Schema {
     }    
     
     /*
-     * For a field N1.NATIONNAME, tableSchemaName is NATION, column is NATIONNAME
+     * For a field N1.NATIONNAME, fullSchemaColumnName is NATION.NATIONNAME
      */
-    public TypeConversion getType(String tableSchemaName, String columnName){
-        ColumnInfo column = getColumnInfo(tableSchemaName, columnName);
+    public TypeConversion getType(String fullSchemaColumnName){
+        ColumnInfo column = getColumnInfo(fullSchemaColumnName);
         if(column == null){
-            throw new RuntimeException("Column " + columnName + " does not exist in " + tableSchemaName + " !");
+            throw new RuntimeException("Column " + fullSchemaColumnName + " does not exist !");
         }        
         return column.getType();
     }
 
-    public boolean contains(String tableSchemaName, String columnName) {
-        ColumnInfo column = getColumnInfo(tableSchemaName, columnName);
+    public boolean contains(String fullSchemaColumnName) {
+        ColumnInfo column = getColumnInfo(fullSchemaColumnName);
         return (column != null);
     }
 
