@@ -23,7 +23,7 @@ public class ColumnReference<T extends Comparable<T>> implements ValueExpression
     public ColumnReference(TypeConversion<T> wrapper, int columnIndex, String columnStr){
         this(wrapper, columnIndex);
         _columnStr = columnStr;
-    }    
+    }
     
     @Override
     public T eval(List<String> tuple){

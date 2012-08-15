@@ -87,8 +87,9 @@ public class DataSourceComponent implements Component {
 
     @Override
     public DataSourceComponent setBatchOutputMillis(long millis){
-        _batchOutputMillis = millis;
-        return this;
+        throw new RuntimeException("Setting batch mode is not allowed for DataSourceComponents!");
+        //_batchOutputMillis = millis;
+        //return this;
     }
 
     @Override

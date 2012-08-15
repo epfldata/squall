@@ -8,6 +8,7 @@ import java.util.concurrent.Semaphore;
 import org.apache.log4j.Logger;
 import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ColumnReference;
+import plan_runner.operators.AggregateAvgOperator;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.AggregateSumOperator;
 import plan_runner.storage.AggregationStorage;
@@ -94,14 +95,25 @@ public class LocalMergeResults {
         
         private static AggregateOperator createOverallAgg(AggregateOperator lastAgg, Map map){
             TypeConversion wrapper = lastAgg.getType();
-            
             AggregateOperator overallAgg;
+            
+            ColumnReference cr;
             if(lastAgg.hasGroupBy()){
-                overallAgg = new AggregateSumOperator(new ColumnReference(wrapper, 1), map)
-                        .setGroupByColumns(Arrays.asList(0));
+                cr = new ColumnReference(wrapper, 1);
             }else{
-                overallAgg = new AggregateSumOperator(new ColumnReference(wrapper, 0), map);
+                cr = new ColumnReference(wrapper, 0);
             }
+            
+            if(lastAgg instanceof AggregateAvgOperator){
+                overallAgg = new AggregateAvgOperator(cr, map);
+            }else{
+                overallAgg = new AggregateSumOperator(cr, map);
+            }
+            
+            if(lastAgg.hasGroupBy()){
+                overallAgg.setGroupByColumns(Arrays.asList(0));
+            }
+            
             return overallAgg;
         }
 

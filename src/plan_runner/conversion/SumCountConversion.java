@@ -5,12 +5,12 @@ public class SumCountConversion implements TypeConversion<SumCount> {
 
     @Override
     public String toString(SumCount sc){
-        return sc.getSum() + "|" + sc.getCount();
+        return sc.getSum() + ":" + sc.getCount();
     }
             
     @Override
     public SumCount fromString(String sc){
-        String parts[] = sc.split("\\|");
+        String parts[] = sc.split("\\:");
         Double sum = Double.valueOf(parts[0]);
         Long count = Long.valueOf(parts[1]);
         return new SumCount(sum, count);

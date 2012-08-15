@@ -1,8 +1,12 @@
 
 package plan_runner.conversion;
 
+import java.io.Serializable;
 
-public class SumCount{
+
+public class SumCount implements Comparable<SumCount>, Serializable{
+    private static final long serialVersionUID = 1L;
+    
     private Double _sum;
     private Long _count;
 
@@ -50,4 +54,15 @@ public class SumCount{
         hash = 89 * hash + (_count != null ? _count.hashCode() : 0);
         return hash;
     }
+    
+    @Override
+    public int compareTo(SumCount other) {
+        if(getAvg() > other.getAvg()){
+            return 1;
+        }else if(getAvg() < other.getAvg()){
+            return -1;
+        }else{
+            return 0;
+        }
+    }    
 }

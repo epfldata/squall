@@ -35,7 +35,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 
         private Map _map;
 
-        public AggregateAvgOperator(ValueExpression<Double> ve, Map map){
+        public AggregateAvgOperator(ValueExpression ve, Map map){
             _ve=ve;
             _map=map;
             _storage = new AggregationStorage<SumCount>(this, _wrapper, _map, true);
@@ -134,9 +134,20 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
         //actual operator implementation
         @Override
         public SumCount runAggregateFunction(SumCount value, List<String> tuple) {
-            NumericConversion veType = (NumericConversion) _ve.getType();
-            Double sumDelta = veType.toDouble(_ve.eval(tuple));
-            Integer countDelta = 1;
+            Double sumDelta;
+            Long countDelta;
+            
+            TypeConversion veType = _ve.getType();
+            if(veType instanceof SumCountConversion){
+                //when merging results from multiple Components which have SumCount as the output
+                SumCount sc = (SumCount) _ve.eval(tuple);
+                sumDelta = sc.getSum();
+                countDelta = sc.getCount();
+            }else{
+                NumericConversion nc = (NumericConversion) veType;
+                sumDelta = nc.toDouble(_ve.eval(tuple));
+                countDelta = 1L;
+            }
             
             Double sumNew = sumDelta + value.getSum();
             Long countNew = countDelta + value.getCount();
