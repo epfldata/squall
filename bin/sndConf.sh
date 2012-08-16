@@ -16,16 +16,25 @@ CURR_DIR=`pwd`
 
 cd $RESOURCES_DIR
 
+
+# You have as well to change in your local ~/.storm directory
+cp $SOURCE_FILE ~/.storm
+# we have to replace icdatasrv5-priv to icdatarv5 on local machine
+../bin/adjust_storm_yaml_locally.sh $1
+
 # For the storm directory
-for i in {1..4}
+for blade in {5..5}
 do
-	scp $SOURCE_FILE ${USERNAME}@icdatasrv${i}.epfl.ch:${CLUSTER_NODE_CONF}
-	scp $SOURCE_FILE ${USERNAME}@icdatasrv${i}.epfl.ch:${INSTALL_CONF}
+	scp $SOURCE_FILE ${USERNAME}@icdatasrv${blade}:${CLUSTER_NODE_CONF}
+	scp $SOURCE_FILE ${USERNAME}@icdatasrv${blade}:${CLUSTER_HOME_CONF}
 done
 
-for PORT in {1001..1088}
+for blade in {5..5}
 do
-	scp -P $PORT $SOURCE_FILE ${USERNAME}@icdatasrv1.epfl.ch:${CLUSTER_NODE_CONF}
+  for port in {1011,1022}
+  do
+	scp -P $port $SOURCE_FILE ${USERNAME}@icdatasrv${blade}:${CLUSTER_NODE_CONF}
+  done
 done
 
 cd $CURR_DIR
