@@ -45,21 +45,21 @@ then
    exit
 fi
 
-#TIME_BEFORE="$(date +%s)"
+TIME_BEFORE="$(date +%s)"
 ../$STORMNAME/bin/storm jar ../deploy/squall-2.0-standalone.jar plan_runner.main.Main $CONFIG_PATH
-#./waitTopology.sh
-#TIME_AFTER="$(date +%s)"
-#ELAPSED_TIME="$(expr $TIME_AFTER - $TIME_BEFORE)"
-#echo | awk -v D=$ELAPSED_TIME '{printf "Job Elapsed Time: %02d:%02d:%02d\n",D/(60*60),D%(60*60)/60,D%60}'
+./waitTopology.sh
+TIME_AFTER="$(date +%s)"
+ELAPSED_TIME="$(expr $TIME_AFTER - $TIME_BEFORE)"
+echo | awk -v D=$ELAPSED_TIME '{printf "Job Elapsed Time: %02d:%02d:%02d\n",D/(60*60),D%(60*60)/60,D%60}'
 
 # Gather the profiling information
 if [ $PROFILE_ENABLED -eq 1 ]; then
 	echo "Gathering profiling information... "
         mkdir -p $SNAPSHOT_DIR/$confname
         cd $SNAPSHOT_DIR/$confname
-        ${BIN_PATH}/graspSnapshots.sh
-        ${BIN_PATH}/deleteSnapshots.sh        
-	${BIN_PATH}/graspOutput.sh
+        ${BIN_PATH}/grasp_snapshots.sh
+        ${BIN_PATH}/delete_snapshots.sh        
+	${BIN_PATH}/grasp_output.sh
 	cd $STORM_OUTPUT
 	rake
 fi

@@ -18,7 +18,7 @@ public class ValueStore<V> extends KeyValueStore<V, Object> {
 	private static final Object dummyObj = null;
 
 	public ValueStore(Map map) {
-		this(SystemParameters.getInt(map, "MEMORY_SIZE_MB"), map);
+		this(SystemParameters.getInt(map, "STORAGE_MEMORY_SIZE_MB"), map);
 	}
 
 	public ValueStore(int storesizemb, Map map) {

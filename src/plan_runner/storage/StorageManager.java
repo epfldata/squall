@@ -33,7 +33,7 @@ public class StorageManager<R> implements Serializable {
 	public StorageManager(BasicStore store, Map conf) {
 		this.store = store;
 		if (SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED")) {
-			this.rootDir = SystemParameters.getString(conf, "STORAGE_DIP_DIR");
+			this.rootDir = SystemParameters.getString(conf, "STORAGE_CLUSTER_DIR");
 		} else {
 			this.rootDir = SystemParameters.getString(conf, "STORAGE_LOCAL_DIR");
 		}

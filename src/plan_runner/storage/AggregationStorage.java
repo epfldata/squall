@@ -20,7 +20,7 @@ public class AggregationStorage<V> extends KeyValueStore<String, V> {
 	private static final int FINAL_AGGREGATION_TIMEOUT = 10000; /* msecs */
 
 	public AggregationStorage(AggregateOperator outerAggOp, TypeConversion wrapper, Map map, boolean singleEntry){
-		super(singleEntry ? 1 : SystemParameters.getInt(map, "MEMORY_SIZE_MB"), map);
+		super(singleEntry ? 1 : SystemParameters.getInt(map, "STORAGE_MEMORY_SIZE_MB"), map);
 		_conf = map;
 		_wrapper = wrapper;
 		_outerAggOp = outerAggOp;

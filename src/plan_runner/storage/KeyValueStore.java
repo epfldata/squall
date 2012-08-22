@@ -21,11 +21,11 @@ public class KeyValueStore<K, V> extends BasicStore {
 
 	/* Constructors */
 	public KeyValueStore(Map conf) {
-		this(SystemParameters.getInt(conf, "MEMORY_SIZE_MB"), DEFAULT_HASH_INDICES, conf);
+		this(SystemParameters.getInt(conf, "STORAGE_MEMORY_SIZE_MB"), DEFAULT_HASH_INDICES, conf);
 	}
 
 	public KeyValueStore(int hash_indices, Map conf) {
-		this(SystemParameters.getInt(conf, "MEMORY_SIZE_MB"), hash_indices, conf);
+		this(SystemParameters.getInt(conf, "STORAGE_MEMORY_SIZE_MB"), hash_indices, conf);
 	}
 
 	public KeyValueStore(int storesizemb, int hash_indices, Map conf) {

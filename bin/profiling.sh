@@ -14,9 +14,9 @@ check_cluster_mode() {
 
 restart_cluster() {
 	echo "Restarting cluster... "
-	./killAll.sh; sleep 2;
-	./deleteOutputs.sh; sleep 2;
-	./runStormCluster.sh; sleep 5;
+	./kill_all.sh; sleep 2;
+	./delete_outputs.sh; sleep 2;
+	./run_storm_cluster.sh; sleep 5;
 	echo "DONE!"
 }
 
@@ -26,7 +26,7 @@ init_cluster_profiling() {
 		return # Cluster already in profiling mode
 	fi
 	echo "Updating cluster with profiling configuration..."
-	./sndConf.sh storm.yaml.profiling
+	./snd_conf.sh storm.yaml.profiling
 	echo "DONE"
 	restart_cluster
 }
@@ -37,7 +37,7 @@ restore_normal_cluster() {
 		return # Cluster already in normal mode
 	fi
 	echo "Updating cluster with normal configuration..."
-	./sndConf.sh storm.yaml
+	./snd_conf.sh storm.yaml
 	echo "DONE"
 	restart_cluster
 }
