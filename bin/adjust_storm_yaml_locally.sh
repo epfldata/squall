@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILENAME=~/.storm/$1
+FILENAME=~/.storm/storm.yaml
 FIND=-priv
 REPLACE=
 

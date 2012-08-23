@@ -2,21 +2,19 @@ $:.push Dir.getwd;
 require 'util.rb'
 
 # CHANGE BETWEEN HERE AND ...
-$dip_distributed = false
+$dip_distributed = true
 $queries = {
-            "tpch3" => {}, 
+            # "tpch3" => {}, 
 	    "tpch7" => {}
            }
-$data_sizes = ["0.01", "1", "10"]
+$data_sizes = ["1", "0.1"]
 # possible values for optimizer are NameRuleLefty (nrl) and NameCostLefty (ncl) optimizer. Index-based optimizers are obsolete and other name optimizers require manual intervention, so cannot be automatically generated.
-$optimizer = "NAME_RULE_LEFTY"
+$optimizer = "NAME_COST_LEFTY"
 $dip_total_src_par = [10]
 # ... AND HERE
 
-
 $opt = $optimizer.split(pattern = "_").map{|s| s.chars.first.downcase}.join
 
-$topology_name_prefix = "avitorovic"
 $dip_data_root = "/export/home/squalldata/tpchdb/"
 $dip_sql_root = "../test/squall/sql_queries/"
 $dip_result_root = "../test/results"
@@ -26,6 +24,7 @@ $default_delim = "|"
 $default_escaped_delim = "\\|"
 $default_extension = ".tbl"
 
+$TOPOLOGY_NAME_PREFIX="username"
 $storage_local_dir = "/tmp/ramdisk"
 $storage_cluster_dir = "/export/home/squalldata/storage"
 $memory_size_mb = 4096
@@ -46,7 +45,7 @@ $queries.each do |q, q_args|
 DIP_DISTRIBUTED #{$dip_distributed}
 DIP_QUERY_NAME #{q}
 
-DIP_TOPOLOGY_NAME_PREFIX #{$topology_name_prefix}
+DIP_TOPOLOGY_NAME_PREFIX #{$TOPOLOGY_NAME_PREFIX}
 DIP_DATA_ROOT #{$dip_data_root}
 DIP_SQL_ROOT #{$dip_sql_root}
 DIP_SCHEMA_PATH #{dip_schema_path}

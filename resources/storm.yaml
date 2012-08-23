@@ -29,8 +29,6 @@ topology.workers: 2
 
 topology.fall.back.on.java.serialization: false
 
-#worker.childopts: "-Xmx1024m -agentpath:/opt/storm/profiling/yjp-11.0.2/bin/solaris-x86-32/libyjpagent.so=sampling,periodicperf=70,noj2ee,dir=/opt/storm/profiling/output"
-
 #     
 ## Map of tokens to a serialization class. tokens less than 32 are reserved by storm.
 ## Tokens are written on the wire to identify the field.

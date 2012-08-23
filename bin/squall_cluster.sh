@@ -1,14 +1,16 @@
 #!/bin/bash
 
+./recompile.sh
 . ./storm_version.sh
 
 CONFIG_DIR=../test/squall/confs/cluster
 
+# If no configuration file is given, use default
 if [ $# -ne 1 ]
 then
-CONFIG_PATH=$CONFIG_DIR/1G_hyracks
+  CONFIG_PATH=$CONFIG_DIR/1G_hyracks
 else
-CONFIG_PATH=$1
+  CONFIG_PATH=$1
 fi
 
 # check if your configuration file exists
@@ -18,5 +20,11 @@ then
    exit
 fi
 
+confname=${CONFIG_PATH##*/}
 
+TIME_BEFORE="$(date +%s)"
 ../$STORMNAME/bin/storm jar ../deploy/squall-2.0-standalone.jar sql.main.ParserMain $CONFIG_PATH
+./wait_topology.sh $confname
+TIME_AFTER="$(date +%s)"
+ELAPSED_TIME="$(expr $TIME_AFTER - $TIME_BEFORE)"
+echo | awk -v D=$ELAPSED_TIME '{printf "Job Elapsed Time: %02d:%02d:%02d\n",D/(60*60),D%(60*60)/60,D%60}'

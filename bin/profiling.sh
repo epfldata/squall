@@ -1,12 +1,14 @@
 #!/bin/bash
 . ./storm_version.sh
-USERNAME=squalldata
+
+MACHINE=squalldata@icdatasrv5
 CLUSTER_NODE_CONF=/opt/storm/$STORMNAME/conf/storm.yaml
+
 declare -i CLUSTER_MODE
 
 # Returns 1 if cluster is in profiling mode, 0 otherwise
 check_cluster_mode() {
-	scp ${USERNAME}@icdatasrv1.epfl.ch:${CLUSTER_NODE_CONF} storm.yaml.tmp
+	scp ${MACHINE}:${CLUSTER_NODE_CONF} storm.yaml.tmp
 	CLUSTER_MODE=`cat storm.yaml.tmp | grep "worker.childopts" | wc -l`
 	rm storm.yaml.tmp
 	return $CLUSTER_MODE	
@@ -14,9 +16,7 @@ check_cluster_mode() {
 
 restart_cluster() {
 	echo "Restarting cluster... "
-	./kill_all.sh; sleep 2;
-	./delete_outputs.sh; sleep 2;
-	./run_storm_cluster.sh; sleep 5;
+	./reset_all.sh;
 	echo "DONE!"
 }
 

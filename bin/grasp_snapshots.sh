@@ -1,11 +1,24 @@
 #!/bin/bash
-MACHINE1=squalldata@icdatasrv1
-MACHINE2=squalldata@icdatasrv2
-MASTER=master
-SUPERVISOR=icdatasrv
 
+MACHINE=squalldata@icdatasrv
+MACHINE5=${MACHINE}5
 REMOTE_SNAP=/opt/storm/profiling/output/*
-LOCAL_SNAP=snapshots
+
+if [ $# -ne 1 ]
+then
+  LOCAL_SNAP=snapshots
+  mkdir -p $LOCAL_SNAP
+else
+  LOCAL_SNAP=$1
+fi
+
+if [ ! -d $STORM_LOCAL ]; then
+  echo "Directory '$STORM_LOCAL' does not exist. Exiting..."
+  exit
+fi
+
+MASTER=$LOCAL_SNAP/master
+SUPERVISOR=$LOCAL_SNAP/icdatasrv
 
 removeIfEmpty(){
 	DIR=$1
@@ -15,22 +28,19 @@ removeIfEmpty(){
 	fi
 }
 
-mkdir $LOCAL_SNAP
-cd $LOCAL_SNAP
-
 #Grasping from master node
-mkdir $MASTER
-scp -r $MACHINE2:$REMOTE_SNAP ${LOCAL_SNAP}/$MASTER
+mkdir -p $MASTER
+scp -r $MACHINE5:$REMOTE_SNAP $MASTER
 removeIfEmpty "$MASTER"
 
 #Grasping output from supervisor nodes
-for BLADE in {1..4}
+for blade in {5..5}
 do
-	for ZONE in {1..22}
+	for port in {1011,1022}
 	do
-		mkdir ${SUPERVISOR}${BLADE}-${ZONE}
-		PORT=$((1000 + ($BLADE-1)*22+$ZONE))
-		scp -P $PORT -r $MACHINE1:$REMOTE_SNAP ${SUPERVISOR}${BLADE}-${ZONE}/
-		removeIfEmpty "${SUPERVISOR}${BLADE}-${ZONE}"
+		supervisor=${SUPERVISOR}${blade}-${port}
+		mkdir -p $supervisor
+		scp -P $port -r $MACHINE${blade}:$REMOTE_SNAP $supervisor
+		removeIfEmpty "$supervisor"
 	done
 done
