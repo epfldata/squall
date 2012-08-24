@@ -4,7 +4,7 @@ DIP_TOPOLOGY_NAME_PREFIX username
 
 # the following two are optional, by default they use topology.workers and topology.ackers from storm.yaml
 # DIP_NUM_WORKERS 2
-DIP_NUM_ACKERS 0
+# DIP_NUM_ACKERS 0
 
 DIP_DATA_PATH /export/home/squalldata/tpchdb/1G
 

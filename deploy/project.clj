@@ -1,4 +1,4 @@
-(defproject squall "2.0"
+(defproject squall "0.2.0"
   :java-source-path "../src"
   :javac-options {:debug "true" :fork "true"}
   :aot :all
@@ -8,6 +8,7 @@
   :dependencies [
 		     [jsqlparser "0.7.0"]
 		     [trove "3.0.2"]
+		     [bheaven "0.0.3"]
                     ]
 
   :dev-dependencies [

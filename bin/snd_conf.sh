@@ -5,7 +5,6 @@
 USERNAME=squalldata
 MACHINE=$USERNAME@icdatasrv
 
-
 CLUSTER_NODE_CONF=/opt/storm/$STORMNAME/conf/storm.yaml
 CLUSTER_HOME_CONF=/export/home/$USERNAME/.storm/storm.yaml
 

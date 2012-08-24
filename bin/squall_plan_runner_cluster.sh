@@ -23,7 +23,7 @@ fi
 confname=${CONFIG_PATH##*/}
 
 TIME_BEFORE="$(date +%s)"
-../$STORMNAME/bin/storm jar ../deploy/squall-2.0-standalone.jar plan_runner.main.Main $CONFIG_PATH
+../$STORMNAME/bin/storm jar ../deploy/squall-0.2.0-standalone.jar plan_runner.main.Main $CONFIG_PATH
 ./wait_topology.sh $confname
 TIME_AFTER="$(date +%s)"
 ELAPSED_TIME="$(expr $TIME_AFTER - $TIME_BEFORE)"

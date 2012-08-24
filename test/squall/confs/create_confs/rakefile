@@ -7,7 +7,7 @@ $queries = {
             # "tpch3" => {}, 
 	    "tpch7" => {}
            }
-$data_sizes = ["1", "0.1"]
+$data_sizes = [1, 0.1]
 # possible values for optimizer are NameRuleLefty (nrl) and NameCostLefty (ncl) optimizer. Index-based optimizers are obsolete and other name optimizers require manual intervention, so cannot be automatically generated.
 $optimizer = "NAME_COST_LEFTY"
 $dip_total_src_par = [10]
@@ -15,6 +15,7 @@ $dip_total_src_par = [10]
 
 $opt = $optimizer.split(pattern = "_").map{|s| s.chars.first.downcase}.join
 
+$OUTPUT_PATH="generated"
 $dip_data_root = "/export/home/squalldata/tpchdb/"
 $dip_sql_root = "../test/squall/sql_queries/"
 $dip_result_root = "../test/results"
@@ -32,9 +33,9 @@ $memory_size_mb = 4096
 $queries.each do |q, q_args|
   $data_sizes.each do |size|
     $dip_total_src_par.each do |par|
-      size_str = size.gsub(".", "_") # Storm 0.8.0 does not support "." characters in a topology name
+      size_str = size.to_s.gsub(".", "_") # Storm 0.8.0 does not support "." characters in a topology name
       test_name = "#{size_str}G_#{q}_#{$opt}_#{par}"
-        File.open("generated/#{test_name}", "w+") do |f|
+        File.open("#{$OUTPUT_PATH}/#{test_name}", "w+") do |f|
           delim         = q_args.fetch(:delim, $default_delim);
           escaped_delim = q_args.fetch(:escaped_delim, $default_escaped_delim);
 	  extension = q_args.fetch(:extension, $default_extension);
@@ -51,7 +52,7 @@ DIP_SQL_ROOT #{$dip_sql_root}
 DIP_SCHEMA_PATH #{dip_schema_path}
 #{ 
    if !$dip_distributed then
-      "DIP_RESULT_ROOT ../test/results/"
+      "DIP_RESULT_ROOT #{$dip_result_root}"
    end
 }
 
@@ -80,7 +81,7 @@ STORAGE_MEMORY_SIZE_MB #{$memory_size_mb}
 
 ")
         end # File.open
-     task :default => "generated/#{test_name}"
+     task :default => "#{$OUTPUT_PATH}/#{test_name}"
     end # dip_total_src_par
   end #datafiles
 end #queries
