@@ -176,7 +176,7 @@ public class CostParallelismAssigner {
         String currentComp = joinComponent.getName();
         compCost.get(currentComp).setParallelism(parallelism);
         
-        //TODO: we should also check 
+        //we should also check 
         //  if the sum of all the parallelisms in the subplan 
         //    is bigger than DIP_NUM_WORKERS (this is set only for PlanRunner).
         //At the time of deciding of parallelism, we are *not* dealing with Storm Config class, but with a plain map.
@@ -185,7 +185,7 @@ public class CostParallelismAssigner {
     }
 
     private int parallelismFormula(CostParams leftParentParams, CostParams rightParentParams) {
-        //computing TODO: does not take into account when joinComponent send tuples further down
+        //TODO: this formula does not take into account when joinComponent send tuples further down
         double dblParallelism = leftParentParams.getSelectivity() * leftParentParams.getParallelism() +
                             rightParentParams.getSelectivity() * rightParentParams.getParallelism() +
                             1.0/8 * (leftParentParams.getParallelism() + rightParentParams.getParallelism());

@@ -20,7 +20,9 @@ public interface ComponentProperties extends Serializable{
     public long getBatchOutputMillis();
 
     public Component[] getParents();
+    //TODO: problem when having multiple children (sharing scenarios)
     public Component getChild();
+    
     public List<DataSourceComponent> getAncestorDataSources();
 
 }

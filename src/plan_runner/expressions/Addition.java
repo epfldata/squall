@@ -103,13 +103,11 @@ public class Addition<T extends Number & Comparable<T>> implements ValueExpressi
 
 	@Override
 	public void inverseNumber() {
-		// TODO Auto-generated method stub
-		
+	
 	}
 
 	@Override
 	public boolean isNegative() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 

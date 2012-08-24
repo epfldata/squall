@@ -315,7 +315,6 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
 
 	@Override
 	public String getName() {
-		// TODO Auto-generated method stub
 		return _ID;
 	}
 

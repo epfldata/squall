@@ -72,19 +72,16 @@ public class StringConcatenate implements ValueExpression<String> {
 
     @Override
 	public void changeValues(int i, ValueExpression<String> newExpr) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void inverseNumber() {
-		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public boolean isNegative() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 

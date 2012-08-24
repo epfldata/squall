@@ -169,7 +169,6 @@ public class IndexRuleOptimizer implements Optimizer {
      *************************************************************************************/
 
     private int processSelectClause(List<SelectItem> selectItems) {
-        //TODO: take care in nested case
         IndexSelectItemsVisitor selectVisitor = new IndexSelectItemsVisitor(_cg.getQueryPlan(), _schema, _pq.getTan(), _map);
         for(SelectItem elem: selectItems){
             elem.accept(selectVisitor);
@@ -233,7 +232,6 @@ public class IndexRuleOptimizer implements Optimizer {
      *************************************************************************************/
 
     private void processWhereClause(Expression whereExpr) {
-        // TODO: in non-nested case, there is a single Expression
         if (whereExpr == null) return;
 
         //assinging JSQL expressions to Components

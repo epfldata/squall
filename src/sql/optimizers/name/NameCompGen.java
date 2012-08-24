@@ -107,7 +107,6 @@ public class NameCompGen implements CompGen{
     }
     
     private void initWhereClause(Expression whereExpr) {
-        // TODO: in non-nested case, there is a single Expression
         if (whereExpr == null) return;
 
         AndVisitor andVisitor = new AndVisitor();
@@ -312,11 +311,11 @@ public class NameCompGen implements CompGen{
         for(Map.Entry<Set<String>, Expression> orEntry: _compNamesOrExprs.entrySet()){
             Set<String> orCompNames = orEntry.getKey();
 
-            //TODO: the full solution would be that OrExpressions are splitted into subexpressions
+            //TODO-PRIO: the full solution would be that OrExpressions are splitted into subexpressions
             //  which might be executed on their LCM
             //  Not implemented because it's quite rare - only TPCH7
             //  Even in TPCH7 there is no need for multiple LCM.
-            //TODO: selectivityEstimation for pushing OR need to be improved
+            //TODO-PRIO: selectivityEstimation for pushing OR need to be improved
             Expression orExpr = orEntry.getValue();
             if(HierarchyExtractor.isLCM(component, orCompNames)){
                 expr = appendAnd(expr, orExpr);
@@ -444,7 +443,6 @@ public class NameCompGen implements CompGen{
      * SELECT clause - Final aggregation
      *************************************************************************************/
      private NameSelectItemsVisitor getFinalSelectVisitor(Component lastComponent) {
-        //TODO: take care in nested case
         TupleSchema tupleSchema = _compCost.get(lastComponent.getName()).getSchema();
         NameSelectItemsVisitor selectVisitor = new NameSelectItemsVisitor(tupleSchema, _map, lastComponent);
         for(SelectItem elem: _pq.getSelectItems()){

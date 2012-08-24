@@ -117,7 +117,6 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 	// from IRichBolt
 	@Override
 		public void cleanup() {
-			// TODO Auto-generated method stub
 
 		}
 

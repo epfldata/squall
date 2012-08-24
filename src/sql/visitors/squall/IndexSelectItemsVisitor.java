@@ -96,7 +96,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
     public void visit(AllColumns ac) {
         //i.e. SELECT * FROM R join S
         //we need not to do anything in this case for RuleOptimizer
-        //TODO: support it for Cost-Optimizer (Each wanted column has to explicitly specified)
+        //TODO: support it for Cost-Optimizer (Now, each wanted column has to explicitly specified)
     }
 
     @Override

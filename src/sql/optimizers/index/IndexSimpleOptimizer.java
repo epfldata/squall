@@ -77,7 +77,6 @@ public class IndexSimpleOptimizer implements Optimizer {
     }
 
     private int processSelectClause(List<SelectItem> selectItems) {
-        //TODO: take care in nested case
         IndexSelectItemsVisitor selectVisitor = new IndexSelectItemsVisitor(_cg.getQueryPlan(), _schema, _pq.getTan(), _map);
         for(SelectItem elem: selectItems){
             elem.accept(selectVisitor);
@@ -142,8 +141,6 @@ public class IndexSimpleOptimizer implements Optimizer {
     }
 
     private void processWhereClause(Expression whereExpr) {
-        // TODO: in non-nested case, there is a single Expression
-        
         //all the selection are performed on the last component
         Component affectedComponent = _cg.getQueryPlan().getLastComponent();
         IndexWhereVisitor whereVisitor = new IndexWhereVisitor(affectedComponent, _schema, _pq.getTan());

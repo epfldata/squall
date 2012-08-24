@@ -158,7 +158,7 @@ public class NameSelectItemsVisitor extends IndexSelectItemsVisitor{
         }
         
         //if any of the children is not recognized, we have to go to super
-        //  TODO(but fine): if some of exprs are recognized and some not, we will have some extra elements on stack
+        //  if some of exprs are recognized and some not, we will have some extra elements on stack
         for(Expression expr: exprs){
             if(!isRecognized(expr)){
                 return false;
