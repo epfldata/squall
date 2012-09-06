@@ -1,6 +1,7 @@
 #!/bin/bash
 . ./storm_version.sh
 
+MACHINE=squalldata@icdatasrv
 MACHINE5=squalldata@icdatasrv5
 STORMPATH=/opt/storm/$STORMNAME
 LOGPATH=$STORMPATH/logs
@@ -24,5 +25,10 @@ ssh $MACHINE5 $STORMPATH'/bin/storm nimbus > ' $LOGPATH'/consoleNimbus.txt 2>&1 
 ssh $MACHINE5 $STORMPATH'/bin/storm ui > ' $LOGPATH'/consoleUI.txt 2>&1 &'
 
 #Running supervisors on all the nodes.
-ssh -p 1011 $MACHINE5 $STORMPATH'/bin/storm supervisor > ' $LOGPATH'/consoleSupervisor.txt 2>&1 &'
-ssh -p 1022 $MACHINE5 $STORMPATH'/bin/storm supervisor > ' $LOGPATH'/consoleSupervisor.txt 2>&1 &'
+for blade in {5..5}
+do
+  for port in {1001..1022}
+  do
+    ssh -p $port $MACHINE$blade $STORMPATH'/bin/storm supervisor > ' $LOGPATH'/consoleSupervisor.txt 2>&1 &'
+  done 
+done

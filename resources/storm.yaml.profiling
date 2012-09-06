@@ -25,7 +25,7 @@ java.library.path: "/opt/storm/deps/lib"
 
 # these are defaults, but can be changed from config files/from code directly
 topology.acker.executors: 0
-topology.workers: null
+topology.workers: 22
 
 topology.fall.back.on.java.serialization: false
 

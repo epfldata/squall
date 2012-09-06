@@ -23,7 +23,7 @@ done
 # all the local zones
 for blade in {5..5}
 do
-	for port in {1011,1022}
+	for port in {1001..1022}
 	do
 		ssh -p $port $MACHINE${blade} 'ps -u squalldata > ' $PS_PATH/$PS_FILE
 		scp $MACHINE${blade}:$PS_PATH/$PS_FILE $PS_FILE

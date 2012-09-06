@@ -22,9 +22,9 @@ fi
 
 confname=${CONFIG_PATH##*/}
 
-TIME_BEFORE="$(date +%s)"
 ../$STORMNAME/bin/storm jar ../deploy/squall-0.2.0-standalone.jar plan_runner.main.Main $CONFIG_PATH
+TIME_BEFORE="$(date +%s)"
 ./wait_topology.sh $confname
 TIME_AFTER="$(date +%s)"
 ELAPSED_TIME="$(expr $TIME_AFTER - $TIME_BEFORE)"
-echo | awk -v D=$ELAPSED_TIME '{printf "Job Elapsed Time: %02d:%02d:%02d\n",D/(60*60),D%(60*60)/60,D%60}'
+echo | awk -v D=$ELAPSED_TIME '{printf "Job Elapsed Time (this includes time after receiving kill signal, but not disappearing from Web UI): %02d:%02d:%02d\n",D/(60*60),D%(60*60)/60,D%60}'

@@ -26,7 +26,7 @@ for blade in {5..5}
 do
   scp $SOURCE_FILE ${MACHINE}${blade}:${CLUSTER_NODE_CONF}
   scp $SOURCE_FILE ${MACHINE}${blade}:${CLUSTER_HOME_CONF}
-  for port in {1011,1022}
+  for port in {1001..1022}
   do
 	scp -P $port $SOURCE_FILE ${MACHINE}${blade}:${CLUSTER_NODE_CONF}
   done

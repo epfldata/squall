@@ -17,7 +17,6 @@ public class AggregationStorage<V> extends KeyValueStore<String, V> {
 	private TypeConversion _wrapper;
 	private AggregateOperator _outerAggOp;
 	private static final String SINGLE_ENTRY_KEY = "SEK"; /* Single entry key */
-	private static final int FINAL_AGGREGATION_TIMEOUT = 10000; /* msecs */
 
 	public AggregationStorage(AggregateOperator outerAggOp, TypeConversion wrapper, Map map, boolean singleEntry){
 		super(singleEntry ? 1 : SystemParameters.getInt(map, "STORAGE_MEMORY_SIZE_MB"), map);
@@ -93,13 +92,6 @@ public class AggregationStorage<V> extends KeyValueStore<String, V> {
 	}
 	
 	public void addContent(AggregationStorage storage) {
-		// Wait until all previous partial aggregation stores flush their contents
-		try {
-			Thread.sleep(FINAL_AGGREGATION_TIMEOUT);
-		} catch(java.lang.InterruptedException ie) { 
-			System.out.println("Squall Storage:: Failed while waiting for partial stores to flush aggregations. " + ie.getMessage());
-			System.exit(0);
-		}
 		// Now aggregate
 		Set keySet = storage.keySet();
 		for ( Iterator it = keySet.iterator() ; it.hasNext() ; ) {

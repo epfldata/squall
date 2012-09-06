@@ -33,7 +33,7 @@ scp -r $MACHINE5:$STORM_LOGS $STORM_MASTER
 #Grasping output from supervisor nodes
 for blade in {5..5}
 do
-  for port in {1011,1022}
+  for port in {1001..1022}
   do
 	supervisor=${STORM_SUPERVISOR}${blade}-${port}
 	mkdir -p $supervisor
