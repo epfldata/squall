@@ -44,7 +44,7 @@ done
 # 4. grasp output
 ./grasp_output.sh $STORM_OUTPUT_PATH
 
-# 5. Uploading storm.yaml for profiling
+# 5. Uploading storm.yaml for normal operation mode
 ./profiling.sh END
 
 # 6. Extracting timing information, we might want to check whether execution time prolonged too much, so that profiling results does not make sense anymore
