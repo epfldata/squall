@@ -12,10 +12,12 @@ SQUALL_COMMAND=./squall_plan_runner_cluster.sh
 fi
 
 RESULT_DIR=../bin/extract_results/
+EXEC_LOG_DIR=$RESULT_DIR/exec_logs/
 STORM_OUTPUT_PATH=$RESULT_DIR/data/
 
 #1. deleting old data
 rm -rf ${STORM_OUTPUT_PATH}*
+mkdir -p $EXEC_LOG_DIR
 
 # 2. for each generated file, run it and wait until it is terminated
 for config in ${CONF_DIR}* ; do
@@ -23,7 +25,7 @@ for config in ${CONF_DIR}* ; do
         #explained in Killing topology section in https://github.com/nathanmarz/storm/wiki/Running-topologies-on-a-production-cluster
 
 	confname=${config##*/}
-	$SQUALL_COMMAND $CONF_DIR/$confname
+	$SQUALL_COMMAND $CONF_DIR/$confname > $EXEC_LOG_DIR/$confname
 
 	#waiting for topology to finish is now in squall_cluster.sh
 done
