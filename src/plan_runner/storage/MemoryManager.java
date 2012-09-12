@@ -38,80 +38,81 @@ public class MemoryManager implements Serializable {
 	int getSize(float var) 	 { return 4; }
 	int getSize(double var)  { return 8; }
 
-	/* JAVA String and Primitive Wrappers */
-	int getSize(String str) { 
-                //TODO FIXME underprovisioning
-		//return str.getBytes().length;
-                return str.length();
-	}
-
-	private int ByteSize = 0;
-	int getSize(Byte var) {
-		if (ByteSize == 0) {
-			ByteSize = genericGetSize(var);
-		}
-		return ByteSize;
-	}
-	
-	private int ShortSize = 0;
-	int getSize(Short var) {
-		if (ShortSize == 0) {
-			ShortSize = genericGetSize(var);
-		}
-		return ShortSize;
-	}
-
-	private int IntegerSize = 0;
-	int getSize(Integer var) {
-		if (IntegerSize == 0) {
-			IntegerSize = genericGetSize(var);
-		}
-		return IntegerSize;
-	}
-
-	private int LongSize = 0;
-	int getSize(Long var) {
-		if (LongSize == 0) {
-			LongSize = genericGetSize(var);
-		}
-		return LongSize;
-	}
-
-	private int FloatSize = 0;
-	int getSize(Float var) {
-		if (FloatSize == 0) {
-			FloatSize = genericGetSize(var);
-		}
-		return FloatSize;
-	}
-
-	private int DoubleSize = 0;
-	int getSize(Double var) {
-		if (DoubleSize == 0) {
-			DoubleSize = genericGetSize(var);
-		}
-		return DoubleSize;
-	}
-
-	private int CharacterSize = 0;
-	int getSize(Character var) {
-		if (CharacterSize == 0) {
-			CharacterSize = genericGetSize(var);
-		}
-		return CharacterSize;
-	}
-
-	private int BooleanSize = 0;
-	int getSize(Boolean var) {
-		if (ByteSize == 0) {
-			ByteSize = genericGetSize(var);
-		}
-		return ByteSize;
-	}
-
-	public int getSize(Object obj) {	
-                //TODO FIXME - never go to disk
-                return 0;
+        int getSize(Object obj){
+               //TODO FIXME - never go to disk, commented out the following segment
+               return 0;
+        }
+        
+//	/* JAVA String and Primitive Wrappers */
+//	int getSize(String str) { 
+//		return str.getBytes().length;
+//	}
+//
+//	private int ByteSize = 0;
+//	int getSize(Byte var) {
+//		if (ByteSize == 0) {
+//			ByteSize = genericGetSize(var);
+//		}
+//		return ByteSize;
+//	}
+//	
+//	private int ShortSize = 0;
+//	int getSize(Short var) {
+//		if (ShortSize == 0) {
+//			ShortSize = genericGetSize(var);
+//		}
+//		return ShortSize;
+//	}
+//
+//	private int IntegerSize = 0;
+//	int getSize(Integer var) {
+//		if (IntegerSize == 0) {
+//			IntegerSize = genericGetSize(var);
+//		}
+//		return IntegerSize;
+//	}
+//
+//	private int LongSize = 0;
+//	int getSize(Long var) {
+//		if (LongSize == 0) {
+//			LongSize = genericGetSize(var);
+//		}
+//		return LongSize;
+//	}
+//
+//	private int FloatSize = 0;
+//	int getSize(Float var) {
+//		if (FloatSize == 0) {
+//			FloatSize = genericGetSize(var);
+//		}
+//		return FloatSize;
+//	}
+//
+//	private int DoubleSize = 0;
+//	int getSize(Double var) {
+//		if (DoubleSize == 0) {
+//			DoubleSize = genericGetSize(var);
+//		}
+//		return DoubleSize;
+//	}
+//
+//	private int CharacterSize = 0;
+//	int getSize(Character var) {
+//		if (CharacterSize == 0) {
+//			CharacterSize = genericGetSize(var);
+//		}
+//		return CharacterSize;
+//	}
+//
+//	private int BooleanSize = 0;
+//	int getSize(Boolean var) {
+//		if (ByteSize == 0) {
+//			ByteSize = genericGetSize(var);
+//		}
+//		return ByteSize;
+//	}
+//
+//	public int getSize(Object obj) {	
 //		/* It may happen -- for special tricks (see DistinctOperator)
 //		 * that we receive the null object. In this case return 0 since
 //		 * no additional memory size is required. */
@@ -139,7 +140,7 @@ public class MemoryManager implements Serializable {
 //			System.exit(0);
 //		}
 //		return 0;
-	}
+//	}
 
 	private void initMemoryStreams() {
 		this._baos = new ByteArrayOutputStream();
