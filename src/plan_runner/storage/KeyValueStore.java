@@ -80,7 +80,9 @@ public class KeyValueStore<K, V> extends BasicStore {
 
 		String groupId = key.toString();
 		boolean inMem = (this._memstore.containsKey(key) == true);
-		boolean inDisk = (_storageManager.existsInStorage(groupId) == true);
+		//TODO FIXME
+                //boolean inDisk = (_storageManager.existsInStorage(groupId) == true);
+                boolean inDisk = false;
 
 		// If element is not in disk and not in mem, treat this as an insert instead
 		if (!inMem && !inDisk) {
@@ -125,7 +127,9 @@ public class KeyValueStore<K, V> extends BasicStore {
 		Object obj = this._memstore.get(key);
 		HashEntry<K, V> entry = _replAlg.get(obj);
 		boolean inMem = (entry != null);
-		boolean inDisk = (_storageManager.existsInStorage(key.toString())); 
+		//TODO FIXME
+                //boolean inDisk = (_storageManager.existsInStorage(key.toString())); 
+                boolean inDisk = false;
 
 		if (!inMem && !inDisk) {
 			return null;

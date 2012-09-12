@@ -40,7 +40,9 @@ public class MemoryManager implements Serializable {
 
 	/* JAVA String and Primitive Wrappers */
 	int getSize(String str) { 
-		return str.getBytes().length;
+                //TODO FIXME underprovisioning
+		//return str.getBytes().length;
+                return str.length();
 	}
 
 	private int ByteSize = 0;
@@ -108,33 +110,35 @@ public class MemoryManager implements Serializable {
 	}
 
 	public int getSize(Object obj) {	
-		/* It may happen -- for special tricks (see DistinctOperator)
-		 * that we receive the null object. In this case return 0 since
-		 * no additional memory size is required. */
-		if (obj == null) 
-			return 0;	
-		try {
-			partypes[1] = obj.getClass();	
-			if (partypes[0].equals(partypes[1])) {
-				// Avoid recursively calling this is you get a true Object as an argument!
-				System.out.println("Generic get size called with object type " + partypes[1].getName());
-				return genericGetSize(obj);
-			}
-			// Dynamic dispatch according to type
-			Method m = thisClass.getDeclaredMethod("getSize", partypes[1]);
-			return ((Integer)m.invoke(this, obj)).intValue();
-		} catch (java.lang.NoSuchMethodException nsme) { 
-			// We don't have a getSize for the specific type. No problem: serialize/deserialize
-			System.out.println("Generic get size called with object type " + partypes[1].getName());
-			return genericGetSize(obj);
-		} catch (java.lang.IllegalAccessException iae) { 
-			System.out.println("Squall MemoryManager:: IllegalAccessException encountered: " + iae.getMessage()); 
-			System.exit(0);
-		} catch (java.lang.reflect.InvocationTargetException ite) {
-			System.out.println("Squall MemoryManager:: InvocationTargetException encountered: " + ite.getMessage()); 
-			System.exit(0);
-		}
-		return 0;
+                //TODO FIXME - never go to disk
+                return 0;
+//		/* It may happen -- for special tricks (see DistinctOperator)
+//		 * that we receive the null object. In this case return 0 since
+//		 * no additional memory size is required. */
+//		if (obj == null) 
+//			return 0;	
+//		try {
+//			partypes[1] = obj.getClass();	
+//			if (partypes[0].equals(partypes[1])) {
+//				// Avoid recursively calling this is you get a true Object as an argument!
+//				System.out.println("Generic get size called with object type " + partypes[1].getName());
+//				return genericGetSize(obj);
+//			}
+//			// Dynamic dispatch according to type
+//			Method m = thisClass.getDeclaredMethod("getSize", partypes[1]);
+//			return ((Integer)m.invoke(this, obj)).intValue();
+//		} catch (java.lang.NoSuchMethodException nsme) { 
+//			// We don't have a getSize for the specific type. No problem: serialize/deserialize
+//			System.out.println("Generic get size called with object type " + partypes[1].getName());
+//			return genericGetSize(obj);
+//		} catch (java.lang.IllegalAccessException iae) { 
+//			System.out.println("Squall MemoryManager:: IllegalAccessException encountered: " + iae.getMessage()); 
+//			System.exit(0);
+//		} catch (java.lang.reflect.InvocationTargetException ite) {
+//			System.out.println("Squall MemoryManager:: InvocationTargetException encountered: " + ite.getMessage()); 
+//			System.exit(0);
+//		}
+//		return 0;
 	}
 
 	private void initMemoryStreams() {
