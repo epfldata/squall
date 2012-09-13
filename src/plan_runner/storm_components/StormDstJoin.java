@@ -44,7 +44,6 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 	//it's of type int, but we use String to save more space
 	private String _firstEmitterIndex, _secondEmitterIndex;
 
-
 	private int _numSentTuples=0;
 	private boolean _printOut;
 
@@ -262,9 +261,10 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 						AggregateOperator agg = (AggregateOperator) lastOperator;
 						List<String> tuples = agg.getContent();
 						if (tuples != null) {
+                                                        String columnDelimiter = MyUtilities.getColumnDelimiter(_conf);
 //							System.out.println("TUPLES: " + tuples + " - " + tuples.size());
 							for(String tuple: tuples){
-								tuple = tuple.replaceAll(" = ", "|");
+								tuple = tuple.replaceAll(" = ", columnDelimiter);
 		//						System.out.println("BATCH SEND: tuple = " + tuple + " - (after processing: "+ MyUtilities.stringToTuple(tuple, _conf) + ")");
 //								System.out.println("tuple = " + tuple + "/"+ MyUtilities.stringToTuple(tuple, _conf));
 //								List<String> tupleSend = MyUtilities.stringToTuple(tuple, _conf);

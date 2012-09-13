@@ -172,7 +172,7 @@ public class MyUtilities{
 
         //Previously HASH_DELIMITER = "-" in SystemParameters, but now is the same as DIP_GLOBAL_ADD_DELIMITER
         //we need it for preaggregation
-        public static String getHashDelimiter(Map map){
+        public static String getColumnDelimiter(Map map){
             return SystemParameters.getString(map, "DIP_GLOBAL_ADD_DELIMITER");
         }
 
@@ -186,7 +186,7 @@ public class MyUtilities{
 		if(i == tupleLength - 1){
                     hashString+=tuple.get(hashIndexes.get(i));
                 } else {
-                    hashString+=tuple.get(hashIndexes.get(i)) + getHashDelimiter(map);
+                    hashString+=tuple.get(hashIndexes.get(i)) + getColumnDelimiter(map);
                 }
             }
             return hashString;
@@ -197,24 +197,24 @@ public class MyUtilities{
                 return SINGLE_HASH_KEY;
             }
 
-            String hashDelimiter = getHashDelimiter(map);
+            String columnDelimiter = getColumnDelimiter(map);
 
             // NOTE THAT THE HASHCOLUMN depend upon the output of the projection!!
             StringBuilder hashStrBuf = new StringBuilder();
             if(hashIndexes != null){
                 for(int hashIndex: hashIndexes){
-                    hashStrBuf.append(tuple.get(hashIndex)).append(hashDelimiter);
+                    hashStrBuf.append(tuple.get(hashIndex)).append(columnDelimiter);
                 }
             }
             if(hashExpressions != null){
                 for(ValueExpression hashExpression: hashExpressions){
-                    hashStrBuf.append(hashExpression.eval(tuple)).append(hashDelimiter);
+                    hashStrBuf.append(hashExpression.eval(tuple)).append(columnDelimiter);
                 }
             }
 
             //remove one extra HASH_DELIMITER at the end
 
-            int hdLength = hashDelimiter.length();
+            int hdLength = columnDelimiter.length();
             int fullLength = hashStrBuf.length();
             return hashStrBuf.substring(0, fullLength - hdLength);
 
