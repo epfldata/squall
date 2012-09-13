@@ -30,7 +30,7 @@ do
 		echo "Test $TEST completed successfully..."
 	fi
 #	echo "There were `cat $TMPFILE | grep "Generic get size" | wc -l` calls to genericGetSize during execution of ${TEST}..." 
-	rm $TMPFILE
+#	rm $TMPFILE
 	i+=1
 done
 
