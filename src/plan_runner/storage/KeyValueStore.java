@@ -130,13 +130,12 @@ public class KeyValueStore<K, V> extends BasicStore {
 		return _storageManager.existsInStorage(key.toString());
 	}
 
-	@Override	
-	public ArrayList<V> access(Object... data) {
+	protected ArrayList<V> __access(boolean checkStorage, Object... data) {
 		K key = (K)data[0];
 		Object obj = this._memstore.get(key);
 		HashEntry<K, V> entry = _replAlg.get(obj);
 		boolean inMem = (entry != null);
-		boolean inDisk = (_storageManager.existsInStorage(key.toString())); 
+                boolean inDisk = checkStorage ? (_storageManager.existsInStorage(key.toString())) : false;
 
 		if (!inMem && !inDisk) {
 			return null;
@@ -151,6 +150,11 @@ public class KeyValueStore<K, V> extends BasicStore {
 			resList.addAll(storageElems);
 			return resList;
 		}
+	}
+
+	@Override	
+	public ArrayList<V> access(Object... data) {
+		return __access(true, data);
 	}
 		
 	@Override	

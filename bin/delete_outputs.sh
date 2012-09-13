@@ -12,7 +12,7 @@ STORM_LOGS=$STORM_HOME/$STORMNAME/logs
 for blade in {5..5}
 do
   ssh $MACHINE$blade 'rm -r ' $STORM_DATA'/*;rm -r ' $ZOOKEEPER_DATA'/*;rm -r ' $STORM_LOGS'/*'
-  for port in {1011,1022}
+  for port in {1001..1022}
   do
 	ssh -p "$port" $MACHINE${blade} 'rm -r ' $STORM_DATA'/*;rm -r ' $STORM_LOGS'/*'
   done

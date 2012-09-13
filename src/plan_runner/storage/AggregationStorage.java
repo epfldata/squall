@@ -46,7 +46,7 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 		Object key = _singleEntry ? SINGLE_ENTRY_KEY : data[1];
 	//	System.out.println("obj = " + obj + " key = " + key);
 		V value, newValue;
-		ArrayList<V> list = super.access(key);
+		ArrayList<V> list = super.__access(false, key);
 		if(list == null) {
 			value = (V) _wrapper.getInitialValue();
 			super.onInsert(key, value);
@@ -70,7 +70,7 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 	
 	@Override
 	public ArrayList<V> access(Object... data) {
-		return _singleEntry ? super.access(SINGLE_ENTRY_KEY) : super.access(data);
+		return _singleEntry ? super.__access(false, SINGLE_ENTRY_KEY) : super.__access(false, data);
 	}
 	
 	@Override
@@ -107,7 +107,7 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 		for ( Iterator it = keySet.iterator() ; it.hasNext() ; ) {
 			Object key = it.next();
 			V newValue = (V)storage.access(key).get(0);
-			ArrayList<V> list = super.access(key);	
+			ArrayList<V> list = super.__access(false, key);	
 			if (list == null) {
 				super.onInsert(key, newValue);
 			} else {

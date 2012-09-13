@@ -9,7 +9,7 @@ declare -i CLUSTER_MODE
 # Returns 1 if cluster is in profiling mode, 0 otherwise
 check_cluster_mode() {
 	scp ${MACHINE}:${CLUSTER_NODE_CONF} storm.yaml.tmp
-	CLUSTER_MODE=`cat storm.yaml.tmp | grep "worker.childopts" | wc -l`
+	CLUSTER_MODE=`cat storm.yaml.tmp | grep "agentpath" | wc -l`
 	rm storm.yaml.tmp
 	return $CLUSTER_MODE	
 }

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-STORMNAME=storm-0.8.0
+STORMNAME=storm-0.8.1

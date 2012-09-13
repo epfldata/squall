@@ -12,7 +12,7 @@ do
   ssh $MACHINE$blade 'rm -r ' $REMOTE_SNAP'/*'
   #Deleting log of yjp
   ssh $MACHINE$blade 'rm -r ' $SNAP_LOG'/*'
-  for port in {1011,1022}
+  for port in {1001..1022}
   do
     ssh -p "$port" $MACHINE$blade 'rm -r ' $REMOTE_SNAP'/*'
   done

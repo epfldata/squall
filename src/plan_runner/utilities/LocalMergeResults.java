@@ -71,11 +71,9 @@ public class LocalMergeResults {
                         + "\n  created result file with correct name.");
                 return;
             }
-		System.out.println("---------------");
-		System.out.println(_computedAgg.printContent());
-		System.out.println("---------------");
-		System.out.println(_fileAgg.printContent());
-		System.out.println("---------------");
+            if(_computedAgg.printContent().isEmpty() || _fileAgg.printContent().isEmpty()){
+                throw new RuntimeException("Final aggregation state should not be empty!");
+            }
             if(_computedAgg.getStorage().equals(_fileAgg.getStorage())){
                 LOG.info("\nOK: Expected result achieved for " + SystemParameters.getString(map, "DIP_TOPOLOGY_NAME"));
             }else{
