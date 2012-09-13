@@ -39,6 +39,7 @@ public abstract class BasicStore<R> implements Serializable {
 	}
 
 	public String getContent() {
+		String str = null;
 		if (this._baos == null) {
 			this._baos = new ByteArrayOutputStream();
 			this._ps = new PrintStream(this._baos);
@@ -46,7 +47,8 @@ public abstract class BasicStore<R> implements Serializable {
 			this._baos.reset();
 		}
 		this.printStore(this._ps, true);
-		return this._baos.toString();
+		str = this._baos.toString();
+		return str.equals("") ? null : str;
 	}
 	
 	/* Functions to be implemented by all stores */

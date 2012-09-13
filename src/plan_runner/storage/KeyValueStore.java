@@ -10,10 +10,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import plan_runner.conversion.TypeConversion;
 import plan_runner.utilities.SystemParameters;
 
 public class KeyValueStore<K, V> extends BasicStore {
 
+	private TypeConversion _tc = null;
 	private static int DEBUG_COUNTER = 0 ;	
 	private HashMap<K, Object> _memstore;
 	protected static final int DEFAULT_HASH_INDICES = 256;
@@ -26,6 +28,11 @@ public class KeyValueStore<K, V> extends BasicStore {
 
 	public KeyValueStore(int hash_indices, Map conf) {
 		this(SystemParameters.getInt(conf, "STORAGE_MEMORY_SIZE_MB"), hash_indices, conf);
+	}
+
+	public KeyValueStore(TypeConversion tc, Map conf) {
+		this(SystemParameters.getInt(conf, "STORAGE_MEMORY_SIZE_MB"), DEFAULT_HASH_INDICES, conf);
+		this._tc = tc;
 	}
 
 	public KeyValueStore(int storesizemb, int hash_indices, Map conf) {
@@ -70,19 +77,16 @@ public class KeyValueStore<K, V> extends BasicStore {
 			((LRUList)_replAlg).moveToFront(obj);
 		}		
 	}
-	
-	@Override	
-	public V update(Object... data) {
+
+	protected V __update(boolean checkStorage, Object... data) {		
 		K key = (K)data[0];
 		V oldValue = (V)data[1];
 		V newValue = (V)data[2];
+		
 		ArrayList<V> values;
-
 		String groupId = key.toString();
 		boolean inMem = (this._memstore.containsKey(key) == true);
-		//TODO FIXME
-                //boolean inDisk = (_storageManager.existsInStorage(groupId) == true);
-                boolean inDisk = false;
+		boolean inDisk = checkStorage ? (_storageManager.existsInStorage(groupId) == true) : false;
 
 		// If element is not in disk and not in mem, treat this as an insert instead
 		if (!inMem && !inDisk) {
@@ -112,6 +116,11 @@ public class KeyValueStore<K, V> extends BasicStore {
 		}
 		return newValue; 
 	}
+	
+	@Override	
+	public V update(Object... data) {
+		return __update(true, data);
+	}
 
 	@Override	
 	public boolean contains(Object... data) {
@@ -121,15 +130,12 @@ public class KeyValueStore<K, V> extends BasicStore {
 		return _storageManager.existsInStorage(key.toString());
 	}
 
-	@Override	
-	public ArrayList<V> access(Object... data) {
+	protected ArrayList<V> __access(boolean checkStorage, Object... data) {
 		K key = (K)data[0];
 		Object obj = this._memstore.get(key);
 		HashEntry<K, V> entry = _replAlg.get(obj);
 		boolean inMem = (entry != null);
-		//TODO FIXME
-                //boolean inDisk = (_storageManager.existsInStorage(key.toString())); 
-                boolean inDisk = false;
+                boolean inDisk = checkStorage ? (_storageManager.existsInStorage(key.toString())) : false;
 
 		if (!inMem && !inDisk) {
 			return null;
@@ -144,6 +150,11 @@ public class KeyValueStore<K, V> extends BasicStore {
 			resList.addAll(storageElems);
 			return resList;
 		}
+	}
+
+	@Override	
+	public ArrayList<V> access(Object... data) {
+		return __access(true, data);
 	}
 		
 	@Override	
@@ -219,7 +230,10 @@ public class KeyValueStore<K, V> extends BasicStore {
 				stream.print(" = ");
 				values = entry.getValues();
 				for (V v : values) {
-					stream.print(v.toString() + " ");
+					if (this._tc != null)
+						stream.print(_tc.toString(v));
+					else 
+						stream.print(v.toString());
 				}
 				stream.println("");
 			}
@@ -229,7 +243,10 @@ public class KeyValueStore<K, V> extends BasicStore {
 				stream.print(key.toString());
 				stream.print(" = ");
 				for (V v : values) {
-					stream.print(v.toString() + " ");
+					if (this._tc != null)
+						stream.print(_tc.toString(v));
+					else
+						stream.print(v.toString());
 				}
 				stream.println("");
 			}

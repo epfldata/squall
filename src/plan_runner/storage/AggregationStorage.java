@@ -10,13 +10,14 @@ import plan_runner.conversion.TypeConversion;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.utilities.SystemParameters;
 
-public class AggregationStorage<V> extends KeyValueStore<String, V> {
+public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 
 	private Map _conf;
 	private boolean _singleEntry;
 	private TypeConversion _wrapper;
 	private AggregateOperator _outerAggOp;
 	private static final String SINGLE_ENTRY_KEY = "SEK"; /* Single entry key */
+//	private static final int FINAL_AGGREGATION_TIMEOUT = 10000; /* msecs */
 
 	public AggregationStorage(AggregateOperator outerAggOp, TypeConversion wrapper, Map map, boolean singleEntry){
 		super(singleEntry ? 1 : SystemParameters.getInt(map, "STORAGE_MEMORY_SIZE_MB"), map);
@@ -43,8 +44,9 @@ public class AggregationStorage<V> extends KeyValueStore<String, V> {
 	public V update(Object... data) {
 		Object obj = data[0];
 		Object key = _singleEntry ? SINGLE_ENTRY_KEY : data[1];
+	//	System.out.println("obj = " + obj + " key = " + key);
 		V value, newValue;
-		ArrayList<V> list = super.access(key);
+		ArrayList<V> list = super.__access(false, key);
 		if(list == null) {
 			value = (V) _wrapper.getInitialValue();
 			super.onInsert(key, value);
@@ -52,11 +54,12 @@ public class AggregationStorage<V> extends KeyValueStore<String, V> {
 			value = list.get(0);
 		}
 		if (obj instanceof List) {
+	//		System.out.println("LIST : " + (List<String>)obj);
 			newValue = (V) _outerAggOp.runAggregateFunction((V)value, (List<String>)obj);
 		} else {
 			newValue = (V) _outerAggOp.runAggregateFunction((V)value, (V)obj);
 		}
-		super.update(key, value, newValue);
+		super.__update(false, key, value, newValue);
 		return newValue;
 	}
 
@@ -67,7 +70,7 @@ public class AggregationStorage<V> extends KeyValueStore<String, V> {
 	
 	@Override
 	public ArrayList<V> access(Object... data) {
-		return _singleEntry ? super.access(SINGLE_ENTRY_KEY) : super.access(data);
+		return _singleEntry ? super.__access(false, SINGLE_ENTRY_KEY) : super.__access(false, data);
 	}
 	
 	@Override
@@ -92,12 +95,19 @@ public class AggregationStorage<V> extends KeyValueStore<String, V> {
 	}
 	
 	public void addContent(AggregationStorage storage) {
+		// Wait until all previous partial aggregation stores flush their contents
+/*		try {
+			Thread.sleep(FINAL_AGGREGATION_TIMEOUT);
+		} catch(java.lang.InterruptedException ie) { 
+			System.out.println("Squall Storage:: Failed while waiting for partial stores to flush aggregations. " + ie.getMessage());
+			System.exit(0);
+		}*/
 		// Now aggregate
 		Set keySet = storage.keySet();
 		for ( Iterator it = keySet.iterator() ; it.hasNext() ; ) {
 			Object key = it.next();
 			V newValue = (V)storage.access(key).get(0);
-			ArrayList<V> list = super.access(key);	
+			ArrayList<V> list = super.__access(false, key);	
 			if (list == null) {
 				super.onInsert(key, newValue);
 			} else {

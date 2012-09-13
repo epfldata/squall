@@ -169,7 +169,8 @@ public class AggregateCountOperator implements AggregateOperator<Long>{
         //  is the same as DIP_GLOBAL_ADD_DELIMITER
         @Override
         public List<String> getContent(){
-            return Arrays.asList(_storage.getContent().split("\\r?\\n"));
+	    String str = _storage.getContent(); 
+            return str == null ? null : Arrays.asList(str.split("\\r?\\n"));
         }
 
         @Override

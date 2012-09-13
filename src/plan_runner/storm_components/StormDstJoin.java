@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
+import java.util.Collections;
 import org.apache.log4j.Logger;
 import plan_runner.components.ComponentProperties;
 import plan_runner.expressions.ValueExpression;
@@ -37,11 +38,11 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 	private BasicStore<ArrayList<String>> _firstSquallStorage, _secondSquallStorage;
 	private ProjectOperator _firstPreAggProj, _secondPreAggProj;
 	private String _ID;
-        private List<String> _compIds; // a sorted list of all the components
-        private String _componentIndex; //a unique index in a list of all the components
-                            //used as a shorter name, to save some network traffic
-                            //it's of type int, but we use String to save more space
-        private String _firstEmitterIndex, _secondEmitterIndex;
+	private List<String> _compIds; // a sorted list of all the components
+	private String _componentIndex; //a unique index in a list of all the components
+	//used as a shorter name, to save some network traffic
+	//it's of type int, but we use String to save more space
+	private String _firstEmitterIndex, _secondEmitterIndex;
 
 
 	private int _numSentTuples=0;
@@ -54,7 +55,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 	//output has hash formed out of these indexes
 	private List<Integer> _hashIndexes;
 	private List<ValueExpression> _hashExpressions;
-        private List<Integer> _rightHashIndexes; //hash indexes from the right parent
+	private List<Integer> _rightHashIndexes; //hash indexes from the right parent
 
 	//for load-balancing
 	private List<String> _fullHashList;
@@ -70,8 +71,8 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 
 	public StormDstJoin(StormEmitter firstEmitter,
 			StormEmitter secondEmitter,
-                        ComponentProperties cp,
-                        List<String> allCompNames,
+			ComponentProperties cp,
+			List<String> allCompNames,
 			BasicStore<ArrayList<String>> firstPreAggStorage,
 			BasicStore<ArrayList<String>> secondPreAggStorage,
 			ProjectOperator firstPreAggProj,
@@ -84,9 +85,9 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 		_firstEmitter = firstEmitter;
 		_secondEmitter = secondEmitter;
 		_ID = cp.getName();
-                _componentIndex = String.valueOf(allCompNames.indexOf(_ID));
-                _firstEmitterIndex = String.valueOf(allCompNames.indexOf(_firstEmitter.getName()));
-                _secondEmitterIndex = String.valueOf(allCompNames.indexOf(_secondEmitter.getName()));
+		_componentIndex = String.valueOf(allCompNames.indexOf(_ID));
+		_firstEmitterIndex = String.valueOf(allCompNames.indexOf(_firstEmitter.getName()));
+		_secondEmitterIndex = String.valueOf(allCompNames.indexOf(_secondEmitter.getName()));
 		_batchOutputMillis = cp.getBatchOutputMillis();
 
 		int parallelism = SystemParameters.getInt(conf, _ID+"_PAR");
@@ -99,7 +100,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 
 		_hashIndexes = cp.getHashIndexes();
 		_hashExpressions = cp.getHashExpressions();
-                _rightHashIndexes = cp.getParents()[1].getHashIndexes();
+		_rightHashIndexes = cp.getParents()[1].getHashIndexes();
 
 		_hierarchyPosition = hierarchyPosition;
 
@@ -137,8 +138,8 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			}
 
 			String inputComponentIndex=stormTupleRcv.getString(0);
-                        List<String> tuple = (List<String>) stormTupleRcv.getValue(1);
-                        String inputTupleString = MyUtilities.tupleToString(tuple, _conf);
+			List<String> tuple = (List<String>) stormTupleRcv.getValue(1);
+			String inputTupleString = MyUtilities.tupleToString(tuple, _conf);
 			String inputTupleHash=stormTupleRcv.getString(2);
 
 			if(MyUtilities.isFinalAck(tuple, _conf)){
@@ -260,8 +261,16 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 						//sending
 						AggregateOperator agg = (AggregateOperator) lastOperator;
 						List<String> tuples = agg.getContent();
-						for(String tuple: tuples){
-							tupleSend(MyUtilities.stringToTuple(tuple, _conf), null);
+						if (tuples != null) {
+//							System.out.println("TUPLES: " + tuples + " - " + tuples.size());
+							for(String tuple: tuples){
+								tuple = tuple.replaceAll(" = ", "|");
+		//						System.out.println("BATCH SEND: tuple = " + tuple + " - (after processing: "+ MyUtilities.stringToTuple(tuple, _conf) + ")");
+//								System.out.println("tuple = " + tuple + "/"+ MyUtilities.stringToTuple(tuple, _conf));
+//								List<String> tupleSend = MyUtilities.stringToTuple(tuple, _conf);
+//								Collections.reverse(tupleSend);
+								tupleSend(MyUtilities.stringToTuple(tuple, _conf), null);
+							}
 						}
 
 						//clearing
