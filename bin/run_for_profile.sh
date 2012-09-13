@@ -17,8 +17,11 @@ STORM_OUTPUT_PATH=$RESULT_DIR/data/
 SNAPSHOT_DIR=$RESULT_DIR/snapshots
 
 # 1. deleting old data
-rm -rf ${STORM_OUTPUT_PATH}*
+mkdir -p $RESULT_DIR
 mkdir -p $EXEC_LOG_DIR
+mkdir -p $STORM_OUTPUT_PATH
+mkdir -p $SNAPSHOT_DIR
+rm -rf ${STORM_OUTPUT_PATH}*
 
 # 2. Uploading storm.yaml for profiling
 ./profiling.sh START

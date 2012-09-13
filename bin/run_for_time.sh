@@ -16,8 +16,10 @@ EXEC_LOG_DIR=$RESULT_DIR/exec_logs/
 STORM_OUTPUT_PATH=$RESULT_DIR/data/
 
 #1. deleting old data
-rm -rf ${STORM_OUTPUT_PATH}*
+mkdir -p $RESULT_DIR
 mkdir -p $EXEC_LOG_DIR
+mkdir -p $STORM_OUTPUT_PATH
+rm -rf ${STORM_OUTPUT_PATH}*
 
 # 2. for each generated file, run it and wait until it is terminated
 for config in ${CONF_DIR}* ; do

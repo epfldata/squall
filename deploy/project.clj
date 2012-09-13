@@ -1,6 +1,6 @@
 (defproject squall "0.2.0"
   :java-source-path "../src"
-  :javac-options {:debug "true" :fork "true"}
+  :javac-options {:debug "false" :fork "true"}
   :aot :all
   :jvm-opts ["-Xmx128m" "-Djava.library.path=/usr/local/lib:/opt/local/lib:/usr/lib"
             ]
