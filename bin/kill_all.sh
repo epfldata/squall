@@ -4,7 +4,7 @@ MACHINE=squalldata@icdatasrv
 PS_PATH=/export/home/squalldata/squall_scripts
 PS_FILE=psJava.txt
 
-for blade in {5..5}
+for blade in {1..10}
 do
 	ssh $MACHINE${blade} 'ps -u squalldata > ' $PS_PATH/$PS_FILE
 	scp $MACHINE${blade}:$PS_PATH/$PS_FILE $PS_FILE
@@ -21,7 +21,7 @@ do
 done
 
 # all the local zones
-for blade in {5..5}
+for blade in {1..10}
 do
 	for port in {1001..1022}
 	do

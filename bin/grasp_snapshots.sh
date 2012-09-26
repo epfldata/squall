@@ -34,7 +34,7 @@ scp -r $MACHINE5:$REMOTE_SNAP $MASTER
 removeIfEmpty "$MASTER"
 
 #Grasping output from supervisor nodes
-for blade in {5..5}
+for blade in {1..10}
 do
 	for port in {1001..1022}
 	do

@@ -6,7 +6,7 @@ MACHINE=squalldata@icdatasrv
 REMOTE_SNAP=/opt/storm/profiling/output
 SNAP_LOG=/export/home/squalldata/.yjp/log
 
-for blade in {5..5}
+for blade in {1..10}
 do
   #Deleting all the Storm output on master node
   ssh $MACHINE$blade 'rm -r ' $REMOTE_SNAP'/*'

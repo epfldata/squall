@@ -22,7 +22,7 @@ cp $SOURCE_FILE ~/.storm/storm.yaml
 ../bin/adjust_storm_yaml_locally.sh
 
 # For the storm directory
-for blade in {5..5}
+for blade in {1..10}
 do
   scp $SOURCE_FILE ${MACHINE}${blade}:${CLUSTER_NODE_CONF}
   scp $SOURCE_FILE ${MACHINE}${blade}:${CLUSTER_HOME_CONF}
