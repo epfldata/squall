@@ -154,7 +154,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 
 	@Override	
 	public ArrayList<V> access(Object... data) {
-		return __access(true, data);
+		return __access(false, data);
 	}
 		
 	@Override	
