@@ -7,7 +7,9 @@ import backtype.storm.generated.AlreadyAliveException;
 import backtype.storm.generated.ClusterSummary;
 import backtype.storm.generated.ErrorInfo;
 import backtype.storm.generated.ExecutorInfo;
+import backtype.storm.generated.ExecutorSpecificStats;
 import backtype.storm.generated.ExecutorSummary;
+import backtype.storm.generated.GlobalStreamId;
 import backtype.storm.generated.Nimbus.Client;
 import backtype.storm.generated.NotAliveException;
 import backtype.storm.generated.TopologyInfo;
@@ -132,12 +134,12 @@ public class StormWrapper {
     // if we are in local mode, we cannot obtain these information
     public static void writeStats(Map conf){
         Client client=getNimbusStub(conf);
-        StringBuilder stats=new StringBuilder("");
+        StringBuilder sb=new StringBuilder("");
 
         try {
             ClusterSummary clusterInfo = client.getClusterInfo();
             int numOfTopologies = clusterInfo.get_topologies_size();
-            stats.append("In total there is ").append(numOfTopologies).append(" topologies.\n");
+            sb.append("In total there is ").append(numOfTopologies).append(" topologies.\n");
 
             Iterator<TopologySummary> topologyIter = clusterInfo.get_topologies_iterator();
             while(topologyIter.hasNext()){
@@ -145,53 +147,78 @@ public class StormWrapper {
 
                 //print out basic information about topologies
                 String topologyName = topologySummary.get_name();
-                stats.append("For topology ").append(topologyName).append(":\n");
+                sb.append("For topology ").append(topologyName).append(":\n");
                 int numTasks = topologySummary.get_num_tasks();
-                stats.append(numTasks).append(" tasks, ");
+                sb.append(numTasks).append(" tasks, ");
                 int numWorkers = topologySummary.get_num_workers();
-                stats.append(numWorkers).append(" workers, ");
+                sb.append(numWorkers).append(" workers, ");
                 int uptimeSecs = topologySummary.get_uptime_secs();
-                stats.append(uptimeSecs).append(" uptime seconds.\n");
+                sb.append(uptimeSecs).append(" uptime seconds.\n");
 
                 String topologyID = topologySummary.get_id();
                 String topologyConf = client.getTopologyConf(topologyID);
-                stats.append("Topology configuration is \n");
-                stats.append(topologyConf);
-                stats.append("\n");
+                sb.append("Topology configuration is \n");
+                sb.append(topologyConf);
+                sb.append("\n");
 
                 TopologyInfo topologyInfo = client.getTopologyInfo(topologyID);
                 //print more about each task
                 Iterator<ExecutorSummary> execIter = topologyInfo.get_executors_iterator();
+                boolean globalFailed = false;
                 while(execIter.hasNext()){
                     ExecutorSummary execSummary = execIter.next();
 
                     String componentId = execSummary.get_component_id();
-                    stats.append("component_id:").append(componentId).append(", ");
+                    sb.append("component_id:").append(componentId).append(", ");
                     ExecutorInfo execInfo = execSummary.get_executor_info();
                     int taskStart = execInfo.get_task_start();
                     int taskEnd = execInfo.get_task_end();
-                    stats.append("task_id(s) for this executor:").append(taskStart).append("-").append(taskEnd).append(", ");
+                    sb.append("task_id(s) for this executor:").append(taskStart).append("-").append(taskEnd).append(", ");
                     String host = execSummary.get_host();
-                    stats.append("host:").append(host).append(", ");
+                    sb.append("host:").append(host).append(", ");
                     int port = execSummary.get_port();
-                    stats.append("port:").append(port).append(", ");
+                    sb.append("port:").append(port).append(", ");
                     int uptime = execSummary.get_uptime_secs();
-                    stats.append("uptime:").append(uptime).append("\n");
-                    stats.append("\n");
+                    sb.append("uptime:").append(uptime).append("\n");
+                    sb.append("\n");
+                    
+                    //printing failing statistics, if there are failed tuples
+                    ExecutorSpecificStats stats = execSummary.get_stats().get_specific();
+                    boolean isEmpty;
+                    Object objFailed;
+                    if(stats.is_set_spout()){
+                        Map<String, Map<String, Long>> failed = stats.get_spout().get_failed();
+                        objFailed = failed;
+                        isEmpty = isEmptyMapMap(failed);
+                    }else{
+                        Map<String, Map<GlobalStreamId, Long>> failed = stats.get_bolt().get_failed();
+                        objFailed = failed;
+                        isEmpty = isEmptyMapMap(failed);
+                    }
+                    if(!isEmpty){
+                        sb.append("ERROR: There are some failed tuples: ").append(objFailed).append("\n");
+                        globalFailed = true;
+                    }   
+                }
+                
+                //is there at least one component where something failed
+                if(!globalFailed){
+                    sb.append("\n\nOK: No tuples failed so far.");
+                }else{
+                    sb.append("\n\nERROR: Some tuples failed!");
                 }
                 
                 //print topology errors
-                int numErrors = topologyInfo.get_errors_size();
-                if(numErrors == 0){
-                    stats.append("No errors.").append("\n");
+                Map<String, List<ErrorInfo>> errors = topologyInfo.get_errors();
+                if(!isEmptyMap(errors)){
+                    sb.append("\n\nERROR: There are some errors in topology: ").append(errors);
                 }else{
-                    stats.append("FINISHED WITH ERRORS!").append("\n");
-                    Map<String, List<ErrorInfo>> errors = topologyInfo.get_errors();
-                    stats.append(errors).append("\n");
+                    sb.append("\n\nOK: No errors in the topology.");
                 }
+                
             }
 
-            String strStats = stats.toString();
+            String strStats = sb.toString();
             LOG.info(strStats);
         } catch (TException ex) {
             LOG.info("writeStats:" + MyUtilities.getStackTrace(ex));
@@ -199,4 +226,26 @@ public class StormWrapper {
             LOG.info(MyUtilities.getStackTrace(ex));
         }
     }
+    
+    private static <T> boolean isEmptyMapMap(Map<String, Map<T, Long>> mapMap) {
+        for(Map.Entry<String, Map<T, Long>> outerEntry: mapMap.entrySet()){
+            for(Map.Entry<T, Long> innerEntry: outerEntry.getValue().entrySet()){
+                long value = innerEntry.getValue();
+                if(value != 0){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private static boolean isEmptyMap(Map<String, List<ErrorInfo>> map) {
+        for(Map.Entry<String, List<ErrorInfo>> outerEntry: map.entrySet()){
+            List<ErrorInfo> errors = outerEntry.getValue();
+            if(errors != null && !errors.isEmpty()){
+                return false;
+            }
+        }
+        return true;
+    }    
 }
