@@ -45,6 +45,6 @@ DIP_KILL_AT_THE_END true
 # Storage directory for local runs
 STORAGE_LOCAL_DIR /tmp/ramdisk
 # Storage directory for cluster runs
-STORAGE_CLUSTER_DIR /export/home/squalldata/storage 
+STORAGE_CLUSTER_DIR /data/squall_zone/storage
 STORAGE_COLD_START true
 STORAGE_MEMORY_SIZE_MB 4096

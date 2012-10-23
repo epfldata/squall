@@ -3,7 +3,7 @@
 
 MACHINE=squalldata@icdatasrv
 
-REMOTE_SNAP=/opt/storm/profiling/output
+REMOTE_SNAP=/data/squall_zone/profiling/output
 SNAP_LOG=/export/home/squalldata/.yjp/log
 
 for blade in {1..10}

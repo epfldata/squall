@@ -16,7 +16,7 @@ $dip_total_src_par = [10]
 $opt = $optimizer.split(pattern = "_").map{|s| s.chars.first.downcase}.join
 
 $OUTPUT_PATH="generated"
-$dip_data_root = "/export/home/squalldata/tpchdb/"
+$dip_data_root = "/data/squall_blade/data/tpchdb/"
 $dip_sql_root = "../test/squall/sql_queries/"
 $dip_result_root = "../test/results"
 $default_dip_schema_path = "../test/squall/schemas/tpch.txt"
@@ -27,7 +27,7 @@ $default_extension = ".tbl"
 
 $TOPOLOGY_NAME_PREFIX="username"
 $storage_local_dir = "/tmp/ramdisk"
-$storage_cluster_dir = "/export/home/squalldata/storage"
+$storage_cluster_dir = "/data/squall_zone/storage"
 $memory_size_mb = 4096
 
 $queries.each do |q, q_args|

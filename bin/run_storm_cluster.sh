@@ -4,7 +4,7 @@
 MACHINE=squalldata@icdatasrv
 MACHINE5=squalldata@icdatasrv5
 STORMPATH=/opt/storm/$STORMNAME
-LOGPATH=$STORMPATH/logs
+LOGPATH=/data/squall_zone/logs
 
 # Multi-server zookeeper
 #echo "1" | ssh $MACHINE1 'cat > /opt/storm/zookeeper_data/myid'
@@ -16,7 +16,7 @@ LOGPATH=$STORMPATH/logs
 #By default, all the processes on Solaris are run under supervision, using SMF tool
 #Running zookeeper, nimbus and ui on a single node
 #Running zookeeper
-ssh $MACHINE5 '/opt/storm/bin/zookeeperd > /opt/storm/zookeeper_data/consoleZoo.txt 2>&1 &'
+ssh $MACHINE5 '/opt/storm/bin/zookeeperd > /data/squall_zone/zookeeper_data/consoleZoo.txt 2>&1 &'
 
 #Running nimbus and ui
 #Console output goes to the current directory (pwd).

@@ -5,7 +5,8 @@
 
 MACHINE=squalldata@icdatasrv
 MACHINE5=${MACHINE}5
-STORM_HOME=/opt/storm
+STORM_HOME=/data/squall_zone/
+
 STORM_DATA=$STORM_HOME/storm_data
 ZOOKEEPER_DATA=$STORM_HOME/zookeeper_data
 STORM_LOGS=$STORM_HOME/$STORMNAME/logs

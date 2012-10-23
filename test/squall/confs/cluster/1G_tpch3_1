@@ -2,7 +2,7 @@ DIP_DISTRIBUTED true
 DIP_QUERY_NAME tpch3
 
 DIP_TOPOLOGY_NAME_PREFIX username
-DIP_DATA_ROOT /export/home/squalldata/tpchdb/
+DIP_DATA_ROOT /data/squall_blade/data/tpchdb/
 DIP_SQL_ROOT ../test/squall/sql_queries/
 DIP_SCHEMA_PATH ../test/squall/schemas/tpch.txt
 
@@ -44,6 +44,6 @@ DIP_KILL_AT_THE_END true
 # Storage directory for local runs
 STORAGE_LOCAL_DIR /tmp/ramdisk
 # Storage directory for cluster runs
-STORAGE_CLUSTER_DIR /export/home/squalldata/storage 
+STORAGE_CLUSTER_DIR /data/squall_zone/storage
 STORAGE_COLD_START true
 STORAGE_MEMORY_SIZE_MB 4096

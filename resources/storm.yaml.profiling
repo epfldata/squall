@@ -6,7 +6,7 @@ storm.zookeeper.servers:
 
 nimbus.host: "icdatasrv5-priv"
  
-storm.local.dir: "/opt/storm/storm_data"
+storm.local.dir: "/data/squall_zone/storm_data"
 
 supervisor.slots.ports:
     - 6700
@@ -25,7 +25,7 @@ java.library.path: "/opt/storm/deps/lib"
 
 # these are defaults, but can be changed from config files/from code directly
 topology.acker.executors: 0
-topology.workers: 220
+topology.workers: 22
 
 topology.disruptor.wait.strategy: "com.lmax.disruptor.BlockingWaitStrategy"
 topology.executor.receive.buffer.size: 16384 #batched
@@ -33,7 +33,7 @@ topology.executor.send.buffer.size: 16384 #individual messages
 topology.receiver.buffer.size: 8 # setting it too high causes a lot of problems (heartbeat thread gets starved, throughput plummets)
 topology.transfer.buffer.size: 16384 # batched
 
-worker.childopts: "-Xmx1024m -agentpath:/opt/storm/profiling/yjp-11.0.8/bin/solaris-x86-32/libyjpagent.so=sampling,periodicperf=15,noj2ee,dir=/opt/storm/profiling/output"
+worker.childopts: "-Xmx2048m -agentpath:/opt/storm/profiling/yjp-11.0.8/bin/solaris-x86-32/libyjpagent.so=sampling,periodicperf=15,noj2ee,dir=/opt/storm/profiling/output"
 
 topology.fall.back.on.java.serialization: false
 topology.spout.wait.strategy: "backtype.storm.spout.DummySpoutWaitStrategy"

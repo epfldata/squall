@@ -10,13 +10,13 @@ $extension =  ".tbl"
 
 $TOPOLOGY_NAME_PREFIX="username"
 $storage_local_dir = "/tmp/ramdisk"
-$storage_cluster_dir = "/export/home/squalldata/storage"
+$storage_cluster_dir = "/data/squall_zone/storage"
 $memory_size_mb = 4096
 
 $dip_distributed = true
 $dip_result_root = "../test/results/"
 
-$datafiles = $data_sizes.map { |size| [size, "/export/home/avitorovic/queries/tpch/" + size.to_s + "G"] }
+$datafiles = $data_sizes.map { |size| [size, "/data/squall_blade/data/tpchdb/" + size.to_s + "G"] }
 
 $heuristics = 
 [1, 2, 4, 8, 16].map do |parallelism|

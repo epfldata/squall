@@ -6,7 +6,7 @@ storm.zookeeper.servers:
 
 nimbus.host: "icdatasrv5-priv"
  
-storm.local.dir: "/opt/storm/storm_data"
+storm.local.dir: "/data/squall_zone/storm_data"
 
 supervisor.slots.ports:
     - 6700
@@ -33,7 +33,7 @@ topology.executor.send.buffer.size: 16384 #individual messages
 topology.receiver.buffer.size: 8 # setting it too high causes a lot of problems (heartbeat thread gets starved, throughput plummets)
 topology.transfer.buffer.size: 16384 # batched
 
-worker.childopts: "-Xmx1024m"
+worker.childopts: "-Xmx2048m"
 
 topology.fall.back.on.java.serialization: false
 topology.spout.wait.strategy: "backtype.storm.spout.DummySpoutWaitStrategy"
