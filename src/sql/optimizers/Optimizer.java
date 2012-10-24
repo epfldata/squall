@@ -1,7 +1,6 @@
 package sql.optimizers;
 
-import plan_runner.queryPlans.QueryPlan;
-
+import plan_runner.query_plans.QueryPlan;
 
 public interface Optimizer {
 

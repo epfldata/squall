@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package plan_runner.expressions;
 
 import java.util.ArrayList;
@@ -29,23 +24,24 @@ public class Multiplication<T extends Number & Comparable<T>> implements ValueEx
 
     private static final long serialVersionUID = 1L;
 
-    private List<ValueExpression<T>> _veList = new ArrayList<ValueExpression<T>>();
+    private List<ValueExpression> _veList = new ArrayList<ValueExpression>();
     private NumericConversion<T> _wrapper;
 
-    public Multiplication(NumericConversion<T> wrapper, ValueExpression<T> ve1, ValueExpression<T> ve2,
-            ValueExpression<T>... veArray){
+    public Multiplication(ValueExpression ve1, ValueExpression ve2,
+            ValueExpression... veArray){
         _veList.add(ve1);
         _veList.add(ve2);
         _veList.addAll(Arrays.asList(veArray));
-        _wrapper = wrapper;
+        _wrapper = (NumericConversion<T>) MyUtilities.getDominantNumericType(_veList);
     }
 
     @Override
     public T eval(List<String> tuple){
         double result = 1;
-        for(ValueExpression<T> factor: _veList){
-            T value = (T)factor.eval(tuple);
-            result *= _wrapper.toDouble(value);
+        for(ValueExpression factor: _veList){
+            Object currentVal = factor.eval(tuple);
+            NumericConversion currentType = (NumericConversion) factor.getType();
+            result *= currentType.toDouble(currentVal);
         }
         return _wrapper.fromDouble(result);
     }
@@ -83,7 +79,7 @@ public class Multiplication<T extends Number & Comparable<T>> implements ValueEx
 
     @Override
     public List<ValueExpression> getInnerExpressions() {
-        return MyUtilities.listTypeErasure(_veList);
+        return _veList;
     }
 
     @Override

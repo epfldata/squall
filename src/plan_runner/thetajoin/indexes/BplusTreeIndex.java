@@ -1,19 +1,14 @@
 package plan_runner.thetajoin.indexes;
 
-import plan_runner.storage.bplustree.NodeFactory;
-import plan_runner.storage.bplustree.MemoryInnerNode;
-import plan_runner.storage.bplustree.LeafNode;
-import plan_runner.storage.bplustree.MemoryLeafNode;
-import plan_runner.storage.bplustree.Node;
-import plan_runner.storage.bplustree.MemoryNodeFactory;
-import plan_runner.storage.bplustree.BPlusTree;
+import cherri.bheaven.bplustree.BPlusTree;
+import cherri.bheaven.bplustree.LeafNode;
+import cherri.bheaven.bplustree.Node;
+import cherri.bheaven.bplustree.NodeFactory;
+import cherri.bheaven.bplustree.memory.MemoryInnerNode;
+import cherri.bheaven.bplustree.memory.MemoryLeafNode;
+import cherri.bheaven.bplustree.memory.MemoryNodeFactory;
 import gnu.trove.list.array.TIntArrayList;
-
-
-
 import plan_runner.predicates.ComparisonPredicate;
-
-
 
 /**
  * 

@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package plan_runner.conversion;
 
 public class LongConversion implements NumericConversion<Long> {
@@ -24,7 +19,7 @@ public class LongConversion implements NumericConversion<Long> {
     }
 
     @Override
-    public double toDouble(Long obj) {
+    public double toDouble(Object obj) {
         long value = (Long)obj;
         return (double)value;
     }

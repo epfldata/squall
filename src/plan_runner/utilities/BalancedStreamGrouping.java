@@ -1,13 +1,8 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package plan_runner.utilities;
 
+import backtype.storm.generated.GlobalStreamId;
 import backtype.storm.grouping.CustomStreamGrouping;
-import backtype.storm.tuple.Fields;
-import java.util.ArrayList;
+import backtype.storm.task.WorkerTopologyContext;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +16,8 @@ import java.util.Map;
 public class BalancedStreamGrouping implements CustomStreamGrouping{
 
     //the number of tasks on the level this stream grouping is sending to
-    private int _numTasks;
+    private int _numTargetTasks;
+    private List<Integer> _targetTasks;
     
     private List<String> _fullHashList;
 
@@ -35,27 +31,25 @@ public class BalancedStreamGrouping implements CustomStreamGrouping{
         _map = map;
         _fullHashList = fullHashList;
     }
-
+    
     @Override
-    public void prepare(Fields fields, int numTasks) {
-        _numTasks = numTasks;
+    public void prepare(WorkerTopologyContext wtc, GlobalStreamId gsi, List<Integer> targetTasks) {
+        _targetTasks = targetTasks;
+        _numTargetTasks = targetTasks.size();
     }
 
     @Override
-    public List<Integer> taskIndices(List<Object> stormTuple) {
+    public List<Integer> chooseTasks(int taskId, List<Object> stormTuple) {
         List<String> tuple = (List<String>) stormTuple.get(1);
         String tupleHash = (String) stormTuple.get(2);
         if(MyUtilities.isFinalAck(tuple, _map)){
-            List<Integer> result = new ArrayList<Integer>();
-            for(int i=0; i< _numTasks; i++){
-                result.add(i);
-            }
-            return result;
+            //send to everyone
+            return _targetTasks;
         }
         if(!isBalanced()){
-            return fieldGrouping(tupleHash);
+            return Arrays.asList(_targetTasks.get(fieldGrouping(tupleHash)));
         }else{
-            return balancedGrouping(tupleHash);
+            return Arrays.asList(_targetTasks.get(balancedGrouping(tupleHash)));
         }
     }
 
@@ -63,14 +57,12 @@ public class BalancedStreamGrouping implements CustomStreamGrouping{
         return (_fullHashList != null);
     }
 
-    private List<Integer> fieldGrouping(String tupleHash){
-        int index = Math.abs(tupleHash.hashCode()) % _numTasks;
-        return Arrays.asList(index);
+    private int fieldGrouping(String tupleHash){
+        return Math.abs(tupleHash.hashCode()) % _numTargetTasks;
     }
 
-    private List<Integer> balancedGrouping(String tupleHash){
-        int index = _fullHashList.indexOf(tupleHash) % _numTasks;
-        return Arrays.asList(index);
+    private int balancedGrouping(String tupleHash){
+        return _fullHashList.indexOf(tupleHash) % _numTargetTasks;
     }
 
 }

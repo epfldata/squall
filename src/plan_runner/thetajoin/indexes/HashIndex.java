@@ -1,9 +1,7 @@
 package plan_runner.thetajoin.indexes;
 
 import gnu.trove.list.array.TIntArrayList;
-
 import java.util.HashMap;
-
 import plan_runner.predicates.ComparisonPredicate;
 
 

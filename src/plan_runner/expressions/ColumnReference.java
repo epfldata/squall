@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package plan_runner.expressions;
 
 import java.util.ArrayList;
@@ -28,7 +23,7 @@ public class ColumnReference<T extends Comparable<T>> implements ValueExpression
     public ColumnReference(TypeConversion<T> wrapper, int columnIndex, String columnStr){
         this(wrapper, columnIndex);
         _columnStr = columnStr;
-    }    
+    }
     
     @Override
     public T eval(List<String> tuple){

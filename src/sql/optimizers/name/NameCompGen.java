@@ -15,7 +15,7 @@ import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
-import plan_runner.queryPlans.QueryPlan;
+import plan_runner.query_plans.QueryPlan;
 import plan_runner.utilities.DeepCopy;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.CompGen;
@@ -107,7 +107,6 @@ public class NameCompGen implements CompGen{
     }
     
     private void initWhereClause(Expression whereExpr) {
-        // TODO: in non-nested case, there is a single Expression
         if (whereExpr == null) return;
 
         AndVisitor andVisitor = new AndVisitor();
@@ -229,8 +228,8 @@ public class NameCompGen implements CompGen{
         }
         
         //set hashes for two parents, has to be before createCompCost
-        addHash(left, joinCondition);
-        addHash(right, joinCondition);        
+        addJoinHash(left, joinCondition);
+        addJoinHash(right, joinCondition);        
         
         createCompCost(joinComponent);
         if(_costEst!=null) _costEst.setInputParams(joinComponent, joinCondition);
@@ -246,13 +245,20 @@ public class NameCompGen implements CompGen{
             // final aggregation is able to do projection in GroupByProjection
         //}
             
+        NameSelectItemsVisitor nsiv=null;
         if(ParserUtil.isFinalJoin(joinComponent, _pq)){
             //final component in terms of joins
-            addFinalAgg(joinComponent);
+            nsiv = getFinalSelectVisitor(joinComponent);
+            attachSelectClauseOnLastJoin(joinComponent, nsiv);
         }
 
         if(_costEst!=null) _costEst.setOutputParamsAndPar(joinComponent);
 
+        //we have to create newComponent after processing statistics of the joinComponent
+        if(ParserUtil.isFinalJoin(joinComponent, _pq)){
+            generateOperatorComp(joinComponent, nsiv);
+        }
+        
         return joinComponent;
     }
 
@@ -305,11 +311,11 @@ public class NameCompGen implements CompGen{
         for(Map.Entry<Set<String>, Expression> orEntry: _compNamesOrExprs.entrySet()){
             Set<String> orCompNames = orEntry.getKey();
 
-            //TODO: the full solution would be that OrExpressions are splitted into subexpressions
+            //TODO-PRIO: the full solution would be that OrExpressions are splitted into subexpressions
             //  which might be executed on their LCM
             //  Not implemented because it's quite rare - only TPCH7
             //  Even in TPCH7 there is no need for multiple LCM.
-            //TODO: selectivityEstimation for pushing OR need to be improved
+            //TODO-PRIO: selectivityEstimation for pushing OR need to be improved
             Expression orExpr = orEntry.getValue();
             if(HierarchyExtractor.isLCM(component, orCompNames)){
                 expr = appendAnd(expr, orExpr);
@@ -436,22 +442,18 @@ public class NameCompGen implements CompGen{
     /*************************************************************************************
      * SELECT clause - Final aggregation
      *************************************************************************************/
-     private void addFinalAgg(Component lastComponent) {
-        //TODO: take care in nested case
+     private NameSelectItemsVisitor getFinalSelectVisitor(Component lastComponent) {
         TupleSchema tupleSchema = _compCost.get(lastComponent.getName()).getSchema();
         NameSelectItemsVisitor selectVisitor = new NameSelectItemsVisitor(tupleSchema, _map, lastComponent);
         for(SelectItem elem: _pq.getSelectItems()){
             elem.accept(selectVisitor);
         }
-        List<AggregateOperator> aggOps = selectVisitor.getAggOps();
-        List<ValueExpression> groupByVEs = selectVisitor.getGroupByVEs();
-        List<Expression> groupByExprs = selectVisitor.getGroupByExprs();
-
-        attachSelectClause(lastComponent, aggOps, groupByVEs, groupByExprs);
+        return selectVisitor;
     }
 
-    private void attachSelectClause(Component lastComponent, List<AggregateOperator> aggOps, List<ValueExpression> groupByVEs, List<Expression> groupByExprs) {
-        ProjectOperator project = new ProjectOperator(groupByVEs);
+    private void attachSelectClauseOnLastJoin(Component lastComponent, NameSelectItemsVisitor selectVisitor) {
+        List<AggregateOperator> aggOps = selectVisitor.getAggOps();
+        ProjectOperator project = new ProjectOperator(selectVisitor.getGroupByVEs());
         if (aggOps.isEmpty()){
             lastComponent.addOperator(project);
         }else if (aggOps.size() == 1){
@@ -459,26 +461,74 @@ public class NameCompGen implements CompGen{
             AggregateOperator firstAgg = aggOps.get(0);
             firstAgg.setGroupByProjection(project);
             
+                                                /* Avg result cannot be aggregated over multiple nodes.
+                                                 *   Solution is one of the following:
+                                                 *     a) the output of average is keeped in a form (Sum, Count) 
+                                                 *          and then a user is responsible to aggregate it over nodes
+                                                 *     b) if NameTranslator.isSuperset for last join keys and GroupBy is not fullfilled
+                                                 *          create new level node with aggregation as the only operation
+                                                 *    To be akin to Sum and Count aggregates, we opted for a)
+                                                 */
             if(firstAgg.getDistinct() == null){
                 lastComponent.addOperator(firstAgg);
             }else{
-                //Setting new level of components is only necessary for distinct in aggregates
-                
                 //in general groupByVEs is not a ColumnReference (it can be an addition, for example). 
                 //  ProjectOperator is not obliged to create schema which fully fits in what FinalAggregation wants
-                addHash(lastComponent, groupByExprs);
-                OperatorComponent newComponent = new OperatorComponent(lastComponent,
-                                                                 ParserUtil.generateUniqueName("OPERATOR"),
-                                                                 _queryPlan).addOperator(firstAgg);    
-                //we can use the same firstAgg, because we no tupleSchema change occurred after LAST_COMPONENT:FinalAgg and NEW_COMPONENT:FinalAgg
-                //  Namely, NEW_COMPONENT has only FinalAgg operator
+                addHash(lastComponent, selectVisitor.getGroupByVEs());
             }
         }else{
             throw new RuntimeException("For now only one aggregate function supported!");
         }
     }
+    
+    private OperatorComponent generateOperatorComp(Component lastComponent, NameSelectItemsVisitor selectVisitor) {
+        List<AggregateOperator> aggOps = selectVisitor.getAggOps();
+        if(aggOps.size() != 1){
+            return null;
+        }
+        OperatorComponent opComp = null;
+        
+        //projectOperator is already set to firstAgg in attachLastJoin method
+        //  if we decide to do construct new NSIV, then projectOperator has to be set as well
+        AggregateOperator firstAgg = aggOps.get(0);
+        
+        //Setting new level of components is only necessary for distinct in aggregates
+        if (firstAgg.getDistinct() != null ){     
+                opComp = createAndAddOperatorComp(lastComponent);
+                
+                createCompCost(opComp);           
+                if(_costEst!=null) _costEst.setInputParams(opComp);
+                
+                //we can use the same firstAgg, because we no tupleSchema change occurred after LAST_COMPONENT:FinalAgg and NEW_COMPONENT:FinalAgg
+                //  Namely, NEW_COMPONENT has only FinalAgg operator                
+                opComp.addOperator(firstAgg);
+                
+                if(_costEst!=null) _costEst.setOutputParamsAndPar(opComp);                
+        }
+        
+        return opComp;
+    }
+    
+    private OperatorComponent createAndAddOperatorComp(Component lastComponent) {
+        OperatorComponent opComp = new OperatorComponent(lastComponent,
+                                                                 ParserUtil.generateUniqueName("OPERATOR"),
+                                                                 _queryPlan);
+        
+        return opComp;
+    }
+    
+    private void createCompCost(OperatorComponent opComp) {
+        String compName = opComp.getName();
+        CostParams costParams = new CostParams();
 
-
+        //*********set schema
+        TupleSchema schema = _compCost.get(opComp.getParents()[0].getName()).getSchema();
+        costParams.setSchema(schema);
+        
+        _compCost.put(compName, costParams);
+    }
+    
+    
     /*************************************************************************************
      * HASH
      *************************************************************************************/
@@ -487,7 +537,7 @@ public class NameCompGen implements CompGen{
     //  Conditions are related only to parents of join,
     //  but we have to filter who belongs to my branch in NameJoinHashVisitor.
     //  We don't want to hash on something which will be used to join with same later component in the hierarchy.
-    private void addHash(Component component, List<Expression> joinCondition) {
+    private void addJoinHash(Component component, List<Expression> joinCondition) {
         TupleSchema tupleSchema = _compCost.get(component.getName()).getSchema();
         NameJoinHashVisitor joinOn = new NameJoinHashVisitor(tupleSchema, component);
         for(Expression exp: joinCondition){
@@ -495,9 +545,12 @@ public class NameCompGen implements CompGen{
         }
         List<ValueExpression> hashExpressions = joinOn.getExpressions();
 
-        //if joinCondition is a R.A + 5 = S.A, and inputTupleSchema is "R.A + 5", this is NOT a complex condition
-        //  HashExpression is a ColumnReference(0)
-        if(!joinOn.isComplexCondition()){
+        addHash(component, hashExpressions);
+    }
+    
+    private void addHash(Component component, List<ValueExpression> hashExpressions){
+        //if joinCondition is a R.A + 5 = S.A, and inputTupleSchema is "R.A + 5", HashExpression is a ColumnReference(0)
+        if(ParserUtil.isAllColumnRefs(hashExpressions)){
             //all the join conditions are represented through columns, no ValueExpression
             //guaranteed that both joined components will have joined columns visited in the same order
             //i.e R.A=S.A and R.B=S.B, the columns are (R.A, R.B), (S.A, S.B), respectively
@@ -510,4 +563,5 @@ public class NameCompGen implements CompGen{
             component.setHashExpressions(hashExpressions);
         }
     }
+
 }

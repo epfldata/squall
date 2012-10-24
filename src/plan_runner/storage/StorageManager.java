@@ -1,16 +1,16 @@
 package plan_runner.storage;
 
 import java.io.File;
-import java.util.Map;
-import java.util.ArrayList;
-import java.net.InetAddress;
-import java.io.Serializable;
-import java.io.OutputStream;
-import java.io.FilenameFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Map;
 import plan_runner.utilities.SystemParameters;
 
 /* StorageManager that handles reading and writing objects from/to a
@@ -33,7 +33,7 @@ public class StorageManager<R> implements Serializable {
 	public StorageManager(BasicStore store, Map conf) {
 		this.store = store;
 		if (SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED")) {
-			this.rootDir = SystemParameters.getString(conf, "STORAGE_DIP_DIR");
+			this.rootDir = SystemParameters.getString(conf, "STORAGE_CLUSTER_DIR");
 		} else {
 			this.rootDir = SystemParameters.getString(conf, "STORAGE_LOCAL_DIR");
 		}

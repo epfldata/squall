@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
-import plan_runner.queryPlans.QueryPlan;
+import plan_runner.query_plans.QueryPlan;
 import plan_runner.utilities.SystemParameters;
 import sql.schema.Schema;
 import sql.util.TableAliasName;

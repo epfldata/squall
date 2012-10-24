@@ -1,4 +1,5 @@
 package plan_runner.storage;
+
 import java.io.Serializable;
 
 public class LRUList<V> implements ReplacementAlgorithm<V>, Serializable {

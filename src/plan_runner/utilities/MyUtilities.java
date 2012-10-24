@@ -7,12 +7,10 @@ import backtype.storm.topology.InputDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-import plan_runner.expressions.ValueExpression;
 import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStreamReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -20,14 +18,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import plan_runner.thetajoin.matrixMapping.MatrixAssignment;
-import plan_runner.operators.AggregateOperator;
-
 import org.apache.log4j.Logger;
-import plan_runner.stormComponents.StormComponent;
-import plan_runner.stormComponents.StormEmitter;
-import plan_runner.stormComponents.StormSrcHarmonizer;
+import plan_runner.conversion.DoubleConversion;
+import plan_runner.conversion.TypeConversion;
+import plan_runner.expressions.ValueExpression;
+import plan_runner.operators.AggregateOperator;
+import plan_runner.storm_components.StormComponent;
+import plan_runner.storm_components.StormEmitter;
+import plan_runner.storm_components.StormSrcHarmonizer;
+import plan_runner.thetajoin.matrix_mapping.MatrixAssignment;
 
 
 public class MyUtilities{
@@ -71,7 +70,7 @@ public class MyUtilities{
                                                Logger log) {
             StringBuilder sb = new StringBuilder();
             sb.append("\nThe result for topology ");
-            sb.append(MyUtilities.getFullTopologyName(map));
+            sb.append(SystemParameters.getString(map, "DIP_TOPOLOGY_NAME"));
             sb.append("\nComponent ").append(componentName).append(":\n");
             sb.append("\nThis task received ").append(numProcessedTuples);
             sb.append("\n").append(compContent);
@@ -79,33 +78,75 @@ public class MyUtilities{
         }
 
         /*
-         * Different tuple<->(String, Hash) conversions
+         * Used for reading a result file, 
+         *   # should be treated as possible data, not comment
          */
+        public static List<String> readFileLinesSkipEmpty (String path) throws IOException {
+            BufferedReader reader = new BufferedReader(new FileReader(new File(path)));
 
-        public static List<String> getLinesFromFile (String path){
             List<String> lines = new ArrayList<String>();
+            String strLine;
+            while ((strLine = reader.readLine()) != null)   {
+                if(!strLine.isEmpty()){
+                    lines.add(strLine);
+                }
+            }
+            reader.close();
+            return lines;
+        }
+        
+        /*
+         * Used for reading an SQL file
+         */
+        public static String readFileSkipEmptyAndComments(String path){
             try {
-                FileInputStream fstream = new FileInputStream(path);
-                DataInputStream in = new DataInputStream(fstream);
-                BufferedReader br = new BufferedReader(new InputStreamReader(in));
-
-                String strLine;
-                while ((strLine = br.readLine()) != null)   {
-                    if((!strLine.isEmpty()) && (!strLine.startsWith("#"))){
-                        lines.add(strLine);
+                StringBuilder sb = new StringBuilder();
+            
+                List<String> lines = readFileLinesSkipEmpty(path);
+                for(String line: lines){
+                    line = line.trim();
+                    if(!line.startsWith("#")){
+                        sb.append(line).append(" ");
                     }
                 }
-                in.close();
-            } catch (FileNotFoundException ex) {
-                LOG.info("\nResult file " + path + " have not be found!");
-                lines = null;
-            } catch (Exception ex){
-                LOG.info(MyUtilities.getStackTrace(ex));
-                lines = null;
+                if(sb.length() > 0){
+                    sb.deleteCharAt(sb.length() - 1); //last space is unnecessary
+                }
+            
+                return sb.toString();
+            } catch (IOException ex) {
+                String err = MyUtilities.getStackTrace(ex);
+                throw new RuntimeException("Error while reading a file:\n " + err);
             }
-            return lines;
+        }
+        
+        /*
+         * Read query plans - read as verbatim
+         */
+        public static String readFile(String path) {
+            try {
+                StringBuilder sb = new StringBuilder();
+                BufferedReader reader = new BufferedReader(new FileReader(new File(path)));
+                
+                String line;
+                while( (line = reader.readLine()) != null){
+                    sb.append(line).append("\n");
+                }
+                if(sb.length() > 0){
+                    sb.deleteCharAt(sb.length() - 1); //last \n is unnecessary
+                }
+                reader.close();
+            
+                return sb.toString();
+            } catch (IOException ex) {
+                String err = MyUtilities.getStackTrace(ex);
+                throw new RuntimeException("Error while reading a file:\n " + err);
+            }
         }        
 
+        /*
+         * Different tuple<->(String, Hash) conversions
+         */        
         public static List<String> fileLineToTuple(String line, Map conf) {
             String[] columnValues = line.split(SystemParameters.getString(conf, "DIP_READ_SPLIT_DELIMITER"));
             return new ArrayList<String>(Arrays.asList(columnValues));
@@ -131,7 +172,7 @@ public class MyUtilities{
 
         //Previously HASH_DELIMITER = "-" in SystemParameters, but now is the same as DIP_GLOBAL_ADD_DELIMITER
         //we need it for preaggregation
-        public static String getHashDelimiter(Map map){
+        public static String getColumnDelimiter(Map map){
             return SystemParameters.getString(map, "DIP_GLOBAL_ADD_DELIMITER");
         }
 
@@ -145,7 +186,7 @@ public class MyUtilities{
 		if(i == tupleLength - 1){
                     hashString+=tuple.get(hashIndexes.get(i));
                 } else {
-                    hashString+=tuple.get(hashIndexes.get(i)) + getHashDelimiter(map);
+                    hashString+=tuple.get(hashIndexes.get(i)) + getColumnDelimiter(map);
                 }
             }
             return hashString;
@@ -156,36 +197,27 @@ public class MyUtilities{
                 return SINGLE_HASH_KEY;
             }
 
-            String hashDelimiter = getHashDelimiter(map);
+            String columnDelimiter = getColumnDelimiter(map);
 
             // NOTE THAT THE HASHCOLUMN depend upon the output of the projection!!
             StringBuilder hashStrBuf = new StringBuilder();
             if(hashIndexes != null){
                 for(int hashIndex: hashIndexes){
-                    hashStrBuf.append(tuple.get(hashIndex)).append(hashDelimiter);
+                    hashStrBuf.append(tuple.get(hashIndex)).append(columnDelimiter);
                 }
             }
             if(hashExpressions != null){
                 for(ValueExpression hashExpression: hashExpressions){
-                    hashStrBuf.append(hashExpression.eval(tuple)).append(hashDelimiter);
+                    hashStrBuf.append(hashExpression.eval(tuple)).append(columnDelimiter);
                 }
             }
 
             //remove one extra HASH_DELIMITER at the end
 
-            int hdLength = hashDelimiter.length();
+            int hdLength = columnDelimiter.length();
             int fullLength = hashStrBuf.length();
             return hashStrBuf.substring(0, fullLength - hdLength);
 
-        }
-
-        public static String getFullTopologyName(Map map){
-            String topologyName = SystemParameters.getString(map, "DIP_TOPOLOGY_NAME");
-            String topologyPrefix = SystemParameters.getString(map, "DIP_TOPOLOGY_NAME_PREFIX");
-            if(topologyPrefix != null){
-                topologyName = topologyPrefix + "_" + topologyName;
-            }
-            return topologyName;
         }
 
     public static List<String> createOutputTuple(List<String> firstTuple, List<String> secondTuple, List<Integer> joinParams) {
@@ -409,5 +441,40 @@ public class MyUtilities{
             }
             return result;
         }
-	
+        
+        public static TypeConversion getDominantNumericType(List<ValueExpression> veList){
+            TypeConversion wrapper = veList.get(0).getType();
+            for(int i = 1; i < veList.size(); i++){
+                TypeConversion currentType = veList.get(1).getType();
+                if(isDominant(currentType, wrapper)){
+                    wrapper = currentType;
+                }
+            }
+            return wrapper;
+        }
+
+        /*
+         * Does bigger dominates over smaller? 
+         *   For (bigger, smaller) = (double, long) answer is yes.
+         */
+        private static boolean isDominant(TypeConversion bigger, TypeConversion smaller) {
+            //for now we only have two numeric types: double and long
+            if (bigger instanceof DoubleConversion){
+                return true;
+            }else{
+                return false;
+            }
+        }
+        
+        /*
+         * Method invoked with arguments "a/b//c/e//f", 0
+         *   return "f"         
+         * Method invoked with arguments "a/b//c/e//f", 1
+         *   return "e"
+         */
+        public static String getPartFromEnd(String path, int fromEnd){
+            String parts[] = path.split("\\/+");
+            int length = parts.length;
+            return parts[length - (fromEnd +1)];
+        }
 }

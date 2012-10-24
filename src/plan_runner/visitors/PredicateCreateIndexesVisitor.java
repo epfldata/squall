@@ -2,7 +2,6 @@ package plan_runner.visitors;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.BetweenPredicate;
 import plan_runner.predicates.ComparisonPredicate;

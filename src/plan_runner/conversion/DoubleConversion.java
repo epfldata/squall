@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package plan_runner.conversion;
 
 
@@ -25,7 +20,7 @@ public class DoubleConversion implements NumericConversion<Double> {
     }
 
     @Override
-    public double toDouble(Double obj) {
+    public double toDouble(Object obj) {
         return (Double) obj;
     }
 

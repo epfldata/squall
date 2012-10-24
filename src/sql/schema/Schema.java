@@ -12,7 +12,6 @@ import sql.schema.parser.SchemaParser.TableInfo;
 
 
 public class Schema {
-    private static long INVALID = -1;
     
     private String _path;
     private double _scallingFactor;
@@ -40,18 +39,18 @@ public class Schema {
     }    
     
     /*
-     * For a field N1.NATIONNAME, tableSchemaName is NATION, column is NATIONNAME
+     * For a field N1.NATIONNAME, fullSchemaColumnName is NATION.NATIONNAME
      */
-    public TypeConversion getType(String tableSchemaName, String columnName){
-        ColumnInfo column = getColumnInfo(tableSchemaName, columnName);
+    public TypeConversion getType(String fullSchemaColumnName){
+        ColumnInfo column = getColumnInfo(fullSchemaColumnName);
         if(column == null){
-            throw new RuntimeException("Column " + columnName + " does not exist in " + tableSchemaName + " !");
+            throw new RuntimeException("Column " + fullSchemaColumnName + " does not exist !");
         }        
         return column.getType();
     }
 
-    public boolean contains(String tableSchemaName, String columnName) {
-        ColumnInfo column = getColumnInfo(tableSchemaName, columnName);
+    public boolean contains(String fullSchemaColumnName) {
+        ColumnInfo column = getColumnInfo(fullSchemaColumnName);
         return (column != null);
     }
 
@@ -62,8 +61,10 @@ public class Schema {
     public long getTableSize(String tableSchemaName){
         TableInfo table = getTableInfo(tableSchemaName);
         long tableSize = table.getTableSize();
-        if(tableSize == INVALID){
-            throw new RuntimeException("No information about size for table " + tableSchemaName);
+        if(tableSize == SchemaParser.INVALID){
+            throw new RuntimeException("No information about size for table " + tableSchemaName + 
+                    "\n Either add required information to schema " + _path + " ,"
+                    + "\n or try NMPL optimizer, which does not require any cardinality information.");
         }
         return tableSize;
     }
@@ -71,8 +72,10 @@ public class Schema {
     public long getNumDistinctValues(String fullSchemaColumnName){
         ColumnInfo column = getColumnInfo(fullSchemaColumnName);
         long distinct = column.getDistinctValues();
-        if(distinct == INVALID){
-             throw new RuntimeException("No information about the number of distinct values for column " + fullSchemaColumnName);
+        if(distinct == SchemaParser.INVALID){
+             throw new RuntimeException("No information about the number of distinct values for column " + fullSchemaColumnName +
+                     "\n Either add required information to schema " + _path + " ,"
+                    + "\n or try NMPL optimizer, which does not require any cardinality information.");
         }
         return distinct;
     }
@@ -84,7 +87,9 @@ public class Schema {
         Object min = column.getMinValue();
         Object max = column.getMaxValue();
         if(min == null || max == null){
-            throw new RuntimeException("No complete information about ranges for column " + fullSchemaColumnName);
+            throw new RuntimeException("No complete information about ranges for column " + fullSchemaColumnName +
+                    "\n Either add required information to schema " + _path + " ,"
+                    + "\n or try NMPL optimizer, which does not require any cardinality information.");
         }
         Range range = new Range(min, max);
         return range;

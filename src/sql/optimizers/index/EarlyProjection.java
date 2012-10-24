@@ -9,7 +9,7 @@ import plan_runner.expressions.ColumnReference;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.ProjectOperator;
-import plan_runner.queryPlans.QueryPlan;
+import plan_runner.query_plans.QueryPlan;
 import sql.schema.Schema;
 import sql.util.ParserUtil;
 import sql.util.TableAliasName;

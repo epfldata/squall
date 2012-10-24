@@ -1,13 +1,8 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package plan_runner.utilities;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import plan_runner.stormComponents.StormComponent;
+import plan_runner.storm_components.StormComponent;
 
 
 public class PeriodicBatchSend extends Timer {

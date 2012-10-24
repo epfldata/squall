@@ -12,30 +12,32 @@ import org.apache.log4j.Logger;
 public class SystemParameters{
     private static Logger LOG = Logger.getLogger(SystemParameters.class);
 
-    //in Local Mode, we compare against a file in this dir, for example with the name "hyracks.result"
-    //we will concatenate DBSize to it
-    public static String RESULT_DIR = "../testing/results/";
-
-    //default port, should not be changed unless some other application took this port
-    public static final int NIMBUS_THRIFT_PORT = 6627;
+    //the content of ~/.storm/storm.yaml
+    public static final int DEFAULT_NUM_ACKERS = 0;    
 
     //used only in clustered mode execution
     //max number of tuples sent before receiving ack for any of them
-    public static final int MAX_SPOUT_PENDING=5000;
+    //public static final int MAX_SPOUT_PENDING=5000;
 
     //used in StormWrapper for submitting topology, for both local and clustered mode
     //local mode: TPCH7 1GB needs 3000sec, TPCH8 100MB needs 1000s
     //clustered mode: TPCH7 1GB needs 30sec, 2GB needs 60sec, 8GB needs 90sec, 10GB needs 150sec
     //                all TPCH3 are done within 150sec
-    public static final int MESSAGE_TIMEOUT_SECS = 150;
+    //not true anymore, especially when topology.enable.message.timeouts: false(not sure if this has some effect)
+    //public static final int MESSAGE_TIMEOUT_SECS = 150;
+    
     //used in StormDataSource, for both local and clustered mode
     public static final long EOF_TIMEOUT_MILLIS = 1000;
+    
     // Period between figuring out code is finished and
     //   killing the execution
     // In Local Mode needed more time because we also need to compare results (LocalMergeResults)
     public static final long LOCAL_SLEEP_BEFORE_KILL_MILLIS = 8000;
     public static final long CLUSTER_SLEEP_BEFORE_KILL_MILLIS = 2000;
 
+    //default port, should not be changed unless some other application took this port
+    public static final int NIMBUS_THRIFT_PORT = 6627;    
+    
     //DO NOT MODIFY OR MOVE ANYWHERE ELSE. THESE ARE NOT CONFIGURATION VARIABLES
     public static final String DATA_STREAM = Utils.DEFAULT_STREAM_ID; /* "default" */
     public static final String EOF_STREAM = "2";
@@ -44,9 +46,6 @@ public class SystemParameters{
     public static final String LAST_ACK = "LAST_ACK";
     public static final String EOF = "EOF";
     public static final String DUMP_RESULTS = "DumpResults";
-
-    //the content of ~/.storm/storm.yaml
-    public static final int DEFAULT_NUM_ACKERS = 0;
     
     public static boolean isExisting(Map conf, String key){
         String result =  (String) conf.get(key);
@@ -97,7 +96,6 @@ public class SystemParameters{
     public static Config mapToStormConfig(Map map){
         Config conf = new Config();
         conf.putAll(map);
-        setResultPath(map);
         setStormVariables(conf);
         return conf;
     }
@@ -134,17 +132,6 @@ public class SystemParameters{
             throw new RuntimeException(error);
 	}
         return map;
-    }
-
-    private static void setResultPath(Map map) {
-        String path = getString(map, "DIP_DATA_PATH");
-        if(path.endsWith("/")){
-            //removing last "/" character
-            path = path.substring(0, path.length()-1);
-        }
-        int pos = path.lastIndexOf("/");
-        String dataSize = path.substring(pos + 1, path.length());
-        RESULT_DIR += dataSize;
     }
 
     /* Decided not to set it here, because we have to change many Squall config files

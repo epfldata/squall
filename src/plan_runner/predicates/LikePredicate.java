@@ -1,10 +1,10 @@
 package plan_runner.predicates;
 
+import java.util.ArrayList;
+import java.util.List;
 import plan_runner.conversion.StringConversion;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.expressions.ValueSpecification;
-import java.util.ArrayList;
-import java.util.List;
 import plan_runner.visitors.PredicateVisitor;
 
 /*

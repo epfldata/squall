@@ -8,7 +8,7 @@ import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
 import plan_runner.components.EquiJoinComponent;
 import plan_runner.expressions.ValueExpression;
-import plan_runner.queryPlans.QueryPlan;
+import plan_runner.query_plans.QueryPlan;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.CompGen;
 import sql.schema.Schema;
@@ -107,7 +107,7 @@ public class IndexCompGen implements CompGen{
             }
             List<ValueExpression> hashExpressions = joinOn.getExpressions();
 
-            if(!joinOn.isComplexCondition()){
+            if(ParserUtil.isAllColumnRefs(hashExpressions)){
                 //all the join conditions are represented through columns, no ValueExpression (neither in joined component)
                 //guaranteed that both joined components will have joined columns visited in the same order
                 //i.e R.A=S.A and R.B=S.B, the columns are (R.A, R.B), (S.A, S.B), respectively

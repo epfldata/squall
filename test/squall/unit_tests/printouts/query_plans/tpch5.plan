@@ -1,0 +1,59 @@
+QUERY PLAN
+
+Component REGION
+SelectOperator with Predicate: "REGION.NAME" - Col 1 = Constant ASIA
+ProjectOperator ("REGION.REGIONKEY" - Col 0)
+
+ HashIndexes: (0)
+
+Component NATION
+ProjectOperator ("NATION.NAME" - Col 1, "NATION.NATIONKEY" - Col 0, "NATION.REGIONKEY" - Col 2)
+
+ HashIndexes: (2)
+
+Component REGION_NATION
+ProjectOperator ("NATION.NAME" - Col 1, "NATION.NATIONKEY" - Col 2)
+
+ HashIndexes: (1)
+
+Component SUPPLIER
+ProjectOperator ("SUPPLIER.NATIONKEY" - Col 3, "SUPPLIER.SUPPKEY" - Col 0)
+
+ HashIndexes: (0)
+
+Component REGION_NATION_SUPPLIER
+ HashIndexes: (2)
+
+Component LINEITEM
+ProjectOperator (("LINEITEM.EXTENDEDPRICE" - Col 5) * ((Constant 1.0) - ("LINEITEM.DISCOUNT" - Col 6)), "LINEITEM.ORDERKEY" - Col 0, "LINEITEM.SUPPKEY" - Col 2)
+
+ HashIndexes: (2)
+
+Component REGION_NATION_SUPPLIER_LINEITEM
+ProjectOperator ("NATION.NAME" - Col 0, "LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)" - Col 3, "NATION.NATIONKEY" - Col 1, "LINEITEM.ORDERKEY" - Col 4)
+
+ HashIndexes: (3)
+
+Component ORDERS
+SelectOperator with Predicate: ("ORDERS.ORDERDATE" - Col 4 >= Constant 1994-01-01) AND ("ORDERS.ORDERDATE" - Col 4 < Constant 1995-01-01)
+ProjectOperator ("ORDERS.CUSTKEY" - Col 1, "ORDERS.ORDERKEY" - Col 0)
+
+ HashIndexes: (1)
+
+Component REGION_NATION_SUPPLIER_LINEITEM_ORDERS
+ProjectOperator ("NATION.NAME" - Col 0, "LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)" - Col 1, "NATION.NATIONKEY" - Col 2, "ORDERS.CUSTKEY" - Col 4)
+
+ HashIndexes: (2, 3)
+
+Component CUSTOMER
+ProjectOperator ("CUSTOMER.CUSTKEY" - Col 0, "CUSTOMER.NATIONKEY" - Col 3)
+
+ HashIndexes: (1, 0)
+
+Component REGION_NATION_SUPPLIER_LINEITEM_ORDERS_CUSTOMER
+ProjectOperator ("NATION.NAME" - Col 0, "LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)" - Col 1)
+AggregateSumOperator with VE: "LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)" - Col 1
+  GroupByProjection is ProjectOperator ("NATION.NAME" - Col 0).
+
+
+END of QUERY PLAN
