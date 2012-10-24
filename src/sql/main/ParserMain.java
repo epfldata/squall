@@ -45,7 +45,9 @@ public class ParserMain{
     }
     
     private Map putAckers(QueryPlan plan, Map map) {
+        int numWorkers = ParserUtil.getTotalParallelism(plan, map);
         int localAckers, clusterAckers;
+        
         if(!SystemParameters.getBoolean(map, "DIP_ACK_EVERY_TUPLE")){
             //we don't ack after each tuple is sent, 
             //  so we don't need any node to be dedicated for acking
@@ -56,12 +58,15 @@ public class ParserMain{
             localAckers = 1;
             
             //this is a heuristic which could be changed
-            int totalPar = ParserUtil.getTotalParallelism(plan, map);
-            clusterAckers = totalPar / 2;
+            clusterAckers = numWorkers / 2;
         }
 
         if (SystemParameters.getBoolean(map, "DIP_DISTRIBUTED")){
             SystemParameters.putInMap(map, "DIP_NUM_ACKERS", clusterAckers);
+            if(numWorkers + clusterAckers > SystemParameters.CLUSTER_SIZE){
+                throw new RuntimeException("The cluster has only " + SystemParameters.CLUSTER_SIZE + 
+                        " nodes, but the query plan requires " + numWorkers + " workers " + clusterAckers + " ackers.");
+            }
         }else{
             SystemParameters.putInMap(map, "DIP_NUM_ACKERS", localAckers);
         }

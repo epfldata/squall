@@ -6,7 +6,7 @@ import plan_runner.components.Component;
 import plan_runner.query_plans.QueryPlan;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.Optimizer;
-import sql.util.OverParallelizedException;
+import sql.util.ImproperParallelismException;
 import sql.util.ParserUtil;
 import sql.visitors.jsql.SQLVisitor;
 
@@ -97,7 +97,7 @@ public class NameCostOptimizer implements Optimizer{
         boolean isExc = false;
         try{
             ncg.generateEquiJoin(firstComp, secondComp);
-        }catch(OverParallelizedException exc){
+        }catch(ImproperParallelismException exc){
             StringBuilder errorMsg = new StringBuilder();
             errorMsg.append("This subplan will never generated the optimal query plan, so it's thrown:").append("\n");
             errorMsg.append(exc.getMessage()).append("\n");

@@ -6,8 +6,9 @@ import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
 import plan_runner.components.EquiJoinComponent;
 import plan_runner.components.OperatorComponent;
+import plan_runner.utilities.SystemParameters;
 import sql.schema.Schema;
-import sql.util.OverParallelizedException;
+import sql.util.ImproperParallelismException;
 import sql.util.ParserUtil;
 import sql.util.TableAliasName;
 import sql.visitors.jsql.SQLVisitor;
@@ -159,6 +160,13 @@ public class CostParallelismAssigner {
         //compute
         int parallelism = parallelismFormula(leftParentParams, rightParentParams);
 
+        //lower bound
+        int minParallelism = estimateMinParallelism(leftParentParams, rightParentParams);
+        if(minParallelism > parallelism){
+            throw new ImproperParallelismException("Component " + joinComponent.getName() +
+                    " cannot have parallelism LESS than " + minParallelism);
+        }
+        
         //upper bound
         int maxParallelism = estimateDistinctHashes(leftParentParams, rightParentParams);
         if(parallelism > maxParallelism){
@@ -167,10 +175,13 @@ public class CostParallelismAssigner {
                 //  exception serves to force smaller parallelism at sources
                 parallelism = maxParallelism;
             }else{
-                throw new OverParallelizedException("Component " + joinComponent.getName() + 
-                        " cannot have parallelism more than " + maxParallelism);
+                throw new ImproperParallelismException("Component " + joinComponent.getName() + 
+                        " cannot have parallelism MORE than " + maxParallelism);
             }
         }
+        
+        
+        
 
         //setting
         String currentComp = joinComponent.getName();
@@ -267,6 +278,14 @@ public class CostParallelismAssigner {
         //setting
         String currentComp = opComp.getName();
         compCost.get(currentComp).setParallelism(parallelism);
+    }
+
+    private int estimateMinParallelism(CostParams leftParentParams, CostParams rightParentParams) {
+        int providedMemory = SystemParameters.getInt(_map, "STORAGE_MEMORY_SIZE_MB");
+        //inputCardinality tuples need to be stored in memory
+        long inputCardinality = leftParentParams.getCardinality() + rightParentParams.getCardinality();
+        long predictedTotalMemory = (inputCardinality * SystemParameters.TUPLE_SIZE_BYTES * SystemParameters.JAVA_OVERHEAD) / SystemParameters.BYTES_IN_MB;
+        return (int) (predictedTotalMemory / providedMemory);
     }
     
     /*
