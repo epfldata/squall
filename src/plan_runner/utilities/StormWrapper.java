@@ -39,12 +39,13 @@ public class StormWrapper {
             //otherwise this parameter is used only at the end,
             //  and represents the time topology is shown as killed (will be set to default: 30s)
             //Messages are failling if we do not specify timeout (proven for TPCH8)
-            conf.setMessageTimeoutSecs(SystemParameters.MESSAGE_TIMEOUT_SECS);
+            //conf.setMessageTimeoutSecs(SystemParameters.MESSAGE_TIMEOUT_SECS);
             
-            //This is commented out, because we want to build query plans which will be balanced;
-            //  if they are not, we should run out of memory to detect the unoptimal plan
-            //  This could also increase the latency.
-            //conf.setMaxSpoutPending(SystemParameters.MAX_SPOUT_PENDING);
+            //Throttling parameter reduces latency and throughput
+            if(SystemParameters.isExisting(conf, "DIP_THROTTLING")){
+                int tp = SystemParameters.getInt(conf, "DIP_THROTTLING");
+                conf.setMaxSpoutPending(tp);
+            }
         }
 
         if(distributed){

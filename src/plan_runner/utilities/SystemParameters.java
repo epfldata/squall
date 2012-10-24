@@ -17,13 +17,14 @@ public class SystemParameters{
 
     //used only in clustered mode execution
     //max number of tuples sent before receiving ack for any of them
-    public static final int MAX_SPOUT_PENDING=5000;
+    //public static final int MAX_SPOUT_PENDING=5000;
 
     //used in StormWrapper for submitting topology, for both local and clustered mode
     //local mode: TPCH7 1GB needs 3000sec, TPCH8 100MB needs 1000s
     //clustered mode: TPCH7 1GB needs 30sec, 2GB needs 60sec, 8GB needs 90sec, 10GB needs 150sec
     //                all TPCH3 are done within 150sec
-    public static final int MESSAGE_TIMEOUT_SECS = 150;
+    //not true anymore, especially when topology.enable.message.timeouts: false(not sure if this has some effect)
+    //public static final int MESSAGE_TIMEOUT_SECS = 150;
     
     //used in StormDataSource, for both local and clustered mode
     public static final long EOF_TIMEOUT_MILLIS = 1000;
