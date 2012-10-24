@@ -2,7 +2,6 @@
 
 #The tutorial is from http://zookeeper.apache.org/doc/r3.3.3/zookeeperAdmin.html#Ongoing+Data+Directory+Cleanup.
 MACHINE=squalldata@icdatasrv
-USER_HOME=/export/home/squalldata
 MACHINE_DBGEN=${MACHINE}1
 
 SIZE=$1
@@ -12,7 +11,7 @@ QUERY_PATH=data/tpchdb/
 QUERY_NAME=${SIZE}G
 FULL_PATH=${HOME}${QUERY_PATH}${QUERY_NAME}
 
-ssh $MACHINE_DBGEN 'cd ' $HOME/$QUERY_PATH '; mkdir -p ' $QUERY_NAME '; cd ' $USER_HOME '; ./dbgen -vf -s ' $SIZE ' 2>&1; mv *.tbl ' $FULL_PATH
+ssh $MACHINE_DBGEN 'cd ' $HOME/$QUERY_PATH '; mkdir -p ' $QUERY_NAME '; cd ' $HOME '; ./dbgen -vf -s ' $SIZE ' 2>&1; mv *.tbl ' $FULL_PATH
 
 for blade in {2..10}
 do
