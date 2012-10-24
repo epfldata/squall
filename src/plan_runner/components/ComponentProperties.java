@@ -1,9 +1,8 @@
-
 package plan_runner.components;
 
-import plan_runner.expressions.ValueExpression;
 import java.io.Serializable;
 import java.util.List;
+import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 
 
@@ -21,7 +20,9 @@ public interface ComponentProperties extends Serializable{
     public long getBatchOutputMillis();
 
     public Component[] getParents();
+    //TODO: problem when having multiple children (sharing scenarios)
     public Component getChild();
+    
     public List<DataSourceComponent> getAncestorDataSources();
 
 }

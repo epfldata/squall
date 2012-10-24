@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package plan_runner.operators;
 
 import java.util.ArrayList;
@@ -112,6 +107,7 @@ public class ChainOperator implements Operator {
     @Override
     public List<String> process(List<String> tuple) {
         List<String> result = tuple;
+
         for(Operator operator: _operators){
              result = operator.process(result);
              if(result == null){

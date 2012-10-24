@@ -1,16 +1,17 @@
 package plan_runner.operators;
 
-import java.util.Arrays;
-import plan_runner.storage.BasicStore;
-import plan_runner.storage.AggregationStorage;
-import plan_runner.conversion.NumericConversion;
-import plan_runner.expressions.Addition;
-import plan_runner.expressions.ValueExpression;
-import plan_runner.expressions.ValueSpecification;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
+import plan_runner.conversion.NumericConversion;
+import plan_runner.conversion.TypeConversion;
+import plan_runner.expressions.Addition;
+import plan_runner.expressions.ValueExpression;
+import plan_runner.expressions.ValueSpecification;
+import plan_runner.storage.AggregationStorage;
+import plan_runner.storage.BasicStore;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.visitors.OperatorVisitor;
 
@@ -29,14 +30,14 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
         private ProjectOperator _groupByProjection;
         private int _numTuplesProcessed = 0;
         
-        private NumericConversion<T> _wrapper;
+        private NumericConversion _wrapper;
         private ValueExpression<T> _ve;
         private AggregationStorage<T> _storage;
         
         private Map _map;
 
-        public AggregateSumOperator(NumericConversion<T> wrapper, ValueExpression<T> ve, Map map){
-            _wrapper = wrapper;
+        public AggregateSumOperator(ValueExpression<T> ve, Map map){
+            _wrapper = (NumericConversion) ve.getType();
             _ve=ve;
             _map = map;
             _storage = new AggregationStorage<T>(this, _wrapper, _map, true);
@@ -94,6 +95,16 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
             result.add(_ve);
             return result;
         }
+        
+        @Override
+        public boolean hasGroupBy(){
+            return _groupByType != GB_UNSET;
+        }        
+        
+        @Override
+        public TypeConversion getType(){
+            return _wrapper;
+        }        
 
         //from Operator
         @Override
@@ -126,7 +137,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
         @Override
         public T runAggregateFunction(T value, List<String> tuple) {
             ValueExpression<T> base = new ValueSpecification<T>(_wrapper, value);
-            Addition<T> result = new Addition<T>(_wrapper, base, _ve);
+            Addition<T> result = new Addition<T>(base, _ve);
             return result.eval(tuple);
         }
 
@@ -134,7 +145,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
         public T runAggregateFunction(T value1, T value2) {
             ValueExpression<T> ve1 = new ValueSpecification<T>(_wrapper, value1);
             ValueExpression<T> ve2 = new ValueSpecification<T>(_wrapper, value2);
-            Addition<T> result = new Addition<T>(_wrapper, ve1, ve2);
+            Addition<T> result = new Addition<T>(ve1, ve2);
             return result.eval(null);
         }
 
@@ -167,7 +178,8 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
         //  is the same as DIP_GLOBAL_ADD_DELIMITER
         @Override
         public List<String> getContent(){
-            return Arrays.asList(_storage.getContent().split("\\r?\\n"));
+	    String str = _storage.getContent(); 
+            return str == null ? null : Arrays.asList(str.split("\\r?\\n"));
         }
 
         @Override

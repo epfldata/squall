@@ -1,11 +1,8 @@
 package plan_runner.storage;
 
-import java.io.Serializable;
-import plan_runner.storage.MemoryManager;
-import plan_runner.storage.StorageManager;
-import java.io.PrintStream;
-import java.io.OutputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.Serializable;
 
 /* R denotes the type of objects you expect the store to return at a access or update call */
 public abstract class BasicStore<R> implements Serializable {
@@ -18,7 +15,6 @@ public abstract class BasicStore<R> implements Serializable {
 	protected StorageManager _storageManager;
 	private ByteArrayOutputStream _baos = null;
 	private static final long serialVersionUID = 1L;
-	protected static final int DEFAULT_SIZE_MB = 256;
 	private static final String _uniqIdPrefix = "Store#";
 
 	public BasicStore(int storesizemb) {
@@ -43,6 +39,7 @@ public abstract class BasicStore<R> implements Serializable {
 	}
 
 	public String getContent() {
+		String str = null;
 		if (this._baos == null) {
 			this._baos = new ByteArrayOutputStream();
 			this._ps = new PrintStream(this._baos);
@@ -50,7 +47,8 @@ public abstract class BasicStore<R> implements Serializable {
 			this._baos.reset();
 		}
 		this.printStore(this._ps, true);
-		return this._baos.toString();
+		str = this._baos.toString();
+		return str.equals("") ? null : str;
 	}
 	
 	/* Functions to be implemented by all stores */

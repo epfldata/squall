@@ -3,7 +3,7 @@ package sql.optimizers.name;
 
 import java.util.*;
 import plan_runner.components.Component;
-import plan_runner.queryPlans.QueryPlan;
+import plan_runner.query_plans.QueryPlan;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.Optimizer;
 import sql.util.OverParallelizedException;
@@ -24,7 +24,7 @@ public class NameCostOptimizer implements Optimizer{
     
     public QueryPlan generate() {
         int totalSourcePar = SystemParameters.getInt(_map, "DIP_TOTAL_SRC_PAR");
-        NameCompGenFactory factory = new NameCompGenFactory(_map, totalSourcePar);
+        NameCompGenFactory factory = new NameCompGenFactory(_map, _pq.getTan(), totalSourcePar);
         List<String> sourceNames = factory.getParAssigner().getSortedSourceNames();
         int numSources = sourceNames.size();
         NameCompGen optimal = null;

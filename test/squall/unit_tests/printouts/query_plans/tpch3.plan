@@ -1,0 +1,31 @@
+QUERY PLAN
+
+Component CUSTOMER
+SelectOperator with Predicate: "CUSTOMER.MKTSEGMENT" - Col 6 = Constant BUILDING
+ProjectOperator ("CUSTOMER.CUSTKEY" - Col 0)
+
+ HashIndexes: (0)
+
+Component ORDERS
+SelectOperator with Predicate: "ORDERS.ORDERDATE" - Col 4 < Constant 1995-03-15
+ProjectOperator ("ORDERS.ORDERDATE" - Col 4, "ORDERS.SHIPPRIORITY" - Col 7, "ORDERS.CUSTKEY" - Col 1, "ORDERS.ORDERKEY" - Col 0)
+
+ HashIndexes: (2)
+
+Component CUSTOMER_ORDERS
+ProjectOperator ("ORDERS.ORDERDATE" - Col 1, "ORDERS.SHIPPRIORITY" - Col 2, "ORDERS.ORDERKEY" - Col 3)
+
+ HashIndexes: (2)
+
+Component LINEITEM
+SelectOperator with Predicate: "LINEITEM.SHIPDATE" - Col 10 > Constant 1995-03-15
+ProjectOperator ("LINEITEM.ORDERKEY" - Col 0, ("LINEITEM.EXTENDEDPRICE" - Col 5) * ((Constant 1.0) - ("LINEITEM.DISCOUNT" - Col 6)))
+
+ HashIndexes: (0)
+
+Component CUSTOMER_ORDERS_LINEITEM
+AggregateSumOperator with VE: "LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)" - Col 3
+  GroupByProjection is ProjectOperator ("ORDERS.ORDERKEY" - Col 2, "ORDERS.ORDERDATE" - Col 0, "ORDERS.SHIPPRIORITY" - Col 1).
+
+
+END of QUERY PLAN

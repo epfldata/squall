@@ -2,17 +2,16 @@
 
 . ./storm_version.sh
 
+CONFIG_DIR=../test/squall/confs/local
+
 if [ $# -ne 1 ]
 then
-CONFIG_FILE=0.01G_hyracks_ncl_serial
+CONFIG_PATH=$CONFIG_DIR/0_01G_hyracks_ncl
 else
-CONFIG_FILE=$1
+CONFIG_PATH=$1
 fi
 
 cd ../deploy
-
-CONFIG_DIR=../testing/squall/confs
-CONFIG_PATH=$CONFIG_DIR/$CONFIG_FILE
 
 # check if your configuration file exists
 if ! [ -f $CONFIG_PATH ];
@@ -24,4 +23,4 @@ fi
 ../bin/lein run -m sql.main.ParserMain $CONFIG_PATH
 
 #Old version implies specifying libraries explicitly
-#java -cp ../deploy/squall-2.0-standalone.jar:../$STORMNAME/lib/*:../contrib/*:../$STORMNAME/$STORMNAME.jar sql.main.ParserMain $CONFIG_PATH
+#java -Xmx128m -cp ../deploy/squall-0.2.0-standalone.jar:../$STORMNAME/lib/*:../contrib/*:../$STORMNAME/$STORMNAME.jar sql.main.ParserMain $CONFIG_PATH

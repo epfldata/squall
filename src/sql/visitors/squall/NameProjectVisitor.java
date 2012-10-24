@@ -119,9 +119,7 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor{
             ValueExpression right = _exprStack.pop();
             ValueExpression left = _exprStack.pop();
 
-            NumericConversion nc = (NumericConversion) left.getType();
-
-            ValueExpression add = new plan_runner.expressions.Addition(nc, left, right);
+            ValueExpression add = new plan_runner.expressions.Addition(left, right);
             _exprStack.push(add);
         }
     }
@@ -135,9 +133,7 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor{
             ValueExpression right = _exprStack.pop();
             ValueExpression left = _exprStack.pop();
 
-            NumericConversion nc = (NumericConversion) left.getType();
-
-            ValueExpression add = new plan_runner.expressions.Division(nc, left, right);
+            ValueExpression add = new plan_runner.expressions.Division(left, right);
             _exprStack.push(add);
         }
     }
@@ -151,9 +147,7 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor{
             ValueExpression right = _exprStack.pop();
             ValueExpression left = _exprStack.pop();
 
-            NumericConversion nc = (NumericConversion) left.getType();
-
-            ValueExpression add = new plan_runner.expressions.Multiplication(nc, left, right);
+            ValueExpression add = new plan_runner.expressions.Multiplication(left, right);
             _exprStack.push(add);
         }
     }
@@ -167,9 +161,7 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor{
             ValueExpression right = _exprStack.pop();
             ValueExpression left = _exprStack.pop();
 
-            NumericConversion nc = (NumericConversion) left.getType();
-
-            ValueExpression add = new plan_runner.expressions.Subtraction(nc, left, right);
+            ValueExpression add = new plan_runner.expressions.Subtraction(left, right);
             _exprStack.push(add);
         }
     }

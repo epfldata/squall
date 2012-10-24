@@ -47,7 +47,6 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
     }
 
     public double estimate(Expression expr) {
-        //TODO without instanceof
         //  similarly to JSQLTypeConvertor, it can be done via visitor pattern, 
         //  but then it cannot implement SelectivityEstimator anymore.
         //the gap between void of visit method and double as the result here 
@@ -93,7 +92,7 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
         List<Column> columns = ParserUtil.getJSQLColumns(mt);
         Column column = columns.get(0);
 
-        TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
+        TypeConversion tc = _schema.getType(ParserUtil.getFullSchemaColumnName(column, _tan));
 
         //assume uniform distribution
         String fullSchemaColumnName = _tan.getFullSchemaColumnName(column);
@@ -180,8 +179,6 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
             return 1 - (1 - estimate(and.getLeftExpression())) - (1 - estimate(and.getRightExpression()));
         }else{
             return estimate(and.getLeftExpression()) * estimate(and.getRightExpression());
-            //throw new RuntimeException("And expressions with different columns on two sides are not supported!");
-            //TODO: for implementing this take a look at textbook and tpch7
         }
 
     }

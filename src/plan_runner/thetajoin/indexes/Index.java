@@ -1,7 +1,6 @@
 package plan_runner.thetajoin.indexes;
 
 import gnu.trove.list.array.TIntArrayList;
-
 import java.io.Serializable;
 
 

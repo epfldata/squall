@@ -1,8 +1,5 @@
 package sql.util;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.StringReader;
 import java.util.*;
 import net.sf.jsqlparser.JSQLParserException;
@@ -27,7 +24,7 @@ import plan_runner.expressions.ColumnReference;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
-import plan_runner.queryPlans.QueryPlan;
+import plan_runner.query_plans.QueryPlan;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.CompGen;
@@ -330,46 +327,6 @@ public class ParserUtil {
         return result;
     }
 
-    public static String readFile(String path) {
-        StringBuilder sb = new StringBuilder();
-        try {
-            String line;
-            BufferedReader reader = new BufferedReader(new FileReader(new File(path)));
-            while( (line = reader.readLine()) != null){
-                sb.append(line).append("\n");
-            }
-            sb.deleteCharAt(sb.length() - 1); //last \n is unnecessary 
-            reader.close();
-	} catch (Exception e) {
-            String error=MyUtilities.getStackTrace(e);
-            throw new RuntimeException(error);
-	}
-        return sb.toString();
-    }
-    
-    public static String readSQLFromFile(String sqlPath) {
-        StringBuilder sqlstring = new StringBuilder();
-        try {
-            String line;
-            BufferedReader reader = new BufferedReader(new FileReader(new File(sqlPath)));
-            while( (line = reader.readLine()) != null){
-
-                // remove leading and trailing whitespaces
-                line = line.trim();
-            	if (line.length()!=0 && line.charAt(0)!='\n' //empty line
-                        && line.charAt(0)!='\r' //empty line
-                        && line.charAt(0)!='#'){  //commented line
-                    sqlstring.append(line).append(" ");
-                }
-            }
-            reader.close();
-	} catch (Exception e) {
-            String error=MyUtilities.getStackTrace(e);
-            throw new RuntimeException(error);
-	}
-        return sqlstring.toString();
-    }
-
     /*
      * On each component order the Operators as Select, Distinct, Project, Aggregation
      */
@@ -577,12 +534,30 @@ public class ParserUtil {
         
         return result;
     }
-
+    
+    public static String getFullName(String tableCompName, String columnName) {
+        return tableCompName + "." + columnName;
+    }    
+    
+    public static String getFullSchemaColumnName(Column column, TableAliasName tan) {
+        String tableCompName = getComponentName(column);
+        String tableSchemaName = tan.getSchemaName(tableCompName);
+        String columnName = column.getColumnName();
+        return getFullName(tableSchemaName, columnName);
+    }
+    
+    public static String getFullSchemaColumnName(String fullAliasedName, TableAliasName tan){
+        String[] parts = fullAliasedName.split("\\.");
+        String tableCompName = parts[0];
+        String columnName = parts[1];
+        return getFullName(tan.getSchemaName(tableCompName), columnName);
+    }
+    
     /*
      * returns N1.NATIONNAME
      */
     public static String getFullAliasedName(Column column) {
-        return getComponentName(column) + "." + column.getColumnName();
+        return getFullName(getComponentName(column), column.getColumnName());
     }
     
     public static Column nameToColumn(String name) {
@@ -596,7 +571,24 @@ public class ParserUtil {
         column.setColumnName(columnName);
         column.setTable(table);
         return column;
-    }    
+    }
+    
+       /*
+     * From a list of <NATIONNAME, StringConversion>
+     *   it creates a list of <N1.NATIONNAME, StringConversion>
+     */
+    public static TupleSchema createAliasedSchema(List<ColumnNameType> originalSchema, String tableCompName) {
+        List<ColumnNameType> cnts = new ArrayList<ColumnNameType>();
+
+        for(ColumnNameType cnt: originalSchema){
+            String columnName = cnt.getName();
+            columnName = getFullName(tableCompName, columnName);
+            TypeConversion tc = cnt.getType();
+            cnts.add(new ColumnNameType(columnName, tc));
+        }
+
+        return new TupleSchema(cnts);
+    }
 
     public static List<ColumnNameType> getProjectedSchema(List<ColumnNameType> schema, List<Integer> hashIndexes) {
         List<ColumnNameType> result = new ArrayList<ColumnNameType>();
@@ -605,30 +597,6 @@ public class ParserUtil {
             result.add(schema.get(hashIndex));
         }
         return result;
-    }
-
-    public static TypeConversion getColumnType(Column column, TableAliasName tan, Schema schema) {
-        String tableCompName = getComponentName(column);
-        String tableSchemaName = tan.getSchemaName(tableCompName);
-        String columnName = column.getColumnName();
-        return schema.getType(tableSchemaName, columnName);
-    }
-
-       /*
-     * From a list of <NATIONNAME, StringConversion>
-     *   it creates a list of <N1.NATIONNAME, StringConversion>
-     */
-    public static TupleSchema createAliasedSchema(List<ColumnNameType> originalSchema, String aliasName) {
-        List<ColumnNameType> cnts = new ArrayList<ColumnNameType>();
-
-        for(ColumnNameType cnt: originalSchema){
-            String name = cnt.getName();
-            name = aliasName + "." + name;
-            TypeConversion tc = cnt.getType();
-            cnts.add(new ColumnNameType(name, tc));
-        }
-
-        return new TupleSchema(cnts);
     }
     
     public static List<Expression> getSubExpressions(Expression expr){
@@ -718,8 +686,20 @@ public class ParserUtil {
         sb.append("Total parallelism is ").append(totalParallelism).append("\n\n");
         return sb.toString();
     }
+    
+    //can be used *after* parallelismToMap method is invoked
+    public static int getTotalParallelism(QueryPlan plan, Map<String, String> map){
+        int totalParallelism = 0;
+        
+        for(String compName: plan.getComponentNames()){
+            String parallelismStr = SystemParameters.getString(map, compName +"_PAR");          
+            totalParallelism += Integer.valueOf(parallelismStr);
+        }
+        
+        return totalParallelism;
+    }
 
-    //can be used before parallelismToMap method is invoked
+    //can be used *before* parallelismToMap method is invoked
     public static int getTotalParallelism(NameCompGen ncg) {
         int totalParallelism = 0;
         Map<String, CostParams> compCost = ncg.getCompCost();
@@ -757,7 +737,7 @@ public class ParserUtil {
     private static String readSQL(Map map){
         String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
         String sqlPath = SystemParameters.getString(map, "DIP_SQL_ROOT") + queryName + SQL_EXTENSION;
-        return readSQLFromFile(sqlPath);
+        return MyUtilities.readFileSkipEmptyAndComments(sqlPath);
     }
 
     /*

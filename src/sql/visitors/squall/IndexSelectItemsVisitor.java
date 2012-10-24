@@ -18,7 +18,7 @@ import plan_runner.operators.AggregateCountOperator;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.AggregateSumOperator;
 import plan_runner.operators.DistinctOperator;
-import plan_runner.queryPlans.QueryPlan;
+import plan_runner.query_plans.QueryPlan;
 import sql.optimizers.index.IndexTranslator;
 import sql.schema.Schema;
 import sql.util.ParserUtil;
@@ -96,7 +96,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
     public void visit(AllColumns ac) {
         //i.e. SELECT * FROM R join S
         //we need not to do anything in this case for RuleOptimizer
-        //TODO: support it for Cost-Optimizer (Each wanted column has to explicitly specified)
+        //TODO: support it for Cost-Optimizer (Now, each wanted column has to explicitly specified)
     }
 
     @Override
@@ -163,8 +163,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
     }
 
     protected void createSum(ValueExpression ve, boolean isDistinct){
-        NumericConversion numConv = (NumericConversion) ve.getType();
-        _agg = new AggregateSumOperator(numConv, ve, _map);
+        _agg = new AggregateSumOperator(ve, _map);
 
         //DISTINCT and agg are stored on the same component.
         if(isDistinct){
@@ -206,10 +205,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
         ValueExpression right = _exprStack.pop();
         ValueExpression left = _exprStack.pop();
 
-        NumericConversion numConv = (NumericConversion) left.getType();
-        //TODO: check whether they are both of the same type
-
-        ValueExpression ve = new plan_runner.expressions.Addition(numConv, left, right);
+        ValueExpression ve = new plan_runner.expressions.Addition(left, right);
         _exprStack.push(ve);
     }
 
@@ -220,10 +216,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
         ValueExpression right = _exprStack.pop();
         ValueExpression left = _exprStack.pop();
 
-        NumericConversion numConv = (NumericConversion) left.getType();
-        //TODO: check whether they are both of the same type
-
-        ValueExpression ve = new plan_runner.expressions.Multiplication(numConv, left, right);
+        ValueExpression ve = new plan_runner.expressions.Multiplication(left, right);
         _exprStack.push(ve);
     }
 
@@ -234,10 +227,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
         ValueExpression right = _exprStack.pop();
         ValueExpression left = _exprStack.pop();
 
-        NumericConversion numConv = (NumericConversion) left.getType();
-        //TODO: check whether they are both of the same type
-
-        ValueExpression ve = new plan_runner.expressions.Division(numConv, left, right);
+        ValueExpression ve = new plan_runner.expressions.Division(left, right);
         _exprStack.push(ve);
     }
 
@@ -248,10 +238,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
         ValueExpression right = _exprStack.pop();
         ValueExpression left = _exprStack.pop();
 
-        NumericConversion numConv = (NumericConversion) left.getType();
-        //TODO: check whether they are both of the same type
-
-        ValueExpression ve = new plan_runner.expressions.Subtraction(numConv, left, right);
+        ValueExpression ve = new plan_runner.expressions.Subtraction(left, right);
         _exprStack.push(ve);
 
     }
@@ -269,7 +256,7 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
     @Override
     public void visit(Column column) {
         //extract type for the column
-        TypeConversion tc = ParserUtil.getColumnType(column, _tan, _schema);
+        TypeConversion tc = _schema.getType(ParserUtil.getFullSchemaColumnName(column, _tan));
 
         //extract the position (index) of the required column
         int position = _it.getColumnIndex(column, _affectedComponent);

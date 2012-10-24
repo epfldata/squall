@@ -18,7 +18,6 @@ public class HierarchyExtractor {
     }
 
     public static Component getLCM(Component first, Component second){
-        //TODO problem nested: we have multiple children
         Component resultComp = first;
         List<String> resultAnc = ParserUtil.getSourceNameList(resultComp);
         while (!resultAnc.contains(second.getName())){

@@ -9,6 +9,7 @@ import net.sf.jsqlparser.schema.Column;
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
 import plan_runner.components.EquiJoinComponent;
+import plan_runner.components.OperatorComponent;
 import sql.estimators.SelingerSelectivityEstimator;
 import sql.schema.Schema;
 import sql.util.ParserUtil;
@@ -104,6 +105,21 @@ public class CostEstimator {
         
         _parAssigner.setParallelism(joinComponent, _compCost);
     }
+    
+    //***********OperatorComponent***********    
+    public void setInputParams(OperatorComponent opComp){
+        CostParams costParams = _compCost.get(opComp.getName());
+        String parentName = opComp.getParents()[0].getName();
+        
+        costParams.setCardinality(_compCost.get(parentName).getCardinality());
+        costParams.setSelectivity(1);
+    }    
+    
+    public void setOutputParamsAndPar(OperatorComponent opComp){
+        setOutputParams(opComp);
+        
+        _parAssigner.setParallelism(opComp, _compCost);
+    }    
     
     //***********HELPER methods***********    
     private double computeJoinSelectivity(EquiJoinComponent joinComponent, List<Expression> joinCondition, 

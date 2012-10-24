@@ -1,0 +1,63 @@
+QUERY PLAN
+
+Component SUPPLIER
+ProjectOperator ("SUPPLIER.NATIONKEY" - Col 3, "SUPPLIER.SUPPKEY" - Col 0)
+
+ HashIndexes: (0)
+
+Component N1
+SelectOperator with Predicate: ("N1.NAME" - Col 1 = Constant FRANCE) OR ("N1.NAME" - Col 1 = Constant GERMANY)
+ProjectOperator ("N1.NAME" - Col 1, "N1.NATIONKEY" - Col 0)
+
+ HashIndexes: (1)
+
+Component SUPPLIER_N1
+ProjectOperator ("N1.NAME" - Col 2, "SUPPLIER.SUPPKEY" - Col 1)
+
+ HashIndexes: (1)
+
+Component LINEITEM
+SelectOperator with Predicate: ("LINEITEM.SHIPDATE" - Col 10 >= Constant 1995-01-01) AND ("LINEITEM.SHIPDATE" - Col 10 <= Constant 1996-12-31)
+ProjectOperator (IntegerYearFromDate "LINEITEM.SHIPDATE" - Col 10, ("LINEITEM.EXTENDEDPRICE" - Col 5) * ((Constant 1.0) - ("LINEITEM.DISCOUNT" - Col 6)), "LINEITEM.ORDERKEY" - Col 0, "LINEITEM.SUPPKEY" - Col 2)
+
+ HashIndexes: (3)
+
+Component SUPPLIER_N1_LINEITEM
+ProjectOperator ("N1.NAME" - Col 0, "EXTRACT_YEAR(LINEITEM.SHIPDATE)" - Col 2, "LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)" - Col 3, "LINEITEM.ORDERKEY" - Col 4)
+
+ HashIndexes: (3)
+
+Component ORDERS
+ProjectOperator ("ORDERS.CUSTKEY" - Col 1, "ORDERS.ORDERKEY" - Col 0)
+
+ HashIndexes: (1)
+
+Component SUPPLIER_N1_LINEITEM_ORDERS
+ProjectOperator ("N1.NAME" - Col 0, "EXTRACT_YEAR(LINEITEM.SHIPDATE)" - Col 1, "LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)" - Col 2, "ORDERS.CUSTKEY" - Col 4)
+
+ HashIndexes: (3)
+
+Component CUSTOMER
+ProjectOperator ("CUSTOMER.CUSTKEY" - Col 0, "CUSTOMER.NATIONKEY" - Col 3)
+
+ HashIndexes: (0)
+
+Component SUPPLIER_N1_LINEITEM_ORDERS_CUSTOMER
+ProjectOperator ("N1.NAME" - Col 0, "EXTRACT_YEAR(LINEITEM.SHIPDATE)" - Col 1, "LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)" - Col 2, "CUSTOMER.NATIONKEY" - Col 4)
+
+ HashIndexes: (3)
+
+Component N2
+SelectOperator with Predicate: ("N2.NAME" - Col 1 = Constant GERMANY) OR ("N2.NAME" - Col 1 = Constant FRANCE)
+ProjectOperator ("N2.NAME" - Col 1, "N2.NATIONKEY" - Col 0)
+
+ HashIndexes: (1)
+
+Component SUPPLIER_N1_LINEITEM_ORDERS_CUSTOMER_N2
+SelectOperator with Predicate: (("N1.NAME" - Col 0 = Constant FRANCE) AND ("N2.NAME" - Col 4 = Constant GERMANY)) OR (("N1.NAME" - Col 0 = Constant GERMANY) AND ("N2.NAME" - Col 4 = Constant FRANCE))
+ProjectOperator ("N1.NAME" - Col 0, "N2.NAME" - Col 4, "EXTRACT_YEAR(LINEITEM.SHIPDATE)" - Col 1, "LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)" - Col 2)
+AggregateSumOperator with VE: "LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)" - Col 3
+  GroupByProjection is ProjectOperator ("N1.NAME" - Col 0, "N2.NAME" - Col 1, "EXTRACT_YEAR(LINEITEM.SHIPDATE)" - Col 2).
+
+
+END of QUERY PLAN

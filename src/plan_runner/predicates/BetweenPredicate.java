@@ -1,14 +1,9 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package plan_runner.predicates;
 
-import plan_runner.expressions.ValueExpression;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.log4j.Logger;
+import plan_runner.expressions.ValueExpression;
 import plan_runner.visitors.PredicateVisitor;
 
 /* This class is syntactic sugar for complex AndPredicate

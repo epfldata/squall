@@ -2,26 +2,30 @@ package sql.optimizers.name;
 
 import java.util.*;
 import net.sf.jsqlparser.schema.Table;
+import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
 import plan_runner.components.EquiJoinComponent;
-import plan_runner.utilities.SystemParameters;
+import plan_runner.components.OperatorComponent;
 import sql.schema.Schema;
 import sql.util.OverParallelizedException;
 import sql.util.ParserUtil;
+import sql.util.TableAliasName;
 import sql.visitors.jsql.SQLVisitor;
 
 
 public class CostParallelismAssigner {
     private final Map _map;
     private final Schema _schema;
+    private final TableAliasName _tan;
     
     //computed only once
     private List<String> _sortedSourceNames;// sorted by increasing cardinalities
     private Map<String, Integer> _sourcePars;
 
-    public CostParallelismAssigner(Schema schema, Map map) {
+    public CostParallelismAssigner(Schema schema, TableAliasName tan, Map map) {
         _schema = schema;
         _map = map;
+        _tan = tan;
     }
 
     /*
@@ -172,7 +176,7 @@ public class CostParallelismAssigner {
         String currentComp = joinComponent.getName();
         compCost.get(currentComp).setParallelism(parallelism);
         
-        //TODO: we should also check 
+        //we should also check 
         //  if the sum of all the parallelisms in the subplan 
         //    is bigger than DIP_NUM_WORKERS (this is set only for PlanRunner).
         //At the time of deciding of parallelism, we are *not* dealing with Storm Config class, but with a plain map.
@@ -181,7 +185,7 @@ public class CostParallelismAssigner {
     }
 
     private int parallelismFormula(CostParams leftParentParams, CostParams rightParentParams) {
-        //computing TODO: does not take into account when joinComponent send tuples further down
+        //TODO: this formula does not take into account when joinComponent send tuples further down
         double dblParallelism = leftParentParams.getSelectivity() * leftParentParams.getParallelism() +
                             rightParentParams.getSelectivity() * rightParentParams.getParallelism() +
                             1.0/8 * (leftParentParams.getParallelism() + rightParentParams.getParallelism());
@@ -197,8 +201,8 @@ public class CostParallelismAssigner {
      * We take the number of tuples as the upper limit.
      *   The real number of distinct hashes may be much smaller,
      *   for example when having multiple tuples with the very same hash value.
-     *   This is rare in practice, in the examplesw we tried,
-     *      it occurs only for the final aggregation when join and final aggregation are not on the last node.
+     *   This is rare in practice, in the examples we tried,
+     *      it occurs only for the final aggregation when last join and final aggregation are not on the same node.
      */
     private int estimateDistinctHashes(CostParams leftParentParams, CostParams rightParentParams) {
         /* TODO: to implement this properly, we need to:
@@ -226,10 +230,50 @@ public class CostParallelismAssigner {
     }
 
     /*
+     * There could be several algorithms to assign parallelism to opComp:
+     *   a) square root of parallelism of its parent
+     *   b) number of distinct groupBy values
+     *   c) the same as previous level
+     *  We decided to 
+     *    -if groupBy is a single column, take min(b, c)
+     *    -otherwise take c
+     */
+    public void setParallelism(OperatorComponent opComp, Map<String, CostParams> compCost) {    
+        Component parent = opComp.getParents()[0];
+        String parentName = parent.getName();
+        int parentPar = compCost.get(parentName).getParallelism();
+        
+        int parallelism = parentPar;
+        //
+        List<Integer> hashIndexes = parent.getHashIndexes();
+        if((hashIndexes) != null && (hashIndexes.size() == 1)){
+            int index = hashIndexes.get(0);
+            String aliasedColumnName = compCost.get(parentName).getSchema().getSchema().get(index).getName();
+            String fullSchemaColumnName = ParserUtil.getFullSchemaColumnName(aliasedColumnName, _tan);
+            
+            try{
+                long distinctValues = _schema.getNumDistinctValues(fullSchemaColumnName);
+                if(distinctValues < parallelism){
+                    parallelism = (int) distinctValues;
+                }
+            }catch(RuntimeException ex){}
+        }
+        
+        //cannot be less than 1
+        if(parallelism < 1){
+            parallelism = 1;
+        }
+        
+        //setting
+        String currentComp = opComp.getName();
+        compCost.get(currentComp).setParallelism(parallelism);
+    }
+    
+    /*
      * we need separate class from CostParams, because here we want to order them based on cardinality
      * This class will contain all the parallelism for DataSourceComponents
      */
-    private class OrderedCostParams extends CostParams implements Comparable<OrderedCostParams>{
+    private static class OrderedCostParams extends CostParams implements Comparable<OrderedCostParams>{
         private String _componentName;
 
         public OrderedCostParams(String componentName, long cardinality){

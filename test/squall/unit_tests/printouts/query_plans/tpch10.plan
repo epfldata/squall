@@ -1,0 +1,39 @@
+QUERY PLAN
+
+Component LINEITEM
+SelectOperator with Predicate: "LINEITEM.RETURNFLAG" - Col 8 = Constant R
+ProjectOperator (("LINEITEM.EXTENDEDPRICE" - Col 5) * ((Constant 1.0) - ("LINEITEM.DISCOUNT" - Col 6)), "LINEITEM.ORDERKEY" - Col 0)
+
+ HashIndexes: (1)
+
+Component ORDERS
+SelectOperator with Predicate: ("ORDERS.ORDERDATE" - Col 4 >= Constant 1993-10-01) AND ("ORDERS.ORDERDATE" - Col 4 < Constant 1994-01-01)
+ProjectOperator ("ORDERS.CUSTKEY" - Col 1, "ORDERS.ORDERKEY" - Col 0)
+
+ HashIndexes: (1)
+
+Component LINEITEM_ORDERS
+ProjectOperator ("LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)" - Col 0, "ORDERS.CUSTKEY" - Col 2)
+
+ HashIndexes: (1)
+
+Component CUSTOMER
+ProjectOperator ("CUSTOMER.CUSTKEY" - Col 0, "CUSTOMER.NAME" - Col 1, "CUSTOMER.ACCTBAL" - Col 5, "CUSTOMER.ADDRESS" - Col 2, "CUSTOMER.PHONE" - Col 4, "CUSTOMER.COMMENT" - Col 7, "CUSTOMER.NATIONKEY" - Col 3)
+
+ HashIndexes: (0)
+
+Component LINEITEM_ORDERS_CUSTOMER
+ HashIndexes: (7)
+
+Component NATION
+ProjectOperator ("NATION.NAME" - Col 1, "NATION.NATIONKEY" - Col 0)
+
+ HashIndexes: (1)
+
+Component LINEITEM_ORDERS_CUSTOMER_NATION
+ProjectOperator ("ORDERS.CUSTKEY" - Col 1, "CUSTOMER.NAME" - Col 2, "LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)" - Col 0, "CUSTOMER.ACCTBAL" - Col 3, "NATION.NAME" - Col 8, "CUSTOMER.ADDRESS" - Col 4, "CUSTOMER.PHONE" - Col 5, "CUSTOMER.COMMENT" - Col 6)
+AggregateSumOperator with VE: "LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)" - Col 2
+  GroupByProjection is ProjectOperator ("ORDERS.CUSTKEY" - Col 0, "CUSTOMER.NAME" - Col 1, "CUSTOMER.ACCTBAL" - Col 3, "NATION.NAME" - Col 4, "CUSTOMER.ADDRESS" - Col 5, "CUSTOMER.PHONE" - Col 6, "CUSTOMER.COMMENT" - Col 7).
+
+
+END of QUERY PLAN

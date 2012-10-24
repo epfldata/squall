@@ -51,7 +51,6 @@ public class VECollectVisitor implements OperatorVisitor {
         _veList.addAll(vecpv.getExpressions());
     }
 
-    //TODO: this should be only in the last component
     @Override
     public void visit(AggregateOperator aggregation) {
         if(aggregation!=null){
@@ -72,7 +71,7 @@ public class VECollectVisitor implements OperatorVisitor {
     //because we assing by ourselves to projection
     @Override
     public void visit(ProjectOperator projection){
-        //TODO ignored because of topDown - makes no harm
+        //ignored because of topDown - makes no harm
     }
 
     //because it changes the output of the component

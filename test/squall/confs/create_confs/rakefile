@@ -1,0 +1,87 @@
+$:.push Dir.getwd;
+require 'util.rb'
+
+# CHANGE BETWEEN HERE AND ...
+$dip_distributed = true
+$queries = {
+            # "tpch3" => {}, 
+	    "tpch7" => {}
+           }
+$data_sizes = [1, 0.1]
+# possible values for optimizer are NameRuleLefty (nrl) and NameCostLefty (ncl) optimizer. Index-based optimizers are obsolete and other name optimizers require manual intervention, so cannot be automatically generated.
+$optimizer = "NAME_COST_LEFTY"
+$dip_total_src_par = [10]
+# ... AND HERE
+
+$opt = $optimizer.split(pattern = "_").map{|s| s.chars.first.downcase}.join
+
+$OUTPUT_PATH="generated"
+$dip_data_root = "/data/squall_blade/data/tpchdb/"
+$dip_sql_root = "../test/squall/sql_queries/"
+$dip_result_root = "../test/results"
+$default_dip_schema_path = "../test/squall/schemas/tpch.txt"
+
+$default_delim = "|"
+$default_escaped_delim = "\\|"
+$default_extension = ".tbl"
+
+$TOPOLOGY_NAME_PREFIX="username"
+$storage_local_dir = "/tmp/ramdisk"
+$storage_cluster_dir = "/data/squall_zone/storage"
+$memory_size_mb = 4096
+
+$queries.each do |q, q_args|
+  $data_sizes.each do |size|
+    $dip_total_src_par.each do |par|
+      size_str = size.to_s.gsub(".", "_") # Storm 0.8.0 does not support "." characters in a topology name
+      test_name = "#{size_str}G_#{q}_#{$opt}_#{par}"
+        File.open("#{$OUTPUT_PATH}/#{test_name}", "w+") do |f|
+          delim         = q_args.fetch(:delim, $default_delim);
+          escaped_delim = q_args.fetch(:escaped_delim, $default_escaped_delim);
+	  extension = q_args.fetch(:extension, $default_extension);
+	  dip_schema_path = q_args.fetch(:dip_schema_path, $default_dip_schema_path);
+
+          f.puts("# Auto-generated config file for #{test_name}
+
+DIP_DISTRIBUTED #{$dip_distributed}
+DIP_QUERY_NAME #{q}
+
+DIP_TOPOLOGY_NAME_PREFIX #{$TOPOLOGY_NAME_PREFIX}
+DIP_DATA_ROOT #{$dip_data_root}
+DIP_SQL_ROOT #{$dip_sql_root}
+DIP_SCHEMA_PATH #{dip_schema_path}
+#{ 
+   if !$dip_distributed then
+      "DIP_RESULT_ROOT #{$dip_result_root}"
+   end
+}
+
+# DIP_DB_SIZE is in GBs
+DIP_DB_SIZE #{size}
+
+DIP_OPTIMIZER_TYPE #{$optimizer}
+DIP_TOTAL_SRC_PAR #{par}
+
+#below are unlikely to change
+DIP_EXTENSION #{extension}
+DIP_READ_SPLIT_DELIMITER #{escaped_delim}
+DIP_GLOBAL_ADD_DELIMITER #{delim}
+DIP_GLOBAL_SPLIT_DELIMITER #{escaped_delim}
+
+DIP_KILL_AT_THE_END true
+DIP_ACK_EVERY_TUPLE false
+
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR #{$storage_local_dir}
+# Storage directory for cluster runs
+STORAGE_CLUSTER_DIR #{$storage_cluster_dir}
+STORAGE_COLD_START true
+STORAGE_MEMORY_SIZE_MB #{$memory_size_mb}
+
+")
+        end # File.open
+     task :default => "#{$OUTPUT_PATH}/#{test_name}"
+    end # dip_total_src_par
+  end #datafiles
+end #queries

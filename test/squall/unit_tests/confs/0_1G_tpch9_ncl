@@ -1,0 +1,50 @@
+DIP_DISTRIBUTED false
+DIP_QUERY_NAME tpch9
+
+DIP_TOPOLOGY_NAME_PREFIX username
+DIP_DATA_ROOT ../test/data/tpch/
+DIP_SQL_ROOT ../test/squall/sql_queries/
+DIP_SCHEMA_PATH ../test/squall/schemas/tpch.txt
+DIP_RESULT_ROOT ../test/results/
+
+# DIP_DB_SIZE is in GBs
+DIP_DB_SIZE 0.1 
+
+########################################
+#DIP_OPTIMIZER_TYPE INDEX_SIMPLE
+#DIP_MAX_SRC_PAR 1
+
+#DIP_OPTIMIZER_TYPE INDEX_RULE_BUSHY
+#DIP_MAX_SRC_PAR 1
+
+#DIP_OPTIMIZER_TYPE NAME_MANUAL_PAR_LEFTY
+#DIP_PLAN CUSTOMER:2,ORDERS:3:4
+
+#DIP_OPTIMIZER_TYPE NAME_MANUAL_COST_LEFTY
+#DIP_PLAN CUSTOMER,ORDERS
+#DIP_TOTAL_SRC_PAR 20
+
+#DIP_OPTIMIZER_TYPE NAME_RULE_LEFTY
+#DIP_TOTAL_SRC_PAR 20
+
+DIP_OPTIMIZER_TYPE NAME_COST_LEFTY
+DIP_TOTAL_SRC_PAR 20
+
+########################################
+
+#below are unlikely to change
+DIP_EXTENSION .tbl
+DIP_READ_SPLIT_DELIMITER \|
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_ACK_EVERY_TUPLE false
+DIP_KILL_AT_THE_END true
+
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_DIP_DIR /export/home/squalldata/storage 
+STORAGE_COLD_START true
+MEMORY_SIZE_MB 4096
