@@ -215,8 +215,8 @@ public class TopologyStats {
                 sb.append("\nAverage latency for default stream for spout ").append(componentId).append(" is ").append(avgLatency).append("ms.");
             }
 
-            double avgThroughput = getAvgThroughput(tiList, topologyUptime);
-            sb.append("\nAverage throughput for default stream for spout ").append(componentId).append(" is ").append(avgThroughput).append("t/s.");
+            double totalThroughput = getTotalThroughput(tiList, topologyUptime);
+            sb.append("\nTotal throughput for default stream for spout ").append(componentId).append(" is ").append(totalThroughput).append("t/s.");
                     
             allCompTuplesLatency.addAll(tiList);
         }
@@ -226,7 +226,7 @@ public class TopologyStats {
         if(withAckers){
             sb.append("\nAverage latency for default stream for all the spouts is ").append(getAvgLatency(allCompTuplesLatency)).append("ms.");
         }
-        sb.append("\nAverage throughput for default stream for all the spouts is ").append(getAvgThroughput(allCompTuplesLatency, topologyUptime)).append("t/s.");   
+        sb.append("\nTotal throughput for default stream for all the spouts is ").append(getTotalThroughput(allCompTuplesLatency, topologyUptime)).append("t/s.");   
                 
         return sb.toString();
     }
@@ -293,12 +293,12 @@ public class TopologyStats {
        return sumLatency / totalNumTuples;
     }
     
-    private static double getAvgThroughput(List<TuplesInfo> tiList, int topologyUptime) {
+    private static double getTotalThroughput(List<TuplesInfo> tiList, int topologyUptime) {
         long numTuples = 0;
         for(TuplesInfo ti: tiList){
             numTuples += ti.getNumTuples();
         }
-        return (((double)numTuples) / tiList.size()) / topologyUptime;
+        return ((double)numTuples) / topologyUptime;
     }
 
     private static <T> boolean isEmptyMapMap(Map<String, Map<T, Long>> mapMap) {
