@@ -56,6 +56,9 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
     private boolean _firstTime = true;
     private PeriodicBatchSend _periodicBatch;
     private long _batchOutputMillis;
+    
+    //for Send and Wait mode
+    private double _totalLatency;    
 
     public StormOperator(StormEmitter emitter,
             ComponentProperties cp,
@@ -115,7 +118,12 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
 
         if(MyUtilities.isFinalAck(tuple, _conf)){
             _numRemainingParents--;
-            MyUtilities.processFinalAck(_numRemainingParents, _hierarchyPosition, stormTupleRcv, _collector, _periodicBatch);
+            MyUtilities.processFinalAck(_numRemainingParents, 
+                    _hierarchyPosition, 
+                    _conf,
+                    stormTupleRcv, 
+                    _collector, 
+                    _periodicBatch);
             return;
         }
 
@@ -142,14 +150,25 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
         printTuple(tuple);
 
         if(MyUtilities.isSending(_hierarchyPosition, _batchOutputMillis)){
-            tupleSend(tuple, stormTupleRcv);
+            if(MyUtilities.isSendAndWaitMode(_conf)){
+                tupleSend(tuple, stormTupleRcv, stormTupleRcv.getLong(3));
+            }else{
+                tupleSend(tuple, stormTupleRcv, 0);
+            }
+        }
+        if(MyUtilities.isPrintSAWLatency(_hierarchyPosition, _conf)){
+            printSAWTupleLatency(_numSentTuples, stormTupleRcv.getLong(3));
         }
     }
 
     @Override
-    public void tupleSend(List<String> tuple, Tuple stormTupleRcv) {
-        Values stormTupleSnd = MyUtilities.createTupleValues(tuple, _componentIndex,
-                        _hashIndexes, _hashExpressions, _conf);
+    public void tupleSend(List<String> tuple, Tuple stormTupleRcv, long timestamp) {
+        Values stormTupleSnd = MyUtilities.createTupleValues(tuple, 
+                timestamp,
+                _componentIndex,
+                _hashIndexes, 
+                _hashExpressions, 
+                _conf);
         MyUtilities.sendTuple(stormTupleSnd, stormTupleRcv, _collector, _conf);
     }
 
@@ -167,7 +186,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
                     AggregateOperator agg = (AggregateOperator) lastOperator;
                     List<String> tuples = agg.getContent();
                     for(String tuple: tuples){
-                        tupleSend(MyUtilities.stringToTuple(tuple, _conf), null);
+                        tupleSend(MyUtilities.stringToTuple(tuple, _conf), null, 0);
                     }
 
                     //clearing
@@ -193,13 +212,36 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         if(_hierarchyPosition!=FINAL_COMPONENT){ // then its an intermediate stage not the final one
-            declarer.declare(new Fields("CompIndex", "Tuple", "Hash") );
+            if(MyUtilities.isSendAndWaitMode(_conf)){
+                declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("CompIndex", "Tuple", "Hash", "Timestamp"));
+            }else{
+                declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("CompIndex", "Tuple", "Hash"));
+            }
 	}else{
             if(!MyUtilities.isAckEveryTuple(_conf)){
                 declarer.declareStream(SystemParameters.EOF_STREAM, new Fields(SystemParameters.EOF));
             }
         }
     }
+    
+        //Send and Wait mode
+        @Override
+        public void printSAWTupleLatency(long tupleSerialNum, long timestamp) {
+            int tupleSampleRate = SystemParameters.getInt(_conf, "TUPLE_SAMPLE_RATE");
+            if(tupleSerialNum % tupleSampleRate == 0){
+                int initIgnoredSamples = SystemParameters.getInt(_conf, "INIT_IGNORED_SAMPLES");
+                long currentMillis = System.currentTimeMillis();
+                long sawLatency = currentMillis - timestamp;
+                LOG.info("Tuple latency (we log every " + tupleSampleRate + "th one) is " + sawLatency);
+                
+                long _numberOfSamples = tupleSerialNum / tupleSampleRate;
+                if(_numberOfSamples > initIgnoredSamples){
+                    _totalLatency += sawLatency;             
+                    LOG.info("AVERAGE tuple latency (after first " + initIgnoredSamples +
+                            " samples are ignored): " + _totalLatency/(_numberOfSamples - initIgnoredSamples));
+                }
+            }
+        } 
 
     @Override
     public void printTuple(List<String> tuple){

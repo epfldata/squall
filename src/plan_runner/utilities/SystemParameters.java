@@ -39,10 +39,13 @@ public class SystemParameters{
     //default port, should not be changed unless some other application took this port
     public static final int NIMBUS_THRIFT_PORT = 6627;
     
+    //***************************SendAndWait parameters********************************
+    
     //how much space average tuple takes to be stored
     public static final int TUPLE_SIZE_BYTES = 50;
     //the factor we multiply predicted storage
     public static final int JAVA_OVERHEAD = 7;
+    //***************************SendAndWait parameters********************************
     
     //DO NOT MODIFY OR MOVE ANYWHERE ELSE. THESE ARE NOT CONFIGURATION VARIABLES
     public static final String DATA_STREAM = Utils.DEFAULT_STREAM_ID; /* "default" */

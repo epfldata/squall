@@ -42,8 +42,11 @@ public class StormWrapper {
             //conf.setMessageTimeoutSecs(SystemParameters.MESSAGE_TIMEOUT_SECS);
             
             //Throttling parameter reduces latency and throughput
-            if(SystemParameters.isExisting(conf, "DIP_THROTTLING")){
-                int tp = SystemParameters.getInt(conf, "DIP_THROTTLING");
+            if(SystemParameters.isExisting(conf, "DIP_STORM_THROTTLING")){
+                if(MyUtilities.isSendAndWaitMode(conf)){
+                    throw new RuntimeException("Storm throttling (set via DIP_STORM_THROTTLING) and our SEND_AND_WAIT mode cannot be set at the same time!");
+                }
+                int tp = SystemParameters.getInt(conf, "DIP_STORM_THROTTLING");
                 conf.setMaxSpoutPending(tp);
             }
         }
@@ -137,7 +140,7 @@ public class StormWrapper {
     }
 
     // if we are in local mode, we cannot obtain these information
-    public static void writeStats(Map conf){
+    public static void writeStormStats(Map conf){
         Client client=getNimbusStub(conf);
         StringBuilder sb=new StringBuilder("");
 

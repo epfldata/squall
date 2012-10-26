@@ -338,13 +338,20 @@ public class MyUtilities{
 
         //in ProcessFinalAck and dumpSignal we have acking at the end, because we return after that
         public static void processFinalAck(int numRemainingParents,
-                int hierarchyPosition, Tuple stormTupleRcv, OutputCollector collector) {
+                int hierarchyPosition, 
+                Map conf,
+                Tuple stormTupleRcv, 
+                OutputCollector collector) {
             if(numRemainingParents == 0){
             //this task received from all the parent tasks SystemParameters.LAST_ACK
                 if(hierarchyPosition != StormComponent.FINAL_COMPONENT){
                 //if this component is not the last one
                     List<String> lastTuple = new ArrayList<String>(Arrays.asList(SystemParameters.LAST_ACK));
-                    collector.emit(new Values("N/A", lastTuple, "N/A"));
+                    if(MyUtilities.isSendAndWaitMode(conf)){
+                        collector.emit(new Values("N/A", lastTuple, "N/A", 0));
+                    }else{
+                        collector.emit(new Values("N/A", lastTuple, "N/A"));
+                    }
                 }else{
                     collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
                 }
@@ -353,14 +360,22 @@ public class MyUtilities{
         }
 
         public static void processFinalAck(int numRemainingParents,
-                int hierarchyPosition, Tuple stormTupleRcv, OutputCollector collector, PeriodicBatchSend periodicBatch) {
+                int hierarchyPosition, 
+                Map conf,
+                Tuple stormTupleRcv, 
+                OutputCollector collector, 
+                PeriodicBatchSend periodicBatch) {
             if(numRemainingParents == 0){
                 if(periodicBatch != null){
                     periodicBatch.cancel();
                     periodicBatch.getComponent().batchSend();
                 }
             }
-            processFinalAck(numRemainingParents, hierarchyPosition, stormTupleRcv, collector);
+            processFinalAck(numRemainingParents, 
+                    hierarchyPosition, 
+                    conf,
+                    stormTupleRcv, 
+                    collector);
         }
 
         public static void dumpSignal(StormComponent comp, Tuple stormTupleRcv, OutputCollector collector) {
@@ -376,11 +391,23 @@ public class MyUtilities{
             return (hierarchyPosition != StormComponent.FINAL_COMPONENT) && !isBatchOutputMode(batchOutputMillis);
         }
 
-        public static Values createTupleValues(List<String> tuple, String componentIndex,
-                List<Integer> hashIndexes, List<ValueExpression> hashExpressions, Map conf) {
+        public static Values createTupleValues(List<String> tuple, 
+                long timestamp,
+                String componentIndex,
+                List<Integer> hashIndexes, 
+                List<ValueExpression> hashExpressions, 
+                Map conf) {
 
             String outputTupleHash = MyUtilities.createHashString(tuple, hashIndexes, hashExpressions, conf);
-            return new Values(componentIndex, tuple, outputTupleHash);
+            if(MyUtilities.isSendAndWaitMode(conf)){
+                return new Values(componentIndex, tuple, outputTupleHash, timestamp);
+            }else{
+                return new Values(componentIndex, tuple, outputTupleHash);
+            }
+        }
+        
+        public static boolean isSendAndWaitMode(Map map){
+            return SystemParameters.isExisting(map, "THROTTLING_PARAMETER");
         }
 
         /*
@@ -400,7 +427,7 @@ public class MyUtilities{
         public static void sendTuple(Values stormTupleSnd, SpoutOutputCollector collector, Map conf) {
             String msgId = null;
             if(MyUtilities.isAckEveryTuple(conf)){
-                msgId = "TrackTupleAck";
+                msgId = "T"; //as short as possible
             }
 
             if(msgId != null){
@@ -477,4 +504,9 @@ public class MyUtilities{
             int length = parts.length;
             return parts[length - (fromEnd +1)];
         }
+
+        public static boolean isPrintSAWLatency(int hierarchyPosition, Map conf) {
+            return MyUtilities.isSendAndWaitMode(conf) && hierarchyPosition == StormComponent.FINAL_COMPONENT;
+        }
+
 }

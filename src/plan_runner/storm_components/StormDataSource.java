@@ -65,6 +65,9 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 	private boolean _firstTime = true;
 	private PeriodicBatchSend _periodicBatch;
 	private long _batchOutputMillis;
+        
+        //for Send and Wait mode
+        private double _totalLatency;
 
 	public StormDataSource(ComponentProperties cp,
                         List<String> allCompNames,
@@ -106,6 +109,14 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 				_periodicBatch = new PeriodicBatchSend(_batchOutputMillis, this);
 				_firstTime = false;
 			}
+                        
+                        if(MyUtilities.isSendAndWaitMode(_conf) &&
+                                _numSentTuples % SystemParameters.getInt(_conf, "THROTTLING_PARAMETER") == 0){
+                            try{
+                                Utils.sleep(SystemParameters.getInt(_conf, "BATCH_TIMEOUT"));
+                            }catch(Exception exc){}
+                        }
+                        long timestamp = System.currentTimeMillis();
 
 			String line = readLine();
 //                        if(_numSentTuples % 100 == 0){
@@ -126,10 +137,10 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 			}
 
 			List<String> tuple = MyUtilities.fileLineToTuple(line, _conf);
-			applyOperatorsAndSend(tuple);
+			applyOperatorsAndSend(tuple, timestamp);
 		}
 
-	protected void applyOperatorsAndSend(List<String> tuple){
+	protected void applyOperatorsAndSend(List<String> tuple, long timestamp){
 		// do selection and projection
 		if(MyUtilities.isBatchOutputMode(_batchOutputMillis)){
 			try {
@@ -150,8 +161,11 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 		printTuple(tuple);
 
 		if(MyUtilities.isSending(_hierarchyPosition, _batchOutputMillis)){
-			tupleSend(tuple, null);
+                        tupleSend(tuple, null, timestamp);
 		}
+                if(MyUtilities.isPrintSAWLatency(_hierarchyPosition, _conf)){
+                    printSAWTupleLatency(_numSentTuples, timestamp);
+                }
 	}
 
         /*
@@ -170,7 +184,11 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                             if(!_hasSentLastAck){
                                 _hasSentLastAck = true;
                                 List<String> lastTuple = new ArrayList<String>(Arrays.asList(SystemParameters.LAST_ACK));
-				_collector.emit(new Values("N/A", lastTuple, "N/A"));
+                                if(MyUtilities.isSendAndWaitMode(_conf)){
+                                    _collector.emit(new Values("N/A", lastTuple, "N/A", 0));
+                                }else{
+                                    _collector.emit(new Values("N/A", lastTuple, "N/A"));
+                                }
                             }
                         }
 		}
@@ -191,9 +209,13 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
         }
 
 	@Override
-		public void tupleSend(List<String> tuple, Tuple stormTupleRcv) {
-			Values stormTupleSnd = MyUtilities.createTupleValues(tuple, _componentIndex,
-					_hashIndexes, _hashExpressions, _conf);
+		public void tupleSend(List<String> tuple, Tuple stormTupleRcv, long timestamp) {
+			Values stormTupleSnd = MyUtilities.createTupleValues(tuple, 
+                                timestamp,
+                                _componentIndex,
+				_hashIndexes, 
+                                _hashExpressions, 
+                                _conf);
 			MyUtilities.sendTuple(stormTupleSnd, _collector, _conf);
 		}
 
@@ -211,7 +233,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 						AggregateOperator agg = (AggregateOperator) lastOperator;
 						List<String> tuples = agg.getContent();
 						for(String tuple: tuples){
-							tupleSend(MyUtilities.stringToTuple(tuple, _conf), null);
+							tupleSend(MyUtilities.stringToTuple(tuple, _conf), null, 0);
 						}
 
 						//clearing
@@ -266,8 +288,31 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 			if(MyUtilities.isAckEveryTuple(_conf) || _hierarchyPosition == FINAL_COMPONENT){
 				declarer.declareStream(SystemParameters.EOF_STREAM, new Fields(SystemParameters.EOF));
 			}
-                        declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("CompIndex", "Tuple", "Hash"));
+                        if(MyUtilities.isSendAndWaitMode(_conf)){
+                            declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("CompIndex", "Tuple", "Hash", "Timestamp"));
+                        }else{
+                            declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("CompIndex", "Tuple", "Hash"));
+                        }
 		}
+        
+        //Send and Wait mode
+        @Override
+        public void printSAWTupleLatency(long tupleSerialNum, long timestamp) {
+            int tupleSampleRate = SystemParameters.getInt(_conf, "TUPLE_SAMPLE_RATE");
+            if(tupleSerialNum % tupleSampleRate == 0){
+                int initIgnoredSamples = SystemParameters.getInt(_conf, "INIT_IGNORED_SAMPLES");
+                long currentMillis = System.currentTimeMillis();
+                long sawLatency = currentMillis - timestamp;
+                LOG.info("Tuple latency (we log every " + tupleSampleRate + "th one) is " + sawLatency);
+                
+                long _numberOfSamples = tupleSerialNum / tupleSampleRate;
+                if(_numberOfSamples > initIgnoredSamples){
+                    _totalLatency += sawLatency;             
+                    LOG.info("AVERAGE tuple latency (after first " + initIgnoredSamples +
+                            " samples are ignored): " + _totalLatency/(_numberOfSamples - initIgnoredSamples));
+                }
+            }
+        }      
 
 	@Override
 		public void printTuple(List<String> tuple){

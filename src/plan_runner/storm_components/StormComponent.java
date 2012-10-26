@@ -13,10 +13,11 @@ public interface StormComponent {
     public String getID();
     public String getInfoID();
 
+    public void printSAWTupleLatency(long numSentTuples, long timestamp);
     public void printTuple(List<String> tuple);
     public void printContent();
 
-    public void tupleSend(List<String> tuple, Tuple stormTupleRcv);
+    public void tupleSend(List<String> tuple, Tuple stormTupleRcv, long timestamp);
     //sending the current content of aggregation and then clearing it
     public void batchSend();
 

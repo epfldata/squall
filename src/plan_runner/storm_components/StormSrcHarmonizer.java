@@ -63,7 +63,11 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 
             if(MyUtilities.isFinalAck(tuple, _conf)){
                 _numRemainingParents--;
-                MyUtilities.processFinalAck(_numRemainingParents, StormComponent.INTERMEDIATE, stormRcvTuple, _collector);
+                MyUtilities.processFinalAck(_numRemainingParents, 
+                        StormComponent.INTERMEDIATE, 
+                        _conf,
+                        stormRcvTuple, 
+                        _collector);
                 return;
             }
 
@@ -72,7 +76,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 	}
 
         @Override
-        public void tupleSend(List<String> tuple, Tuple stormTupleRcv) {
+        public void tupleSend(List<String> tuple, Tuple stormTupleRcv, long timestamp) {
             throw new RuntimeException("Should not be here!");
         }
 
@@ -103,6 +107,11 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
             String str = "Harmonizer " + _componentName + " has ID: "+ _ID;
             return str;
         }
+        
+        @Override
+        public void printSAWTupleLatency(long numSentTuples, long timestamp) {
+            //empty
+        }        
 
         public void printTuple(List<String> tuple) {
             //this is purposely empty
@@ -110,5 +119,6 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 
         public void printContent() {
             //this class has no content: this is purposely empty
-        }
+        }       
+
 }
