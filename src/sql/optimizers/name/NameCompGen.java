@@ -11,14 +11,17 @@ import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
 import plan_runner.components.EquiJoinComponent;
 import plan_runner.components.OperatorComponent;
+import plan_runner.conversion.StringConversion;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.AggregateOperator;
+import plan_runner.operators.DistinctOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
 import plan_runner.query_plans.QueryPlan;
 import plan_runner.utilities.DeepCopy;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.CompGen;
+import sql.schema.ColumnNameType;
 import sql.schema.Schema;
 import sql.util.HierarchyExtractor;
 import sql.util.ParserUtil;
@@ -438,7 +441,7 @@ public class NameCompGen implements CompGen{
         String compName = component.getName();
         _compCost.get(compName).setSchema(outputTupleSchema);
     }
-
+    
     /*************************************************************************************
      * SELECT clause - Final aggregation
      *************************************************************************************/
