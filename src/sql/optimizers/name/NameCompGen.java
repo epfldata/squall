@@ -173,6 +173,11 @@ public class NameCompGen implements CompGen{
      */
     @Override
     public DataSourceComponent generateDataSource(String tableCompName){
+	return generateDataSource(tableCompName, false);
+    }
+
+    // XXX: Yannis change for TPCH-6 -- This boolean and the above function
+    public DataSourceComponent generateDataSource(String tableCompName, boolean isOnlyComp){
         DataSourceComponent source = createAddDataSource(tableCompName);
         
         createCompCost(source);
@@ -181,6 +186,29 @@ public class NameCompGen implements CompGen{
         //operators
         addSelectOperator(source);
         addProjectOperator(source);
+	// XXX: Yannis change for TPCH-6
+	if (isOnlyComp) {
+	        TupleSchema tupleSchema = _compCost.get(source.getName()).getSchema();
+        	NameSelectItemsVisitor selectVisitor = new NameSelectItemsVisitor(tupleSchema, _map, source);
+        	for(SelectItem elem: _pq.getSelectItems()){
+	            elem.accept(selectVisitor);
+        	}
+	        List<AggregateOperator> aggOps = selectVisitor.getAggOps();
+        	if (!aggOps.isEmpty()){
+        		if (aggOps.size() == 1){
+				//all the others are group by
+			        AggregateOperator firstAgg = aggOps.get(0);
+			        if(firstAgg.getDistinct() == null){
+                			source.addOperator(firstAgg);
+		        	}else{
+                			addHash(source, selectVisitor.getGroupByVEs());
+				}
+        	    	}else{
+            			throw new RuntimeException("For now only one aggregate function supported!");
+        		}
+		}
+	}
+	// -- END OF YANNIS CHANGE
 
         if(_costEst!=null) _costEst.setOutputParamsAndPar(source);
 

@@ -35,6 +35,10 @@ public class KeyValueStore<K, V> extends BasicStore {
 		this._tc = tc;
 	}
 
+	public void setTypeConversion(TypeConversion tc) {
+		this._tc = tc;
+	}
+
 	public KeyValueStore(int storesizemb, int hash_indices, Map conf) {
 		super(storesizemb);
 		this._storageManager = new StorageManager<V>(this, conf);
@@ -230,10 +234,11 @@ public class KeyValueStore<K, V> extends BasicStore {
 				stream.print(" = ");
 				values = entry.getValues();
 				for (V v : values) {
-					if (this._tc != null)
+					if (this._tc != null) {
 						stream.print(_tc.toString(v));
-					else 
+					} else {
 						stream.print(v.toString());
+					}
 				}
 				stream.println("");
 			}
