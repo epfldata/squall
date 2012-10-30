@@ -66,8 +66,16 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 	private PeriodicBatchSend _periodicBatch;
 	private long _batchOutputMillis;
         
-        //for Send and Wait mode
+        //for CustomTimestamp mode
         private double _totalLatency;
+        
+        //for ManualBatch(Queuing) mode
+        private List<Integer> _targetTaskIds;
+        private int _targetParallelism;
+
+        private StringBuffer[] _targetBuffers;
+        private long[] _targetTimestamps;
+
 
 	public StormDataSource(ComponentProperties cp,
                         List<String> allCompNames,
@@ -110,20 +118,18 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 				_firstTime = false;
 			}
                         
-                        if(MyUtilities.isSendAndWaitMode(_conf) &&
-                                _numSentTuples % SystemParameters.getInt(_conf, "THROTTLING_PARAMETER") == 0){
-                            try{
-                                Utils.sleep(SystemParameters.getInt(_conf, "BATCH_TIMEOUT"));
-                            }catch(Exception exc){}
+                        if(SystemParameters.isExisting(_conf, "BATCH_TIMEOUT_MILLIS")){
+                            int timeout = SystemParameters.getInt(_conf, "BATCH_TIMEOUT_MILLIS");
+                            if(timeout > 0 && _numSentTuples > 0 &&
+                                      _numSentTuples % MyUtilities.getCompBatchSize(_ID, _conf) == 0){
+                                Utils.sleep(timeout);
+                            }
                         }
                         long timestamp = System.currentTimeMillis();
 
+                        
 			String line = readLine();
-//                        if(_numSentTuples % 100 == 0){
-//                            System.out.println("Component " + _ID + " has send " + _numSentTuples + " tuples, "
-//                                    + " and pending is " + _pendingTuples);
-//                        }
-			if(line==null) {
+                        if(line==null) {
                                 if(!_hasReachedEOF){
                                     _hasReachedEOF=true;
                                     //we reached EOF, first time this happens we invoke the method:
@@ -163,8 +169,8 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 		if(MyUtilities.isSending(_hierarchyPosition, _batchOutputMillis)){
                         tupleSend(tuple, null, timestamp);
 		}
-                if(MyUtilities.isPrintSAWLatency(_hierarchyPosition, _conf)){
-                    printSAWTupleLatency(_numSentTuples, timestamp);
+                if(MyUtilities.isPrintLatency(_hierarchyPosition, _conf)){
+                    printTupleLatency(_numSentTuples - 1, timestamp);
                 }
 	}
 
@@ -184,16 +190,13 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                             if(!_hasSentLastAck){
                                 _hasSentLastAck = true;
                                 List<String> lastTuple = new ArrayList<String>(Arrays.asList(SystemParameters.LAST_ACK));
-                                if(MyUtilities.isSendAndWaitMode(_conf)){
-                                    _collector.emit(new Values("N/A", lastTuple, "N/A", 0));
-                                }else{
-                                    _collector.emit(new Values("N/A", lastTuple, "N/A"));
-                                }
+                                tupleSend(lastTuple, null, 0);
                             }
                         }
 		}
-	}
+	}  
 
+        
         /*
          * sending EOF in AckEveryTuple mode when we send at least one tuple to the next component
          */
@@ -208,17 +211,85 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
             }
         }
 
+        
 	@Override
 		public void tupleSend(List<String> tuple, Tuple stormTupleRcv, long timestamp) {
-			Values stormTupleSnd = MyUtilities.createTupleValues(tuple, 
+                        boolean isLastAck = MyUtilities.isFinalAck(tuple, _conf);
+                        
+                        if(!MyUtilities.isManualBatchingMode(_conf)){
+                            if(isLastAck){
+                                finalAckSend();
+                            }else{
+                                regularTupleSend(tuple, timestamp);
+                            }
+                        }else{                     
+                            if(!isLastAck){
+                                //appending tuple if it is not lastAck
+                                addToManualBatch(tuple, timestamp);
+                                if(_numSentTuples % MyUtilities.getCompBatchSize(_ID, _conf) == 0){
+                                    manualBatchSend();
+                                }
+                            }else{
+                                //has to be sent separately, because of the BatchStreamGrouping logic
+                                manualBatchSend(); // we need to send the last batch, if it is not empty
+                                finalAckSend();
+                            }
+                        }
+		}
+        
+                //non-ManualBatchMode
+                private void regularTupleSend(List<String> tuple, long timestamp){
+                    Values stormTupleSnd = MyUtilities.createTupleValues(tuple, 
                                 timestamp,
                                 _componentIndex,
 				_hashIndexes, 
                                 _hashExpressions, 
                                 _conf);
-			MyUtilities.sendTuple(stormTupleSnd, _collector, _conf);
-		}
+                    MyUtilities.sendTuple(stormTupleSnd, _collector, _conf);
+                }        
+        
+                private void finalAckSend(){
+                    Values values = MyUtilities.createUniversalFinalAckTuple(_conf);
+                    _collector.emit(values);
+                }
+        
+                //ManualBatchMode
+                private void addToManualBatch(List<String> tuple, long timestamp){
+                        String tupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);
+                        int dstIndex = MyUtilities.chooseTargetIndex(tupleHash, _targetParallelism);
 
+                        //we put in queueTuple based on tupleHash
+                        //the same hash is used in BatchStreamGrouping for deciding where a particular targetBuffer is to be sent
+                        String tupleString = MyUtilities.tupleToString(tuple, _conf);
+                        
+                        if(MyUtilities.isCustomTimestampMode(_conf)){
+                            if(_targetBuffers[dstIndex].length() == 0){
+                                //timestamp of the first tuple being added to a buffer is the timestamp of the buffer
+                                _targetTimestamps[dstIndex] = timestamp;
+                            }
+                        }
+                        _targetBuffers[dstIndex].append(tupleHash).append(SystemParameters.MANUAL_BATCH_HASH_DELIMITER)
+                                .append(tupleString).append(SystemParameters.MANUAL_BATCH_TUPLE_DELIMITER);
+                }
+                
+                private void manualBatchSend(){
+                        for(int i=0; i<_targetParallelism; i++){
+                            String tupleString = _targetBuffers[i].toString();
+                            _targetBuffers[i] = new StringBuffer("");
+
+                            if(!tupleString.isEmpty()){
+                                //some buffers might be empty
+                                if(MyUtilities.isCustomTimestampMode(_conf)){
+                                    _collector.emit(new Values(_componentIndex, tupleString, _targetTimestamps[i]));
+                                }else{
+                                    _collector.emit(new Values(_componentIndex, tupleString));
+                                }
+                            }
+                        }
+                }
+        
+                
+                //Other Stuff
 	@Override
 		public void batchSend(){
 			if(MyUtilities.isBatchOutputMode(_batchOutputMillis)){
@@ -249,6 +320,14 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 		public void open(Map map, TopologyContext tc, SpoutOutputCollector collector){
 			_collector = collector;
 			_fileSection = tc.getThisTaskIndex();
+                        
+                        _targetTaskIds = MyUtilities.findTargetTaskIds(tc);
+                        _targetParallelism = _targetTaskIds.size();
+                        _targetBuffers = new StringBuffer[_targetParallelism];
+                        _targetTimestamps = new long[_targetParallelism];
+                        for(int i=0; i<_targetParallelism; i++){
+                            _targetBuffers[i] = new StringBuffer("");
+                        }
 
 			try {
 				//  _reader = new BufferedReader(new FileReader(new File(_inputPath)));
@@ -260,6 +339,8 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 				throw new RuntimeException("Filename not found:" + error);
 			}
 		}
+        
+        
 
         //ack method on spout is called only if in AckEveryTuple mode (ACKERS > 0)
 	@Override
@@ -288,28 +369,39 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 			if(MyUtilities.isAckEveryTuple(_conf) || _hierarchyPosition == FINAL_COMPONENT){
 				declarer.declareStream(SystemParameters.EOF_STREAM, new Fields(SystemParameters.EOF));
 			}
-                        if(MyUtilities.isSendAndWaitMode(_conf)){
-                            declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("CompIndex", "Tuple", "Hash", "Timestamp"));
+                        
+                        List<String> outputFields= new ArrayList<String>();
+                        if(MyUtilities.isManualBatchingMode(_conf)){
+                            outputFields.add("CompIndex");
+                            outputFields.add("Tuple"); // string
                         }else{
-                            declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("CompIndex", "Tuple", "Hash"));
+                            outputFields.add("CompIndex");
+                            outputFields.add("Tuple"); // list of string
+                            outputFields.add("Hash");
                         }
+                        if(MyUtilities.isCustomTimestampMode(_conf)){
+                            outputFields.add("Timestamp");
+                        }
+			declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(outputFields));
 		}
         
-        //Send and Wait mode
+        //tupleSerialNum starts from 0
         @Override
-        public void printSAWTupleLatency(long tupleSerialNum, long timestamp) {
-            int tupleSampleRate = SystemParameters.getInt(_conf, "TUPLE_SAMPLE_RATE");
-            if(tupleSerialNum % tupleSampleRate == 0){
-                int initIgnoredSamples = SystemParameters.getInt(_conf, "INIT_IGNORED_SAMPLES");
-                long currentMillis = System.currentTimeMillis();
-                long sawLatency = currentMillis - timestamp;
-                LOG.info("Tuple latency (we log every " + tupleSampleRate + "th one) is " + sawLatency);
-                
-                long _numberOfSamples = tupleSerialNum / tupleSampleRate;
-                if(_numberOfSamples > initIgnoredSamples){
-                    _totalLatency += sawLatency;             
-                    LOG.info("AVERAGE tuple latency (after first " + initIgnoredSamples +
-                            " samples are ignored): " + _totalLatency/(_numberOfSamples - initIgnoredSamples));
+        public void printTupleLatency(long tupleSerialNum, long timestamp) {
+            int freqCompute = SystemParameters.getInt(_conf, "FREQ_TUPLE_LOG_COMPUTE");
+            int freqWrite = SystemParameters.getInt(_conf, "FREQ_TUPLE_LOG_WRITE");
+            int startupIgnoredTuples = SystemParameters.getInt(_conf, "INIT_IGNORED_TUPLES");
+            
+            if(tupleSerialNum >= startupIgnoredTuples){
+                tupleSerialNum = tupleSerialNum - startupIgnoredTuples; // start counting from zero when computing starts
+                if(tupleSerialNum % freqCompute == 0){
+                    long latency = System.currentTimeMillis() - timestamp;
+                    _totalLatency += latency;
+                }
+                if(tupleSerialNum % freqWrite == 0){
+                    long numberOfSamples = (tupleSerialNum / freqCompute) + 1; // note that it is divisible
+                    LOG.info("Taking into account every " + freqCompute + "th tuple, and printing every " + freqWrite + "th one.");
+                    LOG.info("AVERAGE tuple latency so far is " + _totalLatency/numberOfSamples);
                 }
             }
         }      

@@ -1,8 +1,10 @@
 package sql.main;
 
 import java.util.Map;
+import org.apache.log4j.Logger;
 import plan_runner.main.Main;
 import plan_runner.query_plans.QueryPlan;
+import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.Optimizer;
 import sql.optimizers.index.IndexRuleOptimizer;
@@ -14,7 +16,9 @@ import sql.optimizers.name.NameRuleOptimizer;
 import sql.util.ParserUtil;
 
 public class ParserMain{
- 
+    private static Logger LOG = Logger.getLogger(ParserMain.class);
+
+    
     public static void main(String[] args){
         String parserConfPath = args[0];
         ParserMain pm = new ParserMain();
@@ -24,6 +28,7 @@ public class ParserMain{
         QueryPlan plan = pm.generatePlan(map);
         //we have to set ackers after we know how many workers are there(which is done in generatePlan)
         map = pm.putAckers(plan, map);
+        map = pm.putBatchSizes(plan, map);
         
         System.out.println(ParserUtil.toString(plan));
         System.out.println(ParserUtil.parToString(plan, map));
@@ -71,8 +76,26 @@ public class ParserMain{
             SystemParameters.putInMap(map, "DIP_NUM_ACKERS", localAckers);
         }
         
+        if(!MyUtilities.checkSendMode(map)){
+            throw new RuntimeException("BATCH_SEND_MODE value is not recognized.");
+        }
+        
         return map;
-    }    
+    }
+    
+    //this method is a skeleton for more complex ones
+    //  an optimizer should do this in a smarter way
+    private Map putBatchSizes(QueryPlan plan, Map map) {
+        if(SystemParameters.isExisting(map, "BATCH_SIZE")){
+            String batchSize = SystemParameters.getString(map, "BATCH_SIZE");
+            for(String compName: plan.getComponentNames()){
+                String batchStr = compName + "_BS";                
+                SystemParameters.putInMap(map, batchStr, batchSize);
+                LOG.info("Batch size for " + compName + " is " + batchSize);
+            }
+        }
+        return map;
+    }
 
     public QueryPlan generatePlan(Map map){
         Optimizer opt = pickOptimizer(map);

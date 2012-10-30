@@ -1,5 +1,6 @@
 package plan_runner.utilities;
 
+import backtype.storm.generated.Grouping;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -16,8 +17,10 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.apache.log4j.Logger;
 import plan_runner.conversion.DoubleConversion;
 import plan_runner.conversion.TypeConversion;
@@ -268,6 +271,38 @@ public class MyUtilities{
             return currentBolt;
         }
         
+        public static InputDeclarer attachEmitterCustom(Map map, List<String> fullHashList, InputDeclarer currentBolt,
+                StormEmitter emitter1, StormEmitter... emittersArray){
+            List<StormEmitter> emittersList = new ArrayList<StormEmitter>();
+            emittersList.add(emitter1);
+            emittersList.addAll(Arrays.asList(emittersArray));
+
+            for(StormEmitter emitter: emittersList){
+                String[] emitterIDs = emitter.getEmitterIDs();
+                for(String emitterID: emitterIDs){
+                    currentBolt = currentBolt.customGrouping(emitterID,
+                            new BalancedStreamGrouping(map, fullHashList));
+                }
+            }
+            return currentBolt;
+        }
+        
+        public static InputDeclarer attachEmitterBatch(Map map, InputDeclarer currentBolt,
+                StormEmitter emitter1, StormEmitter... emittersArray){
+            List<StormEmitter> emittersList = new ArrayList<StormEmitter>();
+            emittersList.add(emitter1);
+            emittersList.addAll(Arrays.asList(emittersArray));
+
+            for(StormEmitter emitter: emittersList){
+                String[] emitterIDs = emitter.getEmitterIDs();
+                for(String emitterID: emitterIDs){
+                    currentBolt = currentBolt.customGrouping(emitterID,
+                            new BatchStreamGrouping(map));
+                }
+            }
+            return currentBolt;
+        }
+        
         public static InputDeclarer thetaAttachEmitterComponents(InputDeclarer currentBolt, 
                 StormEmitter emitter1, StormEmitter emitter2,List<String> allCompNames,MatrixAssignment assignment,Map map){
         	
@@ -287,22 +322,6 @@ public class MyUtilities{
                 String[] emitterIDs = emitter.getEmitterIDs();
                 for(String emitterID: emitterIDs){
                     currentBolt = currentBolt.customGrouping(emitterID, mapping);
-                }
-            }
-            return currentBolt;
-        }
-
-        public static InputDeclarer attachEmitterCustom(Map map, List<String> fullHashList, InputDeclarer currentBolt,
-                StormEmitter emitter1, StormEmitter... emittersArray){
-            List<StormEmitter> emittersList = new ArrayList<StormEmitter>();
-            emittersList.add(emitter1);
-            emittersList.addAll(Arrays.asList(emittersArray));
-
-            for(StormEmitter emitter: emittersList){
-                String[] emitterIDs = emitter.getEmitterIDs();
-                for(String emitterID: emitterIDs){
-                    currentBolt = currentBolt.customGrouping(emitterID,
-                            new BalancedStreamGrouping(map, fullHashList));
                 }
             }
             return currentBolt;
@@ -333,7 +352,15 @@ public class MyUtilities{
         }
 
         public static boolean isFinalAck(List<String> tuple, Map map){
-            return (!isAckEveryTuple(map)) && tuple.get(0).equals(SystemParameters.LAST_ACK);
+            return (!isAckEveryTuple(map)) && isFinalAck(tuple.get(0));
+        }
+        
+        public static boolean isFinalAckManualBatching(String tupleString, Map map){
+            return (!isAckEveryTuple(map)) && isFinalAck(tupleString);
+        }
+        
+        private static boolean isFinalAck(String tupleString){
+            return tupleString.equals(SystemParameters.LAST_ACK);
         }
 
         //in ProcessFinalAck and dumpSignal we have acking at the end, because we return after that
@@ -346,18 +373,30 @@ public class MyUtilities{
             //this task received from all the parent tasks SystemParameters.LAST_ACK
                 if(hierarchyPosition != StormComponent.FINAL_COMPONENT){
                 //if this component is not the last one
-                    List<String> lastTuple = new ArrayList<String>(Arrays.asList(SystemParameters.LAST_ACK));
-                    if(MyUtilities.isSendAndWaitMode(conf)){
-                        collector.emit(new Values("N/A", lastTuple, "N/A", 0));
-                    }else{
-                        collector.emit(new Values("N/A", lastTuple, "N/A"));
-                    }
+                    Values values = createUniversalFinalAckTuple(conf);
+                    collector.emit(values);
                 }else{
                     collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
                 }
             }
             collector.ack(stormTupleRcv);
         }
+        
+        public static Values createUniversalFinalAckTuple(Map map) {
+            Values values = new Values();
+            values.add("N/A");
+            if(!MyUtilities.isManualBatchingMode(map)){
+                List<String> lastTuple = new ArrayList<String>(Arrays.asList(SystemParameters.LAST_ACK));
+                values.add(lastTuple);
+                values.add("N/A");
+            }else{
+                values.add(SystemParameters.LAST_ACK);
+            }
+            if(MyUtilities.isCustomTimestampMode(map)){
+                values.add(0);
+            }
+            return values;
+        }        
 
         public static void processFinalAck(int numRemainingParents,
                 int hierarchyPosition, 
@@ -397,17 +436,40 @@ public class MyUtilities{
                 List<Integer> hashIndexes, 
                 List<ValueExpression> hashExpressions, 
                 Map conf) {
-
+            
             String outputTupleHash = MyUtilities.createHashString(tuple, hashIndexes, hashExpressions, conf);
-            if(MyUtilities.isSendAndWaitMode(conf)){
+            if(MyUtilities.isCustomTimestampMode(conf)){
                 return new Values(componentIndex, tuple, outputTupleHash, timestamp);
             }else{
                 return new Values(componentIndex, tuple, outputTupleHash);
             }
         }
         
-        public static boolean isSendAndWaitMode(Map map){
-            return SystemParameters.isExisting(map, "THROTTLING_PARAMETER");
+        public static boolean isCustomTimestampMode(Map map){
+            return SystemParameters.isExisting(map, "CUSTOM_TIMESTAMP") &&
+                    SystemParameters.getBoolean(map, "CUSTOM_TIMESTAMP");
+        }
+
+        public static boolean isManualBatchingMode(Map map){
+            return SystemParameters.isExisting(map, "BATCH_SEND_MODE") && 
+                    SystemParameters.getString(map, "BATCH_SEND_MODE").equalsIgnoreCase("MANUAL_BATCH");
+        }        
+        
+        public static boolean isThrottlingMode(Map map) {
+            return SystemParameters.isExisting(map, "BATCH_SEND_MODE") && 
+                    SystemParameters.getString(map, "BATCH_SEND_MODE").equalsIgnoreCase("THROTTLING");
+        }
+        
+        public static boolean checkSendMode(Map map){
+            if(SystemParameters.isExisting(map, "BATCH_SEND_MODE")){
+                String mode = SystemParameters.getString(map, "BATCH_SEND_MODE");
+                if (!mode.equalsIgnoreCase("THROTTLING") &&
+                        !mode.equalsIgnoreCase("SEND_AND_WAIT") &&
+                        !mode.equalsIgnoreCase("MANUAL_BATCH")){
+                    return false;
+                }
+            }
+            return true;
         }
 
         /*
@@ -505,8 +567,45 @@ public class MyUtilities{
             return parts[length - (fromEnd +1)];
         }
 
-        public static boolean isPrintSAWLatency(int hierarchyPosition, Map conf) {
-            return MyUtilities.isSendAndWaitMode(conf) && hierarchyPosition == StormComponent.FINAL_COMPONENT;
+        public static boolean isPrintLatency(int hierarchyPosition, Map conf) {
+            return MyUtilities.isCustomTimestampMode(conf) && hierarchyPosition == StormComponent.FINAL_COMPONENT;
         }
 
+
+        //collects all the task ids for "default" stream id
+        public static List<Integer> findTargetTaskIds(TopologyContext tc){
+                List<Integer> result = new ArrayList<Integer>();
+                Map<String, Map<String, Grouping>> streamComponentGroup = tc.getThisTargets();
+                Iterator<Entry<String, Map<String, Grouping>>> it = streamComponentGroup.entrySet().iterator();
+                while(it.hasNext()){
+                    Map.Entry<String, Map<String, Grouping>> pair = it.next();
+                    String streamId = pair.getKey();
+                    Map<String, Grouping> componentGroup = pair.getValue();
+                    if(streamId.equalsIgnoreCase("default")){
+                        Iterator<Entry<String, Grouping>> innerIt = componentGroup.entrySet().iterator();
+                        while(innerIt.hasNext()){
+                            Map.Entry<String, Grouping> innerPair = innerIt.next();
+                            String componentId = innerPair.getKey();
+                            //Grouping group = innerPair.getValue();
+                            //if (group.is_set_direct()){
+                            result.addAll(tc.getComponentTasks(componentId));
+                            //}
+                        }
+                    }
+                }
+                return result;
+        }
+        
+        public static int chooseTargetIndex(String hash, int targetParallelism){
+            return Math.abs(hash.hashCode()) % targetParallelism;
+        }
+
+    public static int getCompBatchSize(String compName, Map map) {
+        return SystemParameters.getInt(map, compName + "_BS");
+    }
+
+    public static long getMin(long first, long second) {
+        return first<second ? first : second;
+    }
+        
 }

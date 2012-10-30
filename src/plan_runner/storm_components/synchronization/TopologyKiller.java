@@ -105,7 +105,7 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
     }
     
     @Override
-    public void printSAWTupleLatency(long numSentTuples, long timestamp) {
+    public void printTupleLatency(long numSentTuples, long timestamp) {
         throw new UnsupportedOperationException("These methods are not ment to be invoked for synchronizationStormComponents");
     }    
 

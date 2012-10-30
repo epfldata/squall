@@ -13,7 +13,7 @@ public interface StormComponent {
     public String getID();
     public String getInfoID();
 
-    public void printSAWTupleLatency(long numSentTuples, long timestamp);
+    public void printTupleLatency(long numSentTuples, long timestamp);
     public void printTuple(List<String> tuple);
     public void printContent();
 
