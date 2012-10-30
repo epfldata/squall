@@ -453,13 +453,22 @@ public class NameCompGen implements CompGen{
 
     private void attachSelectClauseOnLastJoin(Component lastComponent, NameSelectItemsVisitor selectVisitor) {
         List<AggregateOperator> aggOps = selectVisitor.getAggOps();
-        ProjectOperator project = new ProjectOperator(selectVisitor.getGroupByVEs());
+        ProjectOperator project = null;
+        if(!(selectVisitor.getGroupByVEs() == null || selectVisitor.getGroupByVEs().isEmpty())){
+            project = new ProjectOperator(selectVisitor.getGroupByVEs());
+        }
+   
+        
         if (aggOps.isEmpty()){
-            lastComponent.addOperator(project);
+            if(project != null){
+                lastComponent.addOperator(project);
+            }
         }else if (aggOps.size() == 1){
             //all the others are group by
             AggregateOperator firstAgg = aggOps.get(0);
-            firstAgg.setGroupByProjection(project);
+            if(project != null){
+                firstAgg.setGroupByProjection(project);
+            }
             
                                                 /* Avg result cannot be aggregated over multiple nodes.
                                                  *   Solution is one of the following:
