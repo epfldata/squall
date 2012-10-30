@@ -109,7 +109,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
         }
         
         @Override
-        public void printSAWTupleLatency(long numSentTuples, long timestamp) {
+        public void printTupleLatency(long numSentTuples, long timestamp) {
             //empty
         }        
 

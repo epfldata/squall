@@ -41,12 +41,9 @@ public class StormWrapper {
             //Messages are failling if we do not specify timeout (proven for TPCH8)
             //conf.setMessageTimeoutSecs(SystemParameters.MESSAGE_TIMEOUT_SECS);
             
-            //Throttling parameter reduces latency and throughput
-            if(SystemParameters.isExisting(conf, "DIP_STORM_THROTTLING")){
-                if(MyUtilities.isSendAndWaitMode(conf)){
-                    throw new RuntimeException("Storm throttling (set via DIP_STORM_THROTTLING) and our SEND_AND_WAIT mode cannot be set at the same time!");
-                }
-                int tp = SystemParameters.getInt(conf, "DIP_STORM_THROTTLING");
+            //Storm throttling mode
+            if(MyUtilities.isThrottlingMode(conf)){
+                int tp = SystemParameters.getInt(conf, "BATCH_SIZE");
                 conf.setMaxSpoutPending(tp);
             }
         }

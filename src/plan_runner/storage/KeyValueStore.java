@@ -260,10 +260,11 @@ public class KeyValueStore<K, V> extends BasicStore {
 	
 	protected Set<K> keySet() {
 		Set<K> memKeys = this._memstore.keySet();
-		String[] storageGroupIds = this._storageManager.getGroupIds();
-		Set<String> storageKeys = new HashSet<String>(Arrays.asList(storageGroupIds));
+                //YANIS: TODO
+		//String[] storageGroupIds = this._storageManager.getGroupIds();
+		//Set<String> storageKeys = new HashSet<String>(Arrays.asList(storageGroupIds));
 		Set finalSet = new HashSet(memKeys);
-		finalSet.addAll(storageKeys);	
+		//finalSet.addAll(storageKeys);	
 		return finalSet;
 	}
 

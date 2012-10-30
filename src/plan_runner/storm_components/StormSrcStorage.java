@@ -210,14 +210,14 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 		printTuple(tuple);
 
 		if(MyUtilities.isSending(_hierarchyPosition, _batchOutputMillis)){
-                    if(MyUtilities.isSendAndWaitMode(_conf)){
+                    if(MyUtilities.isCustomTimestampMode(_conf)){
                         tupleSend(tuple, stormTupleRcv, stormTupleRcv.getLong(3));
                     }else{
                         tupleSend(tuple, stormTupleRcv, 0);
                     }
 		}
-                if(MyUtilities.isPrintSAWLatency(_hierarchyPosition, _conf)){
-                    printSAWTupleLatency(_numSentTuples, stormTupleRcv.getLong(3));
+                if(MyUtilities.isPrintLatency(_hierarchyPosition, _conf)){
+                    printTupleLatency(_numSentTuples - 1, stormTupleRcv.getLong(3));
                 }
 	}
 
@@ -267,7 +267,7 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 	@Override
 		public void declareOutputFields(OutputFieldsDeclarer declarer) {
 			if(_hierarchyPosition!=FINAL_COMPONENT){ // then its an intermediate stage not the final one
-                            if(MyUtilities.isSendAndWaitMode(_conf)){
+                            if(MyUtilities.isCustomTimestampMode(_conf)){
                                 declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("CompIndex", "Tuple", "Hash", "Timestamp"));
                             }else{
                                 declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("CompIndex", "Tuple", "Hash"));
@@ -275,21 +275,22 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 			}
 		}
         
-        //Send and Wait mode
         @Override
-        public void printSAWTupleLatency(long tupleSerialNum, long timestamp) {
-            int tupleSampleRate = SystemParameters.getInt(_conf, "TUPLE_SAMPLE_RATE");
-            if(tupleSerialNum % tupleSampleRate == 0){
-                int initIgnoredSamples = SystemParameters.getInt(_conf, "INIT_IGNORED_SAMPLES");
-                long currentMillis = System.currentTimeMillis();
-                long sawLatency = currentMillis - timestamp;
-                LOG.info("Tuple latency (we log every " + tupleSampleRate + "th one) is " + sawLatency);
-                
-                long _numberOfSamples = tupleSerialNum / tupleSampleRate;
-                if(_numberOfSamples > initIgnoredSamples){
-                    _totalLatency += sawLatency;             
-                    LOG.info("AVERAGE tuple latency (after first " + initIgnoredSamples +
-                            " samples are ignored): " + _totalLatency/(_numberOfSamples - initIgnoredSamples));
+        public void printTupleLatency(long tupleSerialNum, long timestamp) {
+            int freqCompute = SystemParameters.getInt(_conf, "FREQ_TUPLE_LOG_COMPUTE");
+            int freqWrite = SystemParameters.getInt(_conf, "FREQ_TUPLE_LOG_WRITE");
+            int startupIgnoredTuples = SystemParameters.getInt(_conf, "INIT_IGNORED_TUPLES");
+            
+            if(tupleSerialNum >= startupIgnoredTuples){
+                tupleSerialNum = tupleSerialNum - startupIgnoredTuples; // start counting from zero when computing starts
+                if(tupleSerialNum % freqCompute == 0){
+                    long latency = System.currentTimeMillis() - timestamp;
+                    _totalLatency += latency;
+                }
+                if(tupleSerialNum % freqWrite == 0){
+                    long numberOfSamples = (tupleSerialNum / freqCompute) + 1; // note that it is divisible
+                    LOG.info("Taking into account every " + freqCompute + "th tuple, and printing every " + freqWrite + "th one.");
+                    LOG.info("AVERAGE tuple latency so far is " + _totalLatency/numberOfSamples);
                 }
             }
         }    
