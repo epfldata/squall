@@ -28,7 +28,6 @@ public class ParserMain{
         QueryPlan plan = pm.generatePlan(map);
         //we have to set ackers after we know how many workers are there(which is done in generatePlan)
         map = pm.putAckers(plan, map);
-        map = pm.putBatchSizes(plan, map);
         
         System.out.println(ParserUtil.toString(plan));
         System.out.println(ParserUtil.parToString(plan, map));
@@ -76,24 +75,6 @@ public class ParserMain{
             SystemParameters.putInMap(map, "DIP_NUM_ACKERS", localAckers);
         }
         
-        if(!MyUtilities.checkSendMode(map)){
-            throw new RuntimeException("BATCH_SEND_MODE value is not recognized.");
-        }
-        
-        return map;
-    }
-    
-    //this method is a skeleton for more complex ones
-    //  an optimizer should do this in a smarter way
-    private Map putBatchSizes(QueryPlan plan, Map map) {
-        if(SystemParameters.isExisting(map, "BATCH_SIZE")){
-            String batchSize = SystemParameters.getString(map, "BATCH_SIZE");
-            for(String compName: plan.getComponentNames()){
-                String batchStr = compName + "_BS";                
-                SystemParameters.putInMap(map, batchStr, batchSize);
-                LOG.info("Batch size for " + compName + " is " + batchSize);
-            }
-        }
         return map;
     }
 

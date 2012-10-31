@@ -1,0 +1,865 @@
+2012-10-31 16:39:31 ZooKeeper [INFO] Client environment:zookeeper.version=3.3.3-1073969, built on 02/23/2011 22:27 GMT
+2012-10-31 16:39:31 ZooKeeper [INFO] Client environment:host.name=icdatasrv5-6
+2012-10-31 16:39:31 ZooKeeper [INFO] Client environment:java.version=1.7.0_05
+2012-10-31 16:39:31 ZooKeeper [INFO] Client environment:java.vendor=Oracle Corporation
+2012-10-31 16:39:31 ZooKeeper [INFO] Client environment:java.home=/usr/jdk/instances/jdk1.7.0_05/jre
+2012-10-31 16:39:31 ZooKeeper [INFO] Client environment:java.class.path=/opt/storm/storm-0.8.1/storm-0.8.1.jar:/opt/storm/storm-0.8.1/lib/commons-codec-1.4.jar:/opt/storm/storm-0.8.1/lib/joda-time-2.0.jar:/opt/storm/storm-0.8.1/lib/libthrift7-0.7.0.jar:/opt/storm/storm-0.8.1/lib/jetty-util-6.1.26.jar:/opt/storm/storm-0.8.1/lib/asm-4.0.jar:/opt/storm/storm-0.8.1/lib/bheaven-0.0.3.jar:/opt/storm/storm-0.8.1/lib/commons-lang-2.5.jar:/opt/storm/storm-0.8.1/lib/httpclient-4.1.1.jar:/opt/storm/storm-0.8.1/lib/jgrapht-0.8.3.jar:/opt/storm/storm-0.8.1/lib/disruptor-2.10.1.jar:/opt/storm/storm-0.8.1/lib/snakeyaml-1.9.jar:/opt/storm/storm-0.8.1/lib/commons-logging-1.1.1.jar:/opt/storm/storm-0.8.1/lib/core.incubator-0.1.0.jar:/opt/storm/storm-0.8.1/lib/curator-client-1.0.1.jar:/opt/storm/storm-0.8.1/lib/math.numeric-tower-0.0.1.jar:/opt/storm/storm-0.8.1/lib/tools.logging-0.2.3.jar:/opt/storm/storm-0.8.1/lib/objenesis-1.2.jar:/opt/storm/storm-0.8.1/lib/zookeeper-3.3.3.jar:/opt/storm/storm-0.8.1/lib/commons-fileupload-1.2.1.jar:/opt/storm/storm-0.8.1/lib/compojure-0.6.4.jar:/opt/storm/storm-0.8.1/lib/clout-0.4.1.jar:/opt/storm/storm-0.8.1/lib/slf4j-log4j12-1.5.8.jar:/opt/storm/storm-0.8.1/lib/minlog-1.2.jar:/opt/storm/storm-0.8.1/lib/kryo-2.17.jar:/opt/storm/storm-0.8.1/lib/log4j-1.2.16.jar:/opt/storm/storm-0.8.1/lib/hiccup-0.3.6.jar:/opt/storm/storm-0.8.1/lib/clojure-1.4.0.jar:/opt/storm/storm-0.8.1/lib/jline-0.9.94.jar:/opt/storm/storm-0.8.1/lib/tools.macro-0.1.0.jar:/opt/storm/storm-0.8.1/lib/ring-core-0.3.10.jar:/opt/storm/storm-0.8.1/lib/servlet-api-2.5-20081211.jar:/opt/storm/storm-0.8.1/lib/curator-framework-1.0.1.jar:/opt/storm/storm-0.8.1/lib/reflectasm-1.07-shaded.jar:/opt/storm/storm-0.8.1/lib/commons-io-1.4.jar:/opt/storm/storm-0.8.1/lib/json-simple-1.1.jar:/opt/storm/storm-0.8.1/lib/slf4j-api-1.5.8.jar:/opt/storm/storm-0.8.1/lib/httpcore-4.1.jar:/opt/storm/storm-0.8.1/lib/carbonite-1.5.0.jar:/opt/storm/storm-0.8.1/lib/guava-13.0.jar:/opt/storm/storm-0.8.1/lib/jzmq-2.1.0.jar:/opt/storm/storm-0.8.1/lib/tools.cli-0.2.2.jar:/opt/storm/storm-0.8.1/lib/ring-jetty-adapter-0.3.11.jar:/opt/storm/storm-0.8.1/lib/servlet-api-2.5.jar:/opt/storm/storm-0.8.1/lib/clj-time-0.4.1.jar:/opt/storm/storm-0.8.1/lib/junit-3.8.1.jar:/opt/storm/storm-0.8.1/lib/trove-3.0.2.jar:/opt/storm/storm-0.8.1/lib/ring-servlet-0.3.11.jar:/opt/storm/storm-0.8.1/lib/commons-exec-1.1.jar:/opt/storm/storm-0.8.1/lib/jetty-6.1.26.jar:/opt/storm/storm-0.8.1/log4j:/opt/storm/storm-0.8.1/conf:/data/squall_zone/storm_data/supervisor/stormdist/username_100G_hyracks200-5-1351697966/stormjar.jar
+2012-10-31 16:39:31 ZooKeeper [INFO] Client environment:java.library.path=/opt/storm/deps/lib
+2012-10-31 16:39:31 ZooKeeper [INFO] Client environment:java.io.tmpdir=/var/tmp/
+2012-10-31 16:39:31 ZooKeeper [INFO] Client environment:java.compiler=<NA>
+2012-10-31 16:39:31 ZooKeeper [INFO] Client environment:os.name=SunOS
+2012-10-31 16:39:31 ZooKeeper [INFO] Client environment:os.arch=x86
+2012-10-31 16:39:31 ZooKeeper [INFO] Client environment:os.version=5.10
+2012-10-31 16:39:31 ZooKeeper [INFO] Client environment:user.name=squalldata
+2012-10-31 16:39:31 ZooKeeper [INFO] Client environment:user.home=/export/home/squalldata
+2012-10-31 16:39:31 ZooKeeper [INFO] Client environment:user.dir=/export/home/squalldata
+2012-10-31 16:39:31 ZooKeeperServer [INFO] Server environment:zookeeper.version=3.3.3-1073969, built on 02/23/2011 22:27 GMT
+2012-10-31 16:39:31 ZooKeeperServer [INFO] Server environment:host.name=icdatasrv5-6
+2012-10-31 16:39:31 ZooKeeperServer [INFO] Server environment:java.version=1.7.0_05
+2012-10-31 16:39:31 ZooKeeperServer [INFO] Server environment:java.vendor=Oracle Corporation
+2012-10-31 16:39:31 ZooKeeperServer [INFO] Server environment:java.home=/usr/jdk/instances/jdk1.7.0_05/jre
+2012-10-31 16:39:31 ZooKeeperServer [INFO] Server environment:java.class.path=/opt/storm/storm-0.8.1/storm-0.8.1.jar:/opt/storm/storm-0.8.1/lib/commons-codec-1.4.jar:/opt/storm/storm-0.8.1/lib/joda-time-2.0.jar:/opt/storm/storm-0.8.1/lib/libthrift7-0.7.0.jar:/opt/storm/storm-0.8.1/lib/jetty-util-6.1.26.jar:/opt/storm/storm-0.8.1/lib/asm-4.0.jar:/opt/storm/storm-0.8.1/lib/bheaven-0.0.3.jar:/opt/storm/storm-0.8.1/lib/commons-lang-2.5.jar:/opt/storm/storm-0.8.1/lib/httpclient-4.1.1.jar:/opt/storm/storm-0.8.1/lib/jgrapht-0.8.3.jar:/opt/storm/storm-0.8.1/lib/disruptor-2.10.1.jar:/opt/storm/storm-0.8.1/lib/snakeyaml-1.9.jar:/opt/storm/storm-0.8.1/lib/commons-logging-1.1.1.jar:/opt/storm/storm-0.8.1/lib/core.incubator-0.1.0.jar:/opt/storm/storm-0.8.1/lib/curator-client-1.0.1.jar:/opt/storm/storm-0.8.1/lib/math.numeric-tower-0.0.1.jar:/opt/storm/storm-0.8.1/lib/tools.logging-0.2.3.jar:/opt/storm/storm-0.8.1/lib/objenesis-1.2.jar:/opt/storm/storm-0.8.1/lib/zookeeper-3.3.3.jar:/opt/storm/storm-0.8.1/lib/commons-fileupload-1.2.1.jar:/opt/storm/storm-0.8.1/lib/compojure-0.6.4.jar:/opt/storm/storm-0.8.1/lib/clout-0.4.1.jar:/opt/storm/storm-0.8.1/lib/slf4j-log4j12-1.5.8.jar:/opt/storm/storm-0.8.1/lib/minlog-1.2.jar:/opt/storm/storm-0.8.1/lib/kryo-2.17.jar:/opt/storm/storm-0.8.1/lib/log4j-1.2.16.jar:/opt/storm/storm-0.8.1/lib/hiccup-0.3.6.jar:/opt/storm/storm-0.8.1/lib/clojure-1.4.0.jar:/opt/storm/storm-0.8.1/lib/jline-0.9.94.jar:/opt/storm/storm-0.8.1/lib/tools.macro-0.1.0.jar:/opt/storm/storm-0.8.1/lib/ring-core-0.3.10.jar:/opt/storm/storm-0.8.1/lib/servlet-api-2.5-20081211.jar:/opt/storm/storm-0.8.1/lib/curator-framework-1.0.1.jar:/opt/storm/storm-0.8.1/lib/reflectasm-1.07-shaded.jar:/opt/storm/storm-0.8.1/lib/commons-io-1.4.jar:/opt/storm/storm-0.8.1/lib/json-simple-1.1.jar:/opt/storm/storm-0.8.1/lib/slf4j-api-1.5.8.jar:/opt/storm/storm-0.8.1/lib/httpcore-4.1.jar:/opt/storm/storm-0.8.1/lib/carbonite-1.5.0.jar:/opt/storm/storm-0.8.1/lib/guava-13.0.jar:/opt/storm/storm-0.8.1/lib/jzmq-2.1.0.jar:/opt/storm/storm-0.8.1/lib/tools.cli-0.2.2.jar:/opt/storm/storm-0.8.1/lib/ring-jetty-adapter-0.3.11.jar:/opt/storm/storm-0.8.1/lib/servlet-api-2.5.jar:/opt/storm/storm-0.8.1/lib/clj-time-0.4.1.jar:/opt/storm/storm-0.8.1/lib/junit-3.8.1.jar:/opt/storm/storm-0.8.1/lib/trove-3.0.2.jar:/opt/storm/storm-0.8.1/lib/ring-servlet-0.3.11.jar:/opt/storm/storm-0.8.1/lib/commons-exec-1.1.jar:/opt/storm/storm-0.8.1/lib/jetty-6.1.26.jar:/opt/storm/storm-0.8.1/log4j:/opt/storm/storm-0.8.1/conf:/data/squall_zone/storm_data/supervisor/stormdist/username_100G_hyracks200-5-1351697966/stormjar.jar
+2012-10-31 16:39:31 ZooKeeperServer [INFO] Server environment:java.library.path=/opt/storm/deps/lib
+2012-10-31 16:39:31 ZooKeeperServer [INFO] Server environment:java.io.tmpdir=/var/tmp/
+2012-10-31 16:39:31 ZooKeeperServer [INFO] Server environment:java.compiler=<NA>
+2012-10-31 16:39:31 ZooKeeperServer [INFO] Server environment:os.name=SunOS
+2012-10-31 16:39:31 ZooKeeperServer [INFO] Server environment:os.arch=x86
+2012-10-31 16:39:31 ZooKeeperServer [INFO] Server environment:os.version=5.10
+2012-10-31 16:39:31 ZooKeeperServer [INFO] Server environment:user.name=squalldata
+2012-10-31 16:39:31 ZooKeeperServer [INFO] Server environment:user.home=/export/home/squalldata
+2012-10-31 16:39:31 ZooKeeperServer [INFO] Server environment:user.dir=/export/home/squalldata
+2012-10-31 16:39:32 worker [INFO] Launching worker for username_100G_hyracks200-5-1351697966 on bc7f3d94-3a77-4c2a-8d65-c871e7686b3c:6700 with id 5546a542-b107-4960-a841-15521c77d2de and conf {"dev.zookeeper.path" "/tmp/dev-storm-zookeeper", "topology.tick.tuple.freq.secs" nil, "topology.fall.back.on.java.serialization" false, "zmq.linger.millis" 5000, "topology.skip.missing.kryo.registrations" false, "ui.childopts" "-Xmx768m", "storm.zookeeper.session.timeout" 20000, "nimbus.reassign" true, "nimbus.monitor.freq.secs" 10, "java.library.path" "/opt/storm/deps/lib", "topology.executor.send.buffer.size" 262144, "storm.local.dir" "/data/squall_zone/storm_data", "supervisor.worker.start.timeout.secs" 240, "topology.enable.message.timeouts" true, "nimbus.cleanup.inbox.freq.secs" 600, "nimbus.inbox.jar.expiration.secs" 3600, "topology.worker.shared.thread.pool.size" 4, "nimbus.host" "icdatasrv5-priv", "storm.zookeeper.port" 2181, "transactional.zookeeper.port" nil, "topology.executor.receive.buffer.size" 262144, "transactional.zookeeper.servers" nil, "storm.zookeeper.root" "/storm", "supervisor.enable" true, "storm.zookeeper.servers" ["icdatasrv3-priv" "icdatasrv7-priv"], "transactional.zookeeper.root" "/transactional", "topology.acker.executors" 0, "topology.transfer.buffer.size" 262144, "topology.worker.childopts" nil, "worker.childopts" "-Xmx2048m", "supervisor.heartbeat.frequency.secs" 5, "drpc.port" 3772, "supervisor.monitor.frequency.secs" 3, "topology.receiver.buffer.size" 8, "task.heartbeat.frequency.secs" 3, "topology.tasks" nil, "topology.spout.wait.strategy" "backtype.storm.spout.DummySpoutWaitStrategy", "topology.max.spout.pending" nil, "storm.zookeeper.retry.interval" 1000, "topology.sleep.spout.wait.strategy.time.ms" 1, "supervisor.slots.ports" [6700], "topology.debug" false, "nimbus.task.launch.secs" 240, "nimbus.supervisor.timeout.secs" 60, "topology.message.timeout.secs" 30, "task.refresh.poll.secs" 10, "topology.workers" 220, "supervisor.childopts" "-Xmx1024m", "nimbus.thrift.port" 6627, "topology.stats.sample.rate" 0.05, "worker.heartbeat.frequency.secs" 1, "topology.acker.tasks" nil, "topology.disruptor.wait.strategy" "com.lmax.disruptor.BlockingWaitStrategy", "nimbus.task.timeout.secs" 30, "storm.zookeeper.connection.timeout" 15000, "drpc.invocations.port" 3773, "zmq.threads" 1, "storm.zookeeper.retry.times" 5, "topology.state.synchronization.timeout.secs" 60, "supervisor.worker.timeout.secs" 240, "nimbus.file.copy.expiration.secs" 600, "drpc.request.timeout.secs" 600, "storm.local.mode.zmq" false, "ui.port" 8080, "nimbus.childopts" "-Xmx1024m", "storm.cluster.mode" "distributed", "topology.optimize" true, "topology.max.task.parallelism" nil}
+2012-10-31 16:39:32 CuratorFrameworkImpl [INFO] Starting
+2012-10-31 16:39:32 ZooKeeper [INFO] Initiating client connection, connectString=icdatasrv3-priv:2181,icdatasrv7-priv:2181 sessionTimeout=20000 watcher=com.netflix.curator.ConnectionState@353acd
+2012-10-31 16:39:32 ClientCnxn [INFO] Opening socket connection to server icdatasrv7-priv/172.16.100.70:2181
+2012-10-31 16:39:32 ClientCnxn [INFO] Socket connection established to icdatasrv7-priv/172.16.100.70:2181, initiating session
+2012-10-31 16:39:32 ClientCnxn [INFO] Session establishment complete on server icdatasrv7-priv/172.16.100.70:2181, sessionid = 0x23ab74c2b95030f, negotiated timeout = 20000
+2012-10-31 16:39:32 zookeeper [INFO] Zookeeper state update: :connected:none
+2012-10-31 16:39:32 ZooKeeper [INFO] Session: 0x23ab74c2b95030f closed
+2012-10-31 16:39:32 CuratorFrameworkImpl [INFO] Starting
+2012-10-31 16:39:32 ZooKeeper [INFO] Initiating client connection, connectString=icdatasrv3-priv:2181,icdatasrv7-priv:2181/storm sessionTimeout=20000 watcher=com.netflix.curator.ConnectionState@1d83140
+2012-10-31 16:39:32 ClientCnxn [INFO] Opening socket connection to server icdatasrv3-priv/172.16.100.30:2181
+2012-10-31 16:39:32 ClientCnxn [INFO] EventThread shut down
+2012-10-31 16:39:32 ClientCnxn [INFO] Socket connection established to icdatasrv3-priv/172.16.100.30:2181, initiating session
+2012-10-31 16:39:32 ClientCnxn [INFO] Session establishment complete on server icdatasrv3-priv/172.16.100.30:2181, sessionid = 0x13ab74c2b9502db, negotiated timeout = 20000
+2012-10-31 16:39:34 executor [INFO] Loading executor KILLER:[1 1]
+2012-10-31 16:39:34 executor [INFO] Loaded executor tasks KILLER:[1 1]
+2012-10-31 16:39:34 executor [INFO] Preparing bolt KILLER:(1)
+2012-10-31 16:39:34 executor [INFO] Prepared bolt KILLER:(1)
+2012-10-31 16:39:34 executor [INFO] Finished loading executor KILLER:[1 1]
+2012-10-31 16:39:34 worker [INFO] Launching receive-thread for bc7f3d94-3a77-4c2a-8d65-c871e7686b3c:6700
+2012-10-31 16:39:34 worker [INFO] Worker has topology config {"storm.id" "username_100G_hyracks200-5-1351697966", "dev.zookeeper.path" "/tmp/dev-storm-zookeeper", "topology.tick.tuple.freq.secs" nil, "topology.fall.back.on.java.serialization" false, "zmq.linger.millis" 5000, "topology.skip.missing.kryo.registrations" false, "DIP_GLOBAL_ADD_DELIMITER" "|", "ui.childopts" "-Xmx768m", "storm.zookeeper.session.timeout" 20000, "nimbus.reassign" true, "STORAGE_CLUSTER_DIR" "/data/squall_zone/storage", "nimbus.monitor.freq.secs" 10, "java.library.path" "/opt/storm/deps/lib", "topology.executor.send.buffer.size" 262144, "storm.local.dir" "/data/squall_zone/storm_data", "supervisor.worker.start.timeout.secs" 240, "topology.enable.message.timeouts" true, "nimbus.cleanup.inbox.freq.secs" 600, "DIP_DATA_PATH" "/data/squall_blade/data/tpchdb/100G", "nimbus.inbox.jar.expiration.secs" 3600, "ORDERS_PAR" "200", "DIP_TOPOLOGY_NAME" "username_100G_hyracks200", "topology.worker.shared.thread.pool.size" 4, "nimbus.host" "icdatasrv5-priv", "storm.zookeeper.port" 2181, "transactional.zookeeper.port" nil, "topology.executor.receive.buffer.size" 262144, "transactional.zookeeper.servers" nil, "storm.zookeeper.root" "/storm", "supervisor.enable" true, "storm.zookeeper.servers" ["icdatasrv3-priv" "icdatasrv7-priv"], "transactional.zookeeper.root" "/transactional", "topology.acker.executors" 0, "DIP_TOPOLOGY_NAME_PREFIX" "username", "topology.kryo.decorators" (), "topology.name" "username_100G_hyracks200", "DIP_EXTENSION" ".tbl", "topology.transfer.buffer.size" 262144, "topology.worker.childopts" nil, "STORAGE_COLD_START" "true", "worker.childopts" "-Xmx2048m", "supervisor.heartbeat.frequency.secs" 5, "DIP_READ_SPLIT_DELIMITER" "\\|", "drpc.port" 3772, "DIP_KILL_AT_THE_END" "true", "supervisor.monitor.frequency.secs" 3, "DIP_DISTRIBUTED" "true", "topology.receiver.buffer.size" 8, "task.heartbeat.frequency.secs" 3, "topology.tasks" nil, "topology.spout.wait.strategy" "backtype.storm.spout.DummySpoutWaitStrategy", "topology.max.spout.pending" nil, "storm.zookeeper.retry.interval" 1000, "topology.sleep.spout.wait.strategy.time.ms" 1, "supervisor.slots.ports" [6700], "topology.debug" false, "nimbus.task.launch.secs" 240, "STORAGE_LOCAL_DIR" "/tmp/ramdisk", "nimbus.supervisor.timeout.secs" 60, "topology.kryo.register" nil, "topology.message.timeout.secs" 30, "task.refresh.poll.secs" 10, "DIP_QUERY_NAME" "hyracks_l1", "topology.workers" 220, "supervisor.childopts" "-Xmx1024m", "nimbus.thrift.port" 6627, "topology.stats.sample.rate" 0.05, "worker.heartbeat.frequency.secs" 1, "topology.acker.tasks" nil, "topology.disruptor.wait.strategy" "com.lmax.disruptor.BlockingWaitStrategy", "nimbus.task.timeout.secs" 30, "storm.zookeeper.connection.timeout" 15000, "drpc.invocations.port" 3773, "zmq.threads" 1, "storm.zookeeper.retry.times" 5, "topology.state.synchronization.timeout.secs" 60, "supervisor.worker.timeout.secs" 240, "STORAGE_MEMORY_SIZE_MB" "4096", "nimbus.file.copy.expiration.secs" 600, "DIP_GLOBAL_SPLIT_DELIMITER" "\\|", "drpc.request.timeout.secs" 600, "storm.local.mode.zmq" false, "ui.port" 8080, "nimbus.childopts" "-Xmx1024m", "storm.cluster.mode" "distributed", "topology.optimize" true, "topology.max.task.parallelism" nil}
+2012-10-31 16:39:34 worker [INFO] Worker 5546a542-b107-4960-a841-15521c77d2de for storm username_100G_hyracks200-5-1351697966 on bc7f3d94-3a77-4c2a-8d65-c871e7686b3c:6700 has finished loading
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 134
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: 199 remaining
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 132
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: 198 remaining
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 102
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: 197 remaining
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 59
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: 196 remaining
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 159
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: 195 remaining
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 54
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: 194 remaining
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 41
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: 193 remaining
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 151
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: 192 remaining
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 61
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: 191 remaining
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 186
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: 190 remaining
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 191
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: 189 remaining
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 79
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: 188 remaining
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 12
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: 187 remaining
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 9
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: 186 remaining
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 100
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: 185 remaining
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 184
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: 184 remaining
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 51
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: 183 remaining
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 169
+2012-10-31 16:39:34 TopologyKiller [INFO] TopologyKiller: 182 remaining
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 96
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: 181 remaining
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 90
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: 180 remaining
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 23
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: 179 remaining
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 179
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: 178 remaining
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 81
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: 177 remaining
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 14
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: 176 remaining
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 105
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: 175 remaining
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 45
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: 174 remaining
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 193
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: 173 remaining
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 108
+2012-10-31 16:39:35 TopologyKiller [INFO] TopologyKiller: 172 remaining
+2012-10-31 16:39:36 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 85
+2012-10-31 16:39:36 TopologyKiller [INFO] TopologyKiller: 171 remaining
+2012-10-31 16:39:36 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 143
+2012-10-31 16:39:36 TopologyKiller [INFO] TopologyKiller: 170 remaining
+2012-10-31 16:39:36 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 36
+2012-10-31 16:39:36 TopologyKiller [INFO] TopologyKiller: 169 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 150
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 168 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 91
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 167 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 182
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 166 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 190
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 165 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 173
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 164 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 24
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 163 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 44
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 162 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 201
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 161 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 69
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 160 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 136
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 159 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 154
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 158 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 33
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 157 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 112
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 156 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 76
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 155 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 140
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 154 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 49
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 153 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 94
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 152 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 178
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 151 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 78
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 150 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 133
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 149 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 196
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 148 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 174
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 147 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 40
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 146 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 107
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 145 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 80
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 144 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 17
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 143 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 116
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 142 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 75
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 141 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 160
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 140 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 65
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 139 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 98
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 138 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 110
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 137 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 86
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 136 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 87
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 135 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 168
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 134 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 185
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 133 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 183
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 132 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 13
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 131 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 152
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 130 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 89
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 129 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 129
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 128 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 73
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 127 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 53
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 126 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 47
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 125 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 22
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 124 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 135
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 123 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 93
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 122 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 70
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 121 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 56
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 120 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 157
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 119 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 117
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 118 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 8
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 117 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 106
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 116 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 180
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 115 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 199
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 114 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 29
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 113 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 167
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 112 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 28
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 111 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 46
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 110 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 48
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 109 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 50
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 108 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 124
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 107 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 146
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 106 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 171
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 105 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 198
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 104 remaining
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 194
+2012-10-31 16:39:37 TopologyKiller [INFO] TopologyKiller: 103 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 162
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 102 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 35
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 101 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 16
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 100 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 131
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 99 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 121
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 98 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 21
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 97 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 26
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 96 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 138
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 95 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 52
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 94 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 97
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 93 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 37
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 92 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 67
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 91 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 164
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 90 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 5
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 89 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 3
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 88 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 32
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 87 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 31
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 86 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 187
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 85 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 66
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 84 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 175
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 83 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 68
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 82 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 153
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 81 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 83
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 80 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 114
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 79 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 20
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 78 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 177
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 77 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 57
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 76 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 172
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 75 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 25
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 74 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 99
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 73 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 62
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 72 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 195
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 71 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 125
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 70 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 200
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 69 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 176
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 68 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 139
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 67 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 148
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 66 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 10
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 65 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 118
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 64 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 145
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 63 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 144
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 62 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 149
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 61 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 7
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 60 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 126
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 59 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 188
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 58 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 77
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 57 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 72
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 56 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 6
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 55 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 88
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 54 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 197
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 53 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 158
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 52 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 115
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 51 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 39
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 50 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 103
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 49 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 181
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 48 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 27
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 47 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 15
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 46 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 128
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 45 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 161
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 44 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 74
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 43 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 122
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 42 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 64
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 41 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 111
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 40 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 30
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 39 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 92
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 38 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 104
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 37 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 189
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 36 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 42
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 35 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 38
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 34 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 166
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 33 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 82
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 32 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 60
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 31 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 130
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 30 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 11
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 29 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 147
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 28 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 170
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 27 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 163
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 26 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 120
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 25 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 155
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 24 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 95
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 23 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 2
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 22 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 43
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 21 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 109
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 20 remaining
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 113
+2012-10-31 16:39:38 TopologyKiller [INFO] TopologyKiller: 19 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 165
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 18 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 123
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 17 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 4
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 16 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 119
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 15 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 156
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 14 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 142
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 13 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 63
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 12 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 141
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 11 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 34
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 10 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 19
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 9 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 55
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 8 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 71
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 7 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 137
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 6 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 192
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 5 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 127
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 4 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 101
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 3 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 84
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 2 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 18
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 1 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF message from componentId: ORDERS, taskId: 58
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: 0 remaining
+2012-10-31 16:39:39 TopologyKiller [INFO] TopologyKiller: Received EOF from all the registered tasks. Killing cluster...
+2012-10-31 16:39:40 StormWrapper [INFO] In total there is 1 topologies.
+For topology username_100G_hyracks200:
+201 tasks, 201 workers, 14 uptime seconds.
+Topology configuration is 
+{"storm.id":"username_100G_hyracks200-5-1351697966","dev.zookeeper.path":"\/tmp\/dev-storm-zookeeper","topology.tick.tuple.freq.secs":null,"topology.fall.back.on.java.serialization":false,"zmq.linger.millis":5000,"topology.skip.missing.kryo.registrations":false,"DIP_GLOBAL_ADD_DELIMITER":"|","ui.childopts":"-Xmx768m","storm.zookeeper.session.timeout":20000,"nimbus.reassign":true,"STORAGE_CLUSTER_DIR":"\/data\/squall_zone\/storage","nimbus.monitor.freq.secs":10,"java.library.path":"\/opt\/storm\/deps\/lib","topology.executor.send.buffer.size":262144,"storm.local.dir":"\/data\/squall_zone\/storm_data","supervisor.worker.start.timeout.secs":240,"topology.enable.message.timeouts":true,"nimbus.cleanup.inbox.freq.secs":600,"DIP_DATA_PATH":"\/data\/squall_blade\/data\/tpchdb\/100G","nimbus.inbox.jar.expiration.secs":3600,"ORDERS_PAR":"200","DIP_TOPOLOGY_NAME":"username_100G_hyracks200","topology.worker.shared.thread.pool.size":4,"nimbus.host":"icdatasrv5-priv","storm.zookeeper.port":2181,"transactional.zookeeper.port":null,"topology.executor.receive.buffer.size":262144,"transactional.zookeeper.servers":null,"storm.zookeeper.root":"\/storm","supervisor.enable":true,"storm.zookeeper.servers":["icdatasrv3-priv","icdatasrv7-priv"],"transactional.zookeeper.root":"\/transactional","topology.acker.executors":0,"DIP_TOPOLOGY_NAME_PREFIX":"username","topology.kryo.decorators":[],"topology.name":"username_100G_hyracks200","DIP_EXTENSION":".tbl","topology.transfer.buffer.size":262144,"topology.worker.childopts":null,"STORAGE_COLD_START":"true","worker.childopts":"-Xmx2048m","supervisor.heartbeat.frequency.secs":5,"DIP_READ_SPLIT_DELIMITER":"\\|","drpc.port":3772,"DIP_KILL_AT_THE_END":"true","supervisor.monitor.frequency.secs":3,"DIP_DISTRIBUTED":"true","topology.receiver.buffer.size":8,"task.heartbeat.frequency.secs":3,"topology.tasks":null,"topology.spout.wait.strategy":"backtype.storm.spout.DummySpoutWaitStrategy","topology.max.spout.pending":null,"storm.zookeeper.retry.interval":1000,"topology.sleep.spout.wait.strategy.time.ms":1,"supervisor.slots.ports":[6700],"topology.debug":false,"nimbus.task.launch.secs":240,"STORAGE_LOCAL_DIR":"\/tmp\/ramdisk","nimbus.supervisor.timeout.secs":60,"topology.kryo.register":null,"topology.message.timeout.secs":30,"task.refresh.poll.secs":10,"DIP_QUERY_NAME":"hyracks_l1","topology.workers":220,"supervisor.childopts":"-Xmx1024m","nimbus.thrift.port":6627,"topology.stats.sample.rate":0.05,"worker.heartbeat.frequency.secs":1,"topology.acker.tasks":null,"topology.disruptor.wait.strategy":"com.lmax.disruptor.BlockingWaitStrategy","nimbus.task.timeout.secs":30,"storm.zookeeper.connection.timeout":15000,"drpc.invocations.port":3773,"zmq.threads":1,"storm.zookeeper.retry.times":5,"topology.state.synchronization.timeout.secs":60,"supervisor.worker.timeout.secs":240,"STORAGE_MEMORY_SIZE_MB":"4096","nimbus.file.copy.expiration.secs":600,"DIP_GLOBAL_SPLIT_DELIMITER":"\\|","drpc.request.timeout.secs":600,"storm.local.mode.zmq":false,"ui.port":8080,"nimbus.childopts":"-Xmx1024m","storm.cluster.mode":"distributed","topology.optimize":true,"topology.max.task.parallelism":null}
+component_id:ORDERS, task_id(s) for this executor:2-2, host:icdatasrv6-6, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:34-34, host:icdatasrv4-14, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:66-66, host:icdatasrv1-13, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:98-98, host:icdatasrv9-2, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:130-130, host:icdatasrv3-14, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:162-162, host:icdatasrv8-3, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:194-194, host:icdatasrv2-3, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:3-3, host:icdatasrv3-6, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:35-35, host:icdatasrv7-11, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:67-67, host:icdatasrv2-5, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:99-99, host:icdatasrv4-19, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:131-131, host:icdatasrv7-8, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:163-163, host:icdatasrv3-8, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:195-195, host:icdatasrv1-11, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:4-4, host:icdatasrv4-17, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:36-36, host:icdatasrv8-19, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:68-68, host:icdatasrv10-12, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:100-100, host:icdatasrv6-4, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:132-132, host:icdatasrv8-17, port:6700, uptime:8
+
+component_id:ORDERS, task_id(s) for this executor:164-164, host:icdatasrv8-1, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:196-196, host:icdatasrv8-2, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:5-5, host:icdatasrv6-3, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:37-37, host:icdatasrv1-9, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:69-69, host:icdatasrv5-16, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:101-101, host:icdatasrv4-7, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:133-133, host:icdatasrv9-22, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:165-165, host:icdatasrv3-5, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:197-197, host:icdatasrv8-7, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:6-6, host:icdatasrv8-8, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:38-38, host:icdatasrv6-15, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:70-70, host:icdatasrv9-10, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:102-102, host:icdatasrv6-5, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:134-134, host:icdatasrv2-18, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:166-166, host:icdatasrv4-21, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:198-198, host:icdatasrv7-4, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:7-7, host:icdatasrv3-12, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:39-39, host:icdatasrv1-6, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:71-71, host:icdatasrv4-18, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:103-103, host:icdatasrv6-11, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:135-135, host:icdatasrv3-3, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:167-167, host:icdatasrv9-5, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:199-199, host:icdatasrv2-2, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:8-8, host:icdatasrv3-21, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:40-40, host:icdatasrv9-6, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:72-72, host:icdatasrv10-16, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:104-104, host:icdatasrv9-11, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:136-136, host:icdatasrv5-2, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:168-168, host:icdatasrv8-12, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:200-200, host:icdatasrv2-11, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:9-9, host:icdatasrv10-13, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:41-41, host:icdatasrv9-18, port:6700, uptime:8
+
+component_id:ORDERS, task_id(s) for this executor:73-73, host:icdatasrv9-14, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:105-105, host:icdatasrv2-8, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:137-137, host:icdatasrv4-20, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:169-169, host:icdatasrv10-14, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:201-201, host:icdatasrv5-12, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:10-10, host:icdatasrv10-6, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:42-42, host:icdatasrv1-22, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:74-74, host:icdatasrv6-1, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:106-106, host:icdatasrv1-21, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:138-138, host:icdatasrv2-16, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:170-170, host:icdatasrv3-20, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:11-11, host:icdatasrv6-12, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:43-43, host:icdatasrv3-15, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:75-75, host:icdatasrv9-20, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:107-107, host:icdatasrv9-3, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:139-139, host:icdatasrv6-18, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:171-171, host:icdatasrv9-21, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:12-12, host:icdatasrv5-15, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:44-44, host:icdatasrv8-15, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:76-76, host:icdatasrv10-5, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:108-108, host:icdatasrv4-15, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:140-140, host:icdatasrv8-5, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:172-172, host:icdatasrv3-16, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:13-13, host:icdatasrv5-20, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:45-45, host:icdatasrv2-15, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:77-77, host:icdatasrv1-20, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:109-109, host:icdatasrv3-17, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:141-141, host:icdatasrv3-22, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:173-173, host:icdatasrv7-7, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:14-14, host:icdatasrv7-20, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:46-46, host:icdatasrv7-13, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:78-78, host:icdatasrv1-7, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:110-110, host:icdatasrv10-9, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:142-142, host:icdatasrv10-1, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:174-174, host:icdatasrv10-8, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:15-15, host:icdatasrv7-5, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:47-47, host:icdatasrv2-7, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:79-79, host:icdatasrv7-21, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:111-111, host:icdatasrv1-1, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:143-143, host:icdatasrv4-8, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:175-175, host:icdatasrv1-19, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:16-16, host:icdatasrv3-19, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:48-48, host:icdatasrv2-20, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:80-80, host:icdatasrv10-19, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:112-112, host:icdatasrv5-10, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:144-144, host:icdatasrv6-7, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:176-176, host:icdatasrv9-13, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:17-17, host:icdatasrv10-7, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:49-49, host:icdatasrv6-19, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:81-81, host:icdatasrv7-22, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:113-113, host:icdatasrv3-11, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:145-145, host:icdatasrv10-17, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:177-177, host:icdatasrv10-4, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:18-18, host:icdatasrv4-11, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:50-50, host:icdatasrv2-6, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:82-82, host:icdatasrv10-20, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:114-114, host:icdatasrv10-2, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:146-146, host:icdatasrv3-9, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:178-178, host:icdatasrv8-21, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:19-19, host:icdatasrv4-22, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:51-51, host:icdatasrv1-15, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:83-83, host:icdatasrv9-9, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:115-115, host:icdatasrv3-7, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:147-147, host:icdatasrv3-10, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:179-179, host:icdatasrv9-19, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:20-20, host:icdatasrv6-10, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:52-52, host:icdatasrv7-16, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:84-84, host:icdatasrv4-9, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:116-116, host:icdatasrv7-15, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:148-148, host:icdatasrv1-10, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:180-180, host:icdatasrv8-13, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:21-21, host:icdatasrv1-4, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:53-53, host:icdatasrv8-11, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:85-85, host:icdatasrv5-3, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:117-117, host:icdatasrv7-6, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:149-149, host:icdatasrv4-4, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:181-181, host:icdatasrv6-22, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:22-22, host:icdatasrv2-10, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:54-54, host:icdatasrv1-2, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:86-86, host:icdatasrv8-9, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:118-118, host:icdatasrv10-22, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:150-150, host:icdatasrv5-4, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:182-182, host:icdatasrv7-9, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:23-23, host:icdatasrv6-21, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:55-55, host:icdatasrv4-1, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:87-87, host:icdatasrv8-20, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:119-119, host:icdatasrv6-20, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:151-151, host:icdatasrv6-9, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:183-183, host:icdatasrv10-21, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:24-24, host:icdatasrv5-8, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:56-56, host:icdatasrv8-22, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:88-88, host:icdatasrv2-4, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:120-120, host:icdatasrv3-18, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:152-152, host:icdatasrv5-13, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:184-184, host:icdatasrv2-21, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:25-25, host:icdatasrv7-17, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:57-57, host:icdatasrv7-3, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:89-89, host:icdatasrv8-4, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:121-121, host:icdatasrv9-8, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:153-153, host:icdatasrv2-13, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:185-185, host:icdatasrv8-16, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:26-26, host:icdatasrv3-1, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:58-58, host:icdatasrv4-12, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:90-90, host:icdatasrv3-4, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:122-122, host:icdatasrv6-16, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:154-154, host:icdatasrv5-17, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:186-186, host:icdatasrv5-14, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:27-27, host:icdatasrv6-8, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:59-59, host:icdatasrv5-5, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:91-91, host:icdatasrv10-15, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:123-123, host:icdatasrv1-12, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:155-155, host:icdatasrv1-5, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:187-187, host:icdatasrv9-1, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:28-28, host:icdatasrv10-3, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:60-60, host:icdatasrv4-10, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:92-92, host:icdatasrv5-22, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:124-124, host:icdatasrv7-10, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:156-156, host:icdatasrv4-3, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:188-188, host:icdatasrv10-18, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:29-29, host:icdatasrv9-7, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:61-61, host:icdatasrv5-21, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:93-93, host:icdatasrv9-12, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:125-125, host:icdatasrv3-2, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:157-157, host:icdatasrv5-7, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:189-189, host:icdatasrv7-14, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:30-30, host:icdatasrv8-6, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:62-62, host:icdatasrv2-1, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:94-94, host:icdatasrv6-14, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:126-126, host:icdatasrv7-12, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:158-158, host:icdatasrv10-10, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:190-190, host:icdatasrv5-9, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:31-31, host:icdatasrv9-16, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:63-63, host:icdatasrv1-8, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:95-95, host:icdatasrv10-11, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:127-127, host:icdatasrv4-5, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:159-159, host:icdatasrv5-19, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:191-191, host:icdatasrv2-17, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:32-32, host:icdatasrv2-12, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:64-64, host:icdatasrv2-19, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:96-96, host:icdatasrv9-4, port:6700, uptime:7
+
+component_id:ORDERS, task_id(s) for this executor:128-128, host:icdatasrv7-19, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:160-160, host:icdatasrv1-3, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:192-192, host:icdatasrv4-2, port:6700, uptime:4
+
+component_id:KILLER, task_id(s) for this executor:1-1, host:icdatasrv5-6, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:33-33, host:icdatasrv1-14, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:65-65, host:icdatasrv9-15, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:97-97, host:icdatasrv4-13, port:6700, uptime:5
+
+component_id:ORDERS, task_id(s) for this executor:129-129, host:icdatasrv6-13, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:161-161, host:icdatasrv1-16, port:6700, uptime:4
+
+component_id:ORDERS, task_id(s) for this executor:193-193, host:icdatasrv7-1, port:6700, uptime:7
+
+
+
+OK: No tuples failed so far.
+
+OK: No errors in the topology.

@@ -38,7 +38,6 @@ import plan_runner.utilities.SystemParameters;
 
 public class Main {
 	private static Logger LOG = Logger.getLogger(Main.class);
-	public static QueryPlan queryPlan = null;
 
         public static void main(String[] args) {
            new Main(args);
@@ -47,9 +46,10 @@ public class Main {
         public Main(String[] args){
             String confPath = args[0];
             Config conf = SystemParameters.fileToStormConfig(confPath);
-            queryPlan = chooseQueryPlan(conf);
+            QueryPlan queryPlan = chooseQueryPlan(conf);
             
             addVariablesToMap(conf, confPath);
+            putBatchSizes(queryPlan, conf);
 	    TopologyBuilder builder = createTopology(queryPlan, conf);
             StormWrapper.submitTopology(conf, builder);
         }
@@ -58,6 +58,7 @@ public class Main {
             Config conf = SystemParameters.mapToStormConfig(map);
             
             addVariablesToMap(conf, confPath);
+            putBatchSizes(queryPlan, conf);
             TopologyBuilder builder = createTopology(queryPlan, conf);
             StormWrapper.submitTopology(conf, builder);
         }
@@ -69,6 +70,22 @@ public class Main {
             String topologyName = prefix + "_" + confFilename;
             SystemParameters.putInMap(map, "DIP_TOPOLOGY_NAME", topologyName);
         }
+        
+        //this method is a skeleton for more complex ones
+        //  an optimizer should do this in a smarter way
+        private static void putBatchSizes(QueryPlan plan, Map map) {
+            if(SystemParameters.isExisting(map, "BATCH_SIZE")){
+                String batchSize = SystemParameters.getString(map, "BATCH_SIZE");
+                for(String compName: plan.getComponentNames()){
+                    String batchStr = compName + "_BS";                
+                    SystemParameters.putInMap(map, batchStr, batchSize);
+                    LOG.info("Batch size for " + compName + " is " + batchSize);
+                }
+            }
+            if(!MyUtilities.checkSendMode(map)){
+                throw new RuntimeException("BATCH_SEND_MODE value is not recognized.");
+            }
+        }        
 
         private static TopologyBuilder createTopology(QueryPlan qp, Config conf) {
             TopologyBuilder builder = new TopologyBuilder();
