@@ -1,5 +1,5 @@
 DIP_DISTRIBUTED false
-DIP_QUERY_NAME tpch6
+DIP_QUERY_NAME tpch12
 
 DIP_TOPOLOGY_NAME_PREFIX username
 DIP_DATA_ROOT ../test/data/tpch/

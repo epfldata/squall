@@ -196,9 +196,10 @@ public class KeyValueStore<K, V> extends BasicStore {
 		for (Iterator<K> it = keys.iterator() ; it.hasNext() ; ) {
 			K key = it.next();
 			List<V> thisValues = this.access(key);
-			List<V> storeValues = (List)store.access(key);
+			List<V> storeValues = (List<V>)store.access(key);
 			Collections.sort((List)thisValues);
 			Collections.sort((List)storeValues);
+			
 			// Compare value by value
 			int index = 0;
 			Iterator<V> iterator = thisValues.iterator();
