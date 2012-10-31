@@ -45,19 +45,17 @@ cd $CURR_DIR
 
 #returning original code
 rm -rf $SQUALL_SRC_DIR
-cp -r $BACKUP_DIR/src $SQUALL_SRC_DIR
+cp -r $BACKUP_DIR/$SQUALL_SRC $SQUALL_SRC_DIR
 
 #running new code
 echo "Running Squall with config $CONFIG_PATH topology ..."
 ./squall_plan_runner_cluster.sh $CONFIG_PATH
 
-#waiting topology to be killed
-.wait_topology.sh $CONFIG_FILE
-
 #grasping statistics
 mkdir -p $OUTPUT_DIR
 echo "Grasping statistics for $CONFIG_PATH ..."
  ./get_topology_stats.sh > $OUTPUT_DIR/StormLike.statistics
+#TODO: This could not grasp any statistics after topology is killed
 
 #grasping output of our MACE-like timestamp mechanism, and removing it for not spoiling further results
 for blade in {1..10}

@@ -1,0 +1,352 @@
+2012-10-31 20:09:26 ZooKeeper [INFO] Client environment:zookeeper.version=3.3.3-1073969, built on 02/23/2011 22:27 GMT
+2012-10-31 20:09:26 ZooKeeper [INFO] Client environment:host.name=icdatasrv4-4
+2012-10-31 20:09:26 ZooKeeper [INFO] Client environment:java.version=1.7.0_05
+2012-10-31 20:09:26 ZooKeeper [INFO] Client environment:java.vendor=Oracle Corporation
+2012-10-31 20:09:26 ZooKeeper [INFO] Client environment:java.home=/usr/jdk/instances/jdk1.7.0_05/jre
+2012-10-31 20:09:26 ZooKeeper [INFO] Client environment:java.class.path=/opt/storm/storm-0.8.1/storm-0.8.1.jar:/opt/storm/storm-0.8.1/lib/kryo-2.17.jar:/opt/storm/storm-0.8.1/lib/commons-io-1.4.jar:/opt/storm/storm-0.8.1/lib/curator-framework-1.0.1.jar:/opt/storm/storm-0.8.1/lib/commons-exec-1.1.jar:/opt/storm/storm-0.8.1/lib/clout-0.4.1.jar:/opt/storm/storm-0.8.1/lib/slf4j-log4j12-1.5.8.jar:/opt/storm/storm-0.8.1/lib/math.numeric-tower-0.0.1.jar:/opt/storm/storm-0.8.1/lib/commons-logging-1.1.1.jar:/opt/storm/storm-0.8.1/lib/zookeeper-3.3.3.jar:/opt/storm/storm-0.8.1/lib/reflectasm-1.07-shaded.jar:/opt/storm/storm-0.8.1/lib/clj-time-0.4.1.jar:/opt/storm/storm-0.8.1/lib/commons-codec-1.4.jar:/opt/storm/storm-0.8.1/lib/compojure-0.6.4.jar:/opt/storm/storm-0.8.1/lib/ring-core-0.3.10.jar:/opt/storm/storm-0.8.1/lib/commons-fileupload-1.2.1.jar:/opt/storm/storm-0.8.1/lib/jetty-util-6.1.26.jar:/opt/storm/storm-0.8.1/lib/ring-servlet-0.3.11.jar:/opt/storm/storm-0.8.1/lib/clojure-1.4.0.jar:/opt/storm/storm-0.8.1/lib/httpcore-4.1.jar:/opt/storm/storm-0.8.1/lib/hiccup-0.3.6.jar:/opt/storm/storm-0.8.1/lib/log4j-1.2.16.jar:/opt/storm/storm-0.8.1/lib/objenesis-1.2.jar:/opt/storm/storm-0.8.1/lib/junit-3.8.1.jar:/opt/storm/storm-0.8.1/lib/trove-3.0.2.jar:/opt/storm/storm-0.8.1/lib/snakeyaml-1.9.jar:/opt/storm/storm-0.8.1/lib/json-simple-1.1.jar:/opt/storm/storm-0.8.1/lib/servlet-api-2.5-20081211.jar:/opt/storm/storm-0.8.1/lib/asm-4.0.jar:/opt/storm/storm-0.8.1/lib/carbonite-1.5.0.jar:/opt/storm/storm-0.8.1/lib/jline-0.9.94.jar:/opt/storm/storm-0.8.1/lib/slf4j-api-1.5.8.jar:/opt/storm/storm-0.8.1/lib/servlet-api-2.5.jar:/opt/storm/storm-0.8.1/lib/jgrapht-0.8.3.jar:/opt/storm/storm-0.8.1/lib/tools.cli-0.2.2.jar:/opt/storm/storm-0.8.1/lib/tools.logging-0.2.3.jar:/opt/storm/storm-0.8.1/lib/disruptor-2.10.1.jar:/opt/storm/storm-0.8.1/lib/jetty-6.1.26.jar:/opt/storm/storm-0.8.1/lib/httpclient-4.1.1.jar:/opt/storm/storm-0.8.1/lib/jzmq-2.1.0.jar:/opt/storm/storm-0.8.1/lib/commons-lang-2.5.jar:/opt/storm/storm-0.8.1/lib/guava-13.0.jar:/opt/storm/storm-0.8.1/lib/bheaven-0.0.3.jar:/opt/storm/storm-0.8.1/lib/core.incubator-0.1.0.jar:/opt/storm/storm-0.8.1/lib/libthrift7-0.7.0.jar:/opt/storm/storm-0.8.1/lib/minlog-1.2.jar:/opt/storm/storm-0.8.1/lib/ring-jetty-adapter-0.3.11.jar:/opt/storm/storm-0.8.1/lib/joda-time-2.0.jar:/opt/storm/storm-0.8.1/lib/tools.macro-0.1.0.jar:/opt/storm/storm-0.8.1/lib/curator-client-1.0.1.jar:/opt/storm/storm-0.8.1/log4j:/opt/storm/storm-0.8.1/conf:/data/squall_zone/storm_data/supervisor/stormdist/username_10G_ReadProjectSend_BS1K_Par1_2-3-1351710563/stormjar.jar
+2012-10-31 20:09:26 ZooKeeper [INFO] Client environment:java.library.path=/opt/storm/deps/lib
+2012-10-31 20:09:26 ZooKeeper [INFO] Client environment:java.io.tmpdir=/var/tmp/
+2012-10-31 20:09:26 ZooKeeper [INFO] Client environment:java.compiler=<NA>
+2012-10-31 20:09:26 ZooKeeper [INFO] Client environment:os.name=SunOS
+2012-10-31 20:09:26 ZooKeeper [INFO] Client environment:os.arch=x86
+2012-10-31 20:09:26 ZooKeeper [INFO] Client environment:os.version=5.10
+2012-10-31 20:09:26 ZooKeeper [INFO] Client environment:user.name=squalldata
+2012-10-31 20:09:26 ZooKeeper [INFO] Client environment:user.home=/export/home/squalldata
+2012-10-31 20:09:26 ZooKeeper [INFO] Client environment:user.dir=/export/home/squalldata
+2012-10-31 20:09:26 ZooKeeperServer [INFO] Server environment:zookeeper.version=3.3.3-1073969, built on 02/23/2011 22:27 GMT
+2012-10-31 20:09:26 ZooKeeperServer [INFO] Server environment:host.name=icdatasrv4-4
+2012-10-31 20:09:26 ZooKeeperServer [INFO] Server environment:java.version=1.7.0_05
+2012-10-31 20:09:26 ZooKeeperServer [INFO] Server environment:java.vendor=Oracle Corporation
+2012-10-31 20:09:26 ZooKeeperServer [INFO] Server environment:java.home=/usr/jdk/instances/jdk1.7.0_05/jre
+2012-10-31 20:09:26 ZooKeeperServer [INFO] Server environment:java.class.path=/opt/storm/storm-0.8.1/storm-0.8.1.jar:/opt/storm/storm-0.8.1/lib/kryo-2.17.jar:/opt/storm/storm-0.8.1/lib/commons-io-1.4.jar:/opt/storm/storm-0.8.1/lib/curator-framework-1.0.1.jar:/opt/storm/storm-0.8.1/lib/commons-exec-1.1.jar:/opt/storm/storm-0.8.1/lib/clout-0.4.1.jar:/opt/storm/storm-0.8.1/lib/slf4j-log4j12-1.5.8.jar:/opt/storm/storm-0.8.1/lib/math.numeric-tower-0.0.1.jar:/opt/storm/storm-0.8.1/lib/commons-logging-1.1.1.jar:/opt/storm/storm-0.8.1/lib/zookeeper-3.3.3.jar:/opt/storm/storm-0.8.1/lib/reflectasm-1.07-shaded.jar:/opt/storm/storm-0.8.1/lib/clj-time-0.4.1.jar:/opt/storm/storm-0.8.1/lib/commons-codec-1.4.jar:/opt/storm/storm-0.8.1/lib/compojure-0.6.4.jar:/opt/storm/storm-0.8.1/lib/ring-core-0.3.10.jar:/opt/storm/storm-0.8.1/lib/commons-fileupload-1.2.1.jar:/opt/storm/storm-0.8.1/lib/jetty-util-6.1.26.jar:/opt/storm/storm-0.8.1/lib/ring-servlet-0.3.11.jar:/opt/storm/storm-0.8.1/lib/clojure-1.4.0.jar:/opt/storm/storm-0.8.1/lib/httpcore-4.1.jar:/opt/storm/storm-0.8.1/lib/hiccup-0.3.6.jar:/opt/storm/storm-0.8.1/lib/log4j-1.2.16.jar:/opt/storm/storm-0.8.1/lib/objenesis-1.2.jar:/opt/storm/storm-0.8.1/lib/junit-3.8.1.jar:/opt/storm/storm-0.8.1/lib/trove-3.0.2.jar:/opt/storm/storm-0.8.1/lib/snakeyaml-1.9.jar:/opt/storm/storm-0.8.1/lib/json-simple-1.1.jar:/opt/storm/storm-0.8.1/lib/servlet-api-2.5-20081211.jar:/opt/storm/storm-0.8.1/lib/asm-4.0.jar:/opt/storm/storm-0.8.1/lib/carbonite-1.5.0.jar:/opt/storm/storm-0.8.1/lib/jline-0.9.94.jar:/opt/storm/storm-0.8.1/lib/slf4j-api-1.5.8.jar:/opt/storm/storm-0.8.1/lib/servlet-api-2.5.jar:/opt/storm/storm-0.8.1/lib/jgrapht-0.8.3.jar:/opt/storm/storm-0.8.1/lib/tools.cli-0.2.2.jar:/opt/storm/storm-0.8.1/lib/tools.logging-0.2.3.jar:/opt/storm/storm-0.8.1/lib/disruptor-2.10.1.jar:/opt/storm/storm-0.8.1/lib/jetty-6.1.26.jar:/opt/storm/storm-0.8.1/lib/httpclient-4.1.1.jar:/opt/storm/storm-0.8.1/lib/jzmq-2.1.0.jar:/opt/storm/storm-0.8.1/lib/commons-lang-2.5.jar:/opt/storm/storm-0.8.1/lib/guava-13.0.jar:/opt/storm/storm-0.8.1/lib/bheaven-0.0.3.jar:/opt/storm/storm-0.8.1/lib/core.incubator-0.1.0.jar:/opt/storm/storm-0.8.1/lib/libthrift7-0.7.0.jar:/opt/storm/storm-0.8.1/lib/minlog-1.2.jar:/opt/storm/storm-0.8.1/lib/ring-jetty-adapter-0.3.11.jar:/opt/storm/storm-0.8.1/lib/joda-time-2.0.jar:/opt/storm/storm-0.8.1/lib/tools.macro-0.1.0.jar:/opt/storm/storm-0.8.1/lib/curator-client-1.0.1.jar:/opt/storm/storm-0.8.1/log4j:/opt/storm/storm-0.8.1/conf:/data/squall_zone/storm_data/supervisor/stormdist/username_10G_ReadProjectSend_BS1K_Par1_2-3-1351710563/stormjar.jar
+2012-10-31 20:09:26 ZooKeeperServer [INFO] Server environment:java.library.path=/opt/storm/deps/lib
+2012-10-31 20:09:26 ZooKeeperServer [INFO] Server environment:java.io.tmpdir=/var/tmp/
+2012-10-31 20:09:26 ZooKeeperServer [INFO] Server environment:java.compiler=<NA>
+2012-10-31 20:09:26 ZooKeeperServer [INFO] Server environment:os.name=SunOS
+2012-10-31 20:09:26 ZooKeeperServer [INFO] Server environment:os.arch=x86
+2012-10-31 20:09:26 ZooKeeperServer [INFO] Server environment:os.version=5.10
+2012-10-31 20:09:26 ZooKeeperServer [INFO] Server environment:user.name=squalldata
+2012-10-31 20:09:26 ZooKeeperServer [INFO] Server environment:user.home=/export/home/squalldata
+2012-10-31 20:09:26 ZooKeeperServer [INFO] Server environment:user.dir=/export/home/squalldata
+2012-10-31 20:09:27 worker [INFO] Launching worker for username_10G_ReadProjectSend_BS1K_Par1_2-3-1351710563 on 9c66682b-3e45-4fa8-8992-c0cf2cd68ad0:6700 with id d2b6c14f-d8a8-4616-acea-ddaa845d8a2d and conf {"dev.zookeeper.path" "/tmp/dev-storm-zookeeper", "topology.tick.tuple.freq.secs" nil, "topology.fall.back.on.java.serialization" false, "zmq.linger.millis" 5000, "topology.skip.missing.kryo.registrations" false, "ui.childopts" "-Xmx768m", "storm.zookeeper.session.timeout" 20000, "nimbus.reassign" true, "nimbus.monitor.freq.secs" 10, "java.library.path" "/opt/storm/deps/lib", "topology.executor.send.buffer.size" 16384, "storm.local.dir" "/data/squall_zone/storm_data", "supervisor.worker.start.timeout.secs" 240, "topology.enable.message.timeouts" true, "nimbus.cleanup.inbox.freq.secs" 600, "nimbus.inbox.jar.expiration.secs" 3600, "topology.worker.shared.thread.pool.size" 4, "nimbus.host" "icdatasrv5-priv", "storm.zookeeper.port" 2181, "transactional.zookeeper.port" nil, "topology.executor.receive.buffer.size" 16384, "transactional.zookeeper.servers" nil, "storm.zookeeper.root" "/storm", "supervisor.enable" true, "storm.zookeeper.servers" ["icdatasrv3-priv" "icdatasrv7-priv"], "transactional.zookeeper.root" "/transactional", "topology.acker.executors" 0, "topology.transfer.buffer.size" 16384, "topology.worker.childopts" nil, "worker.childopts" "-Xmx1024m", "supervisor.heartbeat.frequency.secs" 5, "drpc.port" 3772, "supervisor.monitor.frequency.secs" 3, "topology.receiver.buffer.size" 8, "task.heartbeat.frequency.secs" 3, "topology.tasks" nil, "topology.spout.wait.strategy" "backtype.storm.spout.DummySpoutWaitStrategy", "topology.max.spout.pending" nil, "storm.zookeeper.retry.interval" 1000, "topology.sleep.spout.wait.strategy.time.ms" 1, "supervisor.slots.ports" [6700], "topology.debug" false, "nimbus.task.launch.secs" 240, "nimbus.supervisor.timeout.secs" 60, "topology.message.timeout.secs" 30, "task.refresh.poll.secs" 10, "topology.workers" 220, "supervisor.childopts" "-Xmx1024m", "nimbus.thrift.port" 6627, "topology.stats.sample.rate" 0.05, "worker.heartbeat.frequency.secs" 1, "topology.acker.tasks" nil, "topology.disruptor.wait.strategy" "com.lmax.disruptor.BlockingWaitStrategy", "nimbus.task.timeout.secs" 30, "storm.zookeeper.connection.timeout" 15000, "drpc.invocations.port" 3773, "zmq.threads" 1, "storm.zookeeper.retry.times" 5, "topology.state.synchronization.timeout.secs" 60, "supervisor.worker.timeout.secs" 240, "nimbus.file.copy.expiration.secs" 600, "drpc.request.timeout.secs" 600, "storm.local.mode.zmq" false, "ui.port" 8080, "nimbus.childopts" "-Xmx1024m", "storm.cluster.mode" "distributed", "topology.optimize" true, "topology.max.task.parallelism" nil}
+2012-10-31 20:09:27 CuratorFrameworkImpl [INFO] Starting
+2012-10-31 20:09:27 ZooKeeper [INFO] Initiating client connection, connectString=icdatasrv3-priv:2181,icdatasrv7-priv:2181 sessionTimeout=20000 watcher=com.netflix.curator.ConnectionState@353acd
+2012-10-31 20:09:27 ClientCnxn [INFO] Opening socket connection to server icdatasrv7-priv/172.16.100.70:2181
+2012-10-31 20:09:27 ClientCnxn [INFO] Socket connection established to icdatasrv7-priv/172.16.100.70:2181, initiating session
+2012-10-31 20:09:27 ClientCnxn [INFO] Session establishment complete on server icdatasrv7-priv/172.16.100.70:2181, sessionid = 0x23ab821c5be00da, negotiated timeout = 20000
+2012-10-31 20:09:27 zookeeper [INFO] Zookeeper state update: :connected:none
+2012-10-31 20:09:27 ZooKeeper [INFO] Session: 0x23ab821c5be00da closed
+2012-10-31 20:09:27 CuratorFrameworkImpl [INFO] Starting
+2012-10-31 20:09:27 ZooKeeper [INFO] Initiating client connection, connectString=icdatasrv3-priv:2181,icdatasrv7-priv:2181/storm sessionTimeout=20000 watcher=com.netflix.curator.ConnectionState@8fda59
+2012-10-31 20:09:27 ClientCnxn [INFO] Opening socket connection to server icdatasrv7-priv/172.16.100.70:2181
+2012-10-31 20:09:27 ClientCnxn [INFO] Socket connection established to icdatasrv7-priv/172.16.100.70:2181, initiating session
+2012-10-31 20:09:27 ClientCnxn [INFO] EventThread shut down
+2012-10-31 20:09:27 ClientCnxn [INFO] Session establishment complete on server icdatasrv7-priv/172.16.100.70:2181, sessionid = 0x23ab821c5be00db, negotiated timeout = 20000
+2012-10-31 20:09:28 executor [INFO] Loading executor DUMMY:[2 2]
+2012-10-31 20:09:28 executor [INFO] Loaded executor tasks DUMMY:[2 2]
+2012-10-31 20:09:28 executor [INFO] Preparing bolt DUMMY:(2)
+2012-10-31 20:09:28 executor [INFO] Prepared bolt DUMMY:(2)
+2012-10-31 20:09:28 executor [INFO] Finished loading executor DUMMY:[2 2]
+2012-10-31 20:09:28 worker [INFO] Launching receive-thread for 9c66682b-3e45-4fa8-8992-c0cf2cd68ad0:6700
+2012-10-31 20:09:28 worker [INFO] Worker has topology config {"storm.id" "username_10G_ReadProjectSend_BS1K_Par1_2-3-1351710563", "dev.zookeeper.path" "/tmp/dev-storm-zookeeper", "topology.tick.tuple.freq.secs" nil, "topology.fall.back.on.java.serialization" false, "zmq.linger.millis" 5000, "topology.skip.missing.kryo.registrations" false, "DIP_GLOBAL_ADD_DELIMITER" "|", "ui.childopts" "-Xmx768m", "storm.zookeeper.session.timeout" 20000, "nimbus.reassign" true, "STORAGE_CLUSTER_DIR" "/data/squall_zone/storage", "nimbus.monitor.freq.secs" 10, "java.library.path" "/opt/storm/deps/lib", "topology.executor.send.buffer.size" 16384, "storm.local.dir" "/data/squall_zone/storm_data", "supervisor.worker.start.timeout.secs" 240, "topology.enable.message.timeouts" true, "nimbus.cleanup.inbox.freq.secs" 600, "DIP_DATA_PATH" "/data/squall_blade/data/tpchdb/10G", "BATCH_SIZE" "1024", "nimbus.inbox.jar.expiration.secs" 3600, "FREQ_TUPLE_LOG_WRITE" "50000", "ORDERS_PAR" "1", "INIT_IGNORED_TUPLES" "20000", "DIP_TOPOLOGY_NAME" "username_10G_ReadProjectSend_BS1K_Par1_2", "topology.worker.shared.thread.pool.size" 4, "nimbus.host" "icdatasrv5-priv", "storm.zookeeper.port" 2181, "CUSTOM_TIMESTAMP" "true", "transactional.zookeeper.port" nil, "DUMMY_BS" "1024", "topology.executor.receive.buffer.size" 16384, "transactional.zookeeper.servers" nil, "storm.zookeeper.root" "/storm", "BATCH_TIMEOUT_MILLIS" "0", "supervisor.enable" true, "storm.zookeeper.servers" ["icdatasrv3-priv" "icdatasrv7-priv"], "transactional.zookeeper.root" "/transactional", "topology.acker.executors" 0, "DIP_TOPOLOGY_NAME_PREFIX" "username", "DUMMY_PAR" "2", "topology.kryo.decorators" (), "topology.name" "username_10G_ReadProjectSend_BS1K_Par1_2", "DIP_EXTENSION" ".tbl", "topology.transfer.buffer.size" 16384, "topology.worker.childopts" nil, "STORAGE_COLD_START" "true", "ORDERS_BS" "1024", "worker.childopts" "-Xmx1024m", "supervisor.heartbeat.frequency.secs" 5, "DIP_READ_SPLIT_DELIMITER" "\\|", "drpc.port" 3772, "DIP_KILL_AT_THE_END" "true", "supervisor.monitor.frequency.secs" 3, "DIP_DISTRIBUTED" "true", "topology.receiver.buffer.size" 8, "task.heartbeat.frequency.secs" 3, "topology.tasks" nil, "topology.spout.wait.strategy" "backtype.storm.spout.DummySpoutWaitStrategy", "topology.max.spout.pending" nil, "storm.zookeeper.retry.interval" 1000, "topology.sleep.spout.wait.strategy.time.ms" 1, "supervisor.slots.ports" [6700], "topology.debug" false, "nimbus.task.launch.secs" 240, "STORAGE_LOCAL_DIR" "/tmp/ramdisk", "nimbus.supervisor.timeout.secs" 60, "BATCH_SEND_MODE" "MANUAL_BATCH", "topology.kryo.register" nil, "topology.message.timeout.secs" 30, "task.refresh.poll.secs" 10, "DIP_QUERY_NAME" "hyracks_l1", "topology.workers" 220, "supervisor.childopts" "-Xmx1024m", "nimbus.thrift.port" 6627, "topology.stats.sample.rate" 0.05, "worker.heartbeat.frequency.secs" 1, "topology.acker.tasks" nil, "topology.disruptor.wait.strategy" "com.lmax.disruptor.BlockingWaitStrategy", "nimbus.task.timeout.secs" 30, "storm.zookeeper.connection.timeout" 15000, "drpc.invocations.port" 3773, "zmq.threads" 1, "storm.zookeeper.retry.times" 5, "topology.state.synchronization.timeout.secs" 60, "supervisor.worker.timeout.secs" 240, "STORAGE_MEMORY_SIZE_MB" "4096", "nimbus.file.copy.expiration.secs" 600, "DIP_GLOBAL_SPLIT_DELIMITER" "\\|", "drpc.request.timeout.secs" 600, "storm.local.mode.zmq" false, "ui.port" 8080, "nimbus.childopts" "-Xmx1024m", "storm.cluster.mode" "distributed", "topology.optimize" true, "topology.max.task.parallelism" nil, "FREQ_TUPLE_LOG_COMPUTE" "1000"}
+2012-10-31 20:09:28 worker [INFO] Worker d2b6c14f-d8a8-4616-acea-ddaa845d8a2d for storm username_10G_ReadProjectSend_BS1K_Par1_2-3-1351710563 on 9c66682b-3e45-4fa8-8992-c0cf2cd68ad0:6700 has finished loading
+2012-10-31 20:09:28 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:28 StormOperator [INFO] AVERAGE tuple latency so far is 62.0
+2012-10-31 20:09:28 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:28 StormOperator [INFO] AVERAGE tuple latency so far is 23.313725490196077
+2012-10-31 20:09:29 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:29 StormOperator [INFO] AVERAGE tuple latency so far is 14.326732673267326
+2012-10-31 20:09:29 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:29 StormOperator [INFO] AVERAGE tuple latency so far is 10.940397350993377
+2012-10-31 20:09:29 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:29 StormOperator [INFO] AVERAGE tuple latency so far is 8.91542288557214
+2012-10-31 20:09:29 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:29 StormOperator [INFO] AVERAGE tuple latency so far is 7.780876494023905
+2012-10-31 20:09:30 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:30 StormOperator [INFO] AVERAGE tuple latency so far is 7.056478405315614
+2012-10-31 20:09:30 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:30 StormOperator [INFO] AVERAGE tuple latency so far is 6.492877492877493
+2012-10-31 20:09:30 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:30 StormOperator [INFO] AVERAGE tuple latency so far is 6.037406483790524
+2012-10-31 20:09:30 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:30 StormOperator [INFO] AVERAGE tuple latency so far is 5.7317073170731705
+2012-10-31 20:09:31 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:31 StormOperator [INFO] AVERAGE tuple latency so far is 5.4750499001996005
+2012-10-31 20:09:31 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:31 StormOperator [INFO] AVERAGE tuple latency so far is 5.254083484573503
+2012-10-31 20:09:31 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:31 StormOperator [INFO] AVERAGE tuple latency so far is 5.05657237936772
+2012-10-31 20:09:31 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:31 StormOperator [INFO] AVERAGE tuple latency so far is 4.980030721966206
+2012-10-31 20:09:32 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:32 StormOperator [INFO] AVERAGE tuple latency so far is 4.841654778887304
+2012-10-31 20:09:32 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:32 StormOperator [INFO] AVERAGE tuple latency so far is 4.708388814913449
+2012-10-31 20:09:32 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:32 StormOperator [INFO] AVERAGE tuple latency so far is 4.593008739076155
+2012-10-31 20:09:32 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:32 StormOperator [INFO] AVERAGE tuple latency so far is 4.502937720329025
+2012-10-31 20:09:33 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:33 StormOperator [INFO] AVERAGE tuple latency so far is 4.416204217536071
+2012-10-31 20:09:33 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:33 StormOperator [INFO] AVERAGE tuple latency so far is 4.334384858044164
+2012-10-31 20:09:33 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:33 StormOperator [INFO] AVERAGE tuple latency so far is 4.264735264735265
+2012-10-31 20:09:33 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:33 StormOperator [INFO] AVERAGE tuple latency so far is 4.199809705042816
+2012-10-31 20:09:33 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:33 StormOperator [INFO] AVERAGE tuple latency so far is 4.138964577656676
+2012-10-31 20:09:34 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:34 StormOperator [INFO] AVERAGE tuple latency so far is 4.095569070373588
+2012-10-31 20:09:34 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:34 StormOperator [INFO] AVERAGE tuple latency so far is 4.106577851790175
+2012-10-31 20:09:34 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:34 StormOperator [INFO] AVERAGE tuple latency so far is 4.058353317346123
+2012-10-31 20:09:35 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:35 StormOperator [INFO] AVERAGE tuple latency so far is 4.046118370484243
+2012-10-31 20:09:35 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:35 StormOperator [INFO] AVERAGE tuple latency so far is 4.004441154700222
+2012-10-31 20:09:35 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:35 StormOperator [INFO] AVERAGE tuple latency so far is 3.9564596716630978
+2012-10-31 20:09:35 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:35 StormOperator [INFO] AVERAGE tuple latency so far is 3.9152308752584424
+2012-10-31 20:09:36 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:36 StormOperator [INFO] AVERAGE tuple latency so far is 3.8740839440373085
+2012-10-31 20:09:36 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:36 StormOperator [INFO] AVERAGE tuple latency so far is 3.8388136686009027
+2012-10-31 20:09:36 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:36 StormOperator [INFO] AVERAGE tuple latency so far is 3.806371018113679
+2012-10-31 20:09:36 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:36 StormOperator [INFO] AVERAGE tuple latency so far is 3.772259236826166
+2012-10-31 20:09:37 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:37 StormOperator [INFO] AVERAGE tuple latency so far is 3.7448559670781894
+2012-10-31 20:09:37 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:37 StormOperator [INFO] AVERAGE tuple latency so far is 3.7155910908052543
+2012-10-31 20:09:37 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:37 StormOperator [INFO] AVERAGE tuple latency so far is 3.6918378678511936
+2012-10-31 20:09:37 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:37 StormOperator [INFO] AVERAGE tuple latency so far is 3.6709886547811994
+2012-10-31 20:09:37 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:37 StormOperator [INFO] AVERAGE tuple latency so far is 3.6459758022093633
+2012-10-31 20:09:38 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:38 StormOperator [INFO] AVERAGE tuple latency so far is 3.6396719630958483
+2012-10-31 20:09:38 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:38 StormOperator [INFO] AVERAGE tuple latency so far is 3.615192403798101
+2012-10-31 20:09:38 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:38 StormOperator [INFO] AVERAGE tuple latency so far is 3.5948317893710384
+2012-10-31 20:09:38 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:38 StormOperator [INFO] AVERAGE tuple latency so far is 3.63445978105664
+2012-10-31 20:09:39 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:39 StormOperator [INFO] AVERAGE tuple latency so far is 3.6294746629474663
+2012-10-31 20:09:39 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:39 StormOperator [INFO] AVERAGE tuple latency so far is 3.606996819627442
+2012-10-31 20:09:39 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:39 StormOperator [INFO] AVERAGE tuple latency so far is 3.586406041759218
+2012-10-31 20:09:39 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:39 StormOperator [INFO] AVERAGE tuple latency so far is 3.5697522816166884
+2012-10-31 20:09:39 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:39 StormOperator [INFO] AVERAGE tuple latency so far is 3.66950233943003
+2012-10-31 20:09:40 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:40 StormOperator [INFO] AVERAGE tuple latency so far is 3.6526447313619324
+2012-10-31 20:09:40 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:40 StormOperator [INFO] AVERAGE tuple latency so far is 3.630762953896369
+2012-10-31 20:09:40 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:40 StormOperator [INFO] AVERAGE tuple latency so far is 3.615353858456617
+2012-10-31 20:09:40 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:40 StormOperator [INFO] AVERAGE tuple latency so far is 3.610348882791062
+2012-10-31 20:09:41 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:41 StormOperator [INFO] AVERAGE tuple latency so far is 3.8242983467896963
+2012-10-31 20:09:41 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:41 StormOperator [INFO] AVERAGE tuple latency so far is 3.83779705771407
+2012-10-31 20:09:41 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:41 StormOperator [INFO] AVERAGE tuple latency so far is 3.8152536097741576
+2012-10-31 20:09:41 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:41 StormOperator [INFO] AVERAGE tuple latency so far is 3.7946201381315885
+2012-10-31 20:09:42 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:42 StormOperator [INFO] AVERAGE tuple latency so far is 3.773295251695823
+2012-10-31 20:09:42 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:42 StormOperator [INFO] AVERAGE tuple latency so far is 3.755173623290074
+2012-10-31 20:09:42 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:42 StormOperator [INFO] AVERAGE tuple latency so far is 3.7356084108927954
+2012-10-31 20:09:42 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:42 StormOperator [INFO] AVERAGE tuple latency so far is 3.7184005421890887
+2012-10-31 20:09:42 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:42 StormOperator [INFO] AVERAGE tuple latency so far is 3.7030989670109964
+2012-10-31 20:09:43 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:43 StormOperator [INFO] AVERAGE tuple latency so far is 3.686004588659456
+2012-10-31 20:09:43 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:43 StormOperator [INFO] AVERAGE tuple latency so far is 3.670428893905192
+2012-10-31 20:09:43 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:43 StormOperator [INFO] AVERAGE tuple latency so far is 3.705490320533164
+2012-10-31 20:09:43 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:43 StormOperator [INFO] AVERAGE tuple latency so far is 3.687597625741956
+2012-10-31 20:09:44 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:44 StormOperator [INFO] AVERAGE tuple latency so far is 3.6745616733312825
+2012-10-31 20:09:44 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:44 StormOperator [INFO] AVERAGE tuple latency so far is 3.671311723720085
+2012-10-31 20:09:44 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:44 StormOperator [INFO] AVERAGE tuple latency so far is 3.6735302894658313
+2012-10-31 20:09:44 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:44 StormOperator [INFO] AVERAGE tuple latency so far is 3.684798588650397
+2012-10-31 20:09:44 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:44 StormOperator [INFO] AVERAGE tuple latency so far is 3.6702405099971025
+2012-10-31 20:09:45 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:45 StormOperator [INFO] AVERAGE tuple latency so far is 3.668666095401314
+2012-10-31 20:09:45 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:45 StormOperator [INFO] AVERAGE tuple latency so far is 3.6572796395381584
+2012-10-31 20:09:45 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:45 StormOperator [INFO] AVERAGE tuple latency so far is 3.6431546792557623
+2012-10-31 20:09:45 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:45 StormOperator [INFO] AVERAGE tuple latency so far is 3.6310599835661463
+2012-10-31 20:09:46 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:46 StormOperator [INFO] AVERAGE tuple latency so far is 3.6184814914887866
+2012-10-31 20:09:46 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:46 StormOperator [INFO] AVERAGE tuple latency so far is 3.605171954145561
+2012-10-31 20:09:46 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:46 StormOperator [INFO] AVERAGE tuple latency so far is 3.5924756642988687
+2012-10-31 20:09:46 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:46 StormOperator [INFO] AVERAGE tuple latency so far is 3.5801090625811476
+2012-10-31 20:09:46 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:46 StormOperator [INFO] AVERAGE tuple latency so far is 3.5675467828761858
+2012-10-31 20:09:47 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:47 StormOperator [INFO] AVERAGE tuple latency so far is 3.560617565173374
+2012-10-31 20:09:47 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:47 StormOperator [INFO] AVERAGE tuple latency so far is 3.551862034491377
+2012-10-31 20:09:47 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:47 StormOperator [INFO] AVERAGE tuple latency so far is 3.5452974574179215
+2012-10-31 20:09:47 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:47 StormOperator [INFO] AVERAGE tuple latency so far is 3.533528407705438
+2012-10-31 20:09:48 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:48 StormOperator [INFO] AVERAGE tuple latency so far is 3.5225246928450975
+2012-10-31 20:09:48 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:48 StormOperator [INFO] AVERAGE tuple latency so far is 3.51511544870269
+2012-10-31 20:09:48 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:48 StormOperator [INFO] AVERAGE tuple latency so far is 3.504116678428605
+2012-10-31 20:09:48 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:48 StormOperator [INFO] AVERAGE tuple latency so far is 3.4956986747268077
+2012-10-31 20:09:48 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:48 StormOperator [INFO] AVERAGE tuple latency so far is 3.49046196276718
+2012-10-31 20:09:49 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:49 StormOperator [INFO] AVERAGE tuple latency so far is 3.4814814814814814
+2012-10-31 20:09:49 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:49 StormOperator [INFO] AVERAGE tuple latency so far is 3.4706807458997977
+2012-10-31 20:09:49 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:49 StormOperator [INFO] AVERAGE tuple latency so far is 3.461453010442124
+2012-10-31 20:09:49 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:49 StormOperator [INFO] AVERAGE tuple latency so far is 3.4533069655020876
+2012-10-31 20:09:49 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:49 StormOperator [INFO] AVERAGE tuple latency so far is 3.44446859378396
+2012-10-31 20:09:50 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:50 StormOperator [INFO] AVERAGE tuple latency so far is 3.444850569769942
+2012-10-31 20:09:50 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:50 StormOperator [INFO] AVERAGE tuple latency so far is 3.437141033822591
+2012-10-31 20:09:50 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:50 StormOperator [INFO] AVERAGE tuple latency so far is 3.4298042517364764
+2012-10-31 20:09:50 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:50 StormOperator [INFO] AVERAGE tuple latency so far is 3.4209539679233494
+2012-10-31 20:09:51 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:51 StormOperator [INFO] AVERAGE tuple latency so far is 3.4143475572047
+2012-10-31 20:09:51 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:51 StormOperator [INFO] AVERAGE tuple latency so far is 3.4060395837584165
+2012-10-31 20:09:51 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:51 StormOperator [INFO] AVERAGE tuple latency so far is 3.397697434861644
+2012-10-31 20:09:51 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:51 StormOperator [INFO] AVERAGE tuple latency so far is 3.3893221355728853
+2012-10-31 20:09:51 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:51 StormOperator [INFO] AVERAGE tuple latency so far is 3.3832904375371213
+2012-10-31 20:09:52 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:52 StormOperator [INFO] AVERAGE tuple latency so far is 3.3811017447559304
+2012-10-31 20:09:52 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:52 StormOperator [INFO] AVERAGE tuple latency so far is 3.376237623762376
+2012-10-31 20:09:52 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:52 StormOperator [INFO] AVERAGE tuple latency so far is 3.3695443184003078
+2012-10-31 20:09:52 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:52 StormOperator [INFO] AVERAGE tuple latency so far is 3.36183584079223
+2012-10-31 20:09:53 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:53 StormOperator [INFO] AVERAGE tuple latency so far is 3.354650066025278
+2012-10-31 20:09:53 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:53 StormOperator [INFO] AVERAGE tuple latency so far is 3.3485329844888807
+2012-10-31 20:09:53 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:53 StormOperator [INFO] AVERAGE tuple latency so far is 3.3410479540825775
+2012-10-31 20:09:53 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:53 StormOperator [INFO] AVERAGE tuple latency so far is 3.3349844065309115
+2012-10-31 20:09:53 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:53 StormOperator [INFO] AVERAGE tuple latency so far is 3.329576440647155
+2012-10-31 20:09:54 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:54 StormOperator [INFO] AVERAGE tuple latency so far is 3.3284092956224103
+2012-10-31 20:09:54 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:54 StormOperator [INFO] AVERAGE tuple latency so far is 3.320835565077665
+2012-10-31 20:09:54 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:54 StormOperator [INFO] AVERAGE tuple latency so far is 3.314280658290568
+2012-10-31 20:09:54 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:54 StormOperator [INFO] AVERAGE tuple latency so far is 3.3080161375197332
+2012-10-31 20:09:54 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:54 StormOperator [INFO] AVERAGE tuple latency so far is 3.302208311597983
+2012-10-31 20:09:55 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:55 StormOperator [INFO] AVERAGE tuple latency so far is 3.2970177555593865
+2012-10-31 20:09:55 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:55 StormOperator [INFO] AVERAGE tuple latency so far is 3.2914031789437703
+2012-10-31 20:09:55 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:55 StormOperator [INFO] AVERAGE tuple latency so far is 3.2857142857142856
+2012-10-31 20:09:55 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:55 StormOperator [INFO] AVERAGE tuple latency so far is 3.2841539237103006
+2012-10-31 20:09:56 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:56 StormOperator [INFO] AVERAGE tuple latency so far is 3.2829528411931346
+2012-10-31 20:09:56 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:56 StormOperator [INFO] AVERAGE tuple latency so far is 3.276483225913072
+2012-10-31 20:09:56 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:56 StormOperator [INFO] AVERAGE tuple latency so far is 3.2714309129650876
+2012-10-31 20:09:56 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:56 StormOperator [INFO] AVERAGE tuple latency so far is 3.266623313282393
+2012-10-31 20:09:56 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:56 StormOperator [INFO] AVERAGE tuple latency so far is 3.2625383002741493
+2012-10-31 20:09:57 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:57 StormOperator [INFO] AVERAGE tuple latency so far is 3.2578787394016957
+2012-10-31 20:09:57 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:57 StormOperator [INFO] AVERAGE tuple latency so far is 3.2564672274242183
+2012-10-31 20:09:57 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:57 StormOperator [INFO] AVERAGE tuple latency so far is 3.2531884742560226
+2012-10-31 20:09:57 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:57 StormOperator [INFO] AVERAGE tuple latency so far is 3.2485549132947975
+2012-10-31 20:09:58 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:58 StormOperator [INFO] AVERAGE tuple latency so far is 3.2436831498992404
+2012-10-31 20:09:58 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:58 StormOperator [INFO] AVERAGE tuple latency so far is 3.239347792647285
+2012-10-31 20:09:58 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:58 StormOperator [INFO] AVERAGE tuple latency so far is 3.234620668600214
+2012-10-31 20:09:58 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:58 StormOperator [INFO] AVERAGE tuple latency so far is 3.2296621723981214
+2012-10-31 20:09:58 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:58 StormOperator [INFO] AVERAGE tuple latency so far is 3.2252292888287477
+2012-10-31 20:09:59 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:59 StormOperator [INFO] AVERAGE tuple latency so far is 3.2199671690792417
+2012-10-31 20:09:59 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:59 StormOperator [INFO] AVERAGE tuple latency so far is 3.221300548066953
+2012-10-31 20:09:59 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:59 StormOperator [INFO] AVERAGE tuple latency so far is 3.216732833406852
+2012-10-31 20:09:59 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:09:59 StormOperator [INFO] AVERAGE tuple latency so far is 3.212961611443585
+2012-10-31 20:10:00 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:10:00 StormOperator [INFO] AVERAGE tuple latency so far is 3.2086654108100277
+2012-10-31 20:10:00 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:10:00 StormOperator [INFO] AVERAGE tuple latency so far is 3.2050064738886492
+2012-10-31 20:10:00 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:10:00 StormOperator [INFO] AVERAGE tuple latency so far is 3.201542636766176
+2012-10-31 20:10:00 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:10:00 StormOperator [INFO] AVERAGE tuple latency so far is 3.1977024535526875
+2012-10-31 20:10:00 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:10:00 StormOperator [INFO] AVERAGE tuple latency so far is 3.1941980002816504
+2012-10-31 20:10:01 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:10:01 StormOperator [INFO] AVERAGE tuple latency so far is 3.190462872325549
+2012-10-31 20:10:01 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:10:01 StormOperator [INFO] AVERAGE tuple latency so far is 3.1859463963338426
+2012-10-31 20:10:01 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:10:01 StormOperator [INFO] AVERAGE tuple latency so far is 3.181768031995587
+2012-10-31 20:10:01 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:10:01 StormOperator [INFO] AVERAGE tuple latency so far is 3.1780578003013287
+2012-10-31 20:10:01 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:10:01 StormOperator [INFO] AVERAGE tuple latency so far is 3.175214256563733
+2012-10-31 20:10:02 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:10:02 StormOperator [INFO] AVERAGE tuple latency so far is 3.1722740170247263
+2012-10-31 20:10:02 StormOperator [INFO] Taking into account every 1000th tuple, and printing every 50000th one.
+2012-10-31 20:10:02 StormOperator [INFO] AVERAGE tuple latency so far is 3.1731311233391493

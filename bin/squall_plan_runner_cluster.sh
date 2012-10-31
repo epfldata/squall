@@ -1,6 +1,5 @@
 #!/bin/bash
 
-./recompile.sh
 . ./storm_version.sh
 
 CONFIG_DIR=../test/squall_plan_runner/confs/cluster
