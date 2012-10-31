@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE_DIR=extract_constants/ReadProjectSend
+BASE_DIR=extract_constants/joins
 INPUT_DIR=$BASE_DIR/cluster
 RESULT_DIR=$BASE_DIR/output
 CONF_FILES=( `ls ${INPUT_DIR}/` )
