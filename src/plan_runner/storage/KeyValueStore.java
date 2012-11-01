@@ -35,6 +35,10 @@ public class KeyValueStore<K, V> extends BasicStore {
 		this._tc = tc;
 	}
 
+	public void setTypeConversion(TypeConversion tc) {
+		this._tc = tc;
+	}
+
 	public KeyValueStore(int storesizemb, int hash_indices, Map conf) {
 		super(storesizemb);
 		this._storageManager = new StorageManager<V>(this, conf);
@@ -192,9 +196,10 @@ public class KeyValueStore<K, V> extends BasicStore {
 		for (Iterator<K> it = keys.iterator() ; it.hasNext() ; ) {
 			K key = it.next();
 			List<V> thisValues = this.access(key);
-			List<V> storeValues = (List)store.access(key);
+			List<V> storeValues = (List<V>)store.access(key);
 			Collections.sort((List)thisValues);
 			Collections.sort((List)storeValues);
+			
 			// Compare value by value
 			int index = 0;
 			Iterator<V> iterator = thisValues.iterator();
@@ -230,10 +235,11 @@ public class KeyValueStore<K, V> extends BasicStore {
 				stream.print(" = ");
 				values = entry.getValues();
 				for (V v : values) {
-					if (this._tc != null)
+					if (this._tc != null) {
 						stream.print(_tc.toString(v));
-					else 
+					} else {
 						stream.print(v.toString());
+					}
 				}
 				stream.println("");
 			}

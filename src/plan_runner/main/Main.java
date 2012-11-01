@@ -15,6 +15,7 @@ import plan_runner.query_plans.TPCH10Plan;
 import plan_runner.query_plans.TPCH3Plan;
 import plan_runner.query_plans.TPCH4Plan;
 import plan_runner.query_plans.TPCH5Plan;
+import plan_runner.query_plans.debug.TPCH5PlanAvg;
 import plan_runner.query_plans.TPCH7Plan;
 import plan_runner.query_plans.TPCH8Plan;
 import plan_runner.query_plans.TPCH9Plan;
@@ -168,6 +169,8 @@ public class Main {
                 queryPlan = new TPCH4Plan(dataPath, extension, conf).getQueryPlan();
             }else if(queryName.equalsIgnoreCase("tpch5")){
                 queryPlan = new TPCH5Plan(dataPath, extension, conf).getQueryPlan();
+            }else if(queryName.equalsIgnoreCase("tpch5avg")){
+                queryPlan = new TPCH5PlanAvg(dataPath, extension, conf).getQueryPlan();
             }else if(queryName.equalsIgnoreCase("tpch7")){
                 queryPlan = new TPCH7Plan(dataPath, extension, conf).getQueryPlan();
             }else if(queryName.equalsIgnoreCase("tpch8")){

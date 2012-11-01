@@ -600,6 +600,7 @@ public class MyUtilities{
             return Math.abs(hash.hashCode()) % targetParallelism;
         }
 
+
     public static int getCompBatchSize(String compName, Map map) {
         return SystemParameters.getInt(map, compName + "_BS");
     }
@@ -609,3 +610,4 @@ public class MyUtilities{
     }
         
 }
+

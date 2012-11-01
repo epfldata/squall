@@ -36,10 +36,12 @@ public class NameManualParOptimizer implements Optimizer{
     public QueryPlan generate() {
         NameCompGenFactory factory = new NameCompGenFactory(_map, _pq.getTan());
         NameCompGen ncg = factory.create();
+//	// YANNIS HACK FOR TPCH-6 AND POSSIBLY FOR OTHER
+	boolean isOnlyComp = _compNames.size() == 1;
         
-        Component first = ncg.generateDataSource(_compNames.get(0));
+        Component first = ncg.generateDataSource(_compNames.get(0), isOnlyComp);
         for(int i=1; i<_compNames.size();i++){
-            Component second = ncg.generateDataSource(_compNames.get(i));
+            Component second = ncg.generateDataSource(_compNames.get(i), isOnlyComp);
             first = ncg.generateEquiJoin(first, second);
         }
         

@@ -1,5 +1,6 @@
-package plan_runner.query_plans;
+package plan_runner.query_plans.debug;
 
+import plan_runner.query_plans.QueryPlan;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -21,14 +22,14 @@ import plan_runner.expressions.Subtraction;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.expressions.ValueSpecification;
 import plan_runner.operators.AggregateOperator;
-import plan_runner.operators.AggregateSumOperator;
+import plan_runner.operators.AggregateAvgOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.BetweenPredicate;
 import plan_runner.predicates.ComparisonPredicate;
 
-public class TPCH5Plan {
-    private static Logger LOG = Logger.getLogger(TPCH5Plan.class);
+public class TPCH5PlanAvg {
+    private static Logger LOG = Logger.getLogger(TPCH5PlanAvg.class);
 
     private static final TypeConversion<Date> _dc = new DateConversion();
     private static final TypeConversion<String> _sc = new StringConversion();
@@ -39,7 +40,7 @@ public class TPCH5Plan {
     //query variables
     private static Date _date1, _date2;
     private static final String REGION_NAME = "ASIA";
-    
+
     private static void computeDates(){
         // date2 = date1 + 1 year
         String date1Str = "1994-01-01";
@@ -57,7 +58,7 @@ public class TPCH5Plan {
         // tuple is set to null since we are computing based on constants
     }
 
-    public TPCH5Plan(String dataPath, String extension, Map conf){
+    public TPCH5PlanAvg(String dataPath, String extension, Map conf){
         computeDates();
 
         //-------------------------------------------------------------------------------------
@@ -208,7 +209,7 @@ public class TPCH5Plan {
                 new ColumnReference(_doubleConv, 1),
                 substract);
 
-        AggregateOperator aggOp = new AggregateSumOperator(product, conf).setGroupByColumns(Arrays.asList(0));
+        AggregateOperator aggOp = new AggregateAvgOperator(product, conf).setGroupByColumns(Arrays.asList(0));
         OperatorComponent finalComponent = new OperatorComponent(
                 R_N_S_L_C_Ojoin,
                 "FINAL_RESULT",
