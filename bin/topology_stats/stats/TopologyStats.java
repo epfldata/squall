@@ -34,8 +34,8 @@ public class TopologyStats {
         try {
             ClusterSummary clusterInfo = client.getClusterInfo();
             int numOfTopologies = clusterInfo.get_topologies_size();
-            if(numOfTopologies > 1){
-                throw new RuntimeException("For multiple topologies in the cluster, statistics would not be gathered correctly.");
+            if(numOfTopologies != 1){
+                throw new RuntimeException("There should be exactly one active topology, and we have " + numOfTopologies + " of them.");
             }
 
             topologySummary = clusterInfo.get_topologies().get(0);

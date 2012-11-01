@@ -346,7 +346,8 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                                 addToManualBatch(tuple, timestamp);
                                 if(_numSentTuples % MyUtilities.getCompBatchSize(_ID, _conf) == 0){
                                     manualBatchSend();
-                                }                        }
+                                }                        
+                        }
 		}
         
                 //non-ManualBatchMode
@@ -357,7 +358,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 				_hashIndexes, 
                                 _hashExpressions, 
                                 _conf);
-			MyUtilities.sendTuple(stormTupleSnd, stormTupleRcv, _collector, _conf);
+                    MyUtilities.sendTuple(stormTupleSnd, stormTupleRcv, _collector, _conf);
                 }
         
                 //ManualBatchMode
