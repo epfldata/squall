@@ -56,9 +56,9 @@ BATCH_TIMEOUT_MILLIS 0
 #   ignoring latencies in 1st second, they are 3 orders of magnitudes bigger
 INIT_IGNORED_TUPLES 0
 
-#   compute latency for every FREQ_TUPLE_LOG_COMPUTEth tuple on the last component (does not depend on BATCH_SEND_MODE)
+#   compute latency for every FREQ_TUPLE_LOG_COMPUTEth tuple on the last component (it's on batch level for MANUAL_BATCH)
 FREQ_TUPLE_LOG_COMPUTE 1
-#   write average latency for every FREQ_TUPLE_LOG_WRITEth batch on the last component
+#   write average latency for every FREQ_TUPLE_LOG_WRITEth tuple on the last component (it's on batch level for MANUAL_BATCH)
 #   FREQ_TUPLE_LOG_WRITE has to be divisible with FREQ_TUPLE_LOG_COMPUTE
 FREQ_TUPLE_LOG_WRITE 100
 ########################################################################

@@ -70,6 +70,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
         
         //for customTimestamp
         private double _totalLatency;
+        private long _numberOfSamples;
         
         //for ManualBatch(Queuing) mode
         private List<Integer> _targetTaskIds;
@@ -160,7 +161,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                                 return;
                             }
                             
-                            processNonLastTuple(inputComponentIndex, tuple, inputTupleHash, stormTupleRcv);
+                            processNonLastTuple(inputComponentIndex, tuple, inputTupleHash, stormTupleRcv, true);
                             
                         }else{
                                 String inputComponentIndex = stormTupleRcv.getString(0);
@@ -193,7 +194,12 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                                     }
                                     
                                     //processing a tuple
-                                    processNonLastTuple(inputComponentIndex, tuple, inputTupleHash, stormTupleRcv);
+                                    if( i == batchSize - 1){
+                                        processNonLastTuple(inputComponentIndex, tuple, inputTupleHash, stormTupleRcv, true);
+                                    }else{
+                                        processNonLastTuple(inputComponentIndex, tuple, inputTupleHash, stormTupleRcv, false);
+                                    }
+                                    
                                 }
                         }
 
@@ -222,7 +228,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                 private void processNonLastTuple(String inputComponentIndex, 
                         List<String> tuple, 
                         String inputTupleHash,
-                        Tuple stormTupleRcv){
+                        Tuple stormTupleRcv, boolean isLastInBatch){
                   
                         boolean isFromFirstEmitter = false;
 			BasicStore<ArrayList<String>> affectedStorage, oppositeStorage;
@@ -253,7 +259,8 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 					inputTupleHash,
 					isFromFirstEmitter,
 					oppositeStorage,
-					projPreAgg);
+					projPreAgg, 
+                                        isLastInBatch);
                 } 
         
 
@@ -262,7 +269,8 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			String inputTupleHash,
 			boolean isFromFirstEmitter,
 			BasicStore<ArrayList<String>> oppositeStorage,
-			ProjectOperator projPreAgg){
+			ProjectOperator projPreAgg,
+                        boolean isLastInBatch){
 
 		List<String> oppositeStringTupleList = oppositeStorage.access(inputTupleHash);
 
@@ -291,11 +299,11 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 					outputTuple = projPreAgg.process(outputTuple);
 				}
 
-				applyOperatorsAndSend(stormTupleRcv, outputTuple);
+				applyOperatorsAndSend(stormTupleRcv, outputTuple, isLastInBatch);
 			}
 	}
 
-	protected void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> tuple){
+	protected void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> tuple, boolean isLastInBatch){
 		if(MyUtilities.isBatchOutputMode(_batchOutputMillis)){
 			try {
 				_semAgg.acquire();
@@ -329,11 +337,15 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                 if(MyUtilities.isPrintLatency(_hierarchyPosition, _conf)){
                     long timestamp;
                     if(MyUtilities.isManualBatchingMode(_conf)){
-                        timestamp = stormTupleRcv.getLong(2);
+                        if(isLastInBatch){
+                            timestamp = stormTupleRcv.getLong(2);
+                            printTupleLatency(_numSentTuples - 1, timestamp);
+                        }
                     }else{
                         timestamp = stormTupleRcv.getLong(3);
+                        printTupleLatency(_numSentTuples - 1, timestamp);
                     }
-                    printTupleLatency(_numSentTuples - 1, timestamp);
+                    
                 }
 	}
         
@@ -491,12 +503,20 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                 tupleSerialNum = tupleSerialNum - startupIgnoredTuples; // start counting from zero when computing starts
                 if(tupleSerialNum % freqCompute == 0){
                     long latency = System.currentTimeMillis() - timestamp;
+                    if(latency < 0){
+                        LOG.info("Current latency is " + latency + "ms! Ignoring a tuple!");
+                        return;
+                    }
+                    if(_numberOfSamples < 0){
+                        LOG.info("Number of samples is " + _numberOfSamples + "! Ignoring a tuple!");
+                        return;
+                    }
                     _totalLatency += latency;
+                    _numberOfSamples++;
                 }
                 if(tupleSerialNum % freqWrite == 0){
-                    long numberOfSamples = (tupleSerialNum / freqCompute) + 1; // note that it is divisible
                     LOG.info("Taking into account every " + freqCompute + "th tuple, and printing every " + freqWrite + "th one.");
-                    LOG.info("AVERAGE tuple latency so far is " + _totalLatency/numberOfSamples);
+                    LOG.info("AVERAGE tuple latency so far is " + _totalLatency/_numberOfSamples);
                 }
             }
         } 

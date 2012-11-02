@@ -39,7 +39,7 @@ import plan_runner.utilities.SystemParameters;
 
 public class Main {
 	private static Logger LOG = Logger.getLogger(Main.class);
-
+        
         public static void main(String[] args) {
            new Main(args);
         }
@@ -76,17 +76,23 @@ public class Main {
         //  an optimizer should do this in a smarter way
         private static void putBatchSizes(QueryPlan plan, Map map) {
             if(SystemParameters.isExisting(map, "BATCH_SIZE")){
-                String batchSize = SystemParameters.getString(map, "BATCH_SIZE");
-                for(String compName: plan.getComponentNames()){
-                    String batchStr = compName + "_BS";                
-                    SystemParameters.putInMap(map, batchStr, batchSize);
-                    LOG.info("Batch size for " + compName + " is " + batchSize);
+                
+                //if the batch mode is specified, but nothing is put in map yet (because other than MANUAL_BATCH optimizer is used)
+                String firstBatch = plan.getComponentNames().get(0) + "_BS";
+                if(!SystemParameters.isExisting(map, firstBatch)){
+                    String batchSize = SystemParameters.getString(map, "BATCH_SIZE");
+                    for(String compName: plan.getComponentNames()){
+                        String batchStr = compName + "_BS";                
+                        SystemParameters.putInMap(map, batchStr, batchSize);
+                        LOG.info("Batch size for " + compName + " is " + batchSize);
+                    }
                 }
+                
             }
             if(!MyUtilities.checkSendMode(map)){
                 throw new RuntimeException("BATCH_SEND_MODE value is not recognized.");
             }
-        }        
+        } 
 
         private static TopologyBuilder createTopology(QueryPlan qp, Config conf) {
             TopologyBuilder builder = new TopologyBuilder();

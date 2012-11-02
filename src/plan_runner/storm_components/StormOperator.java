@@ -60,6 +60,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
     
     //for Send and Wait mode
     private double _totalLatency;
+    private long _numberOfSamples;
     
     //for ManualBatch(Queuing) mode
     private List<Integer> _targetTaskIds;
@@ -134,7 +135,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
                 return;
             }
                             
-            applyOperatorsAndSend(stormTupleRcv, tuple);
+            applyOperatorsAndSend(stormTupleRcv, tuple, true);
                             
         }else{
             String inputBatch = stormTupleRcv.getString(1);
@@ -164,7 +165,11 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
                 }
                                     
                 //processing a tuple
-                applyOperatorsAndSend(stormTupleRcv, tuple);
+                if( i == batchSize - 1){
+                    applyOperatorsAndSend(stormTupleRcv, tuple, true);
+                }else{
+                    applyOperatorsAndSend(stormTupleRcv, tuple, false);
+                }
             }
         }
         _collector.ack(stormTupleRcv);
@@ -189,7 +194,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
         return false;
     }
 
-    protected void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> tuple){
+    protected void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> tuple, boolean isLastInBatch){
         if(MyUtilities.isBatchOutputMode(_batchOutputMillis)){
             try {
                 _semAgg.acquire();
@@ -223,11 +228,14 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
         if(MyUtilities.isPrintLatency(_hierarchyPosition, _conf)){
             long timestamp;
             if(MyUtilities.isManualBatchingMode(_conf)){
-                timestamp = stormTupleRcv.getLong(2);
+                if(isLastInBatch){
+                    timestamp = stormTupleRcv.getLong(2);
+                    printTupleLatency(_numSentTuples - 1, timestamp);
+                }
             }else{
                 timestamp = stormTupleRcv.getLong(3);
+                printTupleLatency(_numSentTuples - 1, timestamp);
             }
-            printTupleLatency(_numSentTuples - 1, timestamp);
         }
     }
   
@@ -373,12 +381,20 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
                 tupleSerialNum = tupleSerialNum - startupIgnoredTuples; // start counting from zero when computing starts
                 if(tupleSerialNum % freqCompute == 0){
                     long latency = System.currentTimeMillis() - timestamp;
+                    if(latency < 0){
+                        LOG.info("Current latency is " + latency + "ms! Ignoring a tuple!");
+                        return;
+                    }
+                    if(_numberOfSamples < 0){
+                        LOG.info("Number of samples is " + _numberOfSamples + "! Ignoring a tuple!");
+                        return;
+                    }
                     _totalLatency += latency;
+                    _numberOfSamples++;
                 }
                 if(tupleSerialNum % freqWrite == 0){
-                    long numberOfSamples = (tupleSerialNum / freqCompute) + 1; // note that it is divisible
                     LOG.info("Taking into account every " + freqCompute + "th tuple, and printing every " + freqWrite + "th one.");
-                    LOG.info("AVERAGE tuple latency so far is " + _totalLatency/numberOfSamples);
+                    LOG.info("AVERAGE tuple latency so far is " + _totalLatency/_numberOfSamples);
                 }
             }
         } 

@@ -68,6 +68,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
         
         //for CustomTimestamp mode
         private double _totalLatency;
+        private long _numberOfSamples;
         
         //for ManualBatch(Queuing) mode
         private List<Integer> _targetTaskIds;
@@ -396,12 +397,20 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                 tupleSerialNum = tupleSerialNum - startupIgnoredTuples; // start counting from zero when computing starts
                 if(tupleSerialNum % freqCompute == 0){
                     long latency = System.currentTimeMillis() - timestamp;
+                    if(latency < 0){
+                        LOG.info("Current latency is " + latency + "ms! Ignoring a tuple!");
+                        return;
+                    }
+                    if(_numberOfSamples < 0){
+                        LOG.info("Number of samples is " + _numberOfSamples + "! Ignoring a tuple!");
+                        return;
+                    }
                     _totalLatency += latency;
+                    _numberOfSamples++;
                 }
                 if(tupleSerialNum % freqWrite == 0){
-                    long numberOfSamples = (tupleSerialNum / freqCompute) + 1; // note that it is divisible
                     LOG.info("Taking into account every " + freqCompute + "th tuple, and printing every " + freqWrite + "th one.");
-                    LOG.info("AVERAGE tuple latency so far is " + _totalLatency/numberOfSamples);
+                    LOG.info("AVERAGE tuple latency so far is " + _totalLatency/_numberOfSamples);
                 }
             }
         }      
