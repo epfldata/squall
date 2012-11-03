@@ -84,10 +84,15 @@ public class Main {
                     for(String compName: plan.getComponentNames()){
                         String batchStr = compName + "_BS";                
                         SystemParameters.putInMap(map, batchStr, batchSize);
-                        LOG.info("Batch size for " + compName + " is " + batchSize);
                     }
                 }
                 
+                //no matter where this is set, we print out batch sizes of components
+                for(String compName: plan.getComponentNames()){
+                        String batchStr = compName + "_BS";
+                        String batchSize = SystemParameters.getString(map, batchStr);
+                        LOG.info("Batch size for " + compName + " is " + batchSize);
+                }
             }
             if(!MyUtilities.checkSendMode(map)){
                 throw new RuntimeException("BATCH_SEND_MODE value is not recognized.");

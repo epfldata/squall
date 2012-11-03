@@ -4,7 +4,6 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import plan_runner.main.Main;
 import plan_runner.query_plans.QueryPlan;
-import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.Optimizer;
 import sql.optimizers.index.IndexRuleOptimizer;
@@ -13,6 +12,7 @@ import sql.optimizers.name.NameCostOptimizer;
 import sql.optimizers.name.NameManualOptimizer;
 import sql.optimizers.name.NameManualParOptimizer;
 import sql.optimizers.name.NameRuleOptimizer;
+import sql.optimizers.name.manual_batching.ManualBatchingOptimizer;
 import sql.util.ParserUtil;
 
 public class ParserMain{
@@ -99,6 +99,8 @@ public class ParserMain{
             return new NameRuleOptimizer(map);
         }else if("NAME_COST_LEFTY".equalsIgnoreCase(optStr)){
             return new NameCostOptimizer(map);
+        }else if("NAME_MANUAL_BATCHING".equalsIgnoreCase(optStr)){
+            return new ManualBatchingOptimizer(map);
         }
         throw new RuntimeException("Unknown " + optStr + " optimizer!");
     }

@@ -17,6 +17,7 @@ public class CostParams implements Serializable{
     private long _cardinality; //total number of tuples at the output of a component
     private TupleSchema _schema;
     private int _parallelism;
+    private int _batchSize; // only used in manual batching
 
     /**
      * @return the _selectivity
@@ -74,4 +75,18 @@ public class CostParams implements Serializable{
         this._parallelism = parallelism;
     }
 
+    /**
+     * @return the _batchSize
+     */
+    public int getBatchSize() {
+        return _batchSize;
+    }
+
+    /**
+     * @param batchSize the _batchSize to set
+     */
+    public void setBatchSize(int batchSize) {
+        this._batchSize = batchSize;
+    }
+    
 }

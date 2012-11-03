@@ -77,6 +77,7 @@ public class CostEstimator {
     public void setOutputParamsAndPar(DataSourceComponent source){
         setOutputParams(source);
         
+        _parAssigner.setBatchSize(source, _compCost);
         _parAssigner.setParallelism(source, _compCost);
     }
 
@@ -103,6 +104,7 @@ public class CostEstimator {
     public void setOutputParamsAndPar(EquiJoinComponent joinComponent){
         setOutputParams(joinComponent);
         
+        _parAssigner.setBatchSize(joinComponent, _compCost);
         _parAssigner.setParallelism(joinComponent, _compCost);
     }
     

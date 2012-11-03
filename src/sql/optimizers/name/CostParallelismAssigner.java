@@ -15,13 +15,13 @@ import sql.visitors.jsql.SQLVisitor;
 
 
 public class CostParallelismAssigner {
-    private final Map _map;
-    private final Schema _schema;
-    private final TableAliasName _tan;
+    protected final Map _map;
+    protected final Schema _schema;
+    protected final TableAliasName _tan;
     
     //computed only once
-    private List<String> _sortedSourceNames;// sorted by increasing cardinalities
-    private Map<String, Integer> _sourcePars;
+    protected List<String> _sortedSourceNames;// sorted by increasing cardinalities
+    protected Map<String, Integer> _sourcePars;
 
     public CostParallelismAssigner(Schema schema, TableAliasName tan, Map map) {
         _schema = schema;
@@ -106,8 +106,7 @@ public class CostParallelismAssigner {
          _sourcePars = extractNamesPar(sourceCostParams);
          return _sourcePars;
     }
-
-
+    
     public void setParallelism(DataSourceComponent source, Map<String, CostParams> compCost){
         if(_sourcePars == null){
             //if we are here, it was invoked from fake sourceCG, so just return
@@ -118,6 +117,10 @@ public class CostParallelismAssigner {
         int parallelism = _sourcePars.get(sourceName);
         compCost.get(sourceName).setParallelism(parallelism);
     }
+    
+    protected void setBatchSize(DataSourceComponent source, Map<String, CostParams> _compCost) {
+        throw new UnsupportedOperationException("Should not be called from NameCostLefty optimizer.");
+    }    
     
     public List<String> getSortedSourceNames(){
         return _sortedSourceNames;
@@ -194,8 +197,12 @@ public class CostParallelismAssigner {
         //  This prevents from reading NUM_WORKERS from Storm Config class.
         //  If it works in local mode, it might not work in cluster mode - depending where and when the setting is read. 
     }
+    
+    protected void setBatchSize(EquiJoinComponent joinComponent, Map<String, CostParams> _compCost) {
+        throw new UnsupportedOperationException("Should not be called from NameCostLefty optimizer.");
+    }    
 
-    private int parallelismFormula(CostParams leftParentParams, CostParams rightParentParams) {
+    protected int parallelismFormula(CostParams leftParentParams, CostParams rightParentParams) {
         //TODO: this formula does not take into account when joinComponent send tuples further down
         double dblParallelism = leftParentParams.getSelectivity() * leftParentParams.getParallelism() +
                             rightParentParams.getSelectivity() * rightParentParams.getParallelism() +
@@ -279,6 +286,10 @@ public class CostParallelismAssigner {
         String currentComp = opComp.getName();
         compCost.get(currentComp).setParallelism(parallelism);
     }
+    
+    protected void setBatchSize(OperatorComponent operator, Map<String, CostParams> _compCost) {
+        throw new UnsupportedOperationException("Should not be called from NameCostLefty optimizer.");
+    }    
 
     private int estimateMinParallelism(CostParams leftParentParams, CostParams rightParentParams) {
         int providedMemory = SystemParameters.getInt(_map, "STORAGE_MEMORY_SIZE_MB");
