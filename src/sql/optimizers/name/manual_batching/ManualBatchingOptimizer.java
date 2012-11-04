@@ -1,8 +1,10 @@
 package sql.optimizers.name.manual_batching;
 
 import java.util.*;
+import org.apache.log4j.Logger;
 import plan_runner.components.Component;
 import plan_runner.query_plans.QueryPlan;
+import plan_runner.storm_components.StormDataSource;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.Optimizer;
 import sql.optimizers.name.CostParams;
@@ -17,6 +19,8 @@ import sql.visitors.jsql.SQLVisitor;
 public class ManualBatchingOptimizer implements Optimizer{
     private SQLVisitor _pq;
     private Map _map;
+    
+    private static Logger LOG = Logger.getLogger(ManualBatchingOptimizer.class);
     
     public ManualBatchingOptimizer(Map map) {
         _map = map;
@@ -90,6 +94,7 @@ public class ManualBatchingOptimizer implements Optimizer{
         
         ParserUtil.parallelismToMap(optimal, _map);
         
+        LOG.info("Predicted latency is " + getTotalLatency(optimal));
         return optimal.getQueryPlan();
     }
     

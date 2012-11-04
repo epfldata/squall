@@ -13,7 +13,9 @@ public class Constants {
     }    
     
     public static double getSerTime(int batchSize) {
-        if(batchSize <= 128){
+        if(batchSize <= 64){
+            return 0.30;
+        }else if(batchSize <= 128){
             return 0.40;
         }else if(batchSize <= 256){
             return 0.58;
@@ -27,7 +29,9 @@ public class Constants {
     }
     
     public static double getDeserTime(int batchSize) {
-        if(batchSize <= 128){
+        if(batchSize <=64){
+            return 0.70;
+        }else if(batchSize <= 128){
             return 0.90;
         }else if(batchSize <= 256){
             return 1.04;
