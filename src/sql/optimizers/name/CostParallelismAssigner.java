@@ -118,8 +118,8 @@ public class CostParallelismAssigner {
         compCost.get(sourceName).setParallelism(parallelism);
     }
     
-    protected void setBatchSize(DataSourceComponent source, Map<String, CostParams> _compCost) {
-        throw new UnsupportedOperationException("Should not be called from NameCostLefty optimizer.");
+    protected void setBatchSize(DataSourceComponent source, Map<String, CostParams> compCost) {
+        //nothing to do
     }    
     
     public List<String> getSortedSourceNames(){
@@ -154,6 +154,9 @@ public class CostParallelismAssigner {
         String leftParent = joinComponent.getParents()[0].getName();
         String rightParent = joinComponent.getParents()[1].getName();
 
+        String currentCompName = joinComponent.getName();
+        CostParams params = compCost.get(currentCompName);
+        
         CostParams leftParentParams = compCost.get(leftParent);
         CostParams rightParentParams = compCost.get(rightParent);
 
@@ -161,12 +164,12 @@ public class CostParallelismAssigner {
         int rightParallelism = rightParentParams.getParallelism();
 
         //compute
-        int parallelism = parallelismFormula(leftParentParams, rightParentParams);
+        int parallelism = parallelismFormula(params, leftParentParams, rightParentParams);
 
         //lower bound
         int minParallelism = estimateMinParallelism(leftParentParams, rightParentParams);
         if(minParallelism > parallelism){
-            throw new ImproperParallelismException("Component " + joinComponent.getName() +
+            throw new ImproperParallelismException("Component " + currentCompName +
                     " cannot have parallelism LESS than " + minParallelism);
         }
         
@@ -178,17 +181,13 @@ public class CostParallelismAssigner {
                 //  exception serves to force smaller parallelism at sources
                 parallelism = maxParallelism;
             }else{
-                throw new ImproperParallelismException("Component " + joinComponent.getName() + 
+                throw new ImproperParallelismException("Component " + currentCompName + 
                         " cannot have parallelism MORE than " + maxParallelism);
             }
         }
-        
-        
-        
 
         //setting
-        String currentComp = joinComponent.getName();
-        compCost.get(currentComp).setParallelism(parallelism);
+        params.setParallelism(parallelism);
         
         //we should also check 
         //  if the sum of all the parallelisms in the subplan 
@@ -198,11 +197,11 @@ public class CostParallelismAssigner {
         //  If it works in local mode, it might not work in cluster mode - depending where and when the setting is read. 
     }
     
-    protected void setBatchSize(EquiJoinComponent joinComponent, Map<String, CostParams> _compCost) {
-        throw new UnsupportedOperationException("Should not be called from NameCostLefty optimizer.");
+    protected void setBatchSize(EquiJoinComponent joinComponent, Map<String, CostParams> compCost) {
+        //nothing to do
     }    
 
-    protected int parallelismFormula(CostParams leftParentParams, CostParams rightParentParams) {
+    protected int parallelismFormula(CostParams params, CostParams leftParentParams, CostParams rightParentParams) {
         //TODO: this formula does not take into account when joinComponent send tuples further down
         double dblParallelism = leftParentParams.getSelectivity() * leftParentParams.getParallelism() +
                             rightParentParams.getSelectivity() * rightParentParams.getParallelism() +
@@ -287,8 +286,8 @@ public class CostParallelismAssigner {
         compCost.get(currentComp).setParallelism(parallelism);
     }
     
-    protected void setBatchSize(OperatorComponent operator, Map<String, CostParams> _compCost) {
-        throw new UnsupportedOperationException("Should not be called from NameCostLefty optimizer.");
+    protected void setBatchSize(OperatorComponent operator, Map<String, CostParams> compCost) {
+        //nothing to do
     }    
 
     private int estimateMinParallelism(CostParams leftParentParams, CostParams rightParentParams) {

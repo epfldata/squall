@@ -1,13 +1,11 @@
 package sql.optimizers.name.manual_batching;
 
-
-
-
 import java.util.*;
 import plan_runner.components.Component;
 import plan_runner.query_plans.QueryPlan;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.Optimizer;
+import sql.optimizers.name.CostParams;
 import sql.optimizers.name.NameCompGen;
 import sql.util.ImproperParallelismException;
 import sql.util.ParserUtil;
@@ -126,26 +124,35 @@ public class ManualBatchingOptimizer implements Optimizer{
             System.exit(1);
         }
         
-        int index = getMinTotalParIndex(ncgList);
+        int index = getMinTotalLatencyIndex(ncgList);
         return ncgList.get(index);
     }
 
-    private int getMinTotalParIndex(List<NameCompGen> ncgList) {
-        int totalPar = ParserUtil.getTotalParallelism(ncgList.get(0));
-        int minParIndex = 0;
+    private int getMinTotalLatencyIndex(List<NameCompGen> ncgList) {
+        double totalLatency = getTotalLatency(ncgList.get(0));
+        int minLatencyIndex = 0;
         for(int i = 1; i< ncgList.size(); i++){
-            int currentTotalPar = ParserUtil.getTotalParallelism(ncgList.get(i));
-            if(currentTotalPar < totalPar){
-                minParIndex = i;
-                totalPar = currentTotalPar;
+            double currentTotalLatency = getTotalLatency(ncgList.get(i));
+            if(currentTotalLatency < totalLatency){
+                minLatencyIndex = i;
+                totalLatency = currentTotalLatency;
             }
         }
-        return minParIndex;
+        return minLatencyIndex;
     }
     
-    private int getMinTotalPar(List<NameCompGen> ncgList){
-        int minParIndex = getMinTotalParIndex(ncgList);
-        return ParserUtil.getTotalParallelism(ncgList.get(minParIndex));
+    private double getMinTotalLatency(List<NameCompGen> ncgList){
+        int minParIndex = getMinTotalLatencyIndex(ncgList);
+        return getTotalLatency(ncgList.get(minParIndex));
+    }
+
+    //TODO: should compare them by parallelism as well, and not only by totalLatency
+    //  we could also do some pruning
+    private double getTotalLatency(NameCompGen ncg) {
+        Map<String, CostParams> allParams = ncg.getCompCost();
+        Component lastComponent = ncg.getQueryPlan().getLastComponent();
+        CostParams lastParams = allParams.get(lastComponent.getName());
+        return lastParams.getTotalAvgLatency(); // it's computed as query plan is built on
     }
 
 }
