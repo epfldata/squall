@@ -121,6 +121,7 @@ public class CostEstimator {
         setOutputParams(opComp);
         
         _parAssigner.setParallelism(opComp, _compCost);
+        _parAssigner.setBatchSize(opComp, _compCost);
     }    
     
     //***********HELPER methods***********    

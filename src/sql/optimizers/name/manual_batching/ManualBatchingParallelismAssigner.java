@@ -26,9 +26,9 @@ public class ManualBatchingParallelismAssigner extends CostParallelismAssigner {
     @Override
     protected void setBatchSize(DataSourceComponent source, Map<String, CostParams> compCost) {
         CostParams params = compCost.get(source.getName());
-        int batchSize = SOURCE_BATCH_SIZE;
+        int batchSize = (int) (SOURCE_BATCH_SIZE * params.getSelectivity());
         params.setBatchSize(batchSize);
-        double latency = batchSize * Constants.getReadTime();
+        double latency = batchSize * ClusterConstants.getReadTime();
         params.setLatency(latency); // this is only due to useful work
         params.setTotalAvgLatency(latency);
     }
@@ -43,19 +43,21 @@ public class ManualBatchingParallelismAssigner extends CostParallelismAssigner {
         //TODO: we should also check for bottlenecks
         double minLatency = MAX_LATENCY_MILLIS;
         int parallelism = -1;
-        for(int i = 1; i < MAX_COMP_PAR; i++){
+        //we start from the sum of parent parallelism (we know it won't be less anyway)
+        int minParallelism = leftParentParams.getParallelism() + rightParentParams.getParallelism();
+        for(int i = minParallelism; i < MAX_COMP_PAR; i++){
             double latency = estimateJoinLatency(i, leftParentParams, rightParentParams);
             if(latency < minLatency){
                 minLatency = latency;
                 parallelism = i;
             }
         }
-        updateLatencies(parallelism, params, leftParentParams, rightParentParams);
+        updateJoinLatencies(parallelism, params, leftParentParams, rightParentParams);
         return parallelism;
     }
     
     //at the moment of invoking this, parallelism is not yet put in costParams of the component
-    private void updateLatencies(int parallelism, CostParams params, CostParams leftParentParams, CostParams rightParentParams) {
+    private void updateJoinLatencies(int parallelism, CostParams params, CostParams leftParentParams, CostParams rightParentParams) {
         //left parent
         double leftSndTime = estimateSndTimeLeftParent(parallelism, leftParentParams);
         leftParentParams.setLatency(leftParentParams.getLatency() + leftSndTime);
@@ -119,9 +121,31 @@ public class ManualBatchingParallelismAssigner extends CostParallelismAssigner {
     
     //OPERATORS
     @Override
-    protected void setBatchSize(OperatorComponent operator, Map<String, CostParams> compCost) {
-        //this should be only at the last level, so we don't set this one
+    public void setParallelism(OperatorComponent opComp, Map<String, CostParams> compCost) {    
+        super.setParallelism(opComp, compCost);
+        
+        CostParams params = compCost.get(opComp.getName());
+        int parallelism = params.getParallelism();
+        CostParams parentParams = compCost.get(opComp.getParents()[0].getName());
+        updateOpLatencies(parallelism, params, parentParams);
     }
+    
+    private void updateOpLatencies(int parallelism, CostParams params, CostParams parentParams) {
+        //parent
+        double parentSndTime = estimateSndTimeLeftParent(parallelism, parentParams);
+        parentParams.setLatency(parentParams.getLatency() + parentSndTime);
+        double parentTotalAvgLatency = parentParams.getTotalAvgLatency() + parentSndTime;
+        parentParams.setTotalAvgLatency(parentTotalAvgLatency);
+        
+        //this component sets latency only due to rcv and uw
+        double rcvTime = estimateOpRcvTime(parallelism, parentParams);
+        double uwTime = estimateOpUsefullLatency(parallelism, parentParams);
+        params.setLatency(rcvTime + uwTime);
+        
+        //update total latency for this component
+        double totalAvgLatency = parentTotalAvgLatency + rcvTime + uwTime;
+        params.setTotalAvgLatency(totalAvgLatency);
+    }    
     
     
     //HELPER methods
@@ -141,14 +165,14 @@ public class ManualBatchingParallelismAssigner extends CostParallelismAssigner {
         int leftBatchSize = leftParentParams.getBatchSize();
         int leftBatchIn = leftBatchSize / parallelism;
         
-        return (((double)parallelism + 1) / 2) * Constants.getSerTime(leftBatchIn);
+        return (((double)parallelism + 1) / 2) * ClusterConstants.getSerTime(leftBatchIn);
     }
 
     private double estimateSndTimeRightParent(int parallelism, CostParams rightParentParams) {
         int rightBatchSize = rightParentParams.getBatchSize();
         int rightBatchIn = rightBatchSize / parallelism;
         
-        return (((double)parallelism + 1) / 2) * Constants.getSerTime(rightBatchIn);
+        return (((double)parallelism + 1) / 2) * ClusterConstants.getSerTime(rightBatchIn);
     }    
     
     private double estimateJoinRcvTime(int parallelism, CostParams leftParentParams, CostParams rightParentParams) {
@@ -159,8 +183,8 @@ public class ManualBatchingParallelismAssigner extends CostParallelismAssigner {
         int leftParallelism = leftParentParams.getParallelism();
         int rightParallelism = rightParentParams.getParallelism();
         
-        return leftParallelism * Constants.getDeserTime(leftBatchIn) + 
-                rightParallelism * Constants.getDeserTime(rightBatchIn);
+        return leftParallelism * ClusterConstants.getDeserTime(leftBatchIn) + 
+                rightParallelism * ClusterConstants.getDeserTime(rightBatchIn);
         
     }
     
@@ -173,6 +197,23 @@ public class ManualBatchingParallelismAssigner extends CostParallelismAssigner {
         int rightParallelism = rightParentParams.getParallelism();
         
         double iqs = leftParallelism * leftBatchIn + rightParallelism * rightBatchIn;
-        return  Constants.getJoinTime() * iqs;
+        return  ClusterConstants.getJoinTime() * iqs;
+    }
+    
+    private double estimateOpRcvTime(int parallelism, CostParams parentParams) {
+        int parentBatchSize = parentParams.getBatchSize();
+        int parentBatchIn = parentBatchSize / parallelism;
+        int parentParallelism = parentParams.getParallelism();
+        
+        return parentParallelism * ClusterConstants.getDeserTime(parentBatchIn);
+    }
+    
+    private double estimateOpUsefullLatency(int parallelism, CostParams parentParams) {
+        int parentBatchSize = parentParams.getBatchSize();
+        int parentBatchIn = parentBatchSize / parallelism;
+        int parentParallelism = parentParams.getParallelism();
+        
+        double iqs = parentParallelism * parentBatchIn;
+        return  ClusterConstants.getOpTime() * iqs;
     }    
 }

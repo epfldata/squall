@@ -93,6 +93,7 @@ public class ManualBatchingOptimizer implements Optimizer{
         }
         
         ParserUtil.parallelismToMap(optimal, _map);
+        ParserUtil.batchesToMap(optimal, _map);
         
         LOG.info("Predicted latency is " + getTotalLatency(optimal));
         return optimal.getQueryPlan();
