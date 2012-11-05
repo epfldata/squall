@@ -7,6 +7,7 @@ CONF_FILES=( `ls ${INPUT_DIR}/` )
 COUNT=${#CONF_FILES[@]}
 
 mkdir -p $RESULT_DIR
+./recompile.sh
 
 declare -i i
 i=1

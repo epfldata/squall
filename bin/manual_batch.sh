@@ -38,14 +38,14 @@ mkdir -p $BACKUP_DIR
 cp -r $SQUALL_SRC_DIR $BACKUP_DIR
 
 #compiling
-cd $CODE_DIR
-./copier.sh
-cd $CURR_DIR
-./recompile.sh
+####cd $CODE_DIR
+####./copier.sh
+####cd $CURR_DIR
+####./recompile.sh
 
 #returning original code
-rm -rf $SQUALL_SRC_DIR
-cp -r $BACKUP_DIR/$SQUALL_SRC $SQUALL_SRC_DIR
+####rm -rf $SQUALL_SRC_DIR
+####cp -r $BACKUP_DIR/$SQUALL_SRC $SQUALL_SRC_DIR
 
 #running new code
 echo "Running Squall with config $CONFIG_PATH topology ..."
