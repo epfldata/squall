@@ -49,7 +49,7 @@ cp -r $BACKUP_DIR/$SQUALL_SRC $SQUALL_SRC_DIR
 
 #running new code
 echo "Running Squall with config $CONFIG_PATH topology ..."
-./squall_plan_runner_cluster.sh $CONFIG_PATH
+./squall_cluster.sh $CONFIG_PATH > $OUTPUT_DIR/${CONFIG_FILE}.log 2>&1
 
 #grasping statistics
 mkdir -p $OUTPUT_DIR

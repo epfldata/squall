@@ -27,6 +27,9 @@ public class ManualBatchingParallelismAssigner extends CostParallelismAssigner {
     protected void setBatchSize(DataSourceComponent source, Map<String, CostParams> compCost) {
         CostParams params = compCost.get(source.getName());
         int batchSize = (int) (SOURCE_BATCH_SIZE * params.getSelectivity());
+        if(batchSize < 1){
+            batchSize = 1; //cannot be less than 1
+        }
         params.setBatchSize(batchSize);
         double latency = batchSize * ClusterConstants.getReadTime();
         params.setLatency(latency); // this is only due to useful work
@@ -115,6 +118,9 @@ public class ManualBatchingParallelismAssigner extends CostParallelismAssigner {
         //TODO: this implies that both components finish at the same time (optimization of parallelism of sources won't work)
         double iqs = leftParallelism * leftBatchIn + rightParallelism * rightBatchIn;
         int batchSize = (int) (ratio * iqs);
+        if(batchSize < 1){
+            batchSize = 1; //cannot be less than 1
+        }
         params.setBatchSize(batchSize);
     }
     
