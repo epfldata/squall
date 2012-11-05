@@ -48,11 +48,11 @@ cp -r $SQUALL_SRC_DIR $BACKUP_DIR
 ####cp -r $BACKUP_DIR/$SQUALL_SRC $SQUALL_SRC_DIR
 
 #running new code
+mkdir -p $OUTPUT_DIR
 echo "Running Squall with config $CONFIG_PATH topology ..."
 ./squall_cluster.sh $CONFIG_PATH > $OUTPUT_DIR/${CONFIG_FILE}.log 2>&1
 
 #grasping statistics
-mkdir -p $OUTPUT_DIR
 echo "Grasping statistics for $CONFIG_PATH ..."
  ./get_topology_stats.sh > $OUTPUT_DIR/StormLike.statistics
 #TODO: This could not grasp any statistics after topology is killed
