@@ -382,11 +382,11 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
                 if(tupleSerialNum % freqCompute == 0){
                     long latency = System.currentTimeMillis() - timestamp;
                     if(latency < 0){
-                        LOG.info("Current latency is " + latency + "ms! Ignoring a tuple!");
+                        LOG.info("Exception! Current latency is " + latency + "ms! Ignoring a tuple!");
                         return;
                     }
                     if(_numberOfSamples < 0){
-                        LOG.info("Number of samples is " + _numberOfSamples + "! Ignoring a tuple!");
+                        LOG.info("Exception! Number of samples is " + _numberOfSamples + "! Ignoring a tuple!");
                         return;
                     }
                     _totalLatency += latency;

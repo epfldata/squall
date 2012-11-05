@@ -59,7 +59,7 @@ public class SystemParameters{
     public static final long BYTES_IN_MB = 1024 * 1024;
     
     public static final String MANUAL_BATCH_HASH_DELIMITER = "~";
-    public static final String MANUAL_BATCH_TUPLE_DELIMITER = ";";    
+    public static final String MANUAL_BATCH_TUPLE_DELIMITER = "`";    
     
     public static boolean isExisting(Map conf, String key){
         String result =  (String) conf.get(key);

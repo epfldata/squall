@@ -36,6 +36,16 @@ public class ClusterConstants {
             return 0.80;
         }else if(batchSize <= 4096){
             return 0.95;
+        }else if(batchSize <= 8192){
+            return 1.15;
+        }else if(batchSize <= 16384){
+            return 1.40;
+        }else if(batchSize <= 32768){
+            return 1.65;
+        }else if(batchSize <= 65536){
+            return 1.90;
+        }else if(batchSize <= 131072){
+            return 2.20;
         }else{
             throw new RuntimeException("Missing measurements results for deserialization for bs = " + batchSize + ".");
         }
@@ -60,6 +70,16 @@ public class ClusterConstants {
             return 5.00;
         }else if(batchSize <= 4096){
             return 7.50;
+        }else if(batchSize <= 8192){
+            return 9.50;
+        }else if(batchSize <= 16384){
+            return 12.00;
+        }else if(batchSize <= 32768){
+            return 15.00;
+        }else if(batchSize <= 65536){
+            return 18.00;
+        }else if(batchSize <= 131072){
+            return 21.00;
         }else{
             throw new RuntimeException("Missing measurements results for serialization for bs = " + batchSize + ".");
         }

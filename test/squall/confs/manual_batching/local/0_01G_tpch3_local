@@ -8,7 +8,7 @@ DIP_SCHEMA_PATH ../test/squall/schemas/tpch.txt
 DIP_RESULT_ROOT ../test/results/
 
 # DIP_DB_SIZE is in GBs
-DIP_DB_SIZE 0.01
+DIP_DB_SIZE 10
 
 ########################################
 #DIP_OPTIMIZER_TYPE INDEX_SIMPLE
@@ -31,7 +31,7 @@ DIP_DB_SIZE 0.01
 #DIP_TOTAL_SRC_PAR 2
 
 DIP_OPTIMIZER_TYPE NAME_MANUAL_BATCHING
-DIP_TOTAL_SRC_PAR 8
+DIP_TOTAL_SRC_PAR 5
 
 ########################################
 
@@ -49,13 +49,13 @@ DIP_KILL_AT_THE_END true
 #   possible values are THROTTLING, SEND_AND_WAIT, MANUAL_BATCH
 #   double check DIP_ACK_EVERY_TUPLE!!!!!!!!
 #   THROTTLING implies we have DIP_ACK_EVERY_TUPLE = true
-#BATCH_SEND_MODE MANUAL_BATCH
+BATCH_SEND_MODE MANUAL_BATCH
 
-BATCH_SIZE 500
+BATCH_SIZE 1024
 #   timeout between two batches
 BATCH_TIMEOUT_MILLIS 0
 
-#CUSTOM_TIMESTAMP true
+CUSTOM_TIMESTAMP true
 #   ignoring latencies in 1st second, they are 3 orders of magnitudes bigger
 INIT_IGNORED_TUPLES 0
 

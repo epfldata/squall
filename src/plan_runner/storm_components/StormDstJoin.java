@@ -77,7 +77,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
         private int _targetParallelism;
 
         private StringBuffer[] _targetBuffers;
-        private long[] _targetTimestamps;        
+        private long[] _targetTimestamps;
 
 	public StormDstJoin(StormEmitter firstEmitter,
 			StormEmitter secondEmitter,
@@ -375,7 +375,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
         
                 //ManualBatchMode
                 private void addToManualBatch(List<String> tuple, long timestamp){
-                        String tupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);
+                        String tupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);                        
                         int dstIndex = MyUtilities.chooseTargetIndex(tupleHash, _targetParallelism);
 
                         //we put in queueTuple based on tupleHash
@@ -504,11 +504,11 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                 if(tupleSerialNum % freqCompute == 0){
                     long latency = System.currentTimeMillis() - timestamp;
                     if(latency < 0){
-                        LOG.info("Current latency is " + latency + "ms! Ignoring a tuple!");
+                        LOG.info("Exception! Current latency is " + latency + "ms! Ignoring a tuple!");
                         return;
                     }
                     if(_numberOfSamples < 0){
-                        LOG.info("Number of samples is " + _numberOfSamples + "! Ignoring a tuple!");
+                        LOG.info("Exception! Number of samples is " + _numberOfSamples + "! Ignoring a tuple!");
                         return;
                     }
                     _totalLatency += latency;

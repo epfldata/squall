@@ -6,13 +6,13 @@ import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
 import plan_runner.components.EquiJoinComponent;
 import plan_runner.components.OperatorComponent;
+import plan_runner.utilities.SystemParameters;
 import sql.schema.Schema;
 import sql.util.TableAliasName;
 
 
 public class ManualBatchingParallelismAssigner extends CostParallelismAssigner {
 
-    private static int SOURCE_BATCH_SIZE = 1024;
     private static double MAX_LATENCY_MILLIS = 50000;
     private static int MAX_COMP_PAR = 220;
     
@@ -26,7 +26,7 @@ public class ManualBatchingParallelismAssigner extends CostParallelismAssigner {
     @Override
     protected void setBatchSize(DataSourceComponent source, Map<String, CostParams> compCost) {
         CostParams params = compCost.get(source.getName());
-        int batchSize = (int) (SOURCE_BATCH_SIZE * params.getSelectivity());
+        int batchSize = (int) (SystemParameters.getInt(_map, "BATCH_SIZE") * params.getSelectivity());
         if(batchSize < 1){
             batchSize = 1; //cannot be less than 1
         }
