@@ -114,8 +114,13 @@ public class CostParallelismAssigner {
         }
                 
         String sourceName = source.getName();        
-        int parallelism = _sourcePars.get(sourceName);
+        int parallelism = parallelismFormula(source);
         compCost.get(sourceName).setParallelism(parallelism);
+    }
+    
+    protected int parallelismFormula(DataSourceComponent source){
+        String sourceName = source.getName();
+        return _sourcePars.get(sourceName);
     }
     
     protected void setBatchSize(DataSourceComponent source, Map<String, CostParams> compCost) {
@@ -164,7 +169,7 @@ public class CostParallelismAssigner {
         int rightParallelism = rightParentParams.getParallelism();
 
         //compute
-        int parallelism = parallelismFormula(params, leftParentParams, rightParentParams);
+        int parallelism = parallelismFormula(currentCompName, params, leftParentParams, rightParentParams);
 
         //lower bound
         int minParallelism = estimateMinParallelism(leftParentParams, rightParentParams);
@@ -201,7 +206,7 @@ public class CostParallelismAssigner {
         //nothing to do
     }    
 
-    protected int parallelismFormula(CostParams params, CostParams leftParentParams, CostParams rightParentParams) {
+    protected int parallelismFormula(String compName, CostParams params, CostParams leftParentParams, CostParams rightParentParams) {
         //TODO: this formula does not take into account when joinComponent send tuples further down
         double dblParallelism = leftParentParams.getSelectivity() * leftParentParams.getParallelism() +
                             rightParentParams.getSelectivity() * rightParentParams.getParallelism() +

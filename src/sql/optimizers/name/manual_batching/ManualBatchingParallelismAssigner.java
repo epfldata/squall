@@ -8,6 +8,7 @@ import plan_runner.components.EquiJoinComponent;
 import plan_runner.components.OperatorComponent;
 import plan_runner.utilities.SystemParameters;
 import sql.schema.Schema;
+import sql.util.ImproperParallelismException;
 import sql.util.TableAliasName;
 
 
@@ -22,6 +23,25 @@ public class ManualBatchingParallelismAssigner extends CostParallelismAssigner {
     
     
     //SOURCES
+    @Override
+    protected int parallelismFormula(DataSourceComponent source){
+        int parallelism = -1;
+        String compName = source.getName();
+        if(SystemParameters.isExisting(_map, "DIP_BATCH_PAR") &&
+                SystemParameters.getBoolean(_map, "DIP_BATCH_PAR")){
+            if(SystemParameters.isExisting(_map, compName+ "_PAR")){
+                //a user provides parallelism explicitly
+                parallelism = SystemParameters.getInt(_map, compName + "_PAR");
+            }
+        }
+        if(parallelism == -1){
+            //if there is no provided parallelism of a source, resort to superclass way of assigning parallelism
+            return super.parallelismFormula(source);
+        }else{
+            return parallelism;
+        }
+    }
+    
     //this method also set latency for useful work
     @Override
     protected void setBatchSize(DataSourceComponent source, Map<String, CostParams> compCost) {
@@ -41,18 +61,30 @@ public class ManualBatchingParallelismAssigner extends CostParallelismAssigner {
     //this method also set latency for rcv + useful work for the join component
     //TODO: should check if the parallelism is bottleneck
     @Override
-    protected int parallelismFormula(CostParams params, CostParams leftParentParams, CostParams rightParentParams) {
+    protected int parallelismFormula(String compName, CostParams params, CostParams leftParentParams, CostParams rightParentParams) {
         //TODO: this formula does not take into account when joinComponent send tuples further down
         //TODO: we should also check for bottlenecks
         double minLatency = MAX_LATENCY_MILLIS;
         int parallelism = -1;
-        //we start from the sum of parent parallelism (we know it won't be less anyway)
-        int minParallelism = leftParentParams.getParallelism() + rightParentParams.getParallelism();
-        for(int i = minParallelism; i < MAX_COMP_PAR; i++){
-            double latency = estimateJoinLatency(i, leftParentParams, rightParentParams);
-            if(latency < minLatency){
-                minLatency = latency;
-                parallelism = i;
+        
+        if(SystemParameters.isExisting(_map, "DIP_BATCH_PAR") &&
+                SystemParameters.getBoolean(_map, "DIP_BATCH_PAR")){
+            if(SystemParameters.isExisting(_map, compName+ "_PAR")){
+                parallelism = SystemParameters.getInt(_map, compName + "_PAR");
+            }else{
+                //I don't want this query plan
+                throw new ImproperParallelismException("A user did not specify parallelism for " + compName +
+                        ". Thus, it is assumed he does not want that query plan!");
+            }
+        }else{
+            //we start from the sum of parent parallelism (we know it won't be less anyway)
+            int minParallelism = leftParentParams.getParallelism() + rightParentParams.getParallelism();
+            for(int i = minParallelism; i < MAX_COMP_PAR; i++){
+                double latency = estimateJoinLatency(i, leftParentParams, rightParentParams);
+                if(latency < minLatency){
+                    minLatency = latency;
+                    parallelism = i;
+                }
             }
         }
         updateJoinLatencies(parallelism, params, leftParentParams, rightParentParams);
