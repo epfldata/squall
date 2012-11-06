@@ -46,7 +46,15 @@ public class ManualBatchingParallelismAssigner extends CostParallelismAssigner {
     @Override
     protected void setBatchSize(DataSourceComponent source, Map<String, CostParams> compCost) {
         CostParams params = compCost.get(source.getName());
-        int batchSize = (int) (SystemParameters.getInt(_map, "BATCH_SIZE") * params.getSelectivity());
+        
+        //batch size cannot be bigger than relation size (NATION, REGION, ... tables)
+        long maxBatchSize = SystemParameters.getInt(_map, "BATCH_SIZE");
+        long relSize = _schema.getTableSize(_tan.getSchemaName(source.getName())); 
+        if(relSize < maxBatchSize){
+            maxBatchSize = relSize;
+        }
+        
+        int batchSize = (int) (maxBatchSize * params.getSelectivity());
         if(batchSize < 1){
             batchSize = 1; //cannot be less than 1
         }

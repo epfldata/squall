@@ -5,7 +5,8 @@ package sql.optimizers.name.manual_batching;
 public class ClusterConstants {
 
     public static double getJoinTime() {
-        return 0.0037;
+        //return 0.0037;
+        return 0.0097;
     }
 
     public static double getReadTime() {
