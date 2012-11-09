@@ -100,7 +100,7 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
         String fullSchemaColumnName = _tan.getFullSchemaColumnName(column);
         Object minValue = _schema.getRange(fullSchemaColumnName).getMin();
         Object maxValue = _schema.getRange(fullSchemaColumnName).getMax();
-	// HACK: PROPER HACK FOR TPC-H6 AND TPCH-H19
+	// YANNIS HACK: PROPER HACK FOR TPC-H6 AND TPCH-H19
 	if (tc instanceof DoubleConversion) {
 		if (minValue instanceof Long)
 			minValue = (Double)(((Long)minValue).doubleValue());
@@ -115,7 +115,7 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
         double fullRange = tc.getDistance(maxValue, minValue);
         //on one of the sides we have to have a constant
         JSQLTypeConverter rightConverter = new JSQLTypeConverter();
-	// HACK FOR TPCH-4 AND TPCH-12
+	// YANNIS HACK FOR TPCH-4 AND TPCH-12
 	Expression leftExp = mt.getLeftExpression();
 	Expression rightExp = mt.getRightExpression();
 	if (leftExp instanceof Column && rightExp instanceof Column) {

@@ -1,0 +1,1489 @@
+commit 45c17a43644a55f22c7e67a6b3e16ff69e3f56fe
+Author: avitorovic <savitor85@gmail.com>
+Date:   Tue Nov 6 22:01:16 2012 +0100
+
+    Batch size cannot be bigger than the relation size. Join execution constant is fixed, leading to both 1) better prediction, and 2) better query plans.
+
+commit 16204bcfbe1b13e388e4dbf3990fa4058d4d5d3c
+Merge: 099e64d c0a1142
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Nov 6 01:41:19 2012 -0800
+
+    Merge pull request #11 from yannisklonatos/master
+    
+    latency_estimator.sh script updated
+
+commit 099e64ddac8a1be6954e1d72d54c15a2f3667222
+Author: avitorovic <savitor85@gmail.com>
+Date:   Tue Nov 6 08:49:39 2012 +0100
+
+    A user can now provide parallelisms manually for ManualBatchingOptimizer, while batch sizes are still computed from the parallelisms.
+
+commit c0a11428cb6ea04d51211bb794c260d4f3c33058
+Author: Yannis Klonatos <yannis.klonatos@epfl.ch>
+Date:   Mon Nov 5 19:49:46 2012 +0100
+
+    Yannis: Added throughput calculation and latency prediction to script
+
+commit 780b4c52e6db4f3f983f288294bc5934e4328c21
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Nov 5 18:13:36 2012 +0100
+
+    A bug fixed in the code.
+
+commit 398fab3fa936f1f32487e0e8e29a73a203e9a3fc
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Nov 5 13:03:23 2012 +0100
+
+    A minor bug fixed in a script.
+
+commit 3754058e387d69794b18ed2a580c5ba0e1bab06a
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Nov 5 13:00:54 2012 +0100
+
+    By default, manual batching invokes Squall, not PlanRunner.
+
+commit 17453d6c721642d1cb39217786ef82427c3fe07e
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Nov 5 12:55:28 2012 +0100
+
+    Small improvements to scripts. Ensured that batch sizes are not less than 1.
+
+commit a8dad7e2dde86c6a172d3a49e6660730ada57b6c
+Author: avitorovic <savitor85@gmail.com>
+Date:   Mon Nov 5 08:27:38 2012 +0100
+
+    Added manual batching local confs.
+
+commit 706784a1a059804ebb9c0fb527b94c6e422fabf8
+Author: avitorovic <savitor85@gmail.com>
+Date:   Sun Nov 4 23:05:04 2012 +0100
+
+    All the queries worked for ManualBatching, except TPCH7 and TPCH8 - this is due to upper bound on parallelism.
+
+commit 2cd1f65756bbc56d411b4eeefb800a77b0a9cfa7
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Sun Nov 4 17:51:18 2012 +0100
+
+    For hyracks it yields an optimal query plan with 15% error in latency prediction.
+
+commit 82d9e060f7b25eabf01fede572d2ea1f230067fb
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Sun Nov 4 17:39:26 2012 +0100
+
+    Manual batching optimizer works. For now tested on Hyracks.
+
+commit c39f0cacc654f139a5d7089bcc08a88e0d628d5d
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Sat Nov 3 23:26:49 2012 +0100
+
+    Continued with Manual Batching optimizer.
+
+commit 897a580da5342c886934335562e5db1ec2a9430f
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Nov 2 16:47:45 2012 +0100
+
+    Timestamp is now from the first tuple added to batch on a source node till the last tuple read from batch on the last node. Started ManualBatch optimizer.
+
+commit 74f5eab727dc9be1c4943abb2a090f2ce173315f
+Merge: 83cdea3 ecec10c
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Nov 1 03:31:50 2012 -0700
+
+    Merge pull request #10 from yannisklonatos/master
+    
+    Yannis: Merge latest changes in optimizer and more queries and some cleanup in scripts
+
+commit ecec10cf18f13f0d0632c62c5935a581b42f0882
+Merge: 445d121 83cdea3
+Author: Yannis Klonatos <yannis.klonatos@epfl.ch>
+Date:   Thu Nov 1 11:15:14 2012 +0100
+
+    Merge branch 'master' of https://github.com/avitorovic/squall
+
+commit 83cdea305e8590a84884a7d49e95fc2ee69f9b76
+Author: avitorovic <savitor85@gmail.com>
+Date:   Wed Oct 31 23:29:11 2012 +0100
+
+    Slightly updated scripts. Experiments moved to a private repository.
+
+commit fe70f541590bd4516e471d22d7f15954295bc21d
+Author: avitorovic <savitor85@gmail.com>
+Date:   Wed Oct 31 20:18:46 2012 +0100
+
+    Fixed some bugs in scripts.
+
+commit 445d121377fa744ceaad9585c083764a48f973b1
+Author: Yannis Klonatos <yannis.klonatos@epfl.ch>
+Date:   Wed Oct 31 19:46:16 2012 +0100
+
+    Yannis: made queries 4 and 12 work. Added more statistics and hacks
+
+commit 712a6c1f798bd478558301ef289b8e176837192c
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Oct 31 18:33:37 2012 +0100
+
+    Added scripts for extracting constants from the system. Added experimental results done so far.
+
+commit b46a52ab25a1ef791b2ae341703771c5d5e0ee65
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Oct 31 09:09:41 2012 +0100
+
+    Because of TPCH4 Timestamp mechanism and Manual batch mechanism added to StormOperator.
+
+commit a5e5154329d1cb6d38d80d4b518b2667b97debc0
+Merge: c20ecfd 6769593
+Author: Yannis Klonatos <yannis.klonatos@epfl.ch>
+Date:   Wed Oct 31 08:26:10 2012 +0100
+
+    Merge branch 'master' of https://github.com/avitorovic/squall
+
+commit c20ecfd5ed2e0a1f896ba2211a7fb0c16c79c37e
+Author: Yannis Klonatos <yannis.klonatos@epfl.ch>
+Date:   Wed Oct 31 08:25:31 2012 +0100
+
+    Yannis: TPC-H6 works for NCL and NMCL with the aggregation-spout hack,
+    added some statistics
+
+commit 6769593a192a52a28b8aa0224497c37b577c4655
+Author: avitorovic <savitor85@gmail.com>
+Date:   Tue Oct 30 23:29:08 2012 +0100
+
+    TPCH4 made to work with automatic cost based optimizer.
+
+commit 4527e273903909c6e891d133ed524c38f80be00e
+Merge: 47ebaf5 30c812a
+Author: Yannis Klonatos <yannis.klonatos@epfl.ch>
+Date:   Tue Oct 30 19:51:11 2012 +0100
+
+    Merge branch 'master' of https://github.com/avitorovic/squall
+    
+    Conflicts:
+    	src/plan_runner/utilities/MyUtilities.java
+    	test/squall/sql_queries/tpch19.sql
+
+commit 47ebaf588ea718a49c53a75b034e03ccb02179e2
+Author: Yannis Klonatos <yannisklonatos@icdhcp-1-194.epfl.ch>
+Date:   Tue Oct 30 19:47:41 2012 +0100
+
+    Yannis: changes in scripts, fixed bug with type conversion, added TPCH-6 and
+    TPCH-19, added capability to generator for pushing aggregations to spouts.
+
+commit f4f4680d6c887dc2ce6aa5e65b7a28cc423cb23e
+Author: Yannis Klonatos <yannisklonatos@icdhcp-1-194.epfl.ch>
+Date:   Tue Oct 30 19:09:27 2012 +0100
+
+    Yannis: some changes
+
+commit 30c812a31bbdf6eaa71174dcc9e0565c5e21b965
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Oct 30 18:56:00 2012 +0100
+
+    Q19 in its initial form added, it works with Cost optimizer.
+
+commit 10902945c0b81733e2b84574ae50cb694e6d583d
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Oct 30 17:31:50 2012 +0100
+
+    A major change. Added support for multi-level query plans with measuring time in any of the following modes: None, Storm throttling, Send and Wait and Manual Batch.
+
+commit 47aef0519a184fe98fb7038a63be2bf16ec1a456
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Oct 26 17:30:30 2012 +0200
+
+    Added custom timestamp mechanism for measuring latencies.
+
+commit 204340da26e633908744e43a0b847a3bf557b360
+Author: avitorovic <savitor85@gmail.com>
+Date:   Fri Oct 26 07:25:03 2012 +0200
+
+    Throughput is measured in total per spout, not in average.
+
+commit 18115ef4f2fd3b4e02c93e015bbc930b88515101
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Oct 24 16:01:10 2012 +0200
+
+    Added lower bound on parallelism based on data size.
+
+commit 54aa3e1f4511c3870309e60f750886e287a830ad
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Oct 24 13:12:25 2012 +0200
+
+    DIP_THROTTLING is now in config file. Num of ackers is the half of total number of workers.
+
+commit 65558d2b4d5ffe68a90b07b523ef5634b81e4e15
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Oct 24 09:27:59 2012 +0200
+
+    Some scripts renamed.
+
+commit 95a49bb3e8872ed286995cf30f9c51e120069234
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Oct 23 21:12:11 2012 +0200
+
+    Zookeeper now has 2 servers.
+
+commit 03578a028fb06e6a823ec6d26d292f5ecd1085ac
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Oct 23 18:43:05 2012 +0200
+
+    Config files changed due to moving all Storm input/output to separate disks.
+
+commit 0fedc3e332cdb0d1e38a3453a6c81b388b7a8209
+Author: avitorovic <savitor85@gmail.com>
+Date:   Sun Oct 21 20:08:44 2012 +0200
+
+    Installation procedure extended with automatic copying of storm.yaml on the local machine.
+
+commit fb6b2350392aa8506d0f8fc2d623a9060a3fb781
+Author: avitorovic <savitor85@gmail.com>
+Date:   Sat Oct 6 23:07:35 2012 +0200
+
+    Commented out MAX_SPOUT_PENDING(now is used null, the default value). Added some more scripts.
+
+commit 6386e1aeadebb66514eeb07e509c220408bf2ae1
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Oct 1 17:26:07 2012 +0200
+
+    Added support for noticing failed tuples and errors in a topology. Added support for measuring avgLatency and Throughput.
+
+commit 4bc01efdb69324bde89919aa33d8a8ac79ef32d8
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Sep 27 15:19:53 2012 +0200
+
+    A bug regarding unnecessary going to Storage fixed.
+
+commit 941e891c7596164277c6c3fc8a1ebf0fa86450a2
+Author: avitorovic <savitor85@gmail.com>
+Date:   Wed Sep 26 21:02:36 2012 +0200
+
+    Config files changed to work with all the 220 machines we now have.
+
+commit 44d25da7687165d8fc6948bf76984e211485efdd
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Sep 13 19:48:17 2012 +0200
+
+    bheaven compiled for Java6. debug=true in project.clj. creating directories if they don;t exist for run_for* scripts.
+
+commit 005c579b106fba5a179d1c3bab3029508000e21d
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Sep 13 19:01:32 2012 +0200
+
+    A very small refactoring of Yannis' changes.
+
+commit 459a02d23b38037e174f7160301b1bfdffe33e18
+Merge: c3a59c3 71ff5d0
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Sep 13 07:49:56 2012 -0700
+
+    Merge pull request #9 from yannisklonatos/master
+    
+    Storage: fixed bug / minor changes in interface
+
+commit 71ff5d0801a1191a820fd7b2cf3b8a37601101d4
+Merge: cb2a4fd c3a59c3
+Author: yannisklonatos <yannis.klonatos@epfl.ch>
+Date:   Thu Sep 13 16:19:23 2012 +0200
+
+    Merge https://github.com/avitorovic/squall
+    
+    Conflicts:
+    	src/plan_runner/storage/AggregationStorage.java
+    	src/plan_runner/storage/KeyValueStore.java
+    	src/plan_runner/utilities/LocalMergeResults.java
+
+commit cb2a4fdc38845b2beb0a4d4bb32021315651f54a
+Author: yannisklonatos <yannis.klonatos@epfl.ch>
+Date:   Thu Sep 13 16:03:58 2012 +0200
+
+    Yannis: fixed bug in storage + minor changes in storage initialization and functions
+
+commit c3a59c34310ccaa11422feb39e8aada717550117
+Author: avitorovic <savitor85@gmail.com>
+Date:   Wed Sep 12 21:49:39 2012 +0200
+
+    Avoiding unnecessary overheads when we know Squall operates only in memory - to reverse the changes, check TODO FIXME sections of code.
+
+commit 4d7b6a602711248f03d6c6a0284fa2c9ba1726a6
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Sep 12 17:20:36 2012 +0200
+
+    More efficient Storage.
+
+commit a04220f14e9579d7cb9d745792fd648ed2eaadae
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Sep 10 17:09:35 2012 +0200
+
+    Scripts change: When running multiple Squall configs, output is stored in a separate file.
+
+commit 58b4bdf1ade9bbe04cb6843a621ab42b936a95e6
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Sep 7 14:34:50 2012 +0200
+
+    Updated to work with Storm 0.8.1.
+
+commit 2e11dbb23538a20fc87c99fc6c524a86474167ea
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Sep 6 19:03:11 2012 +0200
+
+    Scripts changed to work with entire icdatasrv5. An unnecessary timeout (made as a workaround to a previously fixed bug) removed from Storage.
+
+commit fa6d1d5377cf2bc88dfe1adf50a45e68b3213c56
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Aug 24 14:43:19 2012 +0200
+
+    Comments clarified a bit, especially those denoted with TODO.
+
+commit 66e1badf847f65e09f3b55df2b322657866d33e0
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Aug 24 11:27:41 2012 +0200
+
+    Squall version 0.2.0 released.
+
+commit c483ef3e7862b6724ceb21d2598d6b12dae0f01e
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Aug 23 20:37:39 2012 +0200
+
+    Revisited all the bin files, in order to support grasping profile, timing and graph information from the cluster.
+
+commit f01dae54e3db9fff3dbe685ce91a844b2d18118b
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Aug 22 17:50:36 2012 +0200
+
+    Config and bin files simplified a bit.
+
+commit 499b22b2d7bebacd793545069af31a0d353f3058
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Aug 21 15:40:02 2012 +0200
+
+    storm.yaml modified.
+
+commit e6947330ab92ee899efc5f5beaaf41df7e03ba7b
+Author: avitorovic <savitor85@gmail.com>
+Date:   Sun Aug 19 22:49:05 2012 +0200
+
+    Trident update topology added.
+
+commit 6a846a038acb982c0d9394bf2be94cf3e3d28969
+Author: avitorovic <savitor85@gmail.com>
+Date:   Sun Aug 19 17:37:39 2012 +0200
+
+    Trident test topologies added.
+
+commit 9b285baccb87db26a28af0f4c0e0ac0cfcbdec7b
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Aug 16 18:56:56 2012 +0200
+
+    Updated scripts such that they reflect Storm currently running on the cluster.
+
+commit 8ce0ab1647394c2790a3fff701324453b5bad4c3
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Aug 15 10:25:13 2012 +0200
+
+    Overall aggregation over AvgAggregate operator.
+
+commit 003dec85149ba09af60ee21ee2daf96d3123f581
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Aug 14 19:45:12 2012 +0200
+
+    RST plan restored to its original form.
+
+commit 8caf2088c256e651e5e687e097eaf634524412c8
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Aug 14 19:41:57 2012 +0200
+
+    Squall based on Storm 0.8.0 released. DataSource synchronization for acking simplified.
+
+commit d8f067a500fc476ff15ef77f893533d0b215f9dd
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Aug 14 11:45:24 2012 +0200
+
+    Final version with Storm 0.7.0
+
+commit a017cb2ac64d7dabddd5153c670efbbed61a4447
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Aug 14 10:27:41 2012 +0200
+
+    Removed obsolete code.
+
+commit 4ee3f8d54a39432b08014082a813244d50aff065
+Merge: 5600053 1b9bb6c
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Aug 14 10:23:00 2012 +0200
+
+    Merge remote-tracking branch 'origin/master'
+
+commit 56000539dc8d34a5189e3355de46be7b5cf8bb54
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Aug 14 10:21:06 2012 +0200
+
+    Small type changes.
+
+commit 1b9bb6c69d0d31dd0d2c99f1fd3f5035b5e33194
+Author: avitorovic <savitor85@gmail.com>
+Date:   Tue Aug 14 07:42:22 2012 +0200
+
+    Default java version is 1.7 from now on. Executable files provided.
+
+commit ed142cc84232e74a773e90cbb6e887db740088b0
+Author: avitorovic <savitor85@gmail.com>
+Date:   Mon Aug 13 22:51:39 2012 +0200
+
+    OverallAggregation was previously specified for each query separately, now it's done on a single place.
+
+commit 91f0a080b35aa61d7c64c0bb9b4be5eb584ed10a
+Author: avitorovic <savitor85@gmail.com>
+Date:   Mon Aug 13 22:08:02 2012 +0200
+
+    Additional type simplification.
+
+commit 03043c5afe0d1f0d8c23d2aa74a45860e1df0a42
+Author: avitorovic <savitor85@gmail.com>
+Date:   Mon Aug 13 21:33:51 2012 +0200
+
+    Type system drastically simplified. Many classes touched.
+
+commit 55d827b906e822df9e838e126588c90eebe2a99e
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Aug 13 18:16:36 2012 +0200
+
+    Adding OperatorComponent is fully functionable now.
+
+commit b2f71e2a17a43b9a60c5794245e0cbec74acee6e
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Aug 13 16:50:13 2012 +0200
+
+    Tested automatic adding OperatorComponent to query plan.
+
+commit 3ffaa5d9b4503a05166fc0cda4b18e51f0e58eea
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Aug 13 12:38:22 2012 +0200
+
+    Unit tests slightly modified.
+
+commit c882ede4029616d45beea7b57e62d61c7da381e9
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Aug 13 12:18:47 2012 +0200
+
+    Result path is built from DIP_DATA_PATH, because it either exist in config file (PlanRunner), or it's syntetized (Squall).
+
+commit 4fcfa00d12a93f3cc7a9ea21160965fd6812a65b
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Aug 13 11:43:07 2012 +0200
+
+    Deleted very inefficient (naive) query plans, so that each query can be executed with at most Xmx128m.
+
+commit 8c0e5e6d1ce8d2045445e652c92f7a3d08d8db36
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Aug 13 11:05:48 2012 +0200
+
+    More cleanup. Results between different schemas clearly separated.
+
+commit d00653b1acc31b9c1dc69bc832b8122fa181bdf9
+Author: avitorovic <savitor85@gmail.com>
+Date:   Sun Aug 12 23:45:17 2012 +0200
+
+    Many small changes: 1) Unit_tests added to the repository 2) DIP_RESULT_ROOT and MEMORY_SIZE_MB settings moved from code to settings 3) Name contains no UPPERCASE letters 4) Imports organized all over the code 5) Bin files revisited for easier execution and running.
+
+commit 1bef4a610db9ea3a47b8d9e08be53495d99db40b
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Aug 10 18:37:50 2012 +0200
+
+    More verbose error messages for Schema.
+
+commit 9d0c1edb74af3239db2820e9ce122e85e2ab51b0
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Aug 9 16:02:01 2012 +0200
+
+    Migration to Schema and Statistics files(using JavaCC parser) is successfully completed.
+
+commit 9826205c9f695d5b4ba4675110f5ec2cca524a13
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Aug 9 14:43:47 2012 +0200
+
+    Config files now include path to Schema and Statistics file definition.
+
+commit 01b50291f7f8090c2365c39880b87ebcb29cc1a5
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Aug 9 12:25:20 2012 +0200
+
+    Changes in PlanRunner which simplifies connection with SchemaParser, which is soon going to be added.
+
+commit e18715c7484490aeb5c0482a7046b0b5cc007e63
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Aug 9 10:33:31 2012 +0200
+
+    Config files changes all over the place to add support for storage.
+
+commit c3401ab82283bf0eaad6c9bead6db94be3511f98
+Merge: d25b2b9 ba0ac8b
+Author: avitorovic <savitor85@gmail.com>
+Date:   Wed Aug 8 19:24:03 2012 +0200
+
+    Merge remote branch 'upstream/master'
+
+commit d25b2b9dcbff5152284774aa05853a5cce8f925e
+Merge: b264489 66cb991
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Aug 8 02:50:24 2012 -0700
+
+    Merge pull request #8 from yannisklonatos/master
+    
+    Storage Manager Update
+
+commit 66cb991bd8b06360bc2857ae252043548c08417e
+Author: yannisklonatos <yannis.klonatos@epfl.ch>
+Date:   Wed Aug 8 11:45:17 2012 +0200
+
+    Made storage initialization more user-friendly.
+
+commit 0cae1d92f69cf6db789f308956172a81ba109355
+Merge: 5978c64 b264489
+Author: yannisklonatos <yannis.klonatos@epfl.ch>
+Date:   Wed Aug 8 11:39:23 2012 +0200
+
+    Merge git://github.com/avitorovic/squall
+    
+    Conflicts:
+    	deploy/squall-2.0-standalone.jar
+    	deploy/squall-2.0.jar
+    	src/plan_runner/storage/KeyValueStore.java
+
+commit ba0ac8b5a89e69ea274c7ce9631c832f2b6f0cda
+Merge: af24f45 b264489
+Author: EPFL DATA Lab <professeurs.data@epfl.ch>
+Date:   Thu Jul 26 09:21:16 2012 -0700
+
+    Merge pull request #9 from avitorovic/master
+    
+    Cost optimizer fully implemented. Storage almost done.
+
+commit b264489c63c092661da97915eaa17cf54d0d269f
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Jul 26 17:28:37 2012 +0200
+
+    Installation procedure includes storage requirements. Timeout for collecting results increased, necessary for huge parallelisms. Removed config files for database size which is not bundled in Squall.
+
+commit 1b19f3917e41ee828fdfcc4705d19b1755e41951
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Jul 25 18:54:03 2012 +0200
+
+    Cost optimizer now has filtering at the end of each stage akin to Selinger-style optimizer. A small bug regarding minTotalPar fixed. A bug in NameRuleOptimizer fixed - the problem was related to joining components with no join condition.
+
+commit 836a431957b91642cb93f392b7e0959646d0468f
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Jul 24 17:01:10 2012 +0200
+
+    specifying optimizer from config file. For now, these are supported: rule-based bushy, rule-based lefty, annotation-based lefty (a user can specify a lefty plan w and w/o specified parallelism) and cost-based optimizer. Good news is that the cost-based optimizer generates the best plan in 6 out of 7 tried TPCH queries. When I said the best, I mean the best among several plans generated using annotation-based lefty optimizer.
+
+commit 5978c6422060b449d520bb45169385d9d4630d9f
+Merge: aee4aad 36c4366
+Author: yannisklonatos <yannis.klonatos@epfl.ch>
+Date:   Fri Jul 20 17:30:19 2012 +0200
+
+    Merge git://github.com/avitorovic/squall -- Fixed 2 bugs
+    
+    Conflicts:
+    	deploy/squall-2.0-standalone.jar
+    	deploy/squall-2.0.jar
+
+commit c0392f6a23467280baf2f6241fd0b05dd2bf55a5
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Jul 4 10:39:21 2012 +0200
+
+    Everything in place for specyfing different optimizers from config file.
+
+commit c28866450c22a7b3b450783493fe8fffc01b2350
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Jul 3 16:37:12 2012 +0200
+
+    NameGenerator successfully recognizes the columns which are projected away - right parent hashes. They are called synonims.
+
+commit bbb3744610dd8bc91d4a88a1be3238f0ca3db612
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Jul 2 23:15:19 2012 +0200
+
+    Small improvements for SelectivityEstimation (for AndExpression no overprovisioning). Pushing Or implemented and tested for the only query using it - TPCH7.
+
+commit d808442f036b84065b6775f1c0b3adda1d56bf74
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Jul 2 15:00:01 2012 +0200
+
+    TPCH 5, 7, 8, 9, 10 work for any order with Name recognition.
+
+commit aee4aad196e81ccc0c85e5c97bc9419c0bf15112
+Merge: 169fb9b 9803cb6
+Author: yannisklonatos <yannis.klonatos@epfl.ch>
+Date:   Mon Jul 2 13:21:48 2012 +0200
+
+    Merge git://github.com/avitorovic/squall
+    
+    Conflicts:
+    	deploy/squall-2.0-standalone.jar
+    	deploy/squall-2.0.jar
+
+commit 36c4366f088f9a1087430d6ae34c3a36aff4790b
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Sun Jul 1 17:10:07 2012 +0200
+
+    ColumnReference evalString much more efficient - conversion toString and fromString avoided when evalStr is invoked. This way,  a Date column will be sent around as String and it will not be converted to a Date unless some operations require Date type.
+
+commit 07d4f66df2a818b0772e30668cf8810b0befeba8
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Sun Jul 1 12:01:08 2012 +0200
+
+    src code of sql part of squall and squall_plan_runner merged to a single src dir. This dir contains sql and plan_runner packages as the top ones. Automatically generated Hyracks plan additionally optimized.
+
+commit 169fb9b65f37b971ccd9457fd4c20072e85a29f2
+Author: yannisklonatos <yannis.klonatos@epfl.ch>
+Date:   Fri Jun 29 19:47:52 2012 +0200
+
+    Yannis: local commit before merging with Aleksandar
+
+commit 9803cb6c308c0397304eb8f46057c73b3e0abc98
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Jun 29 13:29:54 2012 +0200
+
+    Fixed a bug when topology is killed before all the results are merged and compared with the expected one. Symptoms: ConcurrentModificationException or NullPointerException. The solution: timeout in SystemParameters in LocalMode is increased.
+
+commit 400b0aa4ff9dda9c0dd92b938316afe6ea3567a7
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Jun 29 13:07:47 2012 +0200
+
+    ColumnReference now can optionally contain columnName. This drastically increases understandability of printed generated query plans.
+
+commit 3e58d56705857a3cf7ac416bd7b4844e05e23acf
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Jun 28 18:16:48 2012 +0200
+
+    Hyracks automatically generated.
+
+commit fe5c069c4ee159c58b146eb8b0e27d361a111c93
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Jun 28 17:37:13 2012 +0200
+
+    Setting up foundations for specifying order of joins in query plans, and leaving everything else for optimizer.
+
+commit e1c435bd1ab3afb5936e59e0e49d2660b5eeb5d4
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Jun 27 17:27:18 2012 +0200
+
+    A minor fix in NameComponentGenerator.java
+
+commit 72245e82a9b8d74637c811f55d2ab41f8ab8389a
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Jun 27 16:48:24 2012 +0200
+
+    NameComponentGenerator simplified, especially FinalAggregation.
+
+commit c2e645011fce68759f2171061193f5173b0ef399
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Jun 27 10:30:39 2012 +0200
+
+    Tests for ProjectSchemaCreator successfully passed.
+
+commit 50a4988f96fd846c2bb4421cdd3ac53242545b03
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Jun 26 20:22:28 2012 +0200
+
+    More powerfull schema transformations.
+
+commit 146f4474187d571822582567dc47446e2caa4a95
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Jun 25 17:53:50 2012 +0200
+
+    ParserMain in SQL part rewritten. Stylistic changes in other classes.
+
+commit 8e41219d0b0192716376c118f3bef9dd4876b5ce
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Sun Jun 24 01:11:56 2012 +0200
+
+    Squall installation significantly simplified. 1)maven is not required anymore, 2)installation implies just running a script, 3)easier manipulating with different storm versions, 4)project.clj and compiled jars moved to a dedicated folder(deploy) in order to avoid some conflicts
+
+commit 28e5ecf2cc9a0882664f2965298a62a10b7385ae
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Jun 22 08:46:42 2012 +0200
+
+    A small fix in config files for Cluster Mode.
+
+commit d86dff7f148e7f23f86bf437cdde01dfe597385f
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Jun 19 15:27:54 2012 +0200
+
+    A small fix concerning isAckEveryTuple method fixed.
+
+commit 08175f2d73df3f20e4f0828897a8d6e87172365d
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Jun 19 12:24:17 2012 +0200
+
+    Changes in config file for SquallPlanRunner: in Local Mode no DIP_NUM_WORKERS anymore, in Cluster Mode both DIP_NUM_WORKERS and DIP_NUM_ACKERS are not mandatory anumore - the defaults are in storm.yaml.
+
+commit 6a7be4abe4cce3f106f254a2996855096430834e
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Jun 19 10:57:28 2012 +0200
+
+    StormComponent are instantiated more easily. No hash methods in StormEmitter anymore. Still setting hashes for this component in Component interface.
+
+commit 6da452679b4cf9b52c9aa0fbd044a51b2401e1b6
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Jun 18 20:29:20 2012 +0200
+
+    Hashing mechanism slightly simplified.
+
+commit 9f7dfb737030accac3cdc50d56c48015c168710e
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Jun 18 17:32:59 2012 +0200
+
+    Added visitor for Squall operators.
+
+commit 44a72f841b4160019eb3ce9f1d91b3d39bc5e66b
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Jun 18 17:22:06 2012 +0200
+
+    Storage easily configurable to work both in local and cluster mode.
+
+commit 391c155b6c3567859fad3afad54aa9f42092de97
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Sat Jun 16 23:23:57 2012 +0200
+
+    Several small fixes in scripts. create_ramdisk.sh does not use hardcoded paths anymore. Regressive scripts run correct config files and regressive testing does not exit when a single config is not executed properly.
+
+commit 0be83bb52972019ff5d9d709096c68b3f46f8aaf
+Merge: 75a8093 1b9f205
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Sat Jun 16 12:37:45 2012 -0700
+
+    Merge pull request #7 from yannisklonatos/master
+    
+    Secondary storage refactored.
+
+commit 1b9f205dfc1fa67490bf00a29204ec5da7cc2222
+Author: yannisklonatos <yannis.klonatos@epfl.ch>
+Date:   Sat Jun 16 09:51:44 2012 +0200
+
+    Some more refactoring. Still needs cleanup
+
+commit 19a443527d777a912adf7ed97f6f40ede31e1745
+Merge: 4ecdd69 75a8093
+Author: yannisklonatos <yannis.klonatos@epfl.ch>
+Date:   Sat Jun 16 09:51:06 2012 +0200
+
+    Merge git://github.com/avitorovic/squall
+
+commit 75a80937ffcd6ce3dcb2948e5cd6d669ff932d60
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Jun 15 17:13:10 2012 +0200
+
+    Projections for Cost-optimizer finished.
+
+commit 4ecdd69f55c7cdb94517b71e1b9654513c509338
+Merge: 303a1ba b05da8f
+Author: yannisklonatos <yannis.klonatos@epfl.ch>
+Date:   Fri Jun 15 12:40:49 2012 +0200
+
+    Merge git://github.com/avitorovic/squall
+
+commit 303a1bab66f65aa5c895c952d9ce6c42cd3919af
+Author: yannisklonatos <yannis.klonatos@epfl.ch>
+Date:   Fri Jun 15 12:39:56 2012 +0200
+
+    Small refactoring/cleanup and one class renaming
+
+commit b05da8f9ef3df275323b908a04f1d1102f47b8dc
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Jun 14 18:12:55 2012 +0200
+
+    A small update in config files.
+
+commit f21dad0bc9b0ea0c524473b160128a5f94c6e046
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Jun 14 13:14:37 2012 +0200
+
+    Cardinality estimation supported for cyclic queries(which is for example TPCH5). Developed a simple, but very powerful way to predict max join parallelism.
+
+commit f01183274909e07519cf4634ece5b16008450bb7
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Jun 13 23:36:33 2012 +0200
+
+    addFinalAgg and isHashedBy for NameTranslator added.
+
+commit 33be978d0830faee1e20056c7c9a38c80c7b6247
+Merge: 175f3c3 d6fcaf1
+Author: yannisklonatos <yannis.klonatos@epfl.ch>
+Date:   Wed Jun 13 18:28:41 2012 +0200
+
+    Merge git://github.com/avitorovic/squall
+    
+    Conflicts:
+    	testing/squall_plan_runner/confs/test/0.01G_theta_hyracks_serial
+
+commit 175f3c368b7db355ea1b8b14bf13a882e709d65f
+Author: yannisklonatos <yannis.klonatos@epfl.ch>
+Date:   Wed Jun 13 18:27:17 2012 +0200
+
+    Yannis: small refactoring
+
+commit d6fcaf1d0190898baf8f42e7aad4d816370b242c
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Jun 13 17:30:26 2012 +0200
+
+    Fixed bug in theta_hyracks config file.
+
+commit 63f5f84037a1f9a70033e91b9dcdde8650a470c3
+Merge: b45479a 81e575d
+Author: yannisklonatos <yannis.klonatos@epfl.ch>
+Date:   Wed Jun 13 16:01:05 2012 +0200
+
+    Merge git://github.com/avitorovic/squall
+
+commit 81e575da9c9fe29d0dffbedb765b22091f2681f6
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Jun 13 15:42:47 2012 +0200
+
+    Fixed a small bug in compilation procedure.
+
+commit b45479a68adcf05a5555bff33ae99e2385ac76b0
+Author: yannisklonatos <yannis.klonatos@epfl.ch>
+Date:   Wed Jun 13 14:02:09 2012 +0200
+
+    New version of storage. Works with joins + aggregations
+
+commit 62eff07ba933b4fdfa0ecdc1f3e56432ef480a14
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Jun 12 19:15:03 2012 +0200
+
+    Separated visitors using indexes(simple and rule optimizer) from those using names (cost optimizer) with maximum code reuse.
+
+commit 0f12e82e7c4c5331ea265d7d592e99cbc124ced2
+Author: yannisklonatos <yannis.klonatos@epfl.ch>
+Date:   Tue Jun 12 15:44:25 2012 +0200
+
+    Previous merge failed (Corrupted). New merge works for joins
+
+commit 0e3a24feceeb84e0fadc7f24d54247a035af5e47
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Jun 11 19:10:14 2012 +0200
+
+    Daily update on cost-based optimizer.
+
+commit fe0175a7358c61f96640d7eda395704a51056de8
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Jun 7 19:41:17 2012 +0200
+
+    An initial attempt to build a Selinger-style selectivity estimator.
+
+commit e66a49a1844688d815b4b5f392d2704e0d26d28f
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Jun 6 21:15:57 2012 +0200
+
+    Started building CostOptimizer.
+
+commit e8671e3bbf4a710a1c044f43eefe59cdae18a0d2
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Jun 6 14:04:50 2012 +0200
+
+    A topology can be killed instantly, if so specified.
+
+commit 20d2692e0c2038eb1da923274c7e6a5cba0376f2
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Jun 6 09:57:09 2012 +0200
+
+    Unifying all the config files.
+
+commit 24f57d05e560e2d993fcd34cf8e96b94def54948
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Jun 5 22:03:00 2012 +0200
+
+    Added 10MB data to the repository for testing purposes. All config files refer to this path by default. All config files lowercase.
+
+commit 33d98eb891f609e60779228060a5a33628e3cafc
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Jun 5 14:18:25 2012 +0200
+
+    Slighlty modified Squall Plan Runner test configs
+
+commit 42d6088f83093027d4cb3a19dbe9bfa676d5d7e1
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Jun 5 13:45:01 2012 +0200
+
+    regressive tests separated for Squall and SquallPlanRunner.
+
+commit 49fe7bd0c53ea7b831151a1185b02521fc7dab6f
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Jun 5 13:33:26 2012 +0200
+
+    A bug fix which caused improper termination fixed. DataSourceComponents do not anymore need to have schema information - all of these are moved to SQL generator part.
+
+commit 67f140507dc5ceaed27d68f7d5d19a12b9755782
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Jun 5 13:32:44 2012 +0200
+
+    A bug fix which caused improper termination fixed. DataSourceComponents do not anymore need to have schema information - all of these are moved to SQL generator part.
+
+commit 7e40cbd5300344d7add4fde38020f5e82bd242a1
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Jun 4 19:05:05 2012 +0200
+
+    ComponentGenerator rewritten to support cost-based optimizer.
+
+commit 8e8cbbd730aa131e2e37b031f23eda1471a77977
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Jun 4 10:52:26 2012 +0200
+
+    Romain's changes to support indexing on ValueExpressions. ThetaJoin does not discard the join column from the right parent, as it is done by equiJoin. Some columnReferences has to be changed all over the ThetaJoin query plans.
+
+commit 9d037b37abc7c36265f2d48fc59b1ef97dbc7ce8
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Sun Jun 3 09:04:53 2012 +0200
+
+    Fixed scripts for running Squall.
+
+commit 54a3fa5d58da29f38b0db5c717294a8e7828a875
+Merge: 74f7cfa ddc872c
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Jun 1 21:01:05 2012 +0200
+
+    Merge remote-tracking branch 'origin/master'
+
+commit 74f7cfab241417791f49ccf9b08ac21d21ab5f6f
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Jun 1 20:56:23 2012 +0200
+
+    Some comments added.
+
+commit ddc872c5260f3a6b427e075553151e496cccf976
+Merge: e4b20b5 5cc017e
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Jun 1 11:52:41 2012 -0700
+
+    Merge pull request #6 from kgeorgen/master
+    
+    Added cost driven partitioner for ThetaJoins
+
+commit 5cc017e52d5521af6df1c0b3ca0c02c78a07acb4
+Author: Nithin George <kgeorgen@gmail.com>
+Date:   Fri Jun 1 19:38:47 2012 +0200
+
+    Added cost driven partitioner to the theta join
+    
+    Added the ability to perform cost driven partitioning of the join
+    matrix to the workers. This feature, along with good cost model, will
+    lead to join matrix partitions that will minimize the cost of the
+    theta-join..
+
+commit e4b20b514351eba652f042274038c611652b9574
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Jun 1 10:02:12 2012 +0200
+
+    Merging with ThetaJoin finished.
+
+commit d95a6bcaa5434b1cc5fc1da18000971a550a5b0a
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Jun 1 09:17:36 2012 +0200
+
+    Precompiled jar files representing the latest src changes added.
+
+commit 036d7ec716045ff7d6f5ec2fd9261b9b5cbaeaae
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Jun 1 09:14:47 2012 +0200
+
+    Minor fixes from the last merge.
+
+commit 63e87450cf87eb83d46b387025f367cb4a3ded99
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu May 31 20:46:36 2012 +0200
+
+    Compilation scripts changed to support Trove library.
+
+commit 19c2cb46aa4900d6822a59bf5aa7fe3e54a4b67c
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu May 31 19:56:14 2012 +0200
+
+    LikePredicate reverted to the correct state.
+
+commit 9e6d67179b25268e9d1bad9ff6a60da42c38a6bc
+Merge: 206f78f 557251f
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu May 31 19:16:40 2012 +0200
+
+    Merge remote-tracking branch 'elseidy/master'
+
+commit 206f78fcdb102d4c1c285a5c8c48f788fab925b6
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu May 31 18:22:53 2012 +0200
+
+    Rule-based optimizer is the default one.
+
+commit 53f8ae818bf6dfd1b3192dfe02deb0d9f370b44d
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu May 31 18:18:58 2012 +0200
+
+    Fixed a bug in processing WHERE clause.
+
+commit 557251f5039bb2774150255192cd31d1fac5083d
+Author: Mohammed El Sayed <SaSa@icdhcp-1-006.epfl.ch>
+Date:   Thu May 31 16:13:05 2012 +0200
+
+    aleksander's code merged
+
+commit 2ec270d61805f97d9e2b61f336040c3413b1d7e0
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue May 29 19:42:11 2012 +0200
+
+    Added more flexibility in positioning an operator inside a chain of operators in Component and StormComponent classes. An order in which user specifies the operators will be respected.
+
+commit c1e8aa6a05270ba86c7f18277716750d641cbcaa
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue May 29 10:33:40 2012 +0200
+
+    Squall refactoring completed. Now we start adding functionalities for a cost-based optimizer.+
+
+commit 25b01d8515824fbb634f024cfea21a57404b0c0c
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue May 29 07:53:36 2012 +0200
+
+    A huge refactor of Squall code. Still not fully completed.
+
+commit 2ef68346136a8aa7fbd0324d102fc2d7cd35ef10
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon May 28 14:50:51 2012 +0200
+
+    Renaming improperly named methods.
+
+commit fcd1533929e4d96f34720fc97c6363b89aae2e06
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon May 28 13:35:12 2012 +0200
+
+    Squall now supports the following SQL queries: hyracks, TPCH 3, 5, 7, 8, 9, 10.
+
+commit 2abd3ea4a38db4c385f3d5d91d5d9f47ec62f028
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon May 28 12:17:48 2012 +0200
+
+    Division expression supported, both in squall and in squall_plan_runner.
+
+commit 3f6df96c03a6db862efec63b8bd35867335b344b
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon May 28 12:16:48 2012 +0200
+
+    QueryPlans TPCH7 and 8 fixed.
+
+commit d7ef3de94ae9839d406fd941e4fa74ef7151b908
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon May 28 08:50:44 2012 +0200
+
+    Smaller footprint for uniquely identifying component names when sending tuples around.
+
+commit c0d0a0190bb7711b4128c6eb93cda3317ded83d8
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Sun May 27 22:10:13 2012 +0200
+
+    Some configs has to be changed due to the naming policy.
+
+commit 04579c39f10923e5cbd1e96014f81e854d979521
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Sun May 27 21:52:30 2012 +0200
+
+    Each component is now characterized with a name (earlier it was a number). This alleviates obtaining information from Storm GUI.
+
+commit 4f345ea86e2adff22bc1a7c918ac45cd6f039a69
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Sun May 27 17:11:28 2012 +0200
+
+    All the directories refactored, except source code.
+
+commit 92e74504a614d56d99e51d03fdcf3b25655fc708
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri May 25 18:48:50 2012 +0200
+
+    Fixed bug which prevented for having space at the end of a tuple column.
+
+commit af24f45637f8065b82aee1dc89175803ad83430e
+Merge: 0916445 f4773ae
+Author: EPFL DATA Lab <professeurs.data@epfl.ch>
+Date:   Thu May 17 02:42:06 2012 -0700
+
+    Merge pull request #7 from avitorovic/master
+    
+    README changed.
+
+commit f4773ae0a492feb672cc956670eddb6bd8aa6230
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu May 17 00:35:10 2012 +0300
+
+    Update README.markdown
+
+commit 4bc25e4cfb8ad9d8942e50dfaa65806bfbef2903
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu May 17 00:28:43 2012 +0300
+
+    Update README.markdown
+
+commit 0916445a1d46ae79581256ace53dc068b2739f42
+Merge: 224886a 906e4fd
+Author: epfldata <professeurs.data@epfl.ch>
+Date:   Tue May 15 07:57:55 2012 -0700
+
+    Merge pull request #6 from avitorovic/master
+    
+    Topologies with only spouts are now fully functionable. New storm.yaml is in place.
+
+commit 906e4fd28b64bdca2bf88b7f8312bf001b676c61
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue May 15 16:34:15 2012 +0200
+
+    Avoid printing every tuple in HyracksL1Plan
+
+commit 36d3356274651d986fe6896f8c15cdd6dd6a1893
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue May 15 16:27:05 2012 +0200
+
+    The new storm.yaml uploaded.
+
+commit 2c57860caf787457a057ded2fbd7d9e2af9996d9
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue May 15 16:21:29 2012 +0200
+
+    Topologies with only spouts are now fully functionable.
+
+commit 224886a5834125825096230a664d31aff155d90f
+Merge: 61c133c 447d8d1
+Author: epfldata <professeurs.data@epfl.ch>
+Date:   Tue May 15 07:10:41 2012 -0700
+
+    Merge pull request #5 from avitorovic/master
+    
+    FINAL_COMPONENT bug fixed. Merged with the secondary storage code. README updated.
+
+commit fceed61ae6706772c665095b31390d36eb4f431a
+Merge: bea46cd 2f47341
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue May 15 15:04:10 2012 +0200
+
+    Merge branch 'master' of github.com:avitorovic/squall
+
+commit 2f47341a6ea9b92630f0d5a750f0a048a030fefb
+Merge: 1fd0778 2c7b38c
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri May 25 05:37:45 2012 -0700
+
+    Merge pull request #2 from gulrich/master
+    
+    Clarification (comments and code cleaning) of the matrix assignment package
+
+commit 2c7b38ccbda1507daa033a9aea10cb65af75c28f
+Author: Guillaume <guillaume.ulrich@epfl.ch>
+Date:   Fri May 25 13:21:49 2012 +0200
+
+    Clarification of the matrix assignment package
+    
+    remove methods getNumberOfWorkersRows() and getNumberOfWorkersColumns() of the MatrixAssignment interface. They were only present for printing and they made no sense in that a partition can have distinct number of workers on different rows (for example in Modification3).
+    
+    To allow the printing of a MatrixAssignment, the method toString() has been overloaded in both OptimalPartition and EquiMatrixAssignment.
+    
+    The method verifyValidity() in Partition has been rename to valid() to be Java-friendly.
+    
+    The parameter of the method getRegions has been changed from "isSRelation" to "dimension" to be consistent with the implemented interface.
+    
+    Some comments have been added to the MatrixMapping package.
+
+commit 1fd0778de01a850f019f24384a31868567b2f107
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed May 23 15:36:24 2012 +0200
+
+    TPCH9 added.
+
+commit c419aeb96bc3ad72f41c4a3a445229f3c0f298b7
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed May 23 12:37:05 2012 +0200
+
+    Merged with ThetaJoin
+
+commit 1bf4a5317e806445948248241008403fd2742150
+Merge: f4773ae 94a2d2f
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed May 23 00:50:15 2012 -0700
+
+    Merge pull request #1 from romainpoiffaut/master
+    
+    Merged Code
+
+commit 94a2d2f6736ab815aee610cddc74cc7b6df35f05
+Author: POIFFAUT Romain <romain.poiffaut@epfl.ch>
+Date:   Tue May 22 23:47:25 2012 +0200
+
+    Debug of ThetaJoin
+    
+    Working ThetaJoin for all operators except !=
+    and with predicate in convenient form
+
+commit 94bf471e18f6f1f66982defa8ea0549f8d7b8c98
+Author: POIFFAUT Romain <romain.poiffaut@epfl.ch>
+Date:   Tue May 22 18:15:07 2012 +0200
+
+    MergedCode
+    
+    ThetaJoin not working yet
+
+commit f7a6b13c8d81e76246a4fdcc83c134924fbc358f
+Author: POIFFAUT Romain <romain.poiffaut@epfl.ch>
+Date:   Sat May 19 11:00:35 2012 +0200
+
+    Add comparison on two tuples
+
+commit bea46cd39701155815421a6b18a87636aec0167a
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue May 15 15:03:22 2012 +0200
+
+    Tuples are sent over the network as ArrayList collections, not as Strings anymore. If sent tuple is some other List collection, an exception should be thrown ('topology.fall.back.on.java.serialization: false' added to storm.yaml). It's a cleaner way to do it, the perfromance is the same.
+
+commit 447d8d1511957a4b3e8351972a9ee8fa418d2b3d
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue May 15 14:35:34 2012 +0200
+
+    Deleted unnecessary parameters from config files (ZOOKEEPER and STORM_MASTER parameters should reside in storm.yaml).
+
+commit 9e377ddfc0a2748d2dce1e07fb7c531b0a9885d5
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue May 15 14:24:07 2012 +0200
+
+    No more repeating cluster parameters in Squall config files.
+
+commit 030bd0b98fd8fc67ba32cff36d6a0dd6b8d27bb7
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue May 15 13:30:22 2012 +0200
+
+    FINAL_COMPONENT bug fixed.
+
+commit 8b1e44ee15c6ef9026caf97c50472641648fabd2
+Merge: 7bcf520 61c133c
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue May 15 11:38:57 2012 +0200
+
+    Merge remote-tracking branch 'epfldata/master'
+
+commit 7bcf5201f45aad715311895308ff0e0e978d809a
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri May 11 17:29:49 2012 +0200
+
+    README expanded
+
+commit 1ef2115f968330cca7ca6a5b8b54b382f16a3de2
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri May 11 17:27:33 2012 +0200
+
+    README expanded
+
+commit 1d0e265afc1af194cb302bd2628605e1312cfb07
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri May 11 17:23:34 2012 +0200
+
+    README expanded
+
+commit 61c133c2d85fc017467d6ea45b2658d0285d8524
+Merge: cb7fdcb cc75305
+Author: epfldata <professeurs.data@epfl.ch>
+Date:   Tue May 8 12:29:53 2012 -0700
+
+    Merge pull request #3 from yannisklonatos/master
+    
+    File-Based, String key-value join secondary storage. Also some cleanup
+
+commit cc75305915d9847f0a0675cad8495daaf8404477
+Merge: 4e8ef19 cb7fdcb
+Author: yannisklonatos <yannis.klonatos@epfl.ch>
+Date:   Mon May 7 15:49:53 2012 +0200
+
+    Merge github.com:yannisklonatos/squall
+
+commit 4e8ef19e4120143eb3e80bbe5c88a59c9c0b57d5
+Author: yannisklonatos <yannis.klonatos@epfl.ch>
+Date:   Mon May 7 15:46:46 2012 +0200
+
+    File-based, String Key-Value secondary storage.
+
+commit 249b9d85921807a41b109523153b2eecc3965278
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed May 2 21:02:18 2012 +0200
+
+    BatchOutputMode fully supported and yields great performance. More cleanup done.
+
+commit 60238b021a8cb65da026be895c457d5b7a134029
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed May 2 15:05:09 2012 +0200
+
+    A small code cleanup. Dead code eliminated.
+
+commit cb7fdcbe048374a9a1e6c7983376a6b9fcf668b9
+Merge: 3010689 0446ce8
+Author: epfldata <professeurs.data@epfl.ch>
+Date:   Sun Apr 29 09:55:23 2012 -0700
+
+    Merge pull request #2 from avitorovic/master
+    
+    Custom acking mechanism
+
+commit 0446ce8bda1ccc8921447f2746e8ae7ac952ddcf
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Sun Apr 29 12:16:01 2012 +0200
+
+    Added alternative way of splitting files. For AckAtEnd, Bolts still have to ack tuples (but no acker nodes used).
+
+commit 5a07ff58f3c641c14ec7325d92d7064559a972be
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Apr 27 11:24:38 2012 +0200
+
+    Now we have only one Spout Component per a file, of course with multiple tasks.
+
+commit ba4ca007413f7dacb894df0caef13abf893435c0
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Apr 25 19:05:14 2012 +0200
+
+    A typo in project documentation concerning building tpch_skew.
+
+commit b90759bdf061ee9f9e0c93c490c2c3d2f90376aa
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Apr 24 12:39:52 2012 +0200
+
+    When AckAtTheEnd, default timeout(30sec) the topology is shown in UI after it is killed.
+
+commit c7c7fc0cf00475955d9fcbee7b02dd312f99d02a
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Tue Apr 24 09:58:56 2012 +0200
+
+    Documentation additionally clarified.
+
+commit 7409620bafdcd7273fcaa516a6a87ce376b927b4
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Apr 23 20:21:00 2012 +0200
+
+    Documentation update
+
+commit 35abbbdc504cee6bf6b941832d56e8df01a6f030
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Mon Apr 23 19:54:08 2012 +0200
+
+    Finalization of the previous change.
+
+commit 401959937110b7b604f2a561651da70e6171af88
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Sun Apr 22 22:51:35 2012 +0200
+
+    DIP_ACK_EVERY_TUPLE property added. It enables a user to choose between 1) acking each tuple at the StormDataSource and from there sending EOFs to TopologyKiller and 2) sending special messages from StormDataSource down to the FINAL_COMPONENT, which is responsible for sending EOFs to TopologyKiller. The approach 2) is more performant, but buffer overlow might occur.
+
+commit 740f1ad11ff2742996a5944766090a374cdce566
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Sun Apr 22 13:44:51 2012 +0200
+
+    Load balancing achieved using a more generic approach, CustomStreamGrouping (instead of direct stream grouping).
+
+commit 200afe595946b71916bfbcadc1b2783bc821259a
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Apr 20 16:59:15 2012 +0200
+
+    Direct stream grouping enables load-balancing for Hyracks(23% overall execution time speedup) and some TPCH queries(4, 5, 7 and 12).
+
+commit 6dffcc045b0c1219aac9866a40238cdeb92e10f7
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Apr 19 18:27:20 2012 +0200
+
+    Nephele superkey/key for isHashedBy method (collocating join and aggregation on the same level) and MultiAggregateOperator(for TPCH12).
+
+commit 301068992a083fdd43284b6d0875460b95154b1f
+Merge: 2c9da71 19d2b44
+Author: epfldata <professeurs.data@epfl.ch>
+Date:   Mon Apr 16 03:37:29 2012 -0700
+
+    Merge pull request #1 from avitorovic/master
+    
+    Some typos fixed.
+
+commit 19d2b447fe4e06d1e6fa4eff47ff9f69c1449b8a
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Apr 12 10:20:34 2012 +0200
+
+    A typo.
+
+commit dd021c6c23b3ce9160e34ea2cebb562823cd1f57
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Apr 12 09:58:15 2012 +0200
+
+    Small updates to documents (ssh).
+
+commit 648e9089fc5e28134401121e8101be2afb29983d
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Sun Apr 8 19:16:34 2012 +0200
+
+    A small refactoring.
+
+commit cbab9729b06802363e74f5e0e67ed53eda24bbe1
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Sun Apr 8 18:49:53 2012 +0200
+
+    Regressive testing implemented in Local Mode, with a string-based diff tool.
+
+commit 8b34c138bbe02786f2779f7d6648ce9d135187f0
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Fri Apr 6 18:40:48 2012 +0200
+
+    A step towards fully automatic testing of Squall execution in Local Mode.
+
+commit b986b2550d679add04a10693a83f36aa76257d4a
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Apr 5 14:29:02 2012 +0200
+
+    PDFs updated.
+
+commit b5a8f3588fa5a957428ab5ba01e6c45e4e9244a5
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Apr 5 14:00:09 2012 +0200
+
+    Hyracks.png deleted.
+
+commit c206bfee7fdcb96cb5207fff5710853dfce95d82
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Apr 5 13:54:21 2012 +0200
+
+    An image for Wiki added: the correct extension.
+
+commit 405239fcecf472ad263926f03ba65e16b9b097a0
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Apr 5 13:50:34 2012 +0200
+
+    An image for Wiki added.
+
+commit c08c76224270f181688b1c2b73fa6bfb3463d212
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Apr 5 00:07:45 2012 +0200
+
+    The final version of Milestone2 in 2012.
+
+commit 0a2a9df9d36fbf8a4eef38abf4d22379d165f713
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Thu Apr 5 00:02:46 2012 +0200
+
+    The final version for Milestone2 in 2012.
+
+commit 887653694c00b127880118f6338dec6940a32bc7
+Author: Aleksandar Vitorovic <savitor85@gmail.com>
+Date:   Wed Apr 4 22:02:06 2012 +0200
+
+    A typo in README fixed.
+
+commit 2c9da71b96e730face74e8bceb773ea7c60a7809
+Author: Christoph Koch <professeurs.data@epfl.ch>
+Date:   Tue Apr 3 11:43:29 2012 +0200
+
+    .
+
+commit 16eb88d8de6a37a7b237a6f80c1cf300e5d09883
+Author: Christoph Koch <professeurs.data@epfl.ch>
+Date:   Tue Apr 3 11:40:36 2012 +0200
+
+    first checkin
+
+commit ba77340d186bfab6c0f3cbdd83fee7f984b79a3f
+Author: Christoph Koch <professeurs.data@epfl.ch>
+Date:   Thu Mar 29 19:04:06 2012 +0200
+
+    foo

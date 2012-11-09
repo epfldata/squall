@@ -176,7 +176,7 @@ public class NameCompGen implements CompGen{
 	return generateDataSource(tableCompName, false);
     }
 
-    // XXX: Yannis change for TPCH-6 -- This boolean and the above function
+    // XXX: Yannis change for single-dataSource plans -- This boolean and the above function
     public DataSourceComponent generateDataSource(String tableCompName, boolean isOnlyComp){
         DataSourceComponent source = createAddDataSource(tableCompName);
         
@@ -186,7 +186,7 @@ public class NameCompGen implements CompGen{
         //operators
         addSelectOperator(source);
         addProjectOperator(source);
-	// XXX: Yannis change for TPCH-6
+	// XXX: Yannis change for single-dataSource plans (such as TPCH6)
 	if (isOnlyComp) {
 	        TupleSchema tupleSchema = _compCost.get(source.getName()).getSchema();
         	NameSelectItemsVisitor selectVisitor = new NameSelectItemsVisitor(tupleSchema, _map, source);

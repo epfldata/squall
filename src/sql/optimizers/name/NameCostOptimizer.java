@@ -32,8 +32,7 @@ public class NameCostOptimizer implements Optimizer{
         //**************creating single-relation plans********************
         if(numSources == 1){
             optimal = factory.create();
-		// YANNIS: FIX FOR TPC-H 6 HERE AS WELL FOR THE NCL OPTIMIZER
-		// SIMILAR TO THAT OF THE NMPL OPTIMIZER
+		// YANNIS: FIX FOR PLANS HAVING ONLY ONE DATA SOURCE
             optimal.generateDataSource(sourceNames.get(0), true);
         }
         
