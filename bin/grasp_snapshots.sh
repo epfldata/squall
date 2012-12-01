@@ -2,7 +2,7 @@
 
 MACHINE=squalldata@icdatasrv
 MACHINE5=${MACHINE}5
-REMOTE_SNAP=/data/squall_zone/profiling/output/*
+REMOTE_SNAP=/data/squall_zone/profiling/*
 
 if [ $# -ne 1 ]
 then
