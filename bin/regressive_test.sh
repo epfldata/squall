@@ -22,10 +22,8 @@ fi
 # Set default variables according to mode
 if [ "$MODE" == "SQL" ]; then
 	CONFDIR=../test/squall/confs/local
-	CLASS=SQL
 else
 	CONFDIR=../test/squall_plan_runner/confs/local
-	CLASS=PLAN_RUNNER
 fi
 TESTCONFS=( `ls ${CONFDIR}/` )
 COUNT=${#TESTCONFS[@]}
@@ -58,7 +56,7 @@ do
 	# Create a temporary output file	
 	mkTempFile 
 	echo "Running test $i ($TEST) out of ${COUNT}..."
-	./squall_local.sh $CLASS $CONFDIR/$TEST > $TMPFILE 
+	./squall_local.sh $MODE $CONFDIR/$TEST > $TMPFILE 
 	if [ "`cat $TMPFILE | tail -n 1 | cut -d' ' -f1`" != "OK:" ]; then
 		echo "Error: Test $TEST failed. Error log in $TMPFILE"
                 ALL_OK=false

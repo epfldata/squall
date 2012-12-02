@@ -3,7 +3,7 @@
 . ./storm_version.sh
 
 KILL_TIME=30
-
+MODE=SQL
 if [ $# -ne 2 ]
 then
 	echo "Should provide an input file and output directory. Exiting..."
@@ -50,7 +50,7 @@ cp -r $SQUALL_SRC_DIR $BACKUP_DIR
 #running new code
 mkdir -p $OUTPUT_DIR
 echo "Running Squall with config $CONFIG_PATH topology ..."
-./squall_cluster.sh $CONFIG_PATH > $OUTPUT_DIR/${CONFIG_FILE}.log 2>&1
+./squall_cluster.sh $MODE $CONFIG_PATH > $OUTPUT_DIR/${CONFIG_FILE}.log 2>&1
 
 #grasping statistics
 echo "Grasping statistics for $CONFIG_PATH ..."

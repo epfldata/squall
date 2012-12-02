@@ -1,4 +1,4 @@
 #!/bin/bash
 
-./createDBs.sh 100
-./createDBs.sh 500
+./create_dbs.sh 20
+./create_dbs.sh 200
