@@ -39,7 +39,7 @@ public class TPCH5Plan {
     //query variables
     private static Date _date1, _date2;
     private static final String REGION_NAME = "ASIA";
-
+    
     private static void computeDates(){
         // date2 = date1 + 1 year
         String date1Str = "1994-01-01";

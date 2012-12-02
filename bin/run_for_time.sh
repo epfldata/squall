@@ -1,14 +1,16 @@
 #!/bin/bash
 
-SYSTEM=SQUALL # possible values are SQUALL and SQUALL_PLAN_RUNNER
+if [ $# -lt 1 ]; then
+MODE=SQL # possible values are SQL and PLAN_RUNNER
+else
+MODE=$1
+fi
 
-if [ $SYSTEM == SQUALL ] 
+if [ $MODE == SQL ] 
 then
 CONF_DIR=../test/squall/confs/create_confs/generated/
-SQUALL_COMMAND=./squall_cluster.sh
 else
 CONF_DIR=../test/squall_plan_runner/confs/create_confs/generated/
-SQUALL_COMMAND=./squall_plan_runner_cluster.sh
 fi
 
 RESULT_DIR=../bin/extract_results/
@@ -27,7 +29,7 @@ for config in ${CONF_DIR}* ; do
         #explained in Killing topology section in https://github.com/nathanmarz/storm/wiki/Running-topologies-on-a-production-cluster
 
 	confname=${config##*/}
-	$SQUALL_COMMAND $CONF_DIR/$confname > $EXEC_LOG_DIR/$confname
+	./squall_cluster.sh $MODE $CONF_DIR/$confname > $EXEC_LOG_DIR/$confname
 
 	#waiting for topology to finish is now in squall_cluster.sh
 done

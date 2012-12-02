@@ -41,9 +41,9 @@ public class StormWrapper {
             //Messages are failling if we do not specify timeout (proven for TPCH8)
             //conf.setMessageTimeoutSecs(SystemParameters.MESSAGE_TIMEOUT_SECS);
             
-            //Throttling parameter reduces latency and throughput
-            if(SystemParameters.isExisting(conf, "DIP_THROTTLING")){
-                int tp = SystemParameters.getInt(conf, "DIP_THROTTLING");
+            //Storm throttling mode
+            if(MyUtilities.isThrottlingMode(conf)){
+                int tp = SystemParameters.getInt(conf, "BATCH_SIZE");
                 conf.setMaxSpoutPending(tp);
             }
         }
@@ -137,7 +137,7 @@ public class StormWrapper {
     }
 
     // if we are in local mode, we cannot obtain these information
-    public static void writeStats(Map conf){
+    public static void writeStormStats(Map conf){
         Client client=getNimbusStub(conf);
         StringBuilder sb=new StringBuilder("");
 

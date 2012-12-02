@@ -15,6 +15,7 @@ import plan_runner.query_plans.TPCH10Plan;
 import plan_runner.query_plans.TPCH3Plan;
 import plan_runner.query_plans.TPCH4Plan;
 import plan_runner.query_plans.TPCH5Plan;
+import plan_runner.query_plans.debug.TPCH5PlanAvg;
 import plan_runner.query_plans.TPCH7Plan;
 import plan_runner.query_plans.TPCH8Plan;
 import plan_runner.query_plans.TPCH9Plan;
@@ -38,8 +39,7 @@ import plan_runner.utilities.SystemParameters;
 
 public class Main {
 	private static Logger LOG = Logger.getLogger(Main.class);
-	public static QueryPlan queryPlan = null;
-
+        
         public static void main(String[] args) {
            new Main(args);
         }
@@ -47,9 +47,10 @@ public class Main {
         public Main(String[] args){
             String confPath = args[0];
             Config conf = SystemParameters.fileToStormConfig(confPath);
-            queryPlan = chooseQueryPlan(conf);
+            QueryPlan queryPlan = chooseQueryPlan(conf);
             
             addVariablesToMap(conf, confPath);
+            putBatchSizes(queryPlan, conf);
 	    TopologyBuilder builder = createTopology(queryPlan, conf);
             StormWrapper.submitTopology(conf, builder);
         }
@@ -58,6 +59,7 @@ public class Main {
             Config conf = SystemParameters.mapToStormConfig(map);
             
             addVariablesToMap(conf, confPath);
+            putBatchSizes(queryPlan, conf);
             TopologyBuilder builder = createTopology(queryPlan, conf);
             StormWrapper.submitTopology(conf, builder);
         }
@@ -69,6 +71,33 @@ public class Main {
             String topologyName = prefix + "_" + confFilename;
             SystemParameters.putInMap(map, "DIP_TOPOLOGY_NAME", topologyName);
         }
+        
+        //this method is a skeleton for more complex ones
+        //  an optimizer should do this in a smarter way
+        private static void putBatchSizes(QueryPlan plan, Map map) {
+            if(SystemParameters.isExisting(map, "BATCH_SIZE")){
+                
+                //if the batch mode is specified, but nothing is put in map yet (because other than MANUAL_BATCH optimizer is used)
+                String firstBatch = plan.getComponentNames().get(0) + "_BS";
+                if(!SystemParameters.isExisting(map, firstBatch)){
+                    String batchSize = SystemParameters.getString(map, "BATCH_SIZE");
+                    for(String compName: plan.getComponentNames()){
+                        String batchStr = compName + "_BS";                
+                        SystemParameters.putInMap(map, batchStr, batchSize);
+                    }
+                }
+                
+                //no matter where this is set, we print out batch sizes of components
+                for(String compName: plan.getComponentNames()){
+                        String batchStr = compName + "_BS";
+                        String batchSize = SystemParameters.getString(map, batchStr);
+                        LOG.info("Batch size for " + compName + " is " + batchSize);
+                }
+            }
+            if(!MyUtilities.checkSendMode(map)){
+                throw new RuntimeException("BATCH_SEND_MODE value is not recognized.");
+            }
+        } 
 
         private static TopologyBuilder createTopology(QueryPlan qp, Config conf) {
             TopologyBuilder builder = new TopologyBuilder();
@@ -151,6 +180,8 @@ public class Main {
                 queryPlan = new TPCH4Plan(dataPath, extension, conf).getQueryPlan();
             }else if(queryName.equalsIgnoreCase("tpch5")){
                 queryPlan = new TPCH5Plan(dataPath, extension, conf).getQueryPlan();
+            }else if(queryName.equalsIgnoreCase("tpch5avg")){
+                queryPlan = new TPCH5PlanAvg(dataPath, extension, conf).getQueryPlan();
             }else if(queryName.equalsIgnoreCase("tpch7")){
                 queryPlan = new TPCH7Plan(dataPath, extension, conf).getQueryPlan();
             }else if(queryName.equalsIgnoreCase("tpch8")){

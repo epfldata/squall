@@ -6,21 +6,22 @@ import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
 import plan_runner.components.EquiJoinComponent;
 import plan_runner.components.OperatorComponent;
+import plan_runner.utilities.SystemParameters;
 import sql.schema.Schema;
-import sql.util.OverParallelizedException;
+import sql.util.ImproperParallelismException;
 import sql.util.ParserUtil;
 import sql.util.TableAliasName;
 import sql.visitors.jsql.SQLVisitor;
 
 
 public class CostParallelismAssigner {
-    private final Map _map;
-    private final Schema _schema;
-    private final TableAliasName _tan;
+    protected final Map _map;
+    protected final Schema _schema;
+    protected final TableAliasName _tan;
     
     //computed only once
-    private List<String> _sortedSourceNames;// sorted by increasing cardinalities
-    private Map<String, Integer> _sourcePars;
+    protected List<String> _sortedSourceNames;// sorted by increasing cardinalities
+    protected Map<String, Integer> _sourcePars;
 
     public CostParallelismAssigner(Schema schema, TableAliasName tan, Map map) {
         _schema = schema;
@@ -105,8 +106,7 @@ public class CostParallelismAssigner {
          _sourcePars = extractNamesPar(sourceCostParams);
          return _sourcePars;
     }
-
-
+    
     public void setParallelism(DataSourceComponent source, Map<String, CostParams> compCost){
         if(_sourcePars == null){
             //if we are here, it was invoked from fake sourceCG, so just return
@@ -114,9 +114,18 @@ public class CostParallelismAssigner {
         }
                 
         String sourceName = source.getName();        
-        int parallelism = _sourcePars.get(sourceName);
+        int parallelism = parallelismFormula(source);
         compCost.get(sourceName).setParallelism(parallelism);
     }
+    
+    protected int parallelismFormula(DataSourceComponent source){
+        String sourceName = source.getName();
+        return _sourcePars.get(sourceName);
+    }
+    
+    protected void setBatchSize(DataSourceComponent source, Map<String, CostParams> compCost) {
+        //nothing to do
+    }    
     
     public List<String> getSortedSourceNames(){
         return _sortedSourceNames;
@@ -150,6 +159,9 @@ public class CostParallelismAssigner {
         String leftParent = joinComponent.getParents()[0].getName();
         String rightParent = joinComponent.getParents()[1].getName();
 
+        String currentCompName = joinComponent.getName();
+        CostParams params = compCost.get(currentCompName);
+        
         CostParams leftParentParams = compCost.get(leftParent);
         CostParams rightParentParams = compCost.get(rightParent);
 
@@ -157,8 +169,15 @@ public class CostParallelismAssigner {
         int rightParallelism = rightParentParams.getParallelism();
 
         //compute
-        int parallelism = parallelismFormula(leftParentParams, rightParentParams);
+        int parallelism = parallelismFormula(currentCompName, params, leftParentParams, rightParentParams);
 
+        //lower bound
+        int minParallelism = estimateMinParallelism(leftParentParams, rightParentParams);
+        if(minParallelism > parallelism){
+            throw new ImproperParallelismException("Component " + currentCompName +
+                    " cannot have parallelism LESS than " + minParallelism);
+        }
+        
         //upper bound
         int maxParallelism = estimateDistinctHashes(leftParentParams, rightParentParams);
         if(parallelism > maxParallelism){
@@ -167,14 +186,13 @@ public class CostParallelismAssigner {
                 //  exception serves to force smaller parallelism at sources
                 parallelism = maxParallelism;
             }else{
-                throw new OverParallelizedException("Component " + joinComponent.getName() + 
-                        " cannot have parallelism more than " + maxParallelism);
+                throw new ImproperParallelismException("Component " + currentCompName + 
+                        " cannot have parallelism MORE than " + maxParallelism);
             }
         }
 
         //setting
-        String currentComp = joinComponent.getName();
-        compCost.get(currentComp).setParallelism(parallelism);
+        params.setParallelism(parallelism);
         
         //we should also check 
         //  if the sum of all the parallelisms in the subplan 
@@ -183,8 +201,12 @@ public class CostParallelismAssigner {
         //  This prevents from reading NUM_WORKERS from Storm Config class.
         //  If it works in local mode, it might not work in cluster mode - depending where and when the setting is read. 
     }
+    
+    protected void setBatchSize(EquiJoinComponent joinComponent, Map<String, CostParams> compCost) {
+        //nothing to do
+    }    
 
-    private int parallelismFormula(CostParams leftParentParams, CostParams rightParentParams) {
+    protected int parallelismFormula(String compName, CostParams params, CostParams leftParentParams, CostParams rightParentParams) {
         //TODO: this formula does not take into account when joinComponent send tuples further down
         double dblParallelism = leftParentParams.getSelectivity() * leftParentParams.getParallelism() +
                             rightParentParams.getSelectivity() * rightParentParams.getParallelism() +
@@ -267,6 +289,18 @@ public class CostParallelismAssigner {
         //setting
         String currentComp = opComp.getName();
         compCost.get(currentComp).setParallelism(parallelism);
+    }
+    
+    protected void setBatchSize(OperatorComponent operator, Map<String, CostParams> compCost) {
+        //nothing to do
+    }    
+
+    private int estimateMinParallelism(CostParams leftParentParams, CostParams rightParentParams) {
+        int providedMemory = SystemParameters.getInt(_map, "STORAGE_MEMORY_SIZE_MB");
+        //inputCardinality tuples need to be stored in memory
+        long inputCardinality = leftParentParams.getCardinality() + rightParentParams.getCardinality();
+        long predictedTotalMemory = (inputCardinality * SystemParameters.TUPLE_SIZE_BYTES * SystemParameters.JAVA_OVERHEAD) / SystemParameters.BYTES_IN_MB;
+        return (int) (predictedTotalMemory / providedMemory);
     }
     
     /*
