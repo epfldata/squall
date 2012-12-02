@@ -89,6 +89,26 @@ public class PrintVisitor implements ExpressionVisitor, ItemsListVisitor {
     @Override
     public void visit(EqualsTo et) {
         visitBinaryExpression(et, " = ");
+    }  
+    
+    @Override
+    public void visit(GreaterThan gt) {
+        visitBinaryExpression(gt, ">");
+    }
+
+    @Override
+    public void visit(GreaterThanEquals gte) {
+        visitBinaryExpression(gte, ">=");
+    }    
+
+    @Override
+    public void visit(MinorThan mt) {
+        visitBinaryExpression(mt, "<");
+    }
+
+    @Override
+    public void visit(MinorThanEquals mte) {
+        visitBinaryExpression(mte, "<=");
     }    
 
     @Override
@@ -159,16 +179,6 @@ public class PrintVisitor implements ExpressionVisitor, ItemsListVisitor {
     }
 
     @Override
-    public void visit(GreaterThan gt) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void visit(GreaterThanEquals gte) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
     public void visit(InExpression ie) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
@@ -180,16 +190,6 @@ public class PrintVisitor implements ExpressionVisitor, ItemsListVisitor {
 
     @Override
     public void visit(LikeExpression le) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void visit(MinorThan mt) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void visit(MinorThanEquals mte) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

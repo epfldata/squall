@@ -13,7 +13,8 @@ public class SystemParameters{
     private static Logger LOG = Logger.getLogger(SystemParameters.class);
 
     //the content of ~/.storm/storm.yaml
-    public static final int DEFAULT_NUM_ACKERS = 0;    
+    public static final int DEFAULT_NUM_ACKERS = 0;
+    public static final int CLUSTER_SIZE = 220;
 
     //used only in clustered mode execution
     //max number of tuples sent before receiving ack for any of them
@@ -36,7 +37,15 @@ public class SystemParameters{
     public static final long CLUSTER_SLEEP_BEFORE_KILL_MILLIS = 2000;
 
     //default port, should not be changed unless some other application took this port
-    public static final int NIMBUS_THRIFT_PORT = 6627;    
+    public static final int NIMBUS_THRIFT_PORT = 6627;
+    
+    //***************************SendAndWait parameters********************************
+    
+    //how much space average tuple takes to be stored
+    public static final int TUPLE_SIZE_BYTES = 50;
+    //the factor we multiply predicted storage
+    public static final int JAVA_OVERHEAD = 7;
+    //***************************SendAndWait parameters********************************
     
     //DO NOT MODIFY OR MOVE ANYWHERE ELSE. THESE ARE NOT CONFIGURATION VARIABLES
     public static final String DATA_STREAM = Utils.DEFAULT_STREAM_ID; /* "default" */
@@ -46,6 +55,11 @@ public class SystemParameters{
     public static final String LAST_ACK = "LAST_ACK";
     public static final String EOF = "EOF";
     public static final String DUMP_RESULTS = "DumpResults";
+
+    public static final long BYTES_IN_MB = 1024 * 1024;
+    
+    public static final String MANUAL_BATCH_HASH_DELIMITER = "~";
+    public static final String MANUAL_BATCH_TUPLE_DELIMITER = "`";    
     
     public static boolean isExisting(Map conf, String key){
         String result =  (String) conf.get(key);

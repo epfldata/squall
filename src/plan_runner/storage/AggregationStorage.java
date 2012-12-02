@@ -25,6 +25,8 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 		_wrapper = wrapper;
 		_outerAggOp = outerAggOp;
 		_singleEntry = singleEntry;
+		if (wrapper != null) 
+			super.setTypeConversion(_wrapper);
 		System.out.println("Initialized Aggregation Storage with uniqId = " + this.getUniqId());
 	}
 

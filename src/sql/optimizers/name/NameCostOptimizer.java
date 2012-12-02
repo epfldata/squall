@@ -6,7 +6,7 @@ import plan_runner.components.Component;
 import plan_runner.query_plans.QueryPlan;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.Optimizer;
-import sql.util.OverParallelizedException;
+import sql.util.ImproperParallelismException;
 import sql.util.ParserUtil;
 import sql.visitors.jsql.SQLVisitor;
 
@@ -32,7 +32,8 @@ public class NameCostOptimizer implements Optimizer{
         //**************creating single-relation plans********************
         if(numSources == 1){
             optimal = factory.create();
-            optimal.generateDataSource(sourceNames.get(0));
+		// YANNIS: FIX FOR PLANS HAVING ONLY ONE DATA SOURCE
+            optimal.generateDataSource(sourceNames.get(0), true);
         }
         
         //**************creating 2-way joins********************
@@ -97,7 +98,7 @@ public class NameCostOptimizer implements Optimizer{
         boolean isExc = false;
         try{
             ncg.generateEquiJoin(firstComp, secondComp);
-        }catch(OverParallelizedException exc){
+        }catch(ImproperParallelismException exc){
             StringBuilder errorMsg = new StringBuilder();
             errorMsg.append("This subplan will never generated the optimal query plan, so it's thrown:").append("\n");
             errorMsg.append(exc.getMessage()).append("\n");
@@ -166,14 +167,8 @@ public class NameCostOptimizer implements Optimizer{
     }
     
     private int getMinTotalPar(List<NameCompGen> ncgList){
-        int minTotalPar = ParserUtil.getTotalParallelism(ncgList.get(0));
-        for(int i = 1; i< ncgList.size(); i++){
-            int currentTotalPar = ParserUtil.getTotalParallelism(ncgList.get(i));
-            if(currentTotalPar < minTotalPar){
-                minTotalPar = currentTotalPar;
-            }
-        }
-        return minTotalPar;
+        int minParIndex = getMinTotalParIndex(ncgList);
+        return ParserUtil.getTotalParallelism(ncgList.get(minParIndex));
     }
-
+    
 }

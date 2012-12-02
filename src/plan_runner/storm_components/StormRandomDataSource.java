@@ -76,6 +76,9 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
         private int _tuplesProduced = -1;
         private int _customerProduced;
         private int _ordersProduced;
+        
+        //for Send and Wait mode
+        private double _totalLatency;        
 
 	public StormRandomDataSource(ComponentProperties cp,
                         List<String> allCompNames,
@@ -120,6 +123,15 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
 				_periodicBatch = new PeriodicBatchSend(_batchOutputMillis, this);
 				_firstTime = false;
 			}
+                        
+                        if(SystemParameters.isExisting(_conf, "BATCH_TIMEOUT_MILLIS")){
+                            int timeout = SystemParameters.getInt(_conf, "BATCH_TIMEOUT_MILLIS");
+                            if(timeout > 0 && 
+                                    _numSentTuples % MyUtilities.getCompBatchSize(_ID, _conf) == 0){
+                                Utils.sleep(timeout);
+                            }
+                        }
+                        long timestamp = System.currentTimeMillis();                        
 
 			String line = readLine();
 			if(line==null) {
@@ -136,11 +148,11 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
 			}
 
 			List<String> tuple = MyUtilities.fileLineToTuple(line, _conf);
-			applyOperatorsAndSend(tuple);
+			applyOperatorsAndSend(tuple, timestamp);
 
 	}
 
-        protected void applyOperatorsAndSend(List<String> tuple){
+        protected void applyOperatorsAndSend(List<String> tuple, long timestamp){
             // do selection and projection
                 if(MyUtilities.isBatchOutputMode(_batchOutputMillis)){
                     try {
@@ -161,9 +173,11 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
                 printTuple(tuple);
 
                 if(MyUtilities.isSending(_hierarchyPosition, _batchOutputMillis)){
-                    tupleSend(tuple, null);
+                    tupleSend(tuple, null, timestamp);
                 }
-
+                if(MyUtilities.isPrintLatency(_hierarchyPosition, _conf)){
+                    printTupleLatency(_numSentTuples - 1, timestamp);
+                }
         }
 
          /*
@@ -182,7 +196,11 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
                             if(!_hasSentLastAck){
                                 _hasSentLastAck = true;
                                 List<String> lastTuple = new ArrayList<String>(Arrays.asList(SystemParameters.LAST_ACK));
-				_collector.emit(new Values("N/A", lastTuple, "N/A"));
+				if(MyUtilities.isCustomTimestampMode(_conf)){
+                                    _collector.emit(new Values("N/A", lastTuple, "N/A", 0));
+                                }else{
+                                    _collector.emit(new Values("N/A", lastTuple, "N/A"));
+                                }
                             }
                         }
 		}
@@ -203,9 +221,13 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
         }
 
         @Override
-        public void tupleSend(List<String> tuple, Tuple stormTupleRcv) {
-            Values stormTupleSnd = MyUtilities.createTupleValues(tuple, _componentIndex,
-                        _hashIndexes, _hashExpressions, _conf);
+        public void tupleSend(List<String> tuple, Tuple stormTupleRcv, long timestamp) {
+            Values stormTupleSnd = MyUtilities.createTupleValues(tuple, 
+                    timestamp,
+                    _componentIndex,
+                    _hashIndexes, 
+                    _hashExpressions, 
+                    _conf);
             MyUtilities.sendTuple(stormTupleSnd, _collector, _conf);
         }
 
@@ -223,7 +245,7 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
                         AggregateOperator agg = (AggregateOperator) lastOperator;
                         List<String> tuples = agg.getContent();
                         for(String tuple: tuples){
-                            tupleSend(MyUtilities.stringToTuple(tuple, _conf), null);
+                            tupleSend(MyUtilities.stringToTuple(tuple, _conf), null, 0);
                         }
 
                         //clearing
@@ -262,8 +284,33 @@ public class StormRandomDataSource extends BaseRichSpout implements StormEmitter
                 if(MyUtilities.isAckEveryTuple(_conf) || _hierarchyPosition == FINAL_COMPONENT){
                     declarer.declareStream(SystemParameters.EOF_STREAM, new Fields(SystemParameters.EOF));
                 }
-		declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("CompIndex", "Tuple", "Hash"));
+                if(MyUtilities.isCustomTimestampMode(_conf)){
+                    declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("CompIndex", "Tuple", "Hash", "Timestamp"));
+                }else{
+                    declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("CompIndex", "Tuple", "Hash"));
+                }
 	}
+        
+        @Override
+        public void printTupleLatency(long tupleSerialNum, long timestamp) {
+            int freqCompute = SystemParameters.getInt(_conf, "FREQ_TUPLE_LOG_COMPUTE");
+            int freqWrite = SystemParameters.getInt(_conf, "FREQ_TUPLE_LOG_WRITE");
+            int startupIgnoredTuples = SystemParameters.getInt(_conf, "INIT_IGNORED_TUPLES");
+            
+            if(tupleSerialNum >= startupIgnoredTuples){
+                tupleSerialNum = tupleSerialNum - startupIgnoredTuples; // start counting from zero when computing starts
+                if(tupleSerialNum % freqCompute == 0){
+                    long latency = System.currentTimeMillis() - timestamp;
+                    _totalLatency += latency;
+                }
+                if(tupleSerialNum % freqWrite == 0){
+                    long numberOfSamples = (tupleSerialNum / freqCompute) + 1; // note that it is divisible
+                    LOG.info("Taking into account every " + freqCompute + "th tuple, and printing every " + freqWrite + "th one.");
+                    LOG.info("AVERAGE tuple latency so far is " + _totalLatency/numberOfSamples);
+                }
+            }
+        }     
+        
 
         @Override
         public void printTuple(List<String> tuple){

@@ -68,7 +68,10 @@ public class ProjectOperator implements Operator {
         @Override
         public String toString(){
             StringBuilder sb = new StringBuilder();
-            sb.append("ProjectOperator (");
+            sb.append("ProjectOperator ");
+            if(!_veList.isEmpty()){
+                sb.append("(");
+            }
             for(int i=0; i<_veList.size();i++){
                 sb.append(_veList.get(i).toString());
                 if(i==_veList.size()-1){

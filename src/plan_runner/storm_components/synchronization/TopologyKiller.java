@@ -59,7 +59,7 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
             long timeout = SystemParameters.LOCAL_SLEEP_BEFORE_KILL_MILLIS;
             if(SystemParameters.getBoolean(_conf, "DIP_DISTRIBUTED")){
                 //write down statistics (the same which is shown in Storm UI web interface)
-                StormWrapper.writeStats(_conf);
+                StormWrapper.writeStormStats(_conf);
                 timeout = SystemParameters.CLUSTER_SLEEP_BEFORE_KILL_MILLIS;
             }
             if(SystemParameters.getBoolean(_conf, "DIP_KILL_AT_THE_END")){
@@ -103,20 +103,30 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
         String str = "TopologyKiller has ID: " + _ID;
         return str;
     }
+    
+    @Override
+    public void printTupleLatency(long numSentTuples, long timestamp) {
+        throw new UnsupportedOperationException("These methods are not ment to be invoked for synchronizationStormComponents");
+    }    
 
+    @Override
     public void printTuple(List<String> tuple) {
         throw new UnsupportedOperationException("These methods are not ment to be invoked for synchronizationStormComponents");
     }
 
+    @Override
     public void printContent() {
         throw new UnsupportedOperationException("These methods are not ment to be invoked for synchronizationStormComponents");
-    }
-
-    public void tupleSend(List<String> tuple, Tuple stormTupleRcv) {
+    }    
+    
+    @Override
+    public void tupleSend(List<String> tuple, Tuple stormTupleRcv, long timestamp) {
         throw new UnsupportedOperationException("These methods are not ment to be invoked for synchronizationStormComponents");
     }
 
+    @Override
     public void batchSend() {
         throw new UnsupportedOperationException("These methods are not ment to be invoked for synchronizationStormComponents");
     }
+
 }

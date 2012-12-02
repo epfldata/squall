@@ -650,6 +650,14 @@ public class ParserUtil {
         }
         return parallelismToMap(compNamePars, map);
     }
+    
+    public static void batchesToMap(NameCompGen cg, Map map) {
+        for(Component comp: cg.getQueryPlan().getPlan()){
+            String compName = comp.getName();
+            int batchSize = cg.getCostParameters(compName).getBatchSize();
+            SystemParameters.putInMap(map, compName + "_BS", batchSize);
+        }
+    }    
 
     public static int parallelismToMap(Map<String, Integer> compNamePars, Map map) {
         int totalParallelism = 0;

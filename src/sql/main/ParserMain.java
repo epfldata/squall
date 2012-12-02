@@ -1,6 +1,7 @@
 package sql.main;
 
 import java.util.Map;
+import org.apache.log4j.Logger;
 import plan_runner.main.Main;
 import plan_runner.query_plans.QueryPlan;
 import plan_runner.utilities.SystemParameters;
@@ -11,10 +12,13 @@ import sql.optimizers.name.NameCostOptimizer;
 import sql.optimizers.name.NameManualOptimizer;
 import sql.optimizers.name.NameManualParOptimizer;
 import sql.optimizers.name.NameRuleOptimizer;
+import sql.optimizers.name.manual_batching.ManualBatchingOptimizer;
 import sql.util.ParserUtil;
 
 public class ParserMain{
- 
+    private static Logger LOG = Logger.getLogger(ParserMain.class);
+
+    
     public static void main(String[] args){
         String parserConfPath = args[0];
         ParserMain pm = new ParserMain();
@@ -45,7 +49,9 @@ public class ParserMain{
     }
     
     private Map putAckers(QueryPlan plan, Map map) {
+        int numWorkers = ParserUtil.getTotalParallelism(plan, map);
         int localAckers, clusterAckers;
+        
         if(!SystemParameters.getBoolean(map, "DIP_ACK_EVERY_TUPLE")){
             //we don't ack after each tuple is sent, 
             //  so we don't need any node to be dedicated for acking
@@ -56,18 +62,21 @@ public class ParserMain{
             localAckers = 1;
             
             //this is a heuristic which could be changed
-            int totalPar = ParserUtil.getTotalParallelism(plan, map);
-            clusterAckers = totalPar / 2;
+            clusterAckers = numWorkers / 2;
         }
 
         if (SystemParameters.getBoolean(map, "DIP_DISTRIBUTED")){
             SystemParameters.putInMap(map, "DIP_NUM_ACKERS", clusterAckers);
+            if(numWorkers + clusterAckers > SystemParameters.CLUSTER_SIZE){
+                throw new RuntimeException("The cluster has only " + SystemParameters.CLUSTER_SIZE + 
+                        " nodes, but the query plan requires " + numWorkers + " workers " + clusterAckers + " ackers.");
+            }
         }else{
             SystemParameters.putInMap(map, "DIP_NUM_ACKERS", localAckers);
         }
         
         return map;
-    }    
+    }
 
     public QueryPlan generatePlan(Map map){
         Optimizer opt = pickOptimizer(map);
@@ -90,6 +99,8 @@ public class ParserMain{
             return new NameRuleOptimizer(map);
         }else if("NAME_COST_LEFTY".equalsIgnoreCase(optStr)){
             return new NameCostOptimizer(map);
+        }else if("NAME_MANUAL_BATCHING".equalsIgnoreCase(optStr)){
+            return new ManualBatchingOptimizer(map);
         }
         throw new RuntimeException("Unknown " + optStr + " optimizer!");
     }
