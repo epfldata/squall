@@ -73,5 +73,6 @@ public class PredicateUpdateIndexesVisitor implements PredicateVisitor{
     public void visit(LikePredicate like) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
 	
 }

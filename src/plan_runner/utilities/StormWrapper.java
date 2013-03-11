@@ -38,7 +38,7 @@ public class StormWrapper {
         if(MyUtilities.isAckEveryTuple(conf)){
             //otherwise this parameter is used only at the end,
             //  and represents the time topology is shown as killed (will be set to default: 30s)
-            //Messages are failling if we do not specify timeout (proven for TPCH8)
+            //Default also works here
             //conf.setMessageTimeoutSecs(SystemParameters.MESSAGE_TIMEOUT_SECS);
             
             //Storm throttling mode

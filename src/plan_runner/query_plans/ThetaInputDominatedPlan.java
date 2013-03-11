@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
 import plan_runner.components.DataSourceComponent;
-import plan_runner.components.ThetaJoinComponent;
+import plan_runner.components.ThetaJoinStaticComponent;
 import plan_runner.conversion.DoubleConversion;
 import plan_runner.conversion.IntegerConversion;
 import plan_runner.conversion.NumericConversion;
@@ -89,7 +89,7 @@ public class ThetaInputDominatedPlan {
 		
 		AndPredicate overallPred= new AndPredicate(pred1, pred2);
 		
-		ThetaJoinComponent LINEITEMS_ORDERSjoin = new ThetaJoinComponent(
+		ThetaJoinStaticComponent LINEITEMS_ORDERSjoin = new ThetaJoinStaticComponent(
 				relationLineitem,
 				relationOrders,
 				_queryPlan).setJoinPredicate(overallPred)

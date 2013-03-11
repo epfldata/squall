@@ -12,10 +12,10 @@ import java.io.Serializable;
  */
 public interface Index<KeyType> extends Serializable {
 	
-	public TIntArrayList getValues(KeyType key, int operator);
+	public TIntArrayList getValues(int operator, KeyType key);
 
-	public void put(KeyType key, Integer row_id);
+	public void put(Integer row_id, KeyType key);
 
-	public TIntArrayList getValues(KeyType key);
+	public TIntArrayList getValuesWithOutOperator(KeyType key, KeyType ... keys);
 
 }

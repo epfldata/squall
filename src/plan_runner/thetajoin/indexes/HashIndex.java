@@ -25,22 +25,22 @@ public class HashIndex<KeyType> implements Index<KeyType> {
 	}
 	
 	@Override
-	public TIntArrayList getValues(KeyType key) 
+	public TIntArrayList getValuesWithOutOperator(KeyType key,KeyType ... keys) 
 	{
 		return _index.get(key);
 	}
 	
 	@Override
-	public TIntArrayList getValues(KeyType key, int operator) 
+	public TIntArrayList getValues(int operator, KeyType key) 
 	{
 		if (operator != ComparisonPredicate.EQUAL_OP)
 			return null;
 		else
-			return getValues(key);
+			return getValuesWithOutOperator(key);
 	}
 
 	@Override
-	public void put(KeyType key, Integer row_id) {
+	public void put(Integer row_id, KeyType key) {
 		TIntArrayList idsList = _index.get(key);
 		if(idsList == null){
 			idsList = new TIntArrayList(1);

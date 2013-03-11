@@ -50,7 +50,7 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
                             //it's of type int, but we use String to save more space
         private String _firstEmitterIndex, _secondEmitterIndex;
 
-	private int _numSentTuples=0;
+	private long _numSentTuples=0;
 	private boolean _printOut;
 
 	private ChainOperator _operatorChain;
@@ -268,16 +268,16 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 		List<Object> typesOfValuesToIndex = new ArrayList<Object>(visitor._typesOfValuesToIndex);
 		
 		for(int i=0; i<affectedIndexes.size(); i++){
-			if(typesOfValuesToIndex.get(i) instanceof Integer ){
-				affectedIndexes.get(i).put(Integer.parseInt(valuesToIndex.get(i)), row_id);
-			}else if(typesOfValuesToIndex.get(i) instanceof Double ){
-				affectedIndexes.get(i).put(Double.parseDouble(valuesToIndex.get(i)), row_id);
-			}else if(typesOfValuesToIndex.get(i) instanceof String){
-				affectedIndexes.get(i).put(valuesToIndex.get(i), row_id);
-			}else{
-				throw new RuntimeException("non supported type");
-			}
-			
+				if(typesOfValuesToIndex.get(i) instanceof Integer ){
+					affectedIndexes.get(i).put(row_id, Integer.parseInt(valuesToIndex.get(i)));
+				}else if(typesOfValuesToIndex.get(i) instanceof Double ){
+					affectedIndexes.get(i).put(row_id, Double.parseDouble(valuesToIndex.get(i)));
+				}else if(typesOfValuesToIndex.get(i) instanceof String){
+					affectedIndexes.get(i).put(row_id, valuesToIndex.get(i));
+				}else{
+					throw new RuntimeException("non supported type");
+				}
+
 		}
 		
 		return valuesToIndex;
@@ -341,17 +341,18 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 				}	
 			}
 
-			// Get the values from the index (check type first)
-			if(_typeOfValueIndexed.get(i) instanceof String){
-				currentRowIds = currentOpposIndex.getValues(value, currentOperator );
-			//Even if valueIndexed is at first time an integer with precomputation a*col +b, it become a double
-			}else if(_typeOfValueIndexed.get(i) instanceof Double){
-				currentRowIds = currentOpposIndex.getValues(Double.parseDouble(value), currentOperator );
-			}else if(_typeOfValueIndexed.get(i) instanceof Integer){
-				currentRowIds = currentOpposIndex.getValues(Integer.parseInt(value), currentOperator );
-			}else{
-				throw new RuntimeException("non supported type");
-			}
+				// Get the values from the index (check type first)
+				if(_typeOfValueIndexed.get(i) instanceof String){
+					currentRowIds = currentOpposIndex.getValues(currentOperator, value );
+				//Even if valueIndexed is at first time an integer with precomputation a*col +b, it become a double
+				}else if(_typeOfValueIndexed.get(i) instanceof Double){
+					currentRowIds = currentOpposIndex.getValues(currentOperator, Double.parseDouble(value) );
+				}else if(_typeOfValueIndexed.get(i) instanceof Integer){
+					currentRowIds = currentOpposIndex.getValues(currentOperator, Integer.parseInt(value) );
+				}else{
+					throw new RuntimeException("non supported type");
+				}
+			
 				
 			
 			//System.out.println("currentIDS:"+currentRowIds);
@@ -459,7 +460,7 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 			Values stormTupleSnd = MyUtilities.createTupleValues(tuple, 
                                 timestamp,
                                 _componentIndex,
-				_hashIndexes, 
+								_hashIndexes, 
                                 _hashExpressions, 
                                 _conf);
 			MyUtilities.sendTuple(stormTupleSnd, stormTupleRcv, _collector, _conf);

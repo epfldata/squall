@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
 import plan_runner.thetajoin.matrix_mapping.MatrixAssignment.Dimension;
 
 /**
@@ -31,6 +32,32 @@ public class EquiMatrixAssignment implements Serializable, MatrixAssignment{
 		compute();
 		createRegionMatrix();
 	}
+	
+	public EquiMatrixAssignment(int r_S, int r_T, long randomSeed) {
+		if(randomSeed==-1)
+			_rand= new Random();
+		else
+			_rand= new Random(randomSeed);
+		_r_S=r_S;
+		_r_T=r_T;
+		_r=_r_S*_r_T;
+		createRegionMatrix();
+	}
+	
+	public EquiMatrixAssignment(String dim, long randomSeed) {
+		if(randomSeed==-1)
+			_rand= new Random();
+		else
+			_rand= new Random(randomSeed);
+		
+		String[] dimensions= dim.split("-");
+		
+		_r_S=Integer.parseInt(dimensions[0]);
+		_r_T=Integer.parseInt(dimensions[1]);
+		_r=_r_S*_r_T;
+		createRegionMatrix();
+	}
+
 	
 	/**
 	 * This function computes creates the regions Matrix  
@@ -73,7 +100,7 @@ public class EquiMatrixAssignment implements Serializable, MatrixAssignment{
 						System.out.println("errrrrrrrrrrrrrrrrrrrrrrrr");
 				 rt=_r/rs;
 				 //always assign more reducers to the bigger data
-				 if( (_sizeS>_sizeT && rs<=rt) || (_sizeS<_sizeT && rs>=rt))
+				 if( (_sizeS>_sizeT && rs<rt) || (_sizeS<_sizeT && rs>rt))
 					 continue;
 				 if(_r_S==-1){
 					 _r_S=rs;_r_T=rt;
@@ -83,7 +110,7 @@ public class EquiMatrixAssignment implements Serializable, MatrixAssignment{
 		 }
 		}
 		
-		System.out.println("Value of R_S: " +_r_S+" R_T: "+_r_T);
+//		System.out.println("Value of R_S: " +_r_S+" R_T: "+_r_T);
 	}
 	
 	/**
@@ -148,6 +175,68 @@ public class EquiMatrixAssignment implements Serializable, MatrixAssignment{
 		ret = ret.concat("Number of worker rows: " + _r_S + "\n");
 		ret = ret.concat("Number of worker columns: " + _r_T + "\n");
 		return ret;
+	}
+	
+	public int getNumberOfWorkerRows() {
+		return _r_S;
+	}
+
+	public int getNumberOfWorkerColumns() {
+		return _r_T;
+	}
+	
+	public String getMappingDimensions()
+	{
+		return _r_S+"-"+_r_T;
+	}
+	
+	/**
+	 * decides whether this taskID will emit data for data migration.
+	 * @param RowOrColumn
+	 * @param int taskID
+	 * @return boolean 
+	 */
+	
+	public boolean isDataMigrator(Dimension RowOrColumn, int taskID)
+	{
+		if(RowOrColumn == Dimension.ROW){
+			for (int i = 0; i < _r_S; i++) {
+				if(regionsMatrix[i][0]==taskID)
+					return true;
+			}
+		}
+		else if(RowOrColumn == Dimension.COLUMN){
+			for (int i = 0; i < _r_T; i++) {
+				if(regionsMatrix[0][i]==taskID)
+					return true;
+			}
+		}
+		return false;
+	}
+	public static boolean isDataMigrator(int row, int col,Dimension RowOrColumn, int taskID)
+	{
+		
+		int[][] regionsMatrix= new int[row][col];
+		for (int i = 0; i < row; i++) {
+			int ID=i*col;
+			for (int j = 0; j < col; j++) {
+				regionsMatrix[i][j]=ID+j;
+			}
+		}
+		
+		if(RowOrColumn == Dimension.ROW){
+			for (int i = 0; i < row; i++) {
+				if(regionsMatrix[i][0]==taskID)
+					return true;
+			}
+		}
+		else if(RowOrColumn == Dimension.COLUMN){
+			for (int i = 0; i < col; i++) {
+				if(regionsMatrix[0][i]==taskID)
+					return true;
+			}
+		}
+		return false;
 	}
 	
 }

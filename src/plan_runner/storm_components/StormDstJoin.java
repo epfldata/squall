@@ -44,7 +44,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 	//it's of type int, but we use String to save more space
 	private String _firstEmitterIndex, _secondEmitterIndex;
 
-	private int _numSentTuples=0;
+	private long _numSentTuples=0;
 	private boolean _printOut;
 
 	private ChainOperator _operatorChain;
@@ -251,7 +251,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			}
 
 			//add the stormTuple to the specific storage
-                        String inputTupleString = MyUtilities.tupleToString(tuple, _conf);
+            String inputTupleString = MyUtilities.tupleToString(tuple, _conf);
 			affectedStorage.insert(inputTupleHash, inputTupleString);
 
 			performJoin(stormTupleRcv,
@@ -473,9 +473,9 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 	@Override
 		public void declareOutputFields(OutputFieldsDeclarer declarer) {
 			if(_hierarchyPosition == FINAL_COMPONENT){ // then its an intermediate stage not the final one
-                            if(!MyUtilities.isAckEveryTuple(_conf)){
+            	if(!MyUtilities.isAckEveryTuple(_conf)){
 					declarer.declareStream(SystemParameters.EOF_STREAM, new Fields(SystemParameters.EOF));
-                            }
+                }
 			}else{
                             List<String> outputFields= new ArrayList<String>();
                             if(MyUtilities.isManualBatchingMode(_conf)){
@@ -489,7 +489,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                             if(MyUtilities.isCustomTimestampMode(_conf)){
                                 outputFields.add("Timestamp");
                             }
-			declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(outputFields));
+							declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(outputFields));
 			}
 		}
         

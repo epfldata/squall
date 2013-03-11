@@ -18,7 +18,7 @@ import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.Select;
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
-import plan_runner.components.ThetaJoinComponent;
+import plan_runner.components.ThetaJoinStaticComponent;
 import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ColumnReference;
 import plan_runner.expressions.ValueExpression;
@@ -367,7 +367,7 @@ public class ParserUtil {
     }
 
     public static int getPreOpsOutputSize(Component component, Schema schema, TableAliasName tan){
-        if(component instanceof ThetaJoinComponent){
+        if(component instanceof ThetaJoinStaticComponent){
             throw new RuntimeException("SQL generator with Theta does not work for now!");
             //TODO similar to Equijoin, but not subtracting joinColumnsLength
         }
