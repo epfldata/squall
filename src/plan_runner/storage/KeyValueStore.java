@@ -10,11 +10,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.log4j.Logger;
 import plan_runner.conversion.TypeConversion;
 import plan_runner.utilities.SystemParameters;
 
 public class KeyValueStore<K, V> extends BasicStore {
-
+	private static Logger LOG = Logger.getLogger(KeyValueStore.class);
+	
 	private TypeConversion _tc = null;
 	private static int DEBUG_COUNTER = 0 ;	
 	private HashMap<K, Object> _memstore;
@@ -197,6 +199,10 @@ public class KeyValueStore<K, V> extends BasicStore {
 			K key = it.next();
 			List<V> thisValues = this.access(key);
 			List<V> storeValues = (List<V>)store.access(key);
+			if(storeValues == null){
+				LOG.info("File does not contain values for key = " + key + ".\n");
+				return false;
+			}
 			Collections.sort((List)thisValues);
 			Collections.sort((List)storeValues);
 			
@@ -208,12 +214,16 @@ public class KeyValueStore<K, V> extends BasicStore {
 				V value2 = storeValues.get(index);
 				if (value1 instanceof Number) {
 					if (value1 != value2) {
-						if (Math.abs(((Number)value1).floatValue() - ((Number)value2).floatValue()) > 0.0001)
+						if (Math.abs(((Number)value1).floatValue() - ((Number)value2).floatValue()) > 0.0001){
+							LOG.info("Computed value " + value1 + " differs from the value from the file " + value2 +".\n");
 							return false;
+                                                }
 					}
 				} else {
-					if (!value1.equals(value1)) 
+					if (!value1.equals(value1)) {
+						LOG.info("Computed value " + value1 + " differs from the value from the file " + value2 +".\n");
 						return false;
+					}
 				}
 				index++;
 			}
