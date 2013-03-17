@@ -1,0 +1,29 @@
+DIP_DISTRIBUTED false
+DIP_QUERY_NAME tpch3
+DIP_TOPOLOGY_NAME_PREFIX username
+DIP_TOPOLOGY_NAME TPCH3Simple
+DIP_NUM_ACKERS 1
+
+DIP_DATA_PATH ../testing/data/tpch/0.01G/
+
+CUSTOMER_PAR 1
+ORDERS_PAR 1
+LINEITEM_PAR 1
+
+CUSTOMER_ORDERS_PAR 1
+CUSTOMER_ORDERS_LINEITEM_PAR 1
+
+#below are unlikely to change
+DIP_EXTENSION .tbl
+DIP_READ_SPLIT_DELIMITER \|
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_KILL_AT_THE_END true
+
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_DIP_DIR /export/home/squalldata/storage 
+STORAGE_COLD_START true

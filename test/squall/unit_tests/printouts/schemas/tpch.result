@@ -61,7 +61,7 @@ TABLE NAME PART, SIZE 20000
     CONTAINER of type STRING Distinct Values = 40 Range [null, null]
     COMMENT of type STRING Distinct Values = -1 Range [null, null]
     RETAILPRICE of type DATE Distinct Values = -1 Range [null, null]
-    SIZE of type LONG Distinct Values = 50 Range [null, null]
+    SIZE of type LONG Distinct Values = 50 Range [1, 50]
     BRAND of type STRING Distinct Values = 5 Range [null, null]
     TYPE of type STRING Distinct Values = 150 Range [null, null]
 
@@ -81,6 +81,6 @@ TABLE NAME LINEITEM, SIZE 600000
     SUPPKEY of type LONG Distinct Values = 1000 Range [null, null]
     EXTENDEDPRICE of type DATE Distinct Values = -1 Range [null, null]
     COMMENT of type STRING Distinct Values = -1 Range [null, null]
-    DISCOUNT of type DATE Distinct Values = -1 Range [null, null]
-    QUANTITY of type DATE Distinct Values = 50 Range [null, null]
+    DISCOUNT of type DATE Distinct Values = 11 Range [0.0, 0.1]
+    QUANTITY of type DATE Distinct Values = 50 Range [1.0, 50.0]
 

@@ -1,0 +1,41 @@
+DIP_DISTRIBUTED false
+DIP_QUERY_NAME theta_output_dominated
+DIP_TOPOLOGY_NAME_PREFIX username
+DIP_TOPOLOGY_NAME ThetaOutputDominatedSimple
+DIP_NUM_ACKERS 0
+
+DIP_DATA_PATH ../testing/data/tpch/0.01G/
+
+
+ORDERS_PAR 1
+LINEITEM_PAR 1
+NATION_PAR 1
+CUSTOMER_PAR 1
+SUPPLIER_PAR 1
+
+
+SUPPLIER_NATION_PAR 1
+
+#below are unlikely to change
+DIP_EXTENSION .tbl
+DIP_READ_SPLIT_DELIMITER \|
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_KILL_AT_THE_END true
+
+
+NATION_CARD 50
+CUSTOMER_CARD 50
+SUPPLIER_CARD 50
+ORDERS_CARD 50
+LINEITEM_CARD 50
+
+SUPPLIER_NATION_CARD 50
+
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_DIP_DIR /export/home/squalldata/storage 
+STORAGE_COLD_START true

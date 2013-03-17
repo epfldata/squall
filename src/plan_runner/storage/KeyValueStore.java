@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import org.apache.log4j.Logger;
 import plan_runner.conversion.TypeConversion;
 import plan_runner.utilities.SystemParameters;
@@ -215,13 +216,13 @@ public class KeyValueStore<K, V> extends BasicStore {
 				if (value1 instanceof Number) {
 					if (value1 != value2) {
 						if (Math.abs(((Number)value1).floatValue() - ((Number)value2).floatValue()) > 0.0001){
-							LOG.info("Computed value " + value1 + " differs from the value from the file " + value2 +".\n");
+							LOG.info("For key '" + key + "' computed value '" + value1 + "' differs from the value from the file '" + value2 +"'.\n");
 							return false;
-                                                }
+						}
 					}
 				} else {
-					if (!value1.equals(value1)) {
-						LOG.info("Computed value " + value1 + " differs from the value from the file " + value2 +".\n");
+					if (!value1.equals(value1)){
+						LOG.info("For key '" + key + "' computed value '" + value1 + "' differs from the value from the file '" + value2 +"'.\n");
 						return false;
 					}
 				}

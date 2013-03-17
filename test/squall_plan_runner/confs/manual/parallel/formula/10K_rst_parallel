@@ -1,0 +1,26 @@
+DIP_DISTRIBUTED true
+DIP_QUERY_NAME rst
+DIP_TOPOLOGY_NAME_PREFIX avitorovic
+DIP_TOPOLOGY_NAME rst_parallel
+
+# the following two are optional, by default they use topology.workers and topology.ackers from storm.yaml
+#DIP_NUM_WORKERS 176
+#DIP_NUM_ACKERS 0
+
+DIP_DATA_PATH /export/home/avitorovic/queries/rst/data/10K/
+
+DIP_EXTENSION .dat
+
+R_PAR 1
+S_PAR 1
+T_PAR 1
+
+R_S_PAR 16
+R_S_T_PAR 16
+
+# below are unlikely to change
+DIP_READ_SPLIT_DELIMITER ,
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_KILL_AT_THE_END false

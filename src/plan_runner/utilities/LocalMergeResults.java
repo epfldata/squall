@@ -50,8 +50,8 @@ public class LocalMergeResults {
         //  we need it due to collectedLastComponents, and lines of result
         //in cluster mode, they can communicate only through conf file
         public static void localPrintAndCompare(Map map) {
-            localPrint(_computedAgg.printContent(), map);
-            localCompare(map);
+        	localPrint(_computedAgg.printContent(), map);
+        	localCompare(map);
         }
 
         private static void localPrint(String finalResult, Map map){
@@ -70,10 +70,7 @@ public class LocalMergeResults {
                         + "\n  Make sure you specified correct DIP_RESULT_ROOT and"
                         + "\n  created result file with correct name.");
                 return;
-            }
-            if(_computedAgg.printContent().isEmpty() || _fileAgg.printContent().isEmpty()){
-                throw new RuntimeException("Final aggregation state should not be empty!");
-            }
+            }            
             if(_computedAgg.getStorage().equals(_fileAgg.getStorage())){
                 LOG.info("\nOK: Expected result achieved for " + SystemParameters.getString(map, "DIP_TOPOLOGY_NAME"));
             }else{
