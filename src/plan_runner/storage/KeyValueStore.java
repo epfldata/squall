@@ -194,7 +194,20 @@ public class KeyValueStore<K, V> extends BasicStore {
 	}
 	
 	@Override	
-	public boolean equals(BasicStore store) {
+	public boolean equals(BasicStore bstore) {
+		if (!(bstore instanceof KeyValueStore)){
+			LOG.info("Compared stores are not of the same type!");
+			return false;
+		}
+		KeyValueStore store = (KeyValueStore) bstore;
+		int thisSize = this.keySet().size();
+		int otherSize = store.keySet().size();
+		if ( thisSize != otherSize) {
+			LOG.info("Stores differ in size: Computed store has " + thisSize + 
+					      " entries, and file store has " + otherSize + " entries.");
+			return false;
+		}
+		
 		Set<K> keys = this.keySet();
 		for (Iterator<K> it = keys.iterator() ; it.hasNext() ; ) {
 			K key = it.next();
