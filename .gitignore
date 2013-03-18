@@ -3,15 +3,21 @@
 
 
 # Paths
+eclipse
+deploy
+storm-0*
+
 bin/extract_constants
 bin/old
-storm-0*
-eclipse
+experiments
+test/squall_plan_runner/confs/special_purpose
+
+test/data/tpch/small
 test/data/tpch/0.1G
+test/data/tpch/0.05G
 test/data/tpch/1G
+test/data/tpch/4G
 test/data/tpch/10G
 test/data/tpch/50G
 test/results/tpch/10G
 test/results/tpch/50G
-test/squall_plan_runner/confs/special_purpose
-deploy

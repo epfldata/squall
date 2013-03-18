@@ -21,6 +21,9 @@ nimbus.task.launch.secs: 240
 supervisor.worker.start.timeout.secs: 240
 supervisor.worker.timeout.secs: 240
 
+#topology.enable.message.timeouts: false - this should not have any effect on the execution
+#supervisor.enable: false - if this is decommented, no info about sent/received tuples in UI
+
 java.library.path: "/opt/storm/deps/lib"
 #java.library.path: "/usr/local/lib:/opt/local/lib:/usr/lib"
 

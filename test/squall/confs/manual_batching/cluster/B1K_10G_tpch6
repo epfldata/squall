@@ -1,11 +1,10 @@
-DIP_DISTRIBUTED false
-DIP_QUERY_NAME tpch3
+DIP_DISTRIBUTED true
+DIP_QUERY_NAME tpch6
 
 DIP_TOPOLOGY_NAME_PREFIX username
-DIP_DATA_ROOT ../test/data/tpch/
+DIP_DATA_ROOT /data/squall_blade/data/tpchdb/
 DIP_SQL_ROOT ../test/squall/sql_queries/
 DIP_SCHEMA_PATH ../test/squall/schemas/tpch.txt
-DIP_RESULT_ROOT ../test/results/
 
 # DIP_DB_SIZE is in GBs
 DIP_DB_SIZE 10
@@ -18,20 +17,20 @@ DIP_DB_SIZE 10
 #DIP_MAX_SRC_PAR 1
 
 #DIP_OPTIMIZER_TYPE NAME_MANUAL_PAR_LEFTY
-#DIP_PLAN CUSTOMER:2,ORDERS:3:4
+#DIP_PLAN CUSTOMER:1,ORDERS:1:10
 
 #DIP_OPTIMIZER_TYPE NAME_MANUAL_COST_LEFTY
 #DIP_PLAN CUSTOMER,ORDERS
-#DIP_TOTAL_SRC_PAR 10
+#DIP_TOTAL_SRC_PAR 20
 
 #DIP_OPTIMIZER_TYPE NAME_RULE_LEFTY
-#DIP_TOTAL_SRC_PAR 10
+#DIP_TOTAL_SRC_PAR 20
 
 #DIP_OPTIMIZER_TYPE NAME_COST_LEFTY
-#DIP_TOTAL_SRC_PAR 2
+#DIP_TOTAL_SRC_PAR 8
 
 DIP_OPTIMIZER_TYPE NAME_MANUAL_BATCHING
-DIP_TOTAL_SRC_PAR 3
+DIP_TOTAL_SRC_PAR 1
 
 ########################################
 
@@ -57,13 +56,13 @@ BATCH_TIMEOUT_MILLIS 0
 
 CUSTOM_TIMESTAMP true
 #   ignoring latencies in 1st second, they are 3 orders of magnitudes bigger
-INIT_IGNORED_TUPLES 0
+INIT_IGNORED_TUPLES 20
 
-#   compute latency for every FREQ_TUPLE_LOG_COMPUTEth tuple on the last component (does not depend on BATCH_SEND_MODE)
+#   compute latency for every FREQ_TUPLE_LOG_COMPUTEth tuple on the last component (it's on batch level for MANUAL_BATCH)
 FREQ_TUPLE_LOG_COMPUTE 1
-#   write average latency for every FREQ_TUPLE_LOG_WRITEth batch on the last component
+#   write average latency for every FREQ_TUPLE_LOG_WRITEth tuple on the last component (it's on batch level for MANUAL_BATCH)
 #   FREQ_TUPLE_LOG_WRITE has to be divisible with FREQ_TUPLE_LOG_COMPUTE
-FREQ_TUPLE_LOG_WRITE 100
+FREQ_TUPLE_LOG_WRITE 50
 ########################################################################
 
 
