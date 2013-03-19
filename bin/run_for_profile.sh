@@ -57,5 +57,5 @@ done
 # 6. Extracting timing information, we might want to check whether execution time prolonged too much, so that profiling results does not make sense anymore
 CURR_DIR=`pwd`
 cd $RESULT_DIR
-rake -f extract_time.rb
+rake -f extract_time.rb extract[$MODE]
 cd $CURR_DIR

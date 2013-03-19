@@ -62,7 +62,7 @@ public class Main {
         try{
             Thread.sleep(timeout);
         } catch(InterruptedException ie){
-            //If this thread was intrrupted by nother thread
+            //If this thread was intrrupted by another thread
         }
     }
 

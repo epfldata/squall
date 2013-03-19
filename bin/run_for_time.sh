@@ -40,5 +40,5 @@ done
 # 4. Extracting timing information.
 CURR_DIR=`pwd`
 cd $RESULT_DIR
-rake -f extract_time.rb
+rake -f extract_time.rb extract[$MODE]
 cd $CURR_DIR

@@ -4,9 +4,15 @@ require 'time'
 require 'gnuplot'
 require 'util.rb'
 
-task :extract do
+task :extract, :mode do |t, args|
 
-$CONF_PATH = "../../test/squall/confs/create_confs/generated";
+if (args.mode == "SQL") then
+  CONF_MODE="squall"
+else
+  CONF_MODE="squall_plan_runner"
+end
+
+$CONF_PATH = "../../test/#{CONF_MODE}/confs/create_confs/generated";
 $STORM_DATA_DIR = "data";
 $TIMING_DIR = "timing_info";
 $TOPOLOGY_NAME_PREFIX="username";
