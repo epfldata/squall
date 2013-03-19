@@ -3,6 +3,7 @@
 require 'time'
 require 'gnuplot'
 require 'util.rb'
+require 'fileutils'
 
 task :extract, :mode do |t, args|
 
@@ -16,6 +17,8 @@ $CONF_PATH = "../../test/#{CONF_MODE}/confs/create_confs/generated";
 $STORM_DATA_DIR = "data";
 $TIMING_DIR = "timing_info";
 $TOPOLOGY_NAME_PREFIX="username";
+
+FileUtils.mkdir_p($TIMING_DIR);
 
 $topology_names = Dir.foreach($CONF_PATH).find_all{|file| file != "." && file != ".." };
 
