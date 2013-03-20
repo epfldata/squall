@@ -1,24 +1,17 @@
-# This script runs all the config files from CONF_PATH, in order to obtain statistics (timings and eventual errors are in separate file per configuration)
+# This script runs all the config files from CONF_PATH, in order to obtain statistics, Component -> (time of execution, node, failed tuples and exceptions)
 
 require 'time'
 require 'gnuplot'
 require 'util.rb'
-require 'fileutils'
 
-task :extract, :mode do |t, args|
+task :extract, :mode, :base_path, :conf_path, :storm_data_path do |t, args|
 
-if (args.mode == "SQL") then
-  CONF_MODE="squall"
-else
-  CONF_MODE="squall_plan_runner"
-end
-
-$CONF_PATH = "../../test/#{CONF_MODE}/confs/create_confs/generated";
-$STORM_DATA_DIR = "data";
-$TIMING_DIR = "timing_info";
+$RELATIVE="../"; # How from the rake directory to come to bin directory
+$BASE_PATH = $RELATIVE + args.base_path;
+$CONF_PATH = $RELATIVE + args.conf_path;
+$STORM_DATA_DIR = $RELATIVE + args.storm_data_path;
 $TOPOLOGY_NAME_PREFIX="username";
-
-FileUtils.mkdir_p($TIMING_DIR);
+$RAKE_OUTPUT="cluster_exec.info";
 
 $topology_names = Dir.foreach($CONF_PATH).find_all{|file| file != "." && file != ".." };
 
@@ -65,7 +58,7 @@ $topology_names.each do |config_name|
         end
       end
     stat_dump = stat_dump.join("\n");
-    write_file("#{$TIMING_DIR}/#{config_name}", stat_dump)
+    write_file("#{$BASE_PATH}/#{config_name}/#{$RAKE_OUTPUT}", stat_dump)
 end #$topology_names
 end
 

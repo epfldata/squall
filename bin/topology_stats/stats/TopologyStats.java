@@ -116,34 +116,21 @@ public class TopologyStats {
                 
                 //is there at least one component where something failed
                 if(!globalFailed){
-                    sb.append("\n\nOK: No tuples failed so far.");
+                    sb.append("OK: No tuples failed so far.\n");
                 }else{
-                    sb.append("\n\nERROR: Some tuples failed!");
+                    sb.append("ERROR: Some tuples failed!\n");
                 }
                 
                 //print topology errors
                 Map<String, List<ErrorInfo>> errors = topologyInfo.get_errors();
                 if(!isEmptyMap(errors)){
-                    sb.append("\n\nERROR: There are some errors in topology: ").append(errors);
+                    sb.append("ERROR: There are some errors in topology: ").append(errors).append("\n");
                 }else{
-                    sb.append("\n\nOK: No errors in the topology.");
+                    sb.append("OK: No errors in the topology.\n");
                 }
+                
             }
-
-        } catch (TException ex) {
-            ex.printStackTrace();
-        } catch (NotAliveException ex) {
-            ex.printStackTrace();
-        }
-        return sb.toString();
-    }
-    
-    public static String writeStatistics(){
-        StringBuffer sb = new StringBuffer();
-        try{    
-            Client client=getNimbusStub();
-            TopologySummary topologySummary = getTopologySummary(client);
-            String topologyID = topologySummary.get_id();
+            sb.append("\n\n");
             
             TopologyInfo topologyInfo = client.getTopologyInfo(topologyID);
             boolean withAckers = getAckMode(topologyInfo);

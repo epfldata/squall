@@ -1,4 +1,5 @@
 #!/bin/bash
+# Extract information from worker.log files when printing latency is turned on (It works with no Ackers)
 
 usage() {
 	echo "Usage: ./LatencyEstimator.sh <FOLDER>"
