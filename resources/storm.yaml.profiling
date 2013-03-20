@@ -26,7 +26,7 @@ java.library.path: "/opt/storm/deps/lib"
 
 # these are defaults, but can be changed from config files/from code directly
 topology.acker.executors: 0
-topology.workers: 22
+topology.workers: 220
 
 topology.disruptor.wait.strategy: "com.lmax.disruptor.BlockingWaitStrategy"
 topology.executor.receive.buffer.size: 16384 #batched
