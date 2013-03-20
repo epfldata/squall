@@ -1,21 +1,24 @@
 #!/bin/bash
 
 function usage() {
-	echo "Usage:      ./loop_squall_cluster.sh <MODE> <PROFILING> <BASE_PATH>"
-	echo "For example ./loop_squall_cluster.sh SQL YES ../experiments/series_name"
-	echo "or          ./loop_squall_cluster.sh PLAN_RUNNER NO ../experiments/series_name"
+	echo "Usage:      ./loop_squall_cluster.sh <MODE> <PROFILING> <RESTART_ANYWAY> <BASE_PATH>"
+	echo "               MODE: PLAN_RUNNER or SQL "
+	echo "               PROFILING: YES or NO "
+	echo "               RESTART_ANYWAY: YES or NO (this is for cleaning storm .log files)"
+	echo "               BASE_PATH: ../experiments/series_name"
 	exit
 }
 
 
 # Check correct number of command line arguments
-if [ $# -ne 3 ]; then
+if [ $# -ne 4 ]; then
 	echo "Error: Illegal number of command line arguments. Required 3 argument and got $#. Exiting..."
 	usage
 fi
 MODE=$1
 PROFILING=$2
-BASE_PATH=$3
+RESTART_ANYWAY=$3
+BASE_PATH=$4
 # Check if arg3 is a directory
 if [ ! -d $BASE_PATH ]; then
 	echo "Provided argument $BASE_PATH is not a folder (or folder doesn't exist). Exiting..."
@@ -37,9 +40,9 @@ rm -rf ${STORM_DATA_PATH}*
 # 2. storm.yaml is set at the beginning and it is not returned to its original state
 if [ $PROFILING == YES ] 
 then
-  ./profiling.sh START
+  ./profiling.sh START $RESTART_ANYWAY
 else
-  ./profiling.sh END
+  ./profiling.sh END $RESTART_ANYWAY
 fi
 
 # 3. for each generated file, run it and wait until it is terminated

@@ -1,6 +1,9 @@
 #!/bin/bash
 . ./storm_version.sh
 
+# Arguments are OPERATION RESTART_ANYWAY
+#               START/END YES/NO
+
 MACHINE=squalldata@icdatasrv5
 CLUSTER_NODE_CONF=/opt/storm/$STORMNAME/conf/storm.yaml
 
@@ -23,6 +26,9 @@ restart_cluster() {
 init_cluster_profiling() {
 	check_cluster_mode
 	if [ $? == 1 ]; then
+		if [ "$1" == "YES" ]; then
+			restart_cluster
+		fi
 		return # Cluster already in profiling mode
 	fi
 	echo "Updating cluster with profiling configuration..."
@@ -34,6 +40,9 @@ init_cluster_profiling() {
 restore_normal_cluster() {
 	check_cluster_mode
 	if [ $? == 0 ]; then
+		if [ "$1" == "YES" ]; then
+			restart_cluster
+		fi
 		return # Cluster already in normal mode
 	fi
 	echo "Updating cluster with normal configuration..."
@@ -43,9 +52,9 @@ restore_normal_cluster() {
 }
 
 if [ "$1" == "START" ]; then
-	init_cluster_profiling
+	init_cluster_profiling $2
 elif [ "$1" == "END" ]; then
-	restore_normal_cluster
+	restore_normal_cluster $2
 else
 	echo "Undefined command '$1' received. Exiting..."
 	exit
