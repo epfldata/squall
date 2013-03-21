@@ -2,7 +2,8 @@
 
 MACHINE=squalldata@icdatasrv
 MACHINE5=${MACHINE}5
-REMOTE_SNAP=/data/squall_zone/profiling/output/*
+REMOTE_SNAP=/data/squall_zone/profiling/output/
+DEFAULT_PORT=22
 
 if [ $# -ne 1 ]
 then
@@ -30,7 +31,8 @@ removeIfEmpty(){
 
 #Grasping from master node
 mkdir -p $MASTER
-scp -r $MACHINE5:$REMOTE_SNAP $MASTER
+./download_latest_snapshot.sh $MACHINE5 $DEFAULT_PORT $REMOTE_SNAP $MASTER
+# The previous line makes this unneded: scp -r $MACHINE5:$REMOTE_SNAP/* $MASTER
 removeIfEmpty "$MASTER"
 
 #Grasping output from supervisor nodes
@@ -40,7 +42,8 @@ do
 	do
 		supervisor=${SUPERVISOR}${blade}-${port}
 		mkdir -p $supervisor
-		scp -P $port -r $MACHINE${blade}:$REMOTE_SNAP $supervisor
+		./download_latest_snapshot.sh $MACHINE${blade} $port $REMOTE_SNAP $supervisor
+		# The previous line makes this unneded: scp -P $port -r $MACHINE${blade}:$REMOTE_SNAP/* $supervisor
 		removeIfEmpty "$supervisor"
 	done
 done
