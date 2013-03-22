@@ -24,7 +24,7 @@ get_file_serial() {
 ### Methods end
 
 # get a list
-ALL_FILES=`ssh -p $PORT $MACHINE 'export SQ_REMOTE_FOLDER='"'$REMOTE_FOLDER'"'; ls $SQ_REMOTE_FOLDER'`
+ALL_FILES=`ssh -p $PORT $MACHINE 'ls '$REMOTE_FOLDER`
 #echo $ALL_FILES
 
 # find the size of the list

@@ -4,30 +4,30 @@ require 'time'
 require 'gnuplot'
 require 'util.rb'
 
-task :extract, :mode, :base_path, :conf_path, :storm_data_path do |t, args|
-
 $RELATIVE="../"; # How from the rake directory to come to bin directory
-$BASE_PATH = $RELATIVE + args.base_path;
-$CONF_PATH = $RELATIVE + args.conf_path;
-$STORM_DATA_DIR = $RELATIVE + args.storm_data_path;
-$TOPOLOGY_NAME_PREFIX="username";
-$RAKE_OUTPUT="cluster_exec.info";
 
-$topology_names = Dir.foreach($CONF_PATH).find_all{|file| file != "." && file != ".." };
-
-def write_file (filename, data)
-  if (data == "") then 
-    puts "Missing info about #{filename}";
-    return; 
-  end
-  puts "Generating #{filename}"
-  File.open(filename, "w") {|f| f.write(data);}
+task :extract_all, :mode, :base_path, :conf_path, :storm_data_path do |t, args|
+  $CONF_PATH = $RELATIVE + args.conf_path;
+  $topology_names = Dir.foreach($CONF_PATH).find_all{|file| file != "." && file != ".." };
+  $topology_names.each do |config_name|
+    process_topology(config_name,args.base_path,args.storm_data_path)
+  end #$topology_names
 end
 
-topo_dump_str = "StormWrapper \\[INFO\\] In total there is";
+task :extract_one, :mode, :base_path, :config_name, :storm_data_path do |t, args|
+  process_topology(args.config_name,args.base_path,args.storm_data_path)
+end
 
-$topology_names.each do |config_name|
-    full_config_name = $TOPOLOGY_NAME_PREFIX + "_" + config_name
+def process_topology(config_name, base_path, storm_data_path)
+  $BASE_PATH = $RELATIVE + base_path;
+  $STORM_DATA_DIR = $RELATIVE + storm_data_path;
+
+  $TOPOLOGY_NAME_PREFIX="username";
+  $RAKE_OUTPUT="cluster_exec.info";
+  topo_dump_str = "StormWrapper \\[INFO\\] In total there is";
+
+
+  full_config_name = $TOPOLOGY_NAME_PREFIX + "_" + config_name
     stat_dump = [];
     topo_dump_files = `grep -r "#{topo_dump_str}" #{$STORM_DATA_DIR}`.
       split(/\n/).map do |l|
@@ -59,7 +59,13 @@ $topology_names.each do |config_name|
       end
     stat_dump = stat_dump.join("\n");
     write_file("#{$BASE_PATH}/#{config_name}/#{$RAKE_OUTPUT}", stat_dump)
-end #$topology_names
 end
 
-task :default => [:extract]
+def write_file (filename, data)
+  if (data == "") then 
+    puts "Missing info about #{filename}";
+    return; 
+  end
+  puts "Generating #{filename}"
+  File.open(filename, "w") {|f| f.write(data);}
+end
