@@ -50,9 +50,9 @@ public class ThetaTPCH7Plan {
     public ThetaTPCH7Plan(String dataPath, String extension, Map conf){
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashNation1 = new ArrayList<Integer>(Arrays.asList(1));
+        ArrayList<Integer> hashNation2 = new ArrayList<Integer>(Arrays.asList(1));
 
-        SelectOperator selectionNation1 = new SelectOperator(
+        SelectOperator selectionNation2 = new SelectOperator(
                 new OrPredicate(
                     new ComparisonPredicate(
                         new ColumnReference(_sc, 1),
@@ -63,14 +63,14 @@ public class ThetaTPCH7Plan {
                     )
                 ));
 
-        ProjectOperator projectionNation1 = new ProjectOperator(new int[]{1, 0});
+        ProjectOperator projectionNation2 = new ProjectOperator(new int[]{1, 0});
 
-        DataSourceComponent relationNation1 = new DataSourceComponent(
-                "NATION1",
+        DataSourceComponent relationNation2 = new DataSourceComponent(
+                "NATION2",
                 dataPath + "nation" + extension,
-                _queryPlan).setHashIndexes(hashNation1)
-                           .addOperator(selectionNation1)
-                           .addOperator(projectionNation1);
+                _queryPlan).setHashIndexes(hashNation2)
+                           .addOperator(selectionNation2)
+                           .addOperator(projectionNation2);
 
         //-------------------------------------------------------------------------------------
         ArrayList<Integer> hashCustomer = new ArrayList<Integer>(Arrays.asList(1));
@@ -90,7 +90,7 @@ public class ThetaTPCH7Plan {
 				ComparisonPredicate.EQUAL_OP, colN, colC);
 				
         Component N_Cjoin = new ThetaJoinStaticComponent(
-                relationNation1,
+                relationNation2,
                 relationCustomer,
                 _queryPlan).addOperator(new ProjectOperator(new int[]{0, 2}))
                            .setJoinPredicate(N_C_comp);
@@ -132,16 +132,16 @@ public class ThetaTPCH7Plan {
                            .addOperator(projectionSupplier);
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashNation2 = new ArrayList<Integer>(Arrays.asList(1));
+        ArrayList<Integer> hashNation1 = new ArrayList<Integer>(Arrays.asList(1));
 
-        ProjectOperator projectionNation2 = new ProjectOperator(new int[]{1,0});
+        ProjectOperator projectionNation1 = new ProjectOperator(new int[]{1,0});
 
-        DataSourceComponent relationNation2 = new DataSourceComponent(
-                "NATION2",
+        DataSourceComponent relationNation1 = new DataSourceComponent(
+                "NATION1",
                 dataPath + "nation" + extension,
-                _queryPlan).setHashIndexes(hashNation2)
-                           .addOperator(selectionNation1)
-                           .addOperator(projectionNation2);
+                _queryPlan).setHashIndexes(hashNation1)
+                           .addOperator(selectionNation2)
+                           .addOperator(projectionNation1);
 
         //-------------------------------------------------------------------------------------
 
@@ -152,7 +152,7 @@ public class ThetaTPCH7Plan {
                 
         Component S_Njoin = new ThetaJoinStaticComponent(
                     relationSupplier,
-                    relationNation2,
+                    relationNation1,
                     _queryPlan).addOperator(new ProjectOperator(new int[]{0, 2}))
                                .setJoinPredicate(S_N_comp);
                              //.setHashIndexes(new ArrayList<Integer>(Arrays.asList(0)));
@@ -231,7 +231,7 @@ public class ThetaTPCH7Plan {
                 ));
 
         AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_doubleConv, 4), conf)
-                .setGroupByColumns(new ArrayList<Integer>(Arrays.asList(0, 2, 3)));
+                .setGroupByColumns(new ArrayList<Integer>(Arrays.asList(2, 0, 3)));
         
         ColumnReference colN_C_O = new ColumnReference(_ic, 1);
 	ColumnReference colL_S_N = new ColumnReference(_ic, 3);
