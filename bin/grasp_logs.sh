@@ -42,7 +42,8 @@ mkdir -p $STORM_MASTER
 scp -r $MACHINE5:$LOGS_REMOTE_PATH/* $STORM_MASTER
 removeIfEmpty "$STORM_MASTER"
 if [ $REMOVE_FROM_CLUSTER == "YES" ]; then
-  ssh $MACHINE5 'rm -r ' $LOGS_REMOTE_PATH'/*'
+  # TODO, we don't delete because Storm behaves strangely
+  ssh $MACHINE5 'echo "" > ' $LOGS_REMOTE_PATH'/nimbus.log'
 fi
 
 #Grasping output from supervisor nodes
