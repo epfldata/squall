@@ -24,7 +24,7 @@ fi
 # return 1 indicates that there was an error
 # arg $1 is $TOPOLOGY_NAME
 checkErrors(){	
-	# Reassigning username_10G_tpch7 to
+	# Reassigning username_10G_tpch7
 	msg='"Reassigning '$1'" '
 	# echo $msg
 	reassign=`ssh $MACHINE 'grep '$msg $LOG_FILE`
