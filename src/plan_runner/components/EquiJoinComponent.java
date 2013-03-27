@@ -10,6 +10,7 @@ import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.query_plans.QueryPlan;
+import plan_runner.storage.AggregationStorage;
 import plan_runner.storage.BasicStore;
 import plan_runner.storage.KeyValueStore;
 import plan_runner.storm_components.StormComponent;
@@ -38,8 +39,11 @@ public class EquiJoinComponent implements Component {
 
     private ChainOperator _chain = new ChainOperator();
 
+    // The storage is actually KeyValue<String, String>
+    //    or AggregationStorage<Numeric> for pre-aggregation
+    // Access method returns a list of Strings (a list of Numerics for pre-aggregation)
+    private BasicStore<ArrayList<String>> _firstStorage, _secondStorage;
     //preAggregation
-    private BasicStore<ArrayList<String>> _firstPreAggStorage, _secondPreAggStorage;
     private ProjectOperator _firstPreAggProj, _secondPreAggProj;
 
     private boolean _printOut;
@@ -97,16 +101,16 @@ public class EquiJoinComponent implements Component {
 
 
     //next four methods are for Preaggregation
-    public EquiJoinComponent setFirstPreAggStorage(BasicStore<ArrayList<String>> firstPreAggStorage){
-        _firstPreAggStorage = firstPreAggStorage;
+    public EquiJoinComponent setFirstPreAggStorage(AggregationStorage firstPreAggStorage){
+        _firstStorage = firstPreAggStorage;
         return this;
     }
 
-    public EquiJoinComponent setSecondPreAggStorage(BasicStore<ArrayList<String>> secondPreAggStorage){
-        _secondPreAggStorage = secondPreAggStorage;
+    public EquiJoinComponent setSecondPreAggStorage(AggregationStorage secondPreAggStorage){
+        _secondStorage = secondPreAggStorage;
         return this;
     }
-
+    
     //Out of the first storage (join of S tuple with R relation)
     public EquiJoinComponent setFirstPreAggProj(ProjectOperator firstPreAggProj){
         _firstPreAggProj = firstPreAggProj;
@@ -148,21 +152,21 @@ public class EquiJoinComponent implements Component {
 
         MyUtilities.checkBatchOutput(_batchOutputMillis, _chain.getAggregation(), conf);
 
+        // If not set in Preaggregation, we set normal storages
+        if(_firstStorage == null){
+            _firstStorage = new KeyValueStore<String, String>(conf);
+        }
+        if(_secondStorage == null){
+            _secondStorage = new KeyValueStore<String, String>(conf);
+        }
+        
         if(partitioningType == StormJoin.DST_ORDERING){
-                //In Preaggregation one or two storages can be set; otherwise no storage is set
-                if(_firstPreAggStorage == null){
-                    _firstPreAggStorage = new KeyValueStore<String, String>(conf);
-                }
-                if(_secondPreAggStorage == null){
-                    _secondPreAggStorage = new KeyValueStore<String, String>(conf);
-                }
-
                 _joiner = new StormDstJoin(_firstParent,
                                     _secondParent,
                                     this,
                                     allCompNames,
-                                    _firstPreAggStorage,
-                                    _secondPreAggStorage,
+                                    _firstStorage,
+                                    _secondStorage,
                                     _firstPreAggProj,
                                     _secondPreAggProj,
                                     hierarchyPosition,
@@ -174,13 +178,6 @@ public class EquiJoinComponent implements Component {
             if(_chain.getDistinct()!=null){
                 throw new RuntimeException("Cannot instantiate Distinct operator from StormSourceJoin! There are two Bolts processing operators!");
             }
-            //In Preaggregation one or two storages can be set; otherwise no storage is set
-            if(_firstPreAggStorage == null){
-                _firstPreAggStorage = new KeyValueStore<String, String>(conf);
-            }
-            if(_secondPreAggStorage == null){
-                _secondPreAggStorage = new KeyValueStore<String, String>(conf);
-            }
 
             //since we don't know how data is scattered across StormSrcStorage,
             //  we cannot do customStreamGrouping from the previous level
@@ -188,8 +185,8 @@ public class EquiJoinComponent implements Component {
                                     _secondParent,
                                     this,
                                     allCompNames,
-                                    _firstPreAggStorage,
-                                    _secondPreAggStorage,
+                                    _firstStorage,
+                                    _secondStorage,
                                     _firstPreAggProj,
                                     _secondPreAggProj,
                                     hierarchyPosition,

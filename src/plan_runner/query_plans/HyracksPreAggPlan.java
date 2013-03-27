@@ -3,17 +3,21 @@ package plan_runner.query_plans;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.log4j.Logger;
+
 import plan_runner.components.DataSourceComponent;
 import plan_runner.components.EquiJoinComponent;
 import plan_runner.components.OperatorComponent;
 import plan_runner.conversion.DoubleConversion;
+import plan_runner.conversion.LongConversion;
 import plan_runner.conversion.StringConversion;
 import plan_runner.expressions.ColumnReference;
 import plan_runner.expressions.ValueSpecification;
+import plan_runner.operators.AggregateCountOperator;
 import plan_runner.operators.AggregateSumOperator;
 import plan_runner.operators.ProjectOperator;
-import plan_runner.storage.BasicStore;
+import plan_runner.storage.AggregationStorage;
 
 public class HyracksPreAggPlan {
 	private static Logger LOG = Logger.getLogger(HyracksPreAggPlan.class);
@@ -22,6 +26,7 @@ public class HyracksPreAggPlan {
 
 	private static final DoubleConversion _dc = new DoubleConversion();
 	private static final StringConversion _sc = new StringConversion();
+	private static final LongConversion _lc = new LongConversion();
 
 	public HyracksPreAggPlan(String dataPath, String extension, Map conf){
 		//-------------------------------------------------------------------------------------
@@ -48,19 +53,18 @@ public class HyracksPreAggPlan {
 				new ColumnReference(_sc, 1),
 				new ValueSpecification(_sc, "1"));
 		ProjectOperator projSecondOut = new ProjectOperator(new int[]{1, 2});
-		// FIXME FIXME FIXME: This should be as below, but there is an incombatibility with current version.
-		// Will be eventually, but for not don't run this query
-		// JoinAggStorage secondJoinStorage = new JoinAggStorage(new AggregateCountOperator(conf), conf);
-		BasicStore secondJoinStorage = null;
+		AggregationStorage secondJoinStorage = new AggregationStorage(
+				new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(0)),
+				_lc, conf, false);
 
 		List<Integer> hashIndexes = Arrays.asList(0);
 		EquiJoinComponent CUSTOMER_ORDERSjoin = new EquiJoinComponent(
 				relationCustomer,
 				relationOrders,
 				_queryPlan).setFirstPreAggProj(projFirstOut)
-                                           .setSecondPreAggProj(projSecondOut)
-                                           .setSecondPreAggStorage(secondJoinStorage)
-                                           .setHashIndexes(hashIndexes);
+                           .setSecondPreAggProj(projSecondOut)
+                           .setSecondPreAggStorage(secondJoinStorage)
+                           .setHashIndexes(hashIndexes);
 
 		//-------------------------------------------------------------------------------------           
 		AggregateSumOperator agg = new AggregateSumOperator(new ColumnReference(_dc, 1), conf)

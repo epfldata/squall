@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
-import java.util.Collections;
 import org.apache.log4j.Logger;
 import plan_runner.components.ComponentProperties;
 import plan_runner.expressions.ValueExpression;
@@ -22,6 +21,7 @@ import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
 import plan_runner.operators.ProjectOperator;
+import plan_runner.storage.AggregationStorage;
 import plan_runner.storage.BasicStore;
 import plan_runner.storm_components.synchronization.TopologyKiller;
 import plan_runner.utilities.MyUtilities;
@@ -59,7 +59,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 	//for load-balancing
 	private List<String> _fullHashList;
 
-	//for No ACK: the total number of tasks of all the parent compoonents
+	//for No ACK: the total number of tasks of all the parent components
 	private int _numRemainingParents;
 
 	//for batch sending
@@ -206,15 +206,15 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			_collector.ack(stormTupleRcv);
 		}
         
-                //if true, we should exit from method which called this method
-                private boolean processFinalAck(List<String> tuple, Tuple stormTupleRcv){
+        //if true, we should exit from method which called this method
+        private boolean processFinalAck(List<String> tuple, Tuple stormTupleRcv){
                     if(MyUtilities.isFinalAck(tuple, _conf)){
-			_numRemainingParents--;
+                    	_numRemainingParents--;
                         if(_numRemainingParents == 0 && MyUtilities.isManualBatchingMode(_conf)){
                             //flushing before sending lastAck down the hierarchy
                             manualBatchSend();
                         }
-			MyUtilities.processFinalAck(_numRemainingParents, 
+                        MyUtilities.processFinalAck(_numRemainingParents, 
                                         _hierarchyPosition, 
                                         _conf,
                                         stormTupleRcv, 
@@ -223,14 +223,14 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                         return true;
                     }
                     return false;
-                }
+       }
         
-                private void processNonLastTuple(String inputComponentIndex, 
+       private void processNonLastTuple(String inputComponentIndex, 
                         List<String> tuple, 
                         String inputTupleHash,
                         Tuple stormTupleRcv, boolean isLastInBatch){
                   
-                        boolean isFromFirstEmitter = false;
+            boolean isFromFirstEmitter = false;
 			BasicStore<ArrayList<String>> affectedStorage, oppositeStorage;
 			ProjectOperator projPreAgg;
 			if(_firstEmitterIndex.equals(inputComponentIndex)){
@@ -251,17 +251,21 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 			}
 
 			//add the stormTuple to the specific storage
-            String inputTupleString = MyUtilities.tupleToString(tuple, _conf);
-			affectedStorage.insert(inputTupleHash, inputTupleString);
-
-			performJoin(stormTupleRcv,
+            if(affectedStorage instanceof AggregationStorage){
+            	//For preaggregations, we have to update the storage, not to insert to it
+            	affectedStorage.update(tuple, inputTupleHash);            	
+            }else{
+                String inputTupleString = MyUtilities.tupleToString(tuple, _conf);
+    			affectedStorage.insert(inputTupleHash, inputTupleString);
+            }
+            performJoin(stormTupleRcv,
 					tuple,
 					inputTupleHash,
 					isFromFirstEmitter,
 					oppositeStorage,
 					projPreAgg, 
-                                        isLastInBatch);
-                } 
+                    isLastInBatch);
+    } 
         
 
 	protected void performJoin(Tuple stormTupleRcv,
@@ -276,7 +280,8 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 
 		if(oppositeStringTupleList!=null)
 			for (int i = 0; i < oppositeStringTupleList.size(); i++) {
-				String oppositeStringTuple= oppositeStringTupleList.get(i);
+				// ValueOf is because of preaggregations, and it does not hurt in normal case
+				String oppositeStringTuple= String.valueOf(oppositeStringTupleList.get(i));
 				List<String> oppositeTuple= MyUtilities.stringToTuple(oppositeStringTuple, getComponentConfiguration());
 
 				List<String> firstTuple, secondTuple;
@@ -289,20 +294,21 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 				}
 
 				List<String> outputTuple;
-				if(oppositeStorage instanceof BasicStore){
-					outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple, _rightHashIndexes);
-				}else{
+				//Before fixing preaggregations, here was instanceof BasicStore
+				if(oppositeStorage instanceof AggregationStorage){
 					outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);
+				}else{
+					outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple, _rightHashIndexes);					
 				}
 
 				if(projPreAgg != null){
-					outputTuple = projPreAgg.process(outputTuple);
+					outputTuple = projPreAgg.process(outputTuple);				
 				}
 
 				applyOperatorsAndSend(stormTupleRcv, outputTuple, isLastInBatch);
 			}
-	}
-
+	}	
+	
 	protected void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> tuple, boolean isLastInBatch){
 		if(MyUtilities.isBatchOutputMode(_batchOutputMillis)){
 			try {

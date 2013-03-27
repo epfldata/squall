@@ -1,5 +1,5 @@
 DIP_DISTRIBUTED false
-DIP_QUERY_NAME hyracks_l3_batch
+DIP_QUERY_NAME hyracks_pre_agg
 DIP_TOPOLOGY_NAME_PREFIX username
 DIP_NUM_ACKERS 0
 
