@@ -2,7 +2,10 @@ package plan_runner.storage;
 
 import java.io.Serializable;
 
+import org.apache.log4j.Logger;
+
 public class LRUList<V> implements ReplacementAlgorithm<V>, Serializable {
+	private static Logger LOG = Logger.getLogger(LRUList.class);
 	
 	LRUNode<V> head;
 	LRUNode<V> tail;
@@ -77,20 +80,20 @@ public class LRUList<V> implements ReplacementAlgorithm<V>, Serializable {
 	}
 	
 	public void print() {
-		System.out.println("----------------------------------------");
-		System.out.println("             PRINTING LIST              ");
+		LOG.info("----------------------------------------");
+		LOG.info("             PRINTING LIST              ");
 		if (head != null)
-			System.out.println("HEAD = " + head.getObject().toString() + " TAIL = " + tail.getObject().toString());
+			LOG.info("HEAD = " + head.getObject().toString() + " TAIL = " + tail.getObject().toString());
 		for (LRUNode tmp = head; tmp != null ; tmp=tmp.next) {
-			System.out.println(tmp.getObject().toString());
+			LOG.info(tmp.getObject().toString());
 		}
-		System.out.println("     PRINTING LIST (REVERSE ORDER)      ");
+		LOG.info("     PRINTING LIST (REVERSE ORDER)      ");
 		if (head != null)
-			System.out.println("HEAD = " + head.getObject().toString() + " TAIL = " + tail.getObject().toString());
+			LOG.info("HEAD = " + head.getObject().toString() + " TAIL = " + tail.getObject().toString());
 		for (LRUNode tmp = tail; tmp != null ; tmp=tmp.prev) {
-			System.out.println(tmp.getObject().toString());
+			LOG.info(tmp.getObject().toString());
 		}
-		System.out.println("----------------------------------------");
+		LOG.info("----------------------------------------");
 	}
 
 	public class LRUNode<V> {

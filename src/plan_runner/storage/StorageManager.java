@@ -11,6 +11,9 @@ import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Map;
+
+import org.apache.log4j.Logger;
+
 import plan_runner.utilities.SystemParameters;
 
 /* StorageManager that handles reading and writing objects from/to a
@@ -18,6 +21,7 @@ import plan_runner.utilities.SystemParameters;
  * where R is the type of Objects you expect to read and write (use Object
  * if you are using multiple types. */
 public class StorageManager<R> implements Serializable {
+	private static Logger LOG = Logger.getLogger(StorageManager.class);
 
 	private boolean isRead;
 	private BasicStore store;
@@ -44,7 +48,7 @@ public class StorageManager<R> implements Serializable {
 		// First check that directory exists
 		File f = new File(this.rootDir);
 		if (f.exists() == false) {
-			System.out.println("Squall StorageManager: WARNING: rootDir " + rootDir + " does not exist. Creating root dir");
+			LOG.info("Squall StorageManager: WARNING: rootDir " + rootDir + " does not exist. Creating root dir");
 			f.mkdir();
 		}
 		// Then check if the rootDir string ends with an '/'
@@ -90,7 +94,7 @@ public class StorageManager<R> implements Serializable {
 			// Delete each file
 			if (!file.delete()) {
 				// Failed to delete file
-				System.out.println("Squall StorageManager: Failed to delete file " + file + " during initial cleanup...");
+				LOG.info("Squall StorageManager: Failed to delete file " + file + " during initial cleanup...");
 				System.exit(-1);
 			}
 		}
@@ -121,10 +125,10 @@ public class StorageManager<R> implements Serializable {
 				isRead = false;
 			}
 		} catch (java.io.FileNotFoundException fnfe) {	
-			System.out.println("Squall StorageManager: FileNotFoundException encountered: " + fnfe.getMessage());
+			LOG.info("Squall StorageManager: FileNotFoundException encountered: " + fnfe.getMessage());
 			System.exit(-1);
 		} catch (java.io.IOException ioe) {
-			System.out.println("Squall StorageManager: IO Exception encountered:" + ioe.getMessage());	
+			LOG.info("Squall StorageManager: IO Exception encountered:" + ioe.getMessage());	
 			System.exit(-1);
 		}
 	}
@@ -145,13 +149,13 @@ public class StorageManager<R> implements Serializable {
 				/* End of file found; close stream and return list */ 
 				this.closeFile();
 			} catch (java.lang.ClassNotFoundException cnfe) {
-				System.out.println("Squall StorageManager: ClassNotFoundException encountered: " + cnfe.getMessage());
+				LOG.info("Squall StorageManager: ClassNotFoundException encountered: " + cnfe.getMessage());
 				System.exit(-1);
 			} catch (java.io.FileNotFoundException fnfe) {	
-				System.out.println("Squall StorageManager: FileNotFoundException encountered: " + fnfe.getMessage());
+				LOG.info("Squall StorageManager: FileNotFoundException encountered: " + fnfe.getMessage());
 				System.exit(-1);
 			} catch (java.io.IOException ioe) {
-				System.out.println("Squall StorageManager: IOException encountered:" + ioe.getMessage());
+				LOG.info("Squall StorageManager: IOException encountered:" + ioe.getMessage());
 				System.exit(-1);
 			}
 		}
@@ -165,14 +169,14 @@ public class StorageManager<R> implements Serializable {
 			this.openFile(filename, false); // WRITE
 			for (Object obj : objects) {
 				if (obj == null) {
-					System.out.println("Squall StorageManager: Cannot write null object!");
+					LOG.info("Squall StorageManager: Cannot write null object!");
 					System.exit(-1);
 				}
 				oos.writeObject(obj);
 			}
 			this.closeFile();
 		} catch (java.io.IOException ioe) {
-			System.out.println("Squall StorageManager: IO Exception encountered:" + ioe.getMessage());	
+			LOG.info("Squall StorageManager: IO Exception encountered:" + ioe.getMessage());	
 			System.exit(-1);
 		}
 	}
@@ -187,14 +191,14 @@ public class StorageManager<R> implements Serializable {
 		 * store has been previously checked for existence of the
 		 * object */
 		if (index == -1) {
-			System.out.println("Squall StorageManager: Element not found during update!");	
+			LOG.info("Squall StorageManager: Element not found during update!");	
 			System.exit(-1);
 		}
 		values.set(index, newValue);
 
 		/* Now RMW: delete old file, and write a new one */
 		if (new File(groupId).delete() == false) {
-			System.out.println("Squall StorageManager: Couldn't erase old file during update!");	
+			LOG.info("Squall StorageManager: Couldn't erase old file during update!");	
 			System.exit(-1);
 		}
 		this.write(groupId, values.toArray());
@@ -214,7 +218,7 @@ public class StorageManager<R> implements Serializable {
 			fos = null;
 			oos = null;
 		} catch (java.io.IOException ioe) {
-			System.out.println("Squall StorageManager: IO Exception encountered:" + ioe.getMessage());	
+			LOG.info("Squall StorageManager: IO Exception encountered:" + ioe.getMessage());	
 			System.exit(-1);
 		}
 	}
@@ -240,7 +244,7 @@ public class StorageManager<R> implements Serializable {
 		try {
 			return InetAddress.getLocalHost().getHostName();
 		} catch (java.net.UnknownHostException uhe) {
-			System.out.println("Squall StorageManager UnknownHostException encountered: " + uhe.getMessage());
+			LOG.info("Squall StorageManager UnknownHostException encountered: " + uhe.getMessage());
 			System.exit(-1);
 		}
 		return null;

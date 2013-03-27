@@ -11,6 +11,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.log4j.Logger;
+
 import storm.trident.TridentState;
 import storm.trident.TridentTopology;
 import storm.trident.operation.BaseFunction;
@@ -25,6 +28,8 @@ import storm.trident.state.map.ReadOnlyMapState;
 import storm.trident.tuple.TridentTuple;
 
 public class TridentReach {
+	private static Logger LOG = Logger.getLogger(TridentReach.class);
+	
     public static Map<String, List<String>> TWEETERS_DB = new HashMap<String, List<String>>() {{
        put("foo.com/blog/1", Arrays.asList("sally", "bob", "tim", "george", "nathan"));
        put("engineering.twitter.com/blog/5", Arrays.asList("adam", "david", "sally", "nathan"));
@@ -138,9 +143,9 @@ public class TridentReach {
         
         Thread.sleep(2000);
         
-        System.out.println("REACH: " + drpc.execute("reach", "aaa"));
-        System.out.println("REACH: " + drpc.execute("reach", "foo.com/blog/1"));
-        System.out.println("REACH: " + drpc.execute("reach", "engineering.twitter.com/blog/5"));
+        LOG.info("REACH: " + drpc.execute("reach", "aaa"));
+        LOG.info("REACH: " + drpc.execute("reach", "foo.com/blog/1"));
+        LOG.info("REACH: " + drpc.execute("reach", "engineering.twitter.com/blog/5"));
         
         
         cluster.shutdown();

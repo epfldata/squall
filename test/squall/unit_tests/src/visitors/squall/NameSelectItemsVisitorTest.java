@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import static org.junit.Assert.assertEquals;
+
+import org.apache.log4j.Logger;
 import org.junit.Test;
 import plan_runner.components.DataSourceComponent;
 import plan_runner.conversion.*;
@@ -26,6 +28,8 @@ import sql.visitors.squall.NameSelectItemsVisitor;
  * @author vitorovi
  */
 public class NameSelectItemsVisitorTest {
+	private static Logger LOG = Logger.getLogger(NameSelectItemsVisitorTest.class);		
+	
         //this will not break any contracts,
     //  even with new DateConversion() on all the places,
     //  we will have a single object per (possibly) multiple spout/bolt threads.
@@ -49,7 +53,7 @@ public class NameSelectItemsVisitorTest {
 
     @Test
     public void testFullExprs() {
-        System.out.println("test NSIV: full expressions in inputTupleSchema");
+        LOG.info("test NSIV: full expressions in inputTupleSchema");
         
         List<ColumnNameType> inputTupleSchema = new ArrayList<ColumnNameType>();
         inputTupleSchema.add(new ColumnNameType("N1.NAME", _sc));
@@ -83,7 +87,7 @@ public class NameSelectItemsVisitorTest {
     
 //    @Test
 //    public void testSubexpressions() {
-//        System.out.println("test NSIV: subexpressions in inputTupleSchema");
+//        LOG.info("test NSIV: subexpressions in inputTupleSchema");
 //        
 //        List<ColumnNameType> inputTupleSchema = new ArrayList<ColumnNameType>();
 //        inputTupleSchema.add(new ColumnNameType("N1.NAME", _sc)); //0
@@ -121,7 +125,7 @@ public class NameSelectItemsVisitorTest {
 //    
 //    @Test
 //    public void testColumnsOnly() {
-//        System.out.println("test NSIV: columns only in inputTupleSchema");
+//        LOG.info("test NSIV: columns only in inputTupleSchema");
 //        
 //        List<ColumnNameType> inputTupleSchema = new ArrayList<ColumnNameType>();
 //        inputTupleSchema.add(new ColumnNameType("N1.NAME", _sc)); //0

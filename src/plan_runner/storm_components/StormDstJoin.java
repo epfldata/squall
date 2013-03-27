@@ -425,11 +425,11 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 						List<String> tuples = agg.getContent();
 						if (tuples != null) {
                                                         String columnDelimiter = MyUtilities.getColumnDelimiter(_conf);
-//							System.out.println("TUPLES: " + tuples + " - " + tuples.size());
+//							LOG.info("TUPLES: " + tuples + " - " + tuples.size());
 							for(String tuple: tuples){
 								tuple = tuple.replaceAll(" = ", columnDelimiter);
-		//						System.out.println("BATCH SEND: tuple = " + tuple + " - (after processing: "+ MyUtilities.stringToTuple(tuple, _conf) + ")");
-//								System.out.println("tuple = " + tuple + "/"+ MyUtilities.stringToTuple(tuple, _conf));
+		//						LOG.info("BATCH SEND: tuple = " + tuple + " - (after processing: "+ MyUtilities.stringToTuple(tuple, _conf) + ")");
+//								LOG.info("tuple = " + tuple + "/"+ MyUtilities.stringToTuple(tuple, _conf));
 //								List<String> tupleSend = MyUtilities.stringToTuple(tuple, _conf);
 //								Collections.reverse(tupleSend);
 								tupleSend(MyUtilities.stringToTuple(tuple, _conf), null, 0);

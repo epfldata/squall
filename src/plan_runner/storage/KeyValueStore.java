@@ -112,7 +112,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 			if (index != -1)
 				values.set(index, newValue);
 			else {
-				System.out.println("KeyValueStore: BUG: No element for key " + key + " found in store, but store's metadata register elements.");
+				LOG.info("KeyValueStore: BUG: No element for key " + key + " found in store, but store's metadata register elements.");
 				System.exit(0);
 			}
 		}

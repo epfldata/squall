@@ -10,6 +10,9 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import org.apache.log4j.Logger;
+
 import storm.trident.TridentState;
 import storm.trident.TridentTopology;
 import storm.trident.operation.BaseFunction;
@@ -25,6 +28,8 @@ import storm.trident.tuple.TridentTuple;
  *    Very weird behavior.
  */
 public class TridentUpdater {
+	private static Logger LOG = Logger.getLogger(TridentUpdater.class);
+	
     private static FeederSpout _spout;
     public static class Split extends BaseFunction {
         @Override
@@ -70,7 +75,7 @@ public class TridentUpdater {
             for(int i=0; i<2; i++) {
                 _spout.feed(new ArrayList(Arrays.asList("dog the the cat")));
                 Thread.sleep(10000);
-                System.out.println("DRPC RESULT: " + drpc.execute("words", "dog the dog cat"));
+                LOG.info("DRPC RESULT: " + drpc.execute("words", "dog the dog cat"));
             }
             System.exit(0);
         } else {

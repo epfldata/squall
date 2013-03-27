@@ -14,6 +14,8 @@ import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import static org.junit.Assert.assertEquals;
+
+import org.apache.log4j.Logger;
 import org.junit.Test;
 import sql.main.ParserMain;
 import sql.optimizers.name.ProjGlobalCollect;
@@ -25,10 +27,11 @@ import sql.visitors.jsql.SQLVisitor;
  * @author vitorovi
  */
 public class ProjGlobalCollectTest {
+	private static Logger LOG = Logger.getLogger(ProjGlobalCollectTest.class);
     
     @Test
     public void testEverything() {
-        System.out.println("test ProjGlobalCollect");
+        LOG.info("test ProjGlobalCollect");
         
         //create object
         String parserConfPath = "../test/squall/unit_tests/confs/0_1G_tpch7_ncl";

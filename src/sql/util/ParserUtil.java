@@ -2,6 +2,9 @@ package sql.util;
 
 import java.io.StringReader;
 import java.util.*;
+
+import org.apache.log4j.Logger;
+
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
@@ -39,6 +42,8 @@ import sql.visitors.squall.ColumnRefCollectVisitor;
 
 
 public class ParserUtil {
+	private static Logger LOG = Logger.getLogger(ParserUtil.class);
+	
      public static final int NOT_FOUND = -1;
      private final static String SQL_EXTENSION = ".sql";
      
@@ -61,7 +66,7 @@ public class ParserUtil {
     public static void printParsedQuery(SQLVisitor pq){
         for(Table table: pq.getTableList()){
             String tableStr = toString(table);
-            System.out.println(tableStr);
+            LOG.info(tableStr);
         }
     }     
 
@@ -725,7 +730,7 @@ public class ParserUtil {
         try {
             statement = pm.parse(new StringReader(sqlString));
         } catch (JSQLParserException ex) {
-            System.out.println("JSQLParserException");
+            LOG.info("JSQLParserException");
         }
 
         if (statement instanceof Select) {

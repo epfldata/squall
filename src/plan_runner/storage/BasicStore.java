@@ -4,8 +4,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
 
+import org.apache.log4j.Logger;
+
 /* R denotes the type of objects you expect the store to return at a access or update call */
 public abstract class BasicStore<R> implements Serializable {
+	private static Logger LOG = Logger.getLogger(BasicStore.class);
 
 	private String _uniqId;
 	private PrintStream _ps;
@@ -20,7 +23,7 @@ public abstract class BasicStore<R> implements Serializable {
 	public BasicStore(int storesizemb) {
 		_uniqIdCounter++;
 		this._uniqId = this._uniqIdPrefix + Integer.toString(BasicStore._uniqIdCounter);
-		System.out.println("SquallStorage: Initializing store of size "
+		LOG.info("SquallStorage: Initializing store of size "
 					+ storesizemb + " MB with UniqStoreId: " + _uniqId); 
 	}
 

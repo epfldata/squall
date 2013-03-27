@@ -5,6 +5,8 @@ import java.util.Date;
 import net.sf.jsqlparser.expression.DateValue;
 import net.sf.jsqlparser.expression.Expression;
 import static org.junit.Assert.assertEquals;
+
+import org.apache.log4j.Logger;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import plan_runner.conversion.DateConversion;
@@ -17,6 +19,8 @@ import sql.estimators.JSQLTypeConverter;
  * @author vitorovi
  */
 public class JSQLTypeConverterTest {
+	private static Logger LOG = Logger.getLogger(JSQLTypeConverterTest.class);
+	
     private static JSQLTypeConverter _visitor;
     private static DateConversion _dtc = new DateConversion();
     
@@ -31,7 +35,7 @@ public class JSQLTypeConverterTest {
      */
     @Test
     public void testVisit_DateValue() {
-        System.out.println("visit(DateValue):");
+        LOG.info("visit(DateValue):");
         String dateStr = "1995-01-01";
         Date squallDate = new DateConversion().fromString(dateStr);
         Expression exp = new DateValue(" " + dateStr + " ");
@@ -42,7 +46,7 @@ public class JSQLTypeConverterTest {
     
     @Test
     public void testVisit_DateOp1() {
-        System.out.println("visit(DateOp1):");
+        LOG.info("visit(DateOp1):");
         Date END_DATE = _dtc.fromString("1998-12-31");
         Date orderDateEnd = new DateSum(new ValueSpecification(_dtc, END_DATE), Calendar.DATE, -151).eval(null);
         
@@ -55,7 +59,7 @@ public class JSQLTypeConverterTest {
     
     @Test
     public void testVisit_DateOp2() {
-        System.out.println("visit(DateOp2):");
+        LOG.info("visit(DateOp2):");
         Date END_DATE = _dtc.fromString("1998-12-31");
         Date orderDateEnd = new DateSum(new ValueSpecification(_dtc, END_DATE), Calendar.DATE, -30).eval(null);
         
@@ -68,7 +72,7 @@ public class JSQLTypeConverterTest {
     
     @Test
     public void testVisit_DateOp3() {
-        System.out.println("visit(DateOp3):");
+        LOG.info("visit(DateOp3):");
         Date END_DATE = _dtc.fromString("1998-12-31");
         Date orderDateEnd = new DateSum(new ValueSpecification(_dtc, END_DATE), Calendar.DATE, -61).eval(null);
         
@@ -81,7 +85,7 @@ public class JSQLTypeConverterTest {
     
     @Test
     public void testVisit_DateOp4() {
-        System.out.println("visit(DateOp4):");
+        LOG.info("visit(DateOp4):");
         Date END_DATE = _dtc.fromString("1998-12-31");
         Date orderDateEnd = new DateSum(new ValueSpecification(_dtc, END_DATE), Calendar.DATE, -121).eval(null);
         

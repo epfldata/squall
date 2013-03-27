@@ -1,6 +1,9 @@
 package sql.optimizers.index;
 
 import java.util.*;
+
+import org.apache.log4j.Logger;
+
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Table;
@@ -33,6 +36,8 @@ import sql.visitors.squall.IndexWhereVisitor;
  * Aggregation only on the last level.
  */
 public class IndexRuleOptimizer implements Optimizer {
+	private static Logger LOG = Logger.getLogger(IndexRuleOptimizer.class);
+	
     private Schema _schema;
     private SQLVisitor _pq;
     private IndexCompGen _cg;
@@ -51,14 +56,14 @@ public class IndexRuleOptimizer implements Optimizer {
     public QueryPlan generate(){
         _cg = generateTableJoins();
 
-        System.out.println("Before WHERE, SELECT and EarlyProjection: ");
-        System.out.println(ParserUtil.toString(_cg.getQueryPlan()));
+        LOG.info("Before WHERE, SELECT and EarlyProjection: ");
+        LOG.info(ParserUtil.toString(_cg.getQueryPlan()));
 
         //selectItems might add OperatorComponent, this is why it goes first
         int queryType = processSelectClause(_pq.getSelectItems());
         processWhereClause(_pq.getWhereExpr());
         if(queryType == IndexSelectItemsVisitor.NON_AGG){
-            System.out.println("Early projection will not be performed since the query is NON_AGG type (contains projections)!");
+            LOG.info("Early projection will not be performed since the query is NON_AGG type (contains projections)!");
         }else{
             earlyProjection(_cg.getQueryPlan());
         }

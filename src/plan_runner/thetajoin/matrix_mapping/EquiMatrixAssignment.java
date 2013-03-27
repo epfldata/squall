@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import plan_runner.thetajoin.matrix_mapping.MatrixAssignment.Dimension;
+import org.apache.log4j.Logger;
 
 /**
  * @author ElSeidy
@@ -17,6 +17,8 @@ import plan_runner.thetajoin.matrix_mapping.MatrixAssignment.Dimension;
  *    of the Theta-join paper, for fallacies.
  */
 public class EquiMatrixAssignment implements Serializable, MatrixAssignment{
+	private static Logger LOG = Logger.getLogger(EquiMatrixAssignment.class);
+	
 	private long _sizeS,_sizeT; // dimensions of data.. row, column respectively.
 	private int _r; // practically speaking usually a relatively small value!
 	public int _r_S=-1,_r_T=-1; // dimensions of reducers.. row, column respectively.
@@ -82,7 +84,7 @@ public class EquiMatrixAssignment implements Serializable, MatrixAssignment{
 		 */
 		double denominator =  Math.sqrt(_sizeS * _sizeT / _r);
 		if( (_sizeS % denominator)==0 && (_sizeT % denominator)==0){
-//			System.out.println("IF ONE!!");
+//			LOG.info("IF ONE!!");
 			_r_S= (int) (_sizeS/denominator);
 			_r_T= (int) (_sizeT/denominator);
 		}
@@ -97,7 +99,7 @@ public class EquiMatrixAssignment implements Serializable, MatrixAssignment{
 		for (List<Integer> set : Utilities.powerSet(primeFactors)) {
 				 rs=Utilities.multiply(set);
 				if( (_r%rs) !=0 ) //Assert rt should be integer
-						System.out.println("errrrrrrrrrrrrrrrrrrrrrrrr");
+						LOG.info("errrrrrrrrrrrrrrrrrrrrrrrr");
 				 rt=_r/rs;
 				 //always assign more reducers to the bigger data
 				 if( (_sizeS>_sizeT && rs<rt) || (_sizeS<_sizeT && rs>rt))
@@ -110,7 +112,7 @@ public class EquiMatrixAssignment implements Serializable, MatrixAssignment{
 		 }
 		}
 		
-//		System.out.println("Value of R_S: " +_r_S+" R_T: "+_r_T);
+//		LOG.info("Value of R_S: " +_r_S+" R_T: "+_r_T);
 	}
 	
 	/**
@@ -140,7 +142,7 @@ public class EquiMatrixAssignment implements Serializable, MatrixAssignment{
 		if(RowOrColumn==Dimension.ROW){
 			//uniformly distributed !!
 			int randomIndex=_rand.nextInt(_r_S);
-//			System.out.println("random: "+randomIndex);
+//			LOG.info("random: "+randomIndex);
 			for (int i = 0; i < _r_T; i++) {
 				regions.add(regionsMatrix[randomIndex][i]);
 			}
@@ -148,24 +150,24 @@ public class EquiMatrixAssignment implements Serializable, MatrixAssignment{
 		else if(RowOrColumn==Dimension.COLUMN){
 			//uniformly distributed !!
 			int randomIndex=_rand.nextInt(_r_T);
-//			System.out.println("random: "+randomIndex);
+//			LOG.info("random: "+randomIndex);
 			for (int i = 0; i < _r_S; i++) {
 				regions.add(regionsMatrix[i][randomIndex]);
 			}
 		}
 		else
-			System.out.println("ERROR not a possible index (row or column) assignment.");
+			LOG.info("ERROR not a possible index (row or column) assignment.");
 	
 		return regions;
 	}
 
 	public static void main(String[] args) {
 		EquiMatrixAssignment x = new EquiMatrixAssignment(13, 7, 1,-1);
-		System.out.println(x._r_S);
-		System.out.println(x._r_T);
+		LOG.info(x._r_S);
+		LOG.info(x._r_T);
 		ArrayList<Integer> indices= x.getRegionIDs(Dimension.COLUMN);
 		for (int i = 0; i < indices.size(); i++) {
-			System.out.println("Value: "+indices.get(i));
+			LOG.info("Value: "+indices.get(i));
 		}
 	}
 

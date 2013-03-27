@@ -10,6 +10,9 @@ import cherri.bheaven.bplustree.memory.MemoryNodeFactory;
 import gnu.trove.list.array.TIntArrayList;
 import java.util.Calendar;
 import java.util.Date;
+
+import org.apache.log4j.Logger;
+
 import plan_runner.predicates.ComparisonPredicate;
 
 /**
@@ -21,6 +24,7 @@ import plan_runner.predicates.ComparisonPredicate;
  */
 public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 		implements Index<KeyType> {
+	private static Logger LOG = Logger.getLogger(BplusTreeIndex.class);
 
 	private static final long serialVersionUID = 1L;
 
@@ -264,7 +268,7 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 			result= (KeyType)c.getTime(); 
 		}
 		else{
-			System.out.println("Operation in B+Tree not supported for underlying datatype");
+			LOG.info("Operation in B+Tree not supported for underlying datatype");
 		}
 		
 		return result;
@@ -332,7 +336,7 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 //		TIntArrayList list= index.getValues(ComparisonPredicate.GREATER_OP, 7.0);
 		
 		for (int i = 0; i < list.size(); i++) {
-			System.out.println(list.get(i));
+			LOG.info(list.get(i));
 		}
 		
 	}

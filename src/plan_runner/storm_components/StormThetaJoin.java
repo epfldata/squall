@@ -355,7 +355,7 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 			
 				
 			
-			//System.out.println("currentIDS:"+currentRowIds);
+			//LOG.info("currentIDS:"+currentRowIds);
 			
 			// Compute the intersection
 			// TODO: Search only within the ids that are in rowIds from previous join conditions

@@ -109,7 +109,7 @@ public class ManualBatchingOptimizer implements Optimizer{
             StringBuilder errorMsg = new StringBuilder();
             errorMsg.append("This subplan will never generated the optimal query plan, so it's thrown:").append("\n");
             errorMsg.append(exc.getMessage()).append("\n");
-            System.out.println(errorMsg.toString());
+            LOG.info(errorMsg.toString());
             isExc = true;
         }
         if(!isExc){
@@ -125,7 +125,7 @@ public class ManualBatchingOptimizer implements Optimizer{
         if(ncgList.isEmpty()){
             String errorMsg = "No query plans can be efficiently executed with specified parallelisms.\n"
                     + "Try to reduce DIP_TOTAL_SRC_PAR in config file.";
-            System.out.println(errorMsg);
+            LOG.info(errorMsg);
             System.exit(1);
         }
         

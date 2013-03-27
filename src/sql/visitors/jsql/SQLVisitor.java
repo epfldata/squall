@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import org.apache.log4j.Logger;
+
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
@@ -16,7 +19,8 @@ import sql.util.JoinTablesExprs;
 import sql.util.TableAliasName;
 
 public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVisitor, ItemsListVisitor, Serializable {
-        private static final long serialVersionUID = 1L;
+	private static Logger LOG = Logger.getLogger(SQLVisitor.class);
+    private static final long serialVersionUID = 1L;
     
 	private List<Table> _tableList;
         private List<Join> _joinList;
@@ -113,7 +117,7 @@ public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVis
 
         @Override
 	public void visit(SubSelect subSelect) {
-                System.out.println("Subselect!");
+                LOG.info("Subselect!");
 		subSelect.getSelectBody().accept(this);
 	}
 
@@ -212,7 +216,7 @@ public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVis
 
         @Override
 	public void visit(ExpressionList expressionList) {
-            System.out.println("ExprList!");
+            LOG.info("ExprList!");
 		for (Iterator iter = expressionList.getExpressions().iterator(); iter.hasNext();) {
 			Expression expression = (Expression) iter.next();
 			expression.accept(this);
@@ -257,7 +261,7 @@ public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVis
 
         @Override
 	public void visit(SubJoin subjoin) {
-                System.out.println("Subjoin!");
+                LOG.info("Subjoin!");
 		subjoin.getLeft().accept(this);
 		subjoin.getJoin().getRightItem().accept(this);
 	}

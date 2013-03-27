@@ -6,11 +6,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.log4j.Logger;
+
 import plan_runner.conversion.TypeConversion;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.utilities.SystemParameters;
 
 public class AggregationStorage<V> extends KeyValueStore<Object, V> {
+	private static Logger LOG = Logger.getLogger(AggregationStorage.class);
 
 	private Map _conf;
 	private boolean _singleEntry;
@@ -27,7 +31,7 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 		_singleEntry = singleEntry;
 		if (wrapper != null) 
 			super.setTypeConversion(_wrapper);
-		System.out.println("Initialized Aggregation Storage with uniqId = " + this.getUniqId());
+		LOG.info("Initialized Aggregation Storage with uniqId = " + this.getUniqId());
 	}
 
 	public void setSingleEntry(boolean singleEntry) {
@@ -46,7 +50,6 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 	public V update(Object... data) {
 		Object obj = data[0];
 		Object key = _singleEntry ? SINGLE_ENTRY_KEY : data[1];
-	//	System.out.println("obj = " + obj + " key = " + key);
 		V value, newValue;
 		ArrayList<V> list = super.__access(false, key);
 		if(list == null) {
@@ -56,7 +59,6 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 			value = list.get(0);
 		}
 		if (obj instanceof List) {
-	//		System.out.println("LIST : " + (List<String>)obj);
 			newValue = (V) _outerAggOp.runAggregateFunction((V)value, (List<String>)obj);
 		} else {
 			newValue = (V) _outerAggOp.runAggregateFunction((V)value, (V)obj);
@@ -101,7 +103,7 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 /*		try {
 			Thread.sleep(FINAL_AGGREGATION_TIMEOUT);
 		} catch(java.lang.InterruptedException ie) { 
-			System.out.println("Squall Storage:: Failed while waiting for partial stores to flush aggregations. " + ie.getMessage());
+			LOG.info("Squall Storage:: Failed while waiting for partial stores to flush aggregations. " + ie.getMessage());
 			System.exit(0);
 		}*/
 		// Now aggregate
