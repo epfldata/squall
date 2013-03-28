@@ -56,7 +56,9 @@ do
 	if [ $ALREADY_KILLED == "false" ]; then
 		checkErrors $TOPOLOGY_NAME
 		if [ "$?" == "1" ]; then
+			echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 			echo "ERROR: Reassigning happened in topology $TOPOLOGY_NAME. The topology will be killed..."
+			echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 			storm kill $TOPOLOGY_NAME
 			ALREADY_KILLED=true
 		fi

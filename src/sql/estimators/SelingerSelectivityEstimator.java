@@ -73,7 +73,7 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
             Parenthesis pnths = (Parenthesis) expr;
             return estimate(pnths.getExpression());
         }else if(expr instanceof LikeExpression){
-            //TODO: this is for TPCH9
+            // YANNIS TODO: this is for TPCH9
             return 0.052;
         }
         throw new RuntimeException("We should be in a more specific method!");

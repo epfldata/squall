@@ -495,7 +495,6 @@ public class StormThetaJoin extends BaseRichBolt implements StormJoin, StormComp
 	// from IRichBolt
 	@Override
 		public void cleanup() {
-			// TODO Auto-generated method stub
 
 		}
 
