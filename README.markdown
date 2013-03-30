@@ -4,4 +4,4 @@ This is work in progress, currently it is in development stage. Squall is being 
 
 ## Documentation
 
-Documentation and can be found on the [Squall wiki](http://github.com/epfldata/squall/wiki).
+Documentation can be found on the [Squall wiki](http://github.com/epfldata/squall/wiki).
