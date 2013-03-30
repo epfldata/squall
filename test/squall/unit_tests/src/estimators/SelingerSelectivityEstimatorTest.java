@@ -7,6 +7,8 @@ import net.sf.jsqlparser.expression.DateValue;
 import net.sf.jsqlparser.expression.operators.relational.MinorThan;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
+
+import org.apache.log4j.Logger;
 import org.junit.*;
 import static org.junit.Assert.assertEquals;
 import sql.estimators.SelingerSelectivityEstimator;
@@ -18,6 +20,7 @@ import sql.util.TableAliasName;
  * @author vitorovi
  */
 public class SelingerSelectivityEstimatorTest {
+	private static Logger LOG = Logger.getLogger(SelingerSelectivityEstimatorTest.class);
     private static Column _columnOrderdate;
     private static SelingerSelectivityEstimator _selEstimator; 
     
@@ -58,7 +61,7 @@ public class SelingerSelectivityEstimatorTest {
     
     @Test
     public void testEstimate_MinorThan() {
-        System.out.println("test estimate(MinorThan):");
+        LOG.info("test estimate(MinorThan):");
         MinorThan mt = new MinorThan();
         mt.setLeftExpression(_columnOrderdate);
         mt.setRightExpression(new DateValue("d" + "1995-01-01" + "d"));

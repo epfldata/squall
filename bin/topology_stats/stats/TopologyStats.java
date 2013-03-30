@@ -1,5 +1,6 @@
 package stats;
 
+import backtype.storm.generated.ExecutorStats; 
 import backtype.storm.generated.ClusterSummary;
 import backtype.storm.generated.ErrorInfo;
 import backtype.storm.generated.ExecutorInfo;
@@ -34,8 +35,8 @@ public class TopologyStats {
         try {
             ClusterSummary clusterInfo = client.getClusterInfo();
             int numOfTopologies = clusterInfo.get_topologies_size();
-            if(numOfTopologies != 1){
-                throw new RuntimeException("There should be exactly one active topology, and we have " + numOfTopologies + " of them.");
+            if(numOfTopologies > 1){
+                throw new RuntimeException("For multiple topologies in the cluster, statistics would not be gathered correctly.");
             }
 
             topologySummary = clusterInfo.get_topologies().get(0);
@@ -75,12 +76,12 @@ public class TopologyStats {
                 sb.append("\n");
 
                 TopologyInfo topologyInfo = client.getTopologyInfo(topologyID);
-                                
+
                 //print more about each task
                 Iterator<ExecutorSummary> execIter = topologyInfo.get_executors_iterator();
                 boolean globalFailed = false;
                 while(execIter.hasNext()){
-                    ExecutorSummary execSummary = execIter.next();                    
+                    ExecutorSummary execSummary = execIter.next();
                     String componentId = execSummary.get_component_id();
                     sb.append("component_id:").append(componentId).append(", ");
                     ExecutorInfo execInfo = execSummary.get_executor_info();
@@ -96,59 +97,49 @@ public class TopologyStats {
                     sb.append("\n");
                     
                     //printing failing statistics, if there are failed tuples
-                    ExecutorSpecificStats stats = execSummary.get_stats().get_specific();
-                    boolean isEmpty;
-                    Object objFailed;
-                    if(stats.is_set_spout()){
-                        Map<String, Map<String, Long>> failed = stats.get_spout().get_failed();
-                        objFailed = failed;
-                        isEmpty = isEmptyMapMap(failed);
-                    }else{
-                        Map<String, Map<GlobalStreamId, Long>> failed = stats.get_bolt().get_failed();
-                        objFailed = failed;
-                        isEmpty = isEmptyMapMap(failed);
-                    }
-                    if(!isEmpty){
-                        sb.append("ERROR: There are some failed tuples: ").append(objFailed).append("\n");
-                        globalFailed = true;
-                    }   
+                    ExecutorStats es = execSummary.get_stats();
+		    		if(es == null){
+				      sb.append("No info about failed tuples\n");
+				    }else{
+				      ExecutorSpecificStats stats = es.get_specific();
+				      boolean isEmpty;
+				      Object objFailed;
+				      if(stats.is_set_spout()){
+					  	Map<String, Map<String, Long>> failed = stats.get_spout().get_failed();
+					  	objFailed = failed;
+					  	isEmpty = isEmptyMapMap(failed);
+			          }else{
+			  		    Map<String, Map<GlobalStreamId, Long>> failed = stats.get_bolt().get_failed();
+			            objFailed = failed;
+			            isEmpty = isEmptyMapMap(failed);
+		      		  }
+		      		  if(!isEmpty){
+		     			sb.append("ERROR: There are some failed tuples: ").append(objFailed).append("\n");
+			            globalFailed = true;
+		              }   
+		    	    }
                 }
                 
                 //is there at least one component where something failed
                 if(!globalFailed){
-                    sb.append("\n\nOK: No tuples failed so far.");
+                    sb.append("OK: No tuples failed so far.\n");
                 }else{
-                    sb.append("\n\nERROR: Some tuples failed!");
+                    sb.append("ERROR: Some tuples failed!\n");
                 }
                 
                 //print topology errors
                 Map<String, List<ErrorInfo>> errors = topologyInfo.get_errors();
                 if(!isEmptyMap(errors)){
-                    sb.append("\n\nERROR: There are some errors in topology: ").append(errors);
+                    sb.append("ERROR: There are some errors in topology: ").append(errors).append("\n");
                 }else{
-                    sb.append("\n\nOK: No errors in the topology.");
+                    sb.append("OK: No errors in the topology.\n");
                 }
+                
+		        boolean withAckers = getAckMode(topologyInfo);
+         		int topologyUptime = topologySummary.get_uptime_secs();
+		        sb.append(writeStatistics(topologyInfo, topologyUptime, withAckers));
             }
-
-        } catch (TException ex) {
-            ex.printStackTrace();
-        } catch (NotAliveException ex) {
-            ex.printStackTrace();
-        }
-        return sb.toString();
-    }
-    
-    public static String writeStatistics(){
-        StringBuffer sb = new StringBuffer();
-        try{    
-            Client client=getNimbusStub();
-            TopologySummary topologySummary = getTopologySummary(client);
-            String topologyID = topologySummary.get_id();
-            
-            TopologyInfo topologyInfo = client.getTopologyInfo(topologyID);
-            boolean withAckers = getAckMode(topologyInfo);
-            int topologyUptime = topologySummary.get_uptime_secs();
-            sb.append(writeStatistics(topologyInfo, topologyUptime, withAckers));
+            sb.append("\n\n");
         
         } catch (TException ex) {
             ex.printStackTrace();
@@ -179,7 +170,12 @@ public class TopologyStats {
                 Map<String, Map<String, Long>> ackedMap = getNumTuples(execSummary, withAckers);
                 sb.append("An executor of spout ").append(componentId).append(" has tuples acked \n").append(ackedMap).append("\n");
                 //TODO: For now, for both throughput and latency, we count only on "default" stream.
-                long executorAckedTuples = ackedMap.get(":all-time").get("default");
+		
+		long executorAckedTuples = 0L;
+		Long executorAckedTuplesObj = ackedMap.get(":all-time").get("default");
+		if(executorAckedTuplesObj!=null){
+		  executorAckedTuples = executorAckedTuplesObj;
+		}
                 
                 //LATENCIES
                 double executorLatency = 0;
@@ -343,6 +339,5 @@ public class TopologyStats {
     
     public static void main(String[] args){
         System.out.println(writeTopologyInfo());
-        System.out.println(writeStatistics());
     }
 }

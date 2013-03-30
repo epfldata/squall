@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
 import plan_runner.components.DataSourceComponent;
-import plan_runner.components.ThetaJoinComponent;
+import plan_runner.components.ThetaJoinStaticComponent;
 import plan_runner.conversion.IntegerConversion;
 import plan_runner.expressions.ColumnReference;
 import plan_runner.operators.AggregateCountOperator;
@@ -49,7 +49,7 @@ public class ThetaHyracksPlan {
 
             AggregateCountOperator agg = new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(1));
 
-            ThetaJoinComponent CUSTOMER_ORDERSjoin = new ThetaJoinComponent(
+            ThetaJoinStaticComponent CUSTOMER_ORDERSjoin = new ThetaJoinStaticComponent(
                     relationCustomer,
                     relationOrders,
                     _queryPlan).addOperator(agg)

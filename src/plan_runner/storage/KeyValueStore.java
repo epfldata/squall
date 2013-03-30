@@ -10,11 +10,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.log4j.Logger;
 import plan_runner.conversion.TypeConversion;
 import plan_runner.utilities.SystemParameters;
 
 public class KeyValueStore<K, V> extends BasicStore {
-
+	private static Logger LOG = Logger.getLogger(KeyValueStore.class);
+	
 	private TypeConversion _tc = null;
 	private static int DEBUG_COUNTER = 0 ;	
 	private HashMap<K, Object> _memstore;
@@ -109,7 +112,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 			if (index != -1)
 				values.set(index, newValue);
 			else {
-				System.out.println("KeyValueStore: BUG: No element for key " + key + " found in store, but store's metadata register elements.");
+				LOG.info("KeyValueStore: BUG: No element for key " + key + " found in store, but store's metadata register elements.");
 				System.exit(0);
 			}
 		}
@@ -191,12 +194,29 @@ public class KeyValueStore<K, V> extends BasicStore {
 	}
 	
 	@Override	
-	public boolean equals(BasicStore store) {
+	public boolean equals(BasicStore bstore) {
+		if (!(bstore instanceof KeyValueStore)){
+			LOG.info("Compared stores are not of the same type!");
+			return false;
+		}
+		KeyValueStore store = (KeyValueStore) bstore;
+		int thisSize = this.keySet().size();
+		int otherSize = store.keySet().size();
+		if ( thisSize != otherSize) {
+			LOG.info("Stores differ in size: Computed store has " + thisSize + 
+					      " entries, and file store has " + otherSize + " entries.");
+			return false;
+		}
+		
 		Set<K> keys = this.keySet();
 		for (Iterator<K> it = keys.iterator() ; it.hasNext() ; ) {
 			K key = it.next();
 			List<V> thisValues = this.access(key);
 			List<V> storeValues = (List<V>)store.access(key);
+			if(storeValues == null){
+				LOG.info("File does not contain values for key = " + key + ".\n");
+				return false;
+			}
 			Collections.sort((List)thisValues);
 			Collections.sort((List)storeValues);
 			
@@ -208,12 +228,16 @@ public class KeyValueStore<K, V> extends BasicStore {
 				V value2 = storeValues.get(index);
 				if (value1 instanceof Number) {
 					if (value1 != value2) {
-						if (Math.abs(((Number)value1).floatValue() - ((Number)value2).floatValue()) > 0.0001)
+						if (Math.abs(((Number)value1).floatValue() - ((Number)value2).floatValue()) > 0.0001){
+							LOG.info("For key '" + key + "' computed value '" + value1 + "' differs from the value from the file '" + value2 +"'.\n");
 							return false;
+						}
 					}
 				} else {
-					if (!value1.equals(value1)) 
+					if (!value1.equals(value1)){
+						LOG.info("For key '" + key + "' computed value '" + value1 + "' differs from the value from the file '" + value2 +"'.\n");
 						return false;
+					}
 				}
 				index++;
 			}

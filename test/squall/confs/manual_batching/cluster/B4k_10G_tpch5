@@ -1,0 +1,75 @@
+DIP_DISTRIBUTED true
+DIP_QUERY_NAME tpch5
+
+DIP_TOPOLOGY_NAME_PREFIX username
+DIP_DATA_ROOT /data/squall_blade/data/tpchdb/
+DIP_SQL_ROOT ../test/squall/sql_queries/
+DIP_SCHEMA_PATH ../test/squall/schemas/tpch.txt
+
+# DIP_DB_SIZE is in GBs
+DIP_DB_SIZE 10
+
+########################################
+#DIP_OPTIMIZER_TYPE INDEX_SIMPLE
+#DIP_MAX_SRC_PAR 1
+
+#DIP_OPTIMIZER_TYPE INDEX_RULE_BUSHY
+#DIP_MAX_SRC_PAR 1
+
+#DIP_OPTIMIZER_TYPE NAME_MANUAL_PAR_LEFTY
+#DIP_PLAN CUSTOMER:1,ORDERS:1:10
+
+#DIP_OPTIMIZER_TYPE NAME_MANUAL_COST_LEFTY
+#DIP_PLAN CUSTOMER,ORDERS
+#DIP_TOTAL_SRC_PAR 20
+
+#DIP_OPTIMIZER_TYPE NAME_RULE_LEFTY
+#DIP_TOTAL_SRC_PAR 20
+
+#DIP_OPTIMIZER_TYPE NAME_COST_LEFTY
+#DIP_TOTAL_SRC_PAR 8
+
+DIP_OPTIMIZER_TYPE NAME_MANUAL_BATCHING
+DIP_TOTAL_SRC_PAR 6
+
+########################################
+
+#below are unlikely to change
+DIP_EXTENSION .tbl
+DIP_READ_SPLIT_DELIMITER \|
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_ACK_EVERY_TUPLE false
+DIP_KILL_AT_THE_END true
+
+
+########################################################################
+#   possible values are THROTTLING, SEND_AND_WAIT, MANUAL_BATCH
+#   double check DIP_ACK_EVERY_TUPLE!!!!!!!!
+#   THROTTLING implies we have DIP_ACK_EVERY_TUPLE = true
+BATCH_SEND_MODE MANUAL_BATCH
+
+BATCH_SIZE 4096
+#   timeout between two batches
+BATCH_TIMEOUT_MILLIS 0
+
+CUSTOM_TIMESTAMP true
+#   ignoring latencies in 1st second, they are 3 orders of magnitudes bigger
+INIT_IGNORED_TUPLES 20
+
+#   compute latency for every FREQ_TUPLE_LOG_COMPUTEth tuple on the last component (it's on batch level for MANUAL_BATCH)
+FREQ_TUPLE_LOG_COMPUTE 1
+#   write average latency for every FREQ_TUPLE_LOG_WRITEth tuple on the last component (it's on batch level for MANUAL_BATCH)
+#   FREQ_TUPLE_LOG_WRITE has to be divisible with FREQ_TUPLE_LOG_COMPUTE
+FREQ_TUPLE_LOG_WRITE 50
+########################################################################
+
+
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_CLUSTER_DIR /data/squall_zone/storage
+STORAGE_COLD_START true
+STORAGE_MEMORY_SIZE_MB 2048

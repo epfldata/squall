@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import static org.junit.Assert.assertEquals;
+
+import org.apache.log4j.Logger;
 import org.junit.Test;
 import plan_runner.components.DataSourceComponent;
 import plan_runner.components.EquiJoinComponent;
@@ -25,6 +27,8 @@ import sql.visitors.jsql.SQLVisitor;
  * @author vitorovi
  */
 public class ProjSchemaCreatorTest {
+	private static Logger LOG = Logger.getLogger(ProjSchemaCreatorTest.class);	
+	
         //this will not break any contracts,
     //  even with new DateConversion() on all the places,
     //  we will have a single object per (possibly) multiple spout/bolt threads.
@@ -54,7 +58,7 @@ public class ProjSchemaCreatorTest {
     
     @Test
     public void testFullExprs() {
-        System.out.println("test PSC: full expressions in inputTupleSchema");
+        LOG.info("test PSC: full expressions in inputTupleSchema");
         
          
         List<ColumnNameType> inputTupleSchema = new ArrayList<ColumnNameType>();
@@ -94,7 +98,7 @@ public class ProjSchemaCreatorTest {
     
     @Test
     public void testSubexpresssions() {
-        System.out.println("test PSC: subexpressions in inputTupleSchema");
+        LOG.info("test PSC: subexpressions in inputTupleSchema");
         
          
         List<ColumnNameType> inputTupleSchema = new ArrayList<ColumnNameType>();
@@ -137,7 +141,7 @@ public class ProjSchemaCreatorTest {
     
     @Test
     public void testColumnOnly() {
-        System.out.println("test PSC: only columns in inputTupleSchema");
+        LOG.info("test PSC: only columns in inputTupleSchema");
         
          
         List<ColumnNameType> inputTupleSchema = new ArrayList<ColumnNameType>();

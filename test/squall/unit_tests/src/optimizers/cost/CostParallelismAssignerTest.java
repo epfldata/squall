@@ -7,7 +7,10 @@ import java.util.Set;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import static org.junit.Assert.assertEquals;
+
+import org.apache.log4j.Logger;
 import org.junit.Test;
+
 import sql.main.ParserMain;
 import sql.optimizers.name.CostParallelismAssigner;
 import sql.optimizers.name.ProjGlobalCollect;
@@ -21,6 +24,8 @@ import sql.visitors.jsql.SQLVisitor;
  * @author vitorovi
  */
 public class CostParallelismAssignerTest {
+	private static Logger LOG = Logger.getLogger(CostParallelismAssignerTest.class);
+	
     private SQLVisitor _parsedQuery;
     private CostParallelismAssigner _cpa;
     
@@ -45,13 +50,13 @@ public class CostParallelismAssignerTest {
     
     @Test(expected=RuntimeException.class)
     public void testGetSourceParallelism5() {
-        System.out.println("test CPA: getSourceParallelism 5");
+        LOG.info("test CPA: getSourceParallelism 5");
         _cpa.computeSourcePar(5);     
     }    
 
     @Test
     public void testGetSourceParallelism6() {
-        System.out.println("test CPA: getSourceParallelism 6");
+        LOG.info("test CPA: getSourceParallelism 6");
         
         Map<String, Integer> sourceParallelism = _cpa.computeSourcePar(6);     
         Map<String, Integer> expSourceParallelism = new HashMap<String, Integer>(){{
@@ -67,7 +72,7 @@ public class CostParallelismAssignerTest {
 
     @Test
     public void testGetSourceParallelism15() {
-        System.out.println("test CPA: getSourceParallelism 15");
+        LOG.info("test CPA: getSourceParallelism 15");
         
         Map<String, Integer> sourceParallelism = _cpa.computeSourcePar(15);     
         Map<String, Integer> expSourceParallelism = new HashMap<String, Integer>(){{
@@ -86,7 +91,7 @@ public class CostParallelismAssignerTest {
      */
     @Test
     public void testGetSourceParallelism20() {
-        System.out.println("test CPA: getSourceParallelism 20");
+        LOG.info("test CPA: getSourceParallelism 20");
         
         Map<String, Integer> sourceParallelism = _cpa.computeSourcePar(20);     
         Map<String, Integer> expSourceParallelism = new HashMap<String, Integer>(){{
@@ -102,7 +107,7 @@ public class CostParallelismAssignerTest {
     
     @Test
     public void testGetSourceParallelism50() {
-        System.out.println("test CPA: getSourceParallelism 50");
+        LOG.info("test CPA: getSourceParallelism 50");
         
         Map<String, Integer> sourceParallelism = _cpa.computeSourcePar(50);
         Map<String, Integer> expSourceParallelism = new HashMap<String, Integer>(){{

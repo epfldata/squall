@@ -2,6 +2,8 @@
 
 . ./storm_version.sh
 
+SUBMIT_WAIT_TIME=15
+
 printFormat (){
 	echo "Format: ./squall_cluster.sh CONFIG_PATH"
 	echo "        or"
@@ -53,7 +55,15 @@ fi
 confname=${CONFIG_PATH##*/}
 
 ../$STORMNAME/bin/storm jar ../deploy/squall-0.2.0-standalone.jar $CLASS $CONFIG_PATH
+# Time is counted from the moment topology started
 TIME_BEFORE="$(date +%s)"
+
+# printing statistics, in case that the topology is not killed regularly
+sleep $SUBMIT_WAIT_TIME
+echo "******************BEGIN OF TOPOLOGY_STATS******************"
+./get_topology_stats.sh
+echo "******************END OF TOPOLOGY_STATS******************"
+
 ./wait_topology.sh $confname
 TIME_AFTER="$(date +%s)"
 ELAPSED_TIME="$(expr $TIME_AFTER - $TIME_BEFORE)"

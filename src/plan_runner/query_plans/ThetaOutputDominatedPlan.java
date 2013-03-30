@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
 import plan_runner.components.DataSourceComponent;
-import plan_runner.components.ThetaJoinComponent;
+import plan_runner.components.ThetaJoinStaticComponent;
 import plan_runner.conversion.DoubleConversion;
 import plan_runner.conversion.NumericConversion;
 import plan_runner.expressions.ColumnReference;
@@ -55,7 +55,7 @@ public class ThetaOutputDominatedPlan {
 				new ColumnReference(_doubleConv, 0), conf);
 		// Empty parameters = Cartesian Product
 
-		ThetaJoinComponent SUPPLIER_NATIONjoin = new ThetaJoinComponent(
+		ThetaJoinStaticComponent SUPPLIER_NATIONjoin = new ThetaJoinStaticComponent(
 				relationSupplier, relationNation, _queryPlan).addOperator(
 				new ProjectOperator(new int[] { 0 })).addOperator(agg);
 

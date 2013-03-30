@@ -37,7 +37,7 @@ public class DoubleConversion implements NumericConversion<Double> {
     //for printing(debugging) purposes
     @Override
     public String toString(){
-        return  "DATE";
+        return  "DOUBLE";
     }    
     
 }

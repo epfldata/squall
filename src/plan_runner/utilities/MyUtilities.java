@@ -270,7 +270,7 @@ public class MyUtilities{
             }
             return currentBolt;
         }
-        
+
         public static InputDeclarer attachEmitterCustom(Map map, List<String> fullHashList, InputDeclarer currentBolt,
                 StormEmitter emitter1, StormEmitter... emittersArray){
             List<StormEmitter> emittersList = new ArrayList<StormEmitter>();

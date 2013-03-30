@@ -51,7 +51,7 @@ public class Main {
             
             addVariablesToMap(conf, confPath);
             putBatchSizes(queryPlan, conf);
-	    TopologyBuilder builder = createTopology(queryPlan, conf);
+	    	TopologyBuilder builder = createTopology(queryPlan, conf);
             StormWrapper.submitTopology(conf, builder);
         }
 

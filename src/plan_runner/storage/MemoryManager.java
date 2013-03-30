@@ -4,9 +4,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.lang.reflect.Method;
+
+import org.apache.log4j.Logger;
 
 public class MemoryManager implements Serializable {
+	private static Logger LOG = Logger.getLogger(MemoryManager.class);
 
 	Class thisClass;	
 	Class partypes[];
@@ -122,7 +124,7 @@ public class MemoryManager implements Serializable {
 //			partypes[1] = obj.getClass();	
 //			if (partypes[0].equals(partypes[1])) {
 //				// Avoid recursively calling this is you get a true Object as an argument!
-//				System.out.println("Generic get size called with object type " + partypes[1].getName());
+//				LOG.info("Generic get size called with object type " + partypes[1].getName());
 //				return genericGetSize(obj);
 //			}
 //			// Dynamic dispatch according to type
@@ -130,13 +132,13 @@ public class MemoryManager implements Serializable {
 //			return ((Integer)m.invoke(this, obj)).intValue();
 //		} catch (java.lang.NoSuchMethodException nsme) { 
 //			// We don't have a getSize for the specific type. No problem: serialize/deserialize
-//			System.out.println("Generic get size called with object type " + partypes[1].getName());
+//			LOG.info("Generic get size called with object type " + partypes[1].getName());
 //			return genericGetSize(obj);
 //		} catch (java.lang.IllegalAccessException iae) { 
-//			System.out.println("Squall MemoryManager:: IllegalAccessException encountered: " + iae.getMessage()); 
+//			LOG.info("Squall MemoryManager:: IllegalAccessException encountered: " + iae.getMessage()); 
 //			System.exit(0);
 //		} catch (java.lang.reflect.InvocationTargetException ite) {
-//			System.out.println("Squall MemoryManager:: InvocationTargetException encountered: " + ite.getMessage()); 
+//			LOG.info("Squall MemoryManager:: InvocationTargetException encountered: " + ite.getMessage()); 
 //			System.exit(0);
 //		}
 //		return 0;
@@ -147,7 +149,7 @@ public class MemoryManager implements Serializable {
 		try {
 			this._oos = new ObjectOutputStream(this._baos);
 		} catch (IOException ioe) { 
-			System.out.println("Squall MemoryManager:: Couldn't initialize memory streams. IOException encountered: " + ioe.getMessage());
+			LOG.info("Squall MemoryManager:: Couldn't initialize memory streams. IOException encountered: " + ioe.getMessage());
 			System.exit(0);
 		}
 	}
@@ -163,7 +165,7 @@ public class MemoryManager implements Serializable {
 			this._baos.close();
 			return _baos.toByteArray().length;
 		} catch (IOException ioe) {
-			System.out.println("Squall MemoryManager:: genericGetSize() failed. Error while serializing/deserializing Object. IOException encountered:: " + ioe.getMessage()); 
+			LOG.info("Squall MemoryManager:: genericGetSize() failed. Error while serializing/deserializing Object. IOException encountered:: " + ioe.getMessage()); 
 			System.exit(-1);
 		}
 		return -1;
@@ -181,7 +183,7 @@ public class MemoryManager implements Serializable {
 
 	void releaseMemory(Object obj) {
 		long bytes = this.getSize(obj);
-		//System.out.println("Releasing " + bytes + " bytes");
+		//LOG.info("Releasing " + bytes + " bytes");
 		this._currSize -= bytes;
 		// Curr size can be less than zero, if store is evicting bigger elements
 		// than the ones it registered. We handle this case here.

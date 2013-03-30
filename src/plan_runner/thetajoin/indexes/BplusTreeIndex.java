@@ -8,6 +8,11 @@ import cherri.bheaven.bplustree.memory.MemoryInnerNode;
 import cherri.bheaven.bplustree.memory.MemoryLeafNode;
 import cherri.bheaven.bplustree.memory.MemoryNodeFactory;
 import gnu.trove.list.array.TIntArrayList;
+import java.util.Calendar;
+import java.util.Date;
+
+import org.apache.log4j.Logger;
+
 import plan_runner.predicates.ComparisonPredicate;
 
 /**
@@ -19,11 +24,20 @@ import plan_runner.predicates.ComparisonPredicate;
  */
 public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 		implements Index<KeyType> {
+	private static Logger LOG = Logger.getLogger(BplusTreeIndex.class);
 
 	private static final long serialVersionUID = 1L;
 
 	private BPlusTree<KeyType, TIntArrayList> _index;
 	private int _order, _slots;
+	
+	private KeyType _diff=null;
+	
+	public BplusTreeIndex setDiff(Object diff){
+		if(diff!=null)
+			_diff=(KeyType)diff;
+		return this;
+	}
 	
 	/**
 	 * Constructor
@@ -35,11 +49,10 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 		_slots = slots;
 		NodeFactory<KeyType, TIntArrayList> nf = new MemoryNodeFactory<KeyType, TIntArrayList>(_order, _slots);
 		_index = new BPlusTree<KeyType, TIntArrayList>(nf);
-
 	}
 
 	@Override
-	public TIntArrayList getValues(KeyType key) {
+	public TIntArrayList getValuesWithOutOperator(KeyType key,KeyType ... keys) {
 		// search for the leaf node where the key is expected to be
 		LeafNode<KeyType, TIntArrayList> ln = _index.findLeafNode(key);
 		
@@ -57,11 +70,11 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 	}
 
 	@Override
-	public TIntArrayList getValues(KeyType key, int operator) {
+	public TIntArrayList getValues(int operator, KeyType key) {
 		if (operator == ComparisonPredicate.NONEQUAL_OP)
 			return null;
 		else if (operator == ComparisonPredicate.EQUAL_OP)
-			return getValues(key);
+			return getValuesWithOutOperator(key);
 		else if (operator == ComparisonPredicate.GREATER_OP)
 			return myGreater(key, false);
 		else if (operator == ComparisonPredicate.NONLESS_OP)
@@ -82,11 +95,13 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 	 * @param includeEqual If it's a greater-equal search
 	 * @return
 	 */
-	public TIntArrayList myGreater(KeyType key, boolean includeEqual) {
+	public TIntArrayList myGreater(KeyType key, boolean includeEqual ) {
 		
 		TIntArrayList values = new TIntArrayList();
 		LeafNode<KeyType, TIntArrayList> ln;
 		int keyIndex;
+		
+		boolean isFinalBreak=false;
 		
 		boolean first = true;
 		// Find leaf node where it should be
@@ -115,6 +130,13 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 			{
 				if (keepGoing || ln.getKey(s).compareTo(key) > 0 || (ln.getKey(s).compareTo(key) == 0 && includeEqual))
 				{
+					if((_diff!=null && key.compareTo(performOperation(ln.getKey(s), _diff)) < 0))//second part for ranges
+						{
+						isFinalBreak=true;
+						break;
+//						continue;
+						}
+					
 					// Get the corresponding list with values and append its contents to the final result
 					TIntArrayList slotVals = ln.getValue(s);
 					for (int i = 0; i < slotVals.size(); i++)
@@ -123,16 +145,14 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 					keepGoing = true;
 				}
 			}
-			
+			if(isFinalBreak)
+				break;
 			// Go to next leaf node
 			ln = (LeafNode<KeyType, TIntArrayList>) ln.getNext();
 		}while (ln != null);
 		
 		return values;
 	}
-	
-	
-	
 	
 	
 	/**
@@ -141,52 +161,69 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 	 * @param includeEqual If it's a less-equal search
 	 * @return
 	 */
-	public TIntArrayList myLess(KeyType key, boolean includeEqual) {
+	public TIntArrayList myLess(KeyType key, boolean includeEqual) { //assuming diff is of size one only for ranges!
 		
 		TIntArrayList values = new TIntArrayList();
 
-		LeafNode<KeyType, TIntArrayList> ln;
+		LeafNode<KeyType, TIntArrayList> ln=null;
 		Node<KeyType, TIntArrayList> nd;
+		boolean isFinalBreak=false;
 	
+		if(_diff==null){
 		// Get root
-		if (_index.getRoot() instanceof MemoryInnerNode)
-		{
-			MemoryInnerNode<KeyType, TIntArrayList> root = (MemoryInnerNode<KeyType, TIntArrayList>) _index.getRoot();
-			if (root == null)
-				return null;
-			
-			// Go down to left most node
-			nd = root.getChild(0);
-			while (nd != null && nd instanceof MemoryInnerNode)
-				nd = ((MemoryInnerNode<KeyType, TIntArrayList>)nd).getChild(0);
-			
-			if (nd == null)
-				return null;
-			
-			ln = (MemoryLeafNode<KeyType, TIntArrayList>) nd;
+			if (_index.getRoot() instanceof MemoryInnerNode)
+			{
+				MemoryInnerNode<KeyType, TIntArrayList> root = (MemoryInnerNode<KeyType, TIntArrayList>) _index.getRoot();
+				if (root == null)
+					return null;
+				
+				// Go down to left most node
+				nd = root.getChild(0);
+				while (nd != null && nd instanceof MemoryInnerNode)
+					nd = ((MemoryInnerNode<KeyType, TIntArrayList>)nd).getChild(0);
+				
+				if (nd == null)
+					return null;
+				
+				ln = (MemoryLeafNode<KeyType, TIntArrayList>) nd;
+			}
+			else
+				ln = (MemoryLeafNode<KeyType, TIntArrayList>) _index.getRoot();
 		}
-		else
-			ln = (MemoryLeafNode<KeyType, TIntArrayList>) _index.getRoot();
+		else{
+			ln = _index.findLeafNode(performOperation(key, _diff));
+			if(ln==null)
+				return null;
+		}
 		
 
 		// Iterate over leaf nodes
 		do
 		{
 			// For each slot in the current leaf
+			if(ln==null)
+				break;
 			for (int s = 0; s < ln.getSlots(); s++)
 			{
 				// While the key is less or equal (if needed), continue
-				if (ln.getKey(s).compareTo(key) < 0 || (ln.getKey(s).compareTo(key) == 0 && includeEqual))
+				if ( ln.getKey(s).compareTo(key) < 0 || (ln.getKey(s).compareTo(key) == 0 && includeEqual)) 
 				{
+					if((_diff!=null && ln.getKey(s).compareTo(performOperation(key, _diff)) < 0))//second part for ranges
+						{
+//						break;
+						continue;
+						}
 					// Get the corresponding list with values and append its contents to the final result
 					TIntArrayList slotVals = ln.getValue(s);
 					for (int i = 0; i < slotVals.size(); i++)
 						values.add(slotVals.get(i));
-					
 				}
-				else
-					break;
+				else{
+					isFinalBreak=true;
+					break;}
 			}
+			if(isFinalBreak)
+				break;
 			
 			// Go to next leaf node
 			ln = (LeafNode<KeyType, TIntArrayList>) ln.getNext();
@@ -197,8 +234,9 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 	
 	
 	
+	
 	@Override
-	public void put(KeyType key, Integer row_id) {
+	public void put(Integer row_id, KeyType key) {
 
 		// find node where key could be
 		LeafNode<KeyType, TIntArrayList> ln = _index.findLeafNode(key);
@@ -208,12 +246,100 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 			idsList = new TIntArrayList(1);
 			_index.put(key, idsList);
 			
-
 		}
 		idsList.add(row_id);
 	}
 	
+	private KeyType performOperation(KeyType k, KeyType diff){
+		KeyType result =null;
+		if(k instanceof Double ){
+			Double kd=(Double)k; Double diffd=(Double)diff;
+			Double resultd=kd+diffd;
+			result= (KeyType)resultd; 
+		}else if(k instanceof Integer ){
+			Integer kd=(Integer)k; Integer diffd=(Integer)diff;
+			Integer resultd=kd+diffd;
+			result= (KeyType)resultd; 
+		}else if(k instanceof Date ){
+			Date kd=(Date)k; Integer diffd=(Integer)diff;
+			Calendar c = Calendar.getInstance();
+	        c.setTime(kd);
+	        c.add(Calendar.DAY_OF_MONTH, diffd);
+			result= (KeyType)c.getTime(); 
+		}
+		else{
+			LOG.info("Operation in B+Tree not supported for underlying datatype");
+		}
+		
+		return result;
+	}
 	
+	
+	public static void main(String[] args) {
+		
+		/*
+		BplusTreeIndex<Date> index = new BplusTreeIndex<Date>(3, 2);
+		index.put(2, new Date(2));
+		index.put(4, new Date(4));
+		index.put(5, new Date(5));
+		index.put(5, new Date(5));
+		index.put(5, new Date(5));
+		index.put(5, new Date(5));
+		index.put(5, new Date(5));
+		index.put(7, new Date(7));
+		index.put(6, new Date(6));
+		index.put(1, new Date(1));
+		index.put(2, new Date(2));
+		index.put(9, new Date(9));
+		index.put(10, new Date(10));
+		index.put(14, new Date(14));
+		index.put(11, new Date(11));
+		index.put(11, new Date(11));
+		index.put(12, new Date(12));
+		index.put(13, new Date(13));
+		index.put(11, new Date(11));
+		index.put(11, new Date(11));
+		index.put(11, new Date(11));
+		TIntArrayList list= index.getValues(ComparisonPredicate.LESS_OP, new Date(4));
+		*/
+		
+		BplusTreeIndex<Double> index = new BplusTreeIndex<Double>(3, 2);
+		index.setDiff(-3.0);
+		
+		index.put(0, 0.0);
+		index.put(2, 2.0);
+		index.put(4, 4.0);
+		index.put(5, 5.0);
+		index.put(5, 5.0);
+		index.put(5, 5.0);
+		index.put(5, 5.0);
+		index.put(5, 5.0);
+		index.put(7, 7.0);
+		index.put(6, 6.0);
+		index.put(1, 1.0);
+		index.put(2, 2.0);
+		index.put(9, 9.0);
+		index.put(10, 10.0);
+		index.put(10, 10.0);
+		
+		index.put(14, 14.0);
+		index.put(11, 11.0);
+		index.put(11, 11.0);
+		index.put(12, 12.0);
+		index.put(13, 13.0);
+		index.put(11, 11.0);
+		index.put(11, 11.0);
+		index.put(11, 11.0);
+		index.put(8, 8.0);
+		
+		TIntArrayList list= index.getValues(ComparisonPredicate.LESS_OP, 10.0);
+//		TIntArrayList list= index.getValues(ComparisonPredicate.GREATER_OP, 7.0);
+		
+		for (int i = 0; i < list.size(); i++) {
+			LOG.info(list.get(i));
+		}
+		
+	}
 	
 
 }

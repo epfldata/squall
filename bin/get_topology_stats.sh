@@ -1,4 +1,5 @@
 #!/bin/bash
+# Similar to rake_files/extract_time.rb, but in addition it computes Storm latency (with Ackers) and throughput
 
 . ./storm_version.sh
 

@@ -1,4 +1,5 @@
 #!/bin/bash
+# This script does not work now, as wait_topology.sh need to return when status is KILLED
 
 . ./storm_version.sh
 

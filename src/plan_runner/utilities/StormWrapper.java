@@ -8,6 +8,7 @@ import backtype.storm.generated.ClusterSummary;
 import backtype.storm.generated.ErrorInfo;
 import backtype.storm.generated.ExecutorInfo;
 import backtype.storm.generated.ExecutorSpecificStats;
+import backtype.storm.generated.ExecutorStats;
 import backtype.storm.generated.ExecutorSummary;
 import backtype.storm.generated.GlobalStreamId;
 import backtype.storm.generated.Nimbus.Client;
@@ -38,7 +39,7 @@ public class StormWrapper {
         if(MyUtilities.isAckEveryTuple(conf)){
             //otherwise this parameter is used only at the end,
             //  and represents the time topology is shown as killed (will be set to default: 30s)
-            //Messages are failling if we do not specify timeout (proven for TPCH8)
+            //Default also works here
             //conf.setMessageTimeoutSecs(SystemParameters.MESSAGE_TIMEOUT_SECS);
             
             //Storm throttling mode
@@ -167,12 +168,12 @@ public class StormWrapper {
                 sb.append("\n");
 
                 TopologyInfo topologyInfo = client.getTopologyInfo(topologyID);
+
                 //print more about each task
                 Iterator<ExecutorSummary> execIter = topologyInfo.get_executors_iterator();
                 boolean globalFailed = false;
                 while(execIter.hasNext()){
                     ExecutorSummary execSummary = execIter.next();
-
                     String componentId = execSummary.get_component_id();
                     sb.append("component_id:").append(componentId).append(", ");
                     ExecutorInfo execInfo = execSummary.get_executor_info();
@@ -188,41 +189,47 @@ public class StormWrapper {
                     sb.append("\n");
                     
                     //printing failing statistics, if there are failed tuples
-                    ExecutorSpecificStats stats = execSummary.get_stats().get_specific();
-                    boolean isEmpty;
-                    Object objFailed;
-                    if(stats.is_set_spout()){
-                        Map<String, Map<String, Long>> failed = stats.get_spout().get_failed();
-                        objFailed = failed;
-                        isEmpty = isEmptyMapMap(failed);
-                    }else{
-                        Map<String, Map<GlobalStreamId, Long>> failed = stats.get_bolt().get_failed();
-                        objFailed = failed;
-                        isEmpty = isEmptyMapMap(failed);
-                    }
-                    if(!isEmpty){
-                        sb.append("ERROR: There are some failed tuples: ").append(objFailed).append("\n");
-                        globalFailed = true;
-                    }   
+                    ExecutorStats es = execSummary.get_stats();
+		    		if(es == null){
+				      sb.append("No info about failed tuples\n");
+				    }else{
+				      ExecutorSpecificStats stats = es.get_specific();
+				      boolean isEmpty;
+				      Object objFailed;
+				      if(stats.is_set_spout()){
+					  	Map<String, Map<String, Long>> failed = stats.get_spout().get_failed();
+					  	objFailed = failed;
+					  	isEmpty = isEmptyMapMap(failed);
+			          }else{
+			  		    Map<String, Map<GlobalStreamId, Long>> failed = stats.get_bolt().get_failed();
+			            objFailed = failed;
+			            isEmpty = isEmptyMapMap(failed);
+		      		  }
+		      		  if(!isEmpty){
+		     			sb.append("ERROR: There are some failed tuples: ").append(objFailed).append("\n");
+			            globalFailed = true;
+		              }   
+		    	    }
                 }
                 
                 //is there at least one component where something failed
                 if(!globalFailed){
-                    sb.append("\n\nOK: No tuples failed so far.");
+                    sb.append("OK: No tuples failed so far.\n");
                 }else{
-                    sb.append("\n\nERROR: Some tuples failed!");
+                    sb.append("ERROR: Some tuples failed!\n");
                 }
                 
                 //print topology errors
                 Map<String, List<ErrorInfo>> errors = topologyInfo.get_errors();
                 if(!isEmptyMap(errors)){
-                    sb.append("\n\nERROR: There are some errors in topology: ").append(errors);
+                    sb.append("ERROR: There are some errors in topology: ").append(errors).append("\n");
                 }else{
-                    sb.append("\n\nOK: No errors in the topology.");
+                    sb.append("OK: No errors in the topology.\n");
                 }
                 
             }
-
+            sb.append("\n\n");
+            
             String strStats = sb.toString();
             LOG.info(strStats);
         } catch (TException ex) {

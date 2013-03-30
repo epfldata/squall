@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
 import plan_runner.components.DataSourceComponent;
-import plan_runner.components.ThetaJoinComponent;
+import plan_runner.components.ThetaJoinStaticComponent;
 import plan_runner.conversion.DoubleConversion;
 import plan_runner.conversion.IntegerConversion;
 import plan_runner.conversion.NumericConversion;
@@ -109,7 +109,7 @@ public class ThetaMultipleJoinPlan {
 		
 		AndPredicate predL_O = new AndPredicate(predL_O1, predL_O2);
 		
-		ThetaJoinComponent LINEITEMS_ORDERSjoin = new ThetaJoinComponent(
+		ThetaJoinStaticComponent LINEITEMS_ORDERSjoin = new ThetaJoinStaticComponent(
 				relationLineitem,
 				relationOrders,
 				_queryPlan).setJoinPredicate(predL_O)
@@ -128,7 +128,7 @@ public class ThetaMultipleJoinPlan {
                 ComparisonPredicate predS_P = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP, colRefSupplier, colRefPartSupp);
         
 
-		ThetaJoinComponent SUPPLIER_PARTSUPPjoin = new ThetaJoinComponent(
+		ThetaJoinStaticComponent SUPPLIER_PARTSUPPjoin = new ThetaJoinStaticComponent(
 				relationSupplier,
 				relationPartsupp,
 				_queryPlan).setJoinPredicate(predS_P)
@@ -160,7 +160,7 @@ public class ThetaMultipleJoinPlan {
 		
 
 
-		ThetaJoinComponent LINEITEMS_ORDERS_SUPPLIER_PARTSUPPjoin = new ThetaJoinComponent(
+		ThetaJoinStaticComponent LINEITEMS_ORDERS_SUPPLIER_PARTSUPPjoin = new ThetaJoinStaticComponent(
 				LINEITEMS_ORDERSjoin,
 				SUPPLIER_PARTSUPPjoin,
 				_queryPlan).setJoinPredicate(predL_P)

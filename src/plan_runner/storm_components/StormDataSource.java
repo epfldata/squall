@@ -130,15 +130,15 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
 
                         
 			String line = readLine();
-                        if(line==null) {
-                                if(!_hasReachedEOF){
-                                    _hasReachedEOF=true;
-                                    //we reached EOF, first time this happens we invoke the method:
-                                    eofFinalization();
-                                }
-                                sendEOF();
-                                //sleep since we are not going to do useful work,
-                                //  but still are looping in nextTuple method
+            if(line==null) {
+            	if(!_hasReachedEOF){
+            		_hasReachedEOF=true;
+                    //we reached EOF, first time this happens we invoke the method:
+                    eofFinalization();
+                }
+                sendEOF();
+             	//sleep since we are not going to do useful work,
+             	//  but still are looping in nextTuple method
 				Utils.sleep(SystemParameters.EOF_TIMEOUT_MILLIS);
 				return;
 			}
@@ -189,6 +189,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                             }
 			} else {
                             if(!_hasSentLastAck){
+                            	LOG.info(_ID+":Has sent last_ack, tuples sent:"+_numSentTuples);
                                 _hasSentLastAck = true;
                                 List<String> lastTuple = new ArrayList<String>(Arrays.asList(SystemParameters.LAST_ACK));
                                 tupleSend(lastTuple, null, 0);

@@ -27,7 +27,7 @@ import org.apache.log4j.Logger;
  * The code for counting the lines is here:
  *   LineNumberReader  lnr = new LineNumberReader(new FileReader(new File("File1")));
  *   lnr.skip(Long.MAX_VALUE);
- *   System.out.println(lnr.getLineNumber());
+ *   LOG.info(lnr.getLineNumber());
  * Probably worst performance.
  */
 
@@ -133,7 +133,7 @@ public class SplitFileInputStream implements Serializable, CustomReader {
         try {
             String line;
             while ((line = reader.readLine()) != null) {
-                System.out.println(line);
+                LOG.info(line);
             }
         } catch (IOException ex) {
             LOG.info(MyUtilities.getStackTrace(ex));

@@ -29,8 +29,8 @@ public class ParserMain{
         //we have to set ackers after we know how many workers are there(which is done in generatePlan)
         map = pm.putAckers(plan, map);
         
-        System.out.println(ParserUtil.toString(plan));
-        System.out.println(ParserUtil.parToString(plan, map));
+        LOG.info(ParserUtil.toString(plan));
+        LOG.info(ParserUtil.parToString(plan, map));
         
         new Main(plan, map, parserConfPath);
     }
@@ -85,7 +85,7 @@ public class ParserMain{
 
     private Optimizer pickOptimizer(Map map) {
         String optStr = SystemParameters.getString(map, "DIP_OPTIMIZER_TYPE");
-        System.out.println("Selected optimizer: " + optStr);
+        LOG.info("Selected optimizer: " + optStr);
         if("INDEX_SIMPLE".equalsIgnoreCase(optStr)){
             //Simple optimizer provides lefty plans
             return new IndexSimpleOptimizer(map); 

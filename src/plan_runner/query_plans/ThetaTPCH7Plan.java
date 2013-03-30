@@ -7,7 +7,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
-import plan_runner.components.ThetaJoinComponent;
+import plan_runner.components.ThetaJoinStaticComponent;
 import plan_runner.conversion.DateConversion;
 import plan_runner.conversion.DoubleConversion;
 import plan_runner.conversion.IntegerConversion;
@@ -50,9 +50,9 @@ public class ThetaTPCH7Plan {
     public ThetaTPCH7Plan(String dataPath, String extension, Map conf){
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashNation1 = new ArrayList<Integer>(Arrays.asList(1));
+        ArrayList<Integer> hashNation2 = new ArrayList<Integer>(Arrays.asList(1));
 
-        SelectOperator selectionNation1 = new SelectOperator(
+        SelectOperator selectionNation2 = new SelectOperator(
                 new OrPredicate(
                     new ComparisonPredicate(
                         new ColumnReference(_sc, 1),
@@ -63,14 +63,14 @@ public class ThetaTPCH7Plan {
                     )
                 ));
 
-        ProjectOperator projectionNation1 = new ProjectOperator(new int[]{1, 0});
+        ProjectOperator projectionNation2 = new ProjectOperator(new int[]{1, 0});
 
-        DataSourceComponent relationNation1 = new DataSourceComponent(
-                "NATION1",
+        DataSourceComponent relationNation2 = new DataSourceComponent(
+                "NATION2",
                 dataPath + "nation" + extension,
-                _queryPlan).setHashIndexes(hashNation1)
-                           .addOperator(selectionNation1)
-                           .addOperator(projectionNation1);
+                _queryPlan).setHashIndexes(hashNation2)
+                           .addOperator(selectionNation2)
+                           .addOperator(projectionNation2);
 
         //-------------------------------------------------------------------------------------
         ArrayList<Integer> hashCustomer = new ArrayList<Integer>(Arrays.asList(1));
@@ -89,8 +89,8 @@ public class ThetaTPCH7Plan {
 	ComparisonPredicate N_C_comp = new ComparisonPredicate(
 				ComparisonPredicate.EQUAL_OP, colN, colC);
 				
-        Component N_Cjoin = new ThetaJoinComponent(
-                relationNation1,
+        Component N_Cjoin = new ThetaJoinStaticComponent(
+                relationNation2,
                 relationCustomer,
                 _queryPlan).addOperator(new ProjectOperator(new int[]{0, 2}))
                            .setJoinPredicate(N_C_comp);
@@ -113,7 +113,7 @@ public class ThetaTPCH7Plan {
 	ComparisonPredicate N_C_O_comp = new ComparisonPredicate(
 				ComparisonPredicate.EQUAL_OP, colN_C, colO);
                 
-        Component N_C_Ojoin = new ThetaJoinComponent(
+        Component N_C_Ojoin = new ThetaJoinStaticComponent(
             N_Cjoin,
             relationOrders,
             _queryPlan).addOperator(new ProjectOperator(new int[]{0, 2}))
@@ -132,16 +132,16 @@ public class ThetaTPCH7Plan {
                            .addOperator(projectionSupplier);
 
         //-------------------------------------------------------------------------------------
-        ArrayList<Integer> hashNation2 = new ArrayList<Integer>(Arrays.asList(1));
+        ArrayList<Integer> hashNation1 = new ArrayList<Integer>(Arrays.asList(1));
 
-        ProjectOperator projectionNation2 = new ProjectOperator(new int[]{1,0});
+        ProjectOperator projectionNation1 = new ProjectOperator(new int[]{1,0});
 
-        DataSourceComponent relationNation2 = new DataSourceComponent(
-                "NATION2",
+        DataSourceComponent relationNation1 = new DataSourceComponent(
+                "NATION1",
                 dataPath + "nation" + extension,
-                _queryPlan).setHashIndexes(hashNation2)
-                           .addOperator(selectionNation1)
-                           .addOperator(projectionNation2);
+                _queryPlan).setHashIndexes(hashNation1)
+                           .addOperator(selectionNation2)
+                           .addOperator(projectionNation1);
 
         //-------------------------------------------------------------------------------------
 
@@ -150,9 +150,9 @@ public class ThetaTPCH7Plan {
 	ComparisonPredicate S_N_comp = new ComparisonPredicate(
 				ComparisonPredicate.EQUAL_OP, colS, colN2);
                 
-        Component S_Njoin = new ThetaJoinComponent(
+        Component S_Njoin = new ThetaJoinStaticComponent(
                     relationSupplier,
-                    relationNation2,
+                    relationNation1,
                     _queryPlan).addOperator(new ProjectOperator(new int[]{0, 2}))
                                .setJoinPredicate(S_N_comp);
                              //.setHashIndexes(new ArrayList<Integer>(Arrays.asList(0)));
@@ -200,7 +200,7 @@ public class ThetaTPCH7Plan {
 	ComparisonPredicate L_S_N_comp = new ComparisonPredicate(
 				ComparisonPredicate.EQUAL_OP, colL, colS_N);
         
-        Component L_S_Njoin = new ThetaJoinComponent(
+        Component L_S_Njoin = new ThetaJoinStaticComponent(
             relationLineitem,
             S_Njoin,
             _queryPlan).addOperator(new ProjectOperator(new int[]{5, 0, 1, 3}))
@@ -231,7 +231,7 @@ public class ThetaTPCH7Plan {
                 ));
 
         AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_doubleConv, 4), conf)
-                .setGroupByColumns(new ArrayList<Integer>(Arrays.asList(0, 2, 3)));
+                .setGroupByColumns(new ArrayList<Integer>(Arrays.asList(2, 0, 3)));
         
         ColumnReference colN_C_O = new ColumnReference(_ic, 1);
 	ColumnReference colL_S_N = new ColumnReference(_ic, 3);
@@ -239,7 +239,7 @@ public class ThetaTPCH7Plan {
 				ComparisonPredicate.EQUAL_OP, colN_C_O, colL_S_N);
 
                 
-        Component N_C_O_L_S_Njoin = new ThetaJoinComponent(
+        Component N_C_O_L_S_Njoin = new ThetaJoinStaticComponent(
             N_C_Ojoin,
             L_S_Njoin,
             _queryPlan).addOperator(so)

@@ -6,9 +6,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 
+import org.apache.log4j.Logger;
+
 public class SerializableFileInputStream extends    InputStream
                                          implements Serializable, CustomReader
 {
+  private static Logger LOG = Logger.getLogger(SerializableFileInputStream.class);	
+	
   protected final File          _file;           // The _file to read from
   protected       byte[]        _buffer;         // The _file _buffer
   protected       long          _filePtr    = 0; // How many bytes already read
@@ -262,7 +266,7 @@ public class SerializableFileInputStream extends    InputStream
     while(true){
       String l = reader.readLine();
       if(l == null) { break; }
-      System.out.println(l);
+      LOG.info(l);
     }
   }
 }

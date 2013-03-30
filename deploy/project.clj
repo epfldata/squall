@@ -13,5 +13,5 @@
 
   :dev-dependencies [
 		     [org.clojure/clojure "1.4.0"]
-                     [storm "0.8.0"]
+                     [storm "0.8.1"]
                     ])

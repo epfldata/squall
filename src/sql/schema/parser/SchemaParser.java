@@ -4,10 +4,14 @@ package sql.schema.parser;
 
 import java.util.*;
 import java.io.*;
+
+import org.apache.log4j.Logger;
+
 import plan_runner.conversion.*;
 import sql.schema.*;
 
 public class SchemaParser implements SchemaParserConstants {
+  private static Logger LOG = Logger.getLogger(SchemaParser.class);
 
   public static long INVALID = -1;
 
@@ -16,7 +20,7 @@ public class SchemaParser implements SchemaParserConstants {
     String path = args[0];
     double scallingFactor = Double.valueOf(args[1]);
     Map<String, TableInfo> tables = getSchemaInfo(path, scallingFactor);
-    System.out.println(getParsedString(tables));
+    LOG.info(getParsedString(tables));
   }
 
   public static Map<String,TableInfo> getSchemaInfo(String path, double scallingFactor) throws ParseException{
@@ -33,7 +37,7 @@ public class SchemaParser implements SchemaParserConstants {
         try {
             fin = new FileInputStream(file);
         } catch (FileNotFoundException e) {
-            System.out.println("File " + file.getAbsolutePath()
+            LOG.info("File " + file.getAbsolutePath()
             + " could not be found on filesystem");
         }
 

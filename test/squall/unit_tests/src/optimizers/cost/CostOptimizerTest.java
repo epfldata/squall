@@ -59,16 +59,16 @@ public class CostOptimizerTest {
         ncg.generateEquiJoin(customerSource, ordersSource);
 
         String planStr = ParserUtil.toString(ncg.getQueryPlan());
-        //System.out.println(planStr);
+        //LOG.info(planStr);
         
         //parallelism has to be set in _map
         //int totalParallelism = ParserUtil.parallelismToMap(ncg, _map);
-        //System.out.println("Total parallelism(without KILLER) is " + totalParallelism);
+        //LOG.info("Total parallelism(without KILLER) is " + totalParallelism);
         //new Main(ncg.getQueryPlan(), _map);
         
        //expected query plan
         String expPlanStr = MyUtilities.readFile(PLAN_PATH + "hyracks.plan");
-        //System.out.println(expPlanStr);
+        //LOG.info(expPlanStr);
        
         //comparing
         assertEquals(expPlanStr.length(), planStr.length());
@@ -87,16 +87,16 @@ public class CostOptimizerTest {
         ncg.generateEquiJoin(C_Ojoin, lineitemSource);
         
         String planStr = ParserUtil.toString(ncg.getQueryPlan());
-        //System.out.println(planStr);
+        //LOG.info(planStr);
         
         //parallelism has to be set in _map
         //int totalParallelism = ParserUtil.parallelismToMap(ncg, _map);
-        //System.out.println("Total parallelism(without KILLER) is " + totalParallelism);
+        //LOG.info("Total parallelism(without KILLER) is " + totalParallelism);
         //new Main(ncg.getQueryPlan(), _map);
         
         //expected query plan
         String expPlanStr = MyUtilities.readFile(PLAN_PATH + "tpch3.plan");
-        //System.out.println(expPlanStr);
+        //LOG.info(expPlanStr);
         
         //comparing
         assertEquals(expPlanStr.length(), planStr.length());
@@ -127,16 +127,16 @@ public class CostOptimizerTest {
         ncg.generateEquiJoin(R_N_S_L_Ojoin, customerSource);
         
         String planStr = ParserUtil.toString(ncg.getQueryPlan());
-        //System.out.println(planStr);
+        //LOG.info(planStr);
         
         //parallelism has to be set in _map
         //int totalParallelism = ParserUtil.parallelismToMap(ncg, _map);
-        //System.out.println("Total parallelism(without KILLER) is " + totalParallelism);
+        //LOG.info("Total parallelism(without KILLER) is " + totalParallelism);
         //new Main(ncg.getQueryPlan(), _map);
         
         //expected query plan
         String expPlanStr = MyUtilities.readFile(PLAN_PATH + "tpch5.plan");
-        //System.out.println(expPlanStr);
+        //LOG.info(expPlanStr);
         
         //comparing
         assertEquals(expPlanStr.length(), planStr.length());
@@ -169,16 +169,16 @@ public class CostOptimizerTest {
         ncg.generateEquiJoin(S_N1_L_O_Cjoin, n2Source);
         
         String planStr = ParserUtil.toString(ncg.getQueryPlan());
-        //System.out.println(planStr);
+        //LOG.info(planStr);
         
         //parallelism has to be set in _map
         //int totalParallelism = ParserUtil.parallelismToMap(ncg, _map);
-        //System.out.println("Total parallelism(without KILLER) is " + totalParallelism);
+        //LOG.info("Total parallelism(without KILLER) is " + totalParallelism);
         //new Main(ncg.getQueryPlan(), _map);
         
         //expected query plan
         String expPlanStr = MyUtilities.readFile(PLAN_PATH + "tpch7.plan");
-        //System.out.println(expPlanStr);
+        //LOG.info(expPlanStr);
         
         //comparing
         assertEquals(expPlanStr.length(), planStr.length());
@@ -215,16 +215,16 @@ public class CostOptimizerTest {
         ncg.generateEquiJoin(R_N1_C_O_L_P_Sjoin, n2Source);
         
         String planStr = ParserUtil.toString(ncg.getQueryPlan());
-        //System.out.println(planStr);
+        //LOG.info(planStr);
         
         //parallelism has to be set in _map
         //int totalParallelism = ParserUtil.parallelismToMap(ncg, _map);
-        //System.out.println("Total parallelism(without KILLER) is " + totalParallelism);
+        //LOG.info("Total parallelism(without KILLER) is " + totalParallelism);
         //new Main(ncg.getQueryPlan(), _map);
         
         //expected query plan
         String expPlanStr = MyUtilities.readFile(PLAN_PATH + "tpch8.plan");
-        //System.out.println(expPlanStr);
+        //LOG.info(expPlanStr);
         
         //comparing
         assertEquals(expPlanStr.length(), planStr.length());
@@ -257,16 +257,16 @@ public class CostOptimizerTest {
         ncg.generateEquiJoin(P_L_SP_O_Sjoin, nationSource);
         
         String planStr = ParserUtil.toString(ncg.getQueryPlan());
-        //System.out.println(planStr);
+        //LOG.info(planStr);
         
         //parallelism has to be set in _map
         //int totalParallelism = ParserUtil.parallelismToMap(ncg, _map);
-        //System.out.println("Total parallelism(without KILLER) is " + totalParallelism);
+        //LOG.info("Total parallelism(without KILLER) is " + totalParallelism);
         //new Main(ncg.getQueryPlan(), _map);
         
         //expected query plan
         String expPlanStr = MyUtilities.readFile(PLAN_PATH + "tpch9.plan");
-        //System.out.println(expPlanStr);
+        //LOG.info(expPlanStr);
         
         //comparing
         assertEquals(expPlanStr.length(), planStr.length());
@@ -293,16 +293,16 @@ public class CostOptimizerTest {
         ncg.generateEquiJoin(L_O_Cjoin, nationSource);
         
         String planStr = ParserUtil.toString(ncg.getQueryPlan());
-        //System.out.println(planStr);
+        //LOG.info(planStr);
         
         //parallelism has to be set in _map
         //int totalParallelism = ParserUtil.parallelismToMap(ncg, _map);
-        //System.out.println("Total parallelism(without KILLER) is " + totalParallelism);
+        //LOG.info("Total parallelism(without KILLER) is " + totalParallelism);
         //new Main(ncg.getQueryPlan(), _map);
         
         //expected query plan
         String expPlanStr = MyUtilities.readFile(PLAN_PATH + "tpch10.plan");
-        //System.out.println(expPlanStr);
+        //LOG.info(expPlanStr);
         
         //comparing
         assertEquals(expPlanStr.length(), planStr.length());

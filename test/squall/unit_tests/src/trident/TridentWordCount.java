@@ -1,5 +1,7 @@
 package trident;
 
+import org.apache.log4j.Logger;
+
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.LocalDRPC;
@@ -22,6 +24,8 @@ import storm.trident.tuple.TridentTuple;
  * This is a modified version of the code from storm-starter/src/jvm/trident
  */
 public class TridentWordCount {
+	private static Logger LOG = Logger.getLogger(TridentWordCount.class);	
+	
     public static class Split extends BaseFunction {
         @Override
         public void execute(TridentTuple tuple, TridentCollector collector) {
@@ -70,7 +74,7 @@ public class TridentWordCount {
             LocalCluster cluster = new LocalCluster();
             cluster.submitTopology("wordCounter", conf, buildTopology(drpc));
             for(int i=0; i<2; i++) {
-                System.out.println("DRPC RESULT: " + drpc.execute("words", "dog the dog cat"));
+                LOG.info("DRPC RESULT: " + drpc.execute("words", "dog the dog cat"));
                 Thread.sleep(1000);
             }
             System.exit(0);

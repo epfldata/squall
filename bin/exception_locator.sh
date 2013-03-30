@@ -1,4 +1,5 @@
 #!/bin/bash
+# From STORM_DATA_DIR (which contains all the Storm log files), it extracts the Exceptions
 
 function usage() {
 	echo "Usage: ./exception_locator.sh <FOLDER>"
@@ -20,11 +21,11 @@ fi
 
 # Process files in folder one a time and update total latency
 echo ""
-for FILE in `ls $FOLDER`
+for FILEPATH in `find $FOLDER -name \*.log`
 do
-	EXCEPTIONS=`cat $FOLDER/$FILE | grep "Exception" | cut -d':' -f2  | sort | uniq`
+	EXCEPTIONS=`cat $FILEPATH | grep "Exception" | cut -d':' -f2  | sort | uniq`
 	if [ "$EXCEPTIONS" != "" ]; then
-		echo "$FILE reported the following exceptions:"
+		echo "$FILEPATH reported the following exceptions:"
 		echo -e "\t$EXCEPTIONS"
 	fi
 done
