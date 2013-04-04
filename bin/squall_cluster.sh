@@ -2,7 +2,7 @@
 
 . ./storm_version.sh
 
-SUBMIT_WAIT_TIME=15
+SUBMIT_WAIT_TIME=20
 
 printFormat (){
 	echo "Format: ./squall_cluster.sh CONFIG_PATH"

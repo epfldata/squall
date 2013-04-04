@@ -30,12 +30,29 @@ rm -rf $LOGS_LOCAL_PATH*
 # remote variables
 MACHINE=squalldata@icdatasrv
 MACHINE5=${MACHINE}5
+ZOO1=squalldata@icdatasrv9
+ZOO2=squalldata@icdatasrv7
 LOGS_REMOTE_PATH=/data/squall_zone/logs
 STORM_MASTER=$LOGS_LOCAL_PATH/master
 STORM_SUPERVISOR=$LOGS_LOCAL_PATH/supervisor
+STORM_ZOO1=$LOGS_LOCAL_PATH/zoo1
+STORM_ZOO2=$LOGS_LOCAL_PATH/zoo2
+ZOO_REMOTE_PATH=/data/squall_zone/zookeeper_data/consoleZoo.txt
 
 # actual processing
 . ./storm_version.sh
+
+# Grasping zoo
+mkdir -p $STORM_ZOO1
+scp -r $ZOO1:$ZOO_REMOTE_PATH $STORM_ZOO1
+removeIfEmpty $STORM_ZOO1
+# TODO see what to do with $REMOVE_FROM_CLUSTER
+
+mkdir -p $STORM_ZOO2
+scp -r $ZOO2:$ZOO_REMOTE_PATH $STORM_ZOO2
+removeIfEmpty $STORM_ZOO2
+# TODO see what to do with $REMOVE_FROM_CLUSTER
+
 
 #Grasping output from master node
 mkdir -p $STORM_MASTER
