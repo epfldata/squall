@@ -19,7 +19,7 @@ import sql.util.TableAliasName;
  * no matter on which component we do invoke, the only important is to know previous projections
  *   (TPCH7, 8 with pushing OR from WHERE clause)
  *
- * TODO low prio:
+ * TODO low prio: ERROR MESSAGE
  * do not support R.A + 4 < 2, we will need ValueExpression with ranges to support that, and a user can rewrite it itself
  * do not support R.A + R.B = 2 (no exception)
  *   if there are multiple fields addressed, they have probably some dependency, which we don't model yet

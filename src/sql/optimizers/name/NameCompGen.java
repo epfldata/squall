@@ -339,7 +339,7 @@ public class NameCompGen implements CompGen{
         for(Map.Entry<Set<String>, Expression> orEntry: _compNamesOrExprs.entrySet()){
             Set<String> orCompNames = orEntry.getKey();
 
-            //TODO-PRIO: the full solution would be that OrExpressions are splitted into subexpressions
+            //TODO-PRIO: the full solution would be that OrExpressions are split into subexpressions
             //  which might be executed on their LCM
             //  Not implemented because it's quite rare - only TPCH7
             //  Even in TPCH7 there is no need for multiple LCM.

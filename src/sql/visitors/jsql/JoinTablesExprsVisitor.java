@@ -29,10 +29,10 @@ import sql.util.ParserUtil;
  * Let's take a look at a join condition: R.A = S.A and T.B = S.B
  * On both sides must be at least one relation (otherwise it is WHERE clause)
  *    and at most one relation - we need it since we index joins by tables keys,
- *    so R.A + S.A = 5 is not supported right now (TODO)
+ *    so R.A + S.A = 5 is not supported right now (TODO, ERROR MESSAGE)
  * Returns two objects {R->{S, exp{R.A = S.A}} and {T->{S, exp{T.B=S.B}}
  *
- * TODO: OR in join condition is not yet supported.
+ * TODO ERROR MESSAGE: OR in join condition is not yet supported.
  */
 public class JoinTablesExprsVisitor implements ExpressionVisitor, ItemsListVisitor {
     private Table _sideTable;

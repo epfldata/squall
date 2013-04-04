@@ -14,7 +14,7 @@ import sql.util.ParserUtil;
 import sql.visitors.jsql.SQLVisitor;
 
 /*
- * For lefty plans, parallelism obtained from cost formula
+ * For left-deep plans, parallelism obtained from cost formula
  */
 public class ManualBatchingOptimizer implements Optimizer{
     private SQLVisitor _pq;

@@ -522,10 +522,10 @@ public class ParserUtil {
         TupleSchema result = new TupleSchema(outputSchema);
         //******************** end of similar
         
-        //creating a list of synonims - TODO: works only for lefty plans
+        //creating a list of synonyms - TODO: works only for left-deep plans
         Map<String, String> synonims = new HashMap<String, String>();
         Map<String, String> leftSynonims = leftSchema.getSynonims();
-        if(leftSynonims!=null) synonims.putAll(leftSynonims); //have to add all the synonims from left parent
+        if(leftSynonims!=null) synonims.putAll(leftSynonims); //have to add all the synonyms from left parent
         for(int i=0; i<rightHashIndexes.size(); i++){
             int leftHash = leftHashIndexes.get(i);
             int rightHash = rightHashIndexes.get(i);

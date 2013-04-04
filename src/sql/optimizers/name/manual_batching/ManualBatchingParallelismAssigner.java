@@ -67,11 +67,10 @@ public class ManualBatchingParallelismAssigner extends CostParallelismAssigner {
     
     //JOINS
     //this method also set latency for rcv + useful work for the join component
-    //TODO: should check if the parallelism is bottleneck
     @Override
     protected int parallelismFormula(String compName, CostParams params, CostParams leftParentParams, CostParams rightParentParams) {
         //TODO: this formula does not take into account when joinComponent send tuples further down
-        //TODO: we should also check for bottlenecks
+        //TODO: we should also check for bottlenecks (that the component is not overloaded)
         double minLatency = MAX_LATENCY_MILLIS;
         int parallelism = -1;
         
@@ -202,7 +201,7 @@ public class ManualBatchingParallelismAssigner extends CostParallelismAssigner {
         double leftSndTime = estimateSndTimeLeftParent(parallelism, leftParentParams);
         double rightSndTime = estimateSndTimeRightParent(parallelism, rightParentParams);
         
-        //TODO: we combine them linerly based on number of tuples, parallelisms, batch sizes etc.
+        //TODO: we combine them linearly based on number of tuples, parallelisms, batch sizes etc.
         //for now only cardinality is taken into account
         return (leftSndTime * leftCardinality + rightSndTime * rightCardinality) / (leftCardinality + rightCardinality);
     }

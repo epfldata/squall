@@ -207,7 +207,7 @@ public class CostParallelismAssigner {
     }    
 
     protected int parallelismFormula(String compName, CostParams params, CostParams leftParentParams, CostParams rightParentParams) {
-        //TODO: this formula does not take into account when joinComponent send tuples further down
+        //TODO: this formula does not take into account when joinComponent sends tuples further down
         double dblParallelism = leftParentParams.getSelectivity() * leftParentParams.getParallelism() +
                             rightParentParams.getSelectivity() * rightParentParams.getParallelism() +
                             1.0/8 * (leftParentParams.getParallelism() + rightParentParams.getParallelism());
@@ -225,6 +225,8 @@ public class CostParallelismAssigner {
      *   for example when having multiple tuples with the very same hash value.
      *   This is rare in practice, in the examples we tried,
      *      it occurs only for the final aggregation when last join and final aggregation are not on the same node.
+     *      In general, it can occur when the join key is not primary key for one of the joined relations,
+     *      for example when the relationship is n:m and both n,m>0.
      */
     private int estimateDistinctHashes(CostParams leftParentParams, CostParams rightParentParams) {
         /* TODO: to implement this properly, we need to:

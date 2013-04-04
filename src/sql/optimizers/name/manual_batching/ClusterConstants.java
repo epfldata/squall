@@ -13,9 +13,12 @@ public class ClusterConstants {
         return 0.0015;
     }
     
-    //TODO: for now only in tpch4, we are doing aggregate
     public static double getOpTime() {
-        return getReadTime(); // there is one access to memory, so it can be approximated by this
+    	// TODO: It works precisely when there is one access to memory (as in AggregateCountOperator),
+    	//   but it is not general enough for any king of operator (selection, projection).
+    	//   Actually, this method is invoked only when no join exists on the node, 
+    	//   the only example so far is TPCH4.
+        return getReadTime();
     }    
     
     public static double getSerTime(int batchSize) {
