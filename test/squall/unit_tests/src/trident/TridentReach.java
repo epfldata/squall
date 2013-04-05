@@ -4,6 +4,7 @@ import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.LocalDRPC;
 import backtype.storm.generated.StormTopology;
+import backtype.storm.task.IMetricsContext;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import java.util.ArrayList;
@@ -53,11 +54,12 @@ public class TridentReach {
             public Factory(Map map) {
                 _map = map;
             }
-            
-            @Override
-            public State makeState(Map conf, int partitionIndex, int numPartitions) {
-                return new StaticSingleKeyMapState(_map);
-            }
+
+			@Override
+			public State makeState(Map conf, IMetricsContext metrics,
+					int partitionIndex, int numPartitions) {
+				return new StaticSingleKeyMapState(_map);
+			}
             
         }
         

@@ -3,7 +3,7 @@
 
 MACHINE=squalldata@icdatasrv
 MACHINE5=squalldata@icdatasrv5
-ZOO1=squalldata@icdatasrv3
+ZOO1=squalldata@icdatasrv9
 ZOO2=squalldata@icdatasrv7
 STORMPATH=/opt/storm/$STORMNAME
 LOGPATH=/data/squall_zone/logs
@@ -25,7 +25,7 @@ ssh $MACHINE5 $STORMPATH'/bin/storm nimbus > ' $LOGPATH'/consoleNimbus.txt 2>&1 
 ssh $MACHINE5 $STORMPATH'/bin/storm ui > ' $LOGPATH'/consoleUI.txt 2>&1 &'
 
 #Running supervisors on all the nodes.
-for blade in {1..10}
+for blade in {5..10}
 do
   for port in {1001..1022}
   do
