@@ -20,6 +20,7 @@ import sql.visitors.jsql.SQLVisitor;
  * Instantiates CostParallelismAssigner
  */
 public class CostEstimator {
+	private final String _queryName;
     private final SQLVisitor _pq;
     private final Schema _schema;
     
@@ -29,16 +30,18 @@ public class CostEstimator {
     private Map<String, CostParams> _compCost;
     private final SelingerSelectivityEstimator _selEstimator;    
     
-    public CostEstimator(Schema schema,
+    public CostEstimator(String queryName,
+    		Schema schema,
             SQLVisitor pq, 
             Map<String, CostParams> compCost, 
             CostParallelismAssigner parAssigner){
-        _pq = pq;
+        _queryName = queryName;
+    	_pq = pq;
         _schema = schema;
         _compCost = compCost;
         
         _parAssigner = parAssigner;
-        _selEstimator = new SelingerSelectivityEstimator(schema, _pq.getTan());
+        _selEstimator = new SelingerSelectivityEstimator(_queryName, schema, _pq.getTan());
     }
     
     //***********OPERATORS***********

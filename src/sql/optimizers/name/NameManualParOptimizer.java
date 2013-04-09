@@ -36,12 +36,10 @@ public class NameManualParOptimizer implements Optimizer{
     public QueryPlan generate() {
         NameCompGenFactory factory = new NameCompGenFactory(_map, _pq.getTan());
         NameCompGen ncg = factory.create();
-        // YANNIS: FIX FOR PLANS HAVING ONLY ONE DATA SOURCE
-	boolean isOnlyComp = _compNames.size() == 1;
         
-        Component first = ncg.generateDataSource(_compNames.get(0), isOnlyComp);
+        Component first = ncg.generateDataSource(_compNames.get(0));
         for(int i=1; i<_compNames.size();i++){
-            Component second = ncg.generateDataSource(_compNames.get(i), isOnlyComp);
+            Component second = ncg.generateDataSource(_compNames.get(i));
             first = ncg.generateEquiJoin(first, second);
         }
         

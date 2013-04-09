@@ -40,6 +40,7 @@ public class NameCompGen implements CompGen{
     private final Schema _schema;
     private final String _dataPath;
     private final String _extension;
+    private final String _queryName;
 
     private QueryPlan _queryPlan = new QueryPlan();
 
@@ -93,10 +94,11 @@ public class NameCompGen implements CompGen{
         _pq = ParserUtil.parseQuery(map);
         _dataPath = SystemParameters.getString(map, "DIP_DATA_PATH");
         _extension = SystemParameters.getString(map, "DIP_EXTENSION");
+        _queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
                 
         if(parAssigner != null){
             _parAssigner = parAssigner;
-            _costEst = new CostEstimator(schema, _pq, _compCost, parAssigner);
+            _costEst = new CostEstimator(_queryName, schema, _pq, _compCost, parAssigner);
         }
 
         //initializes _compNamesAndExprs and _compNamesOrExprs
@@ -128,13 +130,13 @@ public class NameCompGen implements CompGen{
     
     /*
      * Used in CostOptimizer when different plans are possible from the same subplan
-     *   main reason is translateExpr method - synonims in NameTranslator
+     *   main reason is translateExpr method - synonyms in NameTranslator
      */
     public NameCompGen deepCopy(){
         //map, schema, dataPath, dataExt are shared because they are constants all the time
         //parAssigner is computed once in NameCompGenFactory and then can be shared
         
-        //pq, globalProject, compNamesAndExprs, compNamesOrExprs are created from schatch in the constructor
+        //pq, globalProject, compNamesAndExprs, compNamesOrExprs are created from scratch in the constructor
         //ideally, this should be deep-copied, because it can be changed due to NameTranslator.synonims
         //  not possible because JSQL is not serializable
         //  but this is only matter of performance
@@ -144,7 +146,7 @@ public class NameCompGen implements CompGen{
         copy._compCost = (Map<String, CostParams>) DeepCopy.copy(_compCost);
         
         //_compCost from Estimator and from NCG has to be the same reference
-        copy._costEst = new CostEstimator(copy._schema, copy._pq, copy._compCost, copy._parAssigner);
+        copy._costEst = new CostEstimator(_queryName, copy._schema, copy._pq, copy._compCost, copy._parAssigner);
         
         copy._queryPlan = (QueryPlan) DeepCopy.copy(_queryPlan);
         return copy;
@@ -173,11 +175,6 @@ public class NameCompGen implements CompGen{
      */
     @Override
     public DataSourceComponent generateDataSource(String tableCompName){
-	return generateDataSource(tableCompName, false);
-    }
-
-    // XXX: Yannis change for single-dataSource plans -- This boolean and the above function
-    public DataSourceComponent generateDataSource(String tableCompName, boolean isOnlyComp){
         DataSourceComponent source = createAddDataSource(tableCompName);
         
         createCompCost(source);
@@ -186,8 +183,9 @@ public class NameCompGen implements CompGen{
         //operators
         addSelectOperator(source);
         addProjectOperator(source);
-	// XXX: Yannis change for single-dataSource plans (such as TPCH6)
-	if (isOnlyComp) {
+
+        // XXX: Yannis change for single-dataSource plans (such as TPCH6)
+        if (ParserUtil.isFinalComponent(source, _pq)) {
 	        TupleSchema tupleSchema = _compCost.get(source.getName()).getSchema();
         	NameSelectItemsVisitor selectVisitor = new NameSelectItemsVisitor(tupleSchema, _map, source);
         	for(SelectItem elem: _pq.getSelectItems()){
@@ -206,12 +204,11 @@ public class NameCompGen implements CompGen{
         	    	}else{
             			throw new RuntimeException("For now only one aggregate function supported!");
         		}
-		}
-	}
-	// -- END OF YANNIS CHANGE
+        	}
+        }
+        // -- END OF YANNIS CHANGE
 
         if(_costEst!=null) _costEst.setOutputParamsAndPar(source);
-
         return source;
     }
 
@@ -274,7 +271,7 @@ public class NameCompGen implements CompGen{
         //}
             
         NameSelectItemsVisitor nsiv=null;
-        if(ParserUtil.isFinalJoin(joinComponent, _pq)){
+        if(ParserUtil.isFinalComponent(joinComponent, _pq)){
             //final component in terms of joins
             nsiv = getFinalSelectVisitor(joinComponent);
             attachSelectClauseOnLastJoin(joinComponent, nsiv);
@@ -283,7 +280,7 @@ public class NameCompGen implements CompGen{
         if(_costEst!=null) _costEst.setOutputParamsAndPar(joinComponent);
 
         //we have to create newComponent after processing statistics of the joinComponent
-        if(ParserUtil.isFinalJoin(joinComponent, _pq)){
+        if(ParserUtil.isFinalComponent(joinComponent, _pq)){
             generateOperatorComp(joinComponent, nsiv);
         }
         

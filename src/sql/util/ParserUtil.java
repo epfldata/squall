@@ -628,7 +628,7 @@ public class ParserUtil {
     /*
      * is joinComponent the last component in the query plan, in terms of no more joins to perform
      */
-    public static boolean isFinalJoin(Component comp, SQLVisitor pq) {
+    public static boolean isFinalComponent(Component comp, SQLVisitor pq) {
         Set<String> allSources = new HashSet<String>(pq.getTan().getComponentNames());
         Set<String> actuallPlanSources = getSourceNameSet(comp);
         return allSources.equals(actuallPlanSources);

@@ -33,8 +33,6 @@ public class NameManualOptimizer implements Optimizer{
         NameCompGenFactory factory = new NameCompGenFactory(_map, _pq.getTan(), totalParallelism);
         NameCompGen ncg = factory.create();
         
-        // YANNIS: FIX FOR PLANS HAVING ONLY ONE DATA SOURCE
-        //  look at costOptimizer
         Component first = ncg.generateDataSource(_compNames.get(0));
         for(int i=1; i<_compNames.size();i++){
             Component second = ncg.generateDataSource(_compNames.get(i));

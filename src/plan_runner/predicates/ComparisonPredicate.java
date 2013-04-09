@@ -43,13 +43,15 @@ public  class ComparisonPredicate<T extends Comparable<T>> implements Predicate 
     public boolean test(List<String> tupleValues){
         Comparable val1 = (Comparable) _ve1.eval(tupleValues);
         Comparable val2 = (Comparable) _ve2.eval(tupleValues);
-	// YANNIS: HACK FOR TPCH6
-	if (val1 instanceof Long) {
-		val1 = (Double)(((Long)val1).doubleValue());
-	}
-	if (val2 instanceof Long) {
-		val2 = (Double)(((Long)val2).doubleValue());
-	}
+
+        // All the Numeric types are converted to double,
+        //   because different types cannot be compared
+        if (val1 instanceof Long) {
+        	val1 = (Double)(((Long)val1).doubleValue());
+        }
+        if (val2 instanceof Long) {
+        	val2 = (Double)(((Long)val2).doubleValue());
+        }
         int compared = val1.compareTo(val2);
 
         boolean result = false;

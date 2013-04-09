@@ -37,8 +37,7 @@ public class NameCostOptimizer implements Optimizer{
         //**************creating single-relation plans********************
         if(numSources == 1){
             optimal = factory.create();
-		// YANNIS: FIX FOR PLANS HAVING ONLY ONE DATA SOURCE
-            optimal.generateDataSource(sourceNames.get(0), true);
+            optimal.generateDataSource(sourceNames.get(0));
         }
         
         //**************creating 2-way joins********************

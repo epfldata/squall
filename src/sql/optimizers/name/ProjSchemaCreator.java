@@ -71,7 +71,7 @@ public class ProjSchemaCreator {
         //each added expression is either present in inputTupleSchema, or can be built out of it
         processGlobalExprs(exprList);
         processGlobalOrs(exprList);
-        if(!ParserUtil.isFinalJoin(_component, _pq)){
+        if(!ParserUtil.isFinalComponent(_component, _pq)){
             //last component does not have hashes, because it's joined with noone
             processHashes(exprList);
         }

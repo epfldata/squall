@@ -43,7 +43,7 @@ public class SelingerSelectivityEstimatorTest {
         
         String path = "../test/squall/schemas/tpch.txt";
         double scallingFactor = 1;
-        _selEstimator = new SelingerSelectivityEstimator(new Schema(path, scallingFactor), new TableAliasName(tableList, "SelingerTest"));
+        _selEstimator = new SelingerSelectivityEstimator("TEST", new Schema(path, scallingFactor), new TableAliasName(tableList, "SelingerTest"));
     }
 
     @AfterClass

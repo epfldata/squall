@@ -31,8 +31,6 @@ public class NameRuleOptimizer implements Optimizer{
         
         NameCompGen ncg = factory.create();
         
-        // YANNIS: FIX FOR PLANS HAVING ONLY ONE DATA SOURCE
-        //  look at costOptimizer
         Component first = ncg.generateDataSource(sourceNames.remove(0));
         int numSources = sourceNames.size(); //first component is already removed
         for(int i=0; i < numSources; i++){

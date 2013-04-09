@@ -26,10 +26,12 @@ import sql.util.TableAliasName;
  */
 public class SelingerSelectivityEstimator implements SelectivityEstimator{
 
+	private String _queryName;
     private Schema _schema;
     private TableAliasName _tan;
 
-    public SelingerSelectivityEstimator(Schema schema, TableAliasName tan){
+    public SelingerSelectivityEstimator(String queryName, Schema schema, TableAliasName tan){
+    	_queryName = queryName;
         _schema = schema;
         _tan = tan;
     }
@@ -72,11 +74,9 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
         }else if(expr instanceof Parenthesis){
             Parenthesis pnths = (Parenthesis) expr;
             return estimate(pnths.getExpression());
-        }else if(expr instanceof LikeExpression){
-            // YANNIS TODO: this is for TPCH9
-            return 0.052;
+        }else{
+        	return HardCodedSelectivities.estimate(_queryName, expr);
         }
-        throw new RuntimeException("We should be in a more specific method!");
     }
 
     public double estimate(EqualsTo equals){
@@ -93,64 +93,59 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
     public double estimate(MinorThan mt){
         List<Column> columns = ParserUtil.getJSQLColumns(mt);
         Column column = columns.get(0);
-
         TypeConversion tc = _schema.getType(ParserUtil.getFullSchemaColumnName(column, _tan));
 	
-        //assume uniform distribution
+        // TODO: assume uniform distribution
         String fullSchemaColumnName = _tan.getFullSchemaColumnName(column);
         Object minValue = _schema.getRange(fullSchemaColumnName).getMin();
         Object maxValue = _schema.getRange(fullSchemaColumnName).getMax();
-	// YANNIS HACK: PROPER HACK FOR TPC-H6 AND TPCH-H19
-	if (tc instanceof DoubleConversion) {
-		if (minValue instanceof Long)
-			minValue = (Double)(((Long)minValue).doubleValue());
-		if (maxValue instanceof Long)
-			maxValue = (Double)(((Long)maxValue).doubleValue());
-	} else if (tc instanceof LongConversion) {
-		if (minValue instanceof Double)
-			minValue = (Long)(((Double)minValue).longValue());
-		if (maxValue instanceof Double)
-			maxValue = (Long)(((Double)maxValue).longValue());
-	}
-        double fullRange = tc.getDistance(maxValue, minValue);
-        //on one of the sides we have to have a constant
-        JSQLTypeConverter rightConverter = new JSQLTypeConverter();
-	// YANNIS HACK FOR TPCH-4 AND TPCH-12
-	Expression leftExp = mt.getLeftExpression();
-	Expression rightExp = mt.getRightExpression();
-	if (leftExp instanceof Column && rightExp instanceof Column) {
-		String rightname = ((Column)rightExp).getColumnName();  
-		String leftname = ((Column)leftExp).getColumnName();
-		if (rightname.equals("RECEIPTDATE") && leftname.equals("COMMITDATE")) {
-			return .62;
-		}
-		if (rightname.equals("COMMITDATE") && leftname.equals("SHIPDATE")) {
-			return .50;
-		}
-	}
-	// END OF HACK
-        mt.getRightExpression().accept(rightConverter);
-        Object currentValue = rightConverter.getResult();
-        if(currentValue == null){
-            JSQLTypeConverter leftConverter = new JSQLTypeConverter();
-            mt.getLeftExpression().accept(leftConverter);
-            currentValue = leftConverter.getResult();
-        }
-	//YANNIS: HACK TO MAKE TPCH-6 WORK WITH NCL OPTIMIZER
-	if (tc instanceof DoubleConversion) {
-		if (currentValue instanceof Long)
-			currentValue = (Double)(((Long)currentValue).doubleValue());
-	} else if (tc instanceof LongConversion) {
-		if (currentValue instanceof Double)
-			currentValue = (Long)(((Double)currentValue).longValue());
-	}
-	//END OF HACK
-        double distance = tc.getDistance(currentValue, minValue);
 
-        return distance/fullRange;
+        // We have to compare the same types
+        if (tc instanceof DoubleConversion) {
+        	if (minValue instanceof Long){
+        		minValue = longToDouble((Long)minValue);
+        	}
+        	if (maxValue instanceof Long){
+        		maxValue = longToDouble((Long)maxValue);
+        	}
+        } else if (tc instanceof LongConversion) {
+        	if (minValue instanceof Double){
+        		minValue = doubleToLong((Double)minValue);
+        	}
+        	if (maxValue instanceof Double){
+        		maxValue = doubleToLong((Double)maxValue);
+        	}
+        }
+        
+        double fullRange = tc.getDistance(maxValue, minValue);
+        Expression leftExp = mt.getLeftExpression();
+        Expression rightExp = mt.getRightExpression();
+
+        Object conditionConstant = findConditionConstant(rightExp);
+        if(conditionConstant == null){
+        	//maybe the constant is on the left side
+        	conditionConstant = findConditionConstant(leftExp);
+        }
+        
+        if(conditionConstant != null){
+        	// a constant on one side
+        	//MAKE TPCH-6 WORK WITH NCL OPTIMIZER
+        	if (tc instanceof DoubleConversion) {
+        		if (conditionConstant instanceof Long)
+        			conditionConstant = longToDouble((Long)conditionConstant);
+        	} else if (tc instanceof LongConversion) {
+        		if (conditionConstant instanceof Double)
+        			conditionConstant = doubleToLong((Double)conditionConstant);
+        	}
+            double distance = tc.getDistance(conditionConstant, minValue);
+            return distance/fullRange;
+        }else{
+    		//no constants on both sides; columns within a single table are compared
+            return HardCodedSelectivities.estimate(_queryName, mt);
+        }
     }
 
-    /*
+	/*
      * computed using the basic ones (= and <)
      */
     public double estimate(NotEqualsTo ne){
@@ -218,5 +213,30 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator{
         }
 
     }
+    
+    /*
+     * WHERE R.A < 4, 
+     * or
+     * WHERE 4 < R.A,
+     *   This method returns 4.
+     */
+	private Object findConditionConstant(Expression exp) {
+        JSQLTypeConverter converter = new JSQLTypeConverter();        
+        exp.accept(converter);
+        Object currentValue = converter.getResult();
+        return currentValue;
+	}
+    
+    private Long doubleToLong(Double doubleValue) {
+    	Long result = doubleValue.longValue();
+    	if(result.doubleValue() != doubleValue){
+    		throw new RuntimeException("Rounding error! Check your schema file.");
+    	}
+    	return result;
+	}
+
+	private Double longToDouble(Long longValue) {
+    	return longValue.doubleValue();
+	}
 
 }
