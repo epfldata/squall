@@ -14,11 +14,16 @@ public class BatchStreamGrouping implements CustomStreamGrouping{
     //the number of tasks on the level this stream grouping is sending to
     private int _numTargetTasks;
     private List<Integer> _targetTasks;
-
+    private List<String> _fullHashList;
+    
     private Map _map;
-
-    public BatchStreamGrouping(Map map) {
-        _map = map;
+    
+    /*
+     * fullHashList is null if grouping is not balanced
+     */
+    public BatchStreamGrouping(Map map, List<String> fullHashList){
+    	_map = map;
+    	_fullHashList = fullHashList;
     }
     
     @Override
@@ -38,6 +43,14 @@ public class BatchStreamGrouping implements CustomStreamGrouping{
         int endIndex = tupleBatch.indexOf(SystemParameters.MANUAL_BATCH_HASH_DELIMITER);
         String aHash = tupleBatch.substring(0, endIndex);
 
-        return Arrays.asList(_targetTasks.get(MyUtilities.chooseTargetIndex(aHash, _numTargetTasks)));
+        if(!isBalanced()){
+            return Arrays.asList(_targetTasks.get(MyUtilities.chooseHashTargetIndex(aHash, _numTargetTasks)));
+        }else{
+            return Arrays.asList(_targetTasks.get(MyUtilities.chooseBalancedTargetIndex(aHash, _fullHashList, _numTargetTasks)));
+        }
+    }
+
+    private boolean isBalanced(){
+        return (_fullHashList != null);
     }
 }

@@ -42,11 +42,12 @@ public class HardCodedSelectivities {
 		if (leftExp instanceof Column && rightExp instanceof Column) {
 			String rightname = ((Column)rightExp).getColumnName();  
 			String leftname = ((Column)leftExp).getColumnName();
-			if(queryName.equalsIgnoreCase("TPCH4")){
+			if(queryName.equalsIgnoreCase("TPCH4") || queryName.equalsIgnoreCase("TPCH12")){
 				if (rightname.equals("RECEIPTDATE") && leftname.equals("COMMITDATE")) {
 					return 0.62;
 				}
-			}else if (queryName.equalsIgnoreCase("TPCH12")){
+			}
+			if (queryName.equalsIgnoreCase("TPCH12")){
 				if (rightname.equals("COMMITDATE") && leftname.equals("SHIPDATE")) {
 					return 0.50;
 				}	

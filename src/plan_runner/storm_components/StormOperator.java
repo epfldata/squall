@@ -49,7 +49,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
     //if this is set, we receive using direct stream grouping
     private List<String> _fullHashList;
 
-    //for No ACK: the total number of tasks of all the parent compoonents
+    //for No ACK: the total number of tasks of all the parent components
     private int _numRemainingParents;
 
     //for batch sending
@@ -100,9 +100,9 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
         _fullHashList = cp.getFullHashList();
         
         if(MyUtilities.isManualBatchingMode(_conf)){
-            currentBolt = MyUtilities.attachEmitterBatch(conf, currentBolt, _emitter);
+            currentBolt = MyUtilities.attachEmitterBatch(conf, _fullHashList, currentBolt, _emitter);
         }else{
-            currentBolt = MyUtilities.attachEmitterCustom(conf, _fullHashList, currentBolt, _emitter);
+            currentBolt = MyUtilities.attachEmitterHash(conf, _fullHashList, currentBolt, _emitter);
         }
         
         if( _hierarchyPosition == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf))){
@@ -266,7 +266,7 @@ public class StormOperator extends BaseRichBolt implements StormEmitter, StormCo
         //ManualBatchMode
                 private void addToManualBatch(List<String> tuple, long timestamp){
                         String tupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);
-                        int dstIndex = MyUtilities.chooseTargetIndex(tupleHash, _targetParallelism);
+                        int dstIndex = MyUtilities.chooseHashTargetIndex(tupleHash, _targetParallelism);
 
                         //we put in queueTuple based on tupleHash
                         //the same hash is used in BatchStreamGrouping for deciding where a particular targetBuffer is to be sent

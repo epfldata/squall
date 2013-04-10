@@ -46,7 +46,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 
                 int parallelism = SystemParameters.getInt(conf, _componentName+"_PAR");
                 InputDeclarer currentBolt = builder.setBolt(_ID, this, parallelism);
-                currentBolt = MyUtilities.attachEmitterComponents(currentBolt, _firstEmitter, _secondEmitter);
+                currentBolt = MyUtilities.attachEmitterHash(_conf, null, currentBolt, _firstEmitter, _secondEmitter);
 	}
 
 	// from IRichBolt

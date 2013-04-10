@@ -118,9 +118,9 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
 		InputDeclarer currentBolt = builder.setBolt(_ID, this, parallelism);
                 
                 if(MyUtilities.isManualBatchingMode(_conf)){
-                    currentBolt = MyUtilities.attachEmitterBatch(conf, currentBolt, firstEmitter, secondEmitter);
+                    currentBolt = MyUtilities.attachEmitterBatch(conf, _fullHashList, currentBolt, firstEmitter, secondEmitter);
                 }else{
-                    currentBolt = MyUtilities.attachEmitterCustom(conf, _fullHashList, currentBolt, firstEmitter, secondEmitter);
+                    currentBolt = MyUtilities.attachEmitterHash(conf, _fullHashList, currentBolt, firstEmitter, secondEmitter);
                 }
 
 		if( _hierarchyPosition == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf))){
@@ -382,7 +382,7 @@ public class StormDstJoin extends BaseRichBolt implements StormJoin, StormCompon
                 //ManualBatchMode
                 private void addToManualBatch(List<String> tuple, long timestamp){
                         String tupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);                        
-                        int dstIndex = MyUtilities.chooseTargetIndex(tupleHash, _targetParallelism);
+                        int dstIndex = MyUtilities.chooseHashTargetIndex(tupleHash, _targetParallelism);
 
                         //we put in queueTuple based on tupleHash
                         //the same hash is used in BatchStreamGrouping for deciding where a particular targetBuffer is to be sent

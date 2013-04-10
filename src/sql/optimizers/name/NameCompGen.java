@@ -117,8 +117,8 @@ public class NameCompGen implements CompGen{
         List<OrExpression> orExprs = andVisitor.getOrExprs();
 
         /*
-         * we have to group atomicExpr (conjuctive terms) by ComponentName
-         *   there might be mutliple columns from a single DataSourceComponent, and we want to group them
+         * we have to group atomicExpr (conjunctive terms) by ComponentName
+         *   there might be multiple columns from a single DataSourceComponent, and we want to group them
          *
          * conditions such as R.A + R.B = 10 are possible
          *   not possible to have ColumnReference from multiple tables,
@@ -184,31 +184,21 @@ public class NameCompGen implements CompGen{
         addSelectOperator(source);
         addProjectOperator(source);
 
-        // XXX: Yannis change for single-dataSource plans (such as TPCH6)
-        if (ParserUtil.isFinalComponent(source, _pq)) {
-	        TupleSchema tupleSchema = _compCost.get(source.getName()).getSchema();
-        	NameSelectItemsVisitor selectVisitor = new NameSelectItemsVisitor(tupleSchema, _map, source);
-        	for(SelectItem elem: _pq.getSelectItems()){
-	            elem.accept(selectVisitor);
-        	}
-	        List<AggregateOperator> aggOps = selectVisitor.getAggOps();
-        	if (!aggOps.isEmpty()){
-        		if (aggOps.size() == 1){
-				//all the others are group by
-			        AggregateOperator firstAgg = aggOps.get(0);
-			        if(firstAgg.getDistinct() == null){
-                			source.addOperator(firstAgg);
-		        	}else{
-                			addHash(source, selectVisitor.getGroupByVEs());
-				}
-        	    	}else{
-            			throw new RuntimeException("For now only one aggregate function supported!");
-        		}
-        	}
+        // For single-dataSource plans (such as TPCH6)
+        NameSelectItemsVisitor nsiv=null;
+        if(ParserUtil.isFinalComponent(source, _pq)){
+            //final component in terms of joins
+        	nsiv = getFinalSelectVisitor(source);
+            attachSelectClauseOnLastJoin(source, nsiv);
         }
-        // -- END OF YANNIS CHANGE
 
         if(_costEst!=null) _costEst.setOutputParamsAndPar(source);
+
+        //we have to create newComponent after processing statistics of the joinComponent
+        if(ParserUtil.isFinalComponent(source, _pq)){
+            generateOperatorComp(source, nsiv);
+        }
+        
         return source;
     }
 

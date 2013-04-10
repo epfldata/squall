@@ -250,12 +250,7 @@ public class MyUtilities{
     }
 
 
-        /* For each emitter component (there are two input emitters for each join),
-         *   appropriately connect with all of its inner Components that emits tuples to StormDestinationJoin.
-         * For destinationJoiner, there is only one bolt that emits tuples,
-         *   but for sourceJoiner, there are two SourceStorage (one for storing each emitter tuples),
-         *   which emits tuples.
-         */
+    	/*
         public static InputDeclarer attachEmitterComponents(InputDeclarer currentBolt, 
                 StormEmitter emitter1, StormEmitter... emittersArray){
             List<StormEmitter> emittersList = new ArrayList<StormEmitter>();
@@ -270,8 +265,9 @@ public class MyUtilities{
             }
             return currentBolt;
         }
+        */
 
-        public static InputDeclarer attachEmitterCustom(Map map, List<String> fullHashList, InputDeclarer currentBolt,
+        public static InputDeclarer attachEmitterHash(Map map, List<String> fullHashList, InputDeclarer currentBolt,
                 StormEmitter emitter1, StormEmitter... emittersArray){
             List<StormEmitter> emittersList = new ArrayList<StormEmitter>();
             emittersList.add(emitter1);
@@ -280,14 +276,13 @@ public class MyUtilities{
             for(StormEmitter emitter: emittersList){
                 String[] emitterIDs = emitter.getEmitterIDs();
                 for(String emitterID: emitterIDs){
-                    currentBolt = currentBolt.customGrouping(emitterID,
-                            new BalancedStreamGrouping(map, fullHashList));
+                    currentBolt = currentBolt.customGrouping(emitterID, new HashStreamGrouping(map, fullHashList));
                 }
             }
             return currentBolt;
         }
         
-        public static InputDeclarer attachEmitterBatch(Map map, InputDeclarer currentBolt,
+        public static InputDeclarer attachEmitterBatch(Map map, List<String> fullHashList, InputDeclarer currentBolt,
                 StormEmitter emitter1, StormEmitter... emittersArray){
             List<StormEmitter> emittersList = new ArrayList<StormEmitter>();
             emittersList.add(emitter1);
@@ -297,7 +292,7 @@ public class MyUtilities{
                 String[] emitterIDs = emitter.getEmitterIDs();
                 for(String emitterID: emitterIDs){
                     currentBolt = currentBolt.customGrouping(emitterID,
-                            new BatchStreamGrouping(map));
+                            new BatchStreamGrouping(map, fullHashList));
                 }
             }
             return currentBolt;
@@ -596,8 +591,12 @@ public class MyUtilities{
                 return result;
         }
         
-        public static int chooseTargetIndex(String hash, int targetParallelism){
+        public static int chooseHashTargetIndex(String hash, int targetParallelism){
             return Math.abs(hash.hashCode()) % targetParallelism;
+        }
+        
+        public static int chooseBalancedTargetIndex(String hash, List<String> allHashes, int targetParallelism){
+        	return allHashes.indexOf(hash) % targetParallelism;
         }
 
 

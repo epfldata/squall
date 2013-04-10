@@ -13,7 +13,7 @@ import java.util.Map;
  * Otherwise, we encode fieldGrouping exactly the same as the Storm authors.
  * Because of NoACK possibility, have to be used everywhere in the code.
  */
-public class BalancedStreamGrouping implements CustomStreamGrouping{
+public class HashStreamGrouping implements CustomStreamGrouping{
 
     //the number of tasks on the level this stream grouping is sending to
     private int _numTargetTasks;
@@ -23,11 +23,10 @@ public class BalancedStreamGrouping implements CustomStreamGrouping{
 
     private Map _map;
 
-    public BalancedStreamGrouping(Map map) {
-        _map = map;
-    }
-
-    public BalancedStreamGrouping(Map map, List<String> fullHashList){
+    /*
+     * fullHashList is null if grouping is not balanced
+     */
+    public HashStreamGrouping(Map map, List<String> fullHashList){
         _map = map;
         _fullHashList = fullHashList;
     }
@@ -47,22 +46,14 @@ public class BalancedStreamGrouping implements CustomStreamGrouping{
             return _targetTasks;
         }
         if(!isBalanced()){
-            return Arrays.asList(_targetTasks.get(fieldGrouping(tupleHash)));
+            return Arrays.asList(_targetTasks.get(MyUtilities.chooseHashTargetIndex(tupleHash, _numTargetTasks)));
         }else{
-            return Arrays.asList(_targetTasks.get(balancedGrouping(tupleHash)));
+            return Arrays.asList(_targetTasks.get(MyUtilities.chooseBalancedTargetIndex(tupleHash, _fullHashList, _numTargetTasks)));
         }
     }
 
     private boolean isBalanced(){
         return (_fullHashList != null);
-    }
-
-    private int fieldGrouping(String tupleHash){
-        return Math.abs(tupleHash.hashCode()) % _numTargetTasks;
-    }
-
-    private int balancedGrouping(String tupleHash){
-        return _fullHashList.indexOf(tupleHash) % _numTargetTasks;
     }
 
 }

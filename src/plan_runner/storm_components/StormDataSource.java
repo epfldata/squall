@@ -258,7 +258,7 @@ public class StormDataSource extends BaseRichSpout implements StormEmitter, Stor
                 //ManualBatchMode
                 private void addToManualBatch(List<String> tuple, long timestamp){
                         String tupleHash = MyUtilities.createHashString(tuple, _hashIndexes, _hashExpressions, _conf);
-                        int dstIndex = MyUtilities.chooseTargetIndex(tupleHash, _targetParallelism);
+                        int dstIndex = MyUtilities.chooseHashTargetIndex(tupleHash, _targetParallelism);
 
                         //we put in queueTuple based on tupleHash
                         //the same hash is used in BatchStreamGrouping for deciding where a particular targetBuffer is to be sent
