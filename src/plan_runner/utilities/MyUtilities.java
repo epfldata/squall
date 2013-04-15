@@ -398,11 +398,11 @@ public class MyUtilities{
                 Map conf,
                 Tuple stormTupleRcv, 
                 OutputCollector collector, 
-                PeriodicBatchSend periodicBatch) {
+                PeriodicAggBatchSend periodicBatch) {
             if(numRemainingParents == 0){
                 if(periodicBatch != null){
                     periodicBatch.cancel();
-                    periodicBatch.getComponent().batchSend();
+                    periodicBatch.getComponent().aggBatchSend();
                 }
             }
             processFinalAck(numRemainingParents, 
@@ -417,12 +417,12 @@ public class MyUtilities{
             collector.ack(stormTupleRcv);
         }
 
-        public static boolean isBatchOutputMode(long batchOutputMillis) {
+        public static boolean isAggBatchOutputMode(long batchOutputMillis) {
             return batchOutputMillis != 0L;
         }
 
         public static boolean isSending(int hierarchyPosition, long batchOutputMillis) {
-            return (hierarchyPosition != StormComponent.FINAL_COMPONENT) && !isBatchOutputMode(batchOutputMillis);
+            return (hierarchyPosition != StormComponent.FINAL_COMPONENT) && !isAggBatchOutputMode(batchOutputMillis);
         }
 
         public static Values createTupleValues(List<String> tuple, 
@@ -501,7 +501,12 @@ public class MyUtilities{
             emittersList.add(emitter1);
             emittersList.addAll(Arrays.asList(emittersArray));
 
-            int result = 0;
+            return getNumParentTasks(tc, emittersList);
+        }
+
+        public static int getNumParentTasks(TopologyContext tc,
+				List<StormEmitter> emittersList) {
+        	int result = 0;
             for(StormEmitter emitter: emittersList){
                 //We have multiple emitterIDs only for StormSrcJoin
                 String[] ids = emitter.getEmitterIDs();
@@ -510,9 +515,9 @@ public class MyUtilities{
                 }
             }
             return result;
-        }
+		}
 
-        //used for NoACK optimization for StormSrcJoin
+		//used for NoACK optimization for StormSrcJoin
         public static int getNumParentTasks(TopologyContext tc, StormSrcHarmonizer harmonizer){
             String id = String.valueOf(harmonizer.getID());
             return tc.getComponentTasks(String.valueOf(id)).size();

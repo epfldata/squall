@@ -24,7 +24,7 @@ public interface Component extends Serializable, ComponentProperties, StormEmitt
     //sending the content of the component every 'millis' milliseconds
     public Component setBatchOutputMillis(long millis);
 
-    //this needs to be separatelly kept, due to Parser.SelectItemsVisitor.ComplexCondition
+    //this needs to be separately kept, due to Parser.SelectItemsVisitor.ComplexCondition
     //  in short, whether the component uses indexes or expressions
     //     is also dependent on on other component taking part in a join
     public Component setHashIndexes(List<Integer> hashIndexes);

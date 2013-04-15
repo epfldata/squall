@@ -5,12 +5,12 @@ import java.util.TimerTask;
 import plan_runner.storm_components.StormComponent;
 
 
-public class PeriodicBatchSend extends Timer {
+public class PeriodicAggBatchSend extends Timer {
 
     private PeriodicTask _pt;
     private StormComponent _comp;
 
-    public PeriodicBatchSend(long period, StormComponent comp){
+    public PeriodicAggBatchSend(long period, StormComponent comp){
         _comp = comp;
         _pt = new PeriodicTask(comp);
 
@@ -29,7 +29,7 @@ public class PeriodicBatchSend extends Timer {
         }
 
         public void run(){
-            _comp.batchSend();
+            _comp.aggBatchSend();
         }
     }
 

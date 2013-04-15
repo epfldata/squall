@@ -53,7 +53,7 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
             LOG.info("TopologyKiller: Received EOF from all the registered tasks. Killing cluster...");
             //EVENT WHEN ALL THE SPOUTS FINISHED EMITTING AND ACKED or
             //  WHEN ALL THE TASKS FROM THE LAST COMPONENTS SENT EOF SIGNAL
-            // Instrument all the components for which printOut is set to dump their results
+            // Instruct all the components for which printOut is set to dump their results
             _collector.emit(SystemParameters.DUMP_RESULTS_STREAM, new Values(SystemParameters.DUMP_RESULTS));
             
             long timeout = SystemParameters.LOCAL_SLEEP_BEFORE_KILL_MILLIS;
@@ -125,7 +125,7 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
     }
 
     @Override
-    public void batchSend() {
+    public void aggBatchSend() {
         throw new UnsupportedOperationException("These methods are not ment to be invoked for synchronizationStormComponents");
     }
 

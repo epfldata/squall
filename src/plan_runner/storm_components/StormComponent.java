@@ -19,6 +19,6 @@ public interface StormComponent {
 
     public void tupleSend(List<String> tuple, Tuple stormTupleRcv, long timestamp);
     //sending the current content of aggregation and then clearing it
-    public void batchSend();
+    public void aggBatchSend();
 
 }

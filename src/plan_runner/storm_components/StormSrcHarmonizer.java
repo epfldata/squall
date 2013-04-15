@@ -81,7 +81,7 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
         }
 
         @Override
-        public void batchSend(){
+        public void aggBatchSend(){
             throw new RuntimeException("Should not be here!");
         }
 

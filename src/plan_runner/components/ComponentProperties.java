@@ -1,9 +1,11 @@
 package plan_runner.components;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
+import plan_runner.storage.BasicStore;
 
 
 public interface ComponentProperties extends Serializable{

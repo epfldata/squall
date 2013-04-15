@@ -24,54 +24,41 @@ import plan_runner.operators.ProjectOperator;
 import plan_runner.storage.BasicStore;
 import plan_runner.storm_components.synchronization.TopologyKiller;
 import plan_runner.utilities.MyUtilities;
-import plan_runner.utilities.PeriodicBatchSend;
+import plan_runner.utilities.PeriodicAggBatchSend;
 import plan_runner.utilities.SystemParameters;
 
-public class StormSrcStorage extends BaseRichBolt implements StormEmitter, StormComponent{
+public class StormSrcStorage extends StormBoltComponent{
 	private static Logger LOG = Logger.getLogger(StormSrcStorage.class);
 	private static final long serialVersionUID = 1L;
 
-	private String _componentName;
 	private String _tableName;
-        private String _componentIndex; //a unique index in a list of all the components
-                            //used as a shorter name, to save some network traffic
-                            //it's of type int, but we use String to save more space
 	private boolean _isFromFirstEmitter; // receive R updates
-	private boolean _printOut;
-	private int _hierarchyPosition=INTERMEDIATE;
-	private List<Integer> _hashIndexes;
-	private List<ValueExpression> _hashExpressions;
-        private List<Integer> _rightHashIndexes; // hashIndexes from the righ parent
 
+    //a unique id of the components which sends to StormSrcJoin	
+    private String _firstEmitterIndex, _secondEmitterIndex; 	
+    private List<Integer> _rightHashIndexes; // hashIndexes from the right parent
+
+    private String _full_ID; // Contains the name of the component and tableName
+    
 	private ChainOperator _operatorChain;
 
 	private BasicStore<ArrayList<String>> _joinStorage;
 	private ProjectOperator _preAggProj;
-
 	private StormSrcHarmonizer _harmonizer;
-	private OutputCollector _collector;
+
 	private int _numSentTuples;
-	private String _ID;
-	private Map _conf;
-
-        private String _firstEmitterIndex, _secondEmitterIndex; 
-                    //a unique id of the components which sends to StormSrcJoin
-
-	private int _numRemainingParents;
 
 	//for batch sending
 	private final Semaphore _semAgg = new Semaphore(1, true);
 	private boolean _firstTime = true;
-	private PeriodicBatchSend _periodicBatch;
+	private PeriodicAggBatchSend _periodicAggBatch;
 	private long _batchOutputMillis;
         
-        //for Send and Wait mode
-        private double _totalLatency;        
 
 	public StormSrcStorage(StormEmitter firstEmitter,
-                        StormEmitter secondEmitter,
-                        ComponentProperties cp,
-                        List<String> allCompNames,
+            StormEmitter secondEmitter,
+            ComponentProperties cp,
+            List<String> allCompNames,
 			StormSrcHarmonizer harmonizer,
 			boolean isFromFirstEmitter,
 			BasicStore<ArrayList<String>> preAggStorage,
@@ -80,36 +67,29 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 			TopologyBuilder builder,
 			TopologyKiller killer,
 			Config conf) {
+		super(cp, allCompNames, hierarchyPosition, conf);
 
-               _firstEmitterIndex = String.valueOf(allCompNames.indexOf(firstEmitter.getName()));
-               _secondEmitterIndex = String.valueOf(allCompNames.indexOf(secondEmitter.getName()));
+        _firstEmitterIndex = String.valueOf(allCompNames.indexOf(firstEmitter.getName()));
+        _secondEmitterIndex = String.valueOf(allCompNames.indexOf(secondEmitter.getName()));
 
-		_conf = conf;
-		_componentName = cp.getName();
-                _componentIndex = String.valueOf(allCompNames.indexOf(_componentName));
 		_tableName = (isFromFirstEmitter ? firstEmitter.getName(): secondEmitter.getName());
 		_isFromFirstEmitter=isFromFirstEmitter;
 		_harmonizer = harmonizer;
 		_batchOutputMillis = cp.getBatchOutputMillis();
 
 		_operatorChain = cp.getChainOperator();
-		_hashIndexes=cp.getHashIndexes();
-		_hashExpressions = cp.getHashExpressions();
-		_hierarchyPosition=hierarchyPosition;
-                _rightHashIndexes = cp.getParents()[1].getHashIndexes();
+        _rightHashIndexes = cp.getParents()[1].getHashIndexes();
 
-		_printOut = cp.getPrintOut();
-
-		int parallelism = SystemParameters.getInt(conf, _componentName+"_PAR");
-		_ID = _componentName + "_" + _tableName;
-		InputDeclarer currentBolt = builder.setBolt(_ID, this, parallelism);
+		int parallelism = SystemParameters.getInt(conf, getID()+"_PAR");
+        _full_ID = getID() + "_" + _tableName;
+		InputDeclarer currentBolt = builder.setBolt(_full_ID, this, parallelism);
 		currentBolt.fieldsGrouping(_harmonizer.getID(), new Fields("Hash"));
 
-		if( _hierarchyPosition == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf))){
+		if( getHierarchyPosition() == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf))){
 			killer.registerComponent(this, parallelism);
 		}
 
-		if (_printOut && _operatorChain.isBlocking()){
+		if (cp.getPrintOut() && _operatorChain.isBlocking()){
 			currentBolt.allGrouping(killer.getID(), SystemParameters.DUMP_RESULTS_STREAM);
 		}
 
@@ -119,87 +99,74 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 
 	// from IRichBolt
 	@Override
-		public void cleanup() {
-
+	public void execute(Tuple stormTupleRcv) {
+		if(_firstTime && MyUtilities.isAggBatchOutputMode(_batchOutputMillis)){
+			_periodicAggBatch = new PeriodicAggBatchSend(_batchOutputMillis, this);
+			_firstTime = false;
 		}
 
-	@Override
-		public void execute(Tuple stormTupleRcv) {
-			if(_firstTime && MyUtilities.isBatchOutputMode(_batchOutputMillis)){
-				_periodicBatch = new PeriodicBatchSend(_batchOutputMillis, this);
-				_firstTime = false;
-			}
+		if (receivedDumpSignal(stormTupleRcv)) {
+			MyUtilities.dumpSignal(this, stormTupleRcv, getCollector());
+			return;
+		}
 
-			if (receivedDumpSignal(stormTupleRcv)) {
-				MyUtilities.dumpSignal(this, stormTupleRcv, _collector);
-				return;
-			}
+        //inside StormSrcJoin, we have inputComponentName, not inputComponentIndex
+		String inputComponentIndex=stormTupleRcv.getString(0);
+        List<String> tuple = (List<String>)stormTupleRcv.getValue(1);
+		String inputTupleString=MyUtilities.tupleToString(tuple, getConf());
+		String inputTupleHash=stormTupleRcv.getString(2);
 
-                        //inside StormSrcJoin, we have inputComponentName, not inputComponentIndex
-			String inputComponentIndex=stormTupleRcv.getString(0);
-                        List<String> tuple = (List<String>)stormTupleRcv.getValue(1);
-			String inputTupleString=MyUtilities.tupleToString(tuple, _conf);
-			String inputTupleHash=stormTupleRcv.getString(2);
+		if(processFinalAck(tuple, stormTupleRcv)){
+        	return;
+        }
 
-			if(MyUtilities.isFinalAck(tuple, _conf)){
-				_numRemainingParents--;
-				MyUtilities.processFinalAck(_numRemainingParents, 
-                                        _hierarchyPosition, 
-                                        _conf,
-                                        stormTupleRcv, 
-                                        _collector, 
-                                        _periodicBatch);
-				return;
-			}
+		if((_isFromFirstEmitter && (inputComponentIndex.equals(_firstEmitterIndex))) ||
+				(!_isFromFirstEmitter && (inputComponentIndex.equals(_secondEmitterIndex)))){//add the tuple into the datastructure!!
+			_joinStorage.insert(inputTupleHash, inputTupleString);
+		} else {//JOIN
+			List<String> oppositeTupleStringList = _joinStorage.access(inputTupleHash);
 
-			if((_isFromFirstEmitter && (inputComponentIndex.equals(_firstEmitterIndex))) ||
-                            (!_isFromFirstEmitter && (inputComponentIndex.equals(_secondEmitterIndex)))){//add the tuple into the datastructure!!
-				_joinStorage.insert(inputTupleHash, inputTupleString);
-			} else {//JOIN
-				List<String> oppositeTupleStringList = _joinStorage.access(inputTupleHash);
+			// do stuff
+			if(oppositeTupleStringList!=null)
+				for (int i = 0; i < oppositeTupleStringList.size(); i++) {
+					String oppositeTupleString= oppositeTupleStringList.get(i);
+					List<String> oppositeTuple= MyUtilities.stringToTuple(oppositeTupleString, getConf());
 
-				// do stuff
-				if(oppositeTupleStringList!=null)
-					for (int i = 0; i < oppositeTupleStringList.size(); i++) {
-						String oppositeTupleString= oppositeTupleStringList.get(i);
-						List<String> oppositeTuple= MyUtilities.stringToTuple(oppositeTupleString, _conf);
-
-						List<String> firstTuple, secondTuple;
-						if(_isFromFirstEmitter){
-							//we receive R updates in the Storage which is responsible for S
-							firstTuple=oppositeTuple;
-							secondTuple=tuple;
-						}else{
-							firstTuple=tuple;
-							secondTuple=oppositeTuple;    
-						}
-
-						List<String> outputTuple;
-						if(_joinStorage instanceof BasicStore){
-
-							outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple, _rightHashIndexes);
-						}else{
-							outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);
-						}
-
-						if(_preAggProj != null){
-							outputTuple = _preAggProj.process(outputTuple);
-						}
-
-						applyOperatorsAndSend(stormTupleRcv, outputTuple);
+					List<String> firstTuple, secondTuple;
+					if(_isFromFirstEmitter){
+						//we receive R updates in the Storage which is responsible for S
+						firstTuple=oppositeTuple;
+						secondTuple=tuple;
+					}else{
+						firstTuple=tuple;
+						secondTuple=oppositeTuple;    
 					}
-			}
-			_collector.ack(stormTupleRcv);
+
+					List<String> outputTuple;
+					if(_joinStorage instanceof BasicStore){
+						outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple, _rightHashIndexes);
+					}else{
+						outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);
+					}
+
+					if(_preAggProj != null){
+						outputTuple = _preAggProj.process(outputTuple);
+					}
+
+					applyOperatorsAndSend(stormTupleRcv, outputTuple);
+				}
 		}
+		getCollector().ack(stormTupleRcv);
+	}
 
 	private void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> tuple){
-		if(MyUtilities.isBatchOutputMode(_batchOutputMillis)){
+		if(MyUtilities.isAggBatchOutputMode(_batchOutputMillis)){
 			try {
 				_semAgg.acquire();
 			} catch (InterruptedException ex) {}
 		}
 		tuple = _operatorChain.process(tuple);
-		if(MyUtilities.isBatchOutputMode(_batchOutputMillis)){
+		if(MyUtilities.isAggBatchOutputMode(_batchOutputMillis)){
 			_semAgg.release();
 		}
 
@@ -209,154 +176,74 @@ public class StormSrcStorage extends BaseRichBolt implements StormEmitter, Storm
 		_numSentTuples++;
 		printTuple(tuple);
 
-		if(MyUtilities.isSending(_hierarchyPosition, _batchOutputMillis)){
-                    if(MyUtilities.isCustomTimestampMode(_conf)){
-                        tupleSend(tuple, stormTupleRcv, stormTupleRcv.getLong(3));
-                    }else{
-                        tupleSend(tuple, stormTupleRcv, 0);
-                    }
-		}
-                if(MyUtilities.isPrintLatency(_hierarchyPosition, _conf)){
-                    printTupleLatency(_numSentTuples - 1, stormTupleRcv.getLong(3));
-                }
-	}
-
-	@Override
-		public void tupleSend(List<String> tuple, Tuple stormTupleRcv, long timestamp) {
-			Values stormTupleSnd = MyUtilities.createTupleValues(tuple, 
-                                timestamp, 
-                                _componentIndex,
-				_hashIndexes, 
-                                _hashExpressions, 
-                                _conf);
-			MyUtilities.sendTuple(stormTupleSnd, stormTupleRcv, _collector, _conf);
-		}
-
-	@Override
-		public void batchSend(){
-			if(MyUtilities.isBatchOutputMode(_batchOutputMillis)){
-				if (_operatorChain != null){
-					Operator lastOperator = _operatorChain.getLastOperator();
-					if(lastOperator instanceof AggregateOperator){
-						try {
-							_semAgg.acquire();
-						} catch (InterruptedException ex) {}
-
-						//sending
-						AggregateOperator agg = (AggregateOperator) lastOperator;
-						List<String> tuples = agg.getContent();
-						for(String tuple: tuples){
-							tupleSend(MyUtilities.stringToTuple(tuple, _conf), null, 0);
-						}
-
-						//clearing
-						agg.clearStorage();
-
-						_semAgg.release();
-					}
-				}
-			}
-		}
-
-	@Override
-		public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
-			_collector = collector;
-			_numRemainingParents = MyUtilities.getNumParentTasks(tc, _harmonizer);
-		}
-
-	@Override
-		public void declareOutputFields(OutputFieldsDeclarer declarer) {
-			if(_hierarchyPosition!=FINAL_COMPONENT){ // then its an intermediate stage not the final one
-                            if(MyUtilities.isCustomTimestampMode(_conf)){
-                                declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("CompIndex", "Tuple", "Hash", "Timestamp"));
-                            }else{
-                                declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("CompIndex", "Tuple", "Hash"));
-                            }
-			}
-		}
-        
-        @Override
-        public void printTupleLatency(long tupleSerialNum, long timestamp) {
-            int freqCompute = SystemParameters.getInt(_conf, "FREQ_TUPLE_LOG_COMPUTE");
-            int freqWrite = SystemParameters.getInt(_conf, "FREQ_TUPLE_LOG_WRITE");
-            int startupIgnoredTuples = SystemParameters.getInt(_conf, "INIT_IGNORED_TUPLES");
-            
-            if(tupleSerialNum >= startupIgnoredTuples){
-                tupleSerialNum = tupleSerialNum - startupIgnoredTuples; // start counting from zero when computing starts
-                if(tupleSerialNum % freqCompute == 0){
-                    long latency = System.currentTimeMillis() - timestamp;
-                    _totalLatency += latency;
-                }
-                if(tupleSerialNum % freqWrite == 0){
-                    long numberOfSamples = (tupleSerialNum / freqCompute) + 1; // note that it is divisible
-                    LOG.info("Taking into account every " + freqCompute + "th tuple, and printing every " + freqWrite + "th one.");
-                    LOG.info("AVERAGE tuple latency so far is " + _totalLatency/numberOfSamples);
-                }
+		if(MyUtilities.isSending(getHierarchyPosition(), _batchOutputMillis)){
+			if(MyUtilities.isCustomTimestampMode(getConf())){
+				tupleSend(tuple, stormTupleRcv, stormTupleRcv.getLong(3));
+            }else{
+            	tupleSend(tuple, stormTupleRcv, 0);
             }
-        }    
-
-	@Override
-		public void printTuple(List<String> tuple){
-			if(_printOut){
-				if((_operatorChain == null) || !_operatorChain.isBlocking()){
-					StringBuilder sb = new StringBuilder();
-					sb.append("\nComponent ").append(_componentName);
-					sb.append("\nReceived tuples: ").append(_numSentTuples);
-					sb.append(" Tuple: ").append(MyUtilities.tupleToString(tuple, _conf));
-					LOG.info(sb.toString());
-				}
-			}
 		}
-
-	@Override
-		public void printContent() {
-			if(_printOut){
-				if((_operatorChain!=null) &&_operatorChain.isBlocking()){
-					Operator lastOperator = _operatorChain.getLastOperator();
-					if (lastOperator instanceof AggregateOperator){
-						MyUtilities.printBlockingResult(_componentName,
-								(AggregateOperator) lastOperator,
-								_hierarchyPosition,
-								_conf,
-								LOG);
-					}else{
-						MyUtilities.printBlockingResult(_componentName,
-								lastOperator.getNumTuplesProcessed(),
-								lastOperator.printContent(),
-								_hierarchyPosition,
-								_conf,
-								LOG);
-					}
-				}
-			}
-		}
-
-	private boolean receivedDumpSignal(Tuple stormTuple) {
-		return stormTuple.getSourceStreamId().equalsIgnoreCase(SystemParameters.DUMP_RESULTS_STREAM);
+        if(MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())){
+        	printTupleLatency(_numSentTuples - 1, stormTupleRcv.getLong(3));
+        }
 	}
 
-	// from StormComponent interface
 	@Override
-		public String getID() {
-			return _ID;
+	public void aggBatchSend(){
+		if(MyUtilities.isAggBatchOutputMode(_batchOutputMillis)){
+			if (_operatorChain != null){
+				Operator lastOperator = _operatorChain.getLastOperator();
+				if(lastOperator instanceof AggregateOperator){
+					try {
+						_semAgg.acquire();
+					} catch (InterruptedException ex) {}
+
+					//sending
+					AggregateOperator agg = (AggregateOperator) lastOperator;
+					List<String> tuples = agg.getContent();
+					for(String tuple: tuples){
+						tupleSend(MyUtilities.stringToTuple(tuple, getConf()), null, 0);
+					}
+
+					//clearing
+					agg.clearStorage();
+
+					_semAgg.release();
+				}
+			}
 		}
+	}
+
+	@Override
+	public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
+		super.prepare(map, tc, collector);
+		super.setNumRemainingParents(MyUtilities.getNumParentTasks(tc, _harmonizer));
+	}
 
 	// from StormEmitter interface
 	@Override
-		public String[] getEmitterIDs(){
-			return new String[]{_ID};
-		}
+	public String getName() {
+		return _full_ID;
+	}
 
 	@Override
-		public String getName() {
-			return _componentName;
-		}
+	public String getInfoID() {
+		String str = "SourceStorage " + _full_ID + " has ID: " + getID();
+		return str;
+	}
 
 	@Override
-		public String getInfoID() {
-			String name = _componentName +":" + _tableName;
-			String str = "SourceStorage " + name + " has ID: "+ _ID;
-			return str;
-		}
+	public PeriodicAggBatchSend getPeriodicAggBatch() {
+		return _periodicAggBatch;
+	}
 
+	@Override
+	public long getNumSentTuples() {
+		return _numSentTuples;
+	}
+
+	@Override
+	public ChainOperator getChainOperator() {
+		return _operatorChain;
+	}
 }

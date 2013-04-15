@@ -14,16 +14,16 @@ import plan_runner.storm_components.synchronization.TopologyKiller;
 import plan_runner.utilities.MyUtilities;
 
 public class StormSrcJoin implements StormJoin, Serializable{
-        private static final long serialVersionUID = 1L;
-        private static Logger LOG = Logger.getLogger(StormSrcJoin.class);
+    private static final long serialVersionUID = 1L;
+    private static Logger LOG = Logger.getLogger(StormSrcJoin.class);
       
 	private StormSrcHarmonizer _harmonizer=null;
 	private StormSrcStorage _firstStorage=null;
 	private StormSrcStorage _secondStorage=null;
 
-        private String _componentName;
-        private List<Integer> _hashIndexes;
-        private List<ValueExpression> _hashExpressions;
+    private String _componentName;
+    private List<Integer> _hashIndexes;
+    private List<ValueExpression> _hashExpressions;
 
 	public StormSrcJoin(StormEmitter firstEmitter,
                 StormEmitter secondEmitter,
