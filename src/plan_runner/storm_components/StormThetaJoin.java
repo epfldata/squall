@@ -152,10 +152,10 @@ public class StormThetaJoin extends StormBoltComponent {
 			return;
 		}
 
-		String inputComponentIndex=stormTupleRcv.getString(0);
-        List<String> tuple = (List<String>)stormTupleRcv.getValue(1);
+		String inputComponentIndex=stormTupleRcv.getStringByField(StormComponent.COMP_INDEX); //getString(0);
+        List<String> tuple = (List<String>)stormTupleRcv.getValueByField(StormComponent.TUPLE) ;//getValue(1);
 		String inputTupleString=MyUtilities.tupleToString(tuple, getConf());
-		String inputTupleHash=stormTupleRcv.getString(2);
+		String inputTupleHash=stormTupleRcv.getStringByField(StormComponent.HASH);//getString(2);
 
         if(processFinalAck(tuple, stormTupleRcv)){
         	return;
@@ -194,7 +194,7 @@ public class StormThetaJoin extends StormBoltComponent {
 			valuesToApplyOnIndex = updateIndexes(stormTupleRcv, affectedIndexes, row_id);
 		}
 
-		performJoin( stormTupleRcv,
+		performJoin(stormTupleRcv,
 				tuple,
 				inputTupleHash,
 				isFromFirstEmitter,
@@ -206,8 +206,8 @@ public class StormThetaJoin extends StormBoltComponent {
 	}
 	
 	private List<String> updateIndexes(Tuple stormTupleRcv, List<Index> affectedIndexes, int row_id){
-		String inputComponentIndex = stormTupleRcv.getString(0); // Table name
-		List<String> tuple = (List<String>) stormTupleRcv.getValue(1); //INPUT TUPLE
+		String inputComponentIndex = stormTupleRcv.getStringByField(StormComponent.COMP_INDEX) ; //getString(0); // Table name
+		List<String> tuple = (List<String>) stormTupleRcv.getValueByField(StormComponent.TUPLE) ; //.getValue(1); //INPUT TUPLE
 		// Get a list of tuple attributes and the key value
 		
 		boolean comeFromFirstEmitter;
@@ -390,16 +390,18 @@ public class StormThetaJoin extends StormBoltComponent {
 		}
 		_numSentTuples++;
 		printTuple(tuple);
-
+       
 		if(MyUtilities.isSending(getHierarchyPosition(), _aggBatchOutputMillis)){
-                    if(MyUtilities.isCustomTimestampMode(getConf())){
-                        tupleSend(tuple, stormTupleRcv, stormTupleRcv.getLong(3));
-                    }else{
-                        tupleSend(tuple, stormTupleRcv, 0);
-                    }
+			long timestamp = 0;
+			if(MyUtilities.isCustomTimestampMode(getConf())){
+				timestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
+            }
+			tupleSend(tuple, stormTupleRcv, timestamp);
 		}
+		
         if(MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())){
-        	printTupleLatency(_numSentTuples - 1, stormTupleRcv.getLong(3));
+        	long timestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
+        	printTupleLatency(_numSentTuples - 1, timestamp);
         }
 	}
 

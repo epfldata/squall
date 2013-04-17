@@ -98,15 +98,15 @@ public abstract class StormSpoutComponent extends BaseRichSpout implements Storm
                         
         List<String> outputFields= new ArrayList<String>();
         if(MyUtilities.isManualBatchingMode(_conf)){
-        	outputFields.add("CompIndex");
-            outputFields.add("Tuple"); // string
+        	outputFields.add(StormComponent.COMP_INDEX);
+        	outputFields.add(StormComponent.TUPLE); // string
         }else{
-        	outputFields.add("CompIndex");
-            outputFields.add("Tuple"); // list of string
-            outputFields.add("Hash");
+        	outputFields.add(StormComponent.COMP_INDEX);
+        	outputFields.add(StormComponent.TUPLE); // list of string
+        	outputFields.add(StormComponent.HASH);
         }
         if(MyUtilities.isCustomTimestampMode(getConf())){
-        	outputFields.add("Timestamp");
+        	outputFields.add(StormComponent.TIMESTAMP);
         }
 		declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(outputFields));
 	}

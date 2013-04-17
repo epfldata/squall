@@ -113,9 +113,9 @@ public class StormDstJoin extends StormBoltComponent {
 		}
 
         if(!MyUtilities.isManualBatchingMode(getConf())){
-        	String inputComponentIndex = stormTupleRcv.getString(0);
-            List<String> tuple = (List<String>) stormTupleRcv.getValue(1);
-            String inputTupleHash = stormTupleRcv.getString(2);
+        	String inputComponentIndex = stormTupleRcv.getStringByField(StormComponent.COMP_INDEX); // getString(0);
+            List<String> tuple = (List<String>) stormTupleRcv.getValueByField(StormComponent.TUPLE);  //getValue(1);
+            String inputTupleHash = stormTupleRcv.getStringByField(StormComponent.HASH) ;//getString(2);
 
             if(processFinalAck(tuple, stormTupleRcv)){
             	return;
@@ -124,8 +124,8 @@ public class StormDstJoin extends StormBoltComponent {
             processNonLastTuple(inputComponentIndex, tuple, inputTupleHash, stormTupleRcv, true);
                             
         }else{
-          	String inputComponentIndex = stormTupleRcv.getString(0);
-            String inputBatch = stormTupleRcv.getString(1);
+        	String inputComponentIndex = stormTupleRcv.getStringByField(StormComponent.COMP_INDEX); // getString(0);
+            String inputBatch = stormTupleRcv.getStringByField(StormComponent.TUPLE) ;//getString(1);
                                 
             String[] wholeTuples = inputBatch.split(SystemParameters.MANUAL_BATCH_TUPLE_DELIMITER);
             int batchSize = wholeTuples.length;
@@ -269,27 +269,21 @@ public class StormDstJoin extends StormBoltComponent {
 		printTuple(tuple);
 
 		if(MyUtilities.isSending(getHierarchyPosition(), _aggBatchOutputMillis)){
+			long timestamp = 0;
 			if(MyUtilities.isCustomTimestampMode(getConf())){
-				long timestamp;
-                if(MyUtilities.isManualBatchingMode(getConf())){
-                	timestamp = stormTupleRcv.getLong(2);
-                }else{
-                	timestamp = stormTupleRcv.getLong(3);
-                }
-                tupleSend(tuple, stormTupleRcv, timestamp);
-            }else{
-            	tupleSend(tuple, stormTupleRcv, 0);
+				timestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
             }
+			tupleSend(tuple, stormTupleRcv, timestamp);
 		}
         if(MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())){
         	long timestamp;
             if(MyUtilities.isManualBatchingMode(getConf())){
             	if(isLastInBatch){
-            		timestamp = stormTupleRcv.getLong(2);
+            		timestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
                     printTupleLatency(_numSentTuples - 1, timestamp);
                 }
             }else{
-            	timestamp = stormTupleRcv.getLong(3);
+            	timestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
                 printTupleLatency(_numSentTuples - 1, timestamp);
             }            
         }

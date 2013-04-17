@@ -93,7 +93,7 @@ public class StormOperator extends StormBoltComponent {
         }
         
         if(!MyUtilities.isManualBatchingMode(getConf())){
-            List<String> tuple = (List<String>) stormTupleRcv.getValue(1);
+            List<String> tuple = (List<String>) stormTupleRcv.getValueByField(StormComponent.TUPLE);//getValue(1);
 
             if(processFinalAck(tuple, stormTupleRcv)){
                 return;
@@ -102,7 +102,7 @@ public class StormOperator extends StormBoltComponent {
             applyOperatorsAndSend(stormTupleRcv, tuple, true);
                             
         }else{
-            String inputBatch = stormTupleRcv.getString(1);
+            String inputBatch = stormTupleRcv.getStringByField(StormComponent.TUPLE); //getString(1);
                                 
             String[] wholeTuples = inputBatch.split(SystemParameters.MANUAL_BATCH_TUPLE_DELIMITER);
             int batchSize = wholeTuples.length;
@@ -158,27 +158,21 @@ public class StormOperator extends StormBoltComponent {
         printTuple(tuple);
 
         if(MyUtilities.isSending(getHierarchyPosition(), _aggBatchOutputMillis)){
-            if(MyUtilities.isCustomTimestampMode(getConf())){
-                long timestamp;
-                if(MyUtilities.isManualBatchingMode(getConf())){
-                    timestamp = stormTupleRcv.getLong(2);
-                }else{
-                    timestamp = stormTupleRcv.getLong(3);
-                }
-                    tupleSend(tuple, stormTupleRcv, timestamp);
-            }else{
-                tupleSend(tuple, stormTupleRcv, 0);
-            }		
+        	long timestamp = 0;
+        	if(MyUtilities.isCustomTimestampMode(getConf())){
+                timestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
+            }
+        	tupleSend(tuple, stormTupleRcv, timestamp);
 	}
         if(MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())){
             long timestamp;
             if(MyUtilities.isManualBatchingMode(getConf())){
                 if(isLastInBatch){
-                    timestamp = stormTupleRcv.getLong(2);
+                    timestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP); //getLong(2);
                     printTupleLatency(_numSentTuples - 1, timestamp);
                 }
             }else{
-                timestamp = stormTupleRcv.getLong(3);
+                timestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP); //getLong(3);
                 printTupleLatency(_numSentTuples - 1, timestamp);
             }
         }

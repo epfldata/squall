@@ -15,6 +15,7 @@ import plan_runner.query_plans.TPCH10Plan;
 import plan_runner.query_plans.TPCH3Plan;
 import plan_runner.query_plans.TPCH4Plan;
 import plan_runner.query_plans.TPCH5Plan;
+import plan_runner.query_plans.ThetaTPCH7_L_S_N1Plan;
 import plan_runner.query_plans.debug.TPCH5PlanAvg;
 import plan_runner.query_plans.TPCH7Plan;
 import plan_runner.query_plans.TPCH8Plan;
@@ -200,6 +201,9 @@ public class Main {
             	queryPlan = new ThetaMultipleJoinPlan(dataPath, extension, conf).getQueryPlan();
             }else if (queryName.equalsIgnoreCase("theta_hyracks")){
             	queryPlan = new ThetaHyracksPlan(dataPath, extension, conf).getQueryPlan();
+
+            }else if (queryName.equalsIgnoreCase("theta_tpch7_L_S_N1")){
+            	queryPlan = new ThetaTPCH7_L_S_N1Plan(dataPath, extension, conf).getQueryPlan();
             }
             // ... this line
 

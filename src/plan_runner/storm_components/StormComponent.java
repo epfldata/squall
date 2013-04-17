@@ -9,6 +9,12 @@ public interface StormComponent {
     public static final int INTERMEDIATE=1;
     //Last level component (can be part of Joiner), which does not propagate data anywhere
     public static final int FINAL_COMPONENT=2;
+    
+    // Tuple parts
+	public static final String COMP_INDEX = "CompIndex";
+	public static final String TUPLE = "Tuple";
+	public static final String HASH = "Hash";
+	public static final String TIMESTAMP = "Timestamp";    
 
     public String getID();
     public String getInfoID();

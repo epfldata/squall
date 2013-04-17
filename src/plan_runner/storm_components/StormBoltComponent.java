@@ -26,7 +26,7 @@ import backtype.storm.tuple.Values;
 public abstract class StormBoltComponent extends BaseRichBolt implements StormJoin, StormComponent{
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormBoltComponent.class);
-
+			
 	private Map _conf;
 	private OutputCollector _collector;
 	private String _ID;
@@ -114,15 +114,15 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormJo
 		}else{
             List<String> outputFields= new ArrayList<String>();
             if(MyUtilities.isManualBatchingMode(_conf)){
-            	outputFields.add("CompIndex");
-                outputFields.add("Tuple"); // string
+            	outputFields.add(StormComponent.COMP_INDEX);
+            	outputFields.add(StormComponent.TUPLE); // string
             }else{
-            	outputFields.add("CompIndex");
-                outputFields.add("Tuple"); // list of string
-                outputFields.add("Hash");
+            	outputFields.add(StormComponent.COMP_INDEX);
+            	outputFields.add(StormComponent.TUPLE); // list of string
+            	outputFields.add(StormComponent.HASH);
             }
             if(MyUtilities.isCustomTimestampMode(_conf)){
-            	outputFields.add("Timestamp");
+            	outputFields.add(StormComponent.TIMESTAMP);
             }
 			declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(outputFields));
 		}
