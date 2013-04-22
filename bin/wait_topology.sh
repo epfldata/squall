@@ -44,9 +44,18 @@ echo "STATUS: Waiting for topology $TOPOLOGY_NAME to finish..."
 sleep $WAIT_SUBMIT
 FIRST_TIME=true
 ALREADY_KILLED=false
+PRINTED_FINAL_STATS=false
 while true
 do
 	status=`java -cp $STORM_PATH/$STORMNAME.jar:$STORM_LIB_PATH/libthrift7-0.7.0.jar:$STORM_LIB_PATH/log4j-1.2.16.jar:$STORM_LIB_PATH/slf4j-api-1.5.8.jar:$STORM_LIB_PATH/slf4j-log4j12-1.5.8.jar:$EXEC_DIR/. topologydone.Main $TOPOLOGY_NAME`
+	if [ $status == "KILLED" ]; then
+		if [ $PRINTED_FINAL_STATS == "false" ]; then
+			echo "******************BEGIN OF FINAL TOPOLOGY_STATS******************"
+			./get_topology_stats.sh
+			echo "******************END OF FINAL TOPOLOGY_STATS******************"
+			PRINTED_FINAL_STATS=true
+		fi
+	fi
 	if [ $status == "FINISHED" ]; then
 		if [ $FIRST_TIME == "true" ]; then
 			echo "... Most probably topology $TOPOLOGY_NAME did not even start."

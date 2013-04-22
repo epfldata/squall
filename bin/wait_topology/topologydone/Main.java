@@ -15,17 +15,24 @@ import org.apache.thrift7.TException;
 public class Main {
     private static final String NIMBUS_HOST = "icdatasrv5";
     private static final int NIMBUS_THRIFT_PORT = 6627;
+    
+    private static final int FINISHED = 0;
+    private static final int NOT_FINISHED = 1;
+    private static final int KILLED = 2; //KILLED, BUT NOT REMOVED FROM THE UI
 
     public static void main(String[] args) {
         String topName = args[0];
-        if(topDone(topName)){
+        int status = topDone(topName);
+        if(status == FINISHED){
         	System.out.println("FINISHED");
-        }else{
+        }else if (status == NOT_FINISHED){
         	System.out.println("NOT_FINISHED");
+        }else {
+        	System.out.println("KILLED");
         }
     }
      
-    private static boolean topDone(String topName){
+    private static int topDone(String topName){
         Client client=getNimbusStub();
         try {
             ClusterSummary clusterInfo = client.getClusterInfo();
@@ -34,13 +41,18 @@ public class Main {
                 TopologySummary topologySummary= topologyIter.next();
                 String topologyName = topologySummary.get_name();
                 if (topologyName.equals(topName)){
-                    return false;
+                	String status = topologySummary.get_status();
+                	if(status.equalsIgnoreCase("ACTIVE")){
+                		return NOT_FINISHED;
+                	}else{
+                		return KILLED;
+                	}
                 }
             }
         } catch (TException ex) {
             ex.printStackTrace();
         }
-        return true;
+        return FINISHED;
     }
 
     private static Client getNimbusStub(){
