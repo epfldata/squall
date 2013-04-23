@@ -167,15 +167,15 @@ public class TopologyStats {
                 //ACKED_TUPLES
                 //Map<TimeWindow, <Stream, NumTuplesAcked>>,
                 //  TimeWindow takes one of the following: ":all-time", "600" (10mins), "10800" (3h), "86400" (1d)
-                Map<String, Map<String, Long>> ackedMap = getNumTuples(execSummary, withAckers);
+                Map<String, Map<String, Long>> ackedMap = getNumTuplesSpout(execSummary, withAckers);
                 sb.append("An executor of spout ").append(componentId).append(" has tuples acked \n").append(ackedMap).append("\n");
+
                 //TODO: For now, for both throughput and latency, we count only on "default" stream.
-		
-		long executorAckedTuples = 0L;
-		Long executorAckedTuplesObj = ackedMap.get(":all-time").get("default");
-		if(executorAckedTuplesObj!=null){
-		  executorAckedTuples = executorAckedTuplesObj;
-		}
+                long executorAckedTuples = 0L;
+                Long executorAckedTuplesObj = ackedMap.get(":all-time").get("default");
+                if(executorAckedTuplesObj!=null){
+                	executorAckedTuples = executorAckedTuplesObj;
+                }
                 
                 //LATENCIES
                 double executorLatency = 0;
@@ -191,6 +191,12 @@ public class TopologyStats {
                 //KEEPING BOTH
                 TuplesInfo ti = new TuplesInfo(executorAckedTuples, executorLatency);
                 appendLatency(spoutsInfo, componentId, ti);
+            }else if(stats.is_set_bolt()){
+            	//ACKED_TUPLES
+                //Map<TimeWindow, <Stream, NumTuplesAcked>>,
+                //  TimeWindow takes one of the following: ":all-time", "600" (10mins), "10800" (3h), "86400" (1d)
+                Map<String, Map<String, Long>> ackedMap = getNumTuplesBoltEmitted(execSummary, withAckers);
+                sb.append("An executor of bolt ").append(componentId).append(" has emitted tuples \n").append(ackedMap).append("\n");
             }
         }
         
@@ -249,7 +255,7 @@ public class TopologyStats {
         }
     }
 
-    private static Map<String, Map<String, Long>> getNumTuples(ExecutorSummary execSummary, boolean withAckers) {
+    private static Map<String, Map<String, Long>> getNumTuplesSpout(ExecutorSummary execSummary, boolean withAckers) {
         boolean isSpout = execSummary.get_stats().get_specific().is_set_spout();
         if(!isSpout){
             throw new RuntimeException("Developer error. This method should be called only from spouts!");
@@ -266,6 +272,34 @@ public class TopologyStats {
         return ackedMap;
     }
 
+    private static Map<String, Map<String, Long>> getNumTuplesBoltEmitted(ExecutorSummary execSummary, boolean withAckers) {
+        boolean isBolt = execSummary.get_stats().get_specific().is_set_bolt();
+        if(!isBolt){
+            throw new RuntimeException("Developer error. This method should be called only from bolts!");
+        }
+            
+        Map<String, Map<String, Long>> ackedMap = null;
+        if(withAckers){
+            throw new RuntimeException("A TODO has to be fixed!");
+        	//TODO
+        	/*
+        	 * Map<String, Map<GlobalStreamId, Long>> ackedMap = execSummary.get_stats().get_specific().get_bolt().get_acked(); 
+        	 * 
+        	 * struct GlobalStreamId {
+  				1: required string componentId;
+  				2: required string streamId;
+  				#Going to need to add an enum for the stream type (NORMAL or FAILURE)
+		   	   }
+        	 */
+        }else{
+            //bolts do not set number of acked tuples when working in nonAckers mode
+            // this is not very precise, because it does not correspond in number of tuples *fully processed*
+        	// but at the end of execution (status of a topology is KILLED) it's exactly what we need
+            ackedMap = execSummary.get_stats().get_emitted(); //.get_transferred()
+        }
+        return ackedMap;
+    }    
+    
     private static Map<String, Map<String, Double>> getLatency(ExecutorSummary execSummary, boolean withAckers) {
         boolean isSpout = execSummary.get_stats().get_specific().is_set_spout();
         if(!isSpout){
