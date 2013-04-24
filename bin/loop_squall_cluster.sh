@@ -1,24 +1,26 @@
 #!/bin/bash
 
 function usage() {
-	echo "Usage:      ./loop_squall_cluster.sh <MODE> <PROFILING> <RESTART_ANYWAY> <BASE_PATH>"
+	echo "Usage:      ./loop_squall_cluster.sh <MODE> <PROFILING> <RESTART_BEFORE> <RESTART_AFTER_EACH> <BASE_PATH>"
 	echo "               MODE: PLAN_RUNNER or SQL "
 	echo "               PROFILING: YES or NO "
-	echo "               RESTART_ANYWAY: YES or NO (this is for cleaning storm .log files)"
+	echo "               RESTART_BEFORE: YES or NO (this is for cleaning storm .log files)"
+	echo "               RESTART_AFTER_EACH: YES or NO (this is for cleaning storm .log files)"
 	echo "               BASE_PATH: ../experiments/series_name"
 	exit
 }
 
 
 # Check correct number of command line arguments
-if [ $# -ne 4 ]; then
+if [ $# -ne 5 ]; then
 	echo "Error: Illegal number of command line arguments. Required 4 argument and got $#. Exiting..."
 	usage
 fi
 MODE=$1
 PROFILING=$2
-RESTART_ANYWAY=$3
-BASE_PATH=$4
+RESTART_BEFORE=$3
+RESTART_AFTER_EACH=$4
+BASE_PATH=$5
 # Check if arg3 is a directory
 if [ ! -d $BASE_PATH ]; then
 	echo "Provided argument $BASE_PATH is not a folder (or folder doesn't exist). Exiting..."
@@ -40,9 +42,9 @@ echo "Recompiling ..."
 echo "Changing the configuration and reseting... "
 if [ $PROFILING == YES ] 
 then
-  ./profiling.sh START $RESTART_ANYWAY
+  ./profiling.sh START $RESTART_BEFORE
 else
-  ./profiling.sh END $RESTART_ANYWAY
+  ./profiling.sh END $RESTART_BEFORE
 fi
 
 # 3. for each generated file, run it and wait until it is terminated
@@ -88,6 +90,11 @@ for config in ${CONF_PATH}* ; do
 	cd $RAKE_PATH
 	rake -f extract_time.rb extract_one[$MODE,$BASE_PATH,$confname,$STORM_LOGS_PATH]
 	cd $CURR_DIR
+
+	if [ $RESTART_AFTER_EACH == YES ]
+	then
+	  ./reset_all.sh
+	fi
 
         i+=1
 done
