@@ -45,6 +45,12 @@ sleep $WAIT_SUBMIT
 FIRST_TIME=true
 ALREADY_KILLED=false
 PRINTED_FINAL_STATS=false
+
+FREEZED_SECONDS=$(( 60 * 60 * 3))
+FREEZED_INVOCATIONS=$((FREEZED_SECONDS/TIMEOUT_INVOKE))
+declare -i invocations
+invocations=0
+
 while true
 do
 	status=`java -cp $STORM_PATH/$STORMNAME.jar:$STORM_LIB_PATH/libthrift7-0.7.0.jar:$STORM_LIB_PATH/log4j-1.2.16.jar:$STORM_LIB_PATH/slf4j-api-1.5.8.jar:$STORM_LIB_PATH/slf4j-log4j12-1.5.8.jar:$EXEC_DIR/. topologydone.Main $TOPOLOGY_NAME`
@@ -71,7 +77,15 @@ do
 			storm kill $TOPOLOGY_NAME
 			ALREADY_KILLED=true
 		fi
+		if [ "$invocations" == "$FREEZED_INVOCATIONS" ]; then
+			echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+			echo "ERROR: Topology $TOPOLOGY_NAME executed for more than 3 hours. Considered freezed. The topology will be killed..."
+			echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+			storm kill $TOPOLOGY_NAME
+			ALREADY_KILLED=true
+		fi
 	fi
 	FIRST_TIME=false
+	invocations+=1
 	sleep $TIMEOUT_INVOKE
 done
