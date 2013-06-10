@@ -138,6 +138,7 @@ public class TopologyStats {
 		        boolean withAckers = getAckMode(topologyInfo);
          		int topologyUptime = topologySummary.get_uptime_secs();
 		        sb.append(writeStatistics(topologyInfo, topologyUptime, withAckers));
+		        sb.append(writeBoltLatencies(topologyInfo, topologyUptime, withAckers));
             }
             sb.append("\n\n");
         
@@ -353,6 +354,81 @@ public class TopologyStats {
         return true;
     }
     
+    /*
+     * Bolt latencies    
+     */
+    private static String writeBoltLatencies(TopologyInfo topologyInfo, int topologyUptime, boolean withAckers) {
+        StringBuilder sb=new StringBuilder("");
+                                
+      //Map<ComponentName, List<AckedTuples, Latency>>
+        Map<String, List<TuplesInfo>> boltsInfo = new HashMap<String, List<TuplesInfo>>();
+                        
+        //more about each executor/task
+        Iterator<ExecutorSummary> execIter = topologyInfo.get_executors_iterator();              
+        sb.append("\n\n").append("BOLT LATENCIES:\n");
+        while(execIter.hasNext()){
+            ExecutorSummary execSummary = execIter.next();                                    
+            String componentId = execSummary.get_component_id();
+                    
+            ExecutorSpecificStats stats = execSummary.get_stats().get_specific();
+            if(stats.is_set_bolt()){
+                //EXECUTED_TUPLES
+                //Map<TimeWindow, <GlobalStreamId, NumTuplesExecuted>>,
+                //  TimeWindow takes one of the following: ":all-time", "600" (10mins), "10800" (3h), "86400" (1d)
+                //LATENCIES
+                //Map<TimeWindow, <GlobalStreamId, Latency>>, 
+                //  TimeWindow takes one of the following: ":all-time", "600" (10mins), "10800" (3h), "86400" (1d)            	
+            	               
+                Map<GlobalStreamId, Long> executedMapAllTime = getNumTuplesBolt(execSummary);
+                //let's sum up all the executed tuples during the entire execution for all the streams separately
+                for (Map.Entry<GlobalStreamId, Long> entry : executedMapAllTime.entrySet()) {
+                	GlobalStreamId streamId = entry.getKey();
+                	long executedTuples = entry.getValue();
+                	double execLatency = getBoltLatency(execSummary).get(streamId);
+
+                	//adding to the collection
+                	TuplesInfo ti = new TuplesInfo(executedTuples, execLatency);
+                    appendLatency(boltsInfo, componentId, ti);       	
+                }
+            }    
+        }
+        
+        //AVERAGES PER COMPONENT
+        sb.append("\n").append("Per component:");
+        for(Map.Entry<String, List<TuplesInfo>> componentInfos: boltsInfo.entrySet()){
+            String componentId = componentInfos.getKey();
+            List<TuplesInfo> tiList = componentInfos.getValue();
+            double avgLatency = getAvgLatency(tiList);
+            sb.append("\nAverage execute latency for bolt ").append(componentId).append(" is ").append(avgLatency).append("ms.");
+        }
+                
+        return sb.toString();
+    }
+    
+	//over all time
+    private static Map<GlobalStreamId, Long> getNumTuplesBolt(ExecutorSummary execSummary) {
+        boolean isBolt = execSummary.get_stats().get_specific().is_set_bolt();
+        if(!isBolt){
+            throw new RuntimeException("Developer error. This method should be called only from bolts!");
+        }
+            
+        return execSummary.get_stats().get_specific().get_bolt().get_executed().get(":all-time");
+    }
+    
+    //over all time
+    private static Map<GlobalStreamId, Double> getBoltLatency(ExecutorSummary execSummary) {
+        boolean isBolt = execSummary.get_stats().get_specific().is_set_bolt();
+        if(!isBolt){
+            throw new RuntimeException("Developer error. This method should be called only from bolts!");
+        }
+        return execSummary.get_stats().get_specific().get_bolt().get_execute_ms_avg().get(":all-time");
+    }
+    
+
+    
+    /*
+     * Auxiliary data structure
+     */
     private static class TuplesInfo {
         private long _numTuples;
         private double _latency;
