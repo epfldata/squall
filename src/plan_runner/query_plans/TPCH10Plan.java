@@ -146,7 +146,8 @@ public class TPCH10Plan {
 				C_O_Njoin,
 				relationLineitem,
 				_queryPlan).addOperator(new ProjectOperator(new int[]{0, 1, 2, 3, 4, 5, 7, 8, 9}))
-                                           .addOperator(agg);
+                                           .addOperator(agg)
+											;
         //-------------------------------------------------------------------------------------
 
     }

@@ -70,7 +70,7 @@ public class LocalMergeResults {
                         + "\n  Make sure you specified correct DIP_RESULT_ROOT and"
                         + "\n  created result file with correct name.");
                 return;
-            }            
+            }
             if(_computedAgg.getStorage().equals(_fileAgg.getStorage())){
                 LOG.info("\nOK: Expected result achieved for " + SystemParameters.getString(map, "DIP_TOPOLOGY_NAME"));
             }else{

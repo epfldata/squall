@@ -201,7 +201,6 @@ public class Main {
             	queryPlan = new ThetaMultipleJoinPlan(dataPath, extension, conf).getQueryPlan();
             }else if (queryName.equalsIgnoreCase("theta_hyracks")){
             	queryPlan = new ThetaHyracksPlan(dataPath, extension, conf).getQueryPlan();
-
             }else if (queryName.equalsIgnoreCase("theta_tpch7_L_S_N1")){
             	queryPlan = new ThetaTPCH7_L_S_N1Plan(dataPath, extension, conf).getQueryPlan();
             }

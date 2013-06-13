@@ -168,7 +168,8 @@ public class TPCH9Plan {
 				P_L_PS_O_Sjoin,
 				relationNation,
 				_queryPlan).addOperator(new ProjectOperator(new int[]{0, 1, 2, 3, 4, 6}))
-                                           .addOperator(agg);
+                                           .addOperator(agg)
+                                           ;
         //-------------------------------------------------------------------------------------
 
     }

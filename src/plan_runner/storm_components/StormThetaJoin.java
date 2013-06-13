@@ -11,7 +11,13 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import gnu.trove.list.array.TIntArrayList;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
@@ -26,6 +32,7 @@ import plan_runner.predicates.Predicate;
 import plan_runner.storage.TupleStorage;
 import plan_runner.storm_components.synchronization.TopologyKiller;
 import plan_runner.thetajoin.indexes.Index;
+import plan_runner.thetajoin.matrix_mapping.EquiMatrixAssignment;
 import plan_runner.thetajoin.matrix_mapping.Matrix;
 import plan_runner.thetajoin.matrix_mapping.OptimalPartition;
 import plan_runner.thetajoin.predicate_analyser.PredicateAnalyser;
@@ -52,7 +59,7 @@ public class StormThetaJoin extends StormBoltComponent {
 	List<Integer> _joinParams;
 	
 	private Predicate _joinPredicate;
-	private OptimalPartition _partitioning;
+//	private OptimalPartition _partitioning;
 	
 	private List<Index> _firstRelationIndexes, _secondRelationIndexes;
 	private List<Integer> _operatorForIndexes;
@@ -64,7 +71,9 @@ public class StormThetaJoin extends StormBoltComponent {
 	private final Semaphore _semAgg = new Semaphore(1, true);
 	private boolean _firstTime = true;
 	private PeriodicAggBatchSend _periodicAggBatch;
-	private long _aggBatchOutputMillis; 
+	private long _aggBatchOutputMillis;
+	
+	protected SimpleDateFormat _format = new SimpleDateFormat("EEE MMM d HH:mm:ss zzz yyyy");	
 
 	public StormThetaJoin(StormEmitter firstEmitter,
 			StormEmitter secondEmitter,
@@ -82,16 +91,15 @@ public class StormThetaJoin extends StormBoltComponent {
         _secondEmitterIndex = String.valueOf(allCompNames.indexOf(secondEmitter.getName()));		
 		
 		_aggBatchOutputMillis = cp.getBatchOutputMillis();
-		
 
 		int firstCardinality=SystemParameters.getInt(conf, firstEmitter.getName()+"_CARD");
 		int secondCardinality=SystemParameters.getInt(conf, secondEmitter.getName()+"_CARD");
 
 		int parallelism = SystemParameters.getInt(conf, getID()+"_PAR");
 
-		//            if(parallelism > 1 && distinct != null){
-		//                throw new RuntimeException(_componentName + ": Distinct operator cannot be specified for multiThreaded bolts!");
-		//            }
+		//if(parallelism > 1 && distinct != null){
+		//	throw new RuntimeException(_componentName + ": Distinct operator cannot be specified for multiThreaded bolts!");
+		//}
 
 		_operatorChain = cp.getChainOperator();
 
@@ -99,10 +107,14 @@ public class StormThetaJoin extends StormBoltComponent {
 
 		InputDeclarer currentBolt = builder.setBolt(getID(), this, parallelism);
 		
-		Matrix makides = new Matrix(firstCardinality, secondCardinality);
-		_partitioning = new OptimalPartition (makides, parallelism);
+		//Matrix makides = new Matrix(firstCardinality, secondCardinality);
+		//_partitioning = new OptimalPartition (makides, parallelism);
+
+		EquiMatrixAssignment _currentMappingAssignment= new EquiMatrixAssignment(firstCardinality, secondCardinality, parallelism, -1);
+		String dim = _currentMappingAssignment.getMappingDimensions();
+		LOG.info(getID()+ " Initial Dimensions is: "+ dim);
 		
-		currentBolt = MyUtilities.thetaAttachEmitterComponents(currentBolt, firstEmitter, secondEmitter,allCompNames,_partitioning,conf);
+		currentBolt = MyUtilities.thetaAttachEmitterComponents(currentBolt, firstEmitter, secondEmitter,allCompNames,_currentMappingAssignment,conf);
 		
 		if( getHierarchyPosition() == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf))){
 			killer.registerComponent(this, parallelism);
@@ -114,18 +126,24 @@ public class StormThetaJoin extends StormBoltComponent {
 		_firstRelationStorage = new TupleStorage();
 		_secondRelationStorage = new TupleStorage();
 
-
 		if(_joinPredicate != null){
-			PredicateAnalyser predicateAnalyser = new PredicateAnalyser();	
-			Predicate modifiedPredicate = predicateAnalyser.analyse(_joinPredicate);
-	
-			if (modifiedPredicate == _joinPredicate) { //cannot create index
-				_existIndexes = false;
-			} else {
-				_joinPredicate = modifiedPredicate;
 				createIndexes();
 				_existIndexes = true;
+		
+			//TODO
+			/*
+			if(false){
+				PredicateAnalyser predicateAnalyser = new PredicateAnalyser();
+				Predicate modifiedPredicate = predicateAnalyser.analyse(_joinPredicate);
+				if (modifiedPredicate == _joinPredicate) { //cannot create index
+					_existIndexes = false;
+				} else {
+					_joinPredicate = modifiedPredicate;
+					createIndexes();
+					_existIndexes = true;
+				}
 			}
+			 */		
 		}else{
 			_existIndexes = false;
 		}
@@ -134,6 +152,7 @@ public class StormThetaJoin extends StormBoltComponent {
 	private void createIndexes(){
 		PredicateCreateIndexesVisitor visitor = new PredicateCreateIndexesVisitor();
 		_joinPredicate.accept(visitor);
+		
 		_firstRelationIndexes = new ArrayList<Index>(visitor._firstRelationIndexes);
 		_secondRelationIndexes = new ArrayList<Index>(visitor._secondRelationIndexes);
 		_operatorForIndexes = new ArrayList<Integer>(visitor._operatorForIndexes);
@@ -229,6 +248,12 @@ public class StormThetaJoin extends StormBoltComponent {
 					affectedIndexes.get(i).put(row_id, Integer.parseInt(valuesToIndex.get(i)));
 				}else if(typesOfValuesToIndex.get(i) instanceof Double ){
 					affectedIndexes.get(i).put(row_id, Double.parseDouble(valuesToIndex.get(i)));
+				}else if(typesOfValuesToIndex.get(i) instanceof Date){
+					try {
+						affectedIndexes.get(i).put(row_id, _format.parse(valuesToIndex.get(i)));
+					} catch (ParseException e) {
+						throw new RuntimeException("Parsing problem in StormThetaJoin.updatedIndexes " + e.getMessage());
+					}
 				}else if(typesOfValuesToIndex.get(i) instanceof String){
 					affectedIndexes.get(i).put(row_id, valuesToIndex.get(i));
 				}else{
@@ -294,19 +319,23 @@ public class StormThetaJoin extends StormBoltComponent {
 				}	
 			}
 
-			// Get the values from the index (check type first)
-			if(_typeOfValueIndexed.get(i) instanceof String){
-				currentRowIds = currentOpposIndex.getValues(currentOperator, value );
-			//Even if valueIndexed is at first time an integer with precomputation a*col +b, it become a double
-			}else if(_typeOfValueIndexed.get(i) instanceof Double){
-				currentRowIds = currentOpposIndex.getValues(currentOperator, Double.parseDouble(value) );
-			}else if(_typeOfValueIndexed.get(i) instanceof Integer){
-				currentRowIds = currentOpposIndex.getValues(currentOperator, Integer.parseInt(value) );
-			}else{
-				throw new RuntimeException("non supported type");
-			}
-
-			//LOG.info("currentIDS:"+currentRowIds);
+				// Get the values from the index (check type first)
+				if(_typeOfValueIndexed.get(i) instanceof String){
+					currentRowIds = currentOpposIndex.getValues(currentOperator, value );
+				//Even if valueIndexed is at first time an integer with precomputation a*col +b, it become a double
+				}else if(_typeOfValueIndexed.get(i) instanceof Double){
+					currentRowIds = currentOpposIndex.getValues(currentOperator, Double.parseDouble(value) );
+				}else if(_typeOfValueIndexed.get(i) instanceof Integer){
+					currentRowIds = currentOpposIndex.getValues(currentOperator, Integer.parseInt(value) );
+				}else if(_typeOfValueIndexed.get(i) instanceof Date){
+					try {
+						currentRowIds = currentOpposIndex.getValues(currentOperator, _format.parse(value));
+					} catch (ParseException e) {
+						e.printStackTrace();
+					}
+				}else{
+					throw new RuntimeException("non supported type");
+				}
 			
 			// Compute the intersection
 			// TODO: Search only within the ids that are in rowIds from previous join conditions
@@ -390,7 +419,7 @@ public class StormThetaJoin extends StormBoltComponent {
 		}
 		_numSentTuples++;
 		printTuple(tuple);
-       
+
 		if(MyUtilities.isSending(getHierarchyPosition(), _aggBatchOutputMillis)){
 			long timestamp = 0;
 			if(MyUtilities.isCustomTimestampMode(getConf())){
@@ -436,7 +465,7 @@ public class StormThetaJoin extends StormBoltComponent {
 	public Map<String,Object> getComponentConfiguration(){
 		return getConf();
 	}
-	
+
 	@Override
 	public String getInfoID() {
 		String str = "DestinationStorage " + getID() + " has ID: " + getID();

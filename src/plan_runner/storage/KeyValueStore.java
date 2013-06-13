@@ -84,6 +84,18 @@ public class KeyValueStore<K, V> extends BasicStore {
 			((LRUList)_replAlg).moveToFront(obj);
 		}		
 	}
+	
+	
+	public int size()
+	{
+		int size=0;
+		Object[] x =_memstore.values().toArray();
+		for (int i = 0; i < x.length; i++) {
+			HashEntry<K, V> entry = _replAlg.get(x[i]);
+			size+=entry.getValues().size();
+		}
+		return size;
+	}
 
 	protected V __update(boolean checkStorage, Object... data) {		
 		K key = (K)data[0];
@@ -93,7 +105,8 @@ public class KeyValueStore<K, V> extends BasicStore {
 		ArrayList<V> values;
 		String groupId = key.toString();
 		boolean inMem = (this._memstore.containsKey(key) == true);
-		boolean inDisk = checkStorage ? (_storageManager.existsInStorage(groupId) == true) : false;
+		//boolean inDisk = checkStorage ? (_storageManager.existsInStorage(groupId) == true) : false;
+		boolean inDisk = false;
 
 		// If element is not in disk and not in mem, treat this as an insert instead
 		if (!inMem && !inDisk) {
@@ -112,7 +125,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 			if (index != -1)
 				values.set(index, newValue);
 			else {
-				LOG.info("KeyValueStore: BUG: No element for key " + key + " found in store, but store's metadata register elements.");
+//				LOG.info("KeyValueStore: BUG: No element for key " + key + " found in store, but store's metadata register elements.");
 				System.exit(0);
 			}
 		}
@@ -134,7 +147,8 @@ public class KeyValueStore<K, V> extends BasicStore {
 		K key = (K)data[0];
 		if (_memstore.containsKey(key) == true) 
 			return true;
-		return _storageManager.existsInStorage(key.toString());
+		//return _storageManager.existsInStorage(key.toString());
+		return false;
 	}
 
 	protected ArrayList<V> __access(boolean checkStorage, Object... data) {
@@ -142,7 +156,8 @@ public class KeyValueStore<K, V> extends BasicStore {
 		Object obj = this._memstore.get(key);
 		HashEntry<K, V> entry = _replAlg.get(obj);
 		boolean inMem = (entry != null);
-                boolean inDisk = checkStorage ? (_storageManager.existsInStorage(key.toString())) : false;
+        //boolean inDisk = checkStorage ? (_storageManager.existsInStorage(key.toString())) : false;
+		boolean inDisk = false;
 
 		if (!inMem && !inDisk) {
 			return null;

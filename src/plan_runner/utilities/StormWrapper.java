@@ -35,7 +35,7 @@ public class StormWrapper {
         boolean distributed = SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED");
         String topologyName = SystemParameters.getString(conf, "DIP_TOPOLOGY_NAME");
 
-        conf.setDebug(false);
+        //conf.setDebug(false);
         if(MyUtilities.isAckEveryTuple(conf)){
             //otherwise this parameter is used only at the end,
             //  and represents the time topology is shown as killed (will be set to default: 30s)
@@ -209,7 +209,7 @@ public class StormWrapper {
 		     			sb.append("ERROR: There are some failed tuples: ").append(objFailed).append("\n");
 			            globalFailed = true;
 		              }   
-		    	    }
+		    	   }
                 }
                 
                 //is there at least one component where something failed

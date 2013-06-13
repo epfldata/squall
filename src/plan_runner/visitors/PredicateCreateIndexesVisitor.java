@@ -16,26 +16,24 @@ public class PredicateCreateIndexesVisitor implements PredicateVisitor{
 
 	public List<Index> _firstRelationIndexes = new ArrayList<Index>();
 	public List<Index> _secondRelationIndexes = new ArrayList<Index>();
-	
+
 	public List<Integer> _operatorForIndexes = new ArrayList<Integer>();
 	public List<Object> _typeOfValueIndexed = new ArrayList<Object>();
-		
-	
+
+
 	@Override
 	public void visit(AndPredicate and) {
 		for(Predicate pred : and.getInnerPredicates()){
 			visit(pred);
 		}
 	}
-	
 
 	@Override
 	public void visit(OrPredicate or) {
 		for(Predicate pred : or.getInnerPredicates()){
 			visit(pred);
-		}		
+		}
 	}
-
 
 	@Override
 	public void visit(BetweenPredicate between) {
@@ -48,11 +46,11 @@ public class PredicateCreateIndexesVisitor implements PredicateVisitor{
 	public void visit(ComparisonPredicate comparison) {
 		_operatorForIndexes.add(comparison.getOperation());
 		_typeOfValueIndexed.add(comparison.getType());
-		
+
 		boolean isString = false;
-		
-		if (comparison.getOperation()==ComparisonPredicate.EQUAL_OP){
-			if(comparison.getType() instanceof Integer){
+
+		if (comparison.getOperation() == ComparisonPredicate.EQUAL_OP) {
+			if (comparison.getType() instanceof Integer) {
 				_firstRelationIndexes.add(new HashIndex<Integer>());
 				_secondRelationIndexes.add(new HashIndex<Integer>());
 			}else if(comparison.getType() instanceof Double){
@@ -80,9 +78,8 @@ public class PredicateCreateIndexesVisitor implements PredicateVisitor{
 				throw new RuntimeException("non supported type");
 			}
 		}
-		
 	}
-	
+
 	public void visit(Predicate pred) {
 		pred.accept(this);
 	}

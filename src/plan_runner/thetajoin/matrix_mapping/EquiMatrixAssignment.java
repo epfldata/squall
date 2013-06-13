@@ -82,7 +82,7 @@ public class EquiMatrixAssignment implements Serializable, MatrixAssignment{
 		/*
 		 *1) IF S,T divisible by the number of r (squares) //Theorem 1 
 		 */
-		double denominator =  Math.sqrt(_sizeS * _sizeT / _r);
+		double denominator =  Math.sqrt( (double)_sizeS * _sizeT / _r);
 		if( (_sizeS % denominator)==0 && (_sizeT % denominator)==0){
 //			LOG.info("IF ONE!!");
 			_r_S= (int) (_sizeS/denominator);

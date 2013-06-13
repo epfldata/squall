@@ -163,7 +163,7 @@ public class MyUtilities{
         public static String tupleToString(List<String> tuple, Map conf) {
             String tupleString="";
             for (int i = 0; i < tuple.size(); i++){
-		if(i==tuple.size()-1){
+            	if(i==tuple.size()-1){
                     tupleString+=tuple.get(i);
                 } else{
                     tupleString+=tuple.get(i) + SystemParameters.getString(conf, "DIP_GLOBAL_ADD_DELIMITER");
@@ -250,7 +250,13 @@ public class MyUtilities{
     }
 
 
-    	/*
+        /* For each emitter component (there are two input emitters for each join),
+         *   appropriately connect with all of its inner Components that emits tuples to StormDestinationJoin.
+         * For destinationJoiner, there is only one bolt that emits tuples,
+         *   but for sourceJoiner, there are two SourceStorage (one for storing each emitter tuples),
+         *   which emits tuples.
+         */
+		/*
         public static InputDeclarer attachEmitterComponents(InputDeclarer currentBolt, 
                 StormEmitter emitter1, StormEmitter... emittersArray){
             List<StormEmitter> emittersList = new ArrayList<StormEmitter>();
@@ -614,4 +620,3 @@ public class MyUtilities{
     }
         
 }
-

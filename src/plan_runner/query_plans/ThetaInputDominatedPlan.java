@@ -75,6 +75,7 @@ public class ThetaInputDominatedPlan {
 				substract);
 		AggregateOperator agg = new AggregateSumOperator(product, conf);
 		
+		///Join predicate
 		ColumnReference colLineItems = new ColumnReference(_ic, 0);
 		ColumnReference colOrders = new ColumnReference(_ic, 0);
 		ComparisonPredicate pred1 = new ComparisonPredicate(
