@@ -251,27 +251,31 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>>
 	}
 	
 	private KeyType performOperation(KeyType k, KeyType diff){
-		KeyType result =null;
-		if(k instanceof Double ){
-			Double kd=(Double)k; Double diffd=(Double)diff;
+		// workaround for some compilers
+		Comparable<?> tmpK = k; 
+		Comparable<?> tmpDiff = diff;
+		Comparable<?> result = null;
+		
+		if(tmpK instanceof Double ){
+			Double kd=(Double)tmpK; Double diffd=(Double)tmpDiff;
 			Double resultd=kd+diffd;
-			result= (KeyType)resultd; 
-		}else if(k instanceof Integer ){
-			Integer kd=(Integer)k; Integer diffd=(Integer)diff;
+			result= resultd; 
+		}else if(tmpK instanceof Integer ){
+			Integer kd=(Integer)tmpK; Integer diffd=(Integer)tmpDiff;
 			Integer resultd=kd+diffd;
-			result= (KeyType)resultd; 
-		}else if(k instanceof Date ){
-			Date kd=(Date)k; Integer diffd=(Integer)diff;
+			result= resultd; 
+		}else if(tmpK instanceof Date ){
+			Date kd=(Date)tmpK; Integer diffd=(Integer)tmpDiff;
 			Calendar c = Calendar.getInstance();
 	        c.setTime(kd);
 	        c.add(Calendar.DAY_OF_MONTH, diffd);
-			result= (KeyType)c.getTime(); 
+			result= c.getTime(); 
 		}
 		else{
 			LOG.info("Operation in B+Tree not supported for underlying datatype");
 		}
 		
-		return result;
+		return (KeyType)result;
 	}
 	
 	
