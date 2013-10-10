@@ -87,7 +87,7 @@ public class ThetaTPCH7Plan {
 			N_Cjoin = new ThetaJoinStaticComponent(relationNation2, relationCustomer, _queryPlan)
 					.addOperator(new ProjectOperator(new int[] { 0, 2 }))
 					.setJoinPredicate(N_C_comp);
-		else if (Theta_JoinType == 3)
+		else if (Theta_JoinType == 1)
 			N_Cjoin = new ThetaJoinDynamicComponentAdvisedEpochs(relationNation2, relationCustomer,
 					_queryPlan).addOperator(new ProjectOperator(new int[] { 0, 2 }))
 					.setJoinPredicate(N_C_comp);
@@ -114,7 +114,7 @@ public class ThetaTPCH7Plan {
 			N_C_Ojoin = new ThetaJoinStaticComponent(N_Cjoin, relationOrders, _queryPlan)
 					.addOperator(new ProjectOperator(new int[] { 0, 2 })).setJoinPredicate(
 							N_C_O_comp);
-		else if (Theta_JoinType == 3)
+		else if (Theta_JoinType == 1)
 			N_C_Ojoin = new ThetaJoinDynamicComponentAdvisedEpochs(N_Cjoin, relationOrders,
 					_queryPlan).addOperator(new ProjectOperator(new int[] { 0, 2 }))
 					.setJoinPredicate(N_C_O_comp);
@@ -150,7 +150,7 @@ public class ThetaTPCH7Plan {
 			S_Njoin = new ThetaJoinStaticComponent(relationSupplier, relationNation1, _queryPlan)
 					.addOperator(new ProjectOperator(new int[] { 0, 2 }))
 					.setJoinPredicate(S_N_comp);
-		else if (Theta_JoinType == 3)
+		else if (Theta_JoinType == 1)
 			S_Njoin = new ThetaJoinDynamicComponentAdvisedEpochs(relationSupplier, relationNation1,
 					_queryPlan).addOperator(new ProjectOperator(new int[] { 0, 2 }))
 					.setJoinPredicate(S_N_comp);
@@ -197,7 +197,7 @@ public class ThetaTPCH7Plan {
 			L_S_Njoin = new ThetaJoinStaticComponent(relationLineitem, S_Njoin, _queryPlan)
 					.addOperator(new ProjectOperator(new int[] { 5, 0, 1, 3 })).setJoinPredicate(
 							L_S_N_comp);
-		else if (Theta_JoinType == 3)
+		else if (Theta_JoinType == 1)
 			L_S_Njoin = new ThetaJoinDynamicComponentAdvisedEpochs(relationLineitem, S_Njoin,
 					_queryPlan).addOperator(new ProjectOperator(new int[] { 5, 0, 1, 3 }))
 					.setJoinPredicate(L_S_N_comp);
@@ -221,12 +221,14 @@ public class ThetaTPCH7Plan {
 		final ComparisonPredicate N_C_O_L_S_N_comp = new ComparisonPredicate(
 				ComparisonPredicate.EQUAL_OP, colN_C_O, colL_S_N);
 
+		Component lastJoiner = null;
 		if (Theta_JoinType == 0)
-			new ThetaJoinStaticComponent(N_C_Ojoin, L_S_Njoin, _queryPlan).addOperator(so)
+			lastJoiner = new ThetaJoinStaticComponent(N_C_Ojoin, L_S_Njoin, _queryPlan).addOperator(so)
 					.addOperator(agg).setJoinPredicate(N_C_O_L_S_N_comp);
-		else if (Theta_JoinType == 3)
-			new ThetaJoinDynamicComponentAdvisedEpochs(N_C_Ojoin, L_S_Njoin, _queryPlan)
+		else if (Theta_JoinType == 1)
+			lastJoiner = new ThetaJoinDynamicComponentAdvisedEpochs(N_C_Ojoin, L_S_Njoin, _queryPlan)
 					.addOperator(so).addOperator(agg).setJoinPredicate(N_C_O_L_S_N_comp);
+		//lastJoiner.setPrintOut(false);
 	}
 
 	public QueryPlan getQueryPlan() {

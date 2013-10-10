@@ -4,7 +4,7 @@
  * This Class is responsible for applying the various mappings i.e. reshuffling the input data
  * and doing some data migrations when necessary.
  */
-package plan_runner.thetajoin.dynamic.storm_component.New;
+package plan_runner.thetajoin.dynamic.storm_component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,12 +33,12 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
-public class ThetaReshufflerAdvisedEpochsNew extends BaseRichBolt {
+public class ThetaReshufflerAdvisedEpochs extends BaseRichBolt {
 
 	/**
 	 * 
 	 */
-	private static Logger LOG = Logger.getLogger(ThetaReshufflerAdvisedEpochsNew.class);
+	private static Logger LOG = Logger.getLogger(ThetaReshufflerAdvisedEpochs.class);
 	private static final long serialVersionUID = 1L;
 	private OutputCollector _collector;
 	private long _currentFirstRelationCount, _currentSecondRelationCount;
@@ -105,7 +105,7 @@ public class ThetaReshufflerAdvisedEpochsNew extends BaseRichBolt {
 
 	private int _hierarchyPosition;
 
-	public ThetaReshufflerAdvisedEpochsNew(StormEmitter firstRelation, StormEmitter secondRelation,
+	public ThetaReshufflerAdvisedEpochs(StormEmitter firstRelation, StormEmitter secondRelation,
 			List<String> allCompNames, int numberOfJoinWorkersTasks, int hierarchyPosition,
 			Map conf, TopologyBuilder builder, String initialDim) {
 		_firstEmitter = firstRelation;
@@ -143,10 +143,7 @@ public class ThetaReshufflerAdvisedEpochsNew extends BaseRichBolt {
 		for (int i = 0; i < renamings.length; i++)
 			renamings[i] = i;
 
-		SystemParameters.getInt(conf, "ADVISOR_TYPE");
 		final int[] initialDims = ThetaJoinUtilities.getDimensions(_initialDim);
-
-		SystemParameters.getDouble(conf, "EPSILON");
 		_mAdvisor = new TheoreticalAdvisorNew(numberOfJoinWorkersTasks, initialDims[0],
 				initialDims[1], _conf);
 
@@ -606,7 +603,7 @@ public class ThetaReshufflerAdvisedEpochsNew extends BaseRichBolt {
 
 	private int identifyDim(int prev1, int prev2, int curr1, int curr2, boolean isDiscarding) {
 
-		return ThetaJoinerDynamicAdvisedEpochsNew.identifyDim(prev1, prev2, curr1, curr2,
+		return ThetaJoinerDynamicAdvisedEpochs.identifyDim(prev1, prev2, curr1, curr2,
 				isDiscarding);
 	}
 

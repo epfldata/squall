@@ -23,8 +23,8 @@ import plan_runner.storm_components.InterchangingComponent;
 import plan_runner.storm_components.StormComponent;
 import plan_runner.storm_components.StormEmitter;
 import plan_runner.storm_components.synchronization.TopologyKiller;
-import plan_runner.thetajoin.dynamic.storm_component.New.ThetaJoinerDynamicAdvisedEpochsNew;
-import plan_runner.thetajoin.dynamic.storm_component.New.ThetaReshufflerAdvisedEpochsNew;
+import plan_runner.thetajoin.dynamic.storm_component.ThetaJoinerDynamicAdvisedEpochs;
+import plan_runner.thetajoin.dynamic.storm_component.ThetaReshufflerAdvisedEpochs;
 import plan_runner.thetajoin.matrix_mapping.EquiMatrixAssignment;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
@@ -43,8 +43,8 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 	private long _batchOutputMillis;
 	private List<Integer> _hashIndexes;
 	private List<ValueExpression> _hashExpressions;
-	private ThetaJoinerDynamicAdvisedEpochsNew _joiner;
-	private ThetaReshufflerAdvisedEpochsNew _reshuffler;
+	private ThetaJoinerDynamicAdvisedEpochs _joiner;
+	private ThetaReshufflerAdvisedEpochs _reshuffler;
 	private final ChainOperator _chain = new ChainOperator();
 	private boolean _printOut;
 	private boolean _printOutSet; // whether printOut was already set
@@ -192,14 +192,14 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 		// create the bolts ..
 
 		// Create the reshuffler.
-		_reshuffler = new ThetaReshufflerAdvisedEpochsNew(_firstParent, _secondParent,
+		_reshuffler = new ThetaReshufflerAdvisedEpochs(_firstParent, _secondParent,
 				allCompNames, _joinerParallelism, hierarchyPosition, conf, builder, dim);
 
 		if (_interComp != null)
 			_reshuffler.set_interComp(_interComp);
 
 		// Create the Join Bolt.
-		_joiner = new ThetaJoinerDynamicAdvisedEpochsNew(_firstParent, _secondParent, this,
+		_joiner = new ThetaJoinerDynamicAdvisedEpochs(_firstParent, _secondParent, this,
 				allCompNames, _joinPredicate, hierarchyPosition, builder, killer, conf,
 				_reshuffler, dim);
 		_reshuffler.setJoinerID(_joiner.getID());

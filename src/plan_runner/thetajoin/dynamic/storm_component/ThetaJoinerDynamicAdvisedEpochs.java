@@ -3,7 +3,7 @@
  * @author El Seidy
  * This Class is responsible for doing the actual Theta-Join.
  */
-package plan_runner.thetajoin.dynamic.storm_component.New;
+package plan_runner.thetajoin.dynamic.storm_component;
 
 import gnu.trove.list.array.TIntArrayList;
 
@@ -49,7 +49,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
-public class ThetaJoinerDynamicAdvisedEpochsNew extends StormBoltComponent {
+public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 
 	// firstRelation=1 secondRelation=2
 	public static int identifyDim(int prevRow, int prevCol, int currRow, int currCol,
@@ -73,7 +73,7 @@ public class ThetaJoinerDynamicAdvisedEpochsNew extends StormBoltComponent {
 	private long numberOfTuplesMemory = 0;
 	private static final long serialVersionUID = 1L;
 
-	private static Logger LOG = Logger.getLogger(ThetaJoinerDynamicAdvisedEpochsNew.class);
+	private static Logger LOG = Logger.getLogger(ThetaJoinerDynamicAdvisedEpochs.class);
 	private TupleStorage _firstRelationStorage, _secondRelationStorage,
 			_firstTaggedRelationStorage, _secondTaggedRelationStorage;
 	private List<Index> _firstRelationIndexes, _secondRelationIndexes, _firstTaggedRelationIndexes,
@@ -111,7 +111,7 @@ public class ThetaJoinerDynamicAdvisedEpochsNew extends StormBoltComponent {
 	private int migrationBufferSize = 100;
 	private int _currentEpochNumber = 0;
 	private int indexOfMigrating = -1;
-	private final ThetaReshufflerAdvisedEpochsNew _reshuffler;
+	private final ThetaReshufflerAdvisedEpochs _reshuffler;
 	private int _AdvisorIndex;
 
 	private final int _numParentTasks;
@@ -126,10 +126,10 @@ public class ThetaJoinerDynamicAdvisedEpochsNew extends StormBoltComponent {
 
 	private final long _batchOutputMillis;
 
-	public ThetaJoinerDynamicAdvisedEpochsNew(StormEmitter firstEmitter,
+	public ThetaJoinerDynamicAdvisedEpochs(StormEmitter firstEmitter,
 			StormEmitter secondEmitter, ComponentProperties cp, List<String> allCompNames,
 			Predicate joinPredicate, int hierarchyPosition, TopologyBuilder builder,
-			TopologyKiller killer, Config conf, ThetaReshufflerAdvisedEpochsNew reshuffler,
+			TopologyKiller killer, Config conf, ThetaReshufflerAdvisedEpochs reshuffler,
 			String initialDim) {
 
 		super(cp, allCompNames, hierarchyPosition, conf);
@@ -251,7 +251,7 @@ public class ThetaJoinerDynamicAdvisedEpochsNew extends StormBoltComponent {
 			return;
 		_numSentTuples++;
 		printStatistics(SystemParameters.OUTPUT_PRINT);
-		// printTuple(tuple);
+		printTuple(tuple);
 		if (MyUtilities.isSending(getHierarchyPosition(), _batchOutputMillis))
 			tupleSend(tuple, stormTupleRcv, 0);
 		if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))

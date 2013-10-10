@@ -5,7 +5,7 @@ import java.util.Map;
 public class ThetaQueryPlansParameters {
 
 	/**
-	 * (ThetaJoinType = 0 = STATIC PARTITIONING) (ThetaJoinType = 3 = DYNAMIC
+	 * (ThetaJoinType = 0 = STATIC PARTITIONING) (ThetaJoinType = 1 = DYNAMIC
 	 * PARTITIONING ADVISED NON-BLOCKING EPOCHS)
 	 */
 

@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
 import plan_runner.components.ThetaJoinDynamicComponentAdvisedEpochs;
 import plan_runner.components.ThetaJoinStaticComponent;
@@ -49,16 +50,18 @@ public class ThetaHyracksPlan {
 		final AggregateCountOperator agg = new AggregateCountOperator(conf)
 				.setGroupByColumns(Arrays.asList(1));
 
+		Component lastJoiner = null;
 		if (Theta_JoinType == 0)
-			new ThetaJoinStaticComponent(relationCustomer, relationOrders, _queryPlan).addOperator(
+			lastJoiner = new ThetaJoinStaticComponent(relationCustomer, relationOrders, _queryPlan).addOperator(
 					agg).setJoinPredicate(comp)
 			// .addOperator(agg)
 			;
-		else if (Theta_JoinType == 3)
-			new ThetaJoinDynamicComponentAdvisedEpochs(relationCustomer, relationOrders, _queryPlan)
-					.addOperator(agg).setJoinPredicate(comp)
+		else if (Theta_JoinType == 1)
+			lastJoiner = new ThetaJoinDynamicComponentAdvisedEpochs(relationCustomer, relationOrders, _queryPlan)
+					.addOperator(agg).setJoinPredicate(comp);
 			// .addOperator(agg)
 			;
+		//lastJoiner.setPrintOut(false);
 
 		// -------------------------------------------------------------------------------------
 

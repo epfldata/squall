@@ -103,7 +103,7 @@ public class ThetaMultipleJoinPlan {
 			LINEITEMS_ORDERSjoin = new ThetaJoinStaticComponent(relationLineitem, relationOrders,
 					_queryPlan).setJoinPredicate(predL_O).addOperator(
 					new ProjectOperator(new int[] { 1, 2, 3, 4 }));
-		else if (Theta_JoinType == 3)
+		else if (Theta_JoinType == 1)
 			LINEITEMS_ORDERSjoin = new ThetaJoinDynamicComponentAdvisedEpochs(relationLineitem,
 					relationOrders, _queryPlan).setJoinPredicate(predL_O).addOperator(
 					new ProjectOperator(new int[] { 1, 2, 3, 4 }));
@@ -126,7 +126,7 @@ public class ThetaMultipleJoinPlan {
 					relationPartsupp, _queryPlan).setJoinPredicate(predS_P)
 					.addOperator(new ProjectOperator(new int[] { 0, 1, 3 }))
 					.addOperator(selectionPartSupp);
-		else if (Theta_JoinType == 3)
+		else if (Theta_JoinType == 1)
 			SUPPLIER_PARTSUPPjoin = new ThetaJoinDynamicComponentAdvisedEpochs(relationSupplier,
 					relationPartsupp, _queryPlan).setJoinPredicate(predS_P)
 					.addOperator(new ProjectOperator(new int[] { 0, 1, 3 }))
@@ -155,15 +155,16 @@ public class ThetaMultipleJoinPlan {
 				colRefL_OSupKey, colRefS_PSupKey);
 		final AndPredicate predL_P = new AndPredicate(predL_P1, predL_P2);
 
+		Component lastJoiner = null;
 		if (Theta_JoinType == 0)
-			new ThetaJoinStaticComponent(LINEITEMS_ORDERSjoin, SUPPLIER_PARTSUPPjoin, _queryPlan)
+			lastJoiner = new ThetaJoinStaticComponent(LINEITEMS_ORDERSjoin, SUPPLIER_PARTSUPPjoin, _queryPlan)
 					.setJoinPredicate(predL_P)
 					.addOperator(new ProjectOperator(new int[] { 0, 1, 2, 3 })).addOperator(agg);
-		else if (Theta_JoinType == 3)
-			new ThetaJoinDynamicComponentAdvisedEpochs(LINEITEMS_ORDERSjoin, SUPPLIER_PARTSUPPjoin,
+		else if (Theta_JoinType == 1)
+			lastJoiner = new ThetaJoinDynamicComponentAdvisedEpochs(LINEITEMS_ORDERSjoin, SUPPLIER_PARTSUPPjoin,
 					_queryPlan).setJoinPredicate(predL_P)
 					.addOperator(new ProjectOperator(new int[] { 0, 1, 2, 3 })).addOperator(agg);
-
+		//lastJoiner.setPrintOut(false);
 		// -------------------------------------------------------------------------------------
 
 	}

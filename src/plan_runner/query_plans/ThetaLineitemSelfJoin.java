@@ -88,18 +88,18 @@ public class ThetaLineitemSelfJoin {
 			pred5 = new ComparisonPredicate(ComparisonPredicate.SYM_BAND_WITH_BOUNDS_OP, colLine11,
 					colLine21, 1);
 
-		Component LINEITEMS_LINEITEMSjoin = null;
+		Component lastJoiner = null;
 		if (Theta_JoinType == 0)
-			LINEITEMS_LINEITEMSjoin = new ThetaJoinStaticComponent(relationLineitem1,
+			lastJoiner = new ThetaJoinStaticComponent(relationLineitem1,
 					relationLineitem2, _queryPlan).setJoinPredicate(pred5).setBDB(isBDB)
 			// .addOperator(agg)
 			;
-		else if (Theta_JoinType == 3)
-			LINEITEMS_LINEITEMSjoin = new ThetaJoinDynamicComponentAdvisedEpochs(relationLineitem1,
+		else if (Theta_JoinType == 1)
+			lastJoiner = new ThetaJoinDynamicComponentAdvisedEpochs(relationLineitem1,
 					relationLineitem2, _queryPlan).setJoinPredicate(pred5)
 			// .addOperator(agg)
 			;
-		LINEITEMS_LINEITEMSjoin.setPrintOut(false);
+		//lastJoiner.setPrintOut(false);
 
 	}
 

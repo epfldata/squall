@@ -86,7 +86,7 @@ public class ThetaTPCH7_L_S_N1Plan {
 			S_Njoin = new ThetaJoinStaticComponent(relationSupplier, relationNation1, _queryPlan)
 					.addOperator(new ProjectOperator(new int[] { 0, 2 }))
 					.setJoinPredicate(S_N_comp);
-		else if (Theta_JoinType == 3)
+		else if (Theta_JoinType == 1)
 			S_Njoin = new ThetaJoinDynamicComponentAdvisedEpochs(relationSupplier, relationNation1,
 					_queryPlan).addOperator(new ProjectOperator(new int[] { 0, 2 }))
 					.setJoinPredicate(S_N_comp);
@@ -129,14 +129,16 @@ public class ThetaTPCH7_L_S_N1Plan {
 
 		final AggregateCountOperator agg = new AggregateCountOperator(conf);
 
+		Component lastJoiner = null;
 		if (Theta_JoinType == 0)
-			new ThetaJoinStaticComponent(relationLineitem, S_Njoin, _queryPlan)
+			lastJoiner = new ThetaJoinStaticComponent(relationLineitem, S_Njoin, _queryPlan)
 					.addOperator(new ProjectOperator(new int[] { 5, 0, 1, 3 }))
 					.setJoinPredicate(L_S_N_comp).addOperator(agg);
-		else if (Theta_JoinType == 3)
-			new ThetaJoinDynamicComponentAdvisedEpochs(relationLineitem, S_Njoin, _queryPlan)
+		else if (Theta_JoinType == 1)
+			lastJoiner = new ThetaJoinDynamicComponentAdvisedEpochs(relationLineitem, S_Njoin, _queryPlan)
 					.addOperator(new ProjectOperator(new int[] { 5, 0, 1, 3 }))
 					.setJoinPredicate(L_S_N_comp).addOperator(agg);
+		lastJoiner.setPrintOut(false);
 	}
 
 	public QueryPlan getQueryPlan() {
