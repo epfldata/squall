@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
+
 import org.apache.log4j.Logger;
 
 /*
@@ -32,111 +33,108 @@ import org.apache.log4j.Logger;
  */
 
 public class SplitFileInputStream implements Serializable, CustomReader {
-    private static final long serialVersionUID = 1L;
-    private static Logger LOG = Logger.getLogger(SplitFileInputStream.class);
+	private static final long serialVersionUID = 1L;
+	private static Logger LOG = Logger.getLogger(SplitFileInputStream.class);
 
-    private DataInputStream _in;
-    private BufferedReader _reader;
+	public static void main(String[] args) {
 
-    private boolean _omitFirstLine;
+		final String path = args[0];
+		final int section = Integer.parseInt(args[1]);
+		final int parts = Integer.parseInt(args[2]);
+		final SplitFileInputStream reader = new SplitFileInputStream(path, section, parts);
 
-    private long _filePosition;
-    private long _fileEndPtr;
+		try {
+			String line;
+			while ((line = reader.readLine()) != null)
+				LOG.info(line);
+		} catch (final IOException ex) {
+			LOG.info(MyUtilities.getStackTrace(ex));
+		}
+	}
 
-    public SplitFileInputStream(String path, int section, int parts){
-        setParameters(path, section, parts);
-    }
+	private DataInputStream _in;
 
-    public String readLine() throws IOException{
-        if(eof()){
-            return null;
-        }
+	private BufferedReader _reader;
 
-        String line = _reader.readLine();
-        int length=0;
-        if(line != null){
-            length = line.length();
-        }
-         _filePosition += length + 1; // // + 1 for \n character
+	private boolean _omitFirstLine;
+	private long _filePosition;
 
-        if (_omitFirstLine){
-            _omitFirstLine = false;
-            return readLine();
-        }else{
-            return line;
-        }
-    }
+	private long _fileEndPtr;
 
-    public void close(){
-        try {
-            _in.close();
-            _reader.close();
-        } catch (IOException ex) {
-            LOG.info(MyUtilities.getStackTrace(ex));
-        }
-    }
+	public SplitFileInputStream(String path, int section, int parts) {
+		setParameters(path, section, parts);
+	}
 
-    private void setParameters(String path, int section, int parts){
-        if(section>=parts){
-            throw new RuntimeException("The section can take value from 0 to " + (parts-1));
-        }
+	@Override
+	public void close() {
+		try {
+			_in.close();
+			_reader.close();
+		} catch (final IOException ex) {
+			LOG.info(MyUtilities.getStackTrace(ex));
+		}
+	}
 
-        File file = new File(path); // no close method for this class
-        long fileSize = file.length();
-        long sectionSize = fileSize/parts;
-        _filePosition = section * sectionSize;
-        openFileSection(path, _filePosition);
+	private boolean eof() {
+		return _filePosition > _fileEndPtr;
+	}
 
-        //for all the sections except the last one, the end is sectionSize far from the beginning
-        if(section == parts-1){
-            _fileEndPtr = fileSize;
-        }else{
-            _fileEndPtr = _filePosition + sectionSize;
-        }
+	private void openFileSection(String path, long fileBeginning) {
+		FileInputStream fstream = null;
+		try {
+			fstream = new FileInputStream(path);
+			_in = new DataInputStream(fstream);
+			_reader = new BufferedReader(new InputStreamReader(_in));
+			if (fileBeginning > 0)
+				for (long i = 0; i < fileBeginning; i += _reader.skip(fileBeginning - i)) {
+				}
+		} catch (final IOException ex) {
+			final String msg = MyUtilities.getStackTrace(ex);
+			LOG.info(msg);
+			throw new RuntimeException(msg);
+		}
+	}
 
-        //for all the sections except the first one, we discard the first read line
-        if(section == 0){
-            _omitFirstLine = false;
-        }else{
-            _omitFirstLine = true;
-        }
-    }
+	@Override
+	public String readLine() throws IOException {
+		if (eof())
+			return null;
 
-    private void openFileSection(String path, long fileBeginning){
-        FileInputStream fstream = null;
-        try {
-            fstream = new FileInputStream(path);
-            _in = new DataInputStream(fstream);
-            _reader = new BufferedReader(new InputStreamReader(_in));
-            if (fileBeginning > 0) {
-                for (long i = 0; i < fileBeginning; i += _reader.skip(fileBeginning - i)) {
-                }
-            }
-        } catch (IOException ex) {
-            String msg = MyUtilities.getStackTrace(ex);
-            LOG.info(msg);
-            throw new RuntimeException(msg);
-        }
-    }
+		final String line = _reader.readLine();
+		int length = 0;
+		if (line != null)
+			length = line.length();
+		_filePosition += length + 1; // // + 1 for \n character
 
-    private boolean eof(){
-        return _filePosition > _fileEndPtr;
-    }
+		if (_omitFirstLine) {
+			_omitFirstLine = false;
+			return readLine();
+		} else
+			return line;
+	}
 
-    public static void main(String[] args){
+	private void setParameters(String path, int section, int parts) {
+		if (section >= parts)
+			throw new RuntimeException("The section can take value from 0 to " + (parts - 1));
 
-        String path = args[0];
-        int section = Integer.parseInt(args[1]);
-        int parts = Integer.parseInt(args[2]);
-        SplitFileInputStream reader = new SplitFileInputStream(path, section, parts);
+		final File file = new File(path); // no close method for this class
+		final long fileSize = file.length();
+		final long sectionSize = fileSize / parts;
+		_filePosition = section * sectionSize;
+		openFileSection(path, _filePosition);
 
-        try {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                LOG.info(line);
-            }
-        } catch (IOException ex) {
-            LOG.info(MyUtilities.getStackTrace(ex));
-        }
-    }
+		// for all the sections except the last one, the end is sectionSize far
+		// from the beginning
+		if (section == parts - 1)
+			_fileEndPtr = fileSize;
+		else
+			_fileEndPtr = _filePosition + sectionSize;
+
+		// for all the sections except the first one, we discard the first read
+		// line
+		if (section == 0)
+			_omitFirstLine = false;
+		else
+			_omitFirstLine = true;
+	}
 }

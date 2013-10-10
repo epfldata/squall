@@ -1,43 +1,42 @@
 package plan_runner.conversion;
 
-
 public class IntegerConversion implements NumericConversion<Integer> {
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Override
-    public Integer fromString(String str) {
-        return Integer.valueOf(str);
-    }
+	@Override
+	public Integer fromDouble(double d) {
+		return (int) d;
+	}
 
-    @Override
-    public String toString(Integer obj) {
-        return obj.toString();
-    }
+	@Override
+	public Integer fromString(String str) {
+		return Integer.valueOf(str);
+	}
 
-    @Override
-    public Integer fromDouble(double d) {
-        return (int)d;
-    }
+	@Override
+	public double getDistance(Integer bigger, Integer smaller) {
+		return bigger - smaller;
+	}
 
-    @Override
-    public double toDouble(Object obj) {
-        int value = (Integer)obj;
-        return (double)value;
-    }
+	@Override
+	public Integer getInitialValue() {
+		return new Integer(0);
+	}
 
-    @Override
-    public Integer getInitialValue() {
-        return new Integer(0);
-    }
+	@Override
+	public double toDouble(Object obj) {
+		final int value = (Integer) obj;
+		return value;
+	}
 
-    @Override
-    public double getDistance(Integer bigger, Integer smaller) {
-        return bigger - smaller;
-    }
-    
-    //for printing(debugging) purposes
-    @Override
-    public String toString(){
-        return  "INTEGER";
-    }    
+	// for printing(debugging) purposes
+	@Override
+	public String toString() {
+		return "INTEGER";
+	}
+
+	@Override
+	public String toString(Integer obj) {
+		return obj.toString();
+	}
 }

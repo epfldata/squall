@@ -1,278 +1,276 @@
 package plan_runner.components;
 
-import backtype.storm.Config;
-import backtype.storm.topology.TopologyBuilder;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.log4j.Logger;
+
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
 import plan_runner.operators.ProjectOperator;
+import plan_runner.predicates.Predicate;
 import plan_runner.query_plans.QueryPlan;
 import plan_runner.storage.AggregationStorage;
 import plan_runner.storage.BasicStore;
 import plan_runner.storage.KeyValueStore;
 import plan_runner.storm_components.StormComponent;
+import plan_runner.storm_components.StormDstBDB;
 import plan_runner.storm_components.StormDstJoin;
+import plan_runner.storm_components.StormDstTupleStorageJoin;
 import plan_runner.storm_components.StormJoin;
 import plan_runner.storm_components.StormSrcJoin;
 import plan_runner.storm_components.synchronization.TopologyKiller;
 import plan_runner.utilities.MyUtilities;
+import backtype.storm.Config;
+import backtype.storm.topology.TopologyBuilder;
 
 public class EquiJoinComponent implements Component {
-    private static final long serialVersionUID = 1L;
-    private static Logger LOG = Logger.getLogger(EquiJoinComponent.class);
+	private static final long serialVersionUID = 1L;
+	private static Logger LOG = Logger.getLogger(EquiJoinComponent.class);
 
-    private Component _firstParent;
-    private Component _secondParent;
-    private Component _child;
+	private final Component _firstParent;
+	private final Component _secondParent;
+	private Component _child;
 
-    private String _componentName;
+	private final String _componentName;
 
-    private long _batchOutputMillis;
+	private long _batchOutputMillis;
 
-    private List<Integer> _hashIndexes;
-    private List<ValueExpression> _hashExpressions;
+	private List<Integer> _hashIndexes;
+	private List<ValueExpression> _hashExpressions;
 
-    private StormJoin _joiner;
+	private StormJoin _joiner;
 
-    private ChainOperator _chain = new ChainOperator();
+	private final ChainOperator _chain = new ChainOperator();
 
-    // The storage is actually KeyValue<String, String>
-    //    or AggregationStorage<Numeric> for pre-aggregation
-    // Access method returns a list of Strings (a list of Numerics for pre-aggregation)
-    private BasicStore<ArrayList<String>> _firstStorage, _secondStorage;
-    //preAggregation
-    private ProjectOperator _firstPreAggProj, _secondPreAggProj;
+	// The storage is actually KeyValue<String, String>
+	// or AggregationStorage<Numeric> for pre-aggregation
+	// Access method returns a list of Strings (a list of Numerics for
+	// pre-aggregation)
+	private BasicStore<ArrayList<String>> _firstStorage, _secondStorage;
+	// preAggregation
+	private ProjectOperator _firstPreAggProj, _secondPreAggProj;
 
-    private boolean _printOut;
-    private boolean _printOutSet; //whether printOut was already set
+	private boolean _printOut;
+	private boolean _printOutSet; // whether printOut was already set
+	private boolean _isBDB;
 
-    private List<String> _fullHashList;
+	private List<String> _fullHashList;
+	private Predicate _joinPredicate;
 
-    public EquiJoinComponent(Component firstParent,
-                    Component secondParent,
-                    QueryPlan queryPlan){
-      _firstParent = firstParent;
-      _firstParent.setChild(this);
-      _secondParent = secondParent;
-      _secondParent.setChild(this);
+	public EquiJoinComponent(Component firstParent, Component secondParent, QueryPlan queryPlan) {
+		_firstParent = firstParent;
+		_firstParent.setChild(this);
+		_secondParent = secondParent;
+		_secondParent.setChild(this);
 
-      _componentName = firstParent.getName() + "_" + secondParent.getName();
+		_componentName = firstParent.getName() + "_" + secondParent.getName();
 
-      queryPlan.add(this);
-    }
+		queryPlan.add(this);
+	}
 
-    //list of distinct keys, used for direct stream grouping and load-balancing ()
-    @Override
-    public EquiJoinComponent setFullHashList(List<String> fullHashList){
-        _fullHashList = fullHashList;
-        return this;
-    }
+	@Override
+	public EquiJoinComponent addOperator(Operator operator) {
+		_chain.addOperator(operator);
+		return this;
+	}
 
-    @Override
-    public List<String> getFullHashList(){
-        return _fullHashList;
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Component)
+			return _componentName.equals(((Component) obj).getName());
+		else
+			return false;
+	}
 
-    @Override
-    public EquiJoinComponent setHashIndexes(List<Integer> hashIndexes){
-        _hashIndexes = hashIndexes;
-        return this;
-    }
+	@Override
+	public List<DataSourceComponent> getAncestorDataSources() {
+		final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
+		for (final Component parent : getParents())
+			list.addAll(parent.getAncestorDataSources());
+		return list;
+	}
 
-    @Override
-    public EquiJoinComponent setHashExpressions(List<ValueExpression> hashExpressions){
-        _hashExpressions = hashExpressions;
-        return this;
-    }
+	@Override
+	public long getBatchOutputMillis() {
+		return _batchOutputMillis;
+	}
 
-    @Override
-    public EquiJoinComponent addOperator(Operator operator){
-	_chain.addOperator(operator);
-        return this;
-    }
+	public boolean getBDB() {
+		return _isBDB;
+	}
 
-    @Override
-    public ChainOperator getChainOperator(){
-        return _chain;
-    }
+	@Override
+	public ChainOperator getChainOperator() {
+		return _chain;
+	}
 
+	@Override
+	public Component getChild() {
+		return _child;
+	}
 
-    //next four methods are for Preaggregation
-    public EquiJoinComponent setFirstPreAggStorage(AggregationStorage firstPreAggStorage){
-        _firstStorage = firstPreAggStorage;
-        return this;
-    }
+	// from StormEmitter interface
+	@Override
+	public String[] getEmitterIDs() {
+		return _joiner.getEmitterIDs();
+	}
 
-    public EquiJoinComponent setSecondPreAggStorage(AggregationStorage secondPreAggStorage){
-        _secondStorage = secondPreAggStorage;
-        return this;
-    }
-    
-    //Out of the first storage (join of S tuple with R relation)
-    public EquiJoinComponent setFirstPreAggProj(ProjectOperator firstPreAggProj){
-        _firstPreAggProj = firstPreAggProj;
-        return this;
-    }
+	@Override
+	public List<String> getFullHashList() {
+		return _fullHashList;
+	}
 
-    //Out of the second storage (join of R tuple with S relation)
-    public EquiJoinComponent setSecondPreAggProj(ProjectOperator secondPreAggProj){
-        _secondPreAggProj = secondPreAggProj;
-        return this;
-    }
+	@Override
+	public List<ValueExpression> getHashExpressions() {
+		return _hashExpressions;
+	}
 
-    @Override
-    public EquiJoinComponent setPrintOut(boolean printOut){
-        _printOutSet = true;
-        _printOut = printOut;
-        return this;
-    }
+	@Override
+	public List<Integer> getHashIndexes() {
+		return _hashIndexes;
+	}
 
-    @Override
-    public EquiJoinComponent setBatchOutputMillis(long millis){
-        _batchOutputMillis = millis;
-        return this;
-    }
+	@Override
+	public String getInfoID() {
+		return _joiner.getInfoID();
+	}
 
-    @Override
-    public void makeBolts(TopologyBuilder builder,
-            TopologyKiller killer,
-            List<String> allCompNames,
-            Config conf,
-            int partitioningType,
-            int hierarchyPosition){
+	@Override
+	public String getName() {
+		return _componentName;
+	}
 
-        //by default print out for the last component
-        //for other conditions, can be set via setPrintOut
-        if(hierarchyPosition==StormComponent.FINAL_COMPONENT && !_printOutSet){
-           setPrintOut(true);
-        }
+	@Override
+	public Component[] getParents() {
+		return new Component[] { _firstParent, _secondParent };
+	}
 
-        MyUtilities.checkBatchOutput(_batchOutputMillis, _chain.getAggregation(), conf);
+	@Override
+	public boolean getPrintOut() {
+		return _printOut;
+	}
 
-        // If not set in Preaggregation, we set normal storages
-        if(_firstStorage == null){
-            _firstStorage = new KeyValueStore<String, String>(conf);
-        }
-        if(_secondStorage == null){
-            _secondStorage = new KeyValueStore<String, String>(conf);
-        }
-        
-        if(partitioningType == StormJoin.DST_ORDERING){
-                _joiner = new StormDstJoin(_firstParent,
-                                    _secondParent,
-                                    this,
-                                    allCompNames,
-                                    _firstStorage,
-                                    _secondStorage,
-                                    _firstPreAggProj,
-                                    _secondPreAggProj,
-                                    hierarchyPosition,
-                                    builder,
-                                    killer,
-                                    conf);
-   
-        }else if(partitioningType == StormJoin.SRC_ORDERING){
-            if(_chain.getDistinct()!=null){
-                throw new RuntimeException("Cannot instantiate Distinct operator from StormSourceJoin! There are two Bolts processing operators!");
-            }
+	@Override
+	public int hashCode() {
+		int hash = 7;
+		hash = 37 * hash + (_componentName != null ? _componentName.hashCode() : 0);
+		return hash;
+	}
 
-            //since we don't know how data is scattered across StormSrcStorage,
-            //  we cannot do customStreamGrouping from the previous level
-            _joiner = new StormSrcJoin(_firstParent,
-                                    _secondParent,
-                                    this,
-                                    allCompNames,
-                                    _firstStorage,
-                                    _secondStorage,
-                                    _firstPreAggProj,
-                                    _secondPreAggProj,
-                                    hierarchyPosition,
-                                    builder,
-                                    killer,
-                                    conf);
+	@Override
+	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
+			List<String> allCompNames, Config conf, int partitioningType, int hierarchyPosition) {
 
-        }else{
-            throw new RuntimeException("Unsupported ordering " + partitioningType);
-        }
-    }
+		// by default print out for the last component
+		// for other conditions, can be set via setPrintOut
+		if (hierarchyPosition == StormComponent.FINAL_COMPONENT && !_printOutSet)
+			setPrintOut(true);
 
-    @Override
-    public Component[] getParents() {
-        return new Component[]{_firstParent, _secondParent};
-    }
+		MyUtilities.checkBatchOutput(_batchOutputMillis, _chain.getAggregation(), conf);
 
-    @Override
-    public Component getChild() {
-        return _child;
-    }
+		// If not set in Preaggregation, we set normal storages
+		if (_firstStorage == null)
+			_firstStorage = new KeyValueStore<String, String>(conf);
+		if (_secondStorage == null)
+			_secondStorage = new KeyValueStore<String, String>(conf);
 
-    @Override
-    public void setChild(Component child) {
-        _child = child;
-    }
+		if (_joinPredicate != null) {
+			if (!_isBDB)
+				_joiner = new StormDstTupleStorageJoin(_firstParent, _secondParent, this,
+						allCompNames, _joinPredicate, hierarchyPosition, builder, killer, conf);
+			else
+				_joiner = new StormDstBDB(_firstParent, _secondParent, this, allCompNames,
+						_joinPredicate, hierarchyPosition, builder, killer, conf);
+		} else if (partitioningType == StormJoin.DST_ORDERING)
+			_joiner = new StormDstJoin(_firstParent, _secondParent, this, allCompNames,
+					_firstStorage, _secondStorage, _firstPreAggProj, _secondPreAggProj,
+					hierarchyPosition, builder, killer, conf);
+		else if (partitioningType == StormJoin.SRC_ORDERING) {
+			if (_chain.getDistinct() != null)
+				throw new RuntimeException(
+						"Cannot instantiate Distinct operator from StormSourceJoin! There are two Bolts processing operators!");
 
-    @Override
-    public List<DataSourceComponent> getAncestorDataSources(){
-        List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
-        for(Component parent: getParents()){
-            list.addAll(parent.getAncestorDataSources());
-        }
-        return list;
-    }
+			// since we don't know how data is scattered across StormSrcStorage,
+			// we cannot do customStreamGrouping from the previous level
+			_joiner = new StormSrcJoin(_firstParent, _secondParent, this, allCompNames,
+					_firstStorage, _secondStorage, _firstPreAggProj, _secondPreAggProj,
+					hierarchyPosition, builder, killer, conf);
 
-    // from StormEmitter interface
-    @Override
-    public String[] getEmitterIDs() {
-         return _joiner.getEmitterIDs();
-    }
+		} else
+			throw new RuntimeException("Unsupported ordering " + partitioningType);
+	}
 
-    @Override
-    public String getName() {
-        return _componentName;
-    }
+	@Override
+	public EquiJoinComponent setBatchOutputMillis(long millis) {
+		_batchOutputMillis = millis;
+		return this;
+	}
 
-    @Override
-    public List<Integer> getHashIndexes() {
-        return _hashIndexes;
-    }
+	public EquiJoinComponent setBDB(boolean isBDB) {
+		_isBDB = isBDB;
+		return this;
+	}
 
-    @Override
-    public List<ValueExpression> getHashExpressions() {
-        return _hashExpressions;
-    }
+	@Override
+	public void setChild(Component child) {
+		_child = child;
+	}
 
-    @Override
-    public String getInfoID() {
-        return _joiner.getInfoID();
-    }
+	// Out of the first storage (join of S tuple with R relation)
+	public EquiJoinComponent setFirstPreAggProj(ProjectOperator firstPreAggProj) {
+		_firstPreAggProj = firstPreAggProj;
+		return this;
+	}
 
-    @Override
-    public boolean getPrintOut() {
-        return _printOut;
-    }
+	// next four methods are for Preaggregation
+	public EquiJoinComponent setFirstPreAggStorage(AggregationStorage firstPreAggStorage) {
+		_firstStorage = firstPreAggStorage;
+		return this;
+	}
 
-    @Override
-    public long getBatchOutputMillis() {
-        return _batchOutputMillis;
-    }
+	// list of distinct keys, used for direct stream grouping and load-balancing
+	// ()
+	@Override
+	public EquiJoinComponent setFullHashList(List<String> fullHashList) {
+		_fullHashList = fullHashList;
+		return this;
+	}
 
-    @Override
-    public boolean equals(Object obj){
-        if(obj instanceof Component){
-            return _componentName.equals(((Component)obj).getName());
-        }else{
-            return false;
-        }
-    }
+	@Override
+	public EquiJoinComponent setHashExpressions(List<ValueExpression> hashExpressions) {
+		_hashExpressions = hashExpressions;
+		return this;
+	}
 
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 37 * hash + (this._componentName != null ? this._componentName.hashCode() : 0);
-        return hash;
-    }
+	@Override
+	public EquiJoinComponent setHashIndexes(List<Integer> hashIndexes) {
+		_hashIndexes = hashIndexes;
+		return this;
+	}
+
+	public EquiJoinComponent setJoinPredicate(Predicate predicate) {
+		_joinPredicate = predicate;
+		return this;
+	}
+
+	@Override
+	public EquiJoinComponent setPrintOut(boolean printOut) {
+		_printOutSet = true;
+		_printOut = printOut;
+		return this;
+	}
+
+	// Out of the second storage (join of R tuple with S relation)
+	public EquiJoinComponent setSecondPreAggProj(ProjectOperator secondPreAggProj) {
+		_secondPreAggProj = secondPreAggProj;
+		return this;
+	}
+
+	public EquiJoinComponent setSecondPreAggStorage(AggregationStorage secondPreAggStorage) {
+		_secondStorage = secondPreAggStorage;
+		return this;
+	}
 
 }

@@ -1,27 +1,26 @@
 package sql.optimizers;
 
 import java.util.List;
+
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
 import plan_runner.query_plans.QueryPlan;
 
-
 public interface CompGen {
 
-     public QueryPlan getQueryPlan();
+	/*
+	 * adding a DataSourceComponent to the list of components Necessary to call
+	 * only when only one table is addresses in WHERE clause of a SQL query
+	 */
+	public DataSourceComponent generateDataSource(String tableCompName);
 
-    public List<Component> getSubPlans();
+	/*
+	 * Join between two components
+	 */
+	public Component generateEquiJoin(Component left, Component right);
 
-    /*
-     * adding a DataSourceComponent to the list of components
-     * Necessary to call only when only one table is addresses in WHERE clause of a SQL query
-     */
-    public DataSourceComponent generateDataSource(String tableCompName);
+	public QueryPlan getQueryPlan();
 
-    /*
-     * Join between two components
-     */
-    public Component generateEquiJoin(Component left, Component right);
-
+	public List<Component> getSubPlans();
 
 }

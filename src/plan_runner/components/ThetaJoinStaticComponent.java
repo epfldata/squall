@@ -1,215 +1,223 @@
 package plan_runner.components;
 
-import backtype.storm.Config;
-import backtype.storm.topology.TopologyBuilder;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.log4j.Logger;
+
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
 import plan_runner.predicates.Predicate;
 import plan_runner.query_plans.QueryPlan;
+import plan_runner.storm_components.InterchangingComponent;
+import plan_runner.storm_components.StormBoltComponent;
 import plan_runner.storm_components.StormComponent;
 import plan_runner.storm_components.StormThetaJoin;
+import plan_runner.storm_components.StormThetaJoinBDB;
 import plan_runner.storm_components.synchronization.TopologyKiller;
 import plan_runner.utilities.MyUtilities;
+import backtype.storm.Config;
+import backtype.storm.topology.TopologyBuilder;
 
 public class ThetaJoinStaticComponent implements Component {
-    private static final long serialVersionUID = 1L;
-    private static Logger LOG = Logger.getLogger(ThetaJoinStaticComponent.class);
+	private static final long serialVersionUID = 1L;
+	private static Logger LOG = Logger.getLogger(ThetaJoinStaticComponent.class);
 
-    private Component _firstParent;
-    private Component _secondParent;
-    private Component _child;
+	private final Component _firstParent;
+	private final Component _secondParent;
+	private Component _child;
 
-    private String _componentName;
+	private final String _componentName;
 
-    private long _batchOutputMillis;
+	private long _batchOutputMillis;
 
-    private List<Integer> _hashIndexes;
-    private List<ValueExpression> _hashExpressions;
+	private List<Integer> _hashIndexes;
+	private List<ValueExpression> _hashExpressions;
 
-    private StormThetaJoin _joiner;
+	private StormBoltComponent _joiner;
 
-    private ChainOperator _chain = new ChainOperator();
+	private final ChainOperator _chain = new ChainOperator();
 
-    private boolean _printOut;
-    private boolean _printOutSet; //whether printOut was already set
-    
-    private Predicate _joinPredicate;
+	private boolean _printOut;
+	private boolean _printOutSet; // whether printOut was already set
 
-    public ThetaJoinStaticComponent(Component firstParent,
-                    Component secondParent,
-                    QueryPlan queryPlan){
-      _firstParent = firstParent;
-      _firstParent.setChild(this);
-      _secondParent = secondParent;
-      _secondParent.setChild(this);
+	private Predicate _joinPredicate;
+	private boolean _isBDB;
 
-      _componentName = firstParent.getName() + "_" + secondParent.getName();
+	private InterchangingComponent _interComp = null;
 
-      queryPlan.add(this);
-    }
-    
-    public ThetaJoinStaticComponent setJoinPredicate(Predicate joinPredicate) {
-    	_joinPredicate = joinPredicate;
-    	return this;
-    }
-    
-    public Predicate getJoinPredicate() {
-    	return _joinPredicate;
-    }
+	public ThetaJoinStaticComponent(Component firstParent, Component secondParent,
+			QueryPlan queryPlan) {
+		_firstParent = firstParent;
+		_firstParent.setChild(this);
+		_secondParent = secondParent;
+		_secondParent.setChild(this);
 
-    //list of distinct keys, used for direct stream grouping and load-balancing ()
-    @Override
-    public ThetaJoinStaticComponent setFullHashList(List<String> fullHashList){
-        throw new RuntimeException("Load balancing for Theta join is done inherently!");
-    }
+		_componentName = firstParent.getName() + "_" + secondParent.getName();
 
-    @Override
-    public List<String> getFullHashList(){
-        throw new RuntimeException("Load balancing for Theta join is done inherently!");
-    }
+		queryPlan.add(this);
+	}
 
-    @Override
-    public ThetaJoinStaticComponent setHashIndexes(List<Integer> hashIndexes){
-        _hashIndexes = hashIndexes;
-        return this;
-    }
+	@Override
+	public ThetaJoinStaticComponent addOperator(Operator operator) {
+		_chain.addOperator(operator);
+		return this;
+	}
 
-    @Override
-    public ThetaJoinStaticComponent setHashExpressions(List<ValueExpression> hashExpressions){
-        _hashExpressions = hashExpressions;
-        return this;
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Component)
+			return _componentName.equals(((Component) obj).getName());
+		else
+			return false;
+	}
 
-    @Override
-    public ThetaJoinStaticComponent addOperator(Operator operator){
-	_chain.addOperator(operator);
-        return this;
-    }
+	@Override
+	public List<DataSourceComponent> getAncestorDataSources() {
+		final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
+		for (final Component parent : getParents())
+			list.addAll(parent.getAncestorDataSources());
+		return list;
+	}
 
-    @Override
-    public ChainOperator getChainOperator(){
-        return _chain;
-    }
+	@Override
+	public long getBatchOutputMillis() {
+		return _batchOutputMillis;
+	}
 
+	@Override
+	public ChainOperator getChainOperator() {
+		return _chain;
+	}
 
-    @Override
-    public ThetaJoinStaticComponent setPrintOut(boolean printOut){
-        _printOutSet = true;
-        _printOut = printOut;
-        return this;
-    }
+	@Override
+	public Component getChild() {
+		return _child;
+	}
 
-    @Override
-    public ThetaJoinStaticComponent setBatchOutputMillis(long millis){
-        _batchOutputMillis = millis;
-        return this;
-    }
+	// from StormEmitter interface
+	@Override
+	public String[] getEmitterIDs() {
+		return _joiner.getEmitterIDs();
+	}
 
-    @Override
-    public void makeBolts(TopologyBuilder builder,
-            TopologyKiller killer,
-            List<String> allCompNames,
-            Config conf,
-            int partitioningType,
-            int hierarchyPosition){
+	@Override
+	public List<String> getFullHashList() {
+		throw new RuntimeException("Load balancing for Theta join is done inherently!");
+	}
 
-        //by default print out for the last component
-        //for other conditions, can be set via setPrintOut
-        if(hierarchyPosition==StormComponent.FINAL_COMPONENT && !_printOutSet){
-           setPrintOut(true);
-        }
+	@Override
+	public List<ValueExpression> getHashExpressions() {
+		return _hashExpressions;
+	}
 
-        MyUtilities.checkBatchOutput(_batchOutputMillis, _chain.getAggregation(), conf);
+	@Override
+	public List<Integer> getHashIndexes() {
+		return _hashIndexes;
+	}
 
-        _joiner = new StormThetaJoin(_firstParent,
-                            _secondParent,
-                            this,
-                            allCompNames,
-                            _joinPredicate,
-                            hierarchyPosition,
-                            builder,
-                            killer,
-                            conf);   
-    }
+	@Override
+	public String getInfoID() {
+		return _joiner.getInfoID();
+	}
 
-    @Override
-    public Component[] getParents() {
-        return new Component[]{_firstParent, _secondParent};
-    }
+	public Predicate getJoinPredicate() {
+		return _joinPredicate;
+	}
 
-    @Override
-    public Component getChild() {
-        return _child;
-    }
+	@Override
+	public String getName() {
+		return _componentName;
+	}
 
-    @Override
-    public void setChild(Component child) {
-        _child = child;
-    }
+	@Override
+	public Component[] getParents() {
+		return new Component[] { _firstParent, _secondParent };
+	}
 
-    @Override
-    public List<DataSourceComponent> getAncestorDataSources(){
-        List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
-        for(Component parent: getParents()){
-            list.addAll(parent.getAncestorDataSources());
-        }
-        return list;
-    }
+	@Override
+	public boolean getPrintOut() {
+		return _printOut;
+	}
 
-    // from StormEmitter interface
-    @Override
-    public String[] getEmitterIDs() {
-         return _joiner.getEmitterIDs();
-    }
+	@Override
+	public int hashCode() {
+		int hash = 7;
+		hash = 37 * hash + (_componentName != null ? _componentName.hashCode() : 0);
+		return hash;
+	}
 
-    @Override
-    public String getName() {
-        return _componentName;
-    }
+	@Override
+	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
+			List<String> allCompNames, Config conf, int partitioningType, int hierarchyPosition) {
 
-    @Override
-    public List<Integer> getHashIndexes() {
-        return _hashIndexes;
-    }
+		// by default print out for the last component
+		// for other conditions, can be set via setPrintOut
+		if (hierarchyPosition == StormComponent.FINAL_COMPONENT && !_printOutSet)
+			setPrintOut(true);
 
-    @Override
-    public List<ValueExpression> getHashExpressions() {
-        return _hashExpressions;
-    }
+		MyUtilities.checkBatchOutput(_batchOutputMillis, _chain.getAggregation(), conf);
 
-    @Override
-    public String getInfoID() {
-        return _joiner.getInfoID();
-    }
+		if (!_isBDB)
+			_joiner = new StormThetaJoin(_firstParent, _secondParent, this, allCompNames,
+					_joinPredicate, hierarchyPosition, builder, killer, conf, _interComp);
+		else
+			_joiner = new StormThetaJoinBDB(_firstParent, _secondParent, this, allCompNames,
+					_joinPredicate, hierarchyPosition, builder, killer, conf, _interComp);
 
-    @Override
-    public boolean getPrintOut() {
-        return _printOut;
-    }
+	}
 
-    @Override
-    public long getBatchOutputMillis() {
-        return _batchOutputMillis;
-    }
+	@Override
+	public ThetaJoinStaticComponent setBatchOutputMillis(long millis) {
+		_batchOutputMillis = millis;
+		return this;
+	}
 
-    @Override
-    public boolean equals(Object obj){
-        if(obj instanceof Component){
-            return _componentName.equals(((Component)obj).getName());
-        }else{
-            return false;
-        }
-    }
+	public ThetaJoinStaticComponent setBDB(boolean isBDB) {
+		_isBDB = isBDB;
+		return this;
+	}
 
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 37 * hash + (this._componentName != null ? this._componentName.hashCode() : 0);
-        return hash;
-    }
+	@Override
+	public void setChild(Component child) {
+		_child = child;
+	}
+
+	// list of distinct keys, used for direct stream grouping and load-balancing
+	// ()
+	@Override
+	public ThetaJoinStaticComponent setFullHashList(List<String> fullHashList) {
+		throw new RuntimeException("Load balancing for Theta join is done inherently!");
+	}
+
+	@Override
+	public ThetaJoinStaticComponent setHashExpressions(List<ValueExpression> hashExpressions) {
+		_hashExpressions = hashExpressions;
+		return this;
+	}
+
+	@Override
+	public ThetaJoinStaticComponent setHashIndexes(List<Integer> hashIndexes) {
+		_hashIndexes = hashIndexes;
+		return this;
+	}
+
+	public ThetaJoinStaticComponent setInterComp(InterchangingComponent inter) {
+		_interComp = inter;
+		return this;
+	}
+
+	public ThetaJoinStaticComponent setJoinPredicate(Predicate joinPredicate) {
+		_joinPredicate = joinPredicate;
+		return this;
+	}
+
+	@Override
+	public ThetaJoinStaticComponent setPrintOut(boolean printOut) {
+		_printOutSet = true;
+		_printOut = printOut;
+		return this;
+	}
 
 }

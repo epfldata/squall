@@ -1,4 +1,3 @@
-
 package sql.util;
 
 /*
@@ -6,14 +5,18 @@ package sql.util;
  *   more than how many distinct join condition key values are there.
  */
 public class ImproperParallelismException extends RuntimeException {
-    private String _msg;
-    
-    public ImproperParallelismException(String msg){
-        _msg = msg;
-    }
-    
-    @Override
-    public String getMessage(){
-        return _msg;
-    }
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private final String _msg;
+
+	public ImproperParallelismException(String msg) {
+		_msg = msg;
+	}
+
+	@Override
+	public String getMessage() {
+		return _msg;
+	}
 }

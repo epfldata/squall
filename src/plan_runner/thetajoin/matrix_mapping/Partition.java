@@ -6,9 +6,8 @@ import java.util.Random;
 
 /**
  * This abstract class implement the notion of partition of a matrix, typically
- * a set of part that respect the conditions: 
- *		1) no overlapping 
- *		2) cover the whole matrix
+ * a set of part that respect the conditions: 1) no overlapping 2) cover the
+ * whole matrix
  */
 
 public abstract class Partition implements MatrixAssignment, Serializable {
@@ -29,6 +28,23 @@ public abstract class Partition implements MatrixAssignment, Serializable {
 		generatePartition();
 	}
 
+	/**
+	 * This method returns a cost value for the current matrix partition
+	 * 
+	 * @return cost value for the current partition scheme
+	 */
+	public double calculateCost() {
+		int reducers_used = 0;
+
+		for (int i = 0; i < numReducers_; ++i)
+			if (parts_[i].getArea() != 0)
+				reducers_used++;
+		// This forces the partitioner to use the maximum number of reducers
+		// possible.
+		// It is currently used as stub until a better cost function if found.
+		return 1 / ((double) reducers_used);
+	}
+
 	protected abstract void generatePartition();
 
 	/*
@@ -36,11 +52,9 @@ public abstract class Partition implements MatrixAssignment, Serializable {
 	 */
 	public int getMaxArea() {
 		int max = 0;
-		for (int i = 0; i < numReducers_; ++i) {
-			if (parts_[i].getArea() > max) {
+		for (int i = 0; i < numReducers_; ++i)
+			if (parts_[i].getArea() > max)
 				max = parts_[i].getArea();
-			}
-		}
 		return max;
 	}
 
@@ -49,23 +63,10 @@ public abstract class Partition implements MatrixAssignment, Serializable {
 	 */
 	public int getMaxHalfPerimeter() {
 		int max = 0;
-		for (int i = 0; i < numReducers_; ++i) {
-			if (parts_[i].getHalfPerimeter() > max) {
+		for (int i = 0; i < numReducers_; ++i)
+			if (parts_[i].getHalfPerimeter() > max)
 				max = parts_[i].getHalfPerimeter();
-			}
-		}
 		return max;
-	}
-
-	/**
-	 * @return the sum of half perimeters of Part in the Partition
-	 */
-	public int getSumHalfPerimeter() {
-		int sum = 0;
-		for (int i = 0; i < numReducers_; ++i) {
-			sum += parts_[i].getHalfPerimeter();
-		}
-		return sum;
 	}
 
 	/**
@@ -77,77 +78,38 @@ public abstract class Partition implements MatrixAssignment, Serializable {
 	 *            matrix. (Dimension.ROW or Dimension.COLUMN)
 	 * @return the list of indexes of workers
 	 */
+	@Override
 	public ArrayList<Integer> getRegionIDs(Dimension _dimension) {
 
-		ArrayList<Integer> retList = new ArrayList<Integer>();
+		final ArrayList<Integer> retList = new ArrayList<Integer>();
 
 		if (_dimension == Dimension.ROW) { // tuple from relation S
-			int sIndex = randGen.nextInt(matrix_.getSizeOfS());
-			for (int i = 0; i < numReducers_; ++i) {
-				if (((!matrix_.isSGreaterThanT()) && parts_[i]
-						.intersectRow(sIndex))
-						|| ((matrix_.isSGreaterThanT()) && parts_[i]
-								.intersectColumn(sIndex))) {
+			final int sIndex = randGen.nextInt(matrix_.getSizeOfS());
+			for (int i = 0; i < numReducers_; ++i)
+				if (((!matrix_.isSGreaterThanT()) && parts_[i].intersectRow(sIndex))
+						|| ((matrix_.isSGreaterThanT()) && parts_[i].intersectColumn(sIndex)))
 					retList.add(i);
-				}
-			}
 		} else { // tuple from relation T
-			int tIndex = randGen.nextInt(matrix_.getSizeOfT());
-			for (int i = 0; i < numReducers_; ++i) {
-				if (((matrix_.isSGreaterThanT()) && parts_[i]
-						.intersectRow(tIndex))
-						|| ((!matrix_.isSGreaterThanT()) && parts_[i]
-								.intersectColumn(tIndex))) {
+			final int tIndex = randGen.nextInt(matrix_.getSizeOfT());
+			for (int i = 0; i < numReducers_; ++i)
+				if (((matrix_.isSGreaterThanT()) && parts_[i].intersectRow(tIndex))
+						|| ((!matrix_.isSGreaterThanT()) && parts_[i].intersectColumn(tIndex)))
 					retList.add(i);
-				}
-			}
 		}
 		return retList;
 	}
 
 	/**
-	 * This method check that each portion of the matrix is covered by exactly
-	 * one part.
-	 * 
-	 * @return true if all partition conditions are respected false otherwise
+	 * @return the sum of half perimeters of Part in the Partition
 	 */
-	public boolean valid() {
-		for (int h = 0; h < matrix_.getHeight(); ++h) {
-			for (int w = 0; w < matrix_.getWidth(); ++w) {
-				int index = 0;
-				for (int i = 0; i < numReducers_; ++i) {
-
-					if (parts_[i].covers(h, w)) {
-						index++;
-					}
-				}
-				if (index != 1) {
-					return false;
-				}
-			}
-		}
-		return true;
+	public int getSumHalfPerimeter() {
+		int sum = 0;
+		for (int i = 0; i < numReducers_; ++i)
+			sum += parts_[i].getHalfPerimeter();
+		return sum;
 	}
 
-	/**
-	 * This method returns a cost value for the current matrix partition
-	 * 
-	 * @return cost value for the current partition scheme
-	 */
-	public double calculateCost() {
-		int reducers_used = 0;
-
-		for (int i = 0; i < numReducers_; ++i) {
-			if (parts_[i].getArea() != 0) {
-				reducers_used++;
-			}
-		}
-		// This forces the partitioner to use the maximum number of reducers
-		// possible.
-		// It is currently used as stub until a better cost function if found.
-		return 1 / ((double) reducers_used);
-	}
-
+	@Override
 	public String toString() {
 		String ret = "";
 		ret = ret.concat("Print of a Partition: \n");
@@ -161,6 +123,25 @@ public abstract class Partition implements MatrixAssignment, Serializable {
 					+ (parts_[i].getHIndex() + parts_[i].getHeight()) + ")]\n");
 		}
 		return ret;
+	}
+
+	/**
+	 * This method check that each portion of the matrix is covered by exactly
+	 * one part.
+	 * 
+	 * @return true if all partition conditions are respected false otherwise
+	 */
+	public boolean valid() {
+		for (int h = 0; h < matrix_.getHeight(); ++h)
+			for (int w = 0; w < matrix_.getWidth(); ++w) {
+				int index = 0;
+				for (int i = 0; i < numReducers_; ++i)
+					if (parts_[i].covers(h, w))
+						index++;
+				if (index != 1)
+					return false;
+			}
+		return true;
 	}
 
 }

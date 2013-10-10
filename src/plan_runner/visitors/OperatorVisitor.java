@@ -6,17 +6,16 @@ import plan_runner.operators.DistinctOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
 
-
 public interface OperatorVisitor {
 
-    public void visit(SelectOperator selection);
+	public void visit(AggregateOperator aggregation);
 
-    public void visit(DistinctOperator distinct);
+	public void visit(ChainOperator chain);
 
-    public void visit(ProjectOperator projection);
+	public void visit(DistinctOperator distinct);
 
-    public void visit(AggregateOperator aggregation);
-    
-    public void visit(ChainOperator chain);
+	public void visit(ProjectOperator projection);
+
+	public void visit(SelectOperator selection);
 
 }

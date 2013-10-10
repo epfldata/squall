@@ -1,11 +1,12 @@
 package plan_runner.utilities;
 
-import backtype.storm.generated.GlobalStreamId;
-import backtype.storm.grouping.CustomStreamGrouping;
-import backtype.storm.task.WorkerTopologyContext;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import backtype.storm.generated.GlobalStreamId;
+import backtype.storm.grouping.CustomStreamGrouping;
+import backtype.storm.task.WorkerTopologyContext;
 
 /*
  * If the list of all possible hash values isspecified,
@@ -13,47 +14,51 @@ import java.util.Map;
  * Otherwise, we encode fieldGrouping exactly the same as the Storm authors.
  * Because of NoACK possibility, have to be used everywhere in the code.
  */
-public class HashStreamGrouping implements CustomStreamGrouping{
+public class HashStreamGrouping implements CustomStreamGrouping {
 
-    //the number of tasks on the level this stream grouping is sending to
-    private int _numTargetTasks;
-    private List<Integer> _targetTasks;
-    
-    private List<String> _fullHashList;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	// the number of tasks on the level this stream grouping is sending to
+	private int _numTargetTasks;
+	private List<Integer> _targetTasks;
 
-    private Map _map;
+	private final List<String> _fullHashList;
 
-    /*
-     * fullHashList is null if grouping is not balanced
-     */
-    public HashStreamGrouping(Map map, List<String> fullHashList){
-        _map = map;
-        _fullHashList = fullHashList;
-    }
-    
-    @Override
-    public void prepare(WorkerTopologyContext wtc, GlobalStreamId gsi, List<Integer> targetTasks) {
-        _targetTasks = targetTasks;
-        _numTargetTasks = targetTasks.size();
-    }
+	private final Map _map;
 
-    @Override
-    public List<Integer> chooseTasks(int taskId, List<Object> stormTuple) {
-        List<String> tuple = (List<String>) stormTuple.get(1);
-        String tupleHash = (String) stormTuple.get(2);
-        if(MyUtilities.isFinalAck(tuple, _map)){
-            //send to everyone
-            return _targetTasks;
-        }
-        if(!isBalanced()){
-            return Arrays.asList(_targetTasks.get(MyUtilities.chooseHashTargetIndex(tupleHash, _numTargetTasks)));
-        }else{
-            return Arrays.asList(_targetTasks.get(MyUtilities.chooseBalancedTargetIndex(tupleHash, _fullHashList, _numTargetTasks)));
-        }
-    }
+	/*
+	 * fullHashList is null if grouping is not balanced
+	 */
+	public HashStreamGrouping(Map map, List<String> fullHashList) {
+		_map = map;
+		_fullHashList = fullHashList;
+	}
 
-    private boolean isBalanced(){
-        return (_fullHashList != null);
-    }
+	@Override
+	public List<Integer> chooseTasks(int taskId, List<Object> stormTuple) {
+		final List<String> tuple = (List<String>) stormTuple.get(1);
+		final String tupleHash = (String) stormTuple.get(2);
+		if (MyUtilities.isFinalAck(tuple, _map))
+			// send to everyone
+			return _targetTasks;
+		if (!isBalanced())
+			return Arrays.asList(_targetTasks.get(MyUtilities.chooseHashTargetIndex(tupleHash,
+					_numTargetTasks)));
+		else
+			return Arrays.asList(_targetTasks.get(MyUtilities.chooseBalancedTargetIndex(tupleHash,
+					_fullHashList, _numTargetTasks)));
+	}
+
+	private boolean isBalanced() {
+		return (_fullHashList != null);
+	}
+
+	@Override
+	public void prepare(WorkerTopologyContext wtc, GlobalStreamId gsi, List<Integer> targetTasks) {
+		_targetTasks = targetTasks;
+		_numTargetTasks = targetTasks.size();
+	}
 
 }

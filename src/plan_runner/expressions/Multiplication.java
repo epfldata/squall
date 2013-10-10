@@ -3,6 +3,7 @@ package plan_runner.expressions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import plan_runner.conversion.NumericConversion;
 import plan_runner.conversion.TypeConversion;
 import plan_runner.utilities.MyUtilities;
@@ -22,93 +23,76 @@ import plan_runner.visitors.ValueExpressionVisitor;
  */
 public class Multiplication<T extends Number & Comparable<T>> implements ValueExpression<T> {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    private List<ValueExpression> _veList = new ArrayList<ValueExpression>();
-    private NumericConversion<T> _wrapper;
+	private final List<ValueExpression> _veList = new ArrayList<ValueExpression>();
+	private final NumericConversion<T> _wrapper;
 
-    public Multiplication(ValueExpression ve1, ValueExpression ve2,
-            ValueExpression... veArray){
-        _veList.add(ve1);
-        _veList.add(ve2);
-        _veList.addAll(Arrays.asList(veArray));
-        _wrapper = (NumericConversion<T>) MyUtilities.getDominantNumericType(_veList);
-    }
+	public Multiplication(ValueExpression ve1, ValueExpression ve2, ValueExpression... veArray) {
+		_veList.add(ve1);
+		_veList.add(ve2);
+		_veList.addAll(Arrays.asList(veArray));
+		_wrapper = (NumericConversion<T>) MyUtilities.getDominantNumericType(_veList);
+	}
 
-    @Override
-    public T eval(List<String> tuple){
-        double result = 1;
-        for(ValueExpression factor: _veList){
-            Object currentVal = factor.eval(tuple);
-            NumericConversion currentType = (NumericConversion) factor.getType();
-            result *= currentType.toDouble(currentVal);
-        }
-        return _wrapper.fromDouble(result);
-    }
-    
-    /*@Override
-    public T eval(List<String> firstTuple, List<String> secondTuple){
-        double result = 1;
-        
-    	ValueExpression<T> factor = _veList.get(0);
-        T value = (T)factor.eval(firstTuple);
-        result *= _wrapper.toDouble(value);
-        
-        factor = _veList.get(1);
-        value = (T)factor.eval(secondTuple);
-        result *= _wrapper.toDouble(value);
+	@Override
+	public void accept(ValueExpressionVisitor vev) {
+		vev.visit(this);
+	}
 
-        return _wrapper.fromDouble(result);
-    }*/
-
-     @Override
-    public String evalString(List<String> tuple) {
-        T result = eval(tuple);
-        return _wrapper.toString(result);
-    }
-
-    @Override
-    public TypeConversion getType(){
-        return _wrapper;
-    }
-
-    @Override
-    public void accept(ValueExpressionVisitor vev) {
-        vev.visit(this);
-    }
-
-    @Override
-    public List<ValueExpression> getInnerExpressions() {
-        return _veList;
-    }
-
-    @Override
-    public String toString(){
-        StringBuilder sb = new StringBuilder();
-        for(int i=0; i<_veList.size(); i++){
-            sb.append("(").append(_veList.get(i)).append(")");
-            if(i!=_veList.size()-1){
-                sb.append(" * ");
-            }
-        }
-        return sb.toString();
-    }
-
-    @Override
+	@Override
 	public void changeValues(int i, ValueExpression<T> newExpr) {
-    	_veList.remove(i);
-    	_veList.add(i, newExpr);		
+		_veList.remove(i);
+		_veList.add(i, newExpr);
+	}
+
+	@Override
+	public T eval(List<String> tuple) {
+		double result = 1;
+		for (final ValueExpression factor : _veList) {
+			final Object currentVal = factor.eval(tuple);
+			final NumericConversion currentType = (NumericConversion) factor.getType();
+			result *= currentType.toDouble(currentVal);
+		}
+		return _wrapper.fromDouble(result);
+	}
+
+	@Override
+	public String evalString(List<String> tuple) {
+		final T result = eval(tuple);
+		return _wrapper.toString(result);
+	}
+
+	@Override
+	public List<ValueExpression> getInnerExpressions() {
+		return _veList;
+	}
+
+	@Override
+	public TypeConversion getType() {
+		return _wrapper;
 	}
 
 	@Override
 	public void inverseNumber() {
-		//nothing
-		
+		// nothing
+
 	}
 
 	@Override
 	public boolean isNegative() {
 		return false;
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < _veList.size(); i++) {
+			sb.append("(").append(_veList.get(i)).append(")");
+			if (i != _veList.size() - 1)
+				sb.append(" * ");
+		}
+		return sb.toString();
 	}
 
 }

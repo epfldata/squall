@@ -1,21 +1,29 @@
 package plan_runner.conversion;
 
-import java.util.Date;
+public class DateIntegerConversion implements NumericConversion<Integer> {
 
-public class DateIntegerConversion implements NumericConversion<Integer>{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	@Override
-	public Integer fromString(String str) {
-		String[] splits=str.split("-");
-		int year=Integer.parseInt(splits[0])*10000;
-		int month=Integer.parseInt(splits[1])*100;
-		int day=Integer.parseInt(splits[2]);
-		return year+month+day;
+	public Integer fromDouble(double d) {
+		return (int) d;
 	}
 
 	@Override
-	public String toString(Integer obj) {
-		return obj.toString();
+	public Integer fromString(String str) {
+		final String[] splits = str.split("-");
+		final int year = Integer.parseInt(splits[0]) * 10000;
+		final int month = Integer.parseInt(splits[1]) * 100;
+		final int day = Integer.parseInt(splits[2]);
+		return year + month + day;
+	}
+
+	@Override
+	public double getDistance(Integer bigger, Integer smaller) {
+		return bigger - smaller;
 	}
 
 	@Override
@@ -24,18 +32,13 @@ public class DateIntegerConversion implements NumericConversion<Integer>{
 	}
 
 	@Override
-	public double getDistance(Integer bigger, Integer smaller) {
-		return bigger-smaller;
-	}
-
-	@Override
-	public Integer fromDouble(double d) {
-		return (int)d;
-	}
-
-	@Override
 	public double toDouble(Object obj) {
-		return (Integer)obj;
+		return (Integer) obj;
+	}
+
+	@Override
+	public String toString(Integer obj) {
+		return obj.toString();
 	}
 
 }

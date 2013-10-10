@@ -4,7 +4,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.log4j.Logger;
+
 import plan_runner.components.DataSourceComponent;
 import plan_runner.components.EquiJoinComponent;
 import plan_runner.conversion.DateConversion;
@@ -25,215 +27,168 @@ import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.BetweenPredicate;
 import plan_runner.predicates.ComparisonPredicate;
 
-
 public class TPCH8Plan {
-    private static Logger LOG = Logger.getLogger(TPCH8Plan.class);
+	private static Logger LOG = Logger.getLogger(TPCH8Plan.class);
 
-    private QueryPlan _queryPlan = new QueryPlan();
+	private final QueryPlan _queryPlan = new QueryPlan();
 
-   // the field nation is not used, since we cannot provide final result if having more final components
-   private static final String _nation="BRAZIL";
-   private static final String _region="AMERICA";
-   private static final String _type="ECONOMY ANODIZED STEEL";
-   private static final String _date1Str = "1995-01-01";
-   private static final String _date2Str = "1996-12-31";
+	private static final String _region = "AMERICA";
+	private static final String _type = "ECONOMY ANODIZED STEEL";
+	private static final String _date1Str = "1995-01-01";
+	private static final String _date2Str = "1996-12-31";
 
-   private static final TypeConversion<Date> _dateConv = new DateConversion();
-   private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
-   private static final TypeConversion<String> _sc = new StringConversion();
+	private static final TypeConversion<Date> _dateConv = new DateConversion();
+	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
+	private static final TypeConversion<String> _sc = new StringConversion();
 
-   private static final Date _date1=_dateConv.fromString(_date1Str);
-   private static final Date _date2=_dateConv.fromString(_date2Str);
+	private static final Date _date1 = _dateConv.fromString(_date1Str);
+	private static final Date _date2 = _dateConv.fromString(_date2Str);
 
+	public TPCH8Plan(String dataPath, String extension, Map conf) {
+		// -------------------------------------------------------------------------------------
+		final List<Integer> hashRegion = Arrays.asList(0);
 
-   public TPCH8Plan(String dataPath, String extension, Map conf){
-        //-------------------------------------------------------------------------------------
-        List<Integer> hashRegion = Arrays.asList(0);
+		final SelectOperator selectionRegion = new SelectOperator(new ComparisonPredicate(
+				new ColumnReference(_sc, 1), new ValueSpecification(_sc, _region)));
 
-        SelectOperator selectionRegion = new SelectOperator(
-                new ComparisonPredicate(
-                    new ColumnReference(_sc, 1),
-                    new ValueSpecification(_sc, _region)
-                ));
-        
-        ProjectOperator projectionRegion = new ProjectOperator(new int[]{0});
+		final ProjectOperator projectionRegion = new ProjectOperator(new int[] { 0 });
 
-        DataSourceComponent relationRegion = new DataSourceComponent(
-                "REGION",
-                dataPath + "region" + extension,
-                _queryPlan).setHashIndexes(hashRegion)
-                           .addOperator(selectionRegion)
-                           .addOperator(projectionRegion);
+		final DataSourceComponent relationRegion = new DataSourceComponent("REGION", dataPath
+				+ "region" + extension, _queryPlan).setHashIndexes(hashRegion)
+				.addOperator(selectionRegion).addOperator(projectionRegion);
 
-        //-------------------------------------------------------------------------------------
-        List<Integer> hashNation1 = Arrays.asList(1);
+		// -------------------------------------------------------------------------------------
+		final List<Integer> hashNation1 = Arrays.asList(1);
 
-        ProjectOperator projectionNation1 = new ProjectOperator(new int[]{0,2});
+		final ProjectOperator projectionNation1 = new ProjectOperator(new int[] { 0, 2 });
 
-        DataSourceComponent relationNation1 = new DataSourceComponent(
-                "NATION1",
-                dataPath + "nation" + extension,
-                _queryPlan).setHashIndexes(hashNation1)
-                           .addOperator(projectionNation1);
+		final DataSourceComponent relationNation1 = new DataSourceComponent("NATION1", dataPath
+				+ "nation" + extension, _queryPlan).setHashIndexes(hashNation1).addOperator(
+				projectionNation1);
 
-        //-------------------------------------------------------------------------------------
-        EquiJoinComponent R_Njoin = new EquiJoinComponent(
-                relationRegion,
-                relationNation1,
-                _queryPlan).addOperator(new ProjectOperator(new int[]{1}))
-                           .setHashIndexes(Arrays.asList(0));
-        
-        //-------------------------------------------------------------------------------------
-        List<Integer> hashCustomer = Arrays.asList(0);
+		// -------------------------------------------------------------------------------------
+		final EquiJoinComponent R_Njoin = new EquiJoinComponent(relationRegion, relationNation1,
+				_queryPlan).addOperator(new ProjectOperator(new int[] { 1 })).setHashIndexes(
+				Arrays.asList(0));
 
-        ProjectOperator projectionCustomer = new ProjectOperator(new int[]{3,0});
+		// -------------------------------------------------------------------------------------
+		final List<Integer> hashCustomer = Arrays.asList(0);
 
-        DataSourceComponent relationCustomer = new DataSourceComponent(
-                "CUSTOMER",
-                dataPath + "customer" + extension,
-                _queryPlan).setHashIndexes(hashCustomer)
-                           .addOperator(projectionCustomer);
+		final ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 3, 0 });
 
-        //-------------------------------------------------------------------------------------
-        EquiJoinComponent R_N_Cjoin = new EquiJoinComponent(
-                R_Njoin,
-                relationCustomer,
-                _queryPlan).addOperator(new ProjectOperator(new int[]{1}))
-                           .setHashIndexes(Arrays.asList(0));
+		final DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath
+				+ "customer" + extension, _queryPlan).setHashIndexes(hashCustomer).addOperator(
+				projectionCustomer);
 
-        //-------------------------------------------------------------------------------------
-        List<Integer> hashSupplier = Arrays.asList(1);
+		// -------------------------------------------------------------------------------------
+		final EquiJoinComponent R_N_Cjoin = new EquiJoinComponent(R_Njoin, relationCustomer,
+				_queryPlan).addOperator(new ProjectOperator(new int[] { 1 })).setHashIndexes(
+				Arrays.asList(0));
 
-        ProjectOperator projectionSupplier = new ProjectOperator(new int[]{0, 3});
+		// -------------------------------------------------------------------------------------
+		final List<Integer> hashSupplier = Arrays.asList(1);
 
-        DataSourceComponent relationSupplier = new DataSourceComponent(
-                "SUPPLIER",
-                dataPath + "supplier" + extension,
-                _queryPlan).setHashIndexes(hashSupplier)
-                           .addOperator(projectionSupplier);
+		final ProjectOperator projectionSupplier = new ProjectOperator(new int[] { 0, 3 });
 
-        //-------------------------------------------------------------------------------------
-        List<Integer> hashNation2 = Arrays.asList(0);
+		final DataSourceComponent relationSupplier = new DataSourceComponent("SUPPLIER", dataPath
+				+ "supplier" + extension, _queryPlan).setHashIndexes(hashSupplier).addOperator(
+				projectionSupplier);
 
-        ProjectOperator projectionNation2 = new ProjectOperator(new int[]{0, 1});
+		// -------------------------------------------------------------------------------------
+		final List<Integer> hashNation2 = Arrays.asList(0);
 
-        DataSourceComponent relationNation2 = new DataSourceComponent(
-                "NATION2",
-                dataPath + "nation" + extension,
-                _queryPlan).setHashIndexes(hashNation2)
-                           .addOperator(projectionNation2);
+		final ProjectOperator projectionNation2 = new ProjectOperator(new int[] { 0, 1 });
 
-        //-------------------------------------------------------------------------------------
-        EquiJoinComponent S_Njoin = new EquiJoinComponent(
-                relationSupplier,
-                relationNation2,
-                _queryPlan).addOperator(new ProjectOperator(new int[]{0, 2}))
-                           .setHashIndexes(Arrays.asList(0));
+		final DataSourceComponent relationNation2 = new DataSourceComponent("NATION2", dataPath
+				+ "nation" + extension, _queryPlan).setHashIndexes(hashNation2).addOperator(
+				projectionNation2);
 
-        //-------------------------------------------------------------------------------------
-        List<Integer> hashPart = Arrays.asList(0);
+		// -------------------------------------------------------------------------------------
+		final EquiJoinComponent S_Njoin = new EquiJoinComponent(relationSupplier, relationNation2,
+				_queryPlan).addOperator(new ProjectOperator(new int[] { 0, 2 })).setHashIndexes(
+				Arrays.asList(0));
 
-        SelectOperator selectionPart = new SelectOperator(
-                new ComparisonPredicate(
-                    new ColumnReference(_sc, 4),
-                    new ValueSpecification(_sc, _type)
-                ));
+		// -------------------------------------------------------------------------------------
+		final List<Integer> hashPart = Arrays.asList(0);
 
-        ProjectOperator projectionPart = new ProjectOperator(new int[]{0});
+		final SelectOperator selectionPart = new SelectOperator(new ComparisonPredicate(
+				new ColumnReference(_sc, 4), new ValueSpecification(_sc, _type)));
 
-        DataSourceComponent relationPart = new DataSourceComponent(
-                "PART",
-                dataPath + "part" + extension,
-                _queryPlan).setHashIndexes(hashPart)
-                           .addOperator(selectionPart)
-                           .addOperator(projectionPart);
+		final ProjectOperator projectionPart = new ProjectOperator(new int[] { 0 });
 
-        //-------------------------------------------------------------------------------------
-        List<Integer> hashLineitem = Arrays.asList(1);
+		final DataSourceComponent relationPart = new DataSourceComponent("PART", dataPath + "part"
+				+ extension, _queryPlan).setHashIndexes(hashPart).addOperator(selectionPart)
+				.addOperator(projectionPart);
 
-        //first field in projection
-        ColumnReference orderKey = new ColumnReference(_sc, 0);
-        //second field in projection
-        ColumnReference partKey = new ColumnReference(_sc, 1);
-        //third field in projection
-        ColumnReference suppKey = new ColumnReference(_sc, 2);
-        //forth field in projection
-        ValueExpression<Double> substract = new Subtraction(
-                new ValueSpecification(_doubleConv, 1.0),
-                new ColumnReference(_doubleConv, 6));
-            //extendedPrice*(1-discount)
-        ValueExpression<Double> product = new Multiplication(
-                new ColumnReference(_doubleConv, 5),
-                substract);
-        ProjectOperator projectionLineitem = new ProjectOperator(orderKey, partKey, suppKey, product);
+		// -------------------------------------------------------------------------------------
+		final List<Integer> hashLineitem = Arrays.asList(1);
 
-        DataSourceComponent relationLineitem = new DataSourceComponent(
-                "LINEITEM",
-                dataPath + "lineitem" + extension,
-                _queryPlan).setHashIndexes(hashLineitem)
-                           .addOperator(projectionLineitem);
+		// first field in projection
+		final ColumnReference orderKey = new ColumnReference(_sc, 0);
+		// second field in projection
+		final ColumnReference partKey = new ColumnReference(_sc, 1);
+		// third field in projection
+		final ColumnReference suppKey = new ColumnReference(_sc, 2);
+		// forth field in projection
+		final ValueExpression<Double> substract = new Subtraction(new ValueSpecification(
+				_doubleConv, 1.0), new ColumnReference(_doubleConv, 6));
+		// extendedPrice*(1-discount)
+		final ValueExpression<Double> product = new Multiplication(new ColumnReference(_doubleConv,
+				5), substract);
+		final ProjectOperator projectionLineitem = new ProjectOperator(orderKey, partKey, suppKey,
+				product);
 
-        //-------------------------------------------------------------------------------------
-        EquiJoinComponent P_Ljoin = new EquiJoinComponent(
-                relationPart,
-                relationLineitem,
-                _queryPlan).addOperator(new ProjectOperator(new int[]{1,2,3}))
-                           .setHashIndexes(Arrays.asList(0));
+		final DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
+				+ "lineitem" + extension, _queryPlan).setHashIndexes(hashLineitem).addOperator(
+				projectionLineitem);
 
-       //-------------------------------------------------------------------------------------
-        List<Integer> hashOrders = Arrays.asList(0);
+		// -------------------------------------------------------------------------------------
+		final EquiJoinComponent P_Ljoin = new EquiJoinComponent(relationPart, relationLineitem,
+				_queryPlan).addOperator(new ProjectOperator(new int[] { 1, 2, 3 })).setHashIndexes(
+				Arrays.asList(0));
 
-        SelectOperator selectionOrders = new SelectOperator(
-                new BetweenPredicate(
-                    new ColumnReference(_dateConv, 4),
-                    true, new ValueSpecification(_dateConv, _date1),
-                    true, new ValueSpecification(_dateConv, _date2)
-                ));
+		// -------------------------------------------------------------------------------------
+		final List<Integer> hashOrders = Arrays.asList(0);
 
-        //first field in projection
-        ValueExpression OrdersOrderKey = new ColumnReference(_sc, 0);
-        //second field in projection
-        ValueExpression OrdersCustKey = new ColumnReference(_sc, 1);
-         //third field in projection
-        ValueExpression OrdersExtractYear = new IntegerYearFromDate(
-            new ColumnReference<Date>(_dateConv, 4));
-        ProjectOperator projectionOrders = new ProjectOperator(OrdersOrderKey, OrdersCustKey, OrdersExtractYear);
+		final SelectOperator selectionOrders = new SelectOperator(new BetweenPredicate(
+				new ColumnReference(_dateConv, 4), true, new ValueSpecification(_dateConv, _date1),
+				true, new ValueSpecification(_dateConv, _date2)));
 
-        DataSourceComponent relationOrders = new DataSourceComponent(
-                "ORDERS",
-                dataPath + "orders" + extension,
-                _queryPlan).setHashIndexes(hashOrders)
-                           .addOperator(selectionOrders)
-                           .addOperator(projectionOrders);
+		// first field in projection
+		final ValueExpression OrdersOrderKey = new ColumnReference(_sc, 0);
+		// second field in projection
+		final ValueExpression OrdersCustKey = new ColumnReference(_sc, 1);
+		// third field in projection
+		final ValueExpression OrdersExtractYear = new IntegerYearFromDate(
+				new ColumnReference<Date>(_dateConv, 4));
+		final ProjectOperator projectionOrders = new ProjectOperator(OrdersOrderKey, OrdersCustKey,
+				OrdersExtractYear);
 
-        //-------------------------------------------------------------------------------------
-        EquiJoinComponent P_L_Ojoin = new EquiJoinComponent(
-                P_Ljoin,
-                relationOrders,
-                _queryPlan).addOperator(new ProjectOperator(new int[]{1,2,3,4}))
-                           .setHashIndexes(Arrays.asList(0));
+		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
+				+ "orders" + extension, _queryPlan).setHashIndexes(hashOrders)
+				.addOperator(selectionOrders).addOperator(projectionOrders);
 
-        //-------------------------------------------------------------------------------------
-        EquiJoinComponent S_N_P_L_Ojoin = new EquiJoinComponent(
-                S_Njoin,
-                P_L_Ojoin,
-                _queryPlan).addOperator(new ProjectOperator(new int[]{1,2,3,4}))
-                           .setHashIndexes(Arrays.asList(2));
+		// -------------------------------------------------------------------------------------
+		final EquiJoinComponent P_L_Ojoin = new EquiJoinComponent(P_Ljoin, relationOrders,
+				_queryPlan).addOperator(new ProjectOperator(new int[] { 1, 2, 3, 4 }))
+				.setHashIndexes(Arrays.asList(0));
 
-        //-------------------------------------------------------------------------------------
-        AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_doubleConv, 2), conf)
-                .setGroupByColumns(Arrays.asList(1, 3));
+		// -------------------------------------------------------------------------------------
+		final EquiJoinComponent S_N_P_L_Ojoin = new EquiJoinComponent(S_Njoin, P_L_Ojoin,
+				_queryPlan).addOperator(new ProjectOperator(new int[] { 1, 2, 3, 4 }))
+				.setHashIndexes(Arrays.asList(2));
 
-        EquiJoinComponent R_N_C_S_N_P_L_Ojoin = new EquiJoinComponent(
-                R_N_Cjoin,
-                S_N_P_L_Ojoin,
-                _queryPlan).addOperator(agg);
+		// -------------------------------------------------------------------------------------
+		final AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_doubleConv, 2),
+				conf).setGroupByColumns(Arrays.asList(1, 3));
 
-        //-------------------------------------------------------------------------------------
-        
-   }
-   
-   public QueryPlan getQueryPlan() {
-    return _queryPlan;
-   }
+		new EquiJoinComponent(R_N_Cjoin, S_N_P_L_Ojoin, _queryPlan).addOperator(agg);
+
+		// -------------------------------------------------------------------------------------
+
+	}
+
+	public QueryPlan getQueryPlan() {
+		return _queryPlan;
+	}
 }

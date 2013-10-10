@@ -3,8 +3,11 @@ package plan_runner.query_plans;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.log4j.Logger;
+
 import plan_runner.components.DataSourceComponent;
+import plan_runner.components.ThetaJoinDynamicComponentAdvisedEpochs;
 import plan_runner.components.ThetaJoinStaticComponent;
 import plan_runner.conversion.DoubleConversion;
 import plan_runner.conversion.IntegerConversion;
@@ -24,81 +27,73 @@ public class ThetaInputDominatedPlan {
 
 	private static Logger LOG = Logger.getLogger(ThetaInputDominatedPlan.class);
 
-	private QueryPlan _queryPlan = new QueryPlan();
+	private final QueryPlan _queryPlan = new QueryPlan();
 
 	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
 	private static final IntegerConversion _ic = new IntegerConversion();
 
-        /*
-         *  SELECT SUM(LINEITEM.EXTENDEDPRICE*(1-LINEITEM.DISCOUNT))
-         *  FROM LINEITEM, ORDERS
-         *  WHERE LINEITEM.ORDERKEY = ORDERS.ORDERKEY AND
-         *  ORDERS.TOTALPRICE > 10*LINEITEM.EXTENDEDPRICE
-         */
+	/*
+	 * SELECT SUM(LINEITEM.EXTENDEDPRICE*(1-LINEITEM.DISCOUNT)) FROM LINEITEM,
+	 * ORDERS WHERE LINEITEM.ORDERKEY = ORDERS.ORDERKEY AND ORDERS.TOTALPRICE >
+	 * 10*LINEITEM.EXTENDEDPRICE
+	 */
 	public ThetaInputDominatedPlan(String dataPath, String extension, Map conf) {
+		final int Theta_JoinType = ThetaQueryPlansParameters.getThetaJoinType(conf);
+		// -------------------------------------------------------------------------------------
+		final List<Integer> hashLineitem = Arrays.asList(0);
+
+		final ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0, 5, 6 });
+
+		final DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
+				+ "lineitem" + extension, _queryPlan).setHashIndexes(hashLineitem).addOperator(
+				projectionLineitem);
 
 		// -------------------------------------------------------------------------------------
-		List<Integer> hashLineitem = Arrays.asList(0);
+		final List<Integer> hashOrders = Arrays.asList(1);
 
-		ProjectOperator projectionLineitem = new ProjectOperator(
-				new int[] { 0, 5, 6 });
+		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 3 });
 
-		DataSourceComponent relationLineitem = new DataSourceComponent(
-				"LINEITEM",
-                                dataPath + "lineitem" + extension,
-				_queryPlan).setHashIndexes(hashLineitem)
-				           .addOperator(projectionLineitem);
+		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
+				+ "orders" + extension, _queryPlan).setHashIndexes(hashOrders).addOperator(
+				projectionOrders);
 
 		// -------------------------------------------------------------------------------------
-		List<Integer> hashOrders= Arrays.asList(1);
 
-		ProjectOperator projectionOrders = new ProjectOperator(
-				new int[] { 0, 3 });
+		// set up aggregation function on the StormComponent(Bolt) where join is
+		// performed
+		// 1 - discount
+		final ValueExpression<Double> substract = new Subtraction(new ValueSpecification(
+				_doubleConv, 1.0), new ColumnReference(_doubleConv, 1));
+		// extendedPrice*(1-discount)
+		final ValueExpression<Double> product = new Multiplication(new ColumnReference(_doubleConv,
+				0), substract);
+		final AggregateOperator agg = new AggregateSumOperator(product, conf);
 
-		DataSourceComponent relationOrders = new DataSourceComponent(
-				"ORDERS",
-                                dataPath + "orders" + extension,
-				_queryPlan).setHashIndexes(hashOrders)
-				           .addOperator(projectionOrders);
+		// /Join predicate
+		final ColumnReference colLineItems = new ColumnReference(_ic, 0);
+		final ColumnReference colOrders = new ColumnReference(_ic, 0);
+		final ComparisonPredicate pred1 = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP,
+				colLineItems, colOrders);
 
-		//-------------------------------------------------------------------------------------
+		final ValueSpecification value10 = new ValueSpecification(_doubleConv, 10.0);
+		final ColumnReference colLineItemsInequality = new ColumnReference(_doubleConv, 1);
+		final Multiplication mult = new Multiplication(value10, colLineItemsInequality);
+		final ColumnReference colOrdersInequality = new ColumnReference(_doubleConv, 1);
+		final ComparisonPredicate pred2 = new ComparisonPredicate(ComparisonPredicate.LESS_OP,
+				mult, colOrdersInequality);
 
-		// set up aggregation function on the StormComponent(Bolt) where join is performed
+		final AndPredicate overallPred = new AndPredicate(pred1, pred2);
 
-		//1 - discount
-		ValueExpression<Double> substract = new Subtraction(
-				new ValueSpecification(_doubleConv, 1.0),
-				new ColumnReference(_doubleConv, 1));
-		//extendedPrice*(1-discount)
-		ValueExpression<Double> product = new Multiplication(
-				new ColumnReference(_doubleConv, 0),
-				substract);
-		AggregateOperator agg = new AggregateSumOperator(product, conf);
-		
-		///Join predicate
-		ColumnReference colLineItems = new ColumnReference(_ic, 0);
-		ColumnReference colOrders = new ColumnReference(_ic, 0);
-		ComparisonPredicate pred1 = new ComparisonPredicate(
-				ComparisonPredicate.EQUAL_OP, colLineItems, colOrders);
-		
-		ValueSpecification value10 = new ValueSpecification(_doubleConv,10.0);
-		ColumnReference colLineItemsInequality = new ColumnReference(_doubleConv, 1);
-		Multiplication mult = new Multiplication(value10, colLineItemsInequality);
-		ColumnReference colOrdersInequality = new ColumnReference(_doubleConv, 1);
-		//ComparisonPredicate pred2 = new ComparisonPredicate(ComparisonPredicate.LESS_OP,mult, colOrdersInequality);
-		ComparisonPredicate pred2 = new ComparisonPredicate(ComparisonPredicate.LESS_OP, mult, colOrdersInequality);
-		
-		AndPredicate overallPred= new AndPredicate(pred1, pred2);
-		
-		ThetaJoinStaticComponent LINEITEMS_ORDERSjoin = new ThetaJoinStaticComponent(
-				relationLineitem,
-				relationOrders,
-				_queryPlan).setJoinPredicate(overallPred)
-                                         //.setJoinPredicate(pred2)
-				           .addOperator(new ProjectOperator(new int[]{1, 2, 4}))
-				           .addOperator(agg);
-		
-		//-------------------------------------------------------------------------------------
+		if (Theta_JoinType == 0)
+			new ThetaJoinStaticComponent(relationLineitem, relationOrders, _queryPlan)
+					.setJoinPredicate(overallPred)
+					.addOperator(new ProjectOperator(new int[] { 1, 2, 4 })).addOperator(agg);
+		else if (Theta_JoinType == 3)
+			new ThetaJoinDynamicComponentAdvisedEpochs(relationLineitem, relationOrders, _queryPlan)
+					.setJoinPredicate(overallPred)
+					.addOperator(new ProjectOperator(new int[] { 1, 2, 4 })).addOperator(agg);
+
+		// -------------------------------------------------------------------------------------
 
 	}
 

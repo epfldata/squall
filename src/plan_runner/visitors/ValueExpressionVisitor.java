@@ -10,15 +10,22 @@ import plan_runner.expressions.StringConcatenate;
 import plan_runner.expressions.Subtraction;
 import plan_runner.expressions.ValueSpecification;
 
-
 public interface ValueExpressionVisitor {
-    public void visit(Addition add);
-    public void visit(ColumnReference cr);
-    public void visit(DateSum ds);
-    public void visit(IntegerYearFromDate iyfd);
-    public void visit(Multiplication mult);
-    public void visit(Division dvsn);
-    public void visit(StringConcatenate sc);
-    public void visit(Subtraction sub);
-    public void visit(ValueSpecification vs);
+	public void visit(Addition add);
+
+	public void visit(ColumnReference cr);
+
+	public void visit(DateSum ds);
+
+	public void visit(Division dvsn);
+
+	public void visit(IntegerYearFromDate iyfd);
+
+	public void visit(Multiplication mult);
+
+	public void visit(StringConcatenate sc);
+
+	public void visit(Subtraction sub);
+
+	public void visit(ValueSpecification vs);
 }

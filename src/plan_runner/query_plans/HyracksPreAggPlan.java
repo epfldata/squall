@@ -22,58 +22,49 @@ import plan_runner.storage.AggregationStorage;
 public class HyracksPreAggPlan {
 	private static Logger LOG = Logger.getLogger(HyracksPreAggPlan.class);
 
-	private QueryPlan _queryPlan = new QueryPlan();
+	private final QueryPlan _queryPlan = new QueryPlan();
 
 	private static final DoubleConversion _dc = new DoubleConversion();
 	private static final StringConversion _sc = new StringConversion();
 	private static final LongConversion _lc = new LongConversion();
 
-	public HyracksPreAggPlan(String dataPath, String extension, Map conf){
-		//-------------------------------------------------------------------------------------
+	public HyracksPreAggPlan(String dataPath, String extension, Map conf) {
+		// -------------------------------------------------------------------------------------
 		// start of query plan filling
-		ProjectOperator projectionCustomer = new ProjectOperator(new int[]{0, 6});
-		List<Integer> hashCustomer = Arrays.asList(0);
-		DataSourceComponent relationCustomer = new DataSourceComponent(
-				"CUSTOMER",
-				dataPath + "customer" + extension,
-				_queryPlan).addOperator(projectionCustomer)
-                                           .setHashIndexes(hashCustomer);
+		final ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0, 6 });
+		final List<Integer> hashCustomer = Arrays.asList(0);
+		final DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath
+				+ "customer" + extension, _queryPlan).addOperator(projectionCustomer)
+				.setHashIndexes(hashCustomer);
 
-		//-------------------------------------------------------------------------------------
-		ProjectOperator projectionOrders = new ProjectOperator(new int[]{1});
-		List<Integer> hashOrders = Arrays.asList(0);
-		DataSourceComponent relationOrders = new DataSourceComponent(
-				"ORDERS",
-				dataPath + "orders" + extension,
-				_queryPlan).addOperator(projectionOrders)
-			                   .setHashIndexes(hashOrders);
+		// -------------------------------------------------------------------------------------
+		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 1 });
+		final List<Integer> hashOrders = Arrays.asList(0);
+		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
+				+ "orders" + extension, _queryPlan).addOperator(projectionOrders).setHashIndexes(
+				hashOrders);
 
-		//-------------------------------------------------------------------------------------
-		ProjectOperator projFirstOut = new ProjectOperator(
-				new ColumnReference(_sc, 1),
+		// -------------------------------------------------------------------------------------
+		final ProjectOperator projFirstOut = new ProjectOperator(new ColumnReference(_sc, 1),
 				new ValueSpecification(_sc, "1"));
-		ProjectOperator projSecondOut = new ProjectOperator(new int[]{1, 2});
-		AggregationStorage secondJoinStorage = new AggregationStorage(
-				new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(0)),
-				_lc, conf, false);
+		final ProjectOperator projSecondOut = new ProjectOperator(new int[] { 1, 2 });
+		final AggregationStorage secondJoinStorage = new AggregationStorage(
+				new AggregateCountOperator(conf).setGroupByColumns(Arrays.asList(0)), _lc, conf,
+				false);
 
-		List<Integer> hashIndexes = Arrays.asList(0);
-		EquiJoinComponent CUSTOMER_ORDERSjoin = new EquiJoinComponent(
-				relationCustomer,
-				relationOrders,
-				_queryPlan).setFirstPreAggProj(projFirstOut)
-                           .setSecondPreAggProj(projSecondOut)
-                           .setSecondPreAggStorage(secondJoinStorage)
-                           .setHashIndexes(hashIndexes);
+		final List<Integer> hashIndexes = Arrays.asList(0);
+		final EquiJoinComponent CUSTOMER_ORDERSjoin = new EquiJoinComponent(relationCustomer,
+				relationOrders, _queryPlan).setFirstPreAggProj(projFirstOut)
+				.setSecondPreAggProj(projSecondOut).setSecondPreAggStorage(secondJoinStorage)
+				.setHashIndexes(hashIndexes);
 
-		//-------------------------------------------------------------------------------------           
-		AggregateSumOperator agg = new AggregateSumOperator(new ColumnReference(_dc, 1), conf)
-			.setGroupByColumns(Arrays.asList(0));
+		// -------------------------------------------------------------------------------------
+		final AggregateSumOperator agg = new AggregateSumOperator(new ColumnReference(_dc, 1), conf)
+				.setGroupByColumns(Arrays.asList(0));
 
-		OperatorComponent oc = new OperatorComponent(CUSTOMER_ORDERSjoin, "COUNTAGG", _queryPlan)
-			.addOperator(agg);
+		new OperatorComponent(CUSTOMER_ORDERSjoin, "COUNTAGG", _queryPlan).addOperator(agg);
 
-		//-------------------------------------------------------------------------------------
+		// -------------------------------------------------------------------------------------
 
 	}
 

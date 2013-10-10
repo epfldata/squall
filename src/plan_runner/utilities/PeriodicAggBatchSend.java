@@ -2,35 +2,37 @@ package plan_runner.utilities;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import plan_runner.storm_components.StormComponent;
 
+import plan_runner.storm_components.StormComponent;
 
 public class PeriodicAggBatchSend extends Timer {
 
-    private PeriodicTask _pt;
-    private StormComponent _comp;
+	public class PeriodicTask extends TimerTask {
+		private final StormComponent _comp;
 
-    public PeriodicAggBatchSend(long period, StormComponent comp){
-        _comp = comp;
-        _pt = new PeriodicTask(comp);
+		public PeriodicTask(StormComponent comp) {
+			_comp = comp;
+		}
 
-        scheduleAtFixedRate(_pt, 0, period);
-    }
+		@Override
+		public void run() {
+			_comp.aggBatchSend();
+		}
+	}
 
-    public StormComponent getComponent(){
-        return _comp;
-    }
-    
-    public class PeriodicTask extends TimerTask{
-        private StormComponent _comp;
+	private final PeriodicTask _pt;
 
-        public PeriodicTask(StormComponent comp){
-            _comp = comp;
-        }
+	private final StormComponent _comp;
 
-        public void run(){
-            _comp.aggBatchSend();
-        }
-    }
+	public PeriodicAggBatchSend(long period, StormComponent comp) {
+		_comp = comp;
+		_pt = new PeriodicTask(comp);
+
+		scheduleAtFixedRate(_pt, 0, period);
+	}
+
+	public StormComponent getComponent() {
+		return _comp;
+	}
 
 }
