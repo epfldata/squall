@@ -14,14 +14,28 @@ public class DateConversion implements TypeConversion<Date> {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(DateConversion.class);
 
-	private static final String DATE_FORMAT = "yyyy-MM-dd";
+	private static final String STRING_DATE_FORMAT = "yyyy-MM-dd";
 
 	// this cannot be static, because a static field with a constructor cannot
 	// be serialized
-	private final SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
+	private final SimpleDateFormat string_format = new SimpleDateFormat(STRING_DATE_FORMAT);
 
+	private static final String INT_DATE_FORMAT = "yyyyMMdd";
+
+	// this cannot be static, because a static field with a constructor cannot
+	// be serialized
+	private final SimpleDateFormat int_format = new SimpleDateFormat(INT_DATE_FORMAT);
+	
 	@Override
 	public Date fromString(String str) {
+		return fromString(str, string_format);
+	}
+	
+	public Date fromLong(Long dateLong) {
+		return fromString(String.valueOf(dateLong), int_format);
+	}
+	
+	private Date fromString(String str, SimpleDateFormat format){
 		Date date = null;
 		try {
 			date = format.parse(str);
@@ -31,7 +45,7 @@ public class DateConversion implements TypeConversion<Date> {
 			throw new RuntimeException("Invalid Date Format for " + str);
 		}
 		return date;
-	}
+	}	
 
 	@Override
 	public double getDistance(Date bigger, Date smaller) {
@@ -53,7 +67,10 @@ public class DateConversion implements TypeConversion<Date> {
 
 	@Override
 	public String toString(Date obj) {
-		return format.format(obj);
+		return string_format.format(obj);
 	}
-
+	
+	public Long toLong(Date obj){
+		return Long.valueOf(int_format.format(obj));
+	}
 }

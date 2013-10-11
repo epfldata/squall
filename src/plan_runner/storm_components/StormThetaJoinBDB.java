@@ -20,6 +20,7 @@ import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.Predicate;
 import plan_runner.storage.BPlusTreeStore;
 import plan_runner.storage.BerkeleyDBStore;
+import plan_runner.storage.BerkeleyDBStoreSkewed;
 import plan_runner.storm_components.synchronization.TopologyKiller;
 import plan_runner.thetajoin.matrix_mapping.EquiMatrixAssignment;
 import plan_runner.utilities.MyUtilities;
@@ -188,6 +189,7 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 			storagePath = SystemParameters.getString(getConf(), "STORAGE_LOCAL_DIR");
 
 		// TODO We assume that there is only one index !!
+		/*
 		if (_typeOfValueIndexed.get(0) instanceof Integer) {
 			_firstRelationStorage = new BerkeleyDBStore(Integer.class, storagePath + "/first");
 			_secondRelationStorage = new BerkeleyDBStore(Integer.class, storagePath + "/second");
@@ -202,6 +204,24 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 			_secondRelationStorage = new BerkeleyDBStore(String.class, storagePath + "/second");
 		} else
 			throw new RuntimeException("non supported type");
+		LOG.info("Storage with Uniform BDB!");			
+		 */
+
+		if (_typeOfValueIndexed.get(0) instanceof Integer) {
+			_firstRelationStorage = new BerkeleyDBStoreSkewed(Integer.class, storagePath + "/first");
+			_secondRelationStorage = new BerkeleyDBStoreSkewed(Integer.class, storagePath + "/second");
+		} else if (_typeOfValueIndexed.get(0) instanceof Double) {
+			_firstRelationStorage = new BerkeleyDBStoreSkewed(Double.class, storagePath + "/first");
+			_secondRelationStorage = new BerkeleyDBStoreSkewed(Double.class, storagePath + "/second");
+		} else if (_typeOfValueIndexed.get(0) instanceof Date) {
+			_firstRelationStorage = new BerkeleyDBStoreSkewed(Date.class, storagePath + "/first");
+			_secondRelationStorage = new BerkeleyDBStoreSkewed(Date.class, storagePath + "/second");
+		} else if (_typeOfValueIndexed.get(0) instanceof String) {
+			_firstRelationStorage = new BerkeleyDBStoreSkewed(String.class, storagePath + "/first");
+			_secondRelationStorage = new BerkeleyDBStoreSkewed(String.class, storagePath + "/second");
+		} else
+			throw new RuntimeException("non supported type");
+		LOG.info("Storage with Skewed BDB!");
 
 		if (_joinPredicate != null)
 			_existIndexes = true;

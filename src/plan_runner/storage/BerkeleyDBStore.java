@@ -10,11 +10,13 @@ import java.util.Date;
 import java.util.List;
 
 import plan_runner.conversion.DateConversion;
+import plan_runner.conversion.TypeConversion;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.utilities.SystemParameters;
 
 import com.sleepycat.bind.tuple.DoubleBinding;
 import com.sleepycat.bind.tuple.IntegerBinding;
+import com.sleepycat.bind.tuple.LongBinding;
 import com.sleepycat.bind.tuple.StringBinding;
 import com.sleepycat.je.CacheMode;
 import com.sleepycat.je.Cursor;
@@ -28,22 +30,6 @@ import com.sleepycat.je.OperationStatus;
 import com.sleepycat.je.StatsConfig;
 
 public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
-	public static void main(String[] args) {
-		final String storagePath = "storage";
-
-		// // scenario 1
-		// BerkeleyDBStore<String> store = new BerkeleyDBStore(String.class,
-		// storagePath);
-		// store.testStrings();
-
-		// scenario 2
-		final BerkeleyDBStore<Integer> store = new BerkeleyDBStore(Integer.class, storagePath);
-		store.testInts();
-
-		System.out.println(store.getStatistics());
-		store.shutdown();
-	}
-
 	private String _storagePath;
 	private Environment _env;
 	private Database _db;
@@ -106,7 +92,7 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		databasePut(key, value);
 	}
 	
-	protected OperationStatus databasePut(KeyType key, String value){
+	protected OperationStatus databasePut(Object key, String value){
 		/* DatabaseEntry represents the key and data of each record */
 		final DatabaseEntry keyEntry = new DatabaseEntry();
 		final DatabaseEntry dataEntry = new DatabaseEntry();
@@ -147,7 +133,7 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 				.split(SystemParameters.STORE_TIMESTAMP_DELIMITER));
 	}
 	
-	protected String getValue(KeyType key) {
+	protected String getValue(Object key) {
 		// initialize key
 		final DatabaseEntry keyEntry = new DatabaseEntry();
 		final DatabaseEntry dataEntry = new DatabaseEntry();
@@ -175,7 +161,7 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		return getRange(leftBoundary, false, rightBoundary, false);
 	}	
 
-	protected List<String> getRange(KeyType leftBoundary, boolean includeLeft, KeyType rightBoundary, boolean includeRight) {
+	protected List<String> getRange(Object leftBoundary, boolean includeLeft, Object rightBoundary, boolean includeRight) {
 		final List<String> result = new ArrayList<String>();
 
 		// initialize left and rightBoundary
@@ -192,7 +178,7 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		}
 		while (status == OperationStatus.SUCCESS) {
 			// check if this is right of righBoundary
-			final KeyType currentKey = entryToObject(keyEntry);
+			final Object currentKey = entryToObject(keyEntry);
 			if (!isLessEqual(currentKey, rightBoundary, includeRight))
 				break;
 
@@ -208,7 +194,7 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		return result;
 	}
 	
-	private boolean isLessEqual(KeyType currentKey, KeyType rightBoundary, boolean includeRight) {
+	private boolean isLessEqual(Object currentKey, Object rightBoundary, boolean includeRight) {
 		final Comparable first = (Comparable) currentKey;
 		final Comparable second = (Comparable) rightBoundary;
 		final int compared = first.compareTo(second);
@@ -244,34 +230,38 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		return result;
 	}
 
-	protected void objectToEntry(KeyType key, DatabaseEntry keyEntry) {
+	protected void objectToEntry(Object key, DatabaseEntry keyEntry) {
 		if (key instanceof String)
 			StringBinding.stringToEntry((String) key, keyEntry);
 		else if (key instanceof Integer)
 			IntegerBinding.intToEntry((Integer) key, keyEntry);
+		else if (key instanceof Long)
+			LongBinding.longToEntry((Long) key, keyEntry);
 		else if (key instanceof Double)
 			DoubleBinding.doubleToEntry((Double) key, keyEntry);
 		else if (key instanceof Date) {
 			// luckily, the order of generated Strings conforms to the order of
 			// original Dates
-			final String dateStr = _dc.toString((Date) key);
-			StringBinding.stringToEntry(dateStr, keyEntry);
+			final Long dateLong = _dc.toLong((Date) key);
+			LongBinding.longToEntry(dateLong, keyEntry);
 		} else
 			throw new RuntimeException("Unexpected type " + key + " in BDB.objectToEntry!");
 	}
 	
-	protected KeyType entryToObject(DatabaseEntry keyEntry) {
+	protected Object entryToObject(DatabaseEntry keyEntry) {
 		if (_type == String.class)
-			return (KeyType) StringBinding.entryToString(keyEntry);
+			return StringBinding.entryToString(keyEntry);
 		else if (_type == Integer.class)
-			return (KeyType) (Integer) IntegerBinding.entryToInt(keyEntry);
+			return IntegerBinding.entryToInt(keyEntry);
 		// return (KeyType) new IntegerBinding().entryToObject(keyEntry);
 		// return (KeyType) (Integer) IntegerBinding.entryToInput(keyEntry);
+		else if (_type == Long.class)
+			return LongBinding.entryToLong(keyEntry);
 		else if (_type == Double.class)
-			return (KeyType) (Double) DoubleBinding.entryToDouble(keyEntry);
+			return DoubleBinding.entryToDouble(keyEntry);
 		else if (_type == Date.class) {
-			final String str = StringBinding.entryToString(keyEntry);
-			return (KeyType) _dc.fromString(str);
+			final Long dateLong = LongBinding.entryToLong(keyEntry);
+			return _dc.fromLong(dateLong);
 		} else
 			throw new RuntimeException("Unexpected type " + _type + " in BDB.objectToEntry!");
 	}
@@ -319,6 +309,10 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		// return (int) _db.count(); // does not work when duplicates end up in
 		// the same value
 		return _size;
+	}
+	
+	protected Class getType(){
+		return _type;
 	}
 
 	private void emptyFolder(File folder, boolean emptyRoot) {
@@ -396,9 +390,63 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		final List<String> range1 = getRangeIncludeEquals((KeyType) key1, 2);
 		for (final String tuple : range1)
 			System.out.println("Range1: For key = " + key1 + " in range 2, value = " + tuple);
-
 	}
 
+	public void testDates() {
+		TypeConversion<Date> dateConv = new DateConversion();
+		   
+		Date key1=dateConv.fromString("2013-10-31");
+		String value11 = "12";
+		String value12 = "11";
+		Date key2=dateConv.fromString("2013-11-01");
+		String value2 = "20";
+		Date key3=dateConv.fromString("2013-11-02");
+		Date key51=dateConv.fromString("2013-11-04");
+		String value51 = "505";
+		Date key52=dateConv.fromString("2013-11-04");		
+		String value52 = "5078";
+		Date key6=dateConv.fromString("2013-11-05");
+		String value6 = "605";
+
+		put((KeyType) key1, value11);
+		put((KeyType) key2, value2);
+		put((KeyType) key1, value12);
+		put((KeyType) key6, value6);
+		put((KeyType) key51, value51);
+		put((KeyType) key52, value52);
+
+		// print everything
+		final Cursor cursor = _db.openCursor(null, null);
+		final DatabaseEntry keyEntry = new DatabaseEntry();
+		final DatabaseEntry dataEntry = new DatabaseEntry();
+		while (cursor.getNext(keyEntry, dataEntry, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+			System.out.println("key=" + entryToObject(keyEntry) + " data="
+					+ StringBinding.entryToString(dataEntry));
+		cursor.close();
+
+		// test getEquals
+		final List<String> equalsA = getEqual((KeyType) key1);
+		for (final String tuple : equalsA)
+			System.out.println("Equals1: For key = " + key1 + " , value = " + tuple);
+
+		final List<String> equalsB = getEqual((KeyType) key2);
+		for (final String tuple : equalsB)
+			System.out.println("Equals2: For key = " + key2 + " , value = " + tuple);
+
+		// test getRangesIncludeEquals
+		final List<String> range3 = getRangeIncludeEquals((KeyType) key3, 2);
+		for (final String tuple : range3)
+			System.out.println("Range3: For key = " + key3 + " in range 2, value = " + tuple);
+
+		final List<String> range6 = getRangeIncludeEquals((KeyType) key6, 2);
+		for (final String tuple : range6)
+			System.out.println("Range6: For key = " + key6 + " in range 2, value = " + tuple);
+
+		final List<String> range1 = getRangeIncludeEquals((KeyType) key1, 2);
+		for (final String tuple : range1)
+			System.out.println("Range1: For key = " + key1 + " in range 2, value = " + tuple);
+	}
+	
 	// TESTING
 	public void testStrings() {
 		put((KeyType) "A", "AAAAAA");
@@ -418,4 +466,24 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 			System.out.println("For key = C, value = " + tuple);
 
 	}
+	
+	public static void main(String[] args) {
+		final String storagePath = "storage";
+
+		// // scenario 1
+		// BerkeleyDBStore<String> store = new BerkeleyDBStore(String.class,
+		// storagePath);
+		// store.testStrings();
+
+//		// scenario 2
+//		final BerkeleyDBStore<Integer> store = new BerkeleyDBStore(Integer.class, storagePath);
+//		store.testInts();
+
+		// scenario 3
+		final BerkeleyDBStore<Date> store = new BerkeleyDBStore(Date.class, storagePath);
+		store.testDates();
+		
+		System.out.println(store.getStatistics());
+		store.shutdown();
+	}	
 }
