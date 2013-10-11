@@ -23,8 +23,12 @@ import plan_runner.query_plans.ThetaHyracksPlan;
 import plan_runner.query_plans.ThetaInputDominatedPlan;
 import plan_runner.query_plans.ThetaMultipleJoinPlan;
 import plan_runner.query_plans.ThetaOutputDominatedPlan;
+import plan_runner.query_plans.ThetaTPCH10Plan;
+import plan_runner.query_plans.ThetaTPCH4Plan;
+import plan_runner.query_plans.ThetaTPCH5Plan;
 import plan_runner.query_plans.ThetaTPCH7Plan;
-import plan_runner.query_plans.ThetaTPCH7_L_S_N1Plan;
+import plan_runner.query_plans.ThetaTPCH8Plan;
+import plan_runner.query_plans.ThetaTPCH9Plan;
 import plan_runner.query_plans.debug.HyracksL1Plan;
 import plan_runner.query_plans.debug.HyracksL3BatchPlan;
 import plan_runner.query_plans.debug.HyracksL3Plan;
@@ -95,8 +99,18 @@ public class Main {
 			queryPlan = new TPCH9Plan(dataPath, extension, conf).getQueryPlan();
 		else if (queryName.equalsIgnoreCase("tpch10"))
 			queryPlan = new TPCH10Plan(dataPath, extension, conf).getQueryPlan();
+		else if (queryName.equalsIgnoreCase("theta_tpch4"))
+			queryPlan = new ThetaTPCH4Plan(dataPath, extension, conf).getQueryPlan();
+		else if (queryName.equalsIgnoreCase("theta_tpch5"))
+			queryPlan = new ThetaTPCH5Plan(dataPath, extension, conf).getQueryPlan();
 		else if (queryName.equalsIgnoreCase("theta_tpch7"))
 			queryPlan = new ThetaTPCH7Plan(dataPath, extension, conf).getQueryPlan();
+		else if (queryName.equalsIgnoreCase("theta_tpch8"))
+			queryPlan = new ThetaTPCH8Plan(dataPath, extension, conf).getQueryPlan();
+		else if (queryName.equalsIgnoreCase("theta_tpch9"))
+			queryPlan = new ThetaTPCH9Plan(dataPath, extension, conf).getQueryPlan();
+		else if (queryName.equalsIgnoreCase("theta_tpch10"))
+			queryPlan = new ThetaTPCH10Plan(dataPath, extension, conf).getQueryPlan();
 		else if (queryName.equalsIgnoreCase("theta_input_dominated"))
 			queryPlan = new ThetaInputDominatedPlan(dataPath, extension, conf).getQueryPlan();
 		else if (queryName.equalsIgnoreCase("theta_output_dominated"))
@@ -105,8 +119,6 @@ public class Main {
 			queryPlan = new ThetaMultipleJoinPlan(dataPath, extension, conf).getQueryPlan();
 		else if (queryName.equalsIgnoreCase("theta_hyracks"))
 			queryPlan = new ThetaHyracksPlan(dataPath, extension, conf).getQueryPlan();
-		else if (queryName.equalsIgnoreCase("theta_tpch7_L_S_N1"))
-			queryPlan = new ThetaTPCH7_L_S_N1Plan(dataPath, extension, conf).getQueryPlan();
 		if (queryPlan == null)
 			throw new RuntimeException("QueryPlan " + queryName + " doesn't exist in Main.java");
 		return queryPlan;

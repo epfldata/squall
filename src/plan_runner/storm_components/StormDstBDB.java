@@ -536,16 +536,16 @@ public class StormDstBDB extends BaseRichBolt implements StormJoin, StormCompone
 		final int diff = 0;
 		// Get the values from the index (check type first)
 		if (_typeOfValueIndexed.get(0) instanceof String)
-			return oppositeStorage.getValues(currentOperator, keyValue, diff);
+			return oppositeStorage.get(currentOperator, keyValue, diff);
 		// Even if valueIndexed is at first time an integer with
 		// precomputation a*col +b, it become a double
 		else if (_typeOfValueIndexed.get(0) instanceof Double)
-			return oppositeStorage.getValues(currentOperator, Double.parseDouble(keyValue), diff);
+			return oppositeStorage.get(currentOperator, Double.parseDouble(keyValue), diff);
 		else if (_typeOfValueIndexed.get(0) instanceof Integer)
-			return oppositeStorage.getValues(currentOperator, Integer.parseInt(keyValue), diff);
+			return oppositeStorage.get(currentOperator, Integer.parseInt(keyValue), diff);
 		else if (_typeOfValueIndexed.get(0) instanceof Date)
 			try {
-				return oppositeStorage.getValues(currentOperator, _format.parse(keyValue), diff);
+				return oppositeStorage.get(currentOperator, _format.parse(keyValue), diff);
 			} catch (final ParseException e) {
 				e.printStackTrace();
 				return null;

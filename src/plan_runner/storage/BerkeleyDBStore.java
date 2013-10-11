@@ -94,54 +94,132 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		// dbConfig.setSortedDuplicates(true);
 		_db = _env.openDatabase(null, "simpleDb", dbConfig);
 	}
-
-	private void emptyFolder(File folder, boolean emptyRoot) {
-		final File[] files = folder.listFiles();
-		if (files != null)
-			for (final File f : files)
-				if (f.isDirectory())
-					emptyFolder(f, true);
-				else
-					f.delete();
-		if (emptyRoot)
-			folder.delete();
+	
+	@Override
+	public void put(KeyType key, String value) {
+		incrementSize();
+		final String oldValue = getValue(key);
+		if (oldValue != null)
+			// TODO watch-out not to use BDB with Timestamps!!!
+			value = oldValue + SystemParameters.STORE_TIMESTAMP_DELIMITER + value;
+		
+		databasePut(key, value);
 	}
+	
+	protected OperationStatus databasePut(KeyType key, String value){
+		/* DatabaseEntry represents the key and data of each record */
+		final DatabaseEntry keyEntry = new DatabaseEntry();
+		final DatabaseEntry dataEntry = new DatabaseEntry();
+		
+		/* Use a binding to convert the int into a DatabaseEntry. */		
+		objectToEntry(key, keyEntry);
+		StringBinding.stringToEntry(value, dataEntry);
 
-	private KeyType entryToObject(DatabaseEntry keyEntry) {
-		if (_type == String.class)
-			return (KeyType) StringBinding.entryToString(keyEntry);
-		else if (_type == Integer.class)
-			return (KeyType) (Integer) IntegerBinding.entryToInt(keyEntry);
-		// return (KeyType) new IntegerBinding().entryToObject(keyEntry);
-		// return (KeyType) (Integer) IntegerBinding.entryToInput(keyEntry);
-		else if (_type == Double.class)
-			return (KeyType) (Double) DoubleBinding.entryToDouble(keyEntry);
-		else if (_type == Date.class) {
-			final String str = StringBinding.entryToString(keyEntry);
-			return (KeyType) _dc.fromString(str);
-		} else
-			throw new RuntimeException("Unexpected type " + _type + " in BDB.objectToEntry!");
+		final OperationStatus status = _db.put(null, keyEntry, dataEntry);
+
+		/*
+		 * However, the status return conveys a variety of information. For
+		 * example, the put might succeed, or it might not succeed if the record
+		 * already exists and the database was not configured for duplicate
+		 * records.
+		 */
+		if (status != OperationStatus.SUCCESS)
+			throw new RuntimeException("Data insertion got status " + status);
+		
+		return status;
 	}
+	
+	@Override
+	public List<String> get(int operator, KeyType key, int diff) {
+		if (operator == ComparisonPredicate.EQUAL_OP)
+			return getEqual(key);
+		else if (operator == ComparisonPredicate.SYM_BAND_WITH_BOUNDS_OP)
+			return getRangeIncludeEquals(key, diff);
+		else if (operator == ComparisonPredicate.SYM_BAND_NO_BOUNDS_OP)
+			return getRangeNoEquals(key, diff);
+		else
+			throw new RuntimeException("Unsupported OP " + operator + " in BerkeleyDBStore.");
+	}	
 
-	private List<String> getEqual(KeyType key) {
+	protected List<String> getEqual(KeyType key) {
 		final String value = getValue(key);
 		return value == null ? null : Arrays.asList(value
 				.split(SystemParameters.STORE_TIMESTAMP_DELIMITER));
 	}
+	
+	protected String getValue(KeyType key) {
+		// initialize key
+		final DatabaseEntry keyEntry = new DatabaseEntry();
+		final DatabaseEntry dataEntry = new DatabaseEntry();
+		objectToEntry(key, keyEntry);
 
-	private long getFileSize(File folder) {
-		long foldersize = 0;
-
-		final File[] filelist = folder.listFiles();
-		for (int i = 0; i < filelist.length; i++)
-			if (filelist[i].isDirectory())
-				foldersize += getFileSize(filelist[i]);
-			else
-				foldersize += filelist[i].length();
-		return foldersize;
+		// initialize cursor
+		final Cursor cursor = _db.openCursor(null, null);
+		final OperationStatus status = cursor.getSearchKey(keyEntry, dataEntry, LockMode.DEFAULT);
+		cursor.close();
+		if (status != OperationStatus.SUCCESS)
+			return null;
+		else
+			return StringBinding.entryToString(dataEntry);
+	}	
+	
+	protected List<String> getRangeIncludeEquals(KeyType key, int diff) {
+		final KeyType leftBoundary = getKeyOffset(key, -diff);
+		final KeyType rightBoundary = getKeyOffset(key, diff);
+		return getRange(leftBoundary, true, rightBoundary, true);
 	}
 
-	private KeyType getKeyOffset(KeyType k, int offset) {
+	protected List<String> getRangeNoEquals(KeyType key, int diff) {
+		final KeyType leftBoundary = getKeyOffset(key, -diff);
+		final KeyType rightBoundary = getKeyOffset(key, diff);
+		return getRange(leftBoundary, false, rightBoundary, false);
+	}	
+
+	protected List<String> getRange(KeyType leftBoundary, boolean includeLeft, KeyType rightBoundary, boolean includeRight) {
+		final List<String> result = new ArrayList<String>();
+
+		// initialize left and rightBoundary
+		final DatabaseEntry keyEntry = new DatabaseEntry();
+		final DatabaseEntry dataEntry = new DatabaseEntry();
+		objectToEntry(leftBoundary, keyEntry);
+
+		// initialize cursor
+		final Cursor cursor = _db.openCursor(null, null);
+		OperationStatus status = cursor.getSearchKeyRange(keyEntry, dataEntry, LockMode.DEFAULT);
+		if(status == OperationStatus.SUCCESS && !includeLeft){
+			//omit the first element
+			status = cursor.getNextNoDup(keyEntry, dataEntry, LockMode.DEFAULT);
+		}
+		while (status == OperationStatus.SUCCESS) {
+			// check if this is right of righBoundary
+			final KeyType currentKey = entryToObject(keyEntry);
+			if (!isLessEqual(currentKey, rightBoundary, includeRight))
+				break;
+
+			// find all the data values (tuples) for the given key
+			final String values = StringBinding.entryToString(dataEntry);
+			final List<String> tuples = Arrays.asList(values
+					.split(SystemParameters.STORE_TIMESTAMP_DELIMITER));
+			result.addAll(tuples);
+
+			status = cursor.getNext(keyEntry, dataEntry, LockMode.DEFAULT);
+		}
+		cursor.close();
+		return result;
+	}
+	
+	private boolean isLessEqual(KeyType currentKey, KeyType rightBoundary, boolean includeRight) {
+		final Comparable first = (Comparable) currentKey;
+		final Comparable second = (Comparable) rightBoundary;
+		final int compared = first.compareTo(second);
+		if(includeRight){
+			return (compared <= 0);
+		}else{
+			return (compared < 0);
+		}
+	}
+	
+	protected KeyType getKeyOffset(KeyType k, int offset) {
 		KeyType result = null;
 		if (k instanceof Double) {
 			final Double kd = (Double) k;
@@ -166,47 +244,38 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		return result;
 	}
 
-	private List<String> getRange(KeyType key, int diff) {
-		final List<String> result = new ArrayList<String>();
-
-		// initialize left and rightBoundary
-		final DatabaseEntry keyEntry = new DatabaseEntry();
-		final DatabaseEntry dataEntry = new DatabaseEntry();
-		final KeyType leftBoundary = getKeyOffset(key, -diff);
-		objectToEntry(leftBoundary, keyEntry);
-		final KeyType rightBoundary = getKeyOffset(key, diff);
-
-		// initialize cursor
-		final Cursor cursor = _db.openCursor(null, null);
-		OperationStatus status = cursor.getSearchKeyRange(keyEntry, dataEntry, LockMode.DEFAULT);
-		while (status == OperationStatus.SUCCESS) {
-			// check if this is right of righBoundary
-			final KeyType currentKey = entryToObject(keyEntry);
-			if (!isLessEqual(currentKey, rightBoundary))
-				break;
-
-			// find all the data values (tuples) for the given key
-			final String values = StringBinding.entryToString(dataEntry);
-			final List<String> tuples = Arrays.asList(values
-					.split(SystemParameters.STORE_TIMESTAMP_DELIMITER));
-			result.addAll(tuples);
-
-			status = cursor.getNext(keyEntry, dataEntry, LockMode.DEFAULT);
-		}
-		cursor.close();
-		return result;
+	protected void objectToEntry(KeyType key, DatabaseEntry keyEntry) {
+		if (key instanceof String)
+			StringBinding.stringToEntry((String) key, keyEntry);
+		else if (key instanceof Integer)
+			IntegerBinding.intToEntry((Integer) key, keyEntry);
+		else if (key instanceof Double)
+			DoubleBinding.doubleToEntry((Double) key, keyEntry);
+		else if (key instanceof Date) {
+			// luckily, the order of generated Strings conforms to the order of
+			// original Dates
+			final String dateStr = _dc.toString((Date) key);
+			StringBinding.stringToEntry(dateStr, keyEntry);
+		} else
+			throw new RuntimeException("Unexpected type " + key + " in BDB.objectToEntry!");
 	}
-
-	private List<String> getRangeIncludeEquals(KeyType key, int diff) {
-		return getRange(key, diff);
+	
+	protected KeyType entryToObject(DatabaseEntry keyEntry) {
+		if (_type == String.class)
+			return (KeyType) StringBinding.entryToString(keyEntry);
+		else if (_type == Integer.class)
+			return (KeyType) (Integer) IntegerBinding.entryToInt(keyEntry);
+		// return (KeyType) new IntegerBinding().entryToObject(keyEntry);
+		// return (KeyType) (Integer) IntegerBinding.entryToInput(keyEntry);
+		else if (_type == Double.class)
+			return (KeyType) (Double) DoubleBinding.entryToDouble(keyEntry);
+		else if (_type == Date.class) {
+			final String str = StringBinding.entryToString(keyEntry);
+			return (KeyType) _dc.fromString(str);
+		} else
+			throw new RuntimeException("Unexpected type " + _type + " in BDB.objectToEntry!");
 	}
-
-	private List<String> getRangeNoEquals(KeyType key, int diff) {
-		// a < x < b is equivalent to a+1 <= x <= b-1
-		// TODO does not work correctly for DOUBLES !!!!
-		return getRange(key, diff - 1);
-	}
-
+	
 	@Override
 	public String getStatistics() {
 		final StringBuilder sb = new StringBuilder();
@@ -234,84 +303,6 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		return sb.toString();
 	}
 
-	private String getValue(KeyType key) {
-		// initialize key
-		final DatabaseEntry keyEntry = new DatabaseEntry();
-		final DatabaseEntry dataEntry = new DatabaseEntry();
-		objectToEntry(key, keyEntry);
-
-		// initialize cursor
-		final Cursor cursor = _db.openCursor(null, null);
-		final OperationStatus status = cursor.getSearchKey(keyEntry, dataEntry, LockMode.DEFAULT);
-		cursor.close();
-		if (status != OperationStatus.SUCCESS)
-			return null;
-		else
-			return StringBinding.entryToString(dataEntry);
-	}
-
-	@Override
-	public List<String> getValues(int operator, KeyType key, int diff) {
-		if (operator == ComparisonPredicate.EQUAL_OP)
-			return getEqual(key);
-		else if (operator == ComparisonPredicate.SYM_BAND_WITH_BOUNDS_OP)
-			return getRangeIncludeEquals(key, diff);
-		else if (operator == ComparisonPredicate.SYM_BAND_NO_BOUNDS_OP)
-			return getRangeNoEquals(key, diff);
-		else
-			throw new RuntimeException("Unsupported OP " + operator + " in BerkeleyDBStore.");
-	}
-
-	private boolean isLessEqual(KeyType currentKey, KeyType rightBoundary) {
-		final Comparable first = (Comparable) currentKey;
-		final Comparable second = (Comparable) rightBoundary;
-		final int compared = first.compareTo(second);
-		return (compared <= 0);
-	}
-
-	private void objectToEntry(KeyType key, DatabaseEntry keyEntry) {
-		if (key instanceof String)
-			StringBinding.stringToEntry((String) key, keyEntry);
-		else if (key instanceof Integer)
-			IntegerBinding.intToEntry((Integer) key, keyEntry);
-		else if (key instanceof Double)
-			DoubleBinding.doubleToEntry((Double) key, keyEntry);
-		else if (key instanceof Date) {
-			// luckily, the order of generated Strings conforms to the order of
-			// original Dates
-			final String dateStr = _dc.toString((Date) key);
-			StringBinding.stringToEntry(dateStr, keyEntry);
-		} else
-			throw new RuntimeException("Unexpected type " + key + " in BDB.objectToEntry!");
-	}
-
-	@Override
-	public void put(KeyType key, String value) {
-		_size++;
-		final String oldValue = getValue(key);
-		if (oldValue != null)
-			value = oldValue + SystemParameters.STORE_TIMESTAMP_DELIMITER + value;
-
-		/* DatabaseEntry represents the key and data of each record */
-		final DatabaseEntry keyEntry = new DatabaseEntry();
-		final DatabaseEntry dataEntry = new DatabaseEntry();
-
-		/* Use a binding to convert the int into a DatabaseEntry. */
-		objectToEntry(key, keyEntry);
-		StringBinding.stringToEntry(value, dataEntry);
-
-		final OperationStatus status = _db.put(null, keyEntry, dataEntry);
-
-		/*
-		 * However, the status return conveys a variety of information. For
-		 * example, the put might succeed, or it might not succeed if the record
-		 * already exists and the database was not configured for duplicate
-		 * records.
-		 */
-		if (status != OperationStatus.SUCCESS)
-			throw new RuntimeException("Data insertion got status " + status);
-	}
-
 	@Override
 	public void shutdown() {
 		_db.close();
@@ -319,6 +310,10 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		emptyFolder(new File(_storagePath), false);
 	}
 
+	protected void incrementSize(){
+		_size++;
+	}
+	
 	@Override
 	public int size() {
 		// return (int) _db.count(); // does not work when duplicates end up in
@@ -326,6 +321,30 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		return _size;
 	}
 
+	private void emptyFolder(File folder, boolean emptyRoot) {
+		final File[] files = folder.listFiles();
+		if (files != null)
+			for (final File f : files)
+				if (f.isDirectory())
+					emptyFolder(f, true);
+				else
+					f.delete();
+		if (emptyRoot)
+			folder.delete();
+	}	
+	
+	private long getFileSize(File folder) {
+		long foldersize = 0;
+
+		final File[] filelist = folder.listFiles();
+		for (int i = 0; i < filelist.length; i++)
+			if (filelist[i].isDirectory())
+				foldersize += getFileSize(filelist[i]);
+			else
+				foldersize += filelist[i].length();
+		return foldersize;
+	}	
+	
 	public void testInts() {
 		final Integer key1 = 1;
 		final String value11 = "12";

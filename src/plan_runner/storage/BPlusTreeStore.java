@@ -22,7 +22,7 @@ public interface BPlusTreeStore<KeyType> {
 	// TODO implement all operations for operator --> FOR EXAMPLE SEE public
 	// "TIntArrayList getValues(int operator, KeyType key)" in BPLUSTREEINDEX
 	// class
-	public List<String> getValues(int operator, KeyType key, int diff);
+	public List<String> get(int operator, KeyType key, int diff);
 
 	/**
 	 * Give it key of type KeyType and string value and putinto BerkeleyDB
