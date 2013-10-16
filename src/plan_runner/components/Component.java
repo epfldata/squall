@@ -38,4 +38,5 @@ public interface Component extends Serializable, ComponentProperties, StormEmitt
 
 	public Component setPrintOut(boolean printOut);
 
+
 }

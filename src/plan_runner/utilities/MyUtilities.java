@@ -630,5 +630,12 @@ public class MyUtilities {
 		// tupleString=tupleString.trim();
 		return tupleString;
 	}
-
+	
+	public static boolean isBDB(Map conf){
+		boolean isBDB = false;
+		if(SystemParameters.isExisting(conf, "DIP_IS_BDB")){
+			isBDB = SystemParameters.getBoolean(conf, "DIP_IS_BDB");
+		}
+		return isBDB;
+	}
 }

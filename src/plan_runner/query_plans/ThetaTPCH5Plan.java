@@ -71,10 +71,6 @@ public class ThetaTPCH5Plan {
     public ThetaTPCH5Plan(String dataPath, String extension, Map conf){
         computeDates();
         int Theta_JoinType=ThetaQueryPlansParameters.getThetaJoinType(conf);
-		boolean isBDB = false;
-		if(SystemParameters.isExisting(conf, "DIP_IS_BDB")){
-			isBDB = SystemParameters.getBoolean(conf, "DIP_IS_BDB");
-		}
 		
         //-------------------------------------------------------------------------------------
         List<Integer> hashRegion = Arrays.asList(0);
@@ -267,7 +263,6 @@ public class ThetaTPCH5Plan {
                     relationOrders,
                     _queryPlan).setHashIndexes(hashCO)
                                .addOperator(projectionCO)
-                               .setBDB(isBDB)
                                .setJoinPredicate(C_O_comp);
         }
         else if(Theta_JoinType==1){

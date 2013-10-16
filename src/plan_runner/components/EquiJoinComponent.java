@@ -54,7 +54,6 @@ public class EquiJoinComponent implements Component {
 
 	private boolean _printOut;
 	private boolean _printOutSet; // whether printOut was already set
-	private boolean _isBDB;
 
 	private List<String> _fullHashList;
 	private Predicate _joinPredicate;
@@ -95,10 +94,6 @@ public class EquiJoinComponent implements Component {
 	@Override
 	public long getBatchOutputMillis() {
 		return _batchOutputMillis;
-	}
-
-	public boolean getBDB() {
-		return _isBDB;
 	}
 
 	@Override
@@ -176,18 +171,23 @@ public class EquiJoinComponent implements Component {
 		if (_secondStorage == null)
 			_secondStorage = new KeyValueStore<String, String>(conf);
 
-		if (_joinPredicate != null) {
-			if (!_isBDB)
+		boolean isBDB = MyUtilities.isBDB(conf);
+		if(isBDB && _joinPredicate == null){
+			throw new RuntimeException("Please provide _joinPredicate if you want to run BDB!");
+		}
+		
+		if(isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)){
+			_joiner = new StormDstBDB(_firstParent, _secondParent, this, allCompNames,
+					_joinPredicate, hierarchyPosition, builder, killer, conf);
+		} else if (_joinPredicate != null) {
 				_joiner = new StormDstTupleStorageJoin(_firstParent, _secondParent, this,
 						allCompNames, _joinPredicate, hierarchyPosition, builder, killer, conf);
-			else
-				_joiner = new StormDstBDB(_firstParent, _secondParent, this, allCompNames,
-						_joinPredicate, hierarchyPosition, builder, killer, conf);
-		} else if (partitioningType == StormJoin.DST_ORDERING)
+		} else if (partitioningType == StormJoin.DST_ORDERING){
+			// should issue a warning
 			_joiner = new StormDstJoin(_firstParent, _secondParent, this, allCompNames,
 					_firstStorage, _secondStorage, _firstPreAggProj, _secondPreAggProj,
 					hierarchyPosition, builder, killer, conf);
-		else if (partitioningType == StormJoin.SRC_ORDERING) {
+		}else if (partitioningType == StormJoin.SRC_ORDERING) {
 			if (_chain.getDistinct() != null)
 				throw new RuntimeException(
 						"Cannot instantiate Distinct operator from StormSourceJoin! There are two Bolts processing operators!");
@@ -205,11 +205,6 @@ public class EquiJoinComponent implements Component {
 	@Override
 	public EquiJoinComponent setBatchOutputMillis(long millis) {
 		_batchOutputMillis = millis;
-		return this;
-	}
-
-	public EquiJoinComponent setBDB(boolean isBDB) {
-		_isBDB = isBDB;
 		return this;
 	}
 

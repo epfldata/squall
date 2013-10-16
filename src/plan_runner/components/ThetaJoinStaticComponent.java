@@ -13,6 +13,7 @@ import plan_runner.query_plans.QueryPlan;
 import plan_runner.storm_components.InterchangingComponent;
 import plan_runner.storm_components.StormBoltComponent;
 import plan_runner.storm_components.StormComponent;
+import plan_runner.storm_components.StormDstBDB;
 import plan_runner.storm_components.StormThetaJoin;
 import plan_runner.storm_components.StormThetaJoinBDB;
 import plan_runner.storm_components.synchronization.TopologyKiller;
@@ -43,7 +44,6 @@ public class ThetaJoinStaticComponent implements Component {
 	private boolean _printOutSet; // whether printOut was already set
 
 	private Predicate _joinPredicate;
-	private boolean _isBDB;
 
 	private InterchangingComponent _interComp = null;
 
@@ -159,23 +159,23 @@ public class ThetaJoinStaticComponent implements Component {
 
 		MyUtilities.checkBatchOutput(_batchOutputMillis, _chain.getAggregation(), conf);
 
-		if (!_isBDB)
-			_joiner = new StormThetaJoin(_firstParent, _secondParent, this, allCompNames,
-					_joinPredicate, hierarchyPosition, builder, killer, conf, _interComp);
-		else
+		boolean isBDB = MyUtilities.isBDB(conf);
+		if(isBDB && _joinPredicate == null){
+			throw new RuntimeException("Please provide _joinPredicate if you want to run BDB!");
+		}
+		
+		if(isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)){
 			_joiner = new StormThetaJoinBDB(_firstParent, _secondParent, this, allCompNames,
 					_joinPredicate, hierarchyPosition, builder, killer, conf, _interComp);
-
+		}else{
+			_joiner = new StormThetaJoin(_firstParent, _secondParent, this, allCompNames,
+					_joinPredicate, hierarchyPosition, builder, killer, conf, _interComp);	
+		}
 	}
 
 	@Override
 	public ThetaJoinStaticComponent setBatchOutputMillis(long millis) {
 		_batchOutputMillis = millis;
-		return this;
-	}
-
-	public ThetaJoinStaticComponent setBDB(boolean isBDB) {
-		_isBDB = isBDB;
 		return this;
 	}
 
