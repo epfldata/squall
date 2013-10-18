@@ -4,16 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import plan_runner.conversion.IntegerConversion;
+import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.Addition;
+import plan_runner.expressions.Subtraction;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.expressions.ValueSpecification;
 import plan_runner.visitors.PredicateVisitor;
 
 public class ComparisonPredicate<T extends Comparable<T>> implements Predicate {
-
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	public static final int EQUAL_OP = 0;
 	public static final int NONEQUAL_OP = 1;
@@ -31,6 +29,7 @@ public class ComparisonPredicate<T extends Comparable<T>> implements Predicate {
 	private int indexType; // Either B+tree or BBinarytree
 
 	private ValueExpression<T> _ve1, _ve2;
+	private TypeConversion<T> _wrapper;
 	private int _operation;
 
 	public ComparisonPredicate(int operation, ValueExpression<T> ve1, ValueExpression<T> ve2) {
@@ -208,6 +207,59 @@ public class ComparisonPredicate<T extends Comparable<T>> implements Predicate {
 			break;
 		case NONGREATER_OP:
 			result = (compared <= 0);
+			break;
+		default:
+			throw new RuntimeException("Unsupported operation " + _operation);
+		}
+		return result;
+	}
+	
+	// for band operations
+	public ComparisonPredicate(int op, int diff, TypeConversion<T> typeConversion){
+		_operation = op;
+		_diff = diff;
+		_wrapper = typeConversion;
+	}
+	
+	// for other operations
+	public ComparisonPredicate(int op){
+		_operation = op;
+	}	
+	
+	// used for direct key comparison
+	public boolean test(T key1, T key2){
+		final int compared = key1.compareTo(key2);
+		boolean result = false;
+		switch (_operation) {
+		case EQUAL_OP:
+			result = (compared == 0);
+			break;
+		case NONEQUAL_OP:
+			result = (compared != 0);
+			break;
+		case LESS_OP:
+			result = (compared < 0);
+			break;
+		case NONLESS_OP:
+			result = (compared >= 0);
+			break;
+		case GREATER_OP:
+			result = (compared > 0);
+			break;
+		case NONGREATER_OP:
+			result = (compared <= 0);
+			break;
+		case SYM_BAND_WITH_BOUNDS_OP:
+		case SYM_BAND_NO_BOUNDS_OP:
+			int actualDiff = Math.abs((int) _wrapper.getDistance(key1, key2));
+			
+			if(_operation == SYM_BAND_WITH_BOUNDS_OP){
+				// 	TODO generalize to more _diff types
+				result = (actualDiff <= (int)(Integer)_diff);
+			}else if(_operation == SYM_BAND_NO_BOUNDS_OP){
+				//	TODO generalize to more _diff types
+				result = (actualDiff < (int)(Integer)_diff);
+			}
 			break;
 		default:
 			throw new RuntimeException("Unsupported operation " + _operation);

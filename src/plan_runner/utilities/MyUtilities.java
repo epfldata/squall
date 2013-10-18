@@ -638,4 +638,20 @@ public class MyUtilities {
 		}
 		return isBDB;
 	}
+
+	public static List<String> listFilesForPath(String dir) {
+		List<String> filePaths = new ArrayList<String>();
+
+		File folder = new File(dir);
+		for(File fileEntry: folder.listFiles()){
+			if(fileEntry.isDirectory()){
+				filePaths.addAll(listFilesForPath(fileEntry.getAbsolutePath()));
+			}else{
+				filePaths.add(fileEntry.getAbsolutePath());
+			}
+		}
+		
+		return filePaths;
+	}
+	
 }

@@ -1,11 +1,9 @@
 package plan_runner.conversion;
 
 public class DateIntegerConversion implements NumericConversion<Integer> {
-
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
+	
+	private static final DateConversion _dc = new DateConversion();
 
 	@Override
 	public Integer fromDouble(double d) {
@@ -23,7 +21,7 @@ public class DateIntegerConversion implements NumericConversion<Integer> {
 
 	@Override
 	public double getDistance(Integer bigger, Integer smaller) {
-		return bigger - smaller;
+		return _dc.getDistance(_dc.fromLong(bigger.longValue()), _dc.fromLong(smaller.longValue()));
 	}
 
 	@Override

@@ -5,6 +5,7 @@ import java.util.List;
 
 import plan_runner.expressions.Addition;
 import plan_runner.expressions.ColumnReference;
+import plan_runner.expressions.DateDiff;
 import plan_runner.expressions.DateSum;
 import plan_runner.expressions.Division;
 import plan_runner.expressions.IntegerYearFromDate;
@@ -36,6 +37,11 @@ public class ColumnRefCollectVisitor implements ValueExpressionVisitor {
 	public void visit(DateSum ds) {
 		visit(ds.getInnerExpressions());
 	}
+	
+	@Override
+	public void visit(DateDiff dd) {
+		visit(dd.getInnerExpressions());
+	}	
 
 	@Override
 	public void visit(Division dvsn) {

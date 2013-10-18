@@ -5,8 +5,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-import org.joda.time.Days;
 
 import plan_runner.utilities.MyUtilities;
 
@@ -49,9 +47,13 @@ public class DateConversion implements TypeConversion<Date> {
 
 	@Override
 	public double getDistance(Date bigger, Date smaller) {
+		/*
 		final DateTime smallerDT = new DateTime(smaller);
 		final DateTime biggerDT = new DateTime(bigger);
 		return Days.daysBetween(smallerDT, biggerDT).getDays();
+		*/
+		long diff = bigger.getTime() - smaller.getTime();
+		return (diff / (24* 1000 * 60 * 60));
 	}
 
 	@Override
