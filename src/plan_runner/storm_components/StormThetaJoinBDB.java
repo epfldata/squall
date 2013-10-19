@@ -490,11 +490,15 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 							+ "\nEnd of First Storage");
 				}
 			}
-		if (type == SystemParameters.FINAL_PRINT) {
-			// TODO should be moved to some other place
-			_firstRelationStorage.shutdown();
-			_secondRelationStorage.shutdown();
-		}
+	}
+	
+	@Override
+	protected void finalizeProcessing(){
+		super.finalizeProcessing();
+		//BDB shutdown
+		_firstRelationStorage.shutdown();
+		_secondRelationStorage.shutdown();
+
 	}
 
 	private void processNonLastTuple(String inputComponentIndex, String inputTupleString, //

@@ -359,6 +359,12 @@ public class MyUtilities {
 		return SystemParameters.isExisting(map, "CUSTOM_TIMESTAMP")
 				&& SystemParameters.getBoolean(map, "CUSTOM_TIMESTAMP");
 	}
+	
+	public static boolean isStatisticsCollector(Map map, int hierarchyPosition) {
+		return hierarchyPosition == StormComponent.FINAL_COMPONENT
+				&& SystemParameters.isExisting(map, "DIP_STATISTIC_COLLECTOR")
+				&& SystemParameters.getBoolean(map, "DIP_STATISTIC_COLLECTOR");
+	}
 
 	/*
 	 * Does bigger dominates over smaller? For (bigger, smaller) = (double,
@@ -645,7 +651,10 @@ public class MyUtilities {
 		File folder = new File(dir);
 		for(File fileEntry: folder.listFiles()){
 			if(fileEntry.isDirectory()){
-				filePaths.addAll(listFilesForPath(fileEntry.getAbsolutePath()));
+				if(!fileEntry.getName().startsWith(".")){
+					// avoid hidden folder
+					filePaths.addAll(listFilesForPath(fileEntry.getAbsolutePath()));
+				}
 			}else{
 				filePaths.add(fileEntry.getAbsolutePath());
 			}

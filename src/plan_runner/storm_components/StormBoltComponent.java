@@ -9,6 +9,8 @@ import org.apache.log4j.Logger;
 
 import plan_runner.components.ComponentProperties;
 import plan_runner.expressions.ValueExpression;
+import plan_runner.m_bucket.main.PullStatisticCollector;
+import plan_runner.m_bucket.main.PushStatisticCollector;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
@@ -60,6 +62,9 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormJo
 	// counting negative values
 	protected long numNegatives = 0;
 	protected double maxNegative = 0;
+	
+	//StatisticsCollector
+	private PushStatisticCollector _sc;
 
 	public StormBoltComponent(ComponentProperties cp, List<String> allCompNames,
 			int hierarchyPosition, Map conf) {
@@ -196,7 +201,23 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormJo
 
 		// initial statistics
 		printStatistics(SystemParameters.INITIAL_PRINT);
+		if(MyUtilities.isStatisticsCollector(_conf, _hierarchyPosition)){
+			_sc = new PushStatisticCollector(map);
+		}
 	}
+	
+	protected void sendToStatisticsCollector(List<String> tuple, int relationNumber){
+		if(MyUtilities.isStatisticsCollector(_conf, _hierarchyPosition)){
+			_sc.processTuple(tuple, relationNumber);
+		}
+	}
+	
+	protected void finalizeProcessing(){
+		printStatistics(SystemParameters.FINAL_PRINT);
+		if(MyUtilities.isStatisticsCollector(_conf, _hierarchyPosition)){
+			_sc.finalizeProcessing();
+		}
+	}	
 
 	@Override
 	public void printContent() {
@@ -280,10 +301,11 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormJo
 		if (MyUtilities.isFinalAck(tuple, getConf())) {
 			_numRemainingParents--;
 			if (_numRemainingParents == 0) {
-				printStatistics(SystemParameters.FINAL_PRINT);
-				if (MyUtilities.isManualBatchingMode(getConf()))
+				if (MyUtilities.isManualBatchingMode(getConf())){
 					// flushing before sending lastAck down the hierarchy
 					manualBatchSend();
+				}
+				finalizeProcessing();
 			}
 			MyUtilities.processFinalAck(_numRemainingParents, getHierarchyPosition(), getConf(),
 					stormTupleRcv, getCollector(), getPeriodicAggBatch());

@@ -447,6 +447,7 @@ public class StormThetaJoin extends StormBoltComponent {
 			oppositeStorage = _secondRelationStorage;
 			affectedIndexes = _firstRelationIndexes;
 			oppositeIndexes = _secondRelationIndexes;
+			sendToStatisticsCollector(tuple, 0);
 		} else if (_secondEmitterIndex.equals(inputComponentIndex)) {
 			// S update
 			isFromFirstEmitter = false;
@@ -454,6 +455,7 @@ public class StormThetaJoin extends StormBoltComponent {
 			oppositeStorage = _firstRelationStorage;
 			affectedIndexes = _secondRelationIndexes;
 			oppositeIndexes = _firstRelationIndexes;
+			sendToStatisticsCollector(tuple, 1);
 		} else
 			throw new RuntimeException("InputComponentName " + inputComponentIndex
 					+ " doesn't match neither " + _firstEmitterIndex + " nor "
