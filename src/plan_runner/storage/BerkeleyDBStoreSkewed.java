@@ -4,16 +4,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
-import com.sleepycat.bind.tuple.DoubleBinding;
-import com.sleepycat.bind.tuple.IntegerBinding;
-import com.sleepycat.bind.tuple.LongBinding;
-import com.sleepycat.bind.tuple.StringBinding;
-import com.sleepycat.je.DatabaseEntry;
+import org.apache.log4j.Logger;
 
 import plan_runner.conversion.DateConversion;
 import plan_runner.utilities.SystemParameters;
+
+import com.sleepycat.bind.tuple.LongBinding;
+import com.sleepycat.je.DatabaseEntry;
 
 /*
  * Less duplicates/better performance when there is skew
@@ -24,13 +24,23 @@ import plan_runner.utilities.SystemParameters;
  * Value = Value
  */
 public class BerkeleyDBStoreSkewed<KeyType> extends BerkeleyDBStore<KeyType> {
+	private static Logger LOG = Logger.getLogger(BerkeleyDBStoreSkewed.class);
+	
 	private final DateConversion _dc = new DateConversion();
 	
 	private Random randomGen = new Random();
-	private final int DISPERSION = 10000;
+	private int DISPERSION = 10000;
 	
 	public BerkeleyDBStoreSkewed(Class type, String storagePath) {
 		super(type, storagePath);
+	}
+	
+	public BerkeleyDBStoreSkewed(Class type, String storagePath, Map conf) {
+		this(type, storagePath);
+		if(SystemParameters.isExisting(conf, "DIP_BDB_SKEW_DISPERSION")){
+			DISPERSION = SystemParameters.getInt(conf, "DIP_BDB_SKEW_DISPERSION");
+			LOG.info("BDB Skewed Dispersion set to " + DISPERSION);
+		}
 	}
 	
 	@Override

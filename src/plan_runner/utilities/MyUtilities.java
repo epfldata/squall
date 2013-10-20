@@ -638,11 +638,18 @@ public class MyUtilities {
 	}
 	
 	public static boolean isBDB(Map conf){
-		boolean isBDB = false;
-		if(SystemParameters.isExisting(conf, "DIP_IS_BDB")){
-			isBDB = SystemParameters.getBoolean(conf, "DIP_IS_BDB");
-		}
-		return isBDB;
+		return SystemParameters.isExisting(conf, "DIP_IS_BDB")
+			&& SystemParameters.getBoolean(conf, "DIP_IS_BDB");
+	}
+	
+	public static boolean isBDBUniform(Map conf) {
+		return SystemParameters.isExisting(conf, "DIP_BDB_TYPE")
+				&& SystemParameters.getString(conf, "DIP_BDB_TYPE").equalsIgnoreCase("UNIFORM");	
+	}
+
+	public static boolean isBDBSkewed(Map conf) {
+		return SystemParameters.isExisting(conf, "DIP_BDB_TYPE")
+				&& SystemParameters.getString(conf, "DIP_BDB_TYPE").equalsIgnoreCase("SKEWED");
 	}
 
 	public static List<String> listFilesForPath(String dir) {

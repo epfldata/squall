@@ -14,9 +14,6 @@ import plan_runner.operators.AggregateOperator;
 import plan_runner.utilities.SystemParameters;
 
 public class AggregationStorage<V> extends KeyValueStore<Object, V> {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	private static Logger LOG = Logger.getLogger(AggregationStorage.class);
