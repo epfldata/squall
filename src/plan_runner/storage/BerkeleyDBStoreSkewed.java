@@ -31,7 +31,7 @@ public class BerkeleyDBStoreSkewed<KeyType> extends BerkeleyDBStore<KeyType> {
 	private Random randomGen = new Random();
 	private int DISPERSION = 10000;
 	
-	public BerkeleyDBStoreSkewed(Class type, String storagePath) {
+	private BerkeleyDBStoreSkewed(Class type, String storagePath) {
 		super(type, storagePath);
 	}
 	
@@ -55,6 +55,7 @@ public class BerkeleyDBStoreSkewed<KeyType> extends BerkeleyDBStore<KeyType> {
 		databasePut(physicalKey, value);
 	}	
 	
+	@Override
 	protected List<String> getRangeIncludeEquals(KeyType key, int diff) {
 		final Object leftBoundary = logicalToPhysicalBound(getKeyOffset(key, -diff));
 		final Object rightBoundary = logicalToPhysicalBound(getKeyOffset(key, diff + 1));

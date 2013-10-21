@@ -65,7 +65,7 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		envConfig.setConfigParam("je.cleaner.minUtilization", "25");
 		// envConfig.setConfigParam("je.env.runCleaner", "false");
 		// envConfig.ENV_DUP_CORRECT_PRELOAD_ALL false
-		// envConfig.setConfigParam("je.log.fileMax", "100000000"); 100MB
+		// envConfig.setConfigParam("je.log.fileMax", "100000000"); // 100MB
 		final File envDir = new File(_storagePath);
 		if (!envDir.exists())
 			envDir.mkdirs();
@@ -75,7 +75,7 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		dbConfig.setAllowCreate(true);
 		dbConfig.setTemporary(true); // opposite to DiskPermanent
 		dbConfig.setTransactional(false);
-		dbConfig.setCacheMode(CacheMode.EVICT_LN); // keeps only internal nodes
+		// dbConfig.setCacheMode(CacheMode.EVICT_LN); // keeps only internal nodes
 		// in the memory
 		// dbConfig.setSortedDuplicates(true);
 		_db = _env.openDatabase(null, "simpleDb", dbConfig);

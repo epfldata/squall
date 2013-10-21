@@ -244,17 +244,17 @@ public class StormDstBDB extends BaseRichBolt implements StormJoin, StormCompone
 			LOG.info("Storage with Uniform BDB!");			
 		}else if(MyUtilities.isBDBSkewed(getConf())){
 			if (_typeOfValueIndexed.get(0) instanceof Integer) {
-				_firstRelationStorage = new BerkeleyDBStoreSkewed(Integer.class, storagePath + "/first");
-				_secondRelationStorage = new BerkeleyDBStoreSkewed(Integer.class, storagePath + "/second");
+				_firstRelationStorage = new BerkeleyDBStoreSkewed(Integer.class, storagePath + "/first", getConf());
+				_secondRelationStorage = new BerkeleyDBStoreSkewed(Integer.class, storagePath + "/second", getConf());
 			} else if (_typeOfValueIndexed.get(0) instanceof Double) {
-				_firstRelationStorage = new BerkeleyDBStoreSkewed(Double.class, storagePath + "/first");
-				_secondRelationStorage = new BerkeleyDBStoreSkewed(Double.class, storagePath + "/second");
+				_firstRelationStorage = new BerkeleyDBStoreSkewed(Double.class, storagePath + "/first", getConf());
+				_secondRelationStorage = new BerkeleyDBStoreSkewed(Double.class, storagePath + "/second", getConf());
 			} else if (_typeOfValueIndexed.get(0) instanceof Date) {
-				_firstRelationStorage = new BerkeleyDBStoreSkewed(Date.class, storagePath + "/first");
-				_secondRelationStorage = new BerkeleyDBStoreSkewed(Date.class, storagePath + "/second");
+				_firstRelationStorage = new BerkeleyDBStoreSkewed(Date.class, storagePath + "/first", getConf());
+				_secondRelationStorage = new BerkeleyDBStoreSkewed(Date.class, storagePath + "/second", getConf());
 			} else if (_typeOfValueIndexed.get(0) instanceof String) {
-				_firstRelationStorage = new BerkeleyDBStoreSkewed(String.class, storagePath + "/first");
-				_secondRelationStorage = new BerkeleyDBStoreSkewed(String.class, storagePath + "/second");
+				_firstRelationStorage = new BerkeleyDBStoreSkewed(String.class, storagePath + "/first", getConf());
+				_secondRelationStorage = new BerkeleyDBStoreSkewed(String.class, storagePath + "/second", getConf());
 			} else
 				throw new RuntimeException("non supported type");		
 			LOG.info("Storage with Skewed BDB!");
@@ -317,7 +317,7 @@ public class StormDstBDB extends BaseRichBolt implements StormJoin, StormCompone
 						LOG.info("First Storage: " + _firstRelationStorage.getStatistics()
 								+ "\nEnd of First Storage");
 						LOG.info("Second Storage: " + _secondRelationStorage.getStatistics()
-								+ "\nEnd of First Storage");
+								+ "\nEnd of Second Storage");
 						// TODO should be placed somewhere else
 						_firstRelationStorage.shutdown();
 						_secondRelationStorage.shutdown();
@@ -375,7 +375,7 @@ public class StormDstBDB extends BaseRichBolt implements StormJoin, StormCompone
 				LOG.info("First Storage: " + _firstRelationStorage.getStatistics()
 						+ "\nEnd of First Storage");
 				LOG.info("Second Storage: " + _secondRelationStorage.getStatistics()
-						+ "\nEnd of First Storage");
+						+ "\nEnd of Second Storage");
 			}
 
 		_collector.ack(stormTupleRcv);
@@ -505,7 +505,7 @@ public class StormDstBDB extends BaseRichBolt implements StormJoin, StormCompone
 		LOG.info("First Storage: " + _firstRelationStorage.getStatistics()
 				+ "\nEnd of First Storage");
 		LOG.info("Second Storage: " + _secondRelationStorage.getStatistics()
-				+ "\nEnd of First Storage");
+				+ "\nEnd of Second Storage");
 	}
 
 	@Override
