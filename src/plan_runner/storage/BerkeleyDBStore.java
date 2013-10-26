@@ -66,6 +66,15 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		// envConfig.setConfigParam("je.env.runCleaner", "false");
 		// envConfig.ENV_DUP_CORRECT_PRELOAD_ALL false
 		// envConfig.setConfigParam("je.log.fileMax", "100000000"); // 100MB
+		
+		// Disk space grows exponentially for skewed data
+		//   independently of cacheSize, cacheMode 
+		//   BerkeleyDBStoreSkewed reduces the effect, but not completely
+		// Keep in mind that it's impossible to obtain strong scalability with fixed amount of cache memory
+		//   as the proportion of data in disk in cache grows in disk favor, and disk is slower
+		// When scaling, it is important to keep the number of disk readers/writers constant per blade
+		envConfig.setCacheSize(512 * 1024 * 1024);
+		
 		final File envDir = new File(_storagePath);
 		if (!envDir.exists())
 			envDir.mkdirs();
@@ -75,9 +84,8 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		dbConfig.setAllowCreate(true);
 		dbConfig.setTemporary(true); // opposite to DiskPermanent
 		dbConfig.setTransactional(false);
-		// dbConfig.setCacheMode(CacheMode.EVICT_LN); // keeps only internal nodes
-		// in the memory
-		// dbConfig.setSortedDuplicates(true);
+		// dbConfig.setCacheMode(CacheMode.EVICT_LN); // keeps only internal nodes in the memory
+		// dbConfig.setSortedDuplicates(true); // terribly slow
 		_db = _env.openDatabase(null, "simpleDb", dbConfig);
 	}
 	
