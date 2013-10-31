@@ -13,7 +13,7 @@ import plan_runner.query_plans.QueryPlan;
 import plan_runner.storm_components.InterchangingComponent;
 import plan_runner.storm_components.StormBoltComponent;
 import plan_runner.storm_components.StormComponent;
-import plan_runner.storm_components.StormDstBDB;
+import plan_runner.storm_components.StormDstTupleStorageBDB;
 import plan_runner.storm_components.StormThetaJoin;
 import plan_runner.storm_components.StormThetaJoinBDB;
 import plan_runner.storm_components.synchronization.TopologyKiller;

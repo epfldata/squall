@@ -1,7 +1,5 @@
 package plan_runner.storm_components;
 
-import gnu.trove.list.array.TIntArrayList;
-
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -18,9 +16,10 @@ import plan_runner.components.ComponentProperties;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
-import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.Predicate;
-import plan_runner.storage.TupleStorage;
+import plan_runner.storage.BPlusTreeStore;
+import plan_runner.storage.BerkeleyDBStore;
+import plan_runner.storage.BerkeleyDBStoreSkewed;
 import plan_runner.storm_components.synchronization.TopologyKiller;
 import plan_runner.thetajoin.indexes.Index;
 import plan_runner.thetajoin.matrix_mapping.EquiMatrixAssignment;
@@ -31,20 +30,22 @@ import plan_runner.utilities.statistics.StatisticsUtilities;
 import plan_runner.visitors.PredicateCreateIndexesVisitor;
 import plan_runner.visitors.PredicateUpdateIndexesVisitor;
 import backtype.storm.Config;
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.InputDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Tuple;
 
-public class StormDstTupleStorageJoin extends StormBoltComponent {
+public class StormDstTupleStorageBDB extends StormBoltComponent {
 	private static final long serialVersionUID = 1L;
-	private static Logger LOG = Logger.getLogger(StormDstTupleStorageJoin.class);
+	private static Logger LOG = Logger.getLogger(StormDstTupleStorageBDB.class);
 
 	// components
 	// used as a shorter name, to save some network traffic
 	// it's of type int, but we use String to save more space
 	private final String _firstEmitterIndex, _secondEmitterIndex;
 	
-	private final TupleStorage _firstRelationStorage, _secondRelationStorage;
+	private BPlusTreeStore _firstRelationStorage, _secondRelationStorage;
 
 	private final ChainOperator _operatorChain;
 	
@@ -72,7 +73,7 @@ public class StormDstTupleStorageJoin extends StormBoltComponent {
 	protected DateFormat _convDateFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss zzz yyyy");
 	protected StatisticsUtilities _statsUtils;
 
-	public StormDstTupleStorageJoin(StormEmitter firstEmitter, StormEmitter secondEmitter,
+	public StormDstTupleStorageBDB(StormEmitter firstEmitter, StormEmitter secondEmitter,
 			ComponentProperties cp, List<String> allCompNames, Predicate joinPredicate,
 			int hierarchyPosition, TopologyBuilder builder, TopologyKiller killer, Config conf) {
 		
@@ -80,9 +81,6 @@ public class StormDstTupleStorageJoin extends StormBoltComponent {
 		
 		_firstEmitterIndex = String.valueOf(allCompNames.indexOf(firstEmitter.getName()));
 		_secondEmitterIndex = String.valueOf(allCompNames.indexOf(secondEmitter.getName()));
-
-		_firstRelationStorage = new TupleStorage();
-		_secondRelationStorage = new TupleStorage();
 		
 		_operatorChain = cp.getChainOperator();
 		_fullHashList = cp.getFullHashList();
@@ -168,7 +166,7 @@ public class StormDstTupleStorageJoin extends StormBoltComponent {
 		printTuple(tuple);
 		if (_numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
 			printStatistics(SystemParameters.OUTPUT_PRINT);
-
+		
 		/*
 		 * Measuring latency from data sources and taking into account only the last tuple in the batch
 		 * 
@@ -214,6 +212,59 @@ public class StormDstTupleStorageJoin extends StormBoltComponent {
 	@Override
 	public void cleanup() {
 
+	}
+	
+	// BaseRichSpout
+	@Override
+	public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
+		createStorage(); // must be before, as the super method invokes print(Initial), which requires non-null storages
+		super.prepare(map, tc, collector);
+	}
+	
+	private void createStorage(){
+		String storagePath = null;
+		if (SystemParameters.getBoolean(getConf(), "DIP_DISTRIBUTED"))
+			storagePath = SystemParameters.getString(getConf(), "STORAGE_CLUSTER_DIR");
+		else
+			storagePath = SystemParameters.getString(getConf(), "STORAGE_LOCAL_DIR");
+
+		// TODO This assumes that there is only one index !!
+
+		if(MyUtilities.isBDBUniform(getConf())){
+			if (_typeOfValueIndexed.get(0) instanceof Integer) {
+				_firstRelationStorage = new BerkeleyDBStore(Integer.class, storagePath + "/first");
+				_secondRelationStorage = new BerkeleyDBStore(Integer.class, storagePath + "/second");
+			} else if (_typeOfValueIndexed.get(0) instanceof Double) {
+				_firstRelationStorage = new BerkeleyDBStore(Double.class, storagePath + "/first");
+				_secondRelationStorage = new BerkeleyDBStore(Double.class, storagePath + "/second");
+			} else if (_typeOfValueIndexed.get(0) instanceof Date) {
+				_firstRelationStorage = new BerkeleyDBStore(Date.class, storagePath + "/first");
+				_secondRelationStorage = new BerkeleyDBStore(Date.class, storagePath + "/second");
+			} else if (_typeOfValueIndexed.get(0) instanceof String) {
+				_firstRelationStorage = new BerkeleyDBStore(String.class, storagePath + "/first");
+				_secondRelationStorage = new BerkeleyDBStore(String.class, storagePath + "/second");
+			} else
+				throw new RuntimeException("non supported type");
+			LOG.info("Storage with Uniform BDB!");			
+		}else if(MyUtilities.isBDBSkewed(getConf())){
+			if (_typeOfValueIndexed.get(0) instanceof Integer) {
+				_firstRelationStorage = new BerkeleyDBStoreSkewed(Integer.class, storagePath + "/first", getConf());
+				_secondRelationStorage = new BerkeleyDBStoreSkewed(Integer.class, storagePath + "/second", getConf());
+			} else if (_typeOfValueIndexed.get(0) instanceof Double) {
+				_firstRelationStorage = new BerkeleyDBStoreSkewed(Double.class, storagePath + "/first", getConf());
+				_secondRelationStorage = new BerkeleyDBStoreSkewed(Double.class, storagePath + "/second", getConf());
+			} else if (_typeOfValueIndexed.get(0) instanceof Date) {
+				_firstRelationStorage = new BerkeleyDBStoreSkewed(Date.class, storagePath + "/first", getConf());
+				_secondRelationStorage = new BerkeleyDBStoreSkewed(Date.class, storagePath + "/second", getConf());
+			} else if (_typeOfValueIndexed.get(0) instanceof String) {
+				_firstRelationStorage = new BerkeleyDBStoreSkewed(String.class, storagePath + "/first", getConf());
+				_secondRelationStorage = new BerkeleyDBStoreSkewed(String.class, storagePath + "/second", getConf());
+			} else
+				throw new RuntimeException("non supported type");		
+			LOG.info("Storage with Skewed BDB!");
+		}else{
+			throw new RuntimeException("Unsupported BDB type!");
+		}
 	}
 
 	private void createIndexes() {
@@ -300,45 +351,41 @@ public class StormDstTupleStorageJoin extends StormBoltComponent {
 			String inputTupleHash, Tuple stormTupleRcv, boolean isLastInBatch) {
 
 		boolean isFromFirstEmitter = false;
-		String inputTupleString = MyUtilities.tupleToString(tuple, getConf());		
-		TupleStorage affectedStorage, oppositeStorage;
-		List<Index> affectedIndexes, oppositeIndexes;
+		BPlusTreeStore affectedStorage, oppositeStorage;
 
 		if (_firstEmitterIndex.equals(inputComponentIndex)) {
 			// R update
 			isFromFirstEmitter = true;
 			affectedStorage = _firstRelationStorage;
 			oppositeStorage = _secondRelationStorage;
-			affectedIndexes = _firstRelationIndexes;
-			oppositeIndexes = _secondRelationIndexes;
 		} else if (_secondEmitterIndex.equals(inputComponentIndex)) {
 			// S update
 			isFromFirstEmitter = false;
 			affectedStorage = _secondRelationStorage;
 			oppositeStorage = _firstRelationStorage;
-			affectedIndexes = _secondRelationIndexes;
-			oppositeIndexes = _firstRelationIndexes;
 		} else
 			throw new RuntimeException("InputComponentName " + inputComponentIndex
 					+ " doesn't match neither " + _firstEmitterIndex + " nor "
 					+ _secondEmitterIndex + ".");
 
-
-		// add the stormTuple to the specific storage
+		// first obtain key
+		final PredicateUpdateIndexesVisitor visitor = new PredicateUpdateIndexesVisitor(
+				isFromFirstEmitter, tuple);
+		_joinPredicate.accept(visitor);
+		final String keyValue = new ArrayList<String>(visitor._valuesToIndex).get(0);
+		
+		// second, obtain value
+		String inputTupleString = MyUtilities.tupleToString(tuple, getConf());
 		if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
 			final long incomingTimestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
 			inputTupleString = incomingTimestamp + SystemParameters.STORE_TIMESTAMP_DELIMITER
 					+ inputTupleString;
 		}
-		final int row_id = affectedStorage.insert(inputTupleString);
+		
+		// add the stormTuple to the specific storage
+		insertIntoBDBStorage(affectedStorage, keyValue, inputTupleString);
 
-		List<String> valuesToApplyOnIndex = null;
-
-		if (_existIndexes)
-			valuesToApplyOnIndex = updateIndexes(inputComponentIndex, tuple, affectedIndexes, row_id);
-
-		performJoin(stormTupleRcv, tuple, inputTupleHash, isFromFirstEmitter, oppositeIndexes,
-				valuesToApplyOnIndex, oppositeStorage, isLastInBatch);
+		performJoin(stormTupleRcv, tuple, isFromFirstEmitter, keyValue, oppositeStorage, isLastInBatch);
 		
 		if((_firstRelationStorage.size() + _secondRelationStorage.size()) % _statsUtils.getDipInputFreqPrint() == 0){
 			printStatistics(SystemParameters.INPUT_PRINT);
@@ -420,6 +467,10 @@ public class StormDstTupleStorageJoin extends StormBoltComponent {
 						LOG.info("," + "RESULT," + _thisTaskID + "," + "TimeStamp:," + ts
 								+ ",Sent Tuples," + getNumSentTuples());
 					}
+					LOG.info("First Storage: " + _firstRelationStorage.getStatistics()
+							+ "\nEnd of First Storage");
+					LOG.info("Second Storage: " + _secondRelationStorage.getStatistics()
+							+ "\nEnd of Second Storage");
 				} else // only final statistics is printed if we are measuring
 					// latency
 					if (type == SystemParameters.FINAL_PRINT) {
@@ -435,18 +486,20 @@ public class StormDstTupleStorageJoin extends StormBoltComponent {
 								+ StatisticsUtilities.bytesToMegabytes(runtime.totalMemory()));
 						LOG.info("," + "RESULT," + _thisTaskID + "," + "TimeStamp:," + ts
 								+ ",Sent Tuples," + getNumSentTuples());
+						
+						LOG.info("First Storage: " + _firstRelationStorage.getStatistics()
+								+ "\nEnd of First Storage");
+						LOG.info("Second Storage: " + _secondRelationStorage.getStatistics()
+								+ "\nEnd of Second Storage");
 					}
 			}
 	}
 	
 	// join-specific code
-	protected void performJoin(Tuple stormTupleRcv, List<String> tuple, String inputTupleHash,
-			boolean isFromFirstEmitter, List<Index> oppositeIndexes,
-			List<String> valuesToApplyOnIndex, TupleStorage oppositeStorage, boolean isLastInBatch) {
-
-		final TupleStorage tuplesToJoin = new TupleStorage();
-		selectTupleToJoin(oppositeStorage, oppositeIndexes, isFromFirstEmitter,
-				valuesToApplyOnIndex, tuplesToJoin);
+	protected void performJoin(Tuple stormTupleRcv, List<String> tuple, boolean isFromFirstEmitter,
+			String keyValue, BPlusTreeStore oppositeStorage, boolean isLastInBatch) {
+		final List<String> tuplesToJoin = selectTupleToJoin(oppositeStorage, isFromFirstEmitter,
+				keyValue);
 		join(stormTupleRcv, tuple, isFromFirstEmitter, tuplesToJoin, isLastInBatch);
 	}
 
@@ -458,15 +511,9 @@ public class StormDstTupleStorageJoin extends StormBoltComponent {
 				_numRemainingParents = MyUtilities.getNumParentTasks(tc, _inter);
 	 */
 
-	private void selectTupleToJoin(TupleStorage oppositeStorage, List<Index> oppositeIndexes,
-			boolean isFromFirstEmitter, List<String> valuesToApplyOnIndex, TupleStorage tuplesToJoin) {
+	private List<String> selectTupleToJoin(BPlusTreeStore oppositeStorage,
+			boolean isFromFirstEmitter, String keyValue) {
 
-		if (!_existIndexes) {
-			tuplesToJoin.copy(oppositeStorage);
-			return;
-		}
-
-		final TIntArrayList rowIds = new TIntArrayList();
 		// If there is atleast one index (so we have single join conditions with
 		// 1 index per condition)
 		// Get the row indices in the storage of the opposite relation that
@@ -475,81 +522,33 @@ public class StormDstTupleStorageJoin extends StormBoltComponent {
 		// join condition
 		// is separated by AND
 
-		for (int i = 0; i < oppositeIndexes.size(); i++) {
-			TIntArrayList currentRowIds = null;
-
-			final Index currentOpposIndex = oppositeIndexes.get(i);
-			final String value = valuesToApplyOnIndex.get(i);
-
-			int currentOperator = _operatorForIndexes.get(i);
-			// Switch inequality operator if the tuple coming is from the other
-			// relation
-			if (isFromFirstEmitter) {
-				final int operator = currentOperator;
-
-				if (operator == ComparisonPredicate.GREATER_OP)
-					currentOperator = ComparisonPredicate.LESS_OP;
-				else if (operator == ComparisonPredicate.NONGREATER_OP)
-					currentOperator = ComparisonPredicate.NONLESS_OP;
-				else if (operator == ComparisonPredicate.LESS_OP)
-					currentOperator = ComparisonPredicate.GREATER_OP;
-				else if (operator == ComparisonPredicate.NONLESS_OP)
-					currentOperator = ComparisonPredicate.NONGREATER_OP;
-				else
-					currentOperator = operator;
+		final int currentOperator = _operatorForIndexes.get(0);
+		// TODO We assume that 1) there is only one index, and consequently
+		// 2) JoinPredicate is ComparisonPredicate
+		final int diff = 0;
+		// Get the values from the index (check type first)
+		if (_typeOfValueIndexed.get(0) instanceof String)
+			return oppositeStorage.get(currentOperator, keyValue, diff);
+		// Even if valueIndexed is at first time an integer with
+		// precomputation a*col +b, it become a double
+		else if (_typeOfValueIndexed.get(0) instanceof Double)
+			return oppositeStorage.get(currentOperator, Double.parseDouble(keyValue), diff);
+		else if (_typeOfValueIndexed.get(0) instanceof Integer)
+			return oppositeStorage.get(currentOperator, Integer.parseInt(keyValue), diff);
+		else if (_typeOfValueIndexed.get(0) instanceof Date)
+			try {
+				return oppositeStorage.get(currentOperator, _convDateFormat.parse(keyValue), diff);
+			} catch (final ParseException e) {
+				e.printStackTrace();
+				return null;
 			}
+		else
+			throw new RuntimeException("non supported type");
 
-			// Get the values from the index (check type first)
-			if (_typeOfValueIndexed.get(i) instanceof String)
-				currentRowIds = currentOpposIndex.getValues(currentOperator, value);
-			// Even if valueIndexed is at first time an integer with
-			// precomputation a*col +b, it become a double
-			else if (_typeOfValueIndexed.get(i) instanceof Double)
-				currentRowIds = currentOpposIndex.getValues(currentOperator,
-						Double.parseDouble(value));
-			else if (_typeOfValueIndexed.get(i) instanceof Integer)
-				currentRowIds = currentOpposIndex.getValues(currentOperator,
-						Integer.parseInt(value));
-			else if (_typeOfValueIndexed.get(i) instanceof Date)
-				try {
-					currentRowIds = currentOpposIndex.getValues(currentOperator,
-							_convDateFormat.parse(value));
-				} catch (final ParseException e) {
-					e.printStackTrace();
-				}
-			else
-				throw new RuntimeException("non supported type");
-
-			// Compute the intersection
-			// TODO: Search only within the ids that are in rowIds from previous
-			// join conditions
-			// If nothing returned (and since we want intersection), no need to
-			// proceed.
-			if (currentRowIds == null)
-				return;
-
-			// If it's the first index, add everything. Else keep the
-			// intersection
-			if (i == 0)
-				rowIds.addAll(currentRowIds);
-			else
-				rowIds.retainAll(currentRowIds);
-
-			// If empty after intersection, return
-			if (rowIds.isEmpty())
-				return;
-		}
-
-		// generate tuplestorage
-		for (int i = 0; i < rowIds.size(); i++) {
-			final int id = rowIds.get(i);
-			tuplesToJoin.insert(oppositeStorage.get(id));
-
-		}
 	}
 	
 	private void join(Tuple stormTuple, List<String> tuple, boolean isFromFirstEmitter,
-			TupleStorage oppositeStorage, boolean isLastInBatch) {
+			List<String> oppositeStorage, boolean isLastInBatch) {
 
 		if (oppositeStorage == null || oppositeStorage.size() == 0)
 			return;
@@ -606,44 +605,28 @@ public class StormDstTupleStorageJoin extends StormBoltComponent {
 				 * 	outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple,
 						_rightHashIndexes);
 				 */
-
+				
 				applyOperatorsAndSend(stormTuple, outputTuple, lineageTimestamp, isLastInBatch);
 			}
 		}
 	}
 	
-	private List<String> updateIndexes(String inputComponentIndex, List<String> tuple, List<Index> affectedIndexes, int row_id) {
-		boolean comeFromFirstEmitter;
+	private void insertIntoBDBStorage(BPlusTreeStore affectedStorage, String key,
+			String inputTupleString) {
 
-		if (inputComponentIndex.equals(_firstEmitterIndex))
-			comeFromFirstEmitter = true;
+		if (_typeOfValueIndexed.get(0) instanceof Integer)
+			affectedStorage.put(Integer.parseInt(key), inputTupleString);
+		else if (_typeOfValueIndexed.get(0) instanceof Double)
+			affectedStorage.put(Double.parseDouble(key), inputTupleString);
+		else if (_typeOfValueIndexed.get(0) instanceof Date)
+			try {
+				affectedStorage.put(_convDateFormat.parse(key), inputTupleString);
+			} catch (final ParseException e) {
+				e.printStackTrace();
+			}
+		else if (_typeOfValueIndexed.get(0) instanceof String)
+			affectedStorage.put(key, inputTupleString);
 		else
-			comeFromFirstEmitter = false;
-
-		final PredicateUpdateIndexesVisitor visitor = new PredicateUpdateIndexesVisitor(
-				comeFromFirstEmitter, tuple);
-		_joinPredicate.accept(visitor);
-
-		final List<String> valuesToIndex = new ArrayList<String>(visitor._valuesToIndex);
-		final List<Object> typesOfValuesToIndex = new ArrayList<Object>(
-				visitor._typesOfValuesToIndex);
-
-		for (int i = 0; i < affectedIndexes.size(); i++)
-			if (typesOfValuesToIndex.get(i) instanceof Integer)
-				affectedIndexes.get(i).put(row_id, Integer.parseInt(valuesToIndex.get(i)));
-			else if (typesOfValuesToIndex.get(i) instanceof Double)
-				affectedIndexes.get(i).put(row_id, Double.parseDouble(valuesToIndex.get(i)));
-			else if (typesOfValuesToIndex.get(i) instanceof Date)
-				try {
-					affectedIndexes.get(i).put(row_id, _convDateFormat.parse(valuesToIndex.get(i)));
-				} catch (final ParseException e) {
-					throw new RuntimeException("Parsing problem in StormThetaJoin.updatedIndexes "
-							+ e.getMessage());
-				}
-			else if (typesOfValuesToIndex.get(i) instanceof String)
-				affectedIndexes.get(i).put(row_id, valuesToIndex.get(i));
-			else
-				throw new RuntimeException("non supported type");
-		return valuesToIndex;
+			throw new RuntimeException("non supported type");
 	}
 }

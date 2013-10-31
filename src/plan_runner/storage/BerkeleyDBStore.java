@@ -95,7 +95,7 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		final String oldValue = getValue(key);
 		if (oldValue != null)
 			// TODO watch-out not to use BDB with Timestamps!!!
-			value = oldValue + SystemParameters.STORE_TIMESTAMP_DELIMITER + value;
+			value = oldValue + SystemParameters.BDB_TUPLE_DELIMITER + value;
 		
 		databasePut(key, value);
 	}
@@ -138,7 +138,7 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 	protected List<String> getEqual(KeyType key) {
 		final String value = getValue(key);
 		return value == null ? null : Arrays.asList(value
-				.split(SystemParameters.STORE_TIMESTAMP_DELIMITER));
+				.split(SystemParameters.BDB_TUPLE_DELIMITER));
 	}
 	
 	protected String getValue(Object key) {
@@ -193,7 +193,7 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 			// find all the data values (tuples) for the given key
 			final String values = StringBinding.entryToString(dataEntry);
 			final List<String> tuples = Arrays.asList(values
-					.split(SystemParameters.STORE_TIMESTAMP_DELIMITER));
+					.split(SystemParameters.BDB_TUPLE_DELIMITER));
 			result.addAll(tuples);
 
 			status = cursor.getNext(keyEntry, dataEntry, LockMode.DEFAULT);

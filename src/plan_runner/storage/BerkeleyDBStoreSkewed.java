@@ -22,6 +22,9 @@ import com.sleepycat.je.DatabaseEntry;
  * 
  * Key = Logical Key + Random String
  * Value = Value
+ * 
+ * TODO: Maybe Putting the keys in order would reduce the disk storage, and improve the performance. 
+ *   It is doubtful if this brings improvement, as it requires a read on every write.
  */
 public class BerkeleyDBStoreSkewed<KeyType> extends BerkeleyDBStore<KeyType> {
 	private static Logger LOG = Logger.getLogger(BerkeleyDBStoreSkewed.class);
@@ -50,7 +53,7 @@ public class BerkeleyDBStoreSkewed<KeyType> extends BerkeleyDBStore<KeyType> {
 		
 		final String oldValue = getValue(physicalKey);
 		if (oldValue != null)
-			value = oldValue + SystemParameters.STORE_TIMESTAMP_DELIMITER + value;
+			value = oldValue + SystemParameters.BDB_TUPLE_DELIMITER + value;
 
 		databasePut(physicalKey, value);
 	}	
@@ -83,7 +86,7 @@ public class BerkeleyDBStoreSkewed<KeyType> extends BerkeleyDBStore<KeyType> {
 		
 		List<String> tuples = (values != null ? new ArrayList<String>() : null);
 		for(String value: values){
-			tuples.addAll(Arrays.asList(value.split(SystemParameters.STORE_TIMESTAMP_DELIMITER)));
+			tuples.addAll(Arrays.asList(value.split(SystemParameters.BDB_TUPLE_DELIMITER)));
 		}
 		return tuples;
 	}

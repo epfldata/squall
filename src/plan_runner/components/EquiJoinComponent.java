@@ -15,7 +15,7 @@ import plan_runner.storage.AggregationStorage;
 import plan_runner.storage.BasicStore;
 import plan_runner.storage.KeyValueStore;
 import plan_runner.storm_components.StormComponent;
-import plan_runner.storm_components.StormDstBDB;
+import plan_runner.storm_components.StormDstTupleStorageBDB;
 import plan_runner.storm_components.StormDstJoin;
 import plan_runner.storm_components.StormDstTupleStorageJoin;
 import plan_runner.storm_components.StormJoin;
@@ -177,7 +177,7 @@ public class EquiJoinComponent implements Component {
 		}
 		
 		if(isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)){
-			_joiner = new StormDstBDB(_firstParent, _secondParent, this, allCompNames,
+			_joiner = new StormDstTupleStorageBDB(_firstParent, _secondParent, this, allCompNames,
 					_joinPredicate, hierarchyPosition, builder, killer, conf);
 		} else if (_joinPredicate != null) {
 				_joiner = new StormDstTupleStorageJoin(_firstParent, _secondParent, this,

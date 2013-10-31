@@ -57,8 +57,7 @@ public class StormDstJoin extends StormBoltComponent {
 
 	// for printing statistics for creating graphs
 	protected Calendar _cal = Calendar.getInstance();
-	protected DateFormat _dateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
-	protected SimpleDateFormat _format = new SimpleDateFormat("EEE MMM d HH:mm:ss zzz yyyy");
+	protected DateFormat _statDateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 	protected StatisticsUtilities _statsUtils;
 
 	public StormDstJoin(StormEmitter firstEmitter, StormEmitter secondEmitter,
@@ -325,7 +324,7 @@ public class StormDstJoin extends StormBoltComponent {
 				final int size1 = ((KeyValueStore<String, String>) _firstRelationStorage).size();
 				final int size2 = ((KeyValueStore<String, String>) _secondRelationStorage).size();
 				final int totalSize = size1 + size2;
-				final String ts = _dateFormat.format(_cal.getTime());
+				final String ts = _statDateFormat.format(_cal.getTime());
 
 				// printing
 				if (!MyUtilities.isCustomTimestampMode(getConf())) {
@@ -359,23 +358,22 @@ public class StormDstJoin extends StormBoltComponent {
 								+ ",Sent Tuples," + getNumSentTuples());
 					}
 				} else // only final statistics is printed if we are measuring
-						// latency
-				if (type == SystemParameters.FINAL_PRINT) {
-					final Runtime runtime = Runtime.getRuntime();
-					final long memory = runtime.totalMemory() - runtime.freeMemory();
-					if (numNegatives > 0)
-						LOG.info("WARNINGLAT! Negative latency for " + numNegatives + ", at most "
-								+ maxNegative + "ms.");
-					LOG.info("," + "MEMORY," + _thisTaskID + "," + " TimeStamp:," + ts
-							+ ", FirstStorage:," + size1 + ", SecondStorage:," + size2
-							+ ", Total:," + totalSize + ", Memory used: ,"
-							+ StatisticsUtilities.bytesToMegabytes(memory) + ","
-							+ StatisticsUtilities.bytesToMegabytes(runtime.totalMemory()));
-					LOG.info("," + "RESULT," + _thisTaskID + "," + "TimeStamp:," + ts
-							+ ",Sent Tuples," + getNumSentTuples());
-				}
+					// latency
+					if (type == SystemParameters.FINAL_PRINT) {
+						final Runtime runtime = Runtime.getRuntime();
+						final long memory = runtime.totalMemory() - runtime.freeMemory();
+						if (numNegatives > 0)
+							LOG.info("WARNINGLAT! Negative latency for " + numNegatives + ", at most "
+									+ maxNegative + "ms.");
+						LOG.info("," + "MEMORY," + _thisTaskID + "," + " TimeStamp:," + ts
+								+ ", FirstStorage:," + size1 + ", SecondStorage:," + size2
+								+ ", Total:," + totalSize + ", Memory used: ,"
+								+ StatisticsUtilities.bytesToMegabytes(memory) + ","
+								+ StatisticsUtilities.bytesToMegabytes(runtime.totalMemory()));
+						LOG.info("," + "RESULT," + _thisTaskID + "," + "TimeStamp:," + ts
+								+ ",Sent Tuples," + getNumSentTuples());
+					}
 			}
-
 	}
 
 	private void processNonLastTuple(String inputComponentIndex, List<String> tuple,

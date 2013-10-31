@@ -55,7 +55,8 @@ public class SystemParameters {
 	public static final long BYTES_IN_MB = 1024 * 1024;
 
 	public static final String MANUAL_BATCH_HASH_DELIMITER = "~";
-	public static final String MANUAL_BATCH_TUPLE_DELIMITER = "`";
+	public static final String MANUAL_BATCH_TUPLE_DELIMITER = "`";  // these two are the same, but it should not be a problem:
+	public static final String BDB_TUPLE_DELIMITER  = "`"; // the first is for network transfer, the second is for storing tuples
 	public static final String STORE_TIMESTAMP_DELIMITER = "@";
 
 	// DYNAMIC THETA JOIN STREAM IDS..
