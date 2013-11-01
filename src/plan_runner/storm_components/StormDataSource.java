@@ -204,11 +204,20 @@ public class StormDataSource extends StormSpoutComponent {
 		}
 
 		if (SystemParameters.isExisting(getConf(), "TIMEOUT_1MS_EVERY_XTH")) {
+			// Obsolete - this is for compatibility with old configurations
 			final long timeout = 1;
 			final int freqWait = SystemParameters.getInt(getConf(), "TIMEOUT_1MS_EVERY_XTH");
 			if (_numSentTuples > 0 && _numSentTuples % freqWait == 0)
 				Utils.sleep(timeout);
 		}
+		
+		if (SystemParameters.isExisting(getConf(), "TIMEOUT_EVERY_X_TUPLE") && SystemParameters.isExisting(getConf(), "TIMEOUT_X_MS")) {
+			final int freqWait = SystemParameters.getInt(getConf(), "TIMEOUT_EVERY_X_TUPLE");			
+			final long timeout = SystemParameters.getInt(getConf(), "TIMEOUT_X_MS");
+			if (_numSentTuples > 0 && _numSentTuples % freqWait == 0)
+				Utils.sleep(timeout);
+		}
+		
 
 		final String line = readLine();
 		if (line == null) {

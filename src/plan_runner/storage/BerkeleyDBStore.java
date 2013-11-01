@@ -94,7 +94,6 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		incrementSize();
 		final String oldValue = getValue(key);
 		if (oldValue != null)
-			// TODO watch-out not to use BDB with Timestamps!!!
 			value = oldValue + SystemParameters.BDB_TUPLE_DELIMITER + value;
 		
 		databasePut(key, value);
