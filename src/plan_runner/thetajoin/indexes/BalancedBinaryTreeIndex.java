@@ -99,34 +99,38 @@ public class BalancedBinaryTreeIndex<KeyType extends Comparable<KeyType>> implem
 	}
 
 	private KeyType performOperation(KeyType k, KeyType diff, boolean isInverse) {
-		KeyType result = null;
-		if (k instanceof Double) {
-			final Double kd = (Double) k;
-			Double diffd = (Double) diff;
+		// workaround for some compilers
+		Comparable<?> tmpK = k;
+		Comparable<?> tmpDiff = diff;
+		Comparable<?> result = null;
+		
+		if (tmpK instanceof Double) {
+			final Double kd = (Double) tmpK;
+			Double diffd = (Double) tmpDiff;
 			if (isInverse)
 				diffd = -1 * diffd;
 			final Double resultd = kd + diffd;
-			result = (KeyType) resultd;
-		} else if (k instanceof Integer) {
-			final Integer kd = (Integer) k;
-			Integer diffd = (Integer) diff;
+			result = resultd;
+		} else if (tmpK instanceof Integer) {
+			final Integer kd = (Integer) tmpK;
+			Integer diffd = (Integer) tmpDiff;
 			if (isInverse)
 				diffd = -1 * diffd;
 			final Integer resultd = kd + diffd;
-			result = (KeyType) resultd;
-		} else if (k instanceof Date) {
-			final Date kd = (Date) k;
-			Integer diffd = (Integer) diff;
+			result = resultd;
+		} else if (tmpK instanceof Date) {
+			final Date kd = (Date) tmpK;
+			Integer diffd = (Integer) tmpDiff;
 			if (isInverse)
 				diffd = -1 * diffd;
 			final Calendar c = Calendar.getInstance();
 			c.setTime(kd);
 			c.add(Calendar.DAY_OF_MONTH, diffd);
-			result = (KeyType) c.getTime();
+			result = c.getTime();
 		} else
-			LOG.info("Operation in B+Tree not supported for underlying datatype");
+			LOG.info("Operation in BalancedBinaryTree not supported for underlying datatype");
 
-		return result;
+		return (KeyType)result;
 	}
 
 	@Override
