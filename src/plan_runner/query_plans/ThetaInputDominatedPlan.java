@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
+import plan_runner.components.ThetaJoinComponentFactory;
 import plan_runner.components.ThetaJoinDynamicComponentAdvisedEpochs;
 import plan_runner.components.ThetaJoinStaticComponent;
 import plan_runner.conversion.DoubleConversion;
@@ -85,15 +86,11 @@ public class ThetaInputDominatedPlan {
 
 		final AndPredicate overallPred = new AndPredicate(pred1, pred2);
 
-		Component lastJoiner = null;
-		if (Theta_JoinType == 0)
-			lastJoiner = new ThetaJoinStaticComponent(relationLineitem, relationOrders, _queryPlan)
-					.setJoinPredicate(overallPred)
-					.addOperator(new ProjectOperator(new int[] { 1, 2, 4 })).addOperator(agg);
-		else if (Theta_JoinType == 1)
-			lastJoiner = new ThetaJoinDynamicComponentAdvisedEpochs(relationLineitem, relationOrders, _queryPlan)
-					.setJoinPredicate(overallPred)
-					.addOperator(new ProjectOperator(new int[] { 1, 2, 4 })).addOperator(agg);
+		Component lastJoiner = ThetaJoinComponentFactory
+				.createThetaJoinOperator(Theta_JoinType, relationLineitem, relationOrders,
+						_queryPlan).setJoinPredicate(overallPred)
+				.addOperator(new ProjectOperator(new int[] { 1, 2, 4 })).addOperator(agg);
+		;
 
 		//lastJoiner.setPrintOut(false);
 		// -------------------------------------------------------------------------------------

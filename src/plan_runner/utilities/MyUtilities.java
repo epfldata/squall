@@ -9,6 +9,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -24,8 +25,10 @@ import plan_runner.storm_components.InterchangingComponent;
 import plan_runner.storm_components.StormComponent;
 import plan_runner.storm_components.StormEmitter;
 import plan_runner.storm_components.StormSrcHarmonizer;
+import plan_runner.thetajoin.matrix_mapping.ContentSensitiveMatrixAssignment;
 import plan_runner.thetajoin.matrix_mapping.MatrixAssignment;
 import backtype.storm.generated.Grouping;
+import backtype.storm.grouping.CustomStreamGrouping;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -294,6 +297,18 @@ public class MyUtilities {
 		return first < second ? first : second;
 	}
 
+	public static int getMin(int first, int second) {
+		return first < second ? first : second;
+	}
+
+	public static long getMax(long first, long second) {
+		return first > second ? first : second;
+	}
+
+	public static int getMax(int first, int second) {
+		return first > second ? first : second;
+	}
+	
 	public static int getNumParentTasks(TopologyContext tc, List<StormEmitter> emittersList) {
 		int result = 0;
 		for (final StormEmitter emitter : emittersList) {
@@ -328,7 +343,7 @@ public class MyUtilities {
 	public static String getPartFromEnd(String path, int fromEnd) {
 		final String parts[] = path.split("\\/+");
 		final int length = parts.length;
-		return parts[length - (fromEnd + 1)];
+		return new String(parts[length - (fromEnd + 1)]);
 	}
 
 	public static String getStackTrace(Throwable aThrowable) {
@@ -576,7 +591,7 @@ public class MyUtilities {
 
 	public static InputDeclarer thetaAttachEmitterComponents(InputDeclarer currentBolt,
 			StormEmitter emitter1, StormEmitter emitter2, List<String> allCompNames,
-			MatrixAssignment assignment, Map map) {
+			MatrixAssignment assignment, Map map, TypeConversion wrapper) {
 
 		// MatrixAssignment assignment = new MatrixAssignment(firstRelationSize,
 		// secondRelationSize, parallelism,-1);
@@ -584,7 +599,13 @@ public class MyUtilities {
 		final String firstEmitterIndex = String.valueOf(allCompNames.indexOf(emitter1.getName()));
 		final String secondEmitterIndex = String.valueOf(allCompNames.indexOf(emitter2.getName()));
 
-		final ThetaJoinStaticMapping mapping = new ThetaJoinStaticMapping(firstEmitterIndex,
+		CustomStreamGrouping mapping=null;
+		
+		if(assignment instanceof ContentSensitiveMatrixAssignment){
+				mapping= new ContentSensitiveThetaJoinStaticMapping(firstEmitterIndex, secondEmitterIndex, assignment, map, wrapper);
+		}
+		else
+			mapping = new ThetaJoinStaticMapping(firstEmitterIndex,
 				secondEmitterIndex, assignment, map);
 
 		final ArrayList<StormEmitter> emittersList = new ArrayList<StormEmitter>();
@@ -668,6 +689,23 @@ public class MyUtilities {
 		}
 		
 		return filePaths;
+	}
+
+	public static String getQueryID(Map map) {
+		String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
+		String dataPath = SystemParameters.getString(map, "DIP_DATA_PATH");
+		String sizeSkew = extractSizeSkew(dataPath);
+		return queryName + "_" + sizeSkew;
+	}
+	
+	private static String extractSizeSkew(String dataPath){
+		String parts[] = dataPath.split("/");
+		int size = parts.length;
+		if(size == 1){
+			return parts[0];
+		}else{
+			return parts[size - 2] + "_" + parts[size - 1]; 
+		}
 	}
 	
 }

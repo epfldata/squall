@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
@@ -13,7 +14,6 @@ import plan_runner.query_plans.QueryPlan;
 import plan_runner.storm_components.InterchangingComponent;
 import plan_runner.storm_components.StormBoltComponent;
 import plan_runner.storm_components.StormComponent;
-import plan_runner.storm_components.StormDstTupleStorageBDB;
 import plan_runner.storm_components.StormThetaJoin;
 import plan_runner.storm_components.StormThetaJoinBDB;
 import plan_runner.storm_components.synchronization.TopologyKiller;
@@ -24,37 +24,30 @@ import backtype.storm.topology.TopologyBuilder;
 public class ThetaJoinStaticComponent implements Component {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(ThetaJoinStaticComponent.class);
-
 	private final Component _firstParent;
 	private final Component _secondParent;
 	private Component _child;
-
 	private final String _componentName;
-
 	private long _batchOutputMillis;
-
 	private List<Integer> _hashIndexes;
 	private List<ValueExpression> _hashExpressions;
-
 	private StormBoltComponent _joiner;
-
 	private final ChainOperator _chain = new ChainOperator();
-
 	private boolean _printOut;
 	private boolean _printOutSet; // whether printOut was already set
-
+	private boolean _isContentSensitive;
 	private Predicate _joinPredicate;
-
 	private InterchangingComponent _interComp = null;
+	private TypeConversion _contentSensitiveThetaJoinWrapper=null; 
 
 	public ThetaJoinStaticComponent(Component firstParent, Component secondParent,
-			QueryPlan queryPlan) {
+			QueryPlan queryPlan, boolean isContentSensitive) {
 		_firstParent = firstParent;
 		_firstParent.setChild(this);
 		_secondParent = secondParent;
 		_secondParent.setChild(this);
-
 		_componentName = firstParent.getName() + "_" + secondParent.getName();
+		_isContentSensitive=isContentSensitive;
 
 		queryPlan.add(this);
 	}
@@ -169,7 +162,7 @@ public class ThetaJoinStaticComponent implements Component {
 					_joinPredicate, hierarchyPosition, builder, killer, conf, _interComp);
 		}else{
 			_joiner = new StormThetaJoin(_firstParent, _secondParent, this, allCompNames,
-					_joinPredicate, hierarchyPosition, builder, killer, conf, _interComp);	
+					_joinPredicate, hierarchyPosition, builder, killer, conf, _interComp, _isContentSensitive,_contentSensitiveThetaJoinWrapper);
 		}
 	}
 
@@ -203,12 +196,14 @@ public class ThetaJoinStaticComponent implements Component {
 		return this;
 	}
 
-	public ThetaJoinStaticComponent setInterComp(InterchangingComponent inter) {
+	@Override
+	public Component setInterComp(InterchangingComponent inter) {
 		_interComp = inter;
 		return this;
 	}
 
-	public ThetaJoinStaticComponent setJoinPredicate(Predicate joinPredicate) {
+	@Override
+	public Component setJoinPredicate(Predicate joinPredicate) {
 		_joinPredicate = joinPredicate;
 		return this;
 	}
@@ -219,5 +214,12 @@ public class ThetaJoinStaticComponent implements Component {
 		_printOut = printOut;
 		return this;
 	}
+
+	@Override
+	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
+		_contentSensitiveThetaJoinWrapper=wrapper;
+		return this;
+	}
+	
 
 }

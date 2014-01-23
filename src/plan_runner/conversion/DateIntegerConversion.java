@@ -13,9 +13,9 @@ public class DateIntegerConversion implements NumericConversion<Integer> {
 	@Override
 	public Integer fromString(String str) {
 		final String[] splits = str.split("-");
-		final int year = Integer.parseInt(splits[0]) * 10000;
-		final int month = Integer.parseInt(splits[1]) * 100;
-		final int day = Integer.parseInt(splits[2]);
+		final int year = Integer.parseInt(new String(splits[0])) * 10000;
+		final int month = Integer.parseInt(new String(splits[1])) * 100;
+		final int day = Integer.parseInt(new String(splits[2]));
 		return year + month + day;
 	}
 
@@ -26,7 +26,17 @@ public class DateIntegerConversion implements NumericConversion<Integer> {
 
 	@Override
 	public Integer getInitialValue() {
-		return new Integer(0);
+		return 0;
+	}
+	
+	@Override
+	public Integer getMinValue() {
+		return Integer.MIN_VALUE;
+	}
+
+	@Override
+	public Integer getMaxValue() {
+		return Integer.MAX_VALUE;
 	}
 
 	@Override

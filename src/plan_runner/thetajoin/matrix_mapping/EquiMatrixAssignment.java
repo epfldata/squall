@@ -16,7 +16,7 @@ import org.apache.log4j.Logger;
  *         !! We are not following the same procedure of the Theta-join paper,
  *         for fallacies.
  */
-public class EquiMatrixAssignment implements Serializable, MatrixAssignment {
+public class EquiMatrixAssignment<KeyType> implements Serializable, MatrixAssignment {
 	/**
 	 * 
 	 */
@@ -94,8 +94,8 @@ public class EquiMatrixAssignment implements Serializable, MatrixAssignment {
 
 		final String[] dimensions = dim.split("-");
 
-		_r_S = Integer.parseInt(dimensions[0]);
-		_r_T = Integer.parseInt(dimensions[1]);
+		_r_S = Integer.parseInt(new String(dimensions[0]));
+		_r_T = Integer.parseInt(new String(dimensions[1]));
 		_r = _r_S * _r_T;
 		createRegionMatrix();
 	}
@@ -229,11 +229,13 @@ public class EquiMatrixAssignment implements Serializable, MatrixAssignment {
 
 	@Override
 	public String toString() {
-		String ret = "";
-		ret = ret.concat("Print of an EquiMatrixAssignment: \n");
-		ret = ret.concat("Number of worker rows: " + _r_S + "\n");
-		ret = ret.concat("Number of worker columns: " + _r_T + "\n");
-		return ret;
+		return getMappingDimensions();
 	}
+
+	@Override
+	public ArrayList getRegionIDs(Dimension RowOrColumn, Object key) {
+		throw new RuntimeException("This method is content-insenstive");
+	}
+
 
 }

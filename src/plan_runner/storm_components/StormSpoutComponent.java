@@ -42,7 +42,7 @@ public abstract class StormSpoutComponent extends BaseRichSpout implements Storm
 	// for ManualBatch(Queuing) mode
 	private List<Integer> _targetTaskIds;
 	private int _targetParallelism;
-	private StringBuffer[] _targetBuffers;
+	private StringBuilder[] _targetBuffers;
 	private long[] _targetTimestamps;
 
 	// for CustomTimestamp mode
@@ -146,7 +146,7 @@ public abstract class StormSpoutComponent extends BaseRichSpout implements Storm
 	private void manualBatchSend() {
 		for (int i = 0; i < _targetParallelism; i++) {
 			final String tupleString = _targetBuffers[i].toString();
-			_targetBuffers[i] = new StringBuffer("");
+			_targetBuffers[i] = new StringBuilder("");
 
 			if (!tupleString.isEmpty())
 				// some buffers might be empty
@@ -164,10 +164,10 @@ public abstract class StormSpoutComponent extends BaseRichSpout implements Storm
 
 		_targetTaskIds = MyUtilities.findTargetTaskIds(tc);
 		_targetParallelism = _targetTaskIds.size();
-		_targetBuffers = new StringBuffer[_targetParallelism];
+		_targetBuffers = new StringBuilder[_targetParallelism];
 		_targetTimestamps = new long[_targetParallelism];
 		for (int i = 0; i < _targetParallelism; i++)
-			_targetBuffers[i] = new StringBuffer("");
+			_targetBuffers[i] = new StringBuilder("");
 	}
 
 	@Override

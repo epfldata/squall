@@ -3,8 +3,11 @@ package plan_runner.components;
 import java.io.Serializable;
 import java.util.List;
 
+import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.Operator;
+import plan_runner.predicates.Predicate;
+import plan_runner.storm_components.InterchangingComponent;
 import plan_runner.storm_components.StormEmitter;
 import plan_runner.storm_components.synchronization.TopologyKiller;
 import backtype.storm.Config;
@@ -37,6 +40,23 @@ public interface Component extends Serializable, ComponentProperties, StormEmitt
 	public Component setHashIndexes(List<Integer> hashIndexes);
 
 	public Component setPrintOut(boolean printOut);
+	
+	public Component setInterComp(InterchangingComponent inter);
+	
+	public Component setJoinPredicate(Predicate joinPredicate);
+	
+	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper); 
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 
 }

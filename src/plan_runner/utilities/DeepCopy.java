@@ -1,10 +1,19 @@
 package plan_runner.utilities;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
 
 /**
  * Deep copy by using serialization/deserialization. Can be made 50% more
@@ -45,5 +54,49 @@ public class DeepCopy {
 		}
 		return obj;
 	}
+	
+	public static void serializeToFile(Object obj, String filename){
+		try{
+			OutputStream file = new FileOutputStream(filename);
+			OutputStream buffer = new BufferedOutputStream(file);
+			ObjectOutput output = new ObjectOutputStream(buffer);
+			output.writeObject(obj);
+			output.close();
+		}catch(IOException ex){
+			throw new RuntimeException("Error while serializing " + MyUtilities.getStackTrace(ex));
+		}
+	}
+	
+	public static Serializable deserializeFromFile(String filename){
+		try{
+			InputStream file = new FileInputStream(filename);
+		    InputStream buffer = new BufferedInputStream(file);
+		    ObjectInput input = new ObjectInputStream (buffer);
+		    return (Serializable) input.readObject();
+		}catch(Exception ex){
+			throw new RuntimeException("Error while deserializing " + MyUtilities.getStackTrace(ex));
+		}
+	}
+	
+	public static byte[] serializeToByteArray(Object obj) {
+		try{
+			ByteArrayOutputStream b = new ByteArrayOutputStream();
+			ObjectOutputStream o = new ObjectOutputStream(b);
+			o.writeObject(obj);
+			return b.toByteArray();
+		}catch(Exception exc){
+			throw new RuntimeException("Problem with serializing " + MyUtilities.getStackTrace(exc));
+		}
+	}
 
+	public static Object deserializeFromByteArray(byte[] bytes) {
+		try{
+			ByteArrayInputStream b = new ByteArrayInputStream(bytes);
+			ObjectInputStream o = new ObjectInputStream(b);
+			return o.readObject();
+		}catch(Exception exc){
+			throw new RuntimeException("Problem with deserializing " + MyUtilities.getStackTrace(exc));
+		}
+	}
+	
 }

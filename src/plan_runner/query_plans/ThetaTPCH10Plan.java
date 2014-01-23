@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
+import plan_runner.components.ThetaJoinComponentFactory;
 import plan_runner.components.ThetaJoinDynamicComponentAdvisedEpochs;
 import plan_runner.components.ThetaJoinStaticComponent;
 import plan_runner.conversion.DateConversion;
@@ -34,200 +35,135 @@ import plan_runner.query_plans.QueryPlan;
 import plan_runner.query_plans.ThetaQueryPlansParameters;
 
 public class ThetaTPCH10Plan {
-    private static Logger LOG = Logger.getLogger(ThetaTPCH10Plan.class);
+	private static Logger LOG = Logger.getLogger(ThetaTPCH10Plan.class);
 
-    private static final TypeConversion<Date> _dc = new DateConversion();
-    private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
-    private static final StringConversion _sc = new StringConversion();
-    private QueryPlan _queryPlan = new QueryPlan();
-    
-    private static final IntegerConversion _ic = new IntegerConversion();
+	private static final TypeConversion<Date> _dc = new DateConversion();
+	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
+	private static final StringConversion _sc = new StringConversion();
+	private QueryPlan _queryPlan = new QueryPlan();
 
-    //query variables
-    private static Date _date1, _date2;
-    private static String MARK = "R";
-     
-    private static void computeDates(){
-    	// date2= date1 + 3 months
-        String date1Str = "1993-10-01";
-        int interval = 3;
-        int unit = Calendar.MONTH;
+	private static final IntegerConversion _ic = new IntegerConversion();
 
-        //setting _date1
-        _date1 = _dc.fromString(date1Str);
+	//query variables
+	private static Date _date1, _date2;
+	private static String MARK = "R";
 
-        //setting _date2
-        ValueExpression<Date> date1Ve, date2Ve;
-        date1Ve = new ValueSpecification<Date>(_dc, _date1);
-        date2Ve = new DateSum(date1Ve, unit, interval);
-        _date2 = date2Ve.eval(null);
-        // tuple is set to null since we are computing based on constants
-    }
+	private static void computeDates() {
+		// date2= date1 + 3 months
+		String date1Str = "1993-10-01";
+		int interval = 3;
+		int unit = Calendar.MONTH;
 
-    public ThetaTPCH10Plan(String dataPath, String extension, Map conf){
-        computeDates();
-        
-        int Theta_JoinType=ThetaQueryPlansParameters.getThetaJoinType(conf);
+		//setting _date1
+		_date1 = _dc.fromString(date1Str);
 
-        //-------------------------------------------------------------------------------------
-        List<Integer> hashCustomer = Arrays.asList(0);
+		//setting _date2
+		ValueExpression<Date> date1Ve, date2Ve;
+		date1Ve = new ValueSpecification<Date>(_dc, _date1);
+		date2Ve = new DateSum(date1Ve, unit, interval);
+		_date2 = date2Ve.eval(null);
+		// tuple is set to null since we are computing based on constants
+	}
 
-        ProjectOperator projectionCustomer = new ProjectOperator(new int[]{0, 1, 2, 3, 4, 5, 7});
+	public ThetaTPCH10Plan(String dataPath, String extension, Map conf) {
+		computeDates();
 
-        DataSourceComponent relationCustomer = new DataSourceComponent(
-                "CUSTOMER",
-                dataPath + "customer" + extension,
-                _queryPlan).setHashIndexes(hashCustomer)
-                           .addOperator(projectionCustomer);
+		int Theta_JoinType = ThetaQueryPlansParameters.getThetaJoinType(conf);
 
-        //-------------------------------------------------------------------------------------
-        List<Integer> hashOrders = Arrays.asList(1);
+		//-------------------------------------------------------------------------------------
+		List<Integer> hashCustomer = Arrays.asList(0);
 
-        SelectOperator selectionOrders = new SelectOperator(
-                new BetweenPredicate(
-                    new ColumnReference(_dc, 4),
-                    true, new ValueSpecification(_dc, _date1),
-                    false, new ValueSpecification(_dc, _date2)
-                ));
+		ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0, 1, 2, 3, 4, 5, 7 });
 
-        ProjectOperator projectionOrders = new ProjectOperator(new int[]{0, 1});
+		DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath
+				+ "customer" + extension, _queryPlan).setHashIndexes(hashCustomer).addOperator(
+				projectionCustomer);
 
-        DataSourceComponent relationOrders = new DataSourceComponent(
-                "ORDERS",
-                dataPath + "orders" + extension,
-                _queryPlan).setHashIndexes(hashOrders)
-                           .addOperator(selectionOrders)
-                           .addOperator(projectionOrders);
+		//-------------------------------------------------------------------------------------
+		List<Integer> hashOrders = Arrays.asList(1);
 
-        //-------------------------------------------------------------------------------------
-        //TODO
-        ColumnReference colC = new ColumnReference(_ic, 0);
+		SelectOperator selectionOrders = new SelectOperator(new BetweenPredicate(
+				new ColumnReference(_dc, 4), true, new ValueSpecification(_dc, _date1), false,
+				new ValueSpecification(_dc, _date2)));
+
+		ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 1 });
+
+		DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath + "orders"
+				+ extension, _queryPlan).setHashIndexes(hashOrders).addOperator(selectionOrders)
+				.addOperator(projectionOrders);
+
+		//-------------------------------------------------------------------------------------
+		ColumnReference colC = new ColumnReference(_ic, 0);
 		ColumnReference colO = new ColumnReference(_ic, 1);
-		ComparisonPredicate C_O_comp = new ComparisonPredicate(
-				ComparisonPredicate.EQUAL_OP, colC, colO);
-		
-		Component C_Ojoin=null;
-        
-        if(Theta_JoinType==0){
-        	C_Ojoin = new ThetaJoinStaticComponent(
-        			relationCustomer,
-    				relationOrders,
-    				_queryPlan).setHashIndexes(Arrays.asList(3))
-    				.addOperator(new ProjectOperator(new int[]{0, 1, 2, 3, 4, 5, 6, 7}))
-    				.setJoinPredicate(C_O_comp);
-        }
-        else if(Theta_JoinType==1){
-        	C_Ojoin = new ThetaJoinDynamicComponentAdvisedEpochs(
-        			relationCustomer,
-    				relationOrders,
-    				_queryPlan).setHashIndexes(Arrays.asList(3))
-    				.addOperator(new ProjectOperator(new int[]{0, 1, 2, 3, 4, 5, 6, 7}))
-    				.setJoinPredicate(C_O_comp);
-        }
-		
-        //-------------------------------------------------------------------------------------
-        List<Integer> hashNation = Arrays.asList(0);
+		ComparisonPredicate C_O_comp = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP, colC,
+				colO);
 
-        ProjectOperator projectionNation = new ProjectOperator(new int[]{0, 1});
+		Component C_Ojoin = ThetaJoinComponentFactory
+				.createThetaJoinOperator(Theta_JoinType, relationCustomer, relationOrders,
+						_queryPlan).setHashIndexes(Arrays.asList(3))
+				.addOperator(new ProjectOperator(new int[] { 0, 1, 2, 3, 4, 5, 6, 7 }))
+				.setJoinPredicate(C_O_comp);
 
-        DataSourceComponent relationNation = new DataSourceComponent(
-                "NATION",
-                dataPath + "nation" + extension,
-                _queryPlan).setHashIndexes(hashNation)
-                           .addOperator(projectionNation);
-        //-------------------------------------------------------------------------------------
-        //TODO
-        
-        ColumnReference colC_O = new ColumnReference(_ic, 3);
+		//-------------------------------------------------------------------------------------
+		List<Integer> hashNation = Arrays.asList(0);
+
+		ProjectOperator projectionNation = new ProjectOperator(new int[] { 0, 1 });
+
+		DataSourceComponent relationNation = new DataSourceComponent("NATION", dataPath + "nation"
+				+ extension, _queryPlan).setHashIndexes(hashNation).addOperator(projectionNation);
+		//-------------------------------------------------------------------------------------
+
+		ColumnReference colC_O = new ColumnReference(_ic, 3);
 		ColumnReference colN = new ColumnReference(_ic, 0);
-		ComparisonPredicate C_O_N_comp = new ComparisonPredicate(
-				ComparisonPredicate.EQUAL_OP, colC_O, colN);
-        
-        Component C_O_Njoin=null;
-        
-        if(Theta_JoinType==0){
-        	C_O_Njoin = new ThetaJoinStaticComponent(
-        			C_Ojoin,
-    				relationNation,
-    				_queryPlan).addOperator(new ProjectOperator(new int[]{0, 1, 2, 4, 5, 6, 7, 9}))
-                                               .setHashIndexes(Arrays.asList(6))
-                                               .setJoinPredicate(C_O_N_comp);
-        }
-        else if(Theta_JoinType==1){
-        	C_O_Njoin = new ThetaJoinDynamicComponentAdvisedEpochs(
-        			C_Ojoin,
-    				relationNation,
-    				_queryPlan).addOperator(new ProjectOperator(new int[]{0, 1, 2, 4, 5, 6, 7, 9}))
-                                               .setHashIndexes(Arrays.asList(6))
-                                               .setJoinPredicate(C_O_N_comp);
-        }
-        //-------------------------------------------------------------------------------------
+		ComparisonPredicate C_O_N_comp = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP,
+				colC_O, colN);
 
-        List<Integer> hashLineitem = Arrays.asList(0);
+		Component C_O_Njoin = ThetaJoinComponentFactory
+				.createThetaJoinOperator(Theta_JoinType, C_Ojoin, relationNation, _queryPlan)
+				.addOperator(new ProjectOperator(new int[] { 0, 1, 2, 4, 5, 6, 7, 9 }))
+				.setHashIndexes(Arrays.asList(6)).setJoinPredicate(C_O_N_comp);
 
-        SelectOperator selectionLineitem = new SelectOperator(
-                new ComparisonPredicate(
-                    new ColumnReference(_sc, 8),
-                    new ValueSpecification(_sc, MARK)
+		//-------------------------------------------------------------------------------------
 
-                ));
+		List<Integer> hashLineitem = Arrays.asList(0);
 
-        ProjectOperator projectionLineitem = new ProjectOperator(new int[]{0, 5, 6});
+		SelectOperator selectionLineitem = new SelectOperator(new ComparisonPredicate(
+				new ColumnReference(_sc, 8), new ValueSpecification(_sc, MARK)));
 
-        DataSourceComponent relationLineitem = new DataSourceComponent(
-                "LINEITEM",
-                dataPath + "lineitem" + extension,
-                _queryPlan).setHashIndexes(hashLineitem)
-                           .addOperator(selectionLineitem)
-                           .addOperator(projectionLineitem);
+		ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0, 5, 6 });
 
-        //-------------------------------------------------------------------------------------
-        // set up aggregation function on the StormComponent(Bolt) where join is performed
+		DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
+				+ "lineitem" + extension, _queryPlan).setHashIndexes(hashLineitem)
+				.addOperator(selectionLineitem).addOperator(projectionLineitem);
 
-	//1 - discount
-	ValueExpression<Double> substract = new Subtraction(
-			new ValueSpecification(_doubleConv, 1.0),
-			new ColumnReference(_doubleConv, 8));
-	//extendedPrice*(1-discount)
-	ValueExpression<Double> product = new Multiplication(
-			new ColumnReference(_doubleConv, 7),
-			substract);
-	AggregateOperator agg = new AggregateSumOperator(product, conf)
+		//-------------------------------------------------------------------------------------
+		// set up aggregation function on the StormComponent(Bolt) where join is performed
+
+		//1 - discount
+		ValueExpression<Double> substract = new Subtraction(
+				new ValueSpecification(_doubleConv, 1.0), new ColumnReference(_doubleConv, 8));
+		//extendedPrice*(1-discount)
+		ValueExpression<Double> product = new Multiplication(new ColumnReference(_doubleConv, 7),
+				substract);
+		AggregateOperator agg = new AggregateSumOperator(product, conf)
 		//.setGroupByColumns(Arrays.asList(0, 1, 4, 6, 2, 3, 5));
-	.setGroupByColumns(Arrays.asList(0, 1, 4, 6, 2, 3, 5));
+				.setGroupByColumns(Arrays.asList(0, 1, 4, 6, 2, 3, 5));
 
-		//TODO
-	
-	ColumnReference colC_O_N = new ColumnReference(_ic, 6);
-	ColumnReference colL = new ColumnReference(_ic, 0);
-	ComparisonPredicate C_O_N_L_comp = new ComparisonPredicate(
-			ComparisonPredicate.EQUAL_OP, colC_O_N, colL);
-	
-	Component C_O_N_Ljoin=null;
-    
-//	new ProjectOperator(new int[]{0, 1, 2, 3, 4, 5, 7, 9, 10}))
-	
-    if(Theta_JoinType==0){
-    	C_O_N_Ljoin = new ThetaJoinStaticComponent(
-    			C_O_Njoin,
-				relationLineitem,
-				_queryPlan).addOperator(new ProjectOperator(new int[]{0, 1, 2, 3, 4, 5, 7, 9, 10}))
-                                           .addOperator(agg)
-                                           .setJoinPredicate(C_O_N_L_comp);
-    }
-    else if(Theta_JoinType==1){
-    	C_O_N_Ljoin = new ThetaJoinDynamicComponentAdvisedEpochs(
-    			C_O_Njoin,
-				relationLineitem,
-				_queryPlan).addOperator(new ProjectOperator(new int[]{0, 1, 2, 3, 4, 5, 7, 9, 10}))
-                                           .addOperator(agg)
-                                           .setJoinPredicate(C_O_N_L_comp);
-    }
-        //-------------------------------------------------------------------------------------
+		ColumnReference colC_O_N = new ColumnReference(_ic, 6);
+		ColumnReference colL = new ColumnReference(_ic, 0);
+		ComparisonPredicate C_O_N_L_comp = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP,
+				colC_O_N, colL);
 
-    }
+		Component C_O_N_Ljoin = ThetaJoinComponentFactory
+				.createThetaJoinOperator(Theta_JoinType, C_O_Njoin, relationLineitem, _queryPlan)
+				.addOperator(new ProjectOperator(new int[] { 0, 1, 2, 3, 4, 5, 7, 9, 10 }))
+				.addOperator(agg).setJoinPredicate(C_O_N_L_comp);
 
-    public QueryPlan getQueryPlan() {
-        return _queryPlan;
-    }
+		//-------------------------------------------------------------------------------------
+
+	}
+
+	public QueryPlan getQueryPlan() {
+		return _queryPlan;
+	}
 }

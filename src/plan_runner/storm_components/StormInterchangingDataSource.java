@@ -101,8 +101,8 @@ public class StormInterchangingDataSource extends BaseRichSpout implements Storm
 
 		_ID = cp.getName();
 
-		_componentIndexRel1 = String.valueOf(allCompNames.indexOf(_ID.split("-")[0]));
-		_componentIndexRel2 = String.valueOf(allCompNames.indexOf(_ID.split("-")[1]));
+		_componentIndexRel1 = String.valueOf(allCompNames.indexOf(new String(_ID.split("-")[0])));
+		_componentIndexRel2 = String.valueOf(allCompNames.indexOf(new String(_ID.split("-")[1])));
 
 		_inputPath1 = inputPath1;
 		_inputPath2 = inputPath2;

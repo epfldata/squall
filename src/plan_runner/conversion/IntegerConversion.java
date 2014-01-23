@@ -20,7 +20,17 @@ public class IntegerConversion implements NumericConversion<Integer> {
 
 	@Override
 	public Integer getInitialValue() {
-		return new Integer(0);
+		return 0;
+	}
+	
+	@Override
+	public Integer getMinValue() {
+		return Integer.MIN_VALUE;
+	}
+
+	@Override
+	public Integer getMaxValue() {
+		return Integer.MAX_VALUE;
 	}
 
 	@Override

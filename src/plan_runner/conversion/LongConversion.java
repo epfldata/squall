@@ -20,8 +20,18 @@ public class LongConversion implements NumericConversion<Long> {
 
 	@Override
 	public Long getInitialValue() {
-		return new Long(0);
+		return 0L;
 	}
+	
+	@Override
+	public Long getMinValue() {
+		return Long.MIN_VALUE;
+	}
+
+	@Override
+	public Long getMaxValue() {
+		return Long.MAX_VALUE;
+	}	
 
 	@Override
 	public double toDouble(Object obj) {

@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
+import plan_runner.components.ThetaJoinComponentFactory;
 import plan_runner.components.ThetaJoinDynamicComponentAdvisedEpochs;
 import plan_runner.components.ThetaJoinStaticComponent;
 import plan_runner.conversion.DoubleConversion;
@@ -52,13 +53,10 @@ public class ThetaOutputDominatedPlan {
 				conf);
 		// Empty parameters = Cartesian Product
 
-		Component lastJoiner = null;
-		if (Theta_JoinType == 0)
-			lastJoiner = new ThetaJoinStaticComponent(relationSupplier, relationNation, _queryPlan).addOperator(
-					new ProjectOperator(new int[] { 0 })).addOperator(agg);
-		else if (Theta_JoinType == 1)
-			lastJoiner = new ThetaJoinDynamicComponentAdvisedEpochs(relationSupplier, relationNation, _queryPlan)
-					.addOperator(new ProjectOperator(new int[] { 0 })).addOperator(agg);
+		Component lastJoiner = ThetaJoinComponentFactory
+				.createThetaJoinOperator(Theta_JoinType, relationSupplier, relationNation,
+						_queryPlan).addOperator(new ProjectOperator(new int[] { 0 }))
+				.addOperator(agg);
 		//lastJoiner.setPrintOut(false);
 
 		// -------------------------------------------------------------------------------------

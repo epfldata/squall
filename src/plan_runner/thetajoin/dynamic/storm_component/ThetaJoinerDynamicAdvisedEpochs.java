@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 
+import javax.management.RuntimeErrorException;
+
 import org.apache.log4j.Logger;
 
 import plan_runner.components.ComponentProperties;
@@ -50,29 +52,8 @@ import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
 public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
-
-	// firstRelation=1 secondRelation=2
-	public static int identifyDim(int prevRow, int prevCol, int currRow, int currCol,
-			boolean isDiscarding) {
-		final int[] preDim = new int[] { prevRow, prevCol };
-		final int[] currDim = new int[] { currRow, currCol };
-
-		if (isDiscarding) { // smaller --> bigger
-			if (preDim[0] < currDim[0])
-				return 1;
-			else if (preDim[1] < currDim[1])
-				return 2;
-		} else if (preDim[0] > currDim[0])
-			return 1;
-		else if (preDim[1] > currDim[1])
-			return 2;
-
-		return -1;
-	}
-
 	private long numberOfTuplesMemory = 0;
 	private static final long serialVersionUID = 1L;
-
 	private static Logger LOG = Logger.getLogger(ThetaJoinerDynamicAdvisedEpochs.class);
 	private TupleStorage _firstRelationStorage, _secondRelationStorage,
 			_firstTaggedRelationStorage, _secondTaggedRelationStorage;
@@ -80,28 +61,23 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 			_secondTaggedRelationIndexes;
 	private TupleStorage _firstRelationStorageNewEpoch, _secondRelationStorageNewEpoch,
 			_firstTaggedRelationStorageNewEpoch, _secondTaggedRelationStorageNewEpoch;
-
 	private List<Index> _firstRelationIndexesNewEpoch, _secondRelationIndexesNewEpoch,
 			_firstTaggedRelationIndexesNewEpoch, _secondTaggedRelationIndexesNewEpoch;
 	private String _firstEmitterIndex, _secondEmitterIndex;
 	private long _numSentTuples = 0;
-
 	private final ChainOperator _operatorChain;
 	private final Predicate _joinPredicate;
 	private List<Integer> _operatorForIndexes;
 	private List<Object> _typeOfValueIndexed;
-
 	private boolean _existIndexes = false;
 	private int _currentNumberOfAckedReshufflerWorkersTasks;
 	private int _currentNumberOfFinalAckedParents;
-
 	private int _thisTaskIDindex;
 	private final int _parallelism;
 	private transient InputDeclarer _currentBolt;
 	private Action _currentAction = null;
 	private int _renamedIDindex;
 	private long _receivedTuplesR = 0, _receivedTuplesS = 0;
-
 	private long _receivedTaggedTuplesR = 0, _receivedTaggedTuplesS = 0;
 	private TupleStorage _migratingRelationStorage, _migratingTaggedRelationStorage;
 	private int _migratingRelationCursor, _migratingTaggedRelationCursor,
@@ -113,7 +89,6 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 	private int indexOfMigrating = -1;
 	private final ThetaReshufflerAdvisedEpochs _reshuffler;
 	private int _AdvisorIndex;
-
 	private final int _numParentTasks;
 	// for statistics
 	SimpleDateFormat _format = new SimpleDateFormat("EEE MMM d HH:mm:ss zzz yyyy");
@@ -126,11 +101,10 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 
 	private final long _batchOutputMillis;
 
-	public ThetaJoinerDynamicAdvisedEpochs(StormEmitter firstEmitter,
-			StormEmitter secondEmitter, ComponentProperties cp, List<String> allCompNames,
-			Predicate joinPredicate, int hierarchyPosition, TopologyBuilder builder,
-			TopologyKiller killer, Config conf, ThetaReshufflerAdvisedEpochs reshuffler,
-			String initialDim) {
+	public ThetaJoinerDynamicAdvisedEpochs(StormEmitter firstEmitter, StormEmitter secondEmitter,
+			ComponentProperties cp, List<String> allCompNames, Predicate joinPredicate,
+			int hierarchyPosition, TopologyBuilder builder, TopologyKiller killer, Config conf,
+			ThetaReshufflerAdvisedEpochs reshuffler, String initialDim) {
 
 		super(cp, allCompNames, hierarchyPosition, conf);
 		_reshuffler = reshuffler;
@@ -145,18 +119,16 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 
 		if (secondEmitter == null) { // then first has to be of type
 			// Interchanging Emitter
-			_firstEmitterIndex = String.valueOf(allCompNames.indexOf(firstEmitter.getName().split(
-					"-")[0]));
-			_secondEmitterIndex = String.valueOf(allCompNames.indexOf(firstEmitter.getName().split(
-					"-")[1]));
+			_firstEmitterIndex = String.valueOf(allCompNames.indexOf(new String(firstEmitter
+					.getName().split("-")[0])));
+			_secondEmitterIndex = String.valueOf(allCompNames.indexOf(new String(firstEmitter
+					.getName().split("-")[1])));
 		} else {
 			_firstEmitterIndex = String.valueOf(allCompNames.indexOf(firstEmitter.getName()));
 			_secondEmitterIndex = String.valueOf(allCompNames.indexOf(secondEmitter.getName()));
 		}
-
 		_parallelism = SystemParameters.getInt(conf, cp.getName() + "_PAR");
 		_operatorChain = cp.getChainOperator();
-
 		_joinPredicate = joinPredicate;
 		_currentBolt = builder.setBolt(cp.getName(), this, _parallelism);
 
@@ -164,6 +136,12 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 			killer.registerComponent(this, _parallelism);
 		if (cp.getPrintOut() && _operatorChain.isBlocking())
 			_currentBolt.allGrouping(killer.getID(), SystemParameters.DUMP_RESULTS_STREAM);
+
+		constructStorageAndIndexes();
+
+	}
+
+	protected void constructStorageAndIndexes() {
 		_firstRelationStorage = new TupleStorage();
 		_firstRelationStorageNewEpoch = new TupleStorage();
 		_secondRelationStorage = new TupleStorage();
@@ -195,7 +173,7 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 				if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
 					// timestamp has to be removed
 					final String parts[] = tupleString.split("\\@");
-					tupleString = parts[1];
+					tupleString = new String(parts[1]);
 				}
 				updateIndexes(emitterIndex, MyUtilities.stringToTuple(tupleString, getConf()),
 						toRelationindexes, row_id);
@@ -334,8 +312,8 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 			if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
 				// timestamp has to be removed
 				final String parts[] = tupleString.split("\\@");
-				lineageTimestamp = Long.valueOf(parts[0]);
-				tupleString = parts[1];
+				lineageTimestamp = Long.valueOf(new String(parts[0]));
+				tupleString = new String(parts[1]);
 			}
 			final Values tplSend = new Values(emitterIndex, MyUtilities.stringToTuple(tupleString,
 					getConf()), "N/A", _currentEpochNumber);
@@ -377,103 +355,10 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 			 * i.e. is flushed! 2) change to the new mapping
 			 */
 			if (signal.equals(SystemParameters.ThetaSignalStop)) {
-				// 1
 				_currentNumberOfAckedReshufflerWorkersTasks++;
-				if (_numParentTasks == _currentNumberOfAckedReshufflerWorkersTasks) {
-					// increment epoch number .. now all tuples of the previous
-					// epoch has been received!
-					_currentEpochNumber++;
-					indexOfMigrating = -1;
-
-					LOG.info(getID() + "AT (STOP): Joiner: " + _renamedIDindex
-							+ " has received receivedTuplesR:" + _receivedTuplesR + " TaggedR:"
-							+ _receivedTaggedTuplesR + " receivedTuplesS:" + _receivedTuplesS
-							+ " TaggedS:" + _receivedTaggedTuplesS);
-					_receivedTuplesR = 0;
-					_receivedTuplesS = 0;
-					_receivedTaggedTuplesR = 0;
-					_receivedTaggedTuplesS = 0;
-					long taggedSizeR = _firstRelationStorage.size()
-							+ _firstTaggedRelationStorage.size();
-					long taggedSizeS = _secondRelationStorage.size()
-							+ _secondTaggedRelationStorage.size();
-					_currentNumberOfAckedReshufflerWorkersTasks = 0;
-					final String actionString = mapping;
-					// Now change to the new mapping
-					_currentAction = Action.fromString(actionString);
-					_renamedIDindex = _currentAction.getNewReducerName(_renamedIDindex);
-
-					// ****************
-					// HANDLE STOP CODE
-					// ****************
-					// Now apply the discards
-					final int discardingDim = identifyDim(_currentAction.getPreviousRows(),
-							_currentAction.getPreviousColumns(), _currentAction.getNewRows(),
-							_currentAction.getNewColumns(), true);
-					LOG.info(getID() + " Joiner AT (STOP) before discarding: " + _renamedIDindex
-							+ " FirstTagged:" + taggedSizeR + " SecondTagged:" + taggedSizeS
-							+ " chose for discarding rel " + discardingDim);
-					if (discardingDim != 1 && discardingDim != 2) // ASSERTION
-						LOG.error("Wrong discardingDim ERROR");
-					/* Perform the discards */
-					performDiscards(discardingDim);
-					taggedSizeR = _firstRelationStorage.size() + _firstTaggedRelationStorage.size();
-					taggedSizeS = _secondRelationStorage.size()
-							+ _secondTaggedRelationStorage.size();
-					LOG.info(getID() + " Joiner AT (STOP) after discarding: " + _renamedIDindex
-							+ " FirstTagged:" + taggedSizeR + " SecondTagged:" + taggedSizeS);
-
-					// ****************
-					// NOW PROCEED CODE
-					// ****************
-					// Migrate all the data (flush everything), now everything
-					// is considered as tagged
-					// Send the EOF of all tuples --> which by thus will have to
-					// send back the ThetaSignalDataMigrationEnded signal
-					// dont send anything to the synchronizer
-					_isMigratingRelationStorage = false;
-					_isMigratingTaggedRelationStorage = false;
-					final int exchangingDim = identifyDim(_currentAction.getPreviousRows(),
-							_currentAction.getPreviousColumns(), _currentAction.getNewRows(),
-							_currentAction.getNewColumns(), false);
-
-					if (exchangingDim != 1 && exchangingDim != 2) // ASSERTION
-						LOG.error("Wrong exchangingDim ERROR");
-					else
-						performExchanges(exchangingDim);
-
-					// ***********************
-					// Now execute the missing joins
-					// ***********************
-
-					if (exchangingDim == 1)
-						// U1 JOIN T2 ... the other join only
-						joinTables(_firstRelationStorage, _secondTaggedRelationStorage,
-								_secondTaggedRelationIndexes, true);
-					else
-						// U2 JOIN T1 ... the other join only
-						joinTables(_secondRelationStorage, _firstTaggedRelationStorage,
-								_firstTaggedRelationIndexes, false);
-
-					// ********************************
-					// Now the add the epoch's tagged tuples
-					// ********************************
-					// add T1' to T1
-					addTaggedTuples(_firstTaggedRelationStorageNewEpoch,
-							_firstTaggedRelationStorage, _firstTaggedRelationIndexes,
-							_firstEmitterIndex);
-					_firstTaggedRelationStorageNewEpoch = new TupleStorage();
-					createIndexes(1, true, true);
-					// add T2' to T2
-					addTaggedTuples(_secondTaggedRelationStorageNewEpoch,
-							_secondTaggedRelationStorage, _secondTaggedRelationIndexes,
-							_secondEmitterIndex);
-					_secondTaggedRelationStorageNewEpoch = new TupleStorage();
-					createIndexes(2, true, true);
-
-				}
+				if (_numParentTasks == _currentNumberOfAckedReshufflerWorkersTasks)
+					processSignalStop(mapping);
 			}
-
 			/*
 			 * - If Datamigration ended. after EOF sent from all the joiners
 			 * received through the reshuffler 1) send the DataMigrationEnded
@@ -496,7 +381,7 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 		 * Case 2 or 3) tuples only from the reshuffler; either
 		 * 2)ThetaDatastreams or 3)datastreams
 		 */
-		// Actual Join
+		// Do The Actual Join
 		else if (inputStream.equals(SystemParameters.ThetaDataReshufflerToJoiner)
 				|| inputStream.equals(SystemParameters.ThetaDataMigrationReshufflerToJoiner)
 				|| inputStream.equals(SystemParameters.DATA_STREAM)) {
@@ -508,256 +393,46 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 			final String inputTupleHash = stormTupleRcv.getStringByField(StormComponent.HASH);
 			// N.B. if received at this level then data migration has ended.
 			if (MyUtilities.isFinalAck(tuple, getConf())) {
-				_currentNumberOfFinalAckedParents--;
-				if (_currentNumberOfFinalAckedParents == 0) {
-					LOG.info(getID() + " AT (LAST_ACK) Joiner: " + _renamedIDindex
-							+ " has received receivedTuplesR:" + _receivedTuplesR + " TaggedR:"
-							+ _receivedTaggedTuplesR + " receivedTuplesS:" + _receivedTuplesS
-							+ " TaggedS:" + _receivedTaggedTuplesS);
-					final int first = _firstRelationStorage.size()
-							+ _firstTaggedRelationStorage.size();
-					final int second = _secondRelationStorage.size()
-							+ _secondTaggedRelationStorage.size();
-					LOG.info(getID() + " AT (LAST_ACK) Joiner: " + _renamedIDindex
-							+ " has FirstRelation:" + _firstRelationStorage.size()
-							+ " FirstRelationTagged:" + _firstTaggedRelationStorage.size()
-							+ " SecondRelation:" + _secondRelationStorage.size()
-							+ " SecondRelationTagged:" + _secondTaggedRelationStorage.size()
-							+ " final sizes: " + first + "," + second);
-
-					printStatistics(SystemParameters.FINAL_PRINT);
-				}
-				MyUtilities.processFinalAck(_currentNumberOfFinalAckedParents,
-						getHierarchyPosition(), getConf(), stormTupleRcv, getCollector(),
-						_periodicAggBatch);
+				processFinalAck(stormTupleRcv);
 				return;
 			}
-
 			boolean isTagged = false;
 			if (inputStream.equals(SystemParameters.ThetaDataMigrationReshufflerToJoiner))
 				isTagged = true;
 			else
 				numberOfTuplesMemory++;
-
 			boolean isFromFirstEmitter = false;
-			TupleStorage affectedStorage = null, oppositeStorage = null;
-			List<Index> affectedIndexes = null, oppositeIndexes = null;
+			Quadruple tupleQuadInfo = null;
+			isFromFirstEmitter = identifyRelation(inputComponentIndex, isTagged);
 
-			if (_firstEmitterIndex.equals(inputComponentIndex)) {
-				if (isTagged)
-					_receivedTaggedTuplesR++;
-				else
-					_receivedTuplesR++;
-				isFromFirstEmitter = true;
-			} else if (_secondEmitterIndex.equals(inputComponentIndex)) {
-				if (isTagged)
-					_receivedTaggedTuplesS++;
-				else
-					_receivedTuplesS++;
-				isFromFirstEmitter = false;
-			} else if (!inputComponentIndex.equals("N/A"))
-				throw new RuntimeException("InputComponentName " + inputComponentIndex
-						+ " doesn't match neither " + _firstEmitterIndex + " nor "
-						+ _secondEmitterIndex + ".");
-
-			if (isTagged) // datamigration input tuple--> join with untagged
-			// data
-			{
-				// first check if it is ThetaJoinerMigrationSignal which
-				// requires to flush more tuples
-				if (inputTupleString.equals(SystemParameters.ThetaJoinerMigrationSignal)) {
-
-					if (_isMigratingRelationStorage)
-						if (_migratingRelationStorage.size() <= migrationBufferSize) {
-							final int endIndex = _migratingRelationCursor
-									+ _migratingRelationStorage.size() - 1;
-							emitBulk(_migratingRelationStorage, _migratingRelationIndex,
-									_migratingRelationCursor, endIndex);
-							clean(_migratingRelationStorage, _migratingRelationCursor, endIndex);
-							_isMigratingRelationStorage = false;
-						} else {
-							final int endIndex = _migratingRelationCursor + migrationBufferSize - 1;
-							emitBulk(_migratingRelationStorage, _migratingRelationIndex,
-									_migratingRelationCursor, endIndex);
-							clean(_migratingRelationStorage, _migratingRelationCursor, endIndex);
-							_migratingRelationCursor += migrationBufferSize;
-						}
-					if (_isMigratingTaggedRelationStorage)
-						if (_migratingTaggedRelationSize <= _migratingTaggedRelationCursor
-								+ migrationBufferSize) {
-							final int endIndex = _migratingTaggedRelationSize - 1;
-							emitBulk(_migratingTaggedRelationStorage, _migratingRelationIndex,
-									_migratingTaggedRelationCursor, endIndex);
-							_isMigratingTaggedRelationStorage = false;
-						} else {
-							final int endIndex = _migratingTaggedRelationCursor
-									+ migrationBufferSize - 1;
-							emitBulk(_migratingTaggedRelationStorage, _migratingRelationIndex,
-									_migratingTaggedRelationCursor, endIndex);
-							_migratingTaggedRelationCursor += migrationBufferSize;
-						}
-
-					if (_isMigratingRelationStorage == true
-							|| _isMigratingTaggedRelationStorage == true) {
-						final Values tplSend = new Values("N/A", MyUtilities.stringToTuple(
-								SystemParameters.ThetaJoinerMigrationSignal, getConf()), "N/A", -1);
-						appendTimestampZero(tplSend);
-						getCollector().emit(SystemParameters.ThetaDataMigrationJoinerToReshuffler,
-								tplSend);
-					} else {
-						final Values tplSend = new Values("N/A", MyUtilities.stringToTuple(
-								SystemParameters.ThetaJoinerDataMigrationEOF, getConf()), "N/A", -1);
-						appendTimestampZero(tplSend);
-						getCollector().emit(SystemParameters.ThetaDataMigrationJoinerToReshuffler,
-								tplSend);
-					}
-
-					getCollector().ack(stormTupleRcv);
-					return; // END
-				}
-				// ELSE
-				final int inputTupleEpochNumber = stormTupleRcv
-						.getIntegerByField(StormComponent.EPOCH);
-
-				if (isFromFirstEmitter) {
-					// R update
-					if (inputTupleEpochNumber == _currentEpochNumber) {
-						affectedStorage = _firstTaggedRelationStorage;
-						oppositeStorage = _secondRelationStorage;
-						affectedIndexes = _firstTaggedRelationIndexes;
-						oppositeIndexes = _secondRelationIndexes;
-					} else if (inputTupleEpochNumber == _currentEpochNumber + 1) {
-						final String _currentDimExcDis = stormTupleRcv
-								.getStringByField(StormComponent.DIM);
-						final String[] splits = _currentDimExcDis.split("-");
-						indexOfMigrating = Integer.parseInt(splits[0]);
-
-						affectedStorage = _firstTaggedRelationStorageNewEpoch;
-						oppositeStorage = _secondRelationStorageNewEpoch;
-						affectedIndexes = _firstTaggedRelationIndexesNewEpoch;
-						oppositeIndexes = _secondRelationIndexesNewEpoch;
-					} else
-						LOG.info("Error epoch number is not within bounds (tagged, first emitter). "
-								+ "Tuple String is "
-								+ inputTupleString
-								+ ", input tuple epoch is "
-								+ inputTupleEpochNumber
-								+ ", currentEpoch is "
-								+ _currentEpochNumber
-								+ ". Current input stream is "
-								+ inputStream
-								+ ".");
-
-				} else // S update
-				if (inputTupleEpochNumber == _currentEpochNumber) {
-					affectedStorage = _secondTaggedRelationStorage;
-					oppositeStorage = _firstRelationStorage;
-					affectedIndexes = _secondTaggedRelationIndexes;
-					oppositeIndexes = _firstRelationIndexes;
-				} else if (inputTupleEpochNumber == _currentEpochNumber + 1) {
-					final String _currentDimExcDis = stormTupleRcv
-							.getStringByField(StormComponent.DIM);
-					final String[] splits = _currentDimExcDis.split("-");
-					indexOfMigrating = Integer.parseInt(splits[0]);
-
-					affectedStorage = _secondTaggedRelationStorageNewEpoch;
-					oppositeStorage = _firstRelationStorageNewEpoch;
-					affectedIndexes = _secondTaggedRelationIndexesNewEpoch;
-					oppositeIndexes = _firstRelationIndexesNewEpoch;
-				} else
-					LOG.info("Error epoch number is not within bounds (tagged, second emitter)"
-							+ "Tuple String is " + inputTupleString + ", input tuple epoch is "
-							+ inputTupleEpochNumber + ", currentEpoch is " + _currentEpochNumber
-							+ ". Current input stream is " + inputStream + ".");
-				// add the stormTuple to the specific storage
-				long incomingTimestamp = 0;
-				if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
-					incomingTimestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
-					inputTupleString = incomingTimestamp
-							+ SystemParameters.STORE_TIMESTAMP_DELIMITER + inputTupleString;
-				}
-				final int row_id = affectedStorage.insert(inputTupleString);
-				List<String> valuesToApplyOnIndex = null;
-				if (_existIndexes)
-					valuesToApplyOnIndex = updateIndexes(stormTupleRcv, affectedIndexes, row_id);
-				performJoin(stormTupleRcv, tuple, inputTupleHash, isFromFirstEmitter,
-						oppositeIndexes, valuesToApplyOnIndex, oppositeStorage, incomingTimestamp);
+			// first check if it is ThetaJoinerMigrationSignal which
+			// requires to flush more tuples
+			if (isTagged && inputTupleString.equals(SystemParameters.ThetaJoinerMigrationSignal)) {
+				continueMigration(stormTupleRcv);
+				return;
 			}
-
-			else // fresh new tuple (join with tagged and untagged)
-			{
-				final int inputTupleEpochNumber = stormTupleRcv
-						.getIntegerByField(StormComponent.EPOCH);
-				String[] splits = {};
-				/* 1)first join with untagged data */
-				if (isFromFirstEmitter) {
-					// R update
-					if (inputTupleEpochNumber == _currentEpochNumber) {
-						affectedStorage = _firstRelationStorage;
-						oppositeStorage = _secondRelationStorage;
-						affectedIndexes = _firstRelationIndexes;
-						oppositeIndexes = _secondRelationIndexes;
-					} else if (inputTupleEpochNumber == _currentEpochNumber + 1) {
-						final String _currentDimExcDis = stormTupleRcv
-								.getStringByField(StormComponent.DIM);
-						splits = _currentDimExcDis.split("-");
-						indexOfMigrating = Integer.parseInt(splits[0]);
-
-						affectedStorage = _firstRelationStorageNewEpoch;
-						oppositeStorage = _secondRelationStorageNewEpoch;
-						affectedIndexes = _firstRelationIndexesNewEpoch;
-						oppositeIndexes = _secondRelationIndexesNewEpoch;
-					} else
-						LOG.info("Error epoch number is not within bounds (new tuple, first emitter)"
-								+ "Tuple String is "
-								+ inputTupleString
-								+ ", input tuple epoch is "
-								+ inputTupleEpochNumber
-								+ ", currentEpoch is "
-								+ _currentEpochNumber
-								+ ". Current input stream is "
-								+ inputStream
-								+ ".");
-				} else // S update
-				if (inputTupleEpochNumber == _currentEpochNumber) {
-					affectedStorage = _secondRelationStorage;
-					oppositeStorage = _firstRelationStorage;
-					affectedIndexes = _secondRelationIndexes;
-					oppositeIndexes = _firstRelationIndexes;
-				} else if (inputTupleEpochNumber == _currentEpochNumber + 1) {
-					final String _currentDimExcDis = stormTupleRcv
-							.getStringByField(StormComponent.DIM);
-					splits = _currentDimExcDis.split("-");
-					indexOfMigrating = Integer.parseInt(splits[0]);
-
-					affectedStorage = _secondRelationStorageNewEpoch;
-					oppositeStorage = _firstRelationStorageNewEpoch;
-					affectedIndexes = _secondRelationIndexesNewEpoch;
-					oppositeIndexes = _firstRelationIndexesNewEpoch;
-				} else
-					LOG.info("Error epoch number is not within bounds (new tuple, second emitter)"
-							+ "Tuple String is " + inputTupleString + ", input tuple epoch is "
-							+ inputTupleEpochNumber + ", currentEpoch is " + _currentEpochNumber
-							+ ". Current input stream is " + inputStream + ".");
-				// add the stormTuple to the specific storage
-				long incomingTimestamp = 0;
-				if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
-					incomingTimestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
-					inputTupleString = incomingTimestamp
-							+ SystemParameters.STORE_TIMESTAMP_DELIMITER + inputTupleString;
-				}
-				final int row_id = affectedStorage.insert(inputTupleString);
-				List<String> valuesToApplyOnIndex = null;
-				if (_existIndexes)
-					valuesToApplyOnIndex = updateIndexes(stormTupleRcv, affectedIndexes, row_id);
-				// (Deprecated) If in splitting phase --> Check ifGroupLeader
-				// (Should be happening here only)
-				performJoin(stormTupleRcv, tuple, inputTupleHash, isFromFirstEmitter,
-						oppositeIndexes, valuesToApplyOnIndex, oppositeStorage, incomingTimestamp);// add
-				// tuple
-
+			final int inputTupleEpochNumber = stormTupleRcv.getIntegerByField(StormComponent.EPOCH);
+			tupleQuadInfo = extractQuadInfo(stormTupleRcv, inputStream, inputTupleString,
+					isFromFirstEmitter, inputTupleEpochNumber, isTagged);
+			// add the stormTuple to the specific storage
+			long incomingTimestamp = 0;
+			if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
+				incomingTimestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
+				inputTupleString = incomingTimestamp + SystemParameters.STORE_TIMESTAMP_DELIMITER
+						+ inputTupleString;
+			}
+			final int row_id = tupleQuadInfo.affectedStorage.insert(inputTupleString);
+			List<String> valuesToApplyOnIndex = null;
+			if (_existIndexes)
+				valuesToApplyOnIndex = updateIndexes(stormTupleRcv, tupleQuadInfo.affectedIndexes,
+						row_id);
+			performJoin(stormTupleRcv, tuple, inputTupleHash, isFromFirstEmitter,
+					tupleQuadInfo.oppositeIndexes, valuesToApplyOnIndex,
+					tupleQuadInfo.oppositeStorage, incomingTimestamp);
+			//If fresh new tuple perform the additional joins
+			if (!isTagged) {
 				/**************************************************
-				 * TODO Add one more join for untagged(new Epoch) join_with
+				 * Add one more join for untagged(new Epoch) join_with
 				 * untagged (old epoch)
 				 *************************************************/
 				boolean isIn = false;
@@ -766,26 +441,26 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 					if (isFromFirstEmitter && exchgDim == 2) {
 						// R update
 						isIn = true;
-						oppositeStorage = _secondRelationStorage;
-						oppositeIndexes = _secondRelationIndexes;
+						tupleQuadInfo = new Quadruple(null, _secondRelationStorage, null,
+								_secondRelationIndexes);
 					} else if ((!isFromFirstEmitter) && exchgDim == 1) {
 						// S update
 						isIn = true;
-						oppositeStorage = _firstRelationStorage;
-						oppositeIndexes = _firstRelationIndexes;
+						tupleQuadInfo = new Quadruple(null, _firstRelationStorage, null,
+								_firstRelationIndexes);
 					}
 					if (isIn) {
 						valuesToApplyOnIndex = null;
 						if (_existIndexes)
 							valuesToApplyOnIndex = updateIndexes(stormTupleRcv, null, -1);
 						performJoin(stormTupleRcv, tuple, inputTupleHash, isFromFirstEmitter,
-								oppositeIndexes, valuesToApplyOnIndex, oppositeStorage,
-								incomingTimestamp);
+								tupleQuadInfo.oppositeIndexes, valuesToApplyOnIndex,
+								tupleQuadInfo.oppositeStorage, incomingTimestamp);
 					}
 				}
 				/************************************************/
 				/**************************************************
-				 * TODO Add one more join for untagged(old Epoch) join_with
+				 * Add one more join for untagged(old Epoch) join_with
 				 * untagged (new epoch)
 				 *************************************************/
 				if (indexOfMigrating > 0 && (inputTupleEpochNumber == _currentEpochNumber)) {
@@ -794,74 +469,52 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 					if (isFromFirstEmitter && exchgDim == 1) {
 						// R update
 						isIn = true;
-						oppositeStorage = _secondRelationStorageNewEpoch;
-						oppositeIndexes = _secondRelationIndexesNewEpoch;
-
+						tupleQuadInfo = new Quadruple(null, _secondRelationStorageNewEpoch, null,
+								_secondRelationIndexesNewEpoch);
 					} else if ((!isFromFirstEmitter) && exchgDim == 2) {
 						// S update
 						isIn = true;
-						oppositeStorage = _firstRelationStorageNewEpoch;
-						oppositeIndexes = _firstRelationIndexesNewEpoch;
+						tupleQuadInfo = new Quadruple(null, _firstRelationStorageNewEpoch, null,
+								_firstRelationIndexesNewEpoch);
 					}
 					if (isIn) {
 						valuesToApplyOnIndex = null;
 						if (_existIndexes)
 							valuesToApplyOnIndex = updateIndexes(stormTupleRcv, null, -1);
 						performJoin(stormTupleRcv, tuple, inputTupleHash, isFromFirstEmitter,
-								oppositeIndexes, valuesToApplyOnIndex, oppositeStorage,
-								incomingTimestamp);
+								tupleQuadInfo.oppositeIndexes, valuesToApplyOnIndex,
+								tupleQuadInfo.oppositeStorage, incomingTimestamp);
 					}
 				}
 				/************************************************/
 				/* 2)second join with tagged data */
-				if (isFromFirstEmitter) {
-					// R update
-					if (inputTupleEpochNumber == _currentEpochNumber) {
-						oppositeStorage = _secondTaggedRelationStorage;
-						oppositeIndexes = _secondTaggedRelationIndexes;
-					} else if (inputTupleEpochNumber == _currentEpochNumber + 1) {
-						oppositeStorage = _secondTaggedRelationStorageNewEpoch;
-						oppositeIndexes = _secondTaggedRelationIndexesNewEpoch;
-					} else
-						LOG.info("Error epoch number is not within bounds (new tuple joined with tagged data, first emitter)"
-								+ "Tuple String is "
-								+ inputTupleString
-								+ ", input tuple epoch is "
-								+ inputTupleEpochNumber
-								+ ", currentEpoch is "
-								+ _currentEpochNumber
-								+ ". Current input stream is "
-								+ inputStream
-								+ ".");
-				} else // S update
 				if (inputTupleEpochNumber == _currentEpochNumber) {
-					oppositeStorage = _firstTaggedRelationStorage;
-					oppositeIndexes = _firstTaggedRelationIndexes;
+					if (isFromFirstEmitter)
+						tupleQuadInfo = new Quadruple(null, _secondTaggedRelationStorage, null,
+								_secondTaggedRelationIndexes);
+					else
+						tupleQuadInfo = new Quadruple(null, _firstTaggedRelationStorage, null,
+								_firstTaggedRelationIndexes);
 				} else if (inputTupleEpochNumber == _currentEpochNumber + 1) {
-					oppositeStorage = _firstTaggedRelationStorageNewEpoch;
-					oppositeIndexes = _firstTaggedRelationIndexesNewEpoch;
+					if (isFromFirstEmitter)
+						tupleQuadInfo = new Quadruple(null, _secondTaggedRelationStorageNewEpoch,
+								null, _secondTaggedRelationIndexesNewEpoch);
+					else
+						tupleQuadInfo = new Quadruple(null, _firstTaggedRelationStorageNewEpoch,
+								null, _firstTaggedRelationIndexesNewEpoch);
 				} else
-					LOG.info("Error epoch number is not within bounds (new tuple joined with tagged data, second emitter)"
-							+ "Tuple String is "
-							+ inputTupleString
-							+ ", input tuple epoch is "
-							+ inputTupleEpochNumber
-							+ ", currentEpoch is "
-							+ _currentEpochNumber
-							+ ". Current input stream is " + inputStream + ".");
+					throw new RuntimeException(
+							"Error epoch number is not within bounds (new tuple joined with tagged data)"
+									+ "Tuple String is " + inputTupleString
+									+ ", input tuple epoch is " + inputTupleEpochNumber
+									+ ", currentEpoch is " + _currentEpochNumber
+									+ ". Current input stream is " + inputStream + ".");
 				valuesToApplyOnIndex = null;
 				if (_existIndexes)
 					valuesToApplyOnIndex = updateIndexes(stormTupleRcv, null, -1);
-				// (Deprecated) If in splitting phase --> Check ifGroupLeader
-				// (Should be happening here only)
 				performJoin(stormTupleRcv, tuple, inputTupleHash, isFromFirstEmitter,
-						oppositeIndexes, valuesToApplyOnIndex, oppositeStorage, incomingTimestamp); // Shall
-				// not
-				// add
-				// the
-				// input
-				// tuple
-				// again
+						tupleQuadInfo.oppositeIndexes, valuesToApplyOnIndex,
+						tupleQuadInfo.oppositeStorage, incomingTimestamp); // Shall not add the input tuple again
 				/**************************************************
 				 * one more join for untagged(new Epoch) join_with
 				 * tagged (old epoch)
@@ -872,31 +525,267 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 					if (isFromFirstEmitter && exchgDim == 2) {
 						// R update
 						isIn = true;
-						oppositeStorage = _secondTaggedRelationStorage;
-						oppositeIndexes = _secondTaggedRelationIndexes;
+						tupleQuadInfo = new Quadruple(null, _secondTaggedRelationStorage, null,
+								_secondTaggedRelationIndexes);
 					} else if ((!isFromFirstEmitter) && exchgDim == 1) {
 						// S update
 						isIn = true;
-						oppositeStorage = _firstTaggedRelationStorage;
-						oppositeIndexes = _firstTaggedRelationIndexes;
+						tupleQuadInfo = new Quadruple(null, _firstTaggedRelationStorage, null,
+								_firstTaggedRelationIndexes);
 					}
 					if (isIn) {
 						valuesToApplyOnIndex = null;
 						if (_existIndexes)
 							valuesToApplyOnIndex = updateIndexes(stormTupleRcv, null, -1);
 						performJoin(stormTupleRcv, tuple, inputTupleHash, isFromFirstEmitter,
-								oppositeIndexes, valuesToApplyOnIndex, oppositeStorage,
-								incomingTimestamp);
+								tupleQuadInfo.oppositeIndexes, valuesToApplyOnIndex,
+								tupleQuadInfo.oppositeStorage, incomingTimestamp);
 					}
 				}
 				/************************************************/
 			}
 		}
-
 		// THIS IS FOR OUTPUTTING STATISTICS!
 		if ((numberOfTuplesMemory) % _statsUtils.getDipInputFreqPrint() == 0)
 			printStatistics(SystemParameters.INPUT_PRINT);
 		getCollector().ack(stormTupleRcv);
+	}
+
+	protected Quadruple extractQuadInfo(Tuple stormTupleRcv, final String inputStream,
+			String inputTupleString, boolean isFromFirstEmitter, final int inputTupleEpochNumber,
+			boolean isTagged) {
+		Quadruple tupleQuadInfo = null;
+		if (inputTupleEpochNumber == _currentEpochNumber) {
+			if (isFromFirstEmitter) {
+				if (isTagged)
+					tupleQuadInfo = new Quadruple(_firstTaggedRelationStorage,
+							_secondRelationStorage, _firstTaggedRelationIndexes,
+							_secondRelationIndexes);
+				else
+					tupleQuadInfo = new Quadruple(_firstRelationStorage, _secondRelationStorage,
+							_firstRelationIndexes, _secondRelationIndexes);
+			} else {
+				if (isTagged)
+					tupleQuadInfo = new Quadruple(_secondTaggedRelationStorage,
+							_firstRelationStorage, _secondTaggedRelationIndexes,
+							_firstRelationIndexes);
+				else
+					tupleQuadInfo = new Quadruple(_secondRelationStorage, _firstRelationStorage,
+							_secondRelationIndexes, _firstRelationIndexes);
+			}
+
+		} else if (inputTupleEpochNumber == _currentEpochNumber + 1) {
+			final String _currentDimExcDis = stormTupleRcv.getStringByField(StormComponent.DIM);
+			final String[] splits = _currentDimExcDis.split("-");
+			indexOfMigrating = Integer.parseInt(new String(splits[0]));
+			if (isFromFirstEmitter) {
+				if (isTagged)
+					tupleQuadInfo = new Quadruple(_firstTaggedRelationStorageNewEpoch,
+							_secondRelationStorageNewEpoch, _firstTaggedRelationIndexesNewEpoch,
+							_secondRelationIndexesNewEpoch);
+				else
+					tupleQuadInfo = new Quadruple(_firstRelationStorageNewEpoch,
+							_secondRelationStorageNewEpoch, _firstRelationIndexesNewEpoch,
+							_secondRelationIndexesNewEpoch);
+			} else {
+				if (isTagged)
+					tupleQuadInfo = new Quadruple(_secondTaggedRelationStorageNewEpoch,
+							_firstRelationStorageNewEpoch, _secondTaggedRelationIndexesNewEpoch,
+							_firstRelationIndexesNewEpoch);
+				else
+					tupleQuadInfo = new Quadruple(_secondRelationStorageNewEpoch,
+							_firstRelationStorageNewEpoch, _secondRelationIndexesNewEpoch,
+							_firstRelationIndexesNewEpoch);
+			}
+		} else
+			throw new RuntimeException("Error epoch number is not within bounds (tagged). "
+					+ "Tuple String is " + inputTupleString + ", input tuple epoch is "
+					+ inputTupleEpochNumber + ", currentEpoch is " + _currentEpochNumber
+					+ ". Current input stream is " + inputStream + ".");
+		return tupleQuadInfo;
+	}
+
+	protected void continueMigration(Tuple stormTupleRcv) {
+		if (_isMigratingRelationStorage)
+			if (_migratingRelationStorage.size() <= migrationBufferSize) {
+				final int endIndex = _migratingRelationCursor + _migratingRelationStorage.size()
+						- 1;
+				emitBulk(_migratingRelationStorage, _migratingRelationIndex,
+						_migratingRelationCursor, endIndex);
+				clean(_migratingRelationStorage, _migratingRelationCursor, endIndex);
+				_isMigratingRelationStorage = false;
+			} else {
+				final int endIndex = _migratingRelationCursor + migrationBufferSize - 1;
+				emitBulk(_migratingRelationStorage, _migratingRelationIndex,
+						_migratingRelationCursor, endIndex);
+				clean(_migratingRelationStorage, _migratingRelationCursor, endIndex);
+				_migratingRelationCursor += migrationBufferSize;
+			}
+		if (_isMigratingTaggedRelationStorage)
+			if (_migratingTaggedRelationSize <= _migratingTaggedRelationCursor
+					+ migrationBufferSize) {
+				final int endIndex = _migratingTaggedRelationSize - 1;
+				emitBulk(_migratingTaggedRelationStorage, _migratingRelationIndex,
+						_migratingTaggedRelationCursor, endIndex);
+				_isMigratingTaggedRelationStorage = false;
+			} else {
+				final int endIndex = _migratingTaggedRelationCursor + migrationBufferSize - 1;
+				emitBulk(_migratingTaggedRelationStorage, _migratingRelationIndex,
+						_migratingTaggedRelationCursor, endIndex);
+				_migratingTaggedRelationCursor += migrationBufferSize;
+			}
+
+		if (_isMigratingRelationStorage == true || _isMigratingTaggedRelationStorage == true) {
+			final Values tplSend = new Values("N/A", MyUtilities.stringToTuple(
+					SystemParameters.ThetaJoinerMigrationSignal, getConf()), "N/A", -1);
+			appendTimestampZero(tplSend);
+			getCollector().emit(SystemParameters.ThetaDataMigrationJoinerToReshuffler, tplSend);
+		} else {
+			final Values tplSend = new Values("N/A", MyUtilities.stringToTuple(
+					SystemParameters.ThetaJoinerDataMigrationEOF, getConf()), "N/A", -1);
+			appendTimestampZero(tplSend);
+			getCollector().emit(SystemParameters.ThetaDataMigrationJoinerToReshuffler, tplSend);
+		}
+		getCollector().ack(stormTupleRcv);
+	}
+
+	protected boolean identifyRelation(final String inputComponentIndex, boolean isTagged) {
+		boolean isFromFirstEmitter = false;
+		if (_firstEmitterIndex.equals(inputComponentIndex)) {
+			if (isTagged)
+				_receivedTaggedTuplesR++;
+			else
+				_receivedTuplesR++;
+			isFromFirstEmitter = true;
+		} else if (_secondEmitterIndex.equals(inputComponentIndex)) {
+			if (isTagged)
+				_receivedTaggedTuplesS++;
+			else
+				_receivedTuplesS++;
+			isFromFirstEmitter = false;
+		} else if (!inputComponentIndex.equals("N/A"))
+			throw new RuntimeException("InputComponentName " + inputComponentIndex
+					+ " doesn't match neither " + _firstEmitterIndex + " nor "
+					+ _secondEmitterIndex + ".");
+		return isFromFirstEmitter;
+	}
+
+	protected void processFinalAck(Tuple stormTupleRcv) {
+		_currentNumberOfFinalAckedParents--;
+		if (_currentNumberOfFinalAckedParents == 0) {
+			LOG.info(getID() + " AT (LAST_ACK) Joiner: " + _renamedIDindex
+					+ " has received receivedTuplesR:" + _receivedTuplesR + " TaggedR:"
+					+ _receivedTaggedTuplesR + " receivedTuplesS:" + _receivedTuplesS + " TaggedS:"
+					+ _receivedTaggedTuplesS);
+			final int first = _firstRelationStorage.size() + _firstTaggedRelationStorage.size();
+			final int second = _secondRelationStorage.size() + _secondTaggedRelationStorage.size();
+			LOG.info(getID() + " AT (LAST_ACK) Joiner: " + _renamedIDindex + " has FirstRelation:"
+					+ _firstRelationStorage.size() + " FirstRelationTagged:"
+					+ _firstTaggedRelationStorage.size() + " SecondRelation:"
+					+ _secondRelationStorage.size() + " SecondRelationTagged:"
+					+ _secondTaggedRelationStorage.size() + " final sizes: " + first + "," + second);
+
+			printStatistics(SystemParameters.FINAL_PRINT);
+		}
+		MyUtilities.processFinalAck(_currentNumberOfFinalAckedParents, getHierarchyPosition(),
+				getConf(), stormTupleRcv, getCollector(), _periodicAggBatch);
+		return;
+	}
+
+	protected void processSignalStop(final String mapping) {
+		// increment epoch number .. now all tuples of the previous
+		// epoch has been received!
+		_currentEpochNumber++;
+		indexOfMigrating = -1;
+
+		LOG.info(getID() + "AT (STOP): Joiner: " + _renamedIDindex
+				+ " has received receivedTuplesR:" + _receivedTuplesR + " TaggedR:"
+				+ _receivedTaggedTuplesR + " receivedTuplesS:" + _receivedTuplesS + " TaggedS:"
+				+ _receivedTaggedTuplesS);
+		_receivedTuplesR = 0;
+		_receivedTuplesS = 0;
+		_receivedTaggedTuplesR = 0;
+		_receivedTaggedTuplesS = 0;
+		long taggedSizeR = _firstRelationStorage.size() + _firstTaggedRelationStorage.size();
+		long taggedSizeS = _secondRelationStorage.size() + _secondTaggedRelationStorage.size();
+		_currentNumberOfAckedReshufflerWorkersTasks = 0;
+		final String actionString = mapping;
+		// Now change to the new mapping
+		_currentAction = Action.fromString(actionString);
+		_renamedIDindex = _currentAction.getNewReducerName(_renamedIDindex);
+
+		// ****************
+		// HANDLE DISCARDS
+		// ****************
+		// Now apply the discards
+		processDiscards(taggedSizeR, taggedSizeS);
+
+		// ****************
+		// INITIATE MIGRATION
+		// ****************
+		// Migrate all the data (flush everything), now everything
+		// is considered as tagged
+		// Send the EOF of all tuples --> which by thus will have to
+		// send back the ThetaSignalDataMigrationEnded signal
+		// dont send anything to the synchronizer
+		final int exchangingDim = processInitiateMigrations();
+
+		// ***********************
+		// Now execute the missing joins
+		// ***********************
+		if (exchangingDim == 1)
+			// U1 JOIN T2 ... the other join only
+			joinTables(_firstRelationStorage, _secondTaggedRelationStorage,
+					_secondTaggedRelationIndexes, true);
+		else
+			// U2 JOIN T1 ... the other join only
+			joinTables(_secondRelationStorage, _firstTaggedRelationStorage,
+					_firstTaggedRelationIndexes, false);
+
+		// ********************************
+		// Now the add the epoch's tagged tuples
+		// ********************************
+		// add T1' to T1
+		addTaggedTuples(_firstTaggedRelationStorageNewEpoch, _firstTaggedRelationStorage,
+				_firstTaggedRelationIndexes, _firstEmitterIndex);
+		_firstTaggedRelationStorageNewEpoch = new TupleStorage();
+		createIndexes(1, true, true);
+		// add T2' to T2
+		addTaggedTuples(_secondTaggedRelationStorageNewEpoch, _secondTaggedRelationStorage,
+				_secondTaggedRelationIndexes, _secondEmitterIndex);
+		_secondTaggedRelationStorageNewEpoch = new TupleStorage();
+		createIndexes(2, true, true);
+	}
+
+	protected int processInitiateMigrations() {
+		_isMigratingRelationStorage = false;
+		_isMigratingTaggedRelationStorage = false;
+		final int exchangingDim = identifyDim(_currentAction.getPreviousRows(),
+				_currentAction.getPreviousColumns(), _currentAction.getNewRows(),
+				_currentAction.getNewColumns(), false);
+
+		if (exchangingDim != 1 && exchangingDim != 2) // ASSERTION
+			LOG.error("Wrong exchangingDim ERROR");
+		else
+			performExchanges(exchangingDim);
+		return exchangingDim;
+	}
+
+	protected void processDiscards(long taggedSizeR, long taggedSizeS) {
+		final int discardingDim = identifyDim(_currentAction.getPreviousRows(),
+				_currentAction.getPreviousColumns(), _currentAction.getNewRows(),
+				_currentAction.getNewColumns(), true);
+		LOG.info(getID() + " Joiner AT (STOP) before discarding: " + _renamedIDindex
+				+ " FirstTagged:" + taggedSizeR + " SecondTagged:" + taggedSizeS
+				+ " chose for discarding rel " + discardingDim);
+		if (discardingDim != 1 && discardingDim != 2) // ASSERTION
+			LOG.error("Wrong discardingDim ERROR");
+		/* Perform the discards */
+		performDiscards(discardingDim);
+		taggedSizeR = _firstRelationStorage.size() + _firstTaggedRelationStorage.size();
+		taggedSizeS = _secondRelationStorage.size() + _secondTaggedRelationStorage.size();
+		LOG.info(getID() + " Joiner AT (STOP) after discarding: " + _renamedIDindex
+				+ " FirstTagged:" + taggedSizeR + " SecondTagged:" + taggedSizeS);
 	}
 
 	@Override
@@ -946,8 +835,8 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 			if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
 				// timestamp has to be removed
 				final String parts[] = oppositeTupleString.split("\\@");
-				final long storedTimestamp = Long.valueOf(parts[0]);
-				oppositeTupleString = parts[1];
+				final long storedTimestamp = Long.valueOf(new String(parts[0]));
+				oppositeTupleString = new String(parts[1]);
 
 				// now we set the maximum TS to the tuple
 				if (storedTimestamp > lineageTimestamp)
@@ -968,12 +857,9 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 			// if existIndexes == true, the join condition is already checked
 			// before
 			if (_joinPredicate == null || _existIndexes
-					|| _joinPredicate.test(firstTuple, secondTuple)) { // if
-				// null,
-				// cross
-				// product
-				// Create the output tuple by omitting the oppositeJoinKeys
-				// (ONLY for equi-joins since they are added
+					|| _joinPredicate.test(firstTuple, secondTuple)) {
+				// if null, cross product Create the output tuple by omitting 
+				//the oppositeJoinKeys (ONLY for equi-joins since they are added
 				// by the first relation), if any (in case of cartesian product
 				// there are none)
 				List<String> outputTuple = null;
@@ -992,8 +878,8 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 			if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
 				// timestamp has to be removed
 				final String parts[] = tupleString.split("\\@");
-				incomingTimestamp = Long.valueOf(parts[0]);
-				tupleString = parts[1];
+				incomingTimestamp = Long.valueOf(new String(parts[0]));
+				tupleString = new String(parts[1]);
 			}
 			final List<String> u2tuple = MyUtilities.stringToTuple(tupleString, getConf());
 
@@ -1007,7 +893,7 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 	}
 
 	/* Perform discards on the relationNumber dimension 1=first 2=second */
-	private void performDiscards(int relationNumber) {
+	protected void performDiscards(int relationNumber) {
 		final PredicateCreateIndexesVisitor visitor = new PredicateCreateIndexesVisitor();
 		_joinPredicate.accept(visitor);
 		final TupleStorage keepStorage = new TupleStorage();
@@ -1060,7 +946,7 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 				if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
 					// timestamp has to be removed
 					final String parts[] = tupleString.split("\\@");
-					tupleString = parts[1];
+					tupleString = new String(parts[1]);
 				}
 				updateIndexes(discardingEmitterIndex,
 						MyUtilities.stringToTuple(tupleString, getConf()), keepIndexes, row_id);
@@ -1083,7 +969,7 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 		}
 	}
 
-	private void performExchanges(int relationNumber) {
+	protected void performExchanges(int relationNumber) {
 
 		TupleStorage exchangingRelationStorage;
 		TupleStorage exchangingTaggedRelationStorage;
@@ -1133,12 +1019,8 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 		addTaggedTuples(exchangingRelationStorage, exchangingTaggedRelationStorage,
 				exchangingIndexes, _migratingRelationIndex);
 
-		if (_isMigratingRelationStorage) // if it was bigger than buffer size,
-			// and still has more data
-			clean(_migratingRelationStorage, 0, _migratingRelationCursor - 1); // remove
-		// that
-		// data
-
+		if (_isMigratingRelationStorage) // if it was bigger than buffer size, and still has more data
+			clean(_migratingRelationStorage, 0, _migratingRelationCursor - 1); // remove that data
 		if (relationNumber == 1) {
 			_firstRelationStorage = _firstRelationStorageNewEpoch;
 			_firstRelationIndexes = _firstRelationIndexesNewEpoch;
@@ -1227,8 +1109,7 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 						_statsUtils.printResultStats(getHierarchyPosition(), LOG, _numSentTuples,
 								_thisTaskID, true);
 					}
-				} else // only final statistics is printed if we are measuring
-						// latency
+				} else // only final statistics is printed if we are measuring latency
 				if (type == SystemParameters.FINAL_PRINT) {
 					if (numNegatives > 0)
 						LOG.info("WARNINGLAT! Negative latency for " + numNegatives + ", at most "
@@ -1279,8 +1160,7 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 					currentOperator = ComparisonPredicate.GREATER_OP;
 				else if (operator == ComparisonPredicate.NONLESS_OP)
 					currentOperator = ComparisonPredicate.NONGREATER_OP;
-				// then it is an equal or not equal so we dont switch the
-				// operator
+				// then it is an equal or not equal so we dont switch the operator
 				else
 					currentOperator = operator;
 			}
@@ -1304,15 +1184,11 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 				}
 			else
 				throw new RuntimeException("non supported type");
-			// Compute the intersection
-			// Search only within the ids that are in rowIds from previous join
-			// conditions
-			// If nothing returned (and since we want intersection), no need to
-			// proceed.
+			// Compute the intersection Search only within the ids that are in rowIds from previous join
+			// conditions If nothing returned (and since we want intersection), no need to proceed.
 			if (currentRowIds == null)
 				return;
-			// If it's the first index, add everything. Else keep the
-			// intersection
+			// If it's the first index, add everything. Else keep the intersection
 			if (i == 0)
 				rowIds.addAll(currentRowIds);
 			else
@@ -1327,7 +1203,6 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 			tuplesToJoin.insert(oppositeStorage.get(id));
 		}
 	}
-
 	// another signature
 	private List<String> updateIndexes(String inputComponentIndex, List<String> tuple,
 			List<Index> affectedIndexes, int row_id) {
@@ -1403,6 +1278,24 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 			else
 				throw new RuntimeException("non supported type");
 		return valuesToIndex;
+	}
+
+	// firstRelation=1 secondRelation=2
+	public static int identifyDim(int prevRow, int prevCol, int currRow, int currCol,
+			boolean isDiscarding) {
+		final int[] preDim = new int[] { prevRow, prevCol };
+		final int[] currDim = new int[] { currRow, currCol };
+
+		if (isDiscarding) { // smaller --> bigger
+			if (preDim[0] < currDim[0])
+				return 1;
+			else if (preDim[1] < currDim[1])
+				return 2;
+		} else if (preDim[0] > currDim[0])
+			return 1;
+		else if (preDim[1] > currDim[1])
+			return 2;
+		return -1;
 	}
 
 }

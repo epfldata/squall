@@ -115,7 +115,7 @@ public abstract class Advisor implements Serializable {
 	public Maybe<Action> adviseAndUpdateDimensions() {
 		final Maybe<Action> result = advise();
 		if (!result.isNone())
-			updateDimensions(result.get());
+			updateMapping(result.get());
 		return result;
 	}
 
@@ -127,7 +127,7 @@ public abstract class Advisor implements Serializable {
 	 * @param action
 	 *            The action including the new dimensions.
 	 */
-	public void updateDimensions(Action action) {
+	public void updateMapping(Action action) {
 		currentRows = action.getNewRows();
 		currentColumns = action.getNewColumns();
 	}

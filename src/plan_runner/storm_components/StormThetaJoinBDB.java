@@ -39,79 +39,58 @@ import backtype.storm.tuple.Tuple;
 public class StormThetaJoinBDB extends StormBoltComponent {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormThetaJoinBDB.class);
-
 	private BPlusTreeStore _firstRelationStorage, _secondRelationStorage;
 	private final String _firstEmitterIndex, _secondEmitterIndex;
-
 	private long _numSentTuples = 0;
-
 	private final ChainOperator _operatorChain;
-
 	// position to test for equality in first and second emitter
 	// join params of current storage then other relation interchangably !!
 	List<Integer> _joinParams;
-
 	private final Predicate _joinPredicate;
-
 	private List<Integer> _operatorForIndexes;
 	private List<Object> _typeOfValueIndexed;
-
 	private boolean _existIndexes = false;
-
 	// for agg batch sending
 	private final Semaphore _semAgg = new Semaphore(1, true);
 	private boolean _firstTime = true;
 	private PeriodicAggBatchSend _periodicAggBatch;
 	private final long _aggBatchOutputMillis;
-
 	private InterchangingComponent _inter = null;
-
 	// for printing statistics for creating graphs
 	protected Calendar _cal = Calendar.getInstance();
 	protected DateFormat _dateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 	protected SimpleDateFormat _format = new SimpleDateFormat("EEE MMM d HH:mm:ss zzz yyyy");
 	protected StatisticsUtilities _statsUtils;
-
 	public StormThetaJoinBDB(StormEmitter firstEmitter, StormEmitter secondEmitter,
 			ComponentProperties cp, List<String> allCompNames, Predicate joinPredicate,
 			int hierarchyPosition, TopologyBuilder builder, TopologyKiller killer, Config conf,
 			InterchangingComponent interComp) {
-
 		super(cp, allCompNames, hierarchyPosition, conf);
-
 		_firstEmitterIndex = String.valueOf(allCompNames.indexOf(firstEmitter.getName()));
 		_secondEmitterIndex = String.valueOf(allCompNames.indexOf(secondEmitter.getName()));
 		_aggBatchOutputMillis = cp.getBatchOutputMillis();
 		_statsUtils = new StatisticsUtilities(getConf(), LOG);
-
 		final int firstCardinality = SystemParameters
 				.getInt(conf, firstEmitter.getName() + "_CARD");
 		final int secondCardinality = SystemParameters.getInt(conf, secondEmitter.getName()
 				+ "_CARD");
-
 		final int parallelism = SystemParameters.getInt(conf, getID() + "_PAR");
-
 		_operatorChain = cp.getChainOperator();
-
 		_joinPredicate = joinPredicate;
-
 		InputDeclarer currentBolt = builder.setBolt(getID(), this, parallelism);
-
 		final EquiMatrixAssignment _currentMappingAssignment = new EquiMatrixAssignment(
 				firstCardinality, secondCardinality, parallelism, -1);
 		final String dim = _currentMappingAssignment.getMappingDimensions();
 		LOG.info(getID() + " Initial Dimensions is: " + dim);
-
 		if (interComp == null)
 			currentBolt = MyUtilities.thetaAttachEmitterComponents(currentBolt, firstEmitter,
-					secondEmitter, allCompNames, _currentMappingAssignment, conf);
+					secondEmitter, allCompNames, _currentMappingAssignment, conf,((ComparisonPredicate)joinPredicate).getwrapper());
 		else {
 			currentBolt = MyUtilities.thetaAttachEmitterComponentsWithInterChanging(currentBolt,
 					firstEmitter, secondEmitter, allCompNames, _currentMappingAssignment, conf,
 					interComp);
 			_inter = interComp;
 		}
-
 		if (getHierarchyPosition() == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf)))
 			killer.registerComponent(this, parallelism);
 		if (cp.getPrintOut() && _operatorChain.isBlocking())
@@ -129,7 +108,6 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 						_semAgg.acquire();
 					} catch (final InterruptedException ex) {
 					}
-
 					// sending
 					final AggregateOperator agg = (AggregateOperator) lastOperator;
 					final List<String> tuples = agg.getContent();
@@ -152,15 +130,12 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 		tuple = _operatorChain.process(tuple);
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			_semAgg.release();
-
 		if (tuple == null)
 			return;
 		_numSentTuples++;
 		printTuple(tuple);
-
 		if (_numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
 			printStatistics(SystemParameters.OUTPUT_PRINT);
-
 		if (MyUtilities.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
 			long timestamp = 0;
 			if (MyUtilities.isCustomTimestampMode(getConf()))
@@ -172,7 +147,6 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 			// timestamp = System.nanoTime();
 			tupleSend(tuple, stormTupleRcv, timestamp);
 		}
-
 		if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
 			printTupleLatency(_numSentTuples - 1, lineageTimestamp);
 	}
@@ -187,7 +161,6 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 			storagePath = SystemParameters.getString(getConf(), "STORAGE_CLUSTER_DIR");
 		else
 			storagePath = SystemParameters.getString(getConf(), "STORAGE_LOCAL_DIR");
-
 		// TODO We assume that there is only one index !!
 		if(MyUtilities.isBDBUniform(getConf())){
 			if (_typeOfValueIndexed.get(0) instanceof Integer) {
@@ -224,7 +197,6 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 		}else{
 			throw new RuntimeException("Unsupported BDB type!");
 		}
-		
 		if (_joinPredicate != null)
 			_existIndexes = true;
 		else
@@ -237,52 +209,43 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 			_periodicAggBatch = new PeriodicAggBatchSend(_aggBatchOutputMillis, this);
 			_firstTime = false;
 		}
-
 		if (receivedDumpSignal(stormTupleRcv)) {
 			MyUtilities.dumpSignal(this, stormTupleRcv, getCollector());
 			return;
 		}
-
 		if (!MyUtilities.isManualBatchingMode(getConf())) {
 			final String inputComponentIndex = stormTupleRcv
 					.getStringByField(StormComponent.COMP_INDEX); // getString(0);
 			final List<String> tuple = (List<String>) stormTupleRcv
 					.getValueByField(StormComponent.TUPLE); // getValue(1);
 			final String inputTupleHash = stormTupleRcv.getStringByField(StormComponent.HASH);// getString(2);
-
 			if (processFinalAck(tuple, stormTupleRcv))
 				return;
-
 			final String inputTupleString = MyUtilities.tupleToString(tuple, getConf());
-
 			processNonLastTuple(inputComponentIndex, inputTupleString, tuple, inputTupleHash,
 					stormTupleRcv, true);
-
 		} else {
 			final String inputComponentIndex = stormTupleRcv
 					.getStringByField(StormComponent.COMP_INDEX); // getString(0);
 			final String inputBatch = stormTupleRcv.getStringByField(StormComponent.TUPLE);// getString(1);
-
 			final String[] wholeTuples = inputBatch
 					.split(SystemParameters.MANUAL_BATCH_TUPLE_DELIMITER);
 			final int batchSize = wholeTuples.length;
 			for (int i = 0; i < batchSize; i++) {
 				// parsing
-				final String currentTuple = wholeTuples[i];
+				final String currentTuple = new String(wholeTuples[i]);
 				final String[] parts = currentTuple
 						.split(SystemParameters.MANUAL_BATCH_HASH_DELIMITER);
-
 				String inputTupleHash = null;
 				String inputTupleString = null;
 				if (parts.length == 1)
 					// lastAck
-					inputTupleString = parts[0];
+					inputTupleString = new String(parts[0]);
 				else {
-					inputTupleHash = parts[0];
-					inputTupleString = parts[1];
+					inputTupleHash = new String(parts[0]);
+					inputTupleString = new String(parts[1]);
 				}
 				final List<String> tuple = MyUtilities.stringToTuple(inputTupleString, getConf());
-
 				// final Ack check
 				if (processFinalAck(tuple, stormTupleRcv)) {
 					if (i != batchSize - 1)
@@ -306,37 +269,30 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 	public ChainOperator getChainOperator() {
 		return _operatorChain;
 	}
-
 	// from IRichBolt
 	@Override
 	public Map<String, Object> getComponentConfiguration() {
 		return getConf();
 	}
-
 	@Override
 	public String getInfoID() {
 		final String str = "DestinationStorage " + getID() + " has ID: " + getID();
 		return str;
 	}
-
 	@Override
 	protected InterchangingComponent getInterComp() {
 		return _inter;
 	}
-
 	@Override
 	public long getNumSentTuples() {
 		return _numSentTuples;
 	}
-
 	@Override
 	public PeriodicAggBatchSend getPeriodicAggBatch() {
 		return _periodicAggBatch;
 	}
-
 	private void insertIntoBDBStorage(BPlusTreeStore affectedStorage, String key,
 			String inputTupleString) {
-
 		if (_typeOfValueIndexed.get(0) instanceof Integer)
 			affectedStorage.put(Integer.parseInt(key), inputTupleString);
 		else if (_typeOfValueIndexed.get(0) instanceof Double)
@@ -355,27 +311,22 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 
 	private void join(Tuple stormTuple, List<String> tuple, boolean isFromFirstEmitter,
 			List<String> oppositeStorage, boolean isLastInBatch) {
-
 		if (oppositeStorage == null || oppositeStorage.size() == 0)
 			return;
-
 		for (int i = 0; i < oppositeStorage.size(); i++) {
 			String oppositeTupleString = oppositeStorage.get(i);
-
 			long lineageTimestamp = 0;
 			if (MyUtilities.isCustomTimestampMode(getConf()))
 				lineageTimestamp = stormTuple.getLongByField(StormComponent.TIMESTAMP);
 			if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
 				// timestamp has to be removed
 				final String parts[] = oppositeTupleString.split("\\@");
-				final long storedTimestamp = Long.valueOf(parts[0]);
-				oppositeTupleString = parts[1];
-
+				final long storedTimestamp = Long.valueOf(new String(parts[0]));
+				oppositeTupleString = new String(parts[1]);
 				// now we set the maximum TS to the tuple
 				if (storedTimestamp > lineageTimestamp)
 					lineageTimestamp = storedTimestamp;
 			}
-
 			final List<String> oppositeTuple = MyUtilities.stringToTuple(oppositeTupleString,
 					getComponentConfiguration());
 			List<String> firstTuple, secondTuple;
@@ -386,27 +337,19 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 				firstTuple = oppositeTuple;
 				secondTuple = tuple;
 			}
-
 			// Check joinCondition
 			// if existIndexes == true, the join condition is already checked
 			// before
 			if (_joinPredicate == null || _existIndexes
-					|| _joinPredicate.test(firstTuple, secondTuple)) { // if
-				// null,
-				// cross
-				// product
-
-				// Create the output tuple by omitting the oppositeJoinKeys
-				// (ONLY for equi-joins since they are added
+					|| _joinPredicate.test(firstTuple, secondTuple)) { 
+				// if null, cross product Create the output tuple by omitting 
+				//the oppositeJoinKeys (ONLY for equi-joins since they are added
 				// by the first relation), if any (in case of cartesian product
 				// there are none)
 				List<String> outputTuple = null;
-
 				// Cartesian product - Outputs all attributes
 				outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);
-
 				applyOperatorsAndSend(stormTuple, outputTuple, lineageTimestamp, isLastInBatch);
-
 			}
 		}
 	}
@@ -436,7 +379,6 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 						: 0;
 				final int totalSize = size1 + size2;
 				final String ts = _dateFormat.format(_cal.getTime());
-
 				// printing
 				if (!MyUtilities.isCustomTimestampMode(getConf())) {
 					final Runtime runtime = Runtime.getRuntime();
@@ -500,7 +442,6 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 		//BDB shutdown
 		_firstRelationStorage.shutdown();
 		_secondRelationStorage.shutdown();
-
 	}
 
 	private void processNonLastTuple(String inputComponentIndex, String inputTupleString, //
@@ -524,13 +465,11 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 			throw new RuntimeException("InputComponentName " + inputComponentIndex
 					+ " doesn't match neither " + _firstEmitterIndex + " nor "
 					+ _secondEmitterIndex + ".");
-
 		if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
 			final long incomingTimestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
 			inputTupleString = incomingTimestamp + SystemParameters.STORE_TIMESTAMP_DELIMITER
 					+ inputTupleString;
 		}
-
 		// NEW
 		final PredicateUpdateIndexesVisitor visitor = new PredicateUpdateIndexesVisitor(
 				isFromFirstEmitter, tuple);
@@ -541,7 +480,6 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 
 		performJoin(stormTupleRcv, tuple, isFromFirstEmitter, keyValue, oppositeStorage,
 				isLastInBatch);
-
 		if ((_firstRelationStorage.size() + _secondRelationStorage.size())
 				% _statsUtils.getDipInputFreqPrint() == 0)
 			printStatistics(SystemParameters.INPUT_PRINT);
@@ -557,13 +495,11 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 		// Then take the intersection of the returned row indices since each
 		// join condition
 		// is separated by AND
-
 		int currentOperator = _operatorForIndexes.get(0);
 		// Switch inequality operator if the tuple coming is from the other
 		// relation
 		if (isFromFirstEmitter) {
 			final int operator = currentOperator;
-
 			if (operator == ComparisonPredicate.GREATER_OP)
 				currentOperator = ComparisonPredicate.LESS_OP;
 			else if (operator == ComparisonPredicate.NONGREATER_OP)
@@ -577,7 +513,6 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 			else
 				currentOperator = operator;
 		}
-
 		// TODO We assume that 1) there is only one index, and consequently
 		// 2) JoinPredicate is ComparisonPredicate
 		final Object tdiff = ((ComparisonPredicate) _joinPredicate).getDiff();

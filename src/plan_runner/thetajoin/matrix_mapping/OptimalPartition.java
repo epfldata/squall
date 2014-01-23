@@ -1,6 +1,9 @@
 package plan_runner.thetajoin.matrix_mapping;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+
+import plan_runner.thetajoin.matrix_mapping.MatrixAssignment.Dimension;
 
 /**
  * This class implement a partitioning algorithm. The idea here is to start by
@@ -163,5 +166,9 @@ public class OptimalPartition extends Partition implements Serializable {
 		// And finally, store the parts
 		for (int i = 0; i < numReducers_; ++i)
 			parts_[i] = new Part(param0[i], param1[i], param2[i], param3[i]);
+	}
+	@Override
+	public ArrayList<Integer> getRegionIDs(Dimension RowOrColumn, Object key) {
+		throw new RuntimeException("This method is content-insenstive");
 	}
 }

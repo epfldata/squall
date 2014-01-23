@@ -3,6 +3,8 @@ package plan_runner.thetajoin.matrix_mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import plan_runner.thetajoin.matrix_mapping.MatrixAssignment.Dimension;
+
 /**
  *  This class implements a partitioning algorithm. 
  *  The idea here is to start by assigning all the matrix to a single worker. 
@@ -382,5 +384,10 @@ public class CostDrivenPartition extends Partition implements Serializable {
 
 		// Allocate the reducers balancing the area for all the blocks
 		allocatePartition(countH, countW, countEH, countEW, true);
+	}
+
+	@Override
+	public ArrayList<Integer> getRegionIDs(Dimension RowOrColumn, Object key) {
+		throw new RuntimeException("This method is content-insenstive");
 	}
 }

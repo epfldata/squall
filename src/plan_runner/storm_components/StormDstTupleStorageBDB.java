@@ -312,7 +312,7 @@ public class StormDstTupleStorageBDB extends StormBoltComponent {
 			final int batchSize = wholeTuples.length;
 			for (int i = 0; i < batchSize; i++) {
 				// parsing
-				final String currentTuple = wholeTuples[i];
+				final String currentTuple = new String(wholeTuples[i]);
 				final String[] parts = currentTuple
 						.split(SystemParameters.MANUAL_BATCH_HASH_DELIMITER);
 
@@ -320,10 +320,10 @@ public class StormDstTupleStorageBDB extends StormBoltComponent {
 				String inputTupleString = null;
 				if (parts.length == 1)
 					// lastAck
-					inputTupleString = parts[0];
+					inputTupleString = new String(parts[0]);
 				else {
-					inputTupleHash = parts[0];
-					inputTupleString = parts[1];
+					inputTupleHash = new String(parts[0]);
+					inputTupleString = new String(parts[1]);
 				}
 				final List<String> tuple = MyUtilities.stringToTuple(inputTupleString, getConf());
 
@@ -562,8 +562,8 @@ public class StormDstTupleStorageBDB extends StormBoltComponent {
 			if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
 				// timestamp has to be removed
 				final String parts[] = oppositeTupleString.split("\\@");
-				final long storedTimestamp = Long.valueOf(parts[0]);
-				oppositeTupleString = parts[1];
+				final long storedTimestamp = Long.valueOf(new String(parts[0]));
+				oppositeTupleString = new String(parts[1]);
 
 				// now we set the maximum TS to the tuple
 				if (storedTimestamp > lineageTimestamp)

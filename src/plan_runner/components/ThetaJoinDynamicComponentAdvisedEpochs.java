@@ -14,6 +14,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
@@ -61,8 +62,8 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 			_secondParent.setChild(this);
 			_componentName = firstParent.getName() + "_" + secondParent.getName();
 		} else
-			_componentName = firstParent.getName().split("-")[0] + "_"
-					+ firstParent.getName().split("-")[1];
+			_componentName = new String(firstParent.getName().split("-")[0]) + "_"
+					+ new String(firstParent.getName().split("-")[1]);
 		queryPlan.add(this);
 	}
 
@@ -173,10 +174,10 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 		int firstCardinality, secondCardinality;
 		if (_secondParent == null) { // then first has to be of type
 			// Interchanging Emitter
-			firstCardinality = SystemParameters.getInt(conf, _firstParent.getName().split("-")[0]
-					+ "_CARD");
-			secondCardinality = SystemParameters.getInt(conf, _firstParent.getName().split("-")[1]
-					+ "_CARD");
+			firstCardinality = SystemParameters.getInt(conf, new String(_firstParent.getName().split("-")[0]
+					+ "_CARD"));
+			secondCardinality = SystemParameters.getInt(conf, new String(_firstParent.getName().split("-")[1]
+					+ "_CARD"));
 		} else {
 			firstCardinality = SystemParameters.getInt(conf, _firstParent.getName() + "_CARD");
 			secondCardinality = SystemParameters.getInt(conf, _secondParent.getName() + "_CARD");
@@ -295,6 +296,13 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 	public ThetaJoinDynamicComponentAdvisedEpochs setPrintOut(boolean printOut) {
 		_printOutSet = true;
 		_printOut = printOut;
+		return this;
+	}
+
+	
+	//TODO IMPLEMENT ME
+	@Override
+	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
 		return this;
 	}
 

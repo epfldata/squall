@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
+import plan_runner.components.ThetaJoinComponentFactory;
 import plan_runner.components.ThetaJoinDynamicComponentAdvisedEpochs;
 import plan_runner.components.ThetaJoinStaticComponent;
 import plan_runner.conversion.IntegerConversion;
@@ -46,21 +47,14 @@ public class ThetaHyracksPlan {
 		final ColumnReference colOrders = new ColumnReference(_ic, 0);
 		final ComparisonPredicate comp = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP,
 				colCustomer, colOrders);
-
+		
 		final AggregateCountOperator agg = new AggregateCountOperator(conf)
 				.setGroupByColumns(Arrays.asList(1));
+		
+		Component lastJoiner = ThetaJoinComponentFactory
+				.createThetaJoinOperator(Theta_JoinType, relationCustomer, relationOrders,
+						_queryPlan).addOperator(agg).setJoinPredicate(comp).setContentSensitiveThetaJoinWrapper(_ic);
 
-		Component lastJoiner = null;
-		if (Theta_JoinType == 0)
-			lastJoiner = new ThetaJoinStaticComponent(relationCustomer, relationOrders, _queryPlan).addOperator(
-					agg).setJoinPredicate(comp)
-			// .addOperator(agg)
-			;
-		else if (Theta_JoinType == 1)
-			lastJoiner = new ThetaJoinDynamicComponentAdvisedEpochs(relationCustomer, relationOrders, _queryPlan)
-					.addOperator(agg).setJoinPredicate(comp);
-			// .addOperator(agg)
-			;
 		//lastJoiner.setPrintOut(false);
 
 		// -------------------------------------------------------------------------------------

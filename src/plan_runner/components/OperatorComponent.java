@@ -5,10 +5,13 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
+import plan_runner.predicates.Predicate;
 import plan_runner.query_plans.QueryPlan;
+import plan_runner.storm_components.InterchangingComponent;
 import plan_runner.storm_components.StormComponent;
 import plan_runner.storm_components.StormOperator;
 import plan_runner.storm_components.synchronization.TopologyKiller;
@@ -185,6 +188,21 @@ public class OperatorComponent implements Component {
 	public OperatorComponent setPrintOut(boolean printOut) {
 		_printOutSet = true;
 		_printOut = printOut;
+		return this;
+	}
+	
+	@Override
+	public Component setInterComp(InterchangingComponent inter) {
+		throw new RuntimeException("Operator component does not support setInterComp");
+	}
+
+	@Override
+	public Component setJoinPredicate(Predicate joinPredicate) {
+		throw new RuntimeException("Operator component does not support Join Predicates");
+	}
+
+	@Override
+	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
 		return this;
 	}
 

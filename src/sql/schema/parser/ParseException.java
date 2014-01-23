@@ -23,7 +23,7 @@ public class ParseException extends Exception {
 	 * version cannot be used as part of an ASCII string literal.
 	 */
 	static String add_escapes(String str) {
-		final StringBuffer retval = new StringBuffer();
+		final StringBuilder retval = new StringBuilder();
 		char ch;
 		for (int i = 0; i < str.length(); i++)
 			switch (str.charAt(i)) {
@@ -73,7 +73,7 @@ public class ParseException extends Exception {
 	private static String initialise(Token currentToken, int[][] expectedTokenSequences,
 			String[] tokenImage) {
 		final String eol = System.getProperty("line.separator", "\n");
-		final StringBuffer expected = new StringBuffer();
+		final StringBuilder expected = new StringBuilder();
 		int maxSize = 0;
 		for (int i = 0; i < expectedTokenSequences.length; i++) {
 			if (maxSize < expectedTokenSequences[i].length)

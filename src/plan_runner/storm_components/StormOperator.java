@@ -161,16 +161,16 @@ public class StormOperator extends StormBoltComponent {
 			final int batchSize = wholeTuples.length;
 			for (int i = 0; i < batchSize; i++) {
 				// parsing
-				final String currentTuple = wholeTuples[i];
+				final String currentTuple = new String(wholeTuples[i]);
 				final String[] parts = currentTuple
 						.split(SystemParameters.MANUAL_BATCH_HASH_DELIMITER);
 
 				String inputTupleString = null;
 				if (parts.length == 1)
 					// lastAck
-					inputTupleString = parts[0];
+					inputTupleString = new String(parts[0]);
 				else
-					inputTupleString = parts[1];
+					inputTupleString = new String(parts[1]);
 				final List<String> tuple = MyUtilities.stringToTuple(inputTupleString, getConf());
 
 				// final Ack check

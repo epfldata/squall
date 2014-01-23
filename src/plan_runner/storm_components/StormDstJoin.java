@@ -205,7 +205,7 @@ public class StormDstJoin extends StormBoltComponent {
 			final int batchSize = wholeTuples.length;
 			for (int i = 0; i < batchSize; i++) {
 				// parsing
-				final String currentTuple = wholeTuples[i];
+				final String currentTuple = new String(wholeTuples[i]);
 				final String[] parts = currentTuple
 						.split(SystemParameters.MANUAL_BATCH_HASH_DELIMITER);
 
@@ -213,10 +213,10 @@ public class StormDstJoin extends StormBoltComponent {
 				String inputTupleString = null;
 				if (parts.length == 1)
 					// lastAck
-					inputTupleString = parts[0];
+					inputTupleString = new String(parts[0]);
 				else {
-					inputTupleHash = parts[0];
-					inputTupleString = parts[1];
+					inputTupleHash = new String(parts[0]);
+					inputTupleString = new String(parts[1]);
 				}
 				final List<String> tuple = MyUtilities.stringToTuple(inputTupleString, getConf());
 

@@ -81,7 +81,7 @@ public class ThetaJoinUtilities {
 
 	public static int[] getDimensions(String Dim) {
 		final String[] dimString = Dim.split("-");
-		return new int[] { Integer.parseInt(dimString[0]), Integer.parseInt(dimString[1]) };
+		return new int[] { Integer.parseInt(new String(dimString[0])), Integer.parseInt(new String(dimString[1])) };
 
 	}
 

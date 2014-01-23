@@ -55,9 +55,21 @@ public class SystemParameters {
 	public static final long BYTES_IN_MB = 1024 * 1024;
 
 	public static final String MANUAL_BATCH_HASH_DELIMITER = "~";
-	public static final String MANUAL_BATCH_TUPLE_DELIMITER = "`";  // these two are the same, but it should not be a problem:
-	public static final String BDB_TUPLE_DELIMITER  = "`"; // the first is for network transfer, the second is for storing tuples
+	public static final String MANUAL_BATCH_TUPLE_DELIMITER = "`"; // these two are the same, but it should not be a problem:
+	public static final String BDB_TUPLE_DELIMITER = "`"; // the first is for network transfer, the second is for storing tuples
 	public static final String STORE_TIMESTAMP_DELIMITER = "@";
+
+	//TYPE OF THETA JOINERS
+	//Content Insensitive 
+	public static final int STATIC_CIS = 0;
+	public static final int EPOCHS_CIS = 1;
+	
+	//Content sensitive counterparts 
+	public static final int STATIC_CS = 2; 
+	public static final int EPOCHS_CS = 3;
+
+	public static final String CONTENT_SENSITIVE = "CS-THETA";
+	public static final String CONTENT_INSENSITIVE = "CIS-THETA";
 
 	// DYNAMIC THETA JOIN STREAM IDS..
 	public static final String ThetaClockStream = "7";
@@ -172,8 +184,8 @@ public class SystemParameters {
 					final String args[] = line.split("\\s+");
 					if (args.length == 2) {
 						// only in that case you put something in map
-						final String key = args[0];
-						final String value = args[1];
+						final String key = new String(args[0]);
+						final String value = new String(args[1]);
 						map.put(key, value);
 					}
 				}

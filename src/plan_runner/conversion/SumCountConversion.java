@@ -6,8 +6,8 @@ public class SumCountConversion implements TypeConversion<SumCount> {
 	@Override
 	public SumCount fromString(String sc) {
 		final String parts[] = sc.split("\\:");
-		final Double sum = Double.valueOf(parts[0]);
-		final Long count = Long.valueOf(parts[1]);
+		final Double sum = Double.valueOf(new String(parts[0]));
+		final Long count = Long.valueOf(new String(parts[1]));
 		return new SumCount(sum, count);
 	}
 

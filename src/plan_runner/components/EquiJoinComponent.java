@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
@@ -14,6 +15,7 @@ import plan_runner.query_plans.QueryPlan;
 import plan_runner.storage.AggregationStorage;
 import plan_runner.storage.BasicStore;
 import plan_runner.storage.KeyValueStore;
+import plan_runner.storm_components.InterchangingComponent;
 import plan_runner.storm_components.StormComponent;
 import plan_runner.storm_components.StormDstTupleStorageBDB;
 import plan_runner.storm_components.StormDstJoin;
@@ -245,10 +247,7 @@ public class EquiJoinComponent implements Component {
 		return this;
 	}
 
-	public EquiJoinComponent setJoinPredicate(Predicate predicate) {
-		_joinPredicate = predicate;
-		return this;
-	}
+
 
 	@Override
 	public EquiJoinComponent setPrintOut(boolean printOut) {
@@ -267,5 +266,22 @@ public class EquiJoinComponent implements Component {
 		_secondStorage = secondPreAggStorage;
 		return this;
 	}
+	
+	@Override
+	public Component setInterComp(InterchangingComponent inter) {
+		throw new RuntimeException("EquiJoin component does not support setInterComp");
+	}
+	
+	@Override
+	public EquiJoinComponent setJoinPredicate(Predicate predicate) {
+		_joinPredicate = predicate;
+		return this;
+	}
+
+	@Override
+	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
+		return this;
+	}
+
 
 }

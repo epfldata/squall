@@ -20,8 +20,18 @@ public class DoubleConversion implements NumericConversion<Double> {
 
 	@Override
 	public Double getInitialValue() {
-		return new Double(0.0);
+		return 0.0;
 	}
+	
+	@Override
+	public Double getMinValue() {
+		return Double.MIN_VALUE;
+	}
+
+	@Override
+	public Double getMaxValue() {
+		return Double.MAX_VALUE;
+	}	
 
 	@Override
 	public double toDouble(Object obj) {

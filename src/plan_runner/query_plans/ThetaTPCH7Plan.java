@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
+import plan_runner.components.ThetaJoinComponentFactory;
 import plan_runner.components.ThetaJoinDynamicComponentAdvisedEpochs;
 import plan_runner.components.ThetaJoinStaticComponent;
 import plan_runner.conversion.DateConversion;
@@ -81,16 +82,10 @@ public class ThetaTPCH7Plan {
 		final ComparisonPredicate N_C_comp = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP,
 				colN, colC);
 
-		Component N_Cjoin = null;
-
-		if (Theta_JoinType == 0)
-			N_Cjoin = new ThetaJoinStaticComponent(relationNation2, relationCustomer, _queryPlan)
-					.addOperator(new ProjectOperator(new int[] { 0, 2 }))
-					.setJoinPredicate(N_C_comp);
-		else if (Theta_JoinType == 1)
-			N_Cjoin = new ThetaJoinDynamicComponentAdvisedEpochs(relationNation2, relationCustomer,
-					_queryPlan).addOperator(new ProjectOperator(new int[] { 0, 2 }))
-					.setJoinPredicate(N_C_comp);
+		Component N_Cjoin = ThetaJoinComponentFactory
+				.createThetaJoinOperator(Theta_JoinType, relationNation2, relationCustomer,
+						_queryPlan).addOperator(new ProjectOperator(new int[] { 0, 2 }))
+				.setJoinPredicate(N_C_comp);
 
 		// -------------------------------------------------------------------------------------
 		final ArrayList<Integer> hashOrders = new ArrayList<Integer>(Arrays.asList(1));
@@ -108,16 +103,9 @@ public class ThetaTPCH7Plan {
 		final ComparisonPredicate N_C_O_comp = new ComparisonPredicate(
 				ComparisonPredicate.EQUAL_OP, colN_C, colO);
 
-		Component N_C_Ojoin = null;
-
-		if (Theta_JoinType == 0)
-			N_C_Ojoin = new ThetaJoinStaticComponent(N_Cjoin, relationOrders, _queryPlan)
-					.addOperator(new ProjectOperator(new int[] { 0, 2 })).setJoinPredicate(
-							N_C_O_comp);
-		else if (Theta_JoinType == 1)
-			N_C_Ojoin = new ThetaJoinDynamicComponentAdvisedEpochs(N_Cjoin, relationOrders,
-					_queryPlan).addOperator(new ProjectOperator(new int[] { 0, 2 }))
-					.setJoinPredicate(N_C_O_comp);
+		Component N_C_Ojoin = ThetaJoinComponentFactory
+				.createThetaJoinOperator(Theta_JoinType, N_Cjoin, relationOrders, _queryPlan)
+				.addOperator(new ProjectOperator(new int[] { 0, 2 })).setJoinPredicate(N_C_O_comp);
 
 		// -------------------------------------------------------------------------------------
 		final ArrayList<Integer> hashSupplier = new ArrayList<Integer>(Arrays.asList(1));
@@ -144,16 +132,10 @@ public class ThetaTPCH7Plan {
 		final ComparisonPredicate S_N_comp = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP,
 				colS, colN2);
 
-		Component S_Njoin = null;
-
-		if (Theta_JoinType == 0)
-			S_Njoin = new ThetaJoinStaticComponent(relationSupplier, relationNation1, _queryPlan)
-					.addOperator(new ProjectOperator(new int[] { 0, 2 }))
-					.setJoinPredicate(S_N_comp);
-		else if (Theta_JoinType == 1)
-			S_Njoin = new ThetaJoinDynamicComponentAdvisedEpochs(relationSupplier, relationNation1,
-					_queryPlan).addOperator(new ProjectOperator(new int[] { 0, 2 }))
-					.setJoinPredicate(S_N_comp);
+		Component S_Njoin = ThetaJoinComponentFactory
+				.createThetaJoinOperator(Theta_JoinType, relationSupplier, relationNation1,
+						_queryPlan).addOperator(new ProjectOperator(new int[] { 0, 2 }))
+				.setJoinPredicate(S_N_comp);
 
 		// -------------------------------------------------------------------------------------
 		final ArrayList<Integer> hashLineitem = new ArrayList<Integer>(Arrays.asList(2));
@@ -191,16 +173,10 @@ public class ThetaTPCH7Plan {
 		final ComparisonPredicate L_S_N_comp = new ComparisonPredicate(
 				ComparisonPredicate.EQUAL_OP, colL, colS_N);
 
-		Component L_S_Njoin = null;
-
-		if (Theta_JoinType == 0)
-			L_S_Njoin = new ThetaJoinStaticComponent(relationLineitem, S_Njoin, _queryPlan)
-					.addOperator(new ProjectOperator(new int[] { 5, 0, 1, 3 })).setJoinPredicate(
-							L_S_N_comp);
-		else if (Theta_JoinType == 1)
-			L_S_Njoin = new ThetaJoinDynamicComponentAdvisedEpochs(relationLineitem, S_Njoin,
-					_queryPlan).addOperator(new ProjectOperator(new int[] { 5, 0, 1, 3 }))
-					.setJoinPredicate(L_S_N_comp);
+		Component L_S_Njoin = ThetaJoinComponentFactory
+				.createThetaJoinOperator(Theta_JoinType, relationLineitem, S_Njoin, _queryPlan)
+				.addOperator(new ProjectOperator(new int[] { 5, 0, 1, 3 }))
+				.setJoinPredicate(L_S_N_comp);
 
 		// -------------------------------------------------------------------------------------
 		// set up aggregation function on the same StormComponent(Bolt) where
@@ -221,13 +197,9 @@ public class ThetaTPCH7Plan {
 		final ComparisonPredicate N_C_O_L_S_N_comp = new ComparisonPredicate(
 				ComparisonPredicate.EQUAL_OP, colN_C_O, colL_S_N);
 
-		Component lastJoiner = null;
-		if (Theta_JoinType == 0)
-			lastJoiner = new ThetaJoinStaticComponent(N_C_Ojoin, L_S_Njoin, _queryPlan).addOperator(so)
-					.addOperator(agg).setJoinPredicate(N_C_O_L_S_N_comp);
-		else if (Theta_JoinType == 1)
-			lastJoiner = new ThetaJoinDynamicComponentAdvisedEpochs(N_C_Ojoin, L_S_Njoin, _queryPlan)
-					.addOperator(so).addOperator(agg).setJoinPredicate(N_C_O_L_S_N_comp);
+		Component lastJoiner = ThetaJoinComponentFactory
+				.createThetaJoinOperator(Theta_JoinType, N_C_Ojoin, L_S_Njoin, _queryPlan)
+				.addOperator(so).addOperator(agg).setJoinPredicate(N_C_O_L_S_N_comp);
 		//lastJoiner.setPrintOut(false);
 	}
 

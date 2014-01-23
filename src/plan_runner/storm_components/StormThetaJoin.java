@@ -14,7 +14,10 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils.Comparison;
+
 import plan_runner.components.ComponentProperties;
+import plan_runner.conversion.TypeConversion;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
@@ -23,7 +26,9 @@ import plan_runner.predicates.Predicate;
 import plan_runner.storage.TupleStorage;
 import plan_runner.storm_components.synchronization.TopologyKiller;
 import plan_runner.thetajoin.indexes.Index;
+import plan_runner.thetajoin.matrix_mapping.ContentSensitiveMatrixAssignment;
 import plan_runner.thetajoin.matrix_mapping.EquiMatrixAssignment;
+import plan_runner.thetajoin.matrix_mapping.MatrixAssignment;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.PeriodicAggBatchSend;
 import plan_runner.utilities.SystemParameters;
@@ -38,35 +43,25 @@ import backtype.storm.tuple.Tuple;
 public class StormThetaJoin extends StormBoltComponent {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormThetaJoin.class);
-
 	private final TupleStorage _firstRelationStorage, _secondRelationStorage;
 	private final String _firstEmitterIndex, _secondEmitterIndex;
-
 	private long _numSentTuples = 0;
-
 	private final ChainOperator _operatorChain;
-
 	// position to test for equality in first and second emitter
 	// join params of current storage then other relation interchangably !!
 	List<Integer> _joinParams;
-
 	private final Predicate _joinPredicate;
 	// private OptimalPartition _partitioning;
-
 	private List<Index> _firstRelationIndexes, _secondRelationIndexes;
 	private List<Integer> _operatorForIndexes;
 	private List<Object> _typeOfValueIndexed;
-
 	private boolean _existIndexes = false;
-
 	// for agg batch sending
 	private final Semaphore _semAgg = new Semaphore(1, true);
 	private boolean _firstTime = true;
 	private PeriodicAggBatchSend _periodicAggBatch;
 	private final long _aggBatchOutputMillis;
-
 	private InterchangingComponent _inter = null;
-
 	// for printing statistics for creating graphs
 	protected Calendar _cal = Calendar.getInstance();
 	protected DateFormat _dateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
@@ -76,53 +71,48 @@ public class StormThetaJoin extends StormBoltComponent {
 	public StormThetaJoin(StormEmitter firstEmitter, StormEmitter secondEmitter,
 			ComponentProperties cp, List<String> allCompNames, Predicate joinPredicate,
 			int hierarchyPosition, TopologyBuilder builder, TopologyKiller killer, Config conf,
-			InterchangingComponent interComp) {
+			InterchangingComponent interComp, boolean isContentSensitive, TypeConversion wrapper) {
 
 		super(cp, allCompNames, hierarchyPosition, conf);
 
 		_firstEmitterIndex = String.valueOf(allCompNames.indexOf(firstEmitter.getName()));
 		_secondEmitterIndex = String.valueOf(allCompNames.indexOf(secondEmitter.getName()));
-
 		_aggBatchOutputMillis = cp.getBatchOutputMillis();
-
 		_statsUtils = new StatisticsUtilities(getConf(), LOG);
-
 		final int firstCardinality = SystemParameters
 				.getInt(conf, firstEmitter.getName() + "_CARD");
 		final int secondCardinality = SystemParameters.getInt(conf, secondEmitter.getName()
 				+ "_CARD");
-
 		final int parallelism = SystemParameters.getInt(conf, getID() + "_PAR");
-
 		_operatorChain = cp.getChainOperator();
-
 		_joinPredicate = joinPredicate;
-
 		InputDeclarer currentBolt = builder.setBolt(getID(), this, parallelism);
-
-		final EquiMatrixAssignment _currentMappingAssignment = new EquiMatrixAssignment(
+		
+		final MatrixAssignment _currentMappingAssignment;
+		if(!isContentSensitive)
+		 _currentMappingAssignment = new EquiMatrixAssignment(
 				firstCardinality, secondCardinality, parallelism, -1);
-		final String dim = _currentMappingAssignment.getMappingDimensions();
+		else
+			_currentMappingAssignment = new ContentSensitiveMatrixAssignment(conf); //TODO 
+		
+		final String dim = _currentMappingAssignment.toString();
 		LOG.info(getID() + " Initial Dimensions is: " + dim);
-
+		
 		if (interComp == null)
 			currentBolt = MyUtilities.thetaAttachEmitterComponents(currentBolt, firstEmitter,
-					secondEmitter, allCompNames, _currentMappingAssignment, conf);
+					secondEmitter, allCompNames, _currentMappingAssignment, conf,wrapper);
 		else {
 			currentBolt = MyUtilities.thetaAttachEmitterComponentsWithInterChanging(currentBolt,
 					firstEmitter, secondEmitter, allCompNames, _currentMappingAssignment, conf,
 					interComp);
 			_inter = interComp;
 		}
-
 		if (getHierarchyPosition() == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf)))
 			killer.registerComponent(this, parallelism);
 		if (cp.getPrintOut() && _operatorChain.isBlocking())
 			currentBolt.allGrouping(killer.getID(), SystemParameters.DUMP_RESULTS_STREAM);
-
 		_firstRelationStorage = new TupleStorage();
 		_secondRelationStorage = new TupleStorage();
-
 		if (_joinPredicate != null) {
 			createIndexes();
 			_existIndexes = true;
@@ -140,16 +130,13 @@ public class StormThetaJoin extends StormBoltComponent {
 						_semAgg.acquire();
 					} catch (final InterruptedException ex) {
 					}
-
 					// sending
 					final AggregateOperator agg = (AggregateOperator) lastOperator;
 					final List<String> tuples = agg.getContent();
 					for (final String tuple : tuples)
 						tupleSend(MyUtilities.stringToTuple(tuple, getConf()), null, 0);
-
 					// clearing
 					agg.clearStorage();
-
 					_semAgg.release();
 				}
 			}
@@ -165,27 +152,22 @@ public class StormThetaJoin extends StormBoltComponent {
 		tuple = _operatorChain.process(tuple);
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			_semAgg.release();
-
 		if (tuple == null)
 			return;
 		_numSentTuples++;
 		printTuple(tuple);
-
 		if (_numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
 			printStatistics(SystemParameters.OUTPUT_PRINT);
-
 		if (MyUtilities.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
 			long timestamp = 0;
 			if (MyUtilities.isCustomTimestampMode(getConf()))
 				if (getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
 					// A tuple has a non-null timestamp only if the component is
-					// next to last
-					// because we measure the latency of the last operator
+					// next to last because we measure the latency of the last operator
 					timestamp = System.currentTimeMillis();
 			// timestamp = System.nanoTime();
 			tupleSend(tuple, stormTupleRcv, timestamp);
 		}
-
 		if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
 			printTupleLatency(_numSentTuples - 1, lineageTimestamp);
 	}
@@ -218,40 +200,33 @@ public class StormThetaJoin extends StormBoltComponent {
 			final List<String> tuple = (List<String>) stormTupleRcv
 					.getValueByField(StormComponent.TUPLE); // getValue(1);
 			final String inputTupleHash = stormTupleRcv.getStringByField(StormComponent.HASH);// getString(2);
-
 			if (processFinalAck(tuple, stormTupleRcv))
 				return;
-
 			final String inputTupleString = MyUtilities.tupleToString(tuple, getConf());
-
 			processNonLastTuple(inputComponentIndex, inputTupleString, tuple, inputTupleHash,
 					stormTupleRcv, true);
-
 		} else {
 			final String inputComponentIndex = stormTupleRcv
 					.getStringByField(StormComponent.COMP_INDEX); // getString(0);
 			final String inputBatch = stormTupleRcv.getStringByField(StormComponent.TUPLE);// getString(1);
-
 			final String[] wholeTuples = inputBatch
 					.split(SystemParameters.MANUAL_BATCH_TUPLE_DELIMITER);
 			final int batchSize = wholeTuples.length;
 			for (int i = 0; i < batchSize; i++) {
 				// parsing
-				final String currentTuple = wholeTuples[i];
+				final String currentTuple = new String(wholeTuples[i]);
 				final String[] parts = currentTuple
 						.split(SystemParameters.MANUAL_BATCH_HASH_DELIMITER);
-
 				String inputTupleHash = null;
 				String inputTupleString = null;
 				if (parts.length == 1)
 					// lastAck
-					inputTupleString = parts[0];
+					inputTupleString = new String(parts[0]);
 				else {
-					inputTupleHash = parts[0];
-					inputTupleString = parts[1];
+					inputTupleHash = new String(parts[0]);
+					inputTupleString = new String(parts[1]);
 				}
 				final List<String> tuple = MyUtilities.stringToTuple(inputTupleString, getConf());
-
 				// final Ack check
 				if (processFinalAck(tuple, stormTupleRcv)) {
 					if (i != batchSize - 1)
@@ -259,7 +234,6 @@ public class StormThetaJoin extends StormBoltComponent {
 								"Should not be here. LAST_ACK is not the last tuple!");
 					return;
 				}
-
 				// processing a tuple
 				if (i == batchSize - 1)
 					processNonLastTuple(inputComponentIndex, inputTupleString, tuple,
@@ -309,24 +283,20 @@ public class StormThetaJoin extends StormBoltComponent {
 
 		if (oppositeStorage == null || oppositeStorage.size() == 0)
 			return;
-
 		for (int i = 0; i < oppositeStorage.size(); i++) {
 			String oppositeTupleString = oppositeStorage.get(i);
-
 			long lineageTimestamp = 0;
 			if (MyUtilities.isCustomTimestampMode(getConf()))
 				lineageTimestamp = stormTuple.getLongByField(StormComponent.TIMESTAMP);
 			if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
 				// timestamp has to be removed
 				final String parts[] = oppositeTupleString.split("\\@");
-				final long storedTimestamp = Long.valueOf(parts[0]);
-				oppositeTupleString = parts[1];
-
+				final long storedTimestamp = Long.valueOf(new String(parts[0]));
+				oppositeTupleString = new String(parts[1]);
 				// now we set the maximum TS to the tuple
 				if (storedTimestamp > lineageTimestamp)
 					lineageTimestamp = storedTimestamp;
 			}
-
 			final List<String> oppositeTuple = MyUtilities.stringToTuple(oppositeTupleString,
 					getComponentConfiguration());
 			List<String> firstTuple, secondTuple;
@@ -337,27 +307,17 @@ public class StormThetaJoin extends StormBoltComponent {
 				firstTuple = oppositeTuple;
 				secondTuple = tuple;
 			}
-
-			// Check joinCondition
-			// if existIndexes == true, the join condition is already checked
-			// before
+			// Check joinCondition if existIndexes == true, the join condition is already checked before
 			if (_joinPredicate == null || _existIndexes
-					|| _joinPredicate.test(firstTuple, secondTuple)) { // if
-				// null,
-				// cross
-				// product
-
+					|| _joinPredicate.test(firstTuple, secondTuple)) {
+				// if null, cross product
 				// Create the output tuple by omitting the oppositeJoinKeys
-				// (ONLY for equi-joins since they are added
-				// by the first relation), if any (in case of cartesian product
-				// there are none)
+				// (ONLY for equi-joins since they are added by the first relation), 
+				//if any (in case of cartesian product there are none)
 				List<String> outputTuple = null;
-
 				// Cartesian product - Outputs all attributes
 				outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);
-
 				applyOperatorsAndSend(stormTuple, outputTuple, lineageTimestamp, isLastInBatch);
-
 			}
 		}
 	}
@@ -365,7 +325,6 @@ public class StormThetaJoin extends StormBoltComponent {
 	protected void performJoin(Tuple stormTupleRcv, List<String> tuple, String inputTupleHash,
 			boolean isFromFirstEmitter, List<Index> oppositeIndexes,
 			List<String> valuesToApplyOnIndex, TupleStorage oppositeStorage, boolean isLastInBatch) {
-
 		final TupleStorage tuplesToJoin = new TupleStorage();
 		selectTupleToJoin(oppositeStorage, oppositeIndexes, isFromFirstEmitter,
 				valuesToApplyOnIndex, tuplesToJoin);
@@ -413,7 +372,7 @@ public class StormThetaJoin extends StormBoltComponent {
 						LOG.info("," + "RESULT," + _thisTaskID + "," + "TimeStamp:," + ts
 								+ ",Sent Tuples," + getNumSentTuples());
 					}
-				} else // only final statistics is printed if we are measuring
+				} else 	// only final statistics is printed if we are measuring
 						// latency
 				if (type == SystemParameters.FINAL_PRINT) {
 					final Runtime runtime = Runtime.getRuntime();
@@ -436,10 +395,8 @@ public class StormThetaJoin extends StormBoltComponent {
 			List<String> tuple, // these two are the same
 			String inputTupleHash, Tuple stormTupleRcv, boolean isLastInBatch) {
 		boolean isFromFirstEmitter = false;
-
 		TupleStorage affectedStorage, oppositeStorage;
 		List<Index> affectedIndexes, oppositeIndexes;
-
 		if (_firstEmitterIndex.equals(inputComponentIndex)) {
 			// R update
 			isFromFirstEmitter = true;
@@ -460,7 +417,6 @@ public class StormThetaJoin extends StormBoltComponent {
 			throw new RuntimeException("InputComponentName " + inputComponentIndex
 					+ " doesn't match neither " + _firstEmitterIndex + " nor "
 					+ _secondEmitterIndex + ".");
-
 		// add the stormTuple to the specific storage
 		if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
 			final long incomingTimestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
@@ -468,16 +424,12 @@ public class StormThetaJoin extends StormBoltComponent {
 					+ inputTupleString;
 		}
 		final int row_id = affectedStorage.insert(inputTupleString);
-
 		List<String> valuesToApplyOnIndex = null;
-
 		if (_existIndexes)
 			valuesToApplyOnIndex = updateIndexes(inputComponentIndex, tuple, affectedIndexes,
 					row_id);
-
 		performJoin(stormTupleRcv, tuple, inputTupleHash, isFromFirstEmitter, oppositeIndexes,
 				valuesToApplyOnIndex, oppositeStorage, isLastInBatch);
-
 		if ((_firstRelationStorage.size() + _secondRelationStorage.size())
 				% _statsUtils.getDipInputFreqPrint() == 0)
 			printStatistics(SystemParameters.INPUT_PRINT);
@@ -485,12 +437,10 @@ public class StormThetaJoin extends StormBoltComponent {
 
 	private void selectTupleToJoin(TupleStorage oppositeStorage, List<Index> oppositeIndexes,
 			boolean isFromFirstEmitter, List<String> valuesToApplyOnIndex, TupleStorage tuplesToJoin) {
-
 		if (!_existIndexes) {
 			tuplesToJoin.copy(oppositeStorage);
 			return;
 		}
-
 		final TIntArrayList rowIds = new TIntArrayList();
 		// If there is atleast one index (so we have single join conditions with
 		// 1 index per condition)
@@ -544,27 +494,21 @@ public class StormThetaJoin extends StormBoltComponent {
 				}
 			else
 				throw new RuntimeException("non supported type");
-
 			// Compute the intersection
-			// TODO: Search only within the ids that are in rowIds from previous
-			// join conditions
-			// If nothing returned (and since we want intersection), no need to
-			// proceed.
+			// TODO: Search only within the ids that are in rowIds from previous conditions If 
+			//nothing returned (and since we want intersection), no need to proceed.
 			if (currentRowIds == null)
 				return;
-
 			// If it's the first index, add everything. Else keep the
 			// intersection
 			if (i == 0)
 				rowIds.addAll(currentRowIds);
 			else
 				rowIds.retainAll(currentRowIds);
-
 			// If empty after intersection, return
 			if (rowIds.isEmpty())
 				return;
 		}
-
 		// generate tuplestorage
 		for (int i = 0; i < rowIds.size(); i++) {
 			final int id = rowIds.get(i);
@@ -580,7 +524,6 @@ public class StormThetaJoin extends StormBoltComponent {
 			comeFromFirstEmitter = true;
 		else
 			comeFromFirstEmitter = false;
-
 		final PredicateUpdateIndexesVisitor visitor = new PredicateUpdateIndexesVisitor(
 				comeFromFirstEmitter, tuple);
 		_joinPredicate.accept(visitor);

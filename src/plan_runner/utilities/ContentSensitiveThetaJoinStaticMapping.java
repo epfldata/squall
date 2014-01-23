@@ -6,29 +6,31 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import plan_runner.conversion.TypeConversion;
 import plan_runner.thetajoin.matrix_mapping.MatrixAssignment;
 import plan_runner.thetajoin.matrix_mapping.MatrixAssignment.Dimension;
 import backtype.storm.generated.GlobalStreamId;
 import backtype.storm.grouping.CustomStreamGrouping;
 import backtype.storm.task.WorkerTopologyContext;
 
-public class ThetaJoinStaticMapping implements CustomStreamGrouping {
+public class ContentSensitiveThetaJoinStaticMapping<KeyType> implements CustomStreamGrouping {
 	private static final long serialVersionUID = 1L;
-	private static Logger LOG = Logger.getLogger(ThetaJoinStaticMapping.class);
+	private static Logger LOG = Logger.getLogger(ContentSensitiveThetaJoinStaticMapping.class);
 
 	private final MatrixAssignment _assignment;
 	private final String _firstEmitterIndex, _secondEmitterIndex;
 	private List<Integer> _targetTasks;
 	private final Map _map;
+	private TypeConversion<KeyType> _wrapper;
 
-	public ThetaJoinStaticMapping(String firstIndex, String secondIndex,
-			MatrixAssignment assignment, Map map) {
+	public ContentSensitiveThetaJoinStaticMapping(String firstIndex, String secondIndex,
+			MatrixAssignment assignment, Map map, TypeConversion<KeyType> wrapper) {
 		_assignment = assignment;
 		_firstEmitterIndex = firstIndex;
 		_secondEmitterIndex = secondIndex;
 		_map = map;
+		_wrapper=wrapper;
 	}
-
 	// @Override
 	@Override
 	public List<Integer> chooseTasks(int taskId, List<Object> stormTuple) {
@@ -49,13 +51,13 @@ public class ThetaJoinStaticMapping implements CustomStreamGrouping {
 	}
 
 	private List<Integer> chooseTasksNonFinalAck(List<Object> stormTuple) {
-		// ////////////////
 		List<Integer> tasks = null;
 		final String tableName = (String) stormTuple.get(0);
+		KeyType tupleKey = _wrapper.fromString((String)stormTuple.get(2));		
 		if (tableName.equals(_firstEmitterIndex))
-			tasks = translateIdsToTasks(_assignment.getRegionIDs(Dimension.ROW));
+			tasks = translateIdsToTasks(_assignment.getRegionIDs(Dimension.ROW,tupleKey));
 		else if (tableName.equals(_secondEmitterIndex))
-			tasks = translateIdsToTasks(_assignment.getRegionIDs(Dimension.COLUMN));
+			tasks = translateIdsToTasks(_assignment.getRegionIDs(Dimension.COLUMN,tupleKey));
 		else {
 			LOG.info("First Name: " + _firstEmitterIndex);
 			LOG.info("Second Name: " + _secondEmitterIndex);

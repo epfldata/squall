@@ -24,10 +24,10 @@ public abstract class Action implements Serializable {
 	 */
 	public static Action fromString(String string) {
 		final String[] parts = string.split(" ");
-		if (parts[0].equals(MIGRATION))
-			return new Migration(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]),
-					Integer.parseInt(parts[3]), Integer.parseInt(parts[4]),
-					Integer.parseInt(parts[5]));
+		if (new String(parts[0]).equals(MIGRATION))
+			return new Migration(Integer.parseInt(new String(parts[1])), Integer.parseInt(new String(parts[2])),
+					Integer.parseInt(new String(parts[3])), Integer.parseInt(new String(parts[4])),
+					Integer.parseInt(new String(parts[5])));
 		else
 			return null;
 	}
@@ -199,5 +199,8 @@ public abstract class Action implements Serializable {
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
-	public abstract String toString();
+	public String toString(){
+		return  getNewRows() + ","
+				+ getNewColumns(); 
+	}
 }
