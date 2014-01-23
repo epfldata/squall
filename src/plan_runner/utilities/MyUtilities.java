@@ -25,7 +25,6 @@ import plan_runner.storm_components.InterchangingComponent;
 import plan_runner.storm_components.StormComponent;
 import plan_runner.storm_components.StormEmitter;
 import plan_runner.storm_components.StormSrcHarmonizer;
-import plan_runner.thetajoin.matrix_mapping.ContentSensitiveMatrixAssignment;
 import plan_runner.thetajoin.matrix_mapping.MatrixAssignment;
 import backtype.storm.generated.Grouping;
 import backtype.storm.grouping.CustomStreamGrouping;
@@ -601,11 +600,7 @@ public class MyUtilities {
 
 		CustomStreamGrouping mapping=null;
 		
-		if(assignment instanceof ContentSensitiveMatrixAssignment){
-				mapping= new ContentSensitiveThetaJoinStaticMapping(firstEmitterIndex, secondEmitterIndex, assignment, map, wrapper);
-		}
-		else
-			mapping = new ThetaJoinStaticMapping(firstEmitterIndex,
+		mapping = new ThetaJoinStaticMapping(firstEmitterIndex,
 				secondEmitterIndex, assignment, map);
 
 		final ArrayList<StormEmitter> emittersList = new ArrayList<StormEmitter>();

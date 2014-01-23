@@ -14,8 +14,6 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils.Comparison;
-
 import plan_runner.components.ComponentProperties;
 import plan_runner.conversion.TypeConversion;
 import plan_runner.operators.AggregateOperator;
@@ -26,7 +24,6 @@ import plan_runner.predicates.Predicate;
 import plan_runner.storage.TupleStorage;
 import plan_runner.storm_components.synchronization.TopologyKiller;
 import plan_runner.thetajoin.indexes.Index;
-import plan_runner.thetajoin.matrix_mapping.ContentSensitiveMatrixAssignment;
 import plan_runner.thetajoin.matrix_mapping.EquiMatrixAssignment;
 import plan_runner.thetajoin.matrix_mapping.MatrixAssignment;
 import plan_runner.utilities.MyUtilities;
@@ -89,11 +86,8 @@ public class StormThetaJoin extends StormBoltComponent {
 		InputDeclarer currentBolt = builder.setBolt(getID(), this, parallelism);
 		
 		final MatrixAssignment _currentMappingAssignment;
-		if(!isContentSensitive)
 		 _currentMappingAssignment = new EquiMatrixAssignment(
 				firstCardinality, secondCardinality, parallelism, -1);
-		else
-			_currentMappingAssignment = new ContentSensitiveMatrixAssignment(conf); //TODO 
 		
 		final String dim = _currentMappingAssignment.toString();
 		LOG.info(getID() + " Initial Dimensions is: " + dim);
