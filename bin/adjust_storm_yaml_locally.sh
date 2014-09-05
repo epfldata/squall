@@ -1,7 +1,7 @@
 #!/bin/bash
 
 FILENAME=~/.storm/storm.yaml
-FIND=-priv
-REPLACE=
+FIND=master3
+REPLACE=icdataportal3
 
 echo "$FILENAME" | xargs perl -pi -e "s/$FIND/$REPLACE/g"

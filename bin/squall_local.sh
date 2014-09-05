@@ -1,5 +1,5 @@
 #!/bin/bash
-. ./storm_version.sh
+. ./storm_env.sh
 
 printFormat (){
 	echo "Format: ./squall_local.sh CONFIG_PATH"
@@ -56,4 +56,7 @@ cd ../deploy
 
 #Old version implies specifying libraries explicitly
 #java -Xmx128m -cp ../deploy/squall-0.2.0-standalone.jar:../$STORMNAME/lib/*:../contrib/*:../$STORMNAME/$STORMNAME.jar sql.main.ParserMain $CONFIG_PATH
+# only for 0.8
 #java -Xmx128m -cp ../deploy/squall-0.2.0-standalone.jar:../$STORMNAME/lib/*:../contrib/*:../$STORMNAME/$STORMNAME.jar plan_runner.main.Main $CONFIG_PATH
+# only for 0.9
+#java -Xmx128m -cp ../deploy/squall-0.2.0-standalone.jar:../$STORMNAME/lib/*:../contrib/* plan_runner.main.Main $CONFIG_PATH

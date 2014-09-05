@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./storm_version.sh
+. ./storm_env.sh
 
 SUBMIT_WAIT_TIME=20
 
@@ -38,13 +38,12 @@ fi
 # But if user has specified a specific configuration file, run this
 if [ $# -eq 2 ]; then
 	CONFIG_PATH=$2
-else if [[ $# -eq 1 && "$AUTO_MODE" == "true" ]]; then
+elif [[ $# -eq 1 && "$AUTO_MODE" == "true" ]]; then
 	CONFIG_PATH=$1
-     else
+else
 	echo "ERROR:: Format not followed:"
 	printFormat
 	exit
-     fi
 fi
 # check if your configuration file exists
 if ! [ -f $CONFIG_PATH ]; then

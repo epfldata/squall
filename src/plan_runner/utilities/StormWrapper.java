@@ -1,11 +1,13 @@
 package plan_runner.utilities;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.apache.thrift7.TException;
+import org.apache.thrift7.transport.TTransportException;
 
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
@@ -55,7 +57,15 @@ public class StormWrapper {
 		final int nimbusThriftPort = SystemParameters.NIMBUS_THRIFT_PORT;
 
 		if (distributed) {
-			final NimbusClient nimbus = new NimbusClient(nimbusHost, nimbusThriftPort);
+			NimbusClient nimbus = null;
+			try {
+				Map<String, String> securityMap = new HashMap<String, String>();
+				securityMap.put("storm.thrift.transport", "backtype.storm.security.auth.SimpleTransportPlugin");
+				nimbus = new NimbusClient(securityMap, nimbusHost, nimbusThriftPort);
+			} catch (TTransportException e) {
+				LOG.info(MyUtilities.getStackTrace(e));
+				System.exit(1);
+			}
 			final Client client = nimbus.getClient();
 			return client;
 		} else

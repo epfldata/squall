@@ -18,14 +18,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.apache.thrift7.TException;
+import org.apache.thrift7.transport.TTransportException;
 
 
 public class TopologyStats {
-    private static final String NIMBUS_HOST = "icdatasrv5";
+    private static final String NIMBUS_HOST = "icdataportal3";
     private static final int NIMBUS_THRIFT_PORT = 6627;
 
     private static Client getNimbusStub(){
-        NimbusClient nimbus = new NimbusClient(NIMBUS_HOST, NIMBUS_THRIFT_PORT);
+	NimbusClient nimbus = null;
+	try{
+	  Map<String, String> conf = new HashMap<String, String>();
+	  conf.put("storm.thrift.transport", "backtype.storm.security.auth.SimpleTransportPlugin");
+	  nimbus = new NimbusClient(conf, NIMBUS_HOST, NIMBUS_THRIFT_PORT);
+	} catch (TTransportException e) {
+	  e.printStackTrace();
+	  System.exit(1);
+	}
         Client client=nimbus.getClient();
         return client;
     }

@@ -1,17 +1,16 @@
 #!/bin/bash
-. ./storm_version.sh
+. ./storm_env.sh
 
 # Arguments are OPERATION RESTART_ANYWAY
 #               START/END YES/NO
 
-MACHINE=squalldata@icdatasrv5
-CLUSTER_NODE_CONF=/opt/storm/$STORMNAME/conf/storm.yaml
+CLUSTER_NODE_CONF=$STORM_INSTALL_DIR/$STORMNAME/conf/storm.yaml
 
 declare -i CLUSTER_MODE
 
 # Returns 1 if cluster is in profiling mode, 0 otherwise
 check_cluster_mode() {
-	scp ${MACHINE}:${CLUSTER_NODE_CONF} storm.yaml.tmp
+	scp $MASTER:$CLUSTER_NODE_CONF storm.yaml.tmp
 	CLUSTER_MODE=`cat storm.yaml.tmp | grep "agentpath" | wc -l`
 	rm storm.yaml.tmp
 	return $CLUSTER_MODE	
@@ -46,6 +45,7 @@ restore_normal_cluster() {
 		return # Cluster already in normal mode
 	fi
 	echo "Updating cluster with normal configuration..."
+   # NOTE: No guarantee that storm.yaml is the current configuration; it's fine as long as we are not in profile mode
 	./snd_conf.sh storm.yaml
 	echo "DONE"
 	restart_cluster

@@ -1,34 +1,50 @@
 #!/bin/bash
-. ./storm_version.sh
+. ./storm_env.sh
 
-MACHINE=squalldata@icdatasrv
-MACHINE5=squalldata@icdatasrv5
-ZOO1=squalldata@icdatasrv9
-ZOO2=squalldata@icdatasrv7
-STORMPATH=/opt/storm/$STORMNAME
-LOGPATH=/data/squall_zone/logs
+# ********** LOCAL PARAMS ***********
+#If changed zookeeper locations/number, do a change here and on one more place
+ZOO1=3
+ZOO2=7
+ZOOBLADE1=blade03
+ZOOBLADE2=blade07
+# ********** END OF LOCAL PARAMS ***********
 
+# ********** RUNNING STUFF **********
 #All of the processes run in background mode (& at the end of each command)
-#By default, all the processes on Solaris are run under supervision, using SMF tool
 
-# Multi-server zookeeper
-echo "1" | ssh $ZOO1 'cat > /data/squall_zone/zookeeper_data/myid'
-echo "2" | ssh $ZOO2 'cat > /data/squall_zone/zookeeper_data/myid'
-ssh $ZOO1 '/opt/storm/bin/zookeeperd > /data/squall_zone/zookeeper_data/consoleZoo.txt 2>&1 &'
-ssh $ZOO2 '/opt/storm/bin/zookeeperd > /data/squall_zone/zookeeper_data/consoleZoo.txt 2>&1 &'
-
+#Running Zookeeper
+#If changed zookeeper locations/number, do a change here and on one more place
+ssh $MASTER cexec :$ZOO1  echo 1 '">"' $ZOOKEEPERPATH/myid
+ssh $MASTER cexec :$ZOO2  echo 2 '">"' $ZOOKEEPERPATH/myid
+ssh $MASTER ssh $ZOOBLADE1 $STORM_INSTALL_DIR/bin/zookeeperd '">"' $ZOOKEEPERPATH/consoleZoo.txt '"2>&1 &"'
+ssh $MASTER ssh $ZOOBLADE2 $STORM_INSTALL_DIR/bin/zookeeperd '">"' $ZOOKEEPERPATH/consoleZoo.txt '"2>&1 &"'
 
 #Running nimbus and ui
-#Console output goes to the current directory (pwd).
-#logs directory goes to pwd/logs.
-ssh $MACHINE5 $STORMPATH'/bin/storm nimbus > ' $LOGPATH'/consoleNimbus.txt 2>&1 &'
-ssh $MACHINE5 $STORMPATH'/bin/storm ui > ' $LOGPATH'/consoleUI.txt 2>&1 &'
+ssh $MASTER $STORMPATH/bin/storm nimbus '>' $STORM_LOGPATH/consoleNimbus.txt '2>&1 &'
+ssh $MASTER $STORMPATH/bin/storm ui '>' $STORM_LOGPATH/consoleUI.txt '2>&1 &'
 
 #Running supervisors on all the nodes.
-for blade in {5..10}
-do
-  for port in {1001..1022}
-  do
-    ssh -p $port $MACHINE$blade $STORMPATH'/bin/storm supervisor > ' $LOGPATH'/consoleSupervisor.txt 2>&1 &'
-  done 
-done
+ssh $MASTER cexec :$BLADES $STORMPATH/bin/storm supervisor '">"' $STORM_LOGPATH/consoleSupervisor.txt '"2>&1 &"'
+
+#Running logviewers on all the nodes.
+ssh $MASTER cexec :$BLADES $STORMPATH/bin/storm logviewer '">"' $STORM_LOGPATH/consoleLogViewer.txt '"2>&1 &"'
+# ********** END OF RUNNING STUFF **********
+
+
+
+
+# ********** END OF FILE: COMMENTS **********
+# These all worked on the cluster
+#### cexec :3 echo 1 '>' $ZOOKEEPERPATH/myid
+#### echo "1" | cexec :3 'cat > '$ZOOKEEPERPATH'/myid'
+#### cexec :3 'echo "1" > '$ZOOKEEPERPATH'/myid'
+#### cexec :3 'echo 1 > '$ZOOKEEPERPATH'/myid'
+#### cexec :3 'echo '1' > '$ZOOKEEPERPATH'/myid'
+#### cexec :3 "echo 1 > /data/lab/storm_tmp/zookeeper_data/myid"
+# These all worked from office machine (">" because we don't want to redirect on $MASTER but on blades)
+#### echo 1 | ssh $MASTER cexec :$ZOO1  cat '">"' $ZOOKEEPERPATH/myid
+#### ssh $MASTER 'cexec :'$ZOO1 ' echo 1 ">"' $ZOOKEEPERPATH'/myid'
+#### echo 1 | ssh $MASTER 'cexec :'$ZOO1 ' cat ">"' $ZOOKEEPERPATH'/myid'
+#### ssh $MASTER 'cexec :3 echo 1 ">"' $ZOOKEEPERPATH'/myid'
+#### ssh $MASTER 'cexec :3 echo 1 ">"'$ZOOKEEPERPATH'/myid'
+#### ssh $MASTER 'cexec :3 "echo 1 > "'$ZOOKEEPERPATH'"/myid"'

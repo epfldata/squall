@@ -1,4 +1,5 @@
 #!/bin/bash
+. ./storm_env.sh
 
 function usage() {
 	echo "Usage:      ./grasp_logs.sh <LOGS_LOCAL_PATH> <REMOVE_FROM_CLUSTER>"
@@ -22,58 +23,41 @@ removeIfEmpty(){
 }
 
 # local path variables
-LOGS_LOCAL_PATH=$1/
+# NOTE: For cget to work with directories, do not use / at the end of the path (although it still complains to an error)
+LOGS_LOCAL_PATH=$1
 REMOVE_FROM_CLUSTER=$2
+CLUSTER_GATHER_DIR=/localhome/datalab/avitorovic/gather_logs
+MASTER_LOG_DIR=$CLUSTER_GATHER_DIR/master
+ZOO_FILEPATH=$ZOOKEEPERPATH/consoleZoo.txt
+
 mkdir -p $LOGS_LOCAL_PATH
-rm -rf $LOGS_LOCAL_PATH*
+: ${LOGS_LOCAL_PATH:?"Need to set LOGS_LOCAL_PATH non-empty"}
+mkdir -p $LOGS_LOCAL_PATH
+rm -rf $LOGS_LOCAL_PATH/*
+ssh $MASTER mkdir -p $CLUSTER_GATHER_DIR
+ssh $MASTER mkdir -p $MASTER_LOG_DIR
 
-# remote variables
-MACHINE=squalldata@icdatasrv
-MACHINE5=${MACHINE}5
-ZOO1=squalldata@icdatasrv9
-ZOO2=squalldata@icdatasrv7
-LOGS_REMOTE_PATH=/data/squall_zone/logs
-STORM_MASTER=$LOGS_LOCAL_PATH/master
-STORM_SUPERVISOR=$LOGS_LOCAL_PATH/supervisor
-STORM_ZOO1=$LOGS_LOCAL_PATH/zoo1
-STORM_ZOO2=$LOGS_LOCAL_PATH/zoo2
-ZOO_REMOTE_PATH=/data/squall_zone/zookeeper_data/consoleZoo.txt
+# All of the following goes to the $CLUSTER_GATHER_DIR (or its subdirectories)
+# collect zookeeper log
+ssh $MASTER cget $ZOO_FILEPATH $CLUSTER_GATHER_DIR
+# collect master logs
+ssh $MASTER cp -r $STORM_LOGPATH/* $MASTER_LOG_DIR
+# collect logs from blades
+ssh $MASTER cget $STORM_LOGPATH $CLUSTER_GATHER_DIR
 
-# actual processing
-. ./storm_version.sh
-
-# Grasping zoo
-mkdir -p $STORM_ZOO1
-scp -r $ZOO1:$ZOO_REMOTE_PATH $STORM_ZOO1
-removeIfEmpty $STORM_ZOO1
-# TODO see what to do with $REMOVE_FROM_CLUSTER
-
-mkdir -p $STORM_ZOO2
-scp -r $ZOO2:$ZOO_REMOTE_PATH $STORM_ZOO2
-removeIfEmpty $STORM_ZOO2
-# TODO see what to do with $REMOVE_FROM_CLUSTER
-
-
-#Grasping output from master node
-mkdir -p $STORM_MASTER
-scp -r $MACHINE5:$LOGS_REMOTE_PATH/* $STORM_MASTER
-removeIfEmpty "$STORM_MASTER"
-if [ $REMOVE_FROM_CLUSTER == "YES" ]; then
-  # TODO, we don't delete because Storm behaves strangely
-  ssh $MACHINE5 'echo "" > ' $LOGS_REMOTE_PATH'/nimbus.log'
-fi
-
-#Grasping output from supervisor nodes
-for blade in {1..10}
-do
-  for port in {1001..1022}
-  do
-	supervisor=${STORM_SUPERVISOR}${blade}-${port}
-	mkdir -p $supervisor
-	scp -P "$port" -r $MACHINE${blade}:$LOGS_REMOTE_PATH/* $supervisor
-	removeIfEmpty "$supervisor"
-	if [ $REMOVE_FROM_CLUSTER == "YES" ]; then
-	  ssh -p "$port" $MACHINE${blade} 'rm -r ' $LOGS_REMOTE_PATH'/*'
+# Copy $CLUSTER_GATHER_DIR to local machine
+scp -r $MASTER:$CLUSTER_GATHER_DIR/* $LOGS_LOCAL_PATH
+# delete unused blade machine logs on the local machine
+for FULLDIR in $LOGS_LOCAL_PATH/*; do
+	if [ -d $FULLDIR ]; then
+		removeIfEmpty "$FULLDIR"
 	fi
-  done
 done
+
+# Cleaning Master/Blades
+if [ $REMOVE_FROM_CLUSTER == "YES" ]; then
+  ./delete_logs.sh
+fi
+# Delete Master:CLUSTER_GATHER_DIR
+: ${CLUSTER_GATHER_DIR:?"Need to set CLUSTER_GATHER_DIR non-empty"}
+ssh $MASTER rm -r $CLUSTER_GATHER_DIR/*

@@ -1,20 +1,16 @@
 #!/bin/bash
+. ./storm_env.sh
 
-. ./storm_version.sh
+# Deleting all the Storm output on Master and blades
+# To avoid deleting /*, We check if the variables are empty or non-set
+: ${STORM_LOGPATH:?"Need to set STORM_LOGPATH non-empty"}
+ssh $MASTER rm -r $STORM_LOGPATH/*
+ssh $MASTER crm -r $STORM_LOGPATH/'"*"'
 
-MACHINE=squalldata@icdatasrv
-STORM_HOME=/data/squall_zone
+: ${STORM_DATA:?"Need to set STORM_DATA non-empty"}
+ssh $MASTER rm -r $STORM_DATA/*
+ssh $MASTER crm -r $STORM_DATA/'"*"'
 
-STORM_DATA=$STORM_HOME/storm_data
-ZOOKEEPER_DATA=$STORM_HOME/zookeeper_data
-STORM_LOGS=$STORM_HOME/logs
-
-#Deleting all the Storm output on master + zones
-for blade in {1..10}
-do
-  ssh $MACHINE$blade 'rm -r ' $STORM_DATA'/*;rm -r ' $ZOOKEEPER_DATA'/*;rm -r ' $STORM_LOGS'/*'
-  for port in {1001..1022}
-  do
-	ssh -p "$port" $MACHINE${blade} 'rm -r ' $STORM_DATA'/*;rm -r ' $STORM_LOGS'/*'
-  done
-done
+: ${ZOOKEEPERPATH:?"Need to set ZOOKEEPERPATH non-empty"}
+ssh $MASTER rm -r $ZOOKEEPERPATH/*
+ssh $MASTER crm -r $ZOOKEEPERPATH/'"*"'

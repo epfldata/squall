@@ -1,18 +1,19 @@
 #!/bin/bash
 
 function usage() {
-	echo "Usage:      ./loop_squall_cluster.sh <MODE> <PROFILING> <RESTART_BEFORE> <RESTART_AFTER_EACH> <BASE_PATH>"
+	echo "Usage:      ./loop_squall_cluster.sh <MODE> <PROFILING> <RESTART_BEFORE> <RESTART_AFTER_EACH> <GET_KEY_REGIONS> <BASE_PATH>"
 	echo "               MODE: PLAN_RUNNER or SQL "
 	echo "               PROFILING: YES or NO "
 	echo "               RESTART_BEFORE: YES or NO (this is for cleaning storm .log files)"
 	echo "               RESTART_AFTER_EACH: YES or NO (this is for cleaning storm .log files)"
+	echo "               GET_KEY_REGIONS: YES or NO"
 	echo "               BASE_PATH: ../experiments/series_name"
 	exit
 }
 
 
 # Check correct number of command line arguments
-if [ $# -ne 5 ]; then
+if [ $# -ne 6 ]; then
 	echo "Error: Illegal number of command line arguments. Required 4 argument and got $#. Exiting..."
 	usage
 fi
@@ -20,7 +21,8 @@ MODE=$1
 PROFILING=$2
 RESTART_BEFORE=$3
 RESTART_AFTER_EACH=$4
-BASE_PATH=$5
+GET_KEY_REGIONS=$5
+BASE_PATH=$6
 # Check if arg3 is a directory
 if [ ! -d $BASE_PATH ]; then
 	echo "Provided argument $BASE_PATH is not a folder (or folder doesn't exist). Exiting..."
@@ -53,32 +55,35 @@ COUNT=${#TESTCONFS[@]}
 declare -i i
 i=1
 for config in ${CONF_PATH}* ; do
+	echo "Removing old logs and storage ..."
+	./delete_logs.sh
+
 	echo "Running config file $i ($config) out of ${COUNT}..."
 
 	# 1. running a topology
 	confname=${config##*/}
-        OUTPUT_PATH=$BASE_PATH/$confname/
-        mkdir -p $OUTPUT_PATH
-        rm -rf ${OUTPUT_PATH}*
+	OUTPUT_PATH=$BASE_PATH/$confname/
+	mkdir -p $OUTPUT_PATH
+	rm -rf ${OUTPUT_PATH}*
 	./squall_cluster.sh $MODE $CONF_PATH/$confname > $OUTPUT_PATH/$EXEC_LOG_FILE_NAME
 	#waiting for topology to finish is now in squall_cluster.sh
 	# incrementing the counter
 
 	# 2. grasping profiling info, if any
-        if [ $PROFILING == YES ]
-  	then
-          echo "Downloading profiling information for config file $i ($config) out of ${COUNT}..."
-	  #getting snapshots
-  	  SNAPSHOT_PATH=$OUTPUT_PATH/$SNAPSHOT_DIR_NAME
-          mkdir -p $SNAPSHOT_PATH
-          ./grasp_snapshots.sh $SNAPSHOT_PATH
+   if [ $PROFILING == YES ]
+	then
+		echo "Downloading profiling information for config file $i ($config) out of ${COUNT}..."
+		#getting snapshots
+		SNAPSHOT_PATH=$OUTPUT_PATH/$SNAPSHOT_DIR_NAME
+		mkdir -p $SNAPSHOT_PATH
+		./grasp_snapshots.sh $SNAPSHOT_PATH
 
-          #deleting snapshots from cluster, so that the following snapshots are not spoiled
-          ./delete_snapshots.sh
+		#deleting snapshots from cluster, so that the following snapshots are not spoiled
+		./delete_snapshots.sh
 	fi	
 
 	# 3. grasping and deleting storm logs
-        echo "Downloading storm log information for config file $i ($config) out of ${COUNT}..."
+	echo "Downloading storm log information for config file $i ($config) out of ${COUNT}..."
 	STORM_LOGS_PATH=$OUTPUT_PATH/$STORM_LOG_DIR_NAME/
 	mkdir -p $STORM_LOGS_PATH
 	rm -rf ${STORM_LOGS_PATH}*
@@ -96,5 +101,10 @@ for config in ${CONF_PATH}* ; do
 	  ./reset_all.sh
 	fi
 
-        i+=1
+	if [ $GET_KEY_REGIONS == YES ]
+	then
+	  ./get_key_region.sh $BASE_PATH
+	fi
+
+	i+=1
 done

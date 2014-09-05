@@ -1,8 +1,11 @@
 #!/bin/bash
 
-. ../storm_version.sh
+. ../storm_env.sh
 
-STORM_PATH=../../$STORMNAME/
-STORM_LIB_PATH=$STORM_PATH/lib
+LOCAL_STORM_PATH=../../$STORMNAME
+LOCAL_STORM_LIB_PATH=$LOCAL_STORM_PATH/lib
 
-javac -cp $STORM_PATH/$STORMNAME.jar:$STORM_LIB_PATH/libthrift7-0.7.0.jar stats/TopologyStats.java
+# Could be used only for 0.8: javac -cp $LOCAL_STORM_PATH/$STORMNAME.jar:$LOCAL_STORM_LIB_PATH/libthrift7-0.7.0.jar stats/TopologyStats.java
+# Could be used for 0.9: javac -cp $LOCAL_STORM_LIB_PATH/storm-core-0.9.2-incubating.jar:$LOCAL_STORM_LIB_PATH/libthrift7-0.7.0.jar:. stats/TopologyStats.java
+# Could be used for 0.9:
+javac -cp $LOCAL_STORM_LIB_PATH/*:. stats/TopologyStats.java
