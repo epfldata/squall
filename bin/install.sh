@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # workaround fora github bug (see https://www.drupal.org/node/2304983)
+mkdir -p $HOME/.lein/self-installs
 cp ../contrib/leiningen-1.7.1-standalone.jar $HOME/.lein/self-installs/
 ./lein plugin install lein-localrepo "0.3"
 ./lein localrepo install ../contrib/trove-3.0.2.jar trove 3.0.2
