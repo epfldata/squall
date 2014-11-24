@@ -4,7 +4,7 @@ Squall is an online query processing engine built on top of [Storm](https://gith
 - [x] SQL (Select-Project-Join) query processing over continuous streams of data.
 - [x] Full fledged & full-history stateful computation essential for approximate query processing, e.g. [Online Aggregation](http://en.wikipedia.org/wiki/Online_aggregation).
 - [x] Time based Window Semantics for infinite data streams.
-- [x] Theta Joins: Complex join predicates, including inequality, band, and arbitrary UDF join predicates.
+- [x] Theta Joins: complex join predicates, including inequality, band, and arbitrary UDF join predicates. [Hive plans](https://cwiki.apache.org/confluence/display/Hive/Theta+Join) to support theta joins in response to user requests.
 - [x] Continuous load balance and adaptation to data skew.
 - [x] Usage: An API for arbitrary SQL query processing or a frontend query processor that parses SQL to a storm topology.
 - [x] Throughput rates of upto Millions of tuples/second and latencies of milliseconds on a 16 machine cluster. Scalable to large cluster settings. Further details can be found in this [whitepaper](http://www.vldb.org/pvldb/vol7/p441-elseidy.pdf).
