@@ -10,6 +10,7 @@ Squall is an online query processing engine built on top of [Storm](https://gith
 - [x] Throughput rates of upto Millions of tuples/second and latencies of milliseconds on a 16 machine cluster. Scalable to large cluster settings. Further details can be found in this [whitepaper](http://www.vldb.org/pvldb/vol7/p441-elseidy.pdf).
 - [x] Out-of-Core Processing: Can operate efficiently under limited memory resources through efficient disk based datastructures and indexes.
 - [ ] Elasticity: Scaling out according to the load.
+- [ ] DashBoard: Integrating support for real time visualizations.
 
 ### Example:
 Consider the following SQL query:
