@@ -17,7 +17,7 @@ SELECT C_MKTSEGMENT, COUNT(O_ORDERKEY)
 FROM CUSTOMER join ORDERS on C_CUSTKEY = O_CUSTKEY
 GROUP BY C_MKTSEGMENT
 ```
-Through the Squall API, an online distributed query plan can be simply formulated as follows:
+Through the Squall API, the online distributed query plan ([full code](https://github.com/epfldata/squall/blob/master/src/plan_runner/query_plans/HyracksPlan.java)) can be simply formulated as follows:
 
 ```java
 ProjectOperator projectionCustomer = new ProjectOperator(new int[]{0, 6});
