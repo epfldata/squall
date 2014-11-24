@@ -7,6 +7,7 @@ Squall is an online query processing engine built on top of [Storm](https://gith
 - [x] Theta Joins: Complex join predicates, including inequality, band, and arbitrary UDF join predicates.
 - [x] Continuous load balance and adaptation to data skew.
 - [x] Usage: An API for arbitrary SQL query processing or a frontend query processor that parses SQL to a storm topology.
+- [x] Throughput rates of upto Millions of tuples/second and latencies of milliseconds on a 16 machine cluster. Scalable to large cluster settings. Further details can be found in this [whitepaper](http://www.vldb.org/pvldb/vol7/p441-elseidy.pdf).
 - [ ] Elasticity: Scaling out according to the load.
 
 ### Example:
@@ -16,7 +17,7 @@ SELECT C_MKTSEGMENT, COUNT(O_ORDERKEY)
 FROM CUSTOMER join ORDERS on C_CUSTKEY = O_CUSTKEY
 GROUP BY C_MKTSEGMENT
 ```
-Through the Squall API, this query can be written as:
+Through the Squall API, an online distributed query plan can be simply formulated as follows:
 
 ```java
 ProjectOperator projectionCustomer = new ProjectOperator(new int[]{0, 6});
