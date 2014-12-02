@@ -139,6 +139,12 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
 		_numberRegisteredTasks += parallelism;
 		_inputDeclarer.allGrouping(component.getID(), SystemParameters.EOF_STREAM);
 	}
+	
+	public void registerComponent(BaseRichBolt component, String componentName, int parallelism) {
+		LOG.info("registering new component " + componentName + " with parallelism " + parallelism);
+		_numberRegisteredTasks += parallelism;
+		_inputDeclarer.allGrouping(componentName, SystemParameters.EOF_STREAM);
+	}
 
 	@Override
 	public void tupleSend(List<String> tuple, Tuple stormTupleRcv, long timestamp) {

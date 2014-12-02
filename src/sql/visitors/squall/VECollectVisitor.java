@@ -4,12 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import plan_runner.components.Component;
+import plan_runner.ewh.operators.SampleAsideAndForwardOperator;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.DistinctOperator;
 import plan_runner.operators.Operator;
+import plan_runner.operators.PrintOperator;
 import plan_runner.operators.ProjectOperator;
+import plan_runner.operators.SampleOperator;
 import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.Predicate;
 import plan_runner.visitors.OperatorVisitor;
@@ -104,4 +107,18 @@ public class VECollectVisitor implements OperatorVisitor {
 		}
 	}
 
+	@Override
+	public void visit(PrintOperator printOperator) {
+		// nothing to visit or add
+	}
+
+	@Override
+	public void visit(SampleOperator sampleOperator) {
+		// nothing to visit or add
+	}
+
+	@Override
+	public void visit(SampleAsideAndForwardOperator sampleAsideAndForwardOperator) {
+		// nothing to visit or add
+	}
 }

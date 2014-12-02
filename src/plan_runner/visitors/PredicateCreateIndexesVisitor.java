@@ -65,6 +65,9 @@ public class PredicateCreateIndexesVisitor implements PredicateVisitor {
 			} else if (comparison.getType() instanceof Double) {
 				_firstRelationIndexes.add(new HashIndex<Double>());
 				_secondRelationIndexes.add(new HashIndex<Double>());
+			} else if (comparison.getType() instanceof Long) {
+				_firstRelationIndexes.add(new HashIndex<Long>());
+				_secondRelationIndexes.add(new HashIndex<Long>());
 			} else if (comparison.getType() instanceof String) {
 				_firstRelationIndexes.add(new HashIndex<String>());
 				_secondRelationIndexes.add(new HashIndex<String>());

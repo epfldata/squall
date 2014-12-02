@@ -14,7 +14,7 @@ import plan_runner.visitors.ValueExpressionVisitor;
  * It convert all the value to double, and then return the final result by automatic casting
  *   (i.e. (int)1.0 )
  *
- * Double can store integers exatly in binary representation,
+ * Double can store integers exactly in binary representation,
  *   so we won't lose the precision on our integer operations.
  *
  * Having different T types in the constructor arguments

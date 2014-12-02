@@ -15,8 +15,13 @@ public class LongConversion implements NumericConversion<Long> {
 
 	@Override
 	public double getDistance(Long bigger, Long smaller) {
-		return bigger - smaller;
+		return bigger.doubleValue() - smaller.doubleValue();
 	}
+	
+	@Override
+	public Long getOffset(Object base, double delta) {
+		return (Long) base + (long) delta;
+	}	
 
 	@Override
 	public Long getInitialValue() {
@@ -24,10 +29,25 @@ public class LongConversion implements NumericConversion<Long> {
 	}
 	
 	@Override
+	public Long minIncrement(Object obj){
+		return (Long)obj + getMinPositiveValue();
+	}
+
+	@Override
+	public Long minDecrement(Object obj){
+		return (Long)obj - getMinPositiveValue();
+	}	
+	
+	@Override
 	public Long getMinValue() {
 		return Long.MIN_VALUE;
 	}
 
+	@Override
+	public Long getMinPositiveValue() {
+		return 1L;
+	}	
+	
 	@Override
 	public Long getMaxValue() {
 		return Long.MAX_VALUE;

@@ -12,6 +12,7 @@ public interface StormComponent {
 	// data anywhere
 	public static final int FINAL_COMPONENT = 2;
 	public static final int NEXT_TO_LAST_COMPONENT = 3;
+	public static final int NEXT_TO_DUMMY = 4;
 
 	// Tuple parts
 	public static final String COMP_INDEX = "CompIndex";

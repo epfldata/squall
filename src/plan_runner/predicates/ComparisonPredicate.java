@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import plan_runner.conversion.IntegerConversion;
+import plan_runner.conversion.NumericConversion;
 import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.Addition;
 import plan_runner.expressions.Subtraction;
@@ -230,6 +231,18 @@ public class ComparisonPredicate<T extends Comparable<T>> implements Predicate {
 		_operation = op;
 	}	
 	
+	public int getInclusiveDiff(){
+		if(_operation == ComparisonPredicate.EQUAL_OP){
+			return 0;
+		}else if(_operation == ComparisonPredicate.SYM_BAND_NO_BOUNDS_OP){
+			return ((int)(Integer)_diff) - 1;
+		}else if(_operation == ComparisonPredicate.SYM_BAND_WITH_BOUNDS_OP){
+			return (int)(Integer)_diff;
+		}else{
+			throw new RuntimeException("Unsupported operation " + _operation);
+		}
+	}
+	
 	// used for direct key comparison
 	public boolean test(T key1, T key2){
 		final int compared = key1.compareTo(key2);
@@ -271,12 +284,44 @@ public class ComparisonPredicate<T extends Comparable<T>> implements Predicate {
 		return result;
 	}
 	
+	// used in sampling matrix generation
+		public List<T> getJoinableKeys(T key){
+			NumericConversion numWrapper = (NumericConversion) _wrapper;
+			List<T> joinableKeys = new ArrayList<T>();
+			switch (_operation) {
+			case EQUAL_OP:
+				joinableKeys.add(key);
+				break;
+			case SYM_BAND_WITH_BOUNDS_OP:
+			case SYM_BAND_NO_BOUNDS_OP:
+				int range = (Integer)_diff;
+				if(_operation == SYM_BAND_WITH_BOUNDS_OP){
+					range += 1;
+				}
+				joinableKeys.add(key);
+				T decrementing = key;
+				T incrementing = key;
+				for(int i = 1; i < range; i++){
+					decrementing = (T) numWrapper.minDecrement(decrementing);
+					joinableKeys.add(decrementing);
+					incrementing = (T) numWrapper.minIncrement(incrementing);
+					joinableKeys.add(incrementing);
+				}
+				break;
+			default:
+				throw new RuntimeException("Unsupported operation " + _operation);
+			}
+			return joinableKeys;
+		}
+	
 	// used for direct key comparison
+	//  ranges are inclusive , e.g. [x1, x2]
 	public boolean isCandidateRegion(T x1, T y1, T x2, T y2){
 		final int comparedUpperLower = x2.compareTo(y1);
 		final int comparedLowerUpper = x1.compareTo(y2);
-		boolean doesIntersect = (comparedUpperLower >= 0 && comparedLowerUpper <=0) ||
-				(comparedUpperLower <= 0 && comparedLowerUpper >=0);
+		// x2 >= y1 && x1 <= y2
+		// equivalent to y1 <= x2 && y2 >= x1
+		boolean doesIntersect = (comparedUpperLower >= 0 && comparedLowerUpper <= 0);
 		
 		boolean result = false;
 		switch (_operation) {
@@ -306,8 +351,8 @@ public class ComparisonPredicate<T extends Comparable<T>> implements Predicate {
 			}
 			
 			// no intersection
-			int actualDiff12 = ((int) _wrapper.getDistance(y1, x2));
-			int actualDiff21 = ((int) _wrapper.getDistance(x1, y2));
+			double actualDiff12 = _wrapper.getDistance(y1, x2);
+			double actualDiff21 = _wrapper.getDistance(x1, y2);
 			
 			if(_operation == SYM_BAND_WITH_BOUNDS_OP){
 				// 	TODO generalize to more _diff types
@@ -324,7 +369,7 @@ public class ComparisonPredicate<T extends Comparable<T>> implements Predicate {
 		}
 		return result;
 	}
-
+	
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
@@ -339,43 +384,43 @@ public class ComparisonPredicate<T extends Comparable<T>> implements Predicate {
 			(ComparisonPredicate.SYM_BAND_WITH_BOUNDS_OP, 10, new IntegerConversion());
 		
 		int x1 = 0; int y1 = 50; int x2 = 10; int y2 = 55;
-		System.out.println("Should be false " + comparison.isCandidateRegion(x1, y1, x2, y2));
+		System.out.println("1IsCandidate Should be false " + comparison.isCandidateRegion(x1, y1, x2, y2));
 		
 		x1 = 44; y1 = 10; x2 = 49; y2 = 23;
-		System.out.println("Should be false " + comparison.isCandidateRegion(x1, y1, x2, y2));
+		System.out.println("2IsCandidate Should be false " + comparison.isCandidateRegion(x1, y1, x2, y2));
 		
 		x1 = 44; y1 = 40; x2 = 49; y2 = 50;
-		System.out.println("Should be true " + comparison.isCandidateRegion(x1, y1, x2, y2));
+		System.out.println("3IsCandidate Should be true " + comparison.isCandidateRegion(x1, y1, x2, y2));
 		
 		x1 = 44; y1 = 50; x2 = 49; y2 = 50;
-		System.out.println("Should be true " + comparison.isCandidateRegion(x1, y1, x2, y2));
+		System.out.println("4IsCandidate Should be true " + comparison.isCandidateRegion(x1, y1, x2, y2));
 		
 		x1 = 44; y1 = 60; x2 = 49; y2 = 62;
-		System.out.println("Should be false " + comparison.isCandidateRegion(x1, y1, x2, y2));
+		System.out.println("5IsCandidate Should be false " + comparison.isCandidateRegion(x1, y1, x2, y2));
 		
 		x1 = 44; y1 = 59; x2 = 49; y2 = 162;
-		System.out.println("Should be true " + comparison.isCandidateRegion(x1, y1, x2, y2));
+		System.out.println("6IsCandidate Should be true " + comparison.isCandidateRegion(x1, y1, x2, y2));
 		
 		x1 = 44; y1 = 53; x2 = 49; y2 = 162;
-		System.out.println("Should be true " + comparison.isCandidateRegion(x1, y1, x2, y2));
+		System.out.println("7IsCandidate Should be true " + comparison.isCandidateRegion(x1, y1, x2, y2));
 		
 		x1 = 44; y1 = 1; x2 = 49; y2 = 34;
-		System.out.println("Should be true " + comparison.isCandidateRegion(x1, y1, x2, y2));
+		System.out.println("8IsCandidate Should be true " + comparison.isCandidateRegion(x1, y1, x2, y2));
 		
 		x1 = 44; y1 = 1; x2 = 49; y2 = 33;
-		System.out.println("Should be false " + comparison.isCandidateRegion(x1, y1, x2, y2));
+		System.out.println("9IsCandidate Should be false " + comparison.isCandidateRegion(x1, y1, x2, y2));
 		
 		x1 = 44; y1 = 1; x2 = 49; y2 = 36;
-		System.out.println("Should be true " + comparison.isCandidateRegion(x1, y1, x2, y2));
+		System.out.println("10IsCandidate Should be true " + comparison.isCandidateRegion(x1, y1, x2, y2));
 		
 		x1 = 44; y1 = 1; x2 = 49; y2 = 48;
-		System.out.println("Should be true " + comparison.isCandidateRegion(x1, y1, x2, y2));
+		System.out.println("11IsCandidate Should be true " + comparison.isCandidateRegion(x1, y1, x2, y2));
 		
 		x1 = 44; y1 = 1; x2 = 88; y2 = 48;
-		System.out.println("Should be true " + comparison.isCandidateRegion(x1, y1, x2, y2));
+		System.out.println("12IsCandidate Should be true " + comparison.isCandidateRegion(x1, y1, x2, y2));
 		
 		x1 = 44; y1 = 54; x2 = 44; y2 = 54;
-		System.out.println("Should be true " + comparison.isCandidateRegion(x1, y1, x2, y2));
+		System.out.println("13IsCandidate Should be true " + comparison.isCandidateRegion(x1, y1, x2, y2));
 	}
 
 }

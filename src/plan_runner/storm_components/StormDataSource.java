@@ -53,10 +53,10 @@ public class StormDataSource extends StormSpoutComponent {
 	private final long _aggBatchOutputMillis;
 
 	public StormDataSource(ComponentProperties cp, List<String> allCompNames, String inputPath,
-			int hierarchyPosition, int parallelism, TopologyBuilder builder, TopologyKiller killer,
-			Config conf) {
+			int hierarchyPosition, int parallelism, boolean isPartitioner,
+			TopologyBuilder builder, TopologyKiller killer, Config conf) {
 
-		super(cp, allCompNames, hierarchyPosition, conf);
+		super(cp, allCompNames, hierarchyPosition, isPartitioner, conf);
 		_operatorChain = cp.getChainOperator();
 
 		_aggBatchOutputMillis = cp.getBatchOutputMillis();
@@ -166,6 +166,9 @@ public class StormDataSource extends StormSpoutComponent {
 						Arrays.asList(SystemParameters.LAST_ACK));
 				tupleSend(lastTuple, null, 0);
 			}
+		if(_operatorChain != null){
+			_operatorChain.finalizeProcessing();
+		}
 	}
 
 	@Override
@@ -240,7 +243,7 @@ public class StormDataSource extends StormSpoutComponent {
 	// BaseRichSpout
 	@Override
 	public void open(Map map, TopologyContext tc, SpoutOutputCollector collector) {
-		super.open(map, tc, collector);
+		super.open(map, tc, collector);	
 		try {
 			_fileSection = tc.getThisTaskIndex();
 			_reader = new SerializableFileInputStream(new File(_inputPath), 1 * 1024 * 1024,

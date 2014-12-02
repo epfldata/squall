@@ -40,6 +40,9 @@ public class DataSourceComponent implements Component {
 	private boolean _printOutSet; // whether printOut condition is already set
 
 	private Component _child;
+	
+	//equi-weight histogram
+	private boolean _isPartitioner;
 
 	public DataSourceComponent(String componentName, String inputPath, QueryPlan queryPlan) {
 		_componentName = componentName;
@@ -150,7 +153,8 @@ public class DataSourceComponent implements Component {
 		MyUtilities.checkBatchOutput(_batchOutputMillis, _chain.getAggregation(), conf);
 
 		_dataSource = new StormDataSource(this, allCompNames, _inputPath, hierarchyPosition,
-				parallelism, builder, killer, conf);
+				parallelism, _isPartitioner, 
+				builder, killer, conf);
 	}
 
 	@Override
@@ -188,19 +192,24 @@ public class DataSourceComponent implements Component {
 		_printOut = printOut;
 		return this;
 	}
+	
+	public DataSourceComponent setPartitioner(boolean isPartitioner){
+		_isPartitioner = isPartitioner;
+		return this;
+	}
 
 	@Override
-	public Component setInterComp(InterchangingComponent inter) {
+	public DataSourceComponent setInterComp(InterchangingComponent inter) {
 		throw new RuntimeException("Datasource component does not support setInterComp");
 	}
 
 	@Override
-	public Component setJoinPredicate(Predicate joinPredicate) {
+	public DataSourceComponent setJoinPredicate(Predicate joinPredicate) {
 		throw new RuntimeException("Datasource component does not support Join Predicates");
 	}
 
 	@Override
-	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
+	public DataSourceComponent setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
 		return this;
 	}
 

@@ -31,7 +31,7 @@ public class StormRandomDataSource extends StormDataSource {
 	public StormRandomDataSource(ComponentProperties cp, List<String> allCompNames,
 			String inputPath, int hierarchyPosition, int parallelism, TopologyBuilder builder,
 			TopologyKiller killer, Config conf) {
-		super(cp, allCompNames, inputPath, hierarchyPosition, parallelism, builder, killer, conf);
+		super(cp, allCompNames, inputPath, hierarchyPosition, parallelism, false, builder, killer, conf);
 
 		_customerProduced = _customerTotal / parallelism;
 		_ordersProduced = _ordersTotal / parallelism;

@@ -49,6 +49,9 @@ public class SystemParameters {
 	public static final String DUMP_RESULTS_STREAM = "3";
 
 	public static final String LAST_ACK = "LAST_ACK";
+	public static final String REL_SIZE = "REL_SIZE";
+	public static final String TOTAL_OUTPUT_SIZE = "OUTPUT_SIZE";
+	public static final String OUTPUT_SAMPLE_SIZE = "SAMPLE_SIZE";
 	public static final String EOF = "EOF";
 	public static final String DUMP_RESULTS = "DumpResults";
 
@@ -156,13 +159,57 @@ public class SystemParameters {
 	public static final String ThetaAckDataMigrationEnded = "ACK-1"; //
 
 	public static final String ThetaAckNewMappingReceived = "ACK-2"; //
+
+	
+	//EWH_STREAMS
+	public static final String D2_TO_S1_STREAM = "d2_to_s1";
+	public static final String RESERVOIR_TO_MERGE = "reservoir_to_merge";
+	public static final String PARTITIONER = "partitioner";
+	public static final String FROM_PARTITIONER = "fpar";
+	
 	// printing statistics for creating graphs
 	public static final int INITIAL_PRINT = 0;
 
 	public static final int INPUT_PRINT = 1;
 	public static final int OUTPUT_PRINT = 2;
 	public static final int FINAL_PRINT = 3;
+	
+	// for content-sensitive
+	public static final int TUPLES_PER_BUCKET = 100; // sample size = TUPLES_PER_BUCKET * #_of_buckets
+	// for sparse matrices we need to specify size ahead of time
+	public static final int MATRIX_CAPACITY_MULTIPLIER = 10;
+	
+	// monotonic join conditions
+	public static final boolean MONOTONIC_PRECOMPUTATION = true;
 
+	// means that PWeightPrecomputation is used
+	//    and that all methods but getWeight of the PWeightPrecomputation expect coarsenedPoints
+	public static final boolean COARSE_PRECOMPUTATION = true;
+
+	// histogram types for building the partitioning scheme in our algorithm
+	public enum HistogramType {
+		D2_COMB_HIST ("DIP_R2_HISTOGRAM", "DIP_EWH_R2_HIST", "D2"), // String R2->D2, but we kept like this not to change config files
+		S1_RES_HIST ("DIP_S1_HISTOGRAM", "DIP_EWH_S1_HIST", "S1");
+		
+		//this is for all histograms, not only for R2 (we keep the name for config backwards compatibility)
+		public static final String ROOT_DIR = "DIP_KEY_R2_HIST_ROOT";
+		
+	    private final String _readConfEntryName; // when reading histogram
+	    private final String _genConfEntryName; //when creating histogram
+	    private final String _filePrefix;
+	    
+	    HistogramType(String readConfEntryName, String genConfEntryName, String filePrefix) {
+	        _readConfEntryName = readConfEntryName;
+	        _genConfEntryName = genConfEntryName;
+	        _filePrefix = filePrefix;
+	    }
+	    
+	    public String readConfEntryName() { return _readConfEntryName; }
+	    public String genConfEntryName() { return _genConfEntryName; }
+	    public String filePrefix () { return _filePrefix; }   
+	}
+	
+	
 	public static Map<String, String> fileToMap(String propertiesFile) {
 		final Map map = new HashMap<String, String>();
 
@@ -214,9 +261,38 @@ public class SystemParameters {
 			throw new RuntimeException("Invalid Boolean value");
 	}
 
+	// if the entry does not exist, return false
+	public static boolean getBooleanIfExist(Map conf, String key) {
+		final String result = getStringSilent(conf, key);
+		if(result == null || result.equals("")){
+			return false;
+		}else if (result.equalsIgnoreCase("TRUE"))
+			return true;
+		else if (result.equalsIgnoreCase("FALSE"))
+			return false;
+		else
+			throw new RuntimeException("Invalid Boolean value");
+	}
+	
+	public static boolean doesExist(Map conf, String key){
+		final String result = getStringSilent(conf, key);
+		if(result == null || result.equals(""))
+			return false;
+		return true;	
+	}
+	
 	public static double getDouble(Map conf, String key) {
 		final String result = getString(conf, key);
 		return Double.parseDouble(result);
+	}
+	
+	public static Comparable getDoubleInfinity(Map conf, String key) {
+		final String result = getString(conf, key);
+		if (result.equalsIgnoreCase("INFINITY")){
+			return Double.MAX_VALUE;
+		}else{
+			return getDouble(conf, key);
+		}
 	}
 
 	public static int getInt(Map conf, String key) {
@@ -224,13 +300,22 @@ public class SystemParameters {
 		return Integer.parseInt(result);
 	}
 
+	public static long getLong(Map conf, String key) {
+		final String result = getString(conf, key);
+		return Long.parseLong(result);
+	}
+	
 	public static String getString(Map conf, String key) {
-		final String result = (String) conf.get(key);
+		final String result = getStringSilent(conf, key);
 		if (result == null || result.equals(""))
 			LOG.info("null in getString method for key " + key);
 		return result;
 	}
 
+	public static String getStringSilent(Map conf, String key) {
+		return (String) conf.get(key);
+	}
+	
 	public static boolean isExisting(Map conf, String key) {
 		final String result = (String) conf.get(key);
 		return result != null;

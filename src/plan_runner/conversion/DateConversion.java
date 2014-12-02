@@ -2,10 +2,14 @@ package plan_runner.conversion;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
 
+import plan_runner.expressions.DateSum;
+import plan_runner.expressions.ValueExpression;
+import plan_runner.expressions.ValueSpecification;
 import plan_runner.utilities.MyUtilities;
 
 public class DateConversion implements TypeConversion<Date> {
@@ -31,6 +35,24 @@ public class DateConversion implements TypeConversion<Date> {
 	
 	public Date fromLong(Long dateLong) {
 		return fromString(String.valueOf(dateLong), int_format);
+	}
+
+	public Date fromInteger(Integer dateInt) {
+		return fromString(String.valueOf(dateInt), int_format);
+	}
+	
+	public Date addDays(Date date, int days){
+		final Calendar c = Calendar.getInstance();
+		final int unit = Calendar.DAY_OF_MONTH;
+		c.setTime(date);
+		c.add(unit, days);
+		return c.getTime();
+	}
+	
+	public Integer addDays(Integer dateLong, int days){
+		Date base = fromInteger(dateLong);
+		Date result = addDays(base, days);
+		return toInteger(result);
 	}
 	
 	private Date fromString(String str, SimpleDateFormat format){
@@ -74,5 +96,9 @@ public class DateConversion implements TypeConversion<Date> {
 	
 	public Long toLong(Date obj){
 		return Long.valueOf(int_format.format(obj));
+	}
+	
+	public Integer toInteger(Date obj){
+		return Integer.valueOf(int_format.format(obj));
 	}
 }

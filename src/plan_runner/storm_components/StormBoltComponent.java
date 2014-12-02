@@ -8,6 +8,8 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import plan_runner.components.ComponentProperties;
+import plan_runner.ewh.main.PushStatisticCollector;
+import plan_runner.ewh.operators.SampleAsideAndForwardOperator;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.ChainOperator;
@@ -50,7 +52,7 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormJo
 	// for ManualBatch(Queuing) mode
 	private List<Integer> _targetTaskIds;
 	private int _targetParallelism;
-	private StringBuffer[] _targetBuffers;
+	private StringBuilder[] _targetBuffers;
 	private long[] _targetTimestamps;
 
 	// for CustomTimestamp mode
@@ -60,6 +62,12 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormJo
 	// counting negative values
 	protected long numNegatives = 0;
 	protected double maxNegative = 0;
+	
+	//StatisticsCollector
+	private PushStatisticCollector _sc;
+	
+	//EWH histogram
+	private boolean _isPartitioner;
 
 	public StormBoltComponent(ComponentProperties cp, List<String> allCompNames,
 			int hierarchyPosition, Map conf) {
@@ -73,6 +81,12 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormJo
 
 		_hashIndexes = cp.getHashIndexes();
 		_hashExpressions = cp.getHashExpressions();
+	}
+	
+	public StormBoltComponent(ComponentProperties cp, List<String> allCompNames,
+			int hierarchyPosition, boolean isPartitioner, Map conf) {
+		this(cp, allCompNames, hierarchyPosition, conf);
+		_isPartitioner = isPartitioner;
 	}
 
 	// ManualBatchMode
@@ -121,6 +135,15 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormJo
 			if (MyUtilities.isCustomTimestampMode(_conf))
 				outputFields.add(StormComponent.TIMESTAMP);
 			declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(outputFields));
+			
+			if(_isPartitioner){
+				//	EQUI-WEIGHT HISTOGRAM
+				final List<String> outputFieldsPart = new ArrayList<String>();
+				outputFieldsPart.add(StormComponent.COMP_INDEX);
+				outputFieldsPart.add(StormComponent.TUPLE); // list of string
+				outputFieldsPart.add(StormComponent.HASH);
+				declarer.declareStream(SystemParameters.PARTITIONER, new Fields(outputFieldsPart));
+			}
 		}
 	}
 
@@ -164,7 +187,7 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormJo
 	protected void manualBatchSend() {
 		for (int i = 0; i < _targetParallelism; i++) {
 			final String tupleString = _targetBuffers[i].toString();
-			_targetBuffers[i] = new StringBuffer("");
+			_targetBuffers[i] = new StringBuilder("");
 
 			if (!tupleString.isEmpty())
 				// some buffers might be empty
@@ -189,20 +212,40 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormJo
 
 		_targetTaskIds = MyUtilities.findTargetTaskIds(tc);
 		_targetParallelism = _targetTaskIds.size();
-		_targetBuffers = new StringBuffer[_targetParallelism];
+		_targetBuffers = new StringBuilder[_targetParallelism];
 		_targetTimestamps = new long[_targetParallelism];
 		for (int i = 0; i < _targetParallelism; i++)
-			_targetBuffers[i] = new StringBuffer("");
+			_targetBuffers[i] = new StringBuilder("");
 
 		// initial statistics
 		printStatistics(SystemParameters.INITIAL_PRINT);
+		if(MyUtilities.isStatisticsCollector(_conf, _hierarchyPosition)){
+			_sc = new PushStatisticCollector(map);
+		}
+		
+		//equi-weight histogram
+		if(_isPartitioner){
+			//extract sampleAside operator
+			SampleAsideAndForwardOperator saf = getChainOperator().getSampleAside();
+			saf.setCollector(_collector);
+			saf.setComponentIndex(_componentIndex);
+		}
 	}
 	
 	protected void sendToStatisticsCollector(List<String> tuple, int relationNumber){
+		if(MyUtilities.isStatisticsCollector(_conf, _hierarchyPosition)){
+			_sc.processTuple(tuple, relationNumber);
+		}
 	}
 	
 	protected void finalizeProcessing(){
 		printStatistics(SystemParameters.FINAL_PRINT);
+		if(getChainOperator() != null){
+			getChainOperator().finalizeProcessing();
+		}
+		if(MyUtilities.isStatisticsCollector(_conf, _hierarchyPosition)){
+			_sc.finalizeProcessing();
+		}
 	}	
 
 	@Override
@@ -295,6 +338,15 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormJo
 			}
 			MyUtilities.processFinalAck(_numRemainingParents, getHierarchyPosition(), getConf(),
 					stormTupleRcv, getCollector(), getPeriodicAggBatch());
+			if(_isPartitioner){
+				// rel size
+				Values relSize = MyUtilities.createRelSizeTuple(_componentIndex, (int) getNumSentTuples());
+				_collector.emit(SystemParameters.PARTITIONER, relSize);
+
+				// final ack
+				MyUtilities.processFinalAckCustomStream(SystemParameters.PARTITIONER, _numRemainingParents, getHierarchyPosition(), getConf(),
+					stormTupleRcv, getCollector(), getPeriodicAggBatch());
+			}
 			return true;
 		}
 		return false;

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import plan_runner.conversion.DoubleConversion;
+import plan_runner.conversion.IntegerConversion;
 import plan_runner.conversion.NumericConversion;
 import plan_runner.conversion.TypeConversion;
 import plan_runner.visitors.ValueExpressionVisitor;
@@ -14,19 +15,19 @@ import plan_runner.visitors.ValueExpressionVisitor;
  * It convert all the value to double, and then return the final result by automatic casting
  *   (i.e. (int)1.0 )
  *
- * Double can store integers exatly in binary representation,
+ * Double can store integers exactly in binary representation,
  *   so we won't lose the precision on our integer operations.
  *
  * Having different T types in the constructor arguments
  *   does not result in exception in the constructor,
  *   but rather in eval method.
  */
-public class Division implements ValueExpression<Double> {
+public class Division implements ValueExpression<Integer> {
 
 	private static final long serialVersionUID = 1L;
 
 	private final List<ValueExpression> _veList = new ArrayList<ValueExpression>();
-	private final NumericConversion<Double> _wrapper = new DoubleConversion();
+	private final NumericConversion<Integer> _wrapper = new IntegerConversion();
 
 	public Division(ValueExpression ve1, ValueExpression ve2, ValueExpression... veArray) {
 		_veList.add(ve1);
@@ -40,12 +41,12 @@ public class Division implements ValueExpression<Double> {
 	}
 
 	@Override
-	public void changeValues(int i, ValueExpression<Double> newExpr) {
+	public void changeValues(int i, ValueExpression<Integer> newExpr) {
 
 	}
 
 	@Override
-	public Double eval(List<String> tuple) {
+	public Integer eval(List<String> tuple) {
 		final ValueExpression firstVE = _veList.get(0);
 		final Object firstObj = firstVE.eval(tuple);
 		final NumericConversion firstType = (NumericConversion) firstVE.getType();
@@ -62,7 +63,7 @@ public class Division implements ValueExpression<Double> {
 
 	@Override
 	public String evalString(List<String> tuple) {
-		final Double result = eval(tuple);
+		final Integer result = eval(tuple);
 		return _wrapper.toString(result);
 	}
 

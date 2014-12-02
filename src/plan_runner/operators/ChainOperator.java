@@ -3,6 +3,7 @@ package plan_runner.operators;
 import java.util.ArrayList;
 import java.util.List;
 
+import plan_runner.ewh.operators.SampleAsideAndForwardOperator;
 import plan_runner.visitors.OperatorVisitor;
 
 public class ChainOperator implements Operator {
@@ -13,7 +14,7 @@ public class ChainOperator implements Operator {
 	private static final long serialVersionUID = 1L;
 	private List<Operator> _operators = new ArrayList<Operator>();
 
-	// we can creat an empty chainOperator and later fill it in
+	// we can create an empty chainOperator and later fill it in
 	public ChainOperator() {
 
 	}
@@ -37,7 +38,9 @@ public class ChainOperator implements Operator {
 	 * Add an operator to the tail
 	 */
 	public void addOperator(Operator operator) {
-		_operators.add(operator);
+		if(operator != null){
+			_operators.add(operator);
+		}
 	}
 
 	/*
@@ -114,6 +117,28 @@ public class ChainOperator implements Operator {
 			if (op instanceof SelectOperator)
 				return (SelectOperator) op;
 		return null;
+	}
+
+	public PrintOperator getPrint() {
+		for (final Operator op : _operators)
+			if (op instanceof PrintOperator)
+				return (PrintOperator) op;
+		return null;
+	}
+
+	public SampleAsideAndForwardOperator getSampleAside() {
+		for (final Operator op : _operators)
+			if (op instanceof SampleAsideAndForwardOperator)
+				return (SampleAsideAndForwardOperator) op;
+		return null;
+	}
+	
+	// closing the files of the printOperator
+	public void finalizeProcessing() {
+		PrintOperator printOperator = getPrint();
+		if(printOperator != null){
+			printOperator.finalizeProcessing();
+		}
 	}
 
 	@Override

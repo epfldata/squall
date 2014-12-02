@@ -17,6 +17,11 @@ public class DoubleConversion implements NumericConversion<Double> {
 	public double getDistance(Double bigger, Double smaller) {
 		return bigger - smaller;
 	}
+	
+	@Override
+	public Double getOffset(Object base, double delta) {
+		return (Double)base + delta;
+	}
 
 	@Override
 	public Double getInitialValue() {
@@ -24,10 +29,25 @@ public class DoubleConversion implements NumericConversion<Double> {
 	}
 	
 	@Override
-	public Double getMinValue() {
-		return Double.MIN_VALUE;
+	public Double minIncrement(Object obj){
+		return (Double)obj + getMinPositiveValue();
 	}
 
+	@Override
+	public Double minDecrement(Object obj){
+		return (Double)obj - getMinPositiveValue();
+	}	
+	
+	@Override
+	public Double getMinValue() {
+		return -1 * Double.MAX_VALUE;
+	}
+
+	@Override
+	public Double getMinPositiveValue() {
+		return Double.MIN_VALUE;
+	}	
+	
 	@Override
 	public Double getMaxValue() {
 		return Double.MAX_VALUE;
