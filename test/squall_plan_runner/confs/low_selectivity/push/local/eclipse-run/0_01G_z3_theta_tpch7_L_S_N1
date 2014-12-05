@@ -1,0 +1,64 @@
+DIP_DISTRIBUTED false
+DIP_QUERY_NAME theta_tpch7_L_S_N1
+DIP_TOPOLOGY_NAME_PREFIX username
+DIP_NUM_ACKERS 0
+
+DIP_DATA_PATH test/data/tpch/0.01G_z3/
+DIP_RESULT_ROOT test/results/
+
+DIP_STATISTIC_COLLECTOR false
+DIP_KEY_REGION_ROOT test/m_bucket/key_region
+
+# THETA-JOIN TYPE
+# Content Insensitive 
+# STATIC_CIS = 0;
+# EPOCHS_CIS = 1;
+# Content sensitive counterparts 
+# STATIC_CS = 2; 
+# EPOCHS_CS = 3;
+DIP_JOIN_TYPE 2
+
+# Parallelisms
+NATION1_PAR 1
+SUPPLIER_PAR 1
+LINEITEM_PAR 1
+
+SUPPLIER_NATION1_PAR 1
+LINEITEM_SUPPLIER_NATION1_PAR 8
+
+# Define Static 1-Bucket Theta Joins parameters Here:
+NATION2_CARD 10
+NATION1_CARD 10
+CUSTOMER_CARD 40
+
+SUPPLIER_CARD 40
+
+LINEITEM_CARD 400000
+SUPPLIER_NATION1_CARD 40
+
+NATION2_CUSTOMER_CARD 40
+ORDERS_CARD 40
+
+NATION2_CUSTOMER_ORDERS_CARD 40
+
+LINEITEM_SUPPLIER_NATION1_CARD 40
+
+# Define Dynamic 1-Bucket Theta Joins parameters Here:
+SUPPLIER_NATION1_RESHUF_PAR 1
+LINEITEM_SUPPLIER_NATION1_RESHUF_PAR 8
+
+#below are unlikely to change
+DIP_EXTENSION .tbl
+DIP_READ_SPLIT_DELIMITER \|
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_KILL_AT_THE_END true
+
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_CLUSTER_DIR /data/squall_zone/storage
+STORAGE_COLD_START true
+STORAGE_MEMORY_SIZE_MB 4096

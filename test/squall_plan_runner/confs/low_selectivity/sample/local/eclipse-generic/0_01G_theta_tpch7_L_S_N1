@@ -1,0 +1,57 @@
+DIP_DISTRIBUTED false
+DIP_QUERY_NAME theta_tpch7_L_S_N1
+DIP_SAMPLING true
+DIP_MATERIALIZED false
+DIP_TOPOLOGY_NAME_PREFIX username
+DIP_NUM_ACKERS 0
+
+# Join type (necessary only if not materialized for the non-last joins)
+DIP_JOIN_TYPE 0
+
+# Define Input Paths Here:
+DIP_DATA_PATH test/data/tpch/0.01G/
+DIP_RESULT_ROOT test/results/
+DIP_KEY_REGION_ROOT test/m_bucket/key_region
+
+# Define Plan parameters for BCI 10G Z0
+DIP_SAMPLE_STATISTICS true
+FIRST_REL_SIZE 17973
+# Z4 55655520
+SECOND_REL_SIZE 7
+# Z4 98180
+FIRST_NUM_OF_BUCKETS 50
+SECOND_NUM_OF_BUCKETS 50
+PAR_LAST_JOINERS 8
+
+# Define Parallelism Here:
+SUPPLIER_PAR 2
+NATION1_PAR 2
+LINEITEM_PAR 2
+SUPPLIER_NATION1_PAR 2
+
+# Define Static Theta Joins parameters Here (necessary only if not materialized for the non-last joins): 
+NATION2_CARD 10
+NATION1_CARD 10
+CUSTOMER_CARD 40
+SUPPLIER_CARD 40
+LINEITEM_CARD 400000
+SUPPLIER_NATION1_CARD 40
+NATION2_CUSTOMER_CARD 40
+ORDERS_CARD 40
+NATION2_CUSTOMER_ORDERS_CARD 40
+LINEITEM_SUPPLIER_NATION1_CARD 40
+
+#below are unlikely to change
+DIP_EXTENSION .tbl
+DIP_READ_SPLIT_DELIMITER \|
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_KILL_AT_THE_END true
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_CLUSTER_DIR /data/squall_zone/storage
+STORAGE_COLD_START true
+STORAGE_MEMORY_SIZE_MB 4096

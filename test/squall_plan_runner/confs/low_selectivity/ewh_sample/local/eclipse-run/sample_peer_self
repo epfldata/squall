@@ -1,0 +1,51 @@
+DIP_DISTRIBUTED false
+DIP_QUERY_NAME theta_ewh_band_peer_self_upload_download
+DIP_MATERIALIZED false
+DIP_TOPOLOGY_NAME_PREFIX username
+DIP_NUM_ACKERS 0
+
+# THETA-JOIN TYPE
+# Content Insensitive 
+# STATIC_CIS = 0;
+# EPOCHS_CIS = 1;
+# Content sensitive counterparts 
+# STATIC_CS = 2; 
+# EPOCHS_CS = 3;
+DIP_JOIN_TYPE 2
+
+# Parameters for choosing the right keyRegion
+# oci OkcanCandidateInput
+# oco OkcanCandidateOutput
+# oei OkcanExactInput
+# oeo OkcanExactOutput
+# bsp BSP
+PARTITIONING_ALGORITHM bsp_io
+PAR_LAST_JOINERS 8
+# in the case of BSP, this is the number of buckets in the rounded matrix (bspP)
+FIRST_NUM_OF_BUCKETS 50
+
+# Define Input Paths Here:
+DIP_DATA_PATH test/data/pavlo_torrent/sample
+DIP_RESULT_ROOT test/results/
+DIP_KEY_REGION_ROOT test/m_bucket/key_region
+
+# Define Parallelism Here:
+PEER1_PAR 2
+PEER2_PAR 2
+PEER1_PEER2_PAR 8
+DUMMY_PAR 8
+
+#below are unlikely to change
+DIP_EXTENSION .tbl
+DIP_READ_SPLIT_DELIMITER \|
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_KILL_AT_THE_END true
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_CLUSTER_DIR /data/squall_zone/storage
+STORAGE_COLD_START true
+STORAGE_MEMORY_SIZE_MB 4096

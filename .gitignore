@@ -11,9 +11,15 @@ bin/extract_constants
 bin/old
 experiments
 test/squall_plan_runner/confs/special_purpose
+contrib/0.2.5
+resources/storm-linux_*
 
 test/data/tpch/small
 test/data/tpch/0.1G
+test/data/tpch/0.01G_z1
+test/data/tpch/0.01G_z2
+test/data/tpch/0.01G_z3
+test/data/tpch/0.01G_z4
 test/data/tpch/0.05G
 test/data/tpch/1G
 test/data/tpch/4G

@@ -1,0 +1,51 @@
+DIP_DISTRIBUTED false
+DIP_QUERY_NAME theta_lines_self_join
+DIP_TOPOLOGY_NAME_PREFIX username
+DIP_NUM_ACKERS 0
+
+# Define Input Paths Here:
+DIP_DATA_PATH ../test/data/tpch/0.01G_z4/
+DIP_RESULT_ROOT ../test/results/
+
+DIP_STATISTIC_COLLECTOR true
+DIP_WRITE_KEY_REGIONS true
+DIP_SAMPLE_STATISTICS true
+DIP_MATRIX_ROOT ../test/m_bucket/join_matrix
+DIP_OPTIMALITY_LOGS ../test/m_bucket/optimality_logs
+DIP_KEY_REGION_ROOT ../test/m_bucket/key_region
+
+# THETA JOIN TYPE
+# STATIC PARTITIONING = 0
+# DYNAMIC PARTITIONING = 1 
+DIP_JOIN_TYPE 0
+
+# Define Parallelism Here:
+LINEITEM1_PAR 1
+LINEITEM2_PAR 1
+LINEITEM1_LINEITEM2_PAR 1
+
+# This specifies for how many joiners the partitioning should be made
+JOINERS_LINEITEM1_LINEITEM2_PAR 8
+
+# Define Static Theta Joins parameters Here:
+LINEITEM1_CARD 50
+LINEITEM2_CARD 2500
+
+# Define Dynamic Theta Joins parameters Here:
+LINEITEM1_LINEITEM2_RESHUF_PAR 1
+DIP_THETA_CLOCK_REFRESH_RATE_MILLISECONDS 100
+
+#below are unlikely to change
+DIP_EXTENSION .tbl
+DIP_READ_SPLIT_DELIMITER \|
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_KILL_AT_THE_END true
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_CLUSTER_DIR /data/squall_zone/storage
+STORAGE_COLD_START true
+STORAGE_MEMORY_SIZE_MB 4096

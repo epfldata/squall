@@ -1,0 +1,40 @@
+DIP_DISTRIBUTED false
+DIP_QUERY_NAME theta_lines_self_join
+DIP_SAMPLING true
+DIP_MATERIALIZED false
+DIP_TOPOLOGY_NAME_PREFIX username
+DIP_NUM_ACKERS 0
+
+# Define Input Paths Here:
+DIP_DATA_PATH test/data/tpch/0.01G/
+DIP_RESULT_ROOT test/results/
+DIP_KEY_REGION_ROOT test/m_bucket/key_region
+
+# Define Plan parameters for BCI 10G Z0
+DIP_SAMPLE_STATISTICS true
+FIRST_REL_SIZE 1384
+# 873000
+SECOND_REL_SIZE 51465
+# 51465000
+FIRST_NUM_OF_BUCKETS 50
+SECOND_NUM_OF_BUCKETS 50
+PAR_LAST_JOINERS 8
+
+# Define Parallelism Here:
+LINEITEM1_PAR 2
+LINEITEM2_PAR 2
+
+#below are unlikely to change
+DIP_EXTENSION .tbl
+DIP_READ_SPLIT_DELIMITER \|
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_KILL_AT_THE_END true
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_CLUSTER_DIR /data/squall_zone/storage
+STORAGE_COLD_START true
+STORAGE_MEMORY_SIZE_MB 4096

@@ -57,6 +57,11 @@ do
    # Could be used only for Storm 0.9
 	status=`java -cp $LOCAL_STORM_LIB_PATH/*:$EXEC_DIR/. topologydone.Main $TOPOLOGY_NAME`
 
+	if [ $status == "STORM_FAILED" ]; then
+		echo "The entire Storm cluster crushed. This was most probably caused by running out of memory. Resetting the cluster!"
+		./reset_all.sh
+		break
+	fi
 	if [ $status == "KILLED" ]; then
 		if [ $PRINTED_FINAL_STATS == "false" ]; then
 			echo "******************BEGIN OF FINAL TOPOLOGY_STATS******************"

@@ -6,7 +6,7 @@ function usage() {
 	echo "               PROFILING: YES or NO "
 	echo "               RESTART_BEFORE: YES or NO (this is for cleaning storm .log files)"
 	echo "               RESTART_AFTER_EACH: YES or NO (this is for cleaning storm .log files)"
-	echo "               GET_KEY_REGIONS: YES or NO"
+	echo "               GET_KEY_REGIONS: YES or NO (This also means GET_R2_EQUI_DEPTH_HISTOGRAM)"
 	echo "               BASE_PATH: ../experiments/series_name"
 	exit
 }
@@ -104,6 +104,7 @@ for config in ${CONF_PATH}* ; do
 	if [ $GET_KEY_REGIONS == YES ]
 	then
 	  ./get_key_region.sh $BASE_PATH
+	  ./get_r2_hist.sh $BASE_PATH
 	fi
 
 	i+=1

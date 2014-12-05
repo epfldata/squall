@@ -18,6 +18,7 @@ public class Main {
     private static final int FINISHED = 0;
     private static final int NOT_FINISHED = 1;
     private static final int KILLED = 2; //KILLED, BUT NOT REMOVED FROM THE UI
+    private static final int STORM_FAILED = 3;
 
     public static void main(String[] args) {
         String topName = args[0];
@@ -26,13 +27,18 @@ public class Main {
         	System.out.println("FINISHED");
         }else if (status == NOT_FINISHED){
         	System.out.println("NOT_FINISHED");
-        }else {
+        }else if (status == KILLED){
         	System.out.println("KILLED");
+        }else{
+		System.out.println("STORM_FAILED");
         }
     }
      
     private static int topDone(String topName){
         Client client=getNimbusStub();
+        if (client == null){
+	  return STORM_FAILED;
+	}
         try {
             ClusterSummary clusterInfo = client.getClusterInfo();
             Iterator<TopologySummary> topologyIter = clusterInfo.get_topologies_iterator();
@@ -56,15 +62,16 @@ public class Main {
 
     private static Client getNimbusStub(){
         NimbusClient nimbus = null;
+	Client client = null;
 	try{
 	  Map<String, String> conf = new HashMap<String, String>();
 	  conf.put("storm.thrift.transport", "backtype.storm.security.auth.SimpleTransportPlugin");
 	  nimbus = new NimbusClient(conf, NIMBUS_HOST, NIMBUS_THRIFT_PORT);
+          client=nimbus.getClient();
 	} catch (TTransportException e) {
 	  e.printStackTrace();
-	  System.exit(1);
+	  //System.exit(1);
 	}
-        Client client=nimbus.getClient();
         return client;
     }
 }
