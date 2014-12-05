@@ -27,22 +27,31 @@ Through the Squall API, the online distributed query plan ([full code](https://g
 ```java
 ProjectOperator projectionCustomer = new ProjectOperator(new int[]{0, 6});
 ArrayList<Integer> hashCustomer = new ArrayList<Integer>(Arrays.asList(0));
-DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER",dataPath + "customer" + extension,
-                                                              _queryPlan).addOperator(projectionCustomer)
+DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER",dataPath +
+                                                              "customer" + extension,
+                                                              _queryPlan).
+                                                              addOperator(projectionCustomer)
                                                               .setHashIndexes(hashCustomer);
 
 ProjectOperator projectionOrders = new ProjectOperator(new int[]{1});
 ArrayList<Integer> hashOrders = new ArrayList<Integer>(Arrays.asList(0));
-DataSourceComponent relationOrders = new DataSourceComponent("ORDERS",dataPath + "orders" + extension,
-                                                            _queryPlan).addOperator(projectionOrders)
-                                                            .setHashIndexes(hashOrders);
+DataSourceComponent relationOrders = new DataSourceComponent("ORDERS",dataPath + 
+                                                              "orders" + extension,
+                                                              _queryPlan)
+                                                              .addOperator(projectionOrders)
+                                                              .setHashIndexes(hashOrders);
 
 ArrayList<Integer> hashIndexes = new ArrayList<Integer>(Arrays.asList(1));
-EquiJoinComponent CUSTOMER_ORDERSjoin = new EquiJoinComponent(relationCustomer,relationOrders,
-                                                             _queryPlan).setHashIndexes(hashIndexes);
+EquiJoinComponent CUSTOMER_ORDERSjoin = new EquiJoinComponent(relationCustomer,
+                                                              relationOrders,
+                                                             _queryPlan)
+                                                             .setHashIndexes(hashIndexes);
 
 AggregateCountOperator agg = new AggregateCountOperator().setGroupByColumns(Arrays.asList(1));
-OperatorComponent oc = new OperatorComponent(CUSTOMER_ORDERSjoin, "COUNTAGG", _queryPlan).setOperator(agg);
+OperatorComponent oc = new OperatorComponent(CUSTOMER_ORDERSjoin,
+                                                              "COUNTAGG",
+                                                              _queryPlan)
+                                                              .setOperator(agg);
 ```
 
 
