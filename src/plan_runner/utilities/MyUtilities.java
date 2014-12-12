@@ -20,7 +20,7 @@ import org.apache.log4j.Logger;
 
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
-import plan_runner.components.ThetaJoinStaticComponent;
+import plan_runner.components.theta.ThetaJoinStaticComponent;
 import plan_runner.conversion.DateIntegerConversion;
 import plan_runner.conversion.DoubleConversion;
 import plan_runner.conversion.NumericConversion;
@@ -57,6 +57,8 @@ import plan_runner.storm_components.StormSrcHarmonizer;
 import plan_runner.thetajoin.matrix_mapping.ContentSensitiveMatrixAssignment;
 import plan_runner.thetajoin.matrix_mapping.MatrixAssignment;
 import plan_runner.utilities.SystemParameters.HistogramType;
+import plan_runner.utilities.thetajoin_static.ContentSensitiveThetaJoinStaticMapping;
+import plan_runner.utilities.thetajoin_static.ThetaJoinStaticMapping;
 import backtype.storm.Config;
 import backtype.storm.Constants;
 import backtype.storm.generated.Grouping;

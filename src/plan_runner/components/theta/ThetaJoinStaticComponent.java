@@ -1,10 +1,12 @@
-package plan_runner.components;
+package plan_runner.components.theta;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import plan_runner.components.Component;
+import plan_runner.components.DataSourceComponent;
 import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
@@ -14,9 +16,9 @@ import plan_runner.query_plans.QueryPlan;
 import plan_runner.storm_components.InterchangingComponent;
 import plan_runner.storm_components.StormBoltComponent;
 import plan_runner.storm_components.StormComponent;
-import plan_runner.storm_components.StormThetaJoin;
-import plan_runner.storm_components.StormThetaJoinBDB;
 import plan_runner.storm_components.synchronization.TopologyKiller;
+import plan_runner.storm_components.theta.StormThetaJoin;
+import plan_runner.storm_components.theta.StormThetaJoinBDB;
 import plan_runner.utilities.MyUtilities;
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;

@@ -1,4 +1,4 @@
-package plan_runner.storm_components;
+package plan_runner.storm_components.theta;
 
 import gnu.trove.list.array.TIntArrayList;
 
@@ -22,6 +22,10 @@ import plan_runner.operators.Operator;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.Predicate;
 import plan_runner.storage.TupleStorage;
+import plan_runner.storm_components.InterchangingComponent;
+import plan_runner.storm_components.StormBoltComponent;
+import plan_runner.storm_components.StormComponent;
+import plan_runner.storm_components.StormEmitter;
 import plan_runner.storm_components.synchronization.TopologyKiller;
 import plan_runner.thetajoin.indexes.Index;
 import plan_runner.thetajoin.matrix_mapping.ContentSensitiveMatrixAssignment;

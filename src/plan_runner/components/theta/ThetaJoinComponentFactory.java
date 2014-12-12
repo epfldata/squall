@@ -1,5 +1,6 @@
-package plan_runner.components;
+package plan_runner.components.theta;
 
+import plan_runner.components.Component;
 import plan_runner.query_plans.QueryPlan;
 import plan_runner.utilities.SystemParameters;
 

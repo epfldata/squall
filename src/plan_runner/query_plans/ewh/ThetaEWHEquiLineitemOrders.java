@@ -7,12 +7,11 @@ import java.util.Map;
 
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
-
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
-import plan_runner.components.ThetaJoinComponentFactory;
-import plan_runner.components.ThetaJoinDynamicComponentAdvisedEpochs;
-import plan_runner.components.ThetaJoinStaticComponent;
+import plan_runner.components.theta.ThetaJoinComponentFactory;
+import plan_runner.components.theta.ThetaJoinDynamicComponentAdvisedEpochs;
+import plan_runner.components.theta.ThetaJoinStaticComponent;
 import plan_runner.conversion.DateConversion;
 import plan_runner.conversion.DateIntegerConversion;
 import plan_runner.conversion.IntegerConversion;
@@ -32,7 +31,7 @@ import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.OrPredicate;
 import plan_runner.query_plans.QueryPlan;
-import plan_runner.query_plans.ThetaQueryPlansParameters;
+import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 import plan_runner.storm_components.StormComponent;
 import plan_runner.storm_components.StormEmitter;
 import plan_runner.storm_components.synchronization.TopologyKiller;

@@ -1,4 +1,4 @@
-package plan_runner.utilities.thetajoin.dynamic;
+package plan_runner.utilities.thetajoin_dynamic;
 
 import java.io.Serializable;
 

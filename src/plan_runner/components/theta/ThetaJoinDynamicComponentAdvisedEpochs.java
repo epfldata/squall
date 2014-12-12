@@ -7,13 +7,15 @@
  * 3- One instance of ThetaClock Spout.
  * 4- One instance of ThetaMappingAssignerSynchronizer Bolt.
  */
-package plan_runner.components;
+package plan_runner.components.theta;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import plan_runner.components.Component;
+import plan_runner.components.DataSourceComponent;
 import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
@@ -29,8 +31,8 @@ import plan_runner.thetajoin.dynamic.storm_component.ThetaReshufflerAdvisedEpoch
 import plan_runner.thetajoin.matrix_mapping.EquiMatrixAssignment;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
-import plan_runner.utilities.ThetaDataMigrationJoinerToReshufflerMapping;
-import plan_runner.utilities.ThetaJoinDynamicMapping;
+import plan_runner.utilities.thetajoin_dynamic.ThetaDataMigrationJoinerToReshufflerMapping;
+import plan_runner.utilities.thetajoin_dynamic.ThetaJoinDynamicMapping;
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
 

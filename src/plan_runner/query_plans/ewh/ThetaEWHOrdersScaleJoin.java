@@ -6,7 +6,7 @@ import java.util.Map;
 
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
-import plan_runner.components.ThetaJoinComponentFactory;
+import plan_runner.components.theta.ThetaJoinComponentFactory;
 import plan_runner.conversion.DoubleConversion;
 import plan_runner.conversion.LongConversion;
 import plan_runner.conversion.NumericConversion;
@@ -25,7 +25,7 @@ import plan_runner.predicates.BetweenPredicate;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.Predicate;
 import plan_runner.query_plans.QueryPlan;
-import plan_runner.query_plans.ThetaQueryPlansParameters;
+import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
 import plan_runner.utilities.SystemParameters.HistogramType;

@@ -1,4 +1,4 @@
-package plan_runner.query_plans;
+package plan_runner.query_plans.theta;
 
 import java.util.Arrays;
 import java.util.List;
@@ -8,14 +8,15 @@ import org.apache.log4j.Logger;
 
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
-import plan_runner.components.ThetaJoinComponentFactory;
-import plan_runner.components.ThetaJoinDynamicComponentAdvisedEpochs;
-import plan_runner.components.ThetaJoinStaticComponent;
+import plan_runner.components.theta.ThetaJoinComponentFactory;
+import plan_runner.components.theta.ThetaJoinDynamicComponentAdvisedEpochs;
+import plan_runner.components.theta.ThetaJoinStaticComponent;
 import plan_runner.conversion.IntegerConversion;
 import plan_runner.expressions.ColumnReference;
 import plan_runner.operators.AggregateCountOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.predicates.ComparisonPredicate;
+import plan_runner.query_plans.QueryPlan;
 
 public class ThetaHyracksPlan {
 	private static Logger LOG = Logger.getLogger(ThetaHyracksPlan.class);

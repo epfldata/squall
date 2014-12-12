@@ -1,4 +1,4 @@
-package plan_runner.query_plans;
+package plan_runner.query_plans.theta;
 
 import java.util.Map;
 

@@ -1,4 +1,4 @@
-package plan_runner.query_plans;
+package plan_runner.query_plans.theta;
 
 import java.util.Arrays;
 import java.util.List;
@@ -8,15 +8,16 @@ import org.apache.log4j.Logger;
 
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
-import plan_runner.components.ThetaJoinComponentFactory;
-import plan_runner.components.ThetaJoinDynamicComponentAdvisedEpochs;
-import plan_runner.components.ThetaJoinStaticComponent;
+import plan_runner.components.theta.ThetaJoinComponentFactory;
+import plan_runner.components.theta.ThetaJoinDynamicComponentAdvisedEpochs;
+import plan_runner.components.theta.ThetaJoinStaticComponent;
 import plan_runner.conversion.DoubleConversion;
 import plan_runner.conversion.NumericConversion;
 import plan_runner.expressions.ColumnReference;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.AggregateSumOperator;
 import plan_runner.operators.ProjectOperator;
+import plan_runner.query_plans.QueryPlan;
 
 public class ThetaOutputDominatedPlan {
 

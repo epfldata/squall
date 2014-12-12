@@ -9,9 +9,9 @@ import org.apache.log4j.Logger;
 
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
-import plan_runner.components.ThetaJoinComponentFactory;
-import plan_runner.components.ThetaJoinDynamicComponentAdvisedEpochs;
-import plan_runner.components.ThetaJoinStaticComponent;
+import plan_runner.components.theta.ThetaJoinComponentFactory;
+import plan_runner.components.theta.ThetaJoinDynamicComponentAdvisedEpochs;
+import plan_runner.components.theta.ThetaJoinStaticComponent;
 import plan_runner.conversion.DateConversion;
 import plan_runner.conversion.DoubleConversion;
 import plan_runner.conversion.IntegerConversion;
@@ -29,7 +29,7 @@ import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.query_plans.QueryPlan;
-import plan_runner.query_plans.ThetaQueryPlansParameters;
+import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 
 public class ThetaTPCH3Plan {
 	private static Logger LOG = Logger.getLogger(ThetaTPCH3Plan.class);

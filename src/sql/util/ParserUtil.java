@@ -27,7 +27,7 @@ import org.apache.log4j.Logger;
 
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
-import plan_runner.components.ThetaJoinStaticComponent;
+import plan_runner.components.theta.ThetaJoinStaticComponent;
 import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ColumnReference;
 import plan_runner.expressions.ValueExpression;
