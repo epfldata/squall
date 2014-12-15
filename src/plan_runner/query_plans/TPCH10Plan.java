@@ -34,7 +34,7 @@ public class TPCH10Plan {
 	private static final TypeConversion<Date> _dc = new DateConversion();
 	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
 	private static final StringConversion _sc = new StringConversion();
-	private final QueryBuilder _queryPlan = new QueryBuilder();
+	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
 	// query variables
 	private static Date _date1, _date2;
@@ -66,8 +66,9 @@ public class TPCH10Plan {
 				5, 7 });
 
 		final DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath
-				+ "customer" + extension, _queryPlan).setHashIndexes(hashCustomer).addOperator(
+				+ "customer" + extension).setHashIndexes(hashCustomer).addOperator(
 				projectionCustomer);
+		_queryBuilder.add(relationCustomer);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashOrders = Arrays.asList(1);
@@ -79,25 +80,29 @@ public class TPCH10Plan {
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 1 });
 
 		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension, _queryPlan).setHashIndexes(hashOrders)
+				+ "orders" + extension).setHashIndexes(hashOrders)
 				.addOperator(selectionOrders).addOperator(projectionOrders);
+		_queryBuilder.add(relationOrders);
 
 		// -------------------------------------------------------------------------------------
-		final EquiJoinComponent C_Ojoin = new EquiJoinComponent(relationCustomer, relationOrders,
-				_queryPlan).setHashIndexes(Arrays.asList(3));
+		final EquiJoinComponent C_Ojoin = new EquiJoinComponent(relationCustomer, relationOrders)
+			.setHashIndexes(Arrays.asList(3));
+		_queryBuilder.add(C_Ojoin);
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashNation = Arrays.asList(0);
 
 		final ProjectOperator projectionNation = new ProjectOperator(new int[] { 0, 1 });
 
 		final DataSourceComponent relationNation = new DataSourceComponent("NATION", dataPath
-				+ "nation" + extension, _queryPlan).setHashIndexes(hashNation).addOperator(
+				+ "nation" + extension).setHashIndexes(hashNation).addOperator(
 				projectionNation);
+		_queryBuilder.add(relationNation);
 		// -------------------------------------------------------------------------------------
 
-		final EquiJoinComponent C_O_Njoin = new EquiJoinComponent(C_Ojoin, relationNation,
-				_queryPlan).addOperator(new ProjectOperator(new int[] { 0, 1, 2, 4, 5, 6, 7, 8 }))
+		final EquiJoinComponent C_O_Njoin = new EquiJoinComponent(C_Ojoin, relationNation)
+				.addOperator(new ProjectOperator(new int[] { 0, 1, 2, 4, 5, 6, 7, 8 }))
 				.setHashIndexes(Arrays.asList(6));
+		_queryBuilder.add(C_O_Njoin);
 		// -------------------------------------------------------------------------------------
 
 		final List<Integer> hashLineitem = Arrays.asList(0);
@@ -108,8 +113,9 @@ public class TPCH10Plan {
 		final ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0, 5, 6 });
 
 		final DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension, _queryPlan).setHashIndexes(hashLineitem)
+				+ "lineitem" + extension).setHashIndexes(hashLineitem)
 				.addOperator(selectionLineitem).addOperator(projectionLineitem);
+		_queryBuilder.add(relationLineitem);
 
 		// -------------------------------------------------------------------------------------
 		// set up aggregation function on the StormComponent(Bolt) where join is
@@ -124,12 +130,13 @@ public class TPCH10Plan {
 		final AggregateOperator agg = new AggregateSumOperator(product, conf)
 				.setGroupByColumns(Arrays.asList(0, 1, 4, 6, 2, 3, 5));
 
-		new EquiJoinComponent(C_O_Njoin, relationLineitem, _queryPlan).addOperator(
+		EquiJoinComponent finalComp = new EquiJoinComponent(C_O_Njoin, relationLineitem).addOperator(
 				new ProjectOperator(new int[] { 0, 1, 2, 3, 4, 5, 7, 8, 9 })).addOperator(agg);
+		_queryBuilder.add(finalComp);
 
 	}
 
 	public QueryBuilder getQueryPlan() {
-		return _queryPlan;
+		return _queryBuilder;
 	}
 }

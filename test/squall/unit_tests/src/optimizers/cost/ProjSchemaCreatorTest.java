@@ -189,37 +189,37 @@ public class ProjSchemaCreatorTest {
     private EquiJoinComponent createTPCH7_LSNSubplan() {
         //not used, but has to be initialized
         String dataPath = ""; String extension = "";
-        QueryBuilder queryPlan = new QueryBuilder();
+        QueryBuilder queryBuilder = new QueryBuilder();
 
         DataSourceComponent relationSupplier = new DataSourceComponent(
                 "SUPPLIER",
-                dataPath + "supplier" + extension,
-                queryPlan);
+                dataPath + "supplier" + extension);
+        queryBuilder.add(relationSupplier);
 
         //-------------------------------------------------------------------------------------
 
         DataSourceComponent relationNation1 = new DataSourceComponent(
                 "N1",
-                dataPath + "nation" + extension,
-                queryPlan);
+                dataPath + "nation" + extension);
+        queryBuilder.add(relationNation1);
 
         //-------------------------------------------------------------------------------------
         EquiJoinComponent S_Njoin = new EquiJoinComponent(
                 relationSupplier,
-                relationNation1,
-                queryPlan);
+                relationNation1);
+        queryBuilder.add(S_Njoin);
 
        //-------------------------------------------------------------------------------------
         DataSourceComponent relationLineitem = new DataSourceComponent(
                 "LINEITEM",
-                dataPath + "lineitem" + extension,
-                queryPlan);
+                dataPath + "lineitem" + extension);
+        queryBuilder.add(relationLineitem);
 
         //-------------------------------------------------------------------------------------
         EquiJoinComponent L_S_Njoin = new EquiJoinComponent(
                 relationLineitem,
-                S_Njoin,
-                queryPlan);
+                S_Njoin);
+        queryBuilder.add(L_S_Njoin);
         
         return L_S_Njoin;
     }

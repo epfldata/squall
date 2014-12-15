@@ -102,7 +102,7 @@ public class NameCostOptimizer implements Optimizer {
 			List<NameCompGen> ncgListSecond = new ArrayList<NameCompGen>();
 			for (int i = 0; i < ncgListFirst.size(); i++) {
 				final NameCompGen ncg = ncgListFirst.get(i);
-				Component firstComp = ncg.getQueryPlan().getLastComponent();
+				Component firstComp = ncg.getQueryBuilder().getLastComponent();
 				final List<String> ancestors = ParserUtil.getSourceNameList(firstComp);
 				final List<String> joinedWith = _pq.getJte().getJoinedWith(ancestors);
 				for (final String compName : joinedWith) {
@@ -111,7 +111,7 @@ public class NameCostOptimizer implements Optimizer {
 						// doing deepCopy only if there are multiple tables to
 						// be joined with
 						newNcg = ncg.deepCopy();
-						firstComp = newNcg.getQueryPlan().getLastComponent();
+						firstComp = newNcg.getQueryBuilder().getLastComponent();
 					}
 
 					final Component secondComp = newNcg.generateDataSource(compName);
@@ -132,7 +132,7 @@ public class NameCostOptimizer implements Optimizer {
 
 		ParserUtil.parallelismToMap(optimal, _map);
 
-		return optimal.getQueryPlan();
+		return optimal.getQueryBuilder();
 	}
 
 	private int getMinTotalPar(List<NameCompGen> ncgList) {
@@ -158,7 +158,7 @@ public class NameCostOptimizer implements Optimizer {
 
 		// filling in the collection with the appropriate key-value structure
 		for (final NameCompGen ncg : ncgList) {
-			final Set<String> ancestors = ParserUtil.getSourceNameSet(ncg.getQueryPlan()
+			final Set<String> ancestors = ParserUtil.getSourceNameSet(ncg.getQueryBuilder()
 					.getLastComponent());
 			ParserUtil.addToCollection(ancestors, ncg, collection);
 		}

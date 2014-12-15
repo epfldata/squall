@@ -46,7 +46,7 @@ public class NameCompGen implements CompGen {
 	private final String _extension;
 	private final String _queryName;
 
-	private QueryBuilder _queryPlan = new QueryBuilder();
+	private QueryBuilder _queryBuilder = new QueryBuilder();
 
 	// compName, CostParams for all the components from _queryPlan
 	private Map<String, CostParams> _compCost = new HashMap<String, CostParams>();
@@ -251,19 +251,22 @@ public class NameCompGen implements CompGen {
 		final String sourceFile = tableSchemaName.toLowerCase();
 
 		final DataSourceComponent relation = new DataSourceComponent(tableCompName, _dataPath
-				+ sourceFile + _extension, _queryPlan);
+				+ sourceFile + _extension);
+		_queryBuilder.add(relation);
 		return relation;
 	}
 
 	private EquiJoinComponent createAndAddEquiJoin(Component left, Component right) {
-		final EquiJoinComponent joinComponent = new EquiJoinComponent(left, right, _queryPlan);
+		final EquiJoinComponent joinComponent = new EquiJoinComponent(left, right);
+		_queryBuilder.add(joinComponent);
 
 		return joinComponent;
 	}
 
 	private OperatorComponent createAndAddOperatorComp(Component lastComponent) {
 		final OperatorComponent opComp = new OperatorComponent(lastComponent,
-				ParserUtil.generateUniqueName("OPERATOR"), _queryPlan);
+				ParserUtil.generateUniqueName("OPERATOR"));
+		_queryBuilder.add(opComp);
 
 		return opComp;
 	}
@@ -369,7 +372,7 @@ public class NameCompGen implements CompGen {
 		copy._costEst = new CostEstimator(_queryName, copy._schema, copy._pq, copy._compCost,
 				copy._parAssigner);
 
-		copy._queryPlan = (QueryBuilder) DeepCopy.copy(_queryPlan);
+		copy._queryBuilder = (QueryBuilder) DeepCopy.copy(_queryBuilder);
 		return copy;
 	}
 
@@ -548,8 +551,8 @@ public class NameCompGen implements CompGen {
 	}
 
 	@Override
-	public QueryBuilder getQueryPlan() {
-		return _queryPlan;
+	public QueryBuilder getQueryBuilder() {
+		return _queryBuilder;
 	}
 
 	@Override

@@ -35,7 +35,7 @@ public class ThetaLineitemSelfJoin {
 	 * Output= 54.206.000.000
 	 */
 
-	private QueryBuilder _queryPlan = new QueryBuilder();
+	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final String _date1Str = "1993-06-17";
 	private static final TypeConversion<Date> _dateConv = new DateConversion();
 	//	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();   
@@ -78,21 +78,25 @@ public class ThetaLineitemSelfJoin {
 			SelectOperator selectionLineitem1 = new SelectOperator(and);
 
 			relationLineitem1 = new DataSourceComponent("LINEITEM1", dataPath
-					+ "lineitem" + extension, _queryPlan).addOperator(selectionLineitem1).addOperator(print1).addOperator(
+					+ "lineitem" + extension).addOperator(selectionLineitem1).addOperator(print1).addOperator(
 							projectionLineitem).setHashIndexes(hashLineitem);
+			_queryBuilder.add(relationLineitem1);
 
 			SelectOperator selectionLineitem2 = new SelectOperator(new ComparisonPredicate(
 					ComparisonPredicate.NONEQUAL_OP, new ColumnReference(_stringConv, 14),
 					new ValueSpecification(_stringConv, "TRUCK")));
 			relationLineitem2 = new DataSourceComponent("LINEITEM2", dataPath
-					+ "lineitem" + extension, _queryPlan).addOperator(selectionLineitem2).addOperator(print2).addOperator(
+					+ "lineitem" + extension).addOperator(selectionLineitem2).addOperator(print2).addOperator(
 							projectionLineitem).setHashIndexes(hashLineitem);
+			_queryBuilder.add(relationLineitem2);
 		}else{
 			relationLineitem1 = new DataSourceComponent("LINEITEM1", dataPath
-					+ "bci_1" + extension, _queryPlan).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
+					+ "bci_1" + extension).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
+			_queryBuilder.add(relationLineitem1);
 
 			relationLineitem2 = new DataSourceComponent("LINEITEM2", dataPath
-					+ "bci_2" + extension, _queryPlan).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
+					+ "bci_2" + extension).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
+			_queryBuilder.add(relationLineitem2);
 		}
 
 		NumericConversion keyType = (NumericConversion) _dateIntConv;
@@ -104,11 +108,11 @@ public class ThetaLineitemSelfJoin {
 			relationLineitem1.setPrintOut(false);
 			relationLineitem2.setPrintOut(false);
 		}else if(isOkcanSampling){
-			_queryPlan = MyUtilities.addOkcanSampler(relationLineitem1, relationLineitem2, firstKeyProject, secondKeyProject,
-					_queryPlan, keyType, comparison, conf);
+			_queryBuilder = MyUtilities.addOkcanSampler(relationLineitem1, relationLineitem2, firstKeyProject, secondKeyProject,
+					_queryBuilder, keyType, comparison, conf);
 		}else if(isEWHSampling){
-			_queryPlan = MyUtilities.addEWHSampler(relationLineitem1, relationLineitem2, firstKeyProject, secondKeyProject,
-					_queryPlan, keyType, comparison, conf); 
+			_queryBuilder = MyUtilities.addEWHSampler(relationLineitem1, relationLineitem2, firstKeyProject, secondKeyProject,
+					_queryBuilder, keyType, comparison, conf); 
 		}else{
 			int Theta_JoinType = ThetaQueryPlansParameters.getThetaJoinType(conf);
 			boolean isBDB = MyUtilities.isBDB(conf);
@@ -140,7 +144,7 @@ public class ThetaLineitemSelfJoin {
 
 			AggregateCountOperator agg = new AggregateCountOperator(conf);		
 			Component LINEITEMS_LINEITEMSjoin = ThetaJoinComponentFactory.createThetaJoinOperator(
-					Theta_JoinType, relationLineitem1, relationLineitem2, _queryPlan).setJoinPredicate(
+					Theta_JoinType, relationLineitem1, relationLineitem2, _queryBuilder).setJoinPredicate(
 							pred5).setContentSensitiveThetaJoinWrapper(keyType)
 							.addOperator(agg)
 							;
@@ -151,6 +155,6 @@ public class ThetaLineitemSelfJoin {
 	}
 
 	public QueryBuilder getQueryPlan() {
-		return _queryPlan;
+		return _queryBuilder;
 	}
 }

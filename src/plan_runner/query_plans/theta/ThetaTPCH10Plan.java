@@ -40,7 +40,7 @@ public class ThetaTPCH10Plan {
 	private static final TypeConversion<Date> _dc = new DateConversion();
 	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
 	private static final StringConversion _sc = new StringConversion();
-	private QueryBuilder _queryPlan = new QueryBuilder();
+	private QueryBuilder _queryBuilder = new QueryBuilder();
 
 	private static final IntegerConversion _ic = new IntegerConversion();
 
@@ -76,8 +76,9 @@ public class ThetaTPCH10Plan {
 		ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0, 1, 2, 3, 4, 5, 7 });
 
 		DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath
-				+ "customer" + extension, _queryPlan).setHashIndexes(hashCustomer).addOperator(
+				+ "customer" + extension).setHashIndexes(hashCustomer).addOperator(
 				projectionCustomer);
+		_queryBuilder.add(relationCustomer);
 
 		//-------------------------------------------------------------------------------------
 		List<Integer> hashOrders = Arrays.asList(1);
@@ -89,8 +90,9 @@ public class ThetaTPCH10Plan {
 		ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 1 });
 
 		DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath + "orders"
-				+ extension, _queryPlan).setHashIndexes(hashOrders).addOperator(selectionOrders)
+				+ extension).setHashIndexes(hashOrders).addOperator(selectionOrders)
 				.addOperator(projectionOrders);
+		_queryBuilder.add(relationOrders);
 
 		//-------------------------------------------------------------------------------------
 		ColumnReference colC = new ColumnReference(_ic, 0);
@@ -100,7 +102,7 @@ public class ThetaTPCH10Plan {
 
 		Component C_Ojoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationCustomer, relationOrders,
-						_queryPlan).setHashIndexes(Arrays.asList(3))
+						_queryBuilder).setHashIndexes(Arrays.asList(3))
 				.addOperator(new ProjectOperator(new int[] { 0, 1, 2, 3, 4, 5, 6, 7 }))
 				.setJoinPredicate(C_O_comp);
 
@@ -110,7 +112,8 @@ public class ThetaTPCH10Plan {
 		ProjectOperator projectionNation = new ProjectOperator(new int[] { 0, 1 });
 
 		DataSourceComponent relationNation = new DataSourceComponent("NATION", dataPath + "nation"
-				+ extension, _queryPlan).setHashIndexes(hashNation).addOperator(projectionNation);
+				+ extension).setHashIndexes(hashNation).addOperator(projectionNation);
+		_queryBuilder.add(relationNation);
 		//-------------------------------------------------------------------------------------
 
 		ColumnReference colC_O = new ColumnReference(_ic, 3);
@@ -119,7 +122,7 @@ public class ThetaTPCH10Plan {
 				colC_O, colN);
 
 		Component C_O_Njoin = ThetaJoinComponentFactory
-				.createThetaJoinOperator(Theta_JoinType, C_Ojoin, relationNation, _queryPlan)
+				.createThetaJoinOperator(Theta_JoinType, C_Ojoin, relationNation, _queryBuilder)
 				.addOperator(new ProjectOperator(new int[] { 0, 1, 2, 4, 5, 6, 7, 9 }))
 				.setHashIndexes(Arrays.asList(6)).setJoinPredicate(C_O_N_comp);
 
@@ -133,8 +136,9 @@ public class ThetaTPCH10Plan {
 		ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0, 5, 6 });
 
 		DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension, _queryPlan).setHashIndexes(hashLineitem)
+				+ "lineitem" + extension).setHashIndexes(hashLineitem)
 				.addOperator(selectionLineitem).addOperator(projectionLineitem);
+		_queryBuilder.add(relationLineitem);
 
 		//-------------------------------------------------------------------------------------
 		// set up aggregation function on the StormComponent(Bolt) where join is performed
@@ -155,7 +159,7 @@ public class ThetaTPCH10Plan {
 				colC_O_N, colL);
 
 		Component C_O_N_Ljoin = ThetaJoinComponentFactory
-				.createThetaJoinOperator(Theta_JoinType, C_O_Njoin, relationLineitem, _queryPlan)
+				.createThetaJoinOperator(Theta_JoinType, C_O_Njoin, relationLineitem, _queryBuilder)
 				.addOperator(new ProjectOperator(new int[] { 0, 1, 2, 3, 4, 5, 7, 9, 10 }))
 				.addOperator(agg).setJoinPredicate(C_O_N_L_comp);
 
@@ -164,6 +168,6 @@ public class ThetaTPCH10Plan {
 	}
 
 	public QueryBuilder getQueryPlan() {
-		return _queryPlan;
+		return _queryBuilder;
 	}
 }

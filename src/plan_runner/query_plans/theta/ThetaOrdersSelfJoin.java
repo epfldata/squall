@@ -28,7 +28,7 @@ import plan_runner.query_plans.QueryBuilder;
 
 public class ThetaOrdersSelfJoin {
 
-	private QueryBuilder _queryPlan = new QueryBuilder();
+	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final String _date1Str = "1993-06-17";
 	private static final TypeConversion<Date> _dateConv = new DateConversion();
 	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
@@ -51,16 +51,18 @@ public class ThetaOrdersSelfJoin {
 		//		SelectOperator selectionOrders1 = new SelectOperator(new AndPredicate(comp1, comp2));
 
 		DataSourceComponent relationOrders1 = new DataSourceComponent("ORDERS1", dataPath
-				+ "orders" + extension, _queryPlan).addOperator(selectionOrders1).addOperator(
+				+ "orders" + extension).addOperator(selectionOrders1).addOperator(
 				new ProjectOperator(new int[] { 0, 3 })).setHashIndexes(hashLineitem);
+		_queryBuilder.add(relationOrders1);
 
 		SelectOperator selectionOrders2 = new SelectOperator(new ComparisonPredicate(
 				ComparisonPredicate.NONLESS_OP, new ColumnReference(_dateConv, 4),
 				new ValueSpecification(_dateConv, _date1)));
 
 		DataSourceComponent relationOrders2 = new DataSourceComponent("ORDERS2", dataPath
-				+ "orders" + extension, _queryPlan).addOperator(selectionOrders2).addOperator(
+				+ "orders" + extension).addOperator(selectionOrders2).addOperator(
 				new ProjectOperator(new int[] { 0, 3 })).setHashIndexes(hashLineitem);
+		_queryBuilder.add(relationOrders2);
 
 		//Aggregate
 		ValueExpression<Double> substract = new Subtraction(new ColumnReference(_doubleConv, 1),
@@ -86,11 +88,11 @@ public class ThetaOrdersSelfJoin {
 
 		Component ORDERS_ORDERSjoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationOrders1, relationOrders2,
-						_queryPlan).setJoinPredicate(pred3).addOperator(agg).setContentSensitiveThetaJoinWrapper(_doubleConv);
+						_queryBuilder).setJoinPredicate(pred3).addOperator(agg).setContentSensitiveThetaJoinWrapper(_doubleConv);
 	}
 
 	public QueryBuilder getQueryPlan() {
-		return _queryPlan;
+		return _queryBuilder;
 	}
 
 }

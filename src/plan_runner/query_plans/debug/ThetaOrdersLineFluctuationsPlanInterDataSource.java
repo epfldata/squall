@@ -1,11 +1,11 @@
-package plan_runner.query_plans.theta;
+package plan_runner.query_plans.debug;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import plan_runner.components.Component;
-import plan_runner.components.DataSourceComponent;
+import plan_runner.components.InterchangingDataSourceComponent;
 import plan_runner.components.theta.ThetaJoinComponentFactory;
 import plan_runner.components.theta.ThetaJoinDynamicComponentAdvisedEpochs;
 import plan_runner.components.theta.ThetaJoinStaticComponent;
@@ -18,16 +18,17 @@ import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.query_plans.QueryBuilder;
-import plan_runner.storm_components.InterchangingComponent;
+import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 import plan_runner.utilities.SystemParameters;
 
-public class ThetaOrdersLineFluctuationsPlan {
+public class ThetaOrdersLineFluctuationsPlanInterDataSource {
 
-	private QueryBuilder _queryPlan = new QueryBuilder();
+	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final IntegerConversion _ic = new IntegerConversion();
 	private static final StringConversion _sc = new StringConversion();
 
-	public ThetaOrdersLineFluctuationsPlan(String dataPath, String extension, Map conf) {
+	public ThetaOrdersLineFluctuationsPlanInterDataSource(String dataPath, String extension,
+			Map conf) {
 
 		int Theta_JoinType = ThetaQueryPlansParameters.getThetaJoinType(conf);
 
@@ -46,30 +47,20 @@ public class ThetaOrdersLineFluctuationsPlan {
 
 		//Orders
 		ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0 });
-		DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath + "orders"
-				+ extension, _queryPlan).addOperator(selectionOrders).addOperator(projectionOrders).setHashIndexes(hashLineitem);
-
-		//Lineitem
 		ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0 });
-		DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension, _queryPlan).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
-
-		InterchangingComponent interComp = new InterchangingComponent(relationOrders,
-				relationLineitem, _queryPlan, multFactor);
-
-		/////////////////I KNOW NOT CLEAN :D
-		// this would not work on the cluster
-		//ThetaReshufflerAdvisedEpochsNew.isInterchanging=true;
-		/////////////////////////
+		InterchangingDataSourceComponent relOrdersLineItem = new InterchangingDataSourceComponent(
+				"ORDERS-LINEITEM", dataPath + "orders" + extension, dataPath + "lineitem"
+						+ extension, multFactor).addOperatorRel1(selectionOrders)
+				.addOperatorRel1(projectionOrders).addOperatorRel2(projectionLineitem).setHashIndexes(hashLineitem);
+		_queryBuilder.add(relOrdersLineItem);
 
 		ColumnReference colO = new ColumnReference(_ic, 0);
 		ColumnReference colL = new ColumnReference(_ic, 0);
 		ComparisonPredicate O_L_comp = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP, colO,
 				colL);
 
-		Component join = ThetaJoinComponentFactory
-				.createThetaJoinOperator(Theta_JoinType, relationOrders, relationLineitem,
-						_queryPlan).setInterComp(interComp).setJoinPredicate(O_L_comp).setContentSensitiveThetaJoinWrapper(_ic);
+		Component join = ThetaJoinComponentFactory.createThetaJoinOperator(Theta_JoinType,
+				relOrdersLineItem, null, _queryBuilder).setJoinPredicate(O_L_comp).setContentSensitiveThetaJoinWrapper(_ic);
 
 		join.setPrintOut(false);
 
@@ -114,7 +105,7 @@ public class ThetaOrdersLineFluctuationsPlan {
 	}
 
 	public QueryBuilder getQueryPlan() {
-		return _queryPlan;
+		return _queryBuilder;
 	}
 
 }

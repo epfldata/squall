@@ -28,7 +28,7 @@ public class IndexCompGen implements CompGen {
 	private final String _dataPath;
 	private final String _extension;
 
-	private final QueryBuilder _queryPlan = new QueryBuilder();
+	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
 	// List of Components which are already added throughEquiJoinComponent and
 	// OperatorComponent
@@ -78,7 +78,8 @@ public class IndexCompGen implements CompGen {
 		final String sourceFile = tableSchemaName.toLowerCase();
 
 		final DataSourceComponent relation = new DataSourceComponent(tableCompName, _dataPath
-				+ sourceFile + _extension, _queryPlan);
+				+ sourceFile + _extension);
+		_queryBuilder.add(relation);
 		_subPlans.add(relation);
 		return relation;
 	}
@@ -89,7 +90,8 @@ public class IndexCompGen implements CompGen {
 	 */
 	@Override
 	public Component generateEquiJoin(Component left, Component right) {
-		final EquiJoinComponent joinComponent = new EquiJoinComponent(left, right, _queryPlan);
+		final EquiJoinComponent joinComponent = new EquiJoinComponent(left, right);
+		_queryBuilder.add(joinComponent);
 
 		// compute join condition
 		final List<Expression> joinCondition = ParserUtil.getJoinCondition(_pq, left, right);
@@ -109,8 +111,8 @@ public class IndexCompGen implements CompGen {
 	}
 
 	@Override
-	public QueryBuilder getQueryPlan() {
-		return _queryPlan;
+	public QueryBuilder getQueryBuilder() {
+		return _queryBuilder;
 	}
 
 	@Override

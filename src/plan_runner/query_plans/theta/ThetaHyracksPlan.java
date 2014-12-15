@@ -21,7 +21,7 @@ import plan_runner.query_plans.QueryBuilder;
 public class ThetaHyracksPlan {
 	private static Logger LOG = Logger.getLogger(ThetaHyracksPlan.class);
 
-	private final QueryBuilder _queryPlan = new QueryBuilder();
+	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
 	private static final IntegerConversion _ic = new IntegerConversion();
 
@@ -32,15 +32,17 @@ public class ThetaHyracksPlan {
 		final ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0, 6 });
 		final List<Integer> hashCustomer = Arrays.asList(0);
 		final DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath
-				+ "customer" + extension, _queryPlan).addOperator(projectionCustomer)
+				+ "customer" + extension).addOperator(projectionCustomer)
 				.setHashIndexes(hashCustomer);
+		_queryBuilder.add(relationCustomer);
 
 		// -------------------------------------------------------------------------------------
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 1 });
 		final List<Integer> hashOrders = Arrays.asList(0);
 		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension, _queryPlan).addOperator(projectionOrders).setHashIndexes(
+				+ "orders" + extension).addOperator(projectionOrders).setHashIndexes(
 				hashOrders);
+		_queryBuilder.add(relationOrders);
 
 		// -------------------------------------------------------------------------------------
 
@@ -54,7 +56,7 @@ public class ThetaHyracksPlan {
 		
 		Component lastJoiner = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationCustomer, relationOrders,
-						_queryPlan).addOperator(agg).setJoinPredicate(comp).setContentSensitiveThetaJoinWrapper(_ic);
+						_queryBuilder).addOperator(agg).setJoinPredicate(comp).setContentSensitiveThetaJoinWrapper(_ic);
 
 		//lastJoiner.setPrintOut(false);
 
@@ -63,7 +65,7 @@ public class ThetaHyracksPlan {
 	}
 
 	public QueryBuilder getQueryPlan() {
-		return _queryPlan;
+		return _queryBuilder;
 	}
 
 }

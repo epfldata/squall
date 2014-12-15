@@ -1,4 +1,4 @@
-package plan_runner.query_plans.ewh;
+package plan_runner.query_plans.debug;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -32,7 +32,7 @@ import plan_runner.utilities.SystemParameters;
 public class TPCH7_L_S_N1Plan {
     private static Logger LOG = Logger.getLogger(TPCH7_L_S_N1Plan.class);
     
-    private QueryBuilder _queryPlan = new QueryBuilder();
+    private QueryBuilder _queryBuilder = new QueryBuilder();
 
 	private static final String    _date1Str = "1995-01-01";
 	private static final String    _date2Str = "1996-12-31";
@@ -56,9 +56,9 @@ public class TPCH7_L_S_N1Plan {
 
         DataSourceComponent relationSupplier = new DataSourceComponent(
                 "SUPPLIER",
-                dataPath + "supplier" + extension,
-                _queryPlan).setHashIndexes(hashSupplier)
+                dataPath + "supplier" + extension).setHashIndexes(hashSupplier)
                            .addOperator(projectionSupplier);
+        _queryBuilder.add(relationSupplier);
 
         //-------------------------------------------------------------------------------------
         List<Integer> hashNation1 = Arrays.asList(1);
@@ -78,10 +78,10 @@ public class TPCH7_L_S_N1Plan {
 
         DataSourceComponent relationNation1 = new DataSourceComponent(
                 "NATION1",
-                dataPath + "nation" + extension,
-                _queryPlan).setHashIndexes(hashNation1)
+                dataPath + "nation" + extension).setHashIndexes(hashNation1)
                            .addOperator(selectionNation2)
                            .addOperator(projectionNation1);
+        _queryBuilder.add(relationNation1);
 
         //-------------------------------------------------------------------------------------
         
@@ -92,10 +92,10 @@ public class TPCH7_L_S_N1Plan {
         
         EquiJoinComponent S_Njoin = new EquiJoinComponent(
                 relationSupplier,
-                relationNation1,
-                _queryPlan).addOperator(new ProjectOperator(new int[]{0, 2}))
+                relationNation1).addOperator(new ProjectOperator(new int[]{0, 2}))
                 		   .setJoinPredicate(S_N_pred)	
                            .setHashIndexes(Arrays.asList(0));
+        _queryBuilder.add(S_Njoin);
 
        //-------------------------------------------------------------------------------------
         List<Integer> hashLineitem = Arrays.asList(2);
@@ -127,10 +127,10 @@ public class TPCH7_L_S_N1Plan {
 
         DataSourceComponent relationLineitem = new DataSourceComponent(
                 "LINEITEM",
-                dataPath + "lineitem" + extension,
-                _queryPlan).setHashIndexes(hashLineitem)
+                dataPath + "lineitem" + extension).setHashIndexes(hashLineitem)
                            .addOperator(selectionLineitem)
                            .addOperator(projectionLineitem);
+        _queryBuilder.add(relationLineitem);
 
         //-------------------------------------------------------------------------------------
         /*
@@ -152,11 +152,11 @@ public class TPCH7_L_S_N1Plan {
 		
 		EquiJoinComponent L_S_Njoin = new EquiJoinComponent(
                 relationLineitem,
-                S_Njoin,
-                _queryPlan).addOperator(new ProjectOperator(new int[]{5, 0, 1, 3}))
+                S_Njoin).addOperator(new ProjectOperator(new int[]{5, 0, 1, 3}))
                            .setHashIndexes(Arrays.asList(3))
                            .setJoinPredicate(L_S_N_pred)
                            ;
+		_queryBuilder.add(L_S_Njoin);
         L_S_Njoin.setPrintOut(false);	
 
         //-------------------------------------------------------------------------------------
@@ -164,6 +164,6 @@ public class TPCH7_L_S_N1Plan {
     }
 
     public QueryBuilder getQueryPlan() {
-        return _queryPlan;
+        return _queryBuilder;
     }
 }

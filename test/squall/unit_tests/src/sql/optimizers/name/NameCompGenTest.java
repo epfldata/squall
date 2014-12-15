@@ -26,9 +26,9 @@ public class NameCompGenTest {
         original.generateDataSource("ORDERS");
         
         //copy and copy2 should be untouched by the last generateDataSource("ORDERS")
-        int copyPlanSize = copy.getQueryPlan().getPlan().size();
+        int copyPlanSize = copy.getQueryBuilder().getPlan().size();
         assertEquals(1, copyPlanSize);
-        int copy2PlanSize = copy2.getQueryPlan().getPlan().size();
+        int copy2PlanSize = copy2.getQueryBuilder().getPlan().size();
         assertEquals(1, copy2PlanSize);
         
         int copyCCSize = copy.getCompCost().size();

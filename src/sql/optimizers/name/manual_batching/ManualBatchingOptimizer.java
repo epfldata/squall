@@ -102,7 +102,7 @@ public class ManualBatchingOptimizer implements Optimizer {
 			final List<NameCompGen> ncgListSecond = new ArrayList<NameCompGen>();
 			for (int i = 0; i < ncgListFirst.size(); i++) {
 				final NameCompGen ncg = ncgListFirst.get(i);
-				Component firstComp = ncg.getQueryPlan().getLastComponent();
+				Component firstComp = ncg.getQueryBuilder().getLastComponent();
 				final List<String> ancestors = ParserUtil.getSourceNameList(firstComp);
 				final List<String> joinedWith = _pq.getJte().getJoinedWith(ancestors);
 				for (final String compName : joinedWith) {
@@ -111,7 +111,7 @@ public class ManualBatchingOptimizer implements Optimizer {
 						// doing deepCopy only if there are multiple tables to
 						// be joined with
 						newNcg = ncg.deepCopy();
-						firstComp = newNcg.getQueryPlan().getLastComponent();
+						firstComp = newNcg.getQueryBuilder().getLastComponent();
 					}
 
 					final Component secondComp = newNcg.generateDataSource(compName);
@@ -135,7 +135,7 @@ public class ManualBatchingOptimizer implements Optimizer {
 		ParserUtil.batchesToMap(optimal, _map);
 
 		LOG.info("Predicted latency is " + getTotalLatency(optimal));
-		return optimal.getQueryPlan();
+		return optimal.getQueryBuilder();
 	}
 
 	private int getMinTotalLatencyIndex(List<NameCompGen> ncgList) {
@@ -156,7 +156,7 @@ public class ManualBatchingOptimizer implements Optimizer {
 	// we could also do some pruning
 	private double getTotalLatency(NameCompGen ncg) {
 		final Map<String, CostParams> allParams = ncg.getCompCost();
-		final Component lastComponent = ncg.getQueryPlan().getLastComponent();
+		final Component lastComponent = ncg.getQueryBuilder().getLastComponent();
 		final CostParams lastParams = allParams.get(lastComponent.getName());
 		return lastParams.getTotalAvgLatency(); // it's computed as query plan
 		// is built on

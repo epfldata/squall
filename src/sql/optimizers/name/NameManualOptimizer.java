@@ -48,7 +48,7 @@ public class NameManualOptimizer implements Optimizer {
 
 		ParserUtil.parallelismToMap(ncg, _map);
 
-		return ncg.getQueryPlan();
+		return ncg.getQueryBuilder();
 	}
 
 	// HELPER methods

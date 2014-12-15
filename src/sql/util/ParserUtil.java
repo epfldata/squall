@@ -125,7 +125,7 @@ public class ParserUtil {
 	}
 
 	public static void batchesToMap(NameCompGen cg, Map map) {
-		for (final Component comp : cg.getQueryPlan().getPlan()) {
+		for (final Component comp : cg.getQueryBuilder().getPlan()) {
 			final String compName = comp.getName();
 			final int batchSize = cg.getCostParameters(compName).getBatchSize();
 			SystemParameters.putInMap(map, compName + "_BS", batchSize);
@@ -237,7 +237,7 @@ public class ParserUtil {
 	 * Find component in a query with a given name
 	 */
 	public static Component getComponent(String compName, CompGen cg) {
-		return cg.getQueryPlan().getComponent(compName);
+		return cg.getQueryBuilder().getComponent(compName);
 	}
 
 	public static String getComponentName(Column column) {
@@ -630,7 +630,7 @@ public class ParserUtil {
 
 	public static int parallelismToMap(NameCompGen cg, Map map) {
 		final Map<String, Integer> compNamePars = new HashMap<String, Integer>();
-		for (final Component comp : cg.getQueryPlan().getPlan()) {
+		for (final Component comp : cg.getQueryBuilder().getPlan()) {
 			final String compName = comp.getName();
 			final int parallelism = cg.getCostParameters(compName).getParallelism();
 			compNamePars.put(compName, parallelism);

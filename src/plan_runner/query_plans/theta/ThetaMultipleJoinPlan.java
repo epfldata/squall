@@ -31,7 +31,7 @@ public class ThetaMultipleJoinPlan {
 
 	private static Logger LOG = Logger.getLogger(ThetaMultipleJoinPlan.class);
 
-	private final QueryBuilder _queryPlan = new QueryBuilder();
+	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
 	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
 	private static final NumericConversion<Integer> _intConv = new IntegerConversion();
@@ -52,8 +52,9 @@ public class ThetaMultipleJoinPlan {
 		final ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0, 1, 2, 5, 6 });
 
 		final DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension, _queryPlan).setHashIndexes(hashLineitem).addOperator(
+				+ "lineitem" + extension).setHashIndexes(hashLineitem).addOperator(
 				projectionLineitem);
+		_queryBuilder.add(relationLineitem);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashOrders = Arrays.asList(0);
@@ -61,8 +62,9 @@ public class ThetaMultipleJoinPlan {
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 3 });
 
 		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension, _queryPlan).setHashIndexes(hashOrders).addOperator(
+				+ "orders" + extension).setHashIndexes(hashOrders).addOperator(
 				projectionOrders);
+		_queryBuilder.add(relationOrders);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashSupplier = Arrays.asList(0);
@@ -70,8 +72,9 @@ public class ThetaMultipleJoinPlan {
 		final ProjectOperator projectionSupplier = new ProjectOperator(new int[] { 0 });
 
 		final DataSourceComponent relationSupplier = new DataSourceComponent("SUPPLIER", dataPath
-				+ "supplier" + extension, _queryPlan).setHashIndexes(hashSupplier).addOperator(
+				+ "supplier" + extension).setHashIndexes(hashSupplier).addOperator(
 				projectionSupplier);
+		_queryBuilder.add(relationSupplier);
 
 		// -------------------------------------------------------------------------------------
 
@@ -80,8 +83,9 @@ public class ThetaMultipleJoinPlan {
 		final ProjectOperator projectionPartsSupp = new ProjectOperator(new int[] { 0, 1, 2 });
 
 		final DataSourceComponent relationPartsupp = new DataSourceComponent("PARTSUPP", dataPath
-				+ "partsupp" + extension, _queryPlan).setHashIndexes(hashPartsSupp).addOperator(
-				projectionPartsSupp);
+				+ "partsupp" + extension).setHashIndexes(hashPartsSupp).addOperator(
+				projectionPartsSupp);		
+		_queryBuilder.add(relationPartsupp);
 
 		// -------------------------------------------------------------------------------------
 
@@ -101,7 +105,7 @@ public class ThetaMultipleJoinPlan {
 
 		Component LINEITEMS_ORDERSjoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationLineitem, relationOrders,
-						_queryPlan).setJoinPredicate(predL_O)
+						_queryBuilder).setJoinPredicate(predL_O)
 				.addOperator(new ProjectOperator(new int[] { 1, 2, 3, 4 }));
 
 		// -------------------------------------------------------------------------------------
@@ -117,7 +121,7 @@ public class ThetaMultipleJoinPlan {
 
 		Component SUPPLIER_PARTSUPPjoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationSupplier, relationPartsupp,
-						_queryPlan).setJoinPredicate(predS_P)
+						_queryBuilder).setJoinPredicate(predS_P)
 				.addOperator(new ProjectOperator(new int[] { 0, 1, 3 }))
 				.addOperator(selectionPartSupp);
 
@@ -146,7 +150,7 @@ public class ThetaMultipleJoinPlan {
 
 		Component lastJoiner = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, LINEITEMS_ORDERSjoin,
-						SUPPLIER_PARTSUPPjoin, _queryPlan).setJoinPredicate(predL_P)
+						SUPPLIER_PARTSUPPjoin, _queryBuilder).setJoinPredicate(predL_P)
 				.addOperator(new ProjectOperator(new int[] { 0, 1, 2, 3 })).addOperator(agg);
 		//lastJoiner.setPrintOut(false);
 		// -------------------------------------------------------------------------------------
@@ -154,6 +158,6 @@ public class ThetaMultipleJoinPlan {
 	}
 
 	public QueryBuilder getQueryPlan() {
-		return _queryPlan;
+		return _queryBuilder;
 	}
 }

@@ -45,7 +45,7 @@ public class TPCH3Plan {
 	private static final TypeConversion<String> _sc = new StringConversion();
 	private static final Date _date = _dateConv.fromString(_dateStr);
 
-	private final QueryBuilder _queryPlan = new QueryBuilder();
+	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
 	public TPCH3Plan(String dataPath, String extension, Map conf) {
 
@@ -58,8 +58,9 @@ public class TPCH3Plan {
 		final ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0 });
 
 		final DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath
-				+ "customer" + extension, _queryPlan).setHashIndexes(hashCustomer)
+				+ "customer" + extension).setHashIndexes(hashCustomer)
 				.addOperator(selectionCustomer).addOperator(projectionCustomer);
+		_queryBuilder.add(relationCustomer);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashOrders = Arrays.asList(1);
@@ -71,13 +72,15 @@ public class TPCH3Plan {
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 1, 4, 7 });
 
 		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension, _queryPlan).setHashIndexes(hashOrders)
+				+ "orders" + extension).setHashIndexes(hashOrders)
 				.addOperator(selectionOrders).addOperator(projectionOrders);
+		_queryBuilder.add(relationOrders);
 
 		// -------------------------------------------------------------------------------------
-		final EquiJoinComponent C_Ojoin = new EquiJoinComponent(relationCustomer, relationOrders,
-				_queryPlan).addOperator(new ProjectOperator(new int[] { 1, 2, 3 })).setHashIndexes(
+		final EquiJoinComponent C_Ojoin = new EquiJoinComponent(relationCustomer, relationOrders)
+				.addOperator(new ProjectOperator(new int[] { 1, 2, 3 })).setHashIndexes(
 				Arrays.asList(0));
+		_queryBuilder.add(C_Ojoin);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashLineitem = Arrays.asList(0);
@@ -89,8 +92,9 @@ public class TPCH3Plan {
 		final ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0, 5, 6 });
 
 		final DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension, _queryPlan).setHashIndexes(hashLineitem)
+				+ "lineitem" + extension).setHashIndexes(hashLineitem)
 				.addOperator(selectionLineitem).addOperator(projectionLineitem);
+		_queryBuilder.add(relationLineitem);
 
 		// -------------------------------------------------------------------------------------
 		// set up aggregation function on the StormComponent(Bolt) where join is
@@ -105,13 +109,13 @@ public class TPCH3Plan {
 		final AggregateOperator agg = new AggregateSumOperator(product, conf)
 				.setGroupByColumns(Arrays.asList(0, 1, 2));
 
-		new EquiJoinComponent(C_Ojoin, relationLineitem, _queryPlan).addOperator(agg);
-
+		EquiJoinComponent finalComp = new EquiJoinComponent(C_Ojoin, relationLineitem).addOperator(agg);
+		_queryBuilder.add(finalComp);
 		// -------------------------------------------------------------------------------------
 
 	}
 
 	public QueryBuilder getQueryPlan() {
-		return _queryPlan;
+		return _queryBuilder;
 	}
 }

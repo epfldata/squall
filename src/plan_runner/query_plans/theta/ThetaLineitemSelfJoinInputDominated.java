@@ -50,7 +50,7 @@ public class ThetaLineitemSelfJoinInputDominated {
 
 	 */
 
-	private QueryBuilder _queryPlan = new QueryBuilder();
+	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final String _date1Str = "1993-06-17";
 	private static final TypeConversion<Date> _dateConv = new DateConversion();
 	//	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();   
@@ -84,8 +84,9 @@ public class ThetaLineitemSelfJoinInputDominated {
 		SelectOperator selectionOrders1 = new SelectOperator(and);
 
 		DataSourceComponent relationLineitem1 = new DataSourceComponent("LINEITEM1", dataPath
-				+ "lineitem" + extension, _queryPlan).addOperator(selectionOrders1).addOperator(
+				+ "lineitem" + extension).addOperator(selectionOrders1).addOperator(
 				projectionLineitem).setHashIndexes(hashLineitem);
+		_queryBuilder.add(relationLineitem1);
 
 		//SelectOperator selectionOrders2 = new SelectOperator(new ComparisonPredicate(ComparisonPredicate.NONEQUAL_OP, new ColumnReference(_stringConv, 14), new ValueSpecification(_stringConv, "TRUCK")));
 		ComparisonPredicate cond1 = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP,
@@ -97,8 +98,9 @@ public class ThetaLineitemSelfJoinInputDominated {
 		//SelectOperator selectionOrders2 = new SelectOperator(and2);
 		SelectOperator selectionOrders2 = new SelectOperator(cond1);
 		DataSourceComponent relationLineitem2 = new DataSourceComponent("LINEITEM2", dataPath
-				+ "lineitem" + extension, _queryPlan).addOperator(selectionOrders2).addOperator(
+				+ "lineitem" + extension).addOperator(selectionOrders2).addOperator(
 				projectionLineitem).setHashIndexes(hashLineitem);
+		_queryBuilder.add(relationLineitem2);
 
 		//		ColumnReference colLine11 = new ColumnReference(_dateIntConv, 0); //shipdate
 		//		ColumnReference colLine12 = new ColumnReference(_dateConv, 1); //receiptdate
@@ -130,7 +132,7 @@ public class ThetaLineitemSelfJoinInputDominated {
 
 		AggregateCountOperator agg = new AggregateCountOperator(conf);
 		Component LINEITEMS_LINEITEMSjoin = ThetaJoinComponentFactory.createThetaJoinOperator(
-				Theta_JoinType, relationLineitem1, relationLineitem2, _queryPlan).setJoinPredicate(
+				Theta_JoinType, relationLineitem1, relationLineitem2, _queryBuilder).setJoinPredicate(
 				pred5).setContentSensitiveThetaJoinWrapper(_ic)
 		        .addOperator(agg)
 		;
@@ -140,6 +142,6 @@ public class ThetaLineitemSelfJoinInputDominated {
 	}
 
 	public QueryBuilder getQueryPlan() {
-		return _queryPlan;
+		return _queryBuilder;
 	}
 }

@@ -30,7 +30,7 @@ public class ThetaInputDominatedPlan {
 
 	private static Logger LOG = Logger.getLogger(ThetaInputDominatedPlan.class);
 
-	private final QueryBuilder _queryPlan = new QueryBuilder();
+	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
 	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
 	private static final IntegerConversion _ic = new IntegerConversion();
@@ -48,8 +48,9 @@ public class ThetaInputDominatedPlan {
 		final ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0, 5, 6 });
 
 		final DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension, _queryPlan).setHashIndexes(hashLineitem).addOperator(
+				+ "lineitem" + extension).setHashIndexes(hashLineitem).addOperator(
 				projectionLineitem);
+		_queryBuilder.add(relationLineitem);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashOrders = Arrays.asList(1);
@@ -57,8 +58,9 @@ public class ThetaInputDominatedPlan {
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 3 });
 
 		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension, _queryPlan).setHashIndexes(hashOrders).addOperator(
+				+ "orders" + extension).setHashIndexes(hashOrders).addOperator(
 				projectionOrders);
+		_queryBuilder.add(relationOrders);
 
 		// -------------------------------------------------------------------------------------
 
@@ -89,7 +91,7 @@ public class ThetaInputDominatedPlan {
 
 		Component lastJoiner = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationLineitem, relationOrders,
-						_queryPlan).setJoinPredicate(overallPred)
+						_queryBuilder).setJoinPredicate(overallPred)
 				.addOperator(new ProjectOperator(new int[] { 1, 2, 4 })).addOperator(agg);
 		;
 
@@ -99,6 +101,6 @@ public class ThetaInputDominatedPlan {
 	}
 
 	public QueryBuilder getQueryPlan() {
-		return _queryPlan;
+		return _queryBuilder;
 	}
 }

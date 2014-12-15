@@ -1,4 +1,4 @@
-package plan_runner.query_plans.ewh;
+package plan_runner.query_plans.theta;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -29,7 +29,6 @@ import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.query_plans.QueryBuilder;
-import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 
 public class ThetaTPCH3Plan {
 	private static Logger LOG = Logger.getLogger(ThetaTPCH3Plan.class);

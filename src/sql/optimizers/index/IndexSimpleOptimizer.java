@@ -63,10 +63,10 @@ public class IndexSimpleOptimizer implements Optimizer {
 				final boolean newLevel = !(_it.isHashedBy(affectedComponent, groupByColumns));
 				if (newLevel) {
 					affectedComponent.setHashIndexes(groupByColumns);
-					new OperatorComponent(affectedComponent,
-							ParserUtil.generateUniqueName("OPERATOR"), _cg.getQueryPlan())
+					OperatorComponent oc = new OperatorComponent(affectedComponent,
+							ParserUtil.generateUniqueName("OPERATOR"))
 							.addOperator(firstAgg);
-
+					_cg.getQueryBuilder().add(oc);
 				} else
 					affectedComponent.addOperator(firstAgg);
 			} else {
@@ -91,8 +91,9 @@ public class IndexSimpleOptimizer implements Optimizer {
 				affectedComponent.setHashExpressions((List<ValueExpression>) DeepCopy
 						.copy(groupByVEs));
 
-				new OperatorComponent(affectedComponent, ParserUtil.generateUniqueName("OPERATOR"),
-						_cg.getQueryPlan()).addOperator(firstAgg);
+				OperatorComponent oc = new OperatorComponent(affectedComponent, 
+						ParserUtil.generateUniqueName("OPERATOR")).addOperator(firstAgg);
+				_cg.getQueryBuilder().add(oc);
 
 			}
 		} else
@@ -111,13 +112,13 @@ public class IndexSimpleOptimizer implements Optimizer {
 		processSelectClause(_pq.getSelectItems());
 		processWhereClause(_pq.getWhereExpr());
 
-		ParserUtil.orderOperators(_cg.getQueryPlan());
+		ParserUtil.orderOperators(_cg.getQueryBuilder());
 
-		final RuleParallelismAssigner parAssign = new RuleParallelismAssigner(_cg.getQueryPlan(),
+		final RuleParallelismAssigner parAssign = new RuleParallelismAssigner(_cg.getQueryBuilder(),
 				_pq.getTan(), _schema, _map);
 		parAssign.assignPar();
 
-		return _cg.getQueryPlan();
+		return _cg.getQueryBuilder();
 	}
 
 	private IndexCompGen generateTableJoins() {
@@ -142,20 +143,20 @@ public class IndexSimpleOptimizer implements Optimizer {
 
 	private int processSelectClause(List<SelectItem> selectItems) {
 		final IndexSelectItemsVisitor selectVisitor = new IndexSelectItemsVisitor(
-				_cg.getQueryPlan(), _schema, _pq.getTan(), _map);
+				_cg.getQueryBuilder(), _schema, _pq.getTan(), _map);
 		for (final SelectItem elem : selectItems)
 			elem.accept(selectVisitor);
 		final List<AggregateOperator> aggOps = selectVisitor.getAggOps();
 		final List<ValueExpression> groupByVEs = selectVisitor.getGroupByVEs();
 
-		final Component affectedComponent = _cg.getQueryPlan().getLastComponent();
+		final Component affectedComponent = _cg.getQueryBuilder().getLastComponent();
 		attachSelectClause(aggOps, groupByVEs, affectedComponent);
 		return (aggOps.isEmpty() ? IndexSelectItemsVisitor.NON_AGG : IndexSelectItemsVisitor.AGG);
 	}
 
 	private void processWhereClause(Expression whereExpr) {
 		// all the selection are performed on the last component
-		final Component affectedComponent = _cg.getQueryPlan().getLastComponent();
+		final Component affectedComponent = _cg.getQueryBuilder().getLastComponent();
 		final IndexWhereVisitor whereVisitor = new IndexWhereVisitor(affectedComponent, _schema,
 				_pq.getTan());
 		if (whereExpr != null) {

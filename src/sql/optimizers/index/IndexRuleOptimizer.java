@@ -78,8 +78,9 @@ public class IndexRuleOptimizer implements Optimizer {
 				final boolean newLevel = !(_it.isHashedBy(lastComponent, groupByColumns));
 				if (newLevel) {
 					lastComponent.setHashIndexes(groupByColumns);
-					new OperatorComponent(lastComponent, ParserUtil.generateUniqueName("OPERATOR"),
-							_cg.getQueryPlan()).addOperator(firstAgg);
+					OperatorComponent oc = new OperatorComponent(lastComponent, 
+							ParserUtil.generateUniqueName("OPERATOR")).addOperator(firstAgg);
+					_cg.getQueryBuilder().add(oc);
 
 				} else
 					lastComponent.addOperator(firstAgg);
@@ -99,8 +100,9 @@ public class IndexRuleOptimizer implements Optimizer {
 				// current component
 				lastComponent.setHashExpressions((List<ValueExpression>) DeepCopy.copy(groupByVEs));
 
-				new OperatorComponent(lastComponent, ParserUtil.generateUniqueName("OPERATOR"),
-						_cg.getQueryPlan()).addOperator(firstAgg);
+				OperatorComponent oc = new OperatorComponent(lastComponent, 
+						ParserUtil.generateUniqueName("OPERATOR")).addOperator(firstAgg);
+				_cg.getQueryBuilder().add(oc);
 			}
 		} else
 			throw new RuntimeException("For now only one aggregate function supported!");
@@ -120,7 +122,7 @@ public class IndexRuleOptimizer implements Optimizer {
 		_cg = generateTableJoins();
 
 		LOG.info("Before WHERE, SELECT and EarlyProjection: ");
-		LOG.info(ParserUtil.toString(_cg.getQueryPlan()));
+		LOG.info(ParserUtil.toString(_cg.getQueryBuilder()));
 
 		// selectItems might add OperatorComponent, this is why it goes first
 		final int queryType = processSelectClause(_pq.getSelectItems());
@@ -128,15 +130,15 @@ public class IndexRuleOptimizer implements Optimizer {
 		if (queryType == IndexSelectItemsVisitor.NON_AGG)
 			LOG.info("Early projection will not be performed since the query is NON_AGG type (contains projections)!");
 		else
-			earlyProjection(_cg.getQueryPlan());
+			earlyProjection(_cg.getQueryBuilder());
 
-		ParserUtil.orderOperators(_cg.getQueryPlan());
+		ParserUtil.orderOperators(_cg.getQueryBuilder());
 
-		final RuleParallelismAssigner parAssign = new RuleParallelismAssigner(_cg.getQueryPlan(),
+		final RuleParallelismAssigner parAssign = new RuleParallelismAssigner(_cg.getQueryBuilder(),
 				_pq.getTan(), _schema, _map);
 		parAssign.assignPar();
 
-		return _cg.getQueryPlan();
+		return _cg.getQueryBuilder();
 	}
 
 	private IndexCompGen generateTableJoins() {
@@ -286,13 +288,13 @@ public class IndexRuleOptimizer implements Optimizer {
 
 	private int processSelectClause(List<SelectItem> selectItems) {
 		final IndexSelectItemsVisitor selectVisitor = new IndexSelectItemsVisitor(
-				_cg.getQueryPlan(), _schema, _pq.getTan(), _map);
+				_cg.getQueryBuilder(), _schema, _pq.getTan(), _map);
 		for (final SelectItem elem : selectItems)
 			elem.accept(selectVisitor);
 		final List<AggregateOperator> aggOps = selectVisitor.getAggOps();
 		final List<ValueExpression> groupByVEs = selectVisitor.getGroupByVEs();
 
-		final Component affectedComponent = _cg.getQueryPlan().getLastComponent();
+		final Component affectedComponent = _cg.getQueryBuilder().getLastComponent();
 		attachSelectClause(affectedComponent, aggOps, groupByVEs);
 		return (aggOps.isEmpty() ? IndexSelectItemsVisitor.NON_AGG : IndexSelectItemsVisitor.AGG);
 	}
@@ -310,7 +312,7 @@ public class IndexRuleOptimizer implements Optimizer {
 
 		// Each component process its own part of JSQL whereExpression
 		for (final Map.Entry<String, Expression> whereCompExprPair : whereCompExprPairs.entrySet()) {
-			final Component affectedComponent = _cg.getQueryPlan().getComponent(
+			final Component affectedComponent = _cg.getQueryBuilder().getComponent(
 					whereCompExprPair.getKey());
 			final Expression whereCompExpr = whereCompExprPair.getValue();
 			processWhereForComponent(affectedComponent, whereCompExpr);

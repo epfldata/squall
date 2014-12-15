@@ -58,7 +58,7 @@ public class CostOptimizerTest {
         DataSourceComponent ordersSource = ncg.generateDataSource("ORDERS");
         ncg.generateEquiJoin(customerSource, ordersSource);
 
-        String planStr = ParserUtil.toString(ncg.getQueryPlan());
+        String planStr = ParserUtil.toString(ncg.getQueryBuilder());
         //LOG.info(planStr);
         
         //parallelism has to be set in _map
@@ -86,7 +86,7 @@ public class CostOptimizerTest {
         DataSourceComponent lineitemSource = ncg.generateDataSource("LINEITEM");
         ncg.generateEquiJoin(C_Ojoin, lineitemSource);
         
-        String planStr = ParserUtil.toString(ncg.getQueryPlan());
+        String planStr = ParserUtil.toString(ncg.getQueryBuilder());
         //LOG.info(planStr);
         
         //parallelism has to be set in _map
@@ -126,7 +126,7 @@ public class CostOptimizerTest {
         DataSourceComponent customerSource = ncg.generateDataSource("CUSTOMER");
         ncg.generateEquiJoin(R_N_S_L_Ojoin, customerSource);
         
-        String planStr = ParserUtil.toString(ncg.getQueryPlan());
+        String planStr = ParserUtil.toString(ncg.getQueryBuilder());
         //LOG.info(planStr);
         
         //parallelism has to be set in _map
@@ -168,7 +168,7 @@ public class CostOptimizerTest {
         DataSourceComponent n2Source = ncg.generateDataSource("N2");
         ncg.generateEquiJoin(S_N1_L_O_Cjoin, n2Source);
         
-        String planStr = ParserUtil.toString(ncg.getQueryPlan());
+        String planStr = ParserUtil.toString(ncg.getQueryBuilder());
         //LOG.info(planStr);
         
         //parallelism has to be set in _map
@@ -214,7 +214,7 @@ public class CostOptimizerTest {
         DataSourceComponent n2Source = ncg.generateDataSource("N2");
         ncg.generateEquiJoin(R_N1_C_O_L_P_Sjoin, n2Source);
         
-        String planStr = ParserUtil.toString(ncg.getQueryPlan());
+        String planStr = ParserUtil.toString(ncg.getQueryBuilder());
         //LOG.info(planStr);
         
         //parallelism has to be set in _map
@@ -256,7 +256,7 @@ public class CostOptimizerTest {
         DataSourceComponent nationSource = ncg.generateDataSource("NATION");
         ncg.generateEquiJoin(P_L_SP_O_Sjoin, nationSource);
         
-        String planStr = ParserUtil.toString(ncg.getQueryPlan());
+        String planStr = ParserUtil.toString(ncg.getQueryBuilder());
         //LOG.info(planStr);
         
         //parallelism has to be set in _map
@@ -292,7 +292,7 @@ public class CostOptimizerTest {
         DataSourceComponent nationSource = ncg.generateDataSource("NATION");
         ncg.generateEquiJoin(L_O_Cjoin, nationSource);
         
-        String planStr = ParserUtil.toString(ncg.getQueryPlan());
+        String planStr = ParserUtil.toString(ncg.getQueryBuilder());
         //LOG.info(planStr);
         
         //parallelism has to be set in _map

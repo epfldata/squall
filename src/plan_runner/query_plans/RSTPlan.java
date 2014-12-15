@@ -25,7 +25,7 @@ public class RSTPlan {
 	private static final NumericConversion<Double> _dc = new DoubleConversion();
 	private static final NumericConversion<Integer> _ic = new IntegerConversion();
 
-	private final QueryBuilder _queryPlan = new QueryBuilder();
+	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
 	public RSTPlan(String dataPath, String extension, Map conf) {
 		// -------------------------------------------------------------------------------------
@@ -33,25 +33,29 @@ public class RSTPlan {
 		final List<Integer> hashR = Arrays.asList(1);
 
 		final DataSourceComponent relationR = new DataSourceComponent("R", dataPath + "r"
-				+ extension, _queryPlan).setHashIndexes(hashR);
+				+ extension).setHashIndexes(hashR);
+		_queryBuilder.add(relationR);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashS = Arrays.asList(0);
 
 		final DataSourceComponent relationS = new DataSourceComponent("S", dataPath + "s"
-				+ extension, _queryPlan).setHashIndexes(hashS);
+				+ extension).setHashIndexes(hashS);
+		_queryBuilder.add(relationS);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashIndexes = Arrays.asList(2);
 
-		final EquiJoinComponent R_Sjoin = new EquiJoinComponent(relationR, relationS, _queryPlan)
+		final EquiJoinComponent R_Sjoin = new EquiJoinComponent(relationR, relationS)
 				.setHashIndexes(hashIndexes);
+		_queryBuilder.add(R_Sjoin);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashT = Arrays.asList(0);
 
 		final DataSourceComponent relationT = new DataSourceComponent("T", dataPath + "t"
-				+ extension, _queryPlan).setHashIndexes(hashT);
+				+ extension).setHashIndexes(hashT);
+		_queryBuilder.add(relationT);
 
 		// -------------------------------------------------------------------------------------
 		final ValueExpression<Double> aggVe = new Multiplication(new ColumnReference(_dc, 0),
@@ -59,13 +63,14 @@ public class RSTPlan {
 
 		final AggregateSumOperator sp = new AggregateSumOperator(aggVe, conf);
 
-		new EquiJoinComponent(R_Sjoin, relationT, _queryPlan).addOperator(
+		EquiJoinComponent rstJoin = new EquiJoinComponent(R_Sjoin, relationT)
+			.addOperator(
 				new SelectOperator(new ComparisonPredicate(new ColumnReference(_ic, 1),
 						new ValueSpecification(_ic, 10)))).addOperator(sp);
-
+		_queryBuilder.add(rstJoin);
 	}
 
 	public QueryBuilder getQueryPlan() {
-		return _queryPlan;
+		return _queryBuilder;
 	}
 }

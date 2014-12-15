@@ -19,7 +19,7 @@ public interface CompGen {
 	 */
 	public Component generateEquiJoin(Component left, Component right);
 
-	public QueryBuilder getQueryPlan();
+	public QueryBuilder getQueryBuilder();
 
 	public List<Component> getSubPlans();
 

@@ -1,4 +1,4 @@
-package plan_runner.query_plans.ewh;
+package plan_runner.query_plans.debug;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,7 +25,7 @@ public class ThetaTPCH8_9_P_LPlan {
 	private static final StringConversion _sc = new StringConversion();
 	private static final IntegerConversion _ic = new IntegerConversion();
 
-	private QueryBuilder _queryPlan = new QueryBuilder();
+	private QueryBuilder _queryBuilder = new QueryBuilder();
 
 	public ThetaTPCH8_9_P_LPlan(String dataPath, String extension, Map conf) {
 		int Theta_JoinType = ThetaQueryPlansParameters.getThetaJoinType(conf);
@@ -35,7 +35,8 @@ public class ThetaTPCH8_9_P_LPlan {
 		ProjectOperator projectionPart = new ProjectOperator(new int[] { 0 });
 
 		DataSourceComponent relationPart = new DataSourceComponent("PART", dataPath + "part"
-				+ extension, _queryPlan).setHashIndexes(hashPart).addOperator(projectionPart);
+				+ extension).setHashIndexes(hashPart).addOperator(projectionPart);
+		_queryBuilder.add(relationPart);
 
 		//-------------------------------------------------------------------------------------
 		List<Integer> hashLineitem = Arrays.asList(1);
@@ -43,8 +44,9 @@ public class ThetaTPCH8_9_P_LPlan {
 		ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0, 1, 2, 4, 5, 6 });
 
 		DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension, _queryPlan).setHashIndexes(hashLineitem).addOperator(
+				+ "lineitem" + extension).setHashIndexes(hashLineitem).addOperator(
 				projectionLineitem);
+		_queryBuilder.add(relationLineitem);
 
 		//-------------------------------------------------------------------------------------
 		//TODO
@@ -56,7 +58,7 @@ public class ThetaTPCH8_9_P_LPlan {
 		//        AggregateCountOperator agg= new AggregateCountOperator(conf);
 
 		Component P_Ljoin = ThetaJoinComponentFactory
-				.createThetaJoinOperator(Theta_JoinType, relationPart, relationLineitem, _queryPlan)
+				.createThetaJoinOperator(Theta_JoinType, relationPart, relationLineitem, _queryBuilder)
 				.setHashIndexes(Arrays.asList(0, 2)).setJoinPredicate(P_L_comp)
 				.addOperator(new ProjectOperator(new int[] { 0, 1, 3, 4, 5, 6 })).setContentSensitiveThetaJoinWrapper(_ic)
 		//					.addOperator(agg)
@@ -68,6 +70,6 @@ public class ThetaTPCH8_9_P_LPlan {
 	}
 
 	public QueryBuilder getQueryPlan() {
-		return _queryPlan;
+		return _queryBuilder;
 	}
 }

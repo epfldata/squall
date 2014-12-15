@@ -23,7 +23,7 @@ public class ThetaOutputDominatedPlan {
 
 	private static Logger LOG = Logger.getLogger(ThetaOutputDominatedPlan.class);
 
-	private final QueryBuilder _queryPlan = new QueryBuilder();
+	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
 	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
 
@@ -38,8 +38,9 @@ public class ThetaOutputDominatedPlan {
 		final ProjectOperator projectionSupplier = new ProjectOperator(new int[] { 0 });
 
 		final DataSourceComponent relationSupplier = new DataSourceComponent("SUPPLIER", dataPath
-				+ "supplier" + extension, _queryPlan).addOperator(projectionSupplier)
+				+ "supplier" + extension).addOperator(projectionSupplier)
 				.setHashIndexes(hashSupplier);
+		_queryBuilder.add(relationSupplier);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashNation = Arrays.asList(0);
@@ -47,8 +48,9 @@ public class ThetaOutputDominatedPlan {
 		final ProjectOperator projectionNation = new ProjectOperator(new int[] { 1 });
 
 		final DataSourceComponent relationNation = new DataSourceComponent("NATION", dataPath
-				+ "nation" + extension, _queryPlan).addOperator(projectionNation).setHashIndexes(
+				+ "nation" + extension).addOperator(projectionNation).setHashIndexes(
 				hashNation);
+		_queryBuilder.add(relationNation);
 
 		final AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_doubleConv, 0),
 				conf);
@@ -56,7 +58,7 @@ public class ThetaOutputDominatedPlan {
 
 		Component lastJoiner = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationSupplier, relationNation,
-						_queryPlan).addOperator(new ProjectOperator(new int[] { 0 }))
+						_queryBuilder).addOperator(new ProjectOperator(new int[] { 0 }))
 				.addOperator(agg);
 		//lastJoiner.setPrintOut(false);
 
@@ -65,6 +67,6 @@ public class ThetaOutputDominatedPlan {
 	}
 
 	public QueryBuilder getQueryPlan() {
-		return _queryPlan;
+		return _queryBuilder;
 	}
 }

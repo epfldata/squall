@@ -35,7 +35,7 @@ public class TPCH9Plan {
 
 	private static final String COLOR = "%green%";
 
-	private final QueryBuilder _queryPlan = new QueryBuilder();
+	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
 	public TPCH9Plan(String dataPath, String extension, Map conf) {
 		// -------------------------------------------------------------------------------------
@@ -47,8 +47,9 @@ public class TPCH9Plan {
 		final ProjectOperator projectionPart = new ProjectOperator(new int[] { 0 });
 
 		final DataSourceComponent relationPart = new DataSourceComponent("PART", dataPath + "part"
-				+ extension, _queryPlan).setHashIndexes(hashPart).addOperator(selectionPart)
+				+ extension).setHashIndexes(hashPart).addOperator(selectionPart)
 				.addOperator(projectionPart);
+		_queryBuilder.add(relationPart);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashLineitem = Arrays.asList(1);
@@ -57,12 +58,14 @@ public class TPCH9Plan {
 				new int[] { 0, 1, 2, 4, 5, 6 });
 
 		final DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension, _queryPlan).setHashIndexes(hashLineitem).addOperator(
+				+ "lineitem" + extension).setHashIndexes(hashLineitem).addOperator(
 				projectionLineitem);
+		_queryBuilder.add(relationLineitem);
 
 		// -------------------------------------------------------------------------------------
-		final EquiJoinComponent P_Ljoin = new EquiJoinComponent(relationPart, relationLineitem,
-				_queryPlan).setHashIndexes(Arrays.asList(0, 2));
+		final EquiJoinComponent P_Ljoin = new EquiJoinComponent(relationPart, relationLineitem)
+				.setHashIndexes(Arrays.asList(0, 2));
+		_queryBuilder.add(P_Ljoin);
 		// -------------------------------------------------------------------------------------
 
 		final List<Integer> hashPartsupp = Arrays.asList(0, 1);
@@ -70,13 +73,15 @@ public class TPCH9Plan {
 		final ProjectOperator projectionPartsupp = new ProjectOperator(new int[] { 0, 1, 3 });
 
 		final DataSourceComponent relationPartsupp = new DataSourceComponent("PARTSUPP", dataPath
-				+ "partsupp" + extension, _queryPlan).setHashIndexes(hashPartsupp).addOperator(
+				+ "partsupp" + extension).setHashIndexes(hashPartsupp).addOperator(
 				projectionPartsupp);
+		_queryBuilder.add(relationPartsupp);
 
 		// -------------------------------------------------------------------------------------
-		final EquiJoinComponent P_L_PSjoin = new EquiJoinComponent(P_Ljoin, relationPartsupp,
-				_queryPlan).setHashIndexes(Arrays.asList(0)).addOperator(
+		final EquiJoinComponent P_L_PSjoin = new EquiJoinComponent(P_Ljoin, relationPartsupp)
+				.setHashIndexes(Arrays.asList(0)).addOperator(
 				new ProjectOperator(new int[] { 1, 2, 3, 4, 5, 6 }));
+		_queryBuilder.add(P_L_PSjoin);
 		// -------------------------------------------------------------------------------------
 
 		final List<Integer> hashOrders = Arrays.asList(0);
@@ -85,14 +90,16 @@ public class TPCH9Plan {
 				new IntegerYearFromDate(new ColumnReference(_dateConv, 4)));
 
 		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension, _queryPlan).setHashIndexes(hashOrders).addOperator(
+				+ "orders" + extension).setHashIndexes(hashOrders).addOperator(
 				projectionOrders);
+		_queryBuilder.add(relationOrders);
 
 		// -------------------------------------------------------------------------------------
 
-		final EquiJoinComponent P_L_PS_Ojoin = new EquiJoinComponent(P_L_PSjoin, relationOrders,
-				_queryPlan).setHashIndexes(Arrays.asList(0)).addOperator(
+		final EquiJoinComponent P_L_PS_Ojoin = new EquiJoinComponent(P_L_PSjoin, relationOrders)
+				.setHashIndexes(Arrays.asList(0)).addOperator(
 				new ProjectOperator(new int[] { 1, 2, 3, 4, 5, 6 }));
+		_queryBuilder.add(P_L_PS_Ojoin);
 		// -------------------------------------------------------------------------------------
 
 		final List<Integer> hashSupplier = Arrays.asList(0);
@@ -100,21 +107,24 @@ public class TPCH9Plan {
 		final ProjectOperator projectionSupplier = new ProjectOperator(new int[] { 0, 3 });
 
 		final DataSourceComponent relationSupplier = new DataSourceComponent("SUPPLIER", dataPath
-				+ "supplier" + extension, _queryPlan).setHashIndexes(hashSupplier).addOperator(
+				+ "supplier" + extension).setHashIndexes(hashSupplier).addOperator(
 				projectionSupplier);
+		_queryBuilder.add(relationSupplier);
 
 		// -------------------------------------------------------------------------------------
 		final EquiJoinComponent P_L_PS_O_Sjoin = new EquiJoinComponent(P_L_PS_Ojoin,
-				relationSupplier, _queryPlan).setHashIndexes(Arrays.asList(5)).addOperator(
+				relationSupplier).setHashIndexes(Arrays.asList(5)).addOperator(
 				new ProjectOperator(new int[] { 1, 2, 3, 4, 5, 6 }));
+		_queryBuilder.add(P_L_PS_O_Sjoin);
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashNation = Arrays.asList(0);
 
 		final ProjectOperator projectionNation = new ProjectOperator(new int[] { 0, 1 });
 
 		final DataSourceComponent relationNation = new DataSourceComponent("NATION", dataPath
-				+ "nation" + extension, _queryPlan).setHashIndexes(hashNation).addOperator(
+				+ "nation" + extension).setHashIndexes(hashNation).addOperator(
 				projectionNation);
+		_queryBuilder.add(relationNation);
 
 		// -------------------------------------------------------------------------------------
 		// set up aggregation function on the StormComponent(Bolt) where join is
@@ -137,12 +147,14 @@ public class TPCH9Plan {
 		final AggregateOperator agg = new AggregateSumOperator(substract2, conf)
 				.setGroupByColumns(Arrays.asList(5, 4));
 
-		new EquiJoinComponent(P_L_PS_O_Sjoin, relationNation, _queryPlan).addOperator(
+		EquiJoinComponent finalComp = new EquiJoinComponent(P_L_PS_O_Sjoin, relationNation)
+				.addOperator(
 				new ProjectOperator(new int[] { 0, 1, 2, 3, 4, 6 })).addOperator(agg);
+		_queryBuilder.add(finalComp);
 
 	}
 
 	public QueryBuilder getQueryPlan() {
-		return _queryPlan;
+		return _queryBuilder;
 	}
 }

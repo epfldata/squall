@@ -1,4 +1,4 @@
-package plan_runner.query_plans.ewh;
+package plan_runner.query_plans.debug;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -29,7 +29,7 @@ public class TPCH8_9_P_LPlan {
     
     private static final String COLOR = "%green%";
 
-    private QueryBuilder _queryPlan = new QueryBuilder();
+    private QueryBuilder _queryBuilder = new QueryBuilder();
     
     private static final IntegerConversion _ic = new IntegerConversion();	    
 
@@ -41,10 +41,10 @@ public class TPCH8_9_P_LPlan {
 
         DataSourceComponent relationPart = new DataSourceComponent(
                 "PART",
-                dataPath + "part" + extension,
-                _queryPlan).setHashIndexes(hashPart)
+                dataPath + "part" + extension).setHashIndexes(hashPart)
 //                           .addOperator(selectionPart)
                            .addOperator(projectionPart);
+        _queryBuilder.add(relationPart);
 
         //-------------------------------------------------------------------------------------
         List<Integer> hashLineitem = Arrays.asList(1);
@@ -53,9 +53,9 @@ public class TPCH8_9_P_LPlan {
 
         DataSourceComponent relationLineitem = new DataSourceComponent(
                 "LINEITEM",
-                dataPath + "lineitem" + extension,
-                _queryPlan).setHashIndexes(hashLineitem)
+                dataPath + "lineitem" + extension).setHashIndexes(hashLineitem)
                            .addOperator(projectionLineitem);
+        _queryBuilder.add(relationLineitem);
         
 //        AggregateCountOperator agg= new AggregateCountOperator(conf);
         
@@ -77,11 +77,11 @@ public class TPCH8_9_P_LPlan {
         
 		EquiJoinComponent P_Ljoin = new EquiJoinComponent(
 				relationPart,
-				relationLineitem,
-				_queryPlan).setHashIndexes(Arrays.asList(0, 2))
+				relationLineitem).setHashIndexes(Arrays.asList(0, 2))
 						   .setJoinPredicate(P_L_pred)
 						   .addOperator(new ProjectOperator(new int[]{0, 1, 3, 4, 5, 6}))
 				;
+		_queryBuilder.add(P_Ljoin);
         P_Ljoin.setPrintOut(false);
         
         //-------------------------------------------------------------------------------------
@@ -89,6 +89,6 @@ public class TPCH8_9_P_LPlan {
     }
 
     public QueryBuilder getQueryPlan() {
-        return _queryPlan;
+        return _queryBuilder;
     }
 }

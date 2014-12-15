@@ -61,7 +61,7 @@ public class NameRuleOptimizer implements Optimizer {
 
 		ParserUtil.parallelismToMap(ncg, _map);
 
-		return ncg.getQueryPlan();
+		return ncg.getQueryBuilder();
 	}
 
 }

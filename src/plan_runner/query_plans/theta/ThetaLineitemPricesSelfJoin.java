@@ -25,7 +25,7 @@ import plan_runner.query_plans.QueryBuilder;
 
 public class ThetaLineitemPricesSelfJoin {
 
-	private QueryBuilder _queryPlan = new QueryBuilder();
+	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final String _date1Str = "1993-06-17";
 	private static final TypeConversion<Date> _dateConv = new DateConversion();
 	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
@@ -42,16 +42,18 @@ public class ThetaLineitemPricesSelfJoin {
 				ComparisonPredicate.EQUAL_OP, new ColumnReference(_stringConv, 14),
 				new ValueSpecification(_stringConv, "TRUCK")));
 		DataSourceComponent relationLineitem1 = new DataSourceComponent("LINEITEM1", dataPath
-				+ "lineitem" + extension, _queryPlan).addOperator(selectionLineitem1).addOperator(
+				+ "lineitem" + extension).addOperator(selectionLineitem1).addOperator(
 				projectionLineitem).setHashIndexes(hashLineitem1);
+		_queryBuilder.add(relationLineitem1);
 
 		SelectOperator selectionLinitem2 = new SelectOperator(new ComparisonPredicate(
 				ComparisonPredicate.NONEQUAL_OP, new ColumnReference(_stringConv, 14),
 				new ValueSpecification(_stringConv, "TRUCK")));
 		final List<Integer> hashLineitem2 = Arrays.asList(0);
 		DataSourceComponent relationLineitem2 = new DataSourceComponent("LINEITEM2", dataPath
-				+ "lineitem" + extension, _queryPlan).addOperator(selectionLinitem2).addOperator(
+				+ "lineitem" + extension).addOperator(selectionLinitem2).addOperator(
 				projectionLineitem).setHashIndexes(hashLineitem2);
+		_queryBuilder.add(relationLineitem2);
 
 		AggregateCountOperator agg = new AggregateCountOperator(conf);
 
@@ -80,11 +82,11 @@ public class ThetaLineitemPricesSelfJoin {
 
 		Component LINEITEMS_LINEITEMSjoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationLineitem1, relationLineitem2,
-						_queryPlan).setJoinPredicate(pred3).addOperator(agg).setContentSensitiveThetaJoinWrapper(_doubleConv);
+						_queryBuilder).setJoinPredicate(pred3).addOperator(agg).setContentSensitiveThetaJoinWrapper(_doubleConv);
 
 	}
 
 	public QueryBuilder getQueryPlan() {
-		return _queryPlan;
+		return _queryBuilder;
 	}
 }

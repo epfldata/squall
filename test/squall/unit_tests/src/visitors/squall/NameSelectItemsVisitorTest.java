@@ -62,7 +62,8 @@ public class NameSelectItemsVisitorTest {
         inputTupleSchema.add(new ColumnNameType("LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)", _dblConv));
         inputTupleSchema.add(new ColumnNameType("LINEITEM.ORDERKEY", _lc)); // not used
         
-        DataSourceComponent source = new DataSourceComponent("TestFullExprs", "", new QueryBuilder());
+        DataSourceComponent source = new DataSourceComponent("TestFullExprs", "");
+        //no need to add to QueryBuilder
         
         NameSelectItemsVisitor selectVisitor = new NameSelectItemsVisitor(new TupleSchema(inputTupleSchema), _map, source);
         for(SelectItem elem: _pq.getSelectItems()){

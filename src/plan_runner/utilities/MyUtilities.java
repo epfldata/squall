@@ -1074,7 +1074,7 @@ public class MyUtilities {
 	}
 	
 	public static QueryBuilder addOkcanSampler(Component firstParent, Component secondParent, ProjectOperator project1, ProjectOperator project2,
-			QueryBuilder queryPlan, NumericConversion keyType, ComparisonPredicate comparison, Map conf){
+			QueryBuilder queryBuilder, NumericConversion keyType, ComparisonPredicate comparison, Map conf){
 		int firstRelSize = SystemParameters.getInt(conf, "FIRST_REL_SIZE");
 		int secondRelSize = SystemParameters.getInt(conf, "SECOND_REL_SIZE");
 		int firstNumOfBuckets = SystemParameters.getInt(conf, "FIRST_NUM_OF_BUCKETS");
@@ -1096,14 +1096,15 @@ public class MyUtilities {
 		// In principle, we could run this on non-materialized relations as well		
 		//   Instead of JoinComponent, we just put OkcanSampleMatrixComponent
 		OkcanSampleMatrixComponent okcanComp = new OkcanSampleMatrixComponent(firstParent, secondParent, keyType, comparison, 
-				numLastJoiners, firstNumOfBuckets, secondNumOfBuckets, queryPlan);
+				numLastJoiners, firstNumOfBuckets, secondNumOfBuckets);
+		queryBuilder.add(okcanComp);
 
-		return queryPlan;
+		return queryBuilder;
 	}
 	
 	public static QueryBuilder addSrcHistogram(Component relationJPS1, int firstKeyProject, Component relationJPS2, int secondKeyProject, 
 			NumericConversion keyType, ComparisonPredicate comparison, boolean isEWHD2Histogram, boolean isEWHS1Histogram, Map conf){
-		QueryBuilder queryPlan = new QueryBuilder();
+		QueryBuilder queryBuilder = new QueryBuilder();
 		int relSize1 = -1, relSize2 = -1;
 		int keyProject1 = -1, keyProject2 = -1;
 		Component r1 = null, r2 = null; // r2 feeds D2Combiner, r1 feeds S1Reservoir directly
@@ -1134,20 +1135,21 @@ public class MyUtilities {
 		int numLastJoiners = SystemParameters.getInt(conf, "PAR_LAST_JOINERS");
 		if(isEWHD2Histogram){
 			addSampleOp(r2, project2, relSize2, numLastJoiners, conf);
-			queryPlan.add(r2);
+			queryBuilder.add(r2);
 		}else{
 			r2 = null;
 		}
 		if(isEWHS1Histogram){
 			addSampleOp(r1, project1, relSize1, numLastJoiners, conf);
-			queryPlan.add(r1);
+			queryBuilder.add(r1);
 		}else{
 			r1 = null;
 		}
 		CreateHistogramComponent r2HistComp = new CreateHistogramComponent(r1, r2, keyType, comparison, 
-				numLastJoiners, queryPlan);
+				numLastJoiners);
+		queryBuilder.add(r2HistComp);
 		
-		return queryPlan;
+		return queryBuilder;
 	}
 	
 	private static void addSampleOp(Component parent, ProjectOperator project, int relSize, int numLastJoiners, Map conf){
@@ -1167,7 +1169,7 @@ public class MyUtilities {
 	}
 	
 	public static QueryBuilder addEWHSampler(Component firstParent, Component secondParent, ProjectOperator project1, ProjectOperator project2,
-			QueryBuilder queryPlan, NumericConversion keyType, ComparisonPredicate comparison, Map conf){
+			QueryBuilder queryBuilder, NumericConversion keyType, ComparisonPredicate comparison, Map conf){
 		int firstRelSize = SystemParameters.getInt(conf, "FIRST_REL_SIZE");
 		int secondRelSize = SystemParameters.getInt(conf, "SECOND_REL_SIZE");
 		int numLastJoiners = SystemParameters.getInt(conf, "PAR_LAST_JOINERS");
@@ -1198,8 +1200,9 @@ public class MyUtilities {
 		boolean isFirstD2 = SystemParameters.getBoolean(conf, "IS_FIRST_D2");
 		EWHSampleMatrixComponent ewhComp = new EWHSampleMatrixComponent(firstParent, secondParent, isFirstD2, keyType, comparison,  
 				numLastJoiners, firstRelSize, secondRelSize,
-				firstNumOfBuckets, secondNumOfBuckets, queryPlan);
-		return queryPlan;
+				firstNumOfBuckets, secondNumOfBuckets);
+		queryBuilder.add(ewhComp);
+		return queryBuilder;
 	}	
 	
 	private static void setParentPartitioner(Component component) {
