@@ -21,7 +21,7 @@ import plan_runner.operators.Operator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.Predicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.storage.AggregationStorage;
 import plan_runner.storage.BasicStore;
 import plan_runner.storage.KeyValueStore;
@@ -59,7 +59,7 @@ public class EWHSampleMatrixComponent implements Component {
 	public EWHSampleMatrixComponent(Component firstParent, Component secondParent, boolean isFirstD2,
 			NumericConversion keyType, ComparisonPredicate comparison, int numOfLastJoiners, 
 			int firstRelationSize, int secondRelationSize,
-			int firstNumOfBuckets, int secondNumOfBuckets, QueryPlan queryPlan) {
+			int firstNumOfBuckets, int secondNumOfBuckets) {
 		_firstParent = firstParent;
 		_firstParent.setChild(this);
 		_secondParent = secondParent;
@@ -74,8 +74,6 @@ public class EWHSampleMatrixComponent implements Component {
 		_secondRelationSize = secondRelationSize;
 		_firstNumOfBuckets = firstNumOfBuckets;
 		_secondNumOfBuckets = secondNumOfBuckets;
-		
-		queryPlan.add(this);
 	}
 	
 	@Override

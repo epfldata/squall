@@ -32,13 +32,13 @@ import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.BetweenPredicate;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.OrPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 
 public class ThetaTPCH7_CustomPlan {
 	private static Logger LOG = Logger.getLogger(ThetaTPCH7_CustomPlan.class);
 
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryPlan = new QueryBuilder();
 
 	private static final IntegerConversion _ic = new IntegerConversion();
 
@@ -214,7 +214,7 @@ public class ThetaTPCH7_CustomPlan {
 
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 }

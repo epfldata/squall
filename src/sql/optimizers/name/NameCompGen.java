@@ -19,7 +19,7 @@ import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.utilities.DeepCopy;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.CompGen;
@@ -46,7 +46,7 @@ public class NameCompGen implements CompGen {
 	private final String _extension;
 	private final String _queryName;
 
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryPlan = new QueryBuilder();
 
 	// compName, CostParams for all the components from _queryPlan
 	private Map<String, CostParams> _compCost = new HashMap<String, CostParams>();
@@ -369,7 +369,7 @@ public class NameCompGen implements CompGen {
 		copy._costEst = new CostEstimator(_queryName, copy._schema, copy._pq, copy._compCost,
 				copy._parAssigner);
 
-		copy._queryPlan = (QueryPlan) DeepCopy.copy(_queryPlan);
+		copy._queryPlan = (QueryBuilder) DeepCopy.copy(_queryPlan);
 		return copy;
 	}
 
@@ -548,7 +548,7 @@ public class NameCompGen implements CompGen {
 	}
 
 	@Override
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 

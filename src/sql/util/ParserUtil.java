@@ -33,7 +33,7 @@ import plan_runner.expressions.ColumnReference;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.CompGen;
@@ -459,7 +459,7 @@ public class ParserUtil {
 	}
 
 	// can be used *after* parallelismToMap method is invoked
-	public static int getTotalParallelism(QueryPlan plan, Map<String, String> map) {
+	public static int getTotalParallelism(QueryBuilder plan, Map<String, String> map) {
 		int totalParallelism = 0;
 
 		for (final String compName : plan.getComponentNames()) {
@@ -603,7 +603,7 @@ public class ParserUtil {
 	 * On each component order the Operators as Select, Distinct, Project,
 	 * Aggregation
 	 */
-	public static void orderOperators(QueryPlan queryPlan) {
+	public static void orderOperators(QueryBuilder queryPlan) {
 		final List<Component> comps = queryPlan.getPlan();
 		for (final Component comp : comps) {
 			final ChainOperator chain = comp.getChainOperator();
@@ -664,7 +664,7 @@ public class ParserUtil {
 	}
 
 	// used after parallelismToMap method is invoked
-	public static String parToString(QueryPlan plan, Map<String, String> map) {
+	public static String parToString(QueryBuilder plan, Map<String, String> map) {
 		int totalParallelism = 0;
 
 		final StringBuilder sb = new StringBuilder("\n\nPARALLELISM:\n");
@@ -728,7 +728,7 @@ public class ParserUtil {
 	/*
 	 * Squall query plan printing - Indexes
 	 */
-	public static String toString(QueryPlan queryPlan) {
+	public static String toString(QueryBuilder queryPlan) {
 		final StringBuilder sb = new StringBuilder("QUERY PLAN");
 		for (final Component comp : queryPlan.getPlan()) {
 			sb.append("\n\nComponent ").append(comp.getName());

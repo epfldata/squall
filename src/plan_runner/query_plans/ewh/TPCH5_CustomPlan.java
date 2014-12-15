@@ -28,7 +28,7 @@ import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.BetweenPredicate;
 import plan_runner.predicates.ComparisonPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 
 public class TPCH5_CustomPlan {
     private static Logger LOG = Logger.getLogger(TPCH5_CustomPlan.class);
@@ -37,7 +37,7 @@ public class TPCH5_CustomPlan {
     private static final TypeConversion<String> _sc = new StringConversion();
     private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
 
-    private QueryPlan _queryPlan = new QueryPlan();
+    private QueryBuilder _queryPlan = new QueryBuilder();
 
     //query variables
     private static Date _date1, _date2;
@@ -226,7 +226,7 @@ public class TPCH5_CustomPlan {
         //-------------------------------------------------------------------------------------
     }
 
-    public QueryPlan getQueryPlan() {
+    public QueryBuilder getQueryPlan() {
         return _queryPlan;
     }
 }

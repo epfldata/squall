@@ -17,7 +17,7 @@ import plan_runner.operators.Operator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.Predicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.storage.AggregationStorage;
 import plan_runner.storage.BasicStore;
 import plan_runner.storage.KeyValueStore;
@@ -49,7 +49,7 @@ public class OkcanSampleMatrixComponent implements Component {
 
 	public OkcanSampleMatrixComponent(Component firstParent, Component secondParent,
 			NumericConversion keyType, ComparisonPredicate comparison, int numOfLastJoiners, 
-			int firstNumOfBuckets, int secondNumOfBuckets, QueryPlan queryPlan) {
+			int firstNumOfBuckets, int secondNumOfBuckets) {
 		_firstParent = firstParent;
 		_firstParent.setChild(this);
 		_secondParent = secondParent;
@@ -61,8 +61,6 @@ public class OkcanSampleMatrixComponent implements Component {
 		_wrapper = keyType;
 		_firstNumOfBuckets = firstNumOfBuckets;
 		_secondNumOfBuckets = secondNumOfBuckets;
-		
-		queryPlan.add(this);
 	}
 
 	@Override

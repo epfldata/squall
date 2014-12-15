@@ -9,12 +9,12 @@ import org.apache.log4j.Logger;
 import plan_runner.components.DataSourceComponent;
 import plan_runner.conversion.IntegerConversion;
 import plan_runner.operators.ProjectOperator;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 
 public class HyracksL1Plan {
 	private static Logger LOG = Logger.getLogger(HyracksL1Plan.class);
 
-	private final QueryPlan _queryPlan = new QueryPlan();
+	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
 	private static final IntegerConversion _ic = new IntegerConversion();
 
@@ -23,19 +23,21 @@ public class HyracksL1Plan {
 		// start of query plan filling
 		final ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0, 6 });
 		final List<Integer> hashCustomer = Arrays.asList(0);
-		new DataSourceComponent("CUSTOMER", dataPath + "customer" + extension, _queryPlan)
+		DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath + "customer" + extension)
 				.addOperator(projectionCustomer).setHashIndexes(hashCustomer).setPrintOut(false);
+		_queryBuilder.add(relationCustomer);
 
 		// -------------------------------------------------------------------------------------
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 1 });
 		final List<Integer> hashOrders = Arrays.asList(0);
-		new DataSourceComponent("ORDERS", dataPath + "orders" + extension, _queryPlan)
+		DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath + "orders" + extension)
 				.addOperator(projectionOrders).setHashIndexes(hashOrders).setPrintOut(false);
+		_queryBuilder.add(relationOrders);
 
 	}
 
-	public QueryPlan getQueryPlan() {
-		return _queryPlan;
+	public QueryBuilder getQueryPlan() {
+		return _queryBuilder;
 	}
 
 }

@@ -27,12 +27,12 @@ import plan_runner.operators.SampleOperator;
 import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.ComparisonPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
 
 public class OkcanSampleMatrixPlan {
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryBuilder = new QueryBuilder();
 
 	public OkcanSampleMatrixPlan(String dataPath, String extension, Map conf) {
 		//can be extracted from the complete query plan
@@ -76,16 +76,19 @@ public class OkcanSampleMatrixPlan {
 		SampleOperator sample2 = new SampleOperator(secondRelSize, secondNumOfBuckets);
 		
 		DataSourceComponent relation1 = new DataSourceComponent(firstCompName, dataPath
-				+ firstSrcFile + extension, _queryPlan).addOperator(projectionLineitem1).addOperator(sample1).setHashIndexes(hash);
-
+				+ firstSrcFile + extension).addOperator(projectionLineitem1).addOperator(sample1).setHashIndexes(hash);
+		_queryBuilder.add(relation1);
+		
 		DataSourceComponent relation2 = new DataSourceComponent(secondCompName, dataPath
-				+ secondSrcFile + extension, _queryPlan).addOperator(projectionLineitem2).addOperator(sample2).setHashIndexes(hash);
+				+ secondSrcFile + extension).addOperator(projectionLineitem2).addOperator(sample2).setHashIndexes(hash);
+		_queryBuilder.add(relation2);
 		
 		OkcanSampleMatrixComponent okcanComp = new OkcanSampleMatrixComponent(relation1, relation2, keyType, comparison, 
-				numLastJoiners, firstNumOfBuckets, secondNumOfBuckets, _queryPlan);
+				numLastJoiners, firstNumOfBuckets, secondNumOfBuckets);
+		_queryBuilder.add(okcanComp);
 	}
 
-	public QueryPlan getQueryPlan() {
-		return _queryPlan;
+	public QueryBuilder getQueryPlan() {
+		return _queryBuilder;
 	}
 }

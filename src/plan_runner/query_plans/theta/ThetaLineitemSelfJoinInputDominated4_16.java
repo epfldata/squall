@@ -1,4 +1,4 @@
-package plan_runner.query_plans.ewh;
+package plan_runner.query_plans.theta;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -24,17 +24,17 @@ import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.OrPredicate;
-import plan_runner.query_plans.QueryPlan;
-import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
+import plan_runner.query_plans.QueryBuilder;
 
-public class ThetaLineitemSelfJoinInputDominated2_32 {
+public class ThetaLineitemSelfJoinInputDominated4_16 {
 
 	/* For 0.01G
-	 * Input: 873 + 15010
-	 * Output: 2719
+	 * Input: 3530 + 15010
+	 * Output = 10559
+
 	 */
 
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryPlan = new QueryBuilder();
 	private static final String _date1Str = "1993-06-17";
 	private static final TypeConversion<Date> _dateConv = new DateConversion();
 	//	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();   
@@ -45,7 +45,7 @@ public class ThetaLineitemSelfJoinInputDominated2_32 {
 	private static final IntegerConversion _ic = new IntegerConversion();
 	private static final DoubleConversion _dblConv = new DoubleConversion();
 
-	public ThetaLineitemSelfJoinInputDominated2_32(String dataPath, String extension, Map conf) {
+	public ThetaLineitemSelfJoinInputDominated4_16(String dataPath, String extension, Map conf) {
 
 		int Theta_JoinType = ThetaQueryPlansParameters.getThetaJoinType(conf);
 
@@ -56,7 +56,7 @@ public class ThetaLineitemSelfJoinInputDominated2_32 {
 		ComparisonPredicate comp1 = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP,
 				new ColumnReference(_stringConv, 14), new ValueSpecification(_stringConv, "TRUCK"));
 		ComparisonPredicate comp2 = new ComparisonPredicate(ComparisonPredicate.GREATER_OP,
-				new ColumnReference(_ic, 4), new ValueSpecification(_ic, 45));
+				new ColumnReference(_ic, 4), new ValueSpecification(_ic, 30));
 
 		AndPredicate and = new AndPredicate(comp1, comp2);
 		SelectOperator selectionOrders1 = new SelectOperator(and);
@@ -107,12 +107,11 @@ public class ThetaLineitemSelfJoinInputDominated2_32 {
 				pred5).setContentSensitiveThetaJoinWrapper(_ic);
 		//     .addOperator(agg)
 		;
-
 		LINEITEMS_LINEITEMSjoin.setPrintOut(false);
 
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 }

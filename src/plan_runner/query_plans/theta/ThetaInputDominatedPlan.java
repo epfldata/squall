@@ -24,13 +24,13 @@ import plan_runner.operators.AggregateSumOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.ComparisonPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 
 public class ThetaInputDominatedPlan {
 
 	private static Logger LOG = Logger.getLogger(ThetaInputDominatedPlan.class);
 
-	private final QueryPlan _queryPlan = new QueryPlan();
+	private final QueryBuilder _queryPlan = new QueryBuilder();
 
 	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
 	private static final IntegerConversion _ic = new IntegerConversion();
@@ -98,7 +98,7 @@ public class ThetaInputDominatedPlan {
 
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 }

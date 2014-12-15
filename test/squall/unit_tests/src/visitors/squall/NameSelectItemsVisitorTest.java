@@ -15,7 +15,7 @@ import plan_runner.expressions.ColumnReference;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.AggregateSumOperator;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import sql.main.ParserMain;
 import sql.schema.ColumnNameType;
 import sql.util.ParserUtil;
@@ -62,7 +62,7 @@ public class NameSelectItemsVisitorTest {
         inputTupleSchema.add(new ColumnNameType("LINEITEM.EXTENDEDPRICE * (1.0 - LINEITEM.DISCOUNT)", _dblConv));
         inputTupleSchema.add(new ColumnNameType("LINEITEM.ORDERKEY", _lc)); // not used
         
-        DataSourceComponent source = new DataSourceComponent("TestFullExprs", "", new QueryPlan());
+        DataSourceComponent source = new DataSourceComponent("TestFullExprs", "", new QueryBuilder());
         
         NameSelectItemsVisitor selectVisitor = new NameSelectItemsVisitor(new TupleSchema(inputTupleSchema), _map, source);
         for(SelectItem elem: _pq.getSelectItems()){

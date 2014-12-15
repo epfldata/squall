@@ -34,7 +34,7 @@ import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.OrPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
@@ -44,7 +44,7 @@ import plan_runner.utilities.SystemParameters.HistogramType;
 public class ThetaEWHBandJPS {
 	private static Logger LOG = Logger.getLogger(ThetaEWHBandJPS.class);	
 	
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final TypeConversion<String> _stringConv = new StringConversion();
 	private static final IntegerConversion _ic = new IntegerConversion();
 	private DateIntegerConversion _dic = new DateIntegerConversion();
@@ -84,20 +84,24 @@ public class ThetaEWHBandJPS {
 		if(!isMaterialized){		
 			// build relations
 			relationJPS1 = new DataSourceComponent("JPS1", dataPath
-					+ "jps_1" + extension, _queryPlan).addOperator(print1).addOperator(
+					+ "jps_1" + extension).addOperator(print1).addOperator(
 					projectionJPS1).setHashIndexes(hashJPS1);
+			_queryBuilder.add(relationJPS1);
 			
 			relationJPS2 = new DataSourceComponent("JPS2", dataPath
-					+ "jps_2" + extension, _queryPlan).addOperator(print2).addOperator(
+					+ "jps_2" + extension).addOperator(print2).addOperator(
 					projectionJPS2).setHashIndexes(hashJPS2);
+			_queryBuilder.add(relationJPS2);
 		}else{
 			relationJPS1 = new DataSourceComponent("JPS1", dataPath
-					+ matName1 + extension, _queryPlan).addOperator(print1).addOperator(
+					+ matName1 + extension).addOperator(print1).addOperator(
 					projectionJPS1).setHashIndexes(hashJPS1);
+			_queryBuilder.add(relationJPS1);
 			
 			relationJPS2 = new DataSourceComponent("JPS2", dataPath
-					+ matName2 + extension, _queryPlan).addOperator(print2).addOperator(
+					+ matName2 + extension).addOperator(print2).addOperator(
 					projectionJPS2).setHashIndexes(hashJPS2);
+			_queryBuilder.add(relationJPS2);
 		}
 	
 		
@@ -115,14 +119,14 @@ public class ThetaEWHBandJPS {
 			relationJPS1.setPrintOut(false);
 			relationJPS2.setPrintOut(false);
 		}else if(isSrcHistogram){
-			_queryPlan = MyUtilities.addSrcHistogram(relationJPS1, firstKeyProject, relationJPS2, secondKeyProject, 
+			_queryBuilder = MyUtilities.addSrcHistogram(relationJPS1, firstKeyProject, relationJPS2, secondKeyProject, 
 					keyType, comparison, isEWHD2Histogram, isEWHS1Histogram, conf);
 		}else if(isOkcanSampling){
-			_queryPlan = MyUtilities.addOkcanSampler(relationJPS1, relationJPS2, firstKeyProject, secondKeyProject,
-					_queryPlan, keyType, comparison, conf);
+			_queryBuilder = MyUtilities.addOkcanSampler(relationJPS1, relationJPS2, firstKeyProject, secondKeyProject,
+					_queryBuilder, keyType, comparison, conf);
 		}else if(isEWHSampling){
-			_queryPlan = MyUtilities.addEWHSampler(relationJPS1, relationJPS2, firstKeyProject, secondKeyProject,
-					_queryPlan, keyType, comparison, conf);
+			_queryBuilder = MyUtilities.addEWHSampler(relationJPS1, relationJPS2, firstKeyProject, secondKeyProject,
+					_queryBuilder, keyType, comparison, conf);
 		}else{
 			final int Theta_JoinType = ThetaQueryPlansParameters.getThetaJoinType(conf);
 			final ColumnReference colO1 = new ColumnReference(keyType, firstKeyProject);
@@ -133,18 +137,19 @@ public class ThetaEWHBandJPS {
 
 			//AggregateCountOperator agg = new AggregateCountOperator(conf);		
 			Component lastJoiner = ThetaJoinComponentFactory.createThetaJoinOperator(
-					Theta_JoinType, relationJPS1, relationJPS2, _queryPlan).setJoinPredicate(
+					Theta_JoinType, relationJPS1, relationJPS2, _queryBuilder).setJoinPredicate(
 							pred5).setContentSensitiveThetaJoinWrapper(keyType)
 							;
 			// .addOperator(agg)
 			// lastJoiner.setPrintOut(false);
 			
-			DummyComponent dummy = new DummyComponent(lastJoiner, "DUMMY", _queryPlan);
+			DummyComponent dummy = new DummyComponent(lastJoiner, "DUMMY");
+			_queryBuilder.add(dummy);
 		}
 
 	}
 
-	public QueryPlan getQueryPlan() {
-		return _queryPlan;
+	public QueryBuilder getQueryPlan() {
+		return _queryBuilder;
 	}
 }

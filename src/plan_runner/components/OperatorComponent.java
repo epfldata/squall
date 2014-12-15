@@ -10,7 +10,7 @@ import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
 import plan_runner.predicates.Predicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.storm_components.InterchangingComponent;
 import plan_runner.storm_components.StormComponent;
 import plan_runner.storm_components.StormOperator;
@@ -46,14 +46,12 @@ public class OperatorComponent implements Component {
 
 	private List<String> _fullHashList;
 
-	public OperatorComponent(Component parent, String componentName, QueryPlan queryPlan) {
+	public OperatorComponent(Component parent, String componentName) {
 
 		_parent = parent;
 		_parent.setChild(this);
 
 		_componentName = componentName;
-
-		queryPlan.add(this);
 	}
 
 	@Override

@@ -11,16 +11,12 @@ import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
 import plan_runner.predicates.Predicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.storm_components.synchronization.TopologyKiller;
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
 
 public class InterchangingComponent implements Component {
-
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	private final Component _firstParent;
 	private final Component _secondParent;
@@ -35,13 +31,12 @@ public class InterchangingComponent implements Component {
 	private final int _multFactor;
 
 	public InterchangingComponent(Component firstParent, Component secondParent,
-			QueryPlan queryPlan, int multfactor) {
+			int multfactor) {
 		_firstParent = firstParent;
 		_firstParent.setChild(this);
 		_secondParent = secondParent;
 		_secondParent.setChild(this);
 		_componentName = firstParent.getName() + "_" + secondParent.getName() + "_INTER";
-		queryPlan.add(this);
 		_multFactor = multfactor;
 	}
 

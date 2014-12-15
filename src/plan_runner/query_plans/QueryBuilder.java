@@ -6,7 +6,7 @@ import java.util.List;
 
 import plan_runner.components.Component;
 
-public class QueryPlan implements Serializable {
+public class QueryBuilder implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private final List<Component> _plan = new ArrayList<Component>();
 

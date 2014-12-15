@@ -30,7 +30,7 @@ import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.OrPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 import plan_runner.storm_components.StormComponent;
 import plan_runner.storm_components.StormEmitter;
@@ -39,7 +39,7 @@ import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
 
 public class ThetaEWHEquiLineitemOrders {
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final IntegerConversion _ic = new IntegerConversion();
 	private static final StringConversion _stringConv = new StringConversion();
 
@@ -82,8 +82,9 @@ public class ThetaEWHEquiLineitemOrders {
 				ComparisonPredicate.LESS_OP, new ColumnReference(_ic, 3),
 				new ValueSpecification(_ic, 2)));
 		DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension, _queryPlan).addOperator(selectionLineitem).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
-
+				+ "lineitem" + extension).addOperator(selectionLineitem).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
+		_queryBuilder.add(relationLineitem);
+		
 		/*
 		 * 36-6
 		ComparisonPredicate selectionOrdersA = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP,
@@ -95,8 +96,8 @@ public class ThetaEWHEquiLineitemOrders {
 		.addOperator(selectionOrders)
 		*/
 		DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension, _queryPlan).addOperator(projectionOrders).setHashIndexes(hashOrders);
-		
+				+ "orders" + extension).addOperator(projectionOrders).setHashIndexes(hashOrders);
+		_queryBuilder.add(relationOrders);
 
 		NumericConversion keyType = (NumericConversion) _ic;
 		ComparisonPredicate comparison = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP);
@@ -104,11 +105,11 @@ public class ThetaEWHEquiLineitemOrders {
 		int secondKeyProject = 0;
 		
 		if(isOkcanSampling){
-			_queryPlan = MyUtilities.addOkcanSampler(relationLineitem, relationOrders, firstKeyProject, secondKeyProject,
-					_queryPlan, keyType, comparison, conf);
+			_queryBuilder = MyUtilities.addOkcanSampler(relationLineitem, relationOrders, firstKeyProject, secondKeyProject,
+					_queryBuilder, keyType, comparison, conf);
 		}else if(isEWHSampling){
-			_queryPlan = MyUtilities.addEWHSampler(relationLineitem, relationOrders, firstKeyProject, secondKeyProject,
-					_queryPlan, keyType, comparison, conf); 
+			_queryBuilder = MyUtilities.addEWHSampler(relationLineitem, relationOrders, firstKeyProject, secondKeyProject,
+					_queryBuilder, keyType, comparison, conf); 
 		}else{
 			final int Theta_JoinType = ThetaQueryPlansParameters.getThetaJoinType(conf);
 			final ColumnReference colL = new ColumnReference(keyType, firstKeyProject);
@@ -118,17 +119,18 @@ public class ThetaEWHEquiLineitemOrders {
 
 			//AggregateCountOperator agg = new AggregateCountOperator(conf);
 			Component lastJoiner = ThetaJoinComponentFactory
-					.createThetaJoinOperator(Theta_JoinType, relationLineitem, relationOrders, _queryPlan)
+					.createThetaJoinOperator(Theta_JoinType, relationLineitem, relationOrders, _queryBuilder)
 					.setJoinPredicate(L_O_comp).setContentSensitiveThetaJoinWrapper(keyType);
 			//.addOperator(agg)
 			// lastJoiner.setPrintOut(false);
 			
-			DummyComponent dummy = new DummyComponent(lastJoiner, "DUMMY", _queryPlan);
+			DummyComponent dummy = new DummyComponent(lastJoiner, "DUMMY");
+			_queryBuilder.add(dummy);
 		}
 
 	}
 
-	public QueryPlan getQueryPlan() {
-		return _queryPlan;
+	public QueryBuilder getQueryPlan() {
+		return _queryBuilder;
 	}
 }

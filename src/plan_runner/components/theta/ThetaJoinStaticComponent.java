@@ -12,7 +12,7 @@ import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
 import plan_runner.predicates.Predicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.storm_components.InterchangingComponent;
 import plan_runner.storm_components.StormBoltComponent;
 import plan_runner.storm_components.StormComponent;
@@ -45,16 +45,13 @@ public class ThetaJoinStaticComponent implements Component {
 	//equi-weight histogram
 	private boolean _isPartitioner; 
 	
-	public ThetaJoinStaticComponent(Component firstParent, Component secondParent,
-			QueryPlan queryPlan, boolean isContentSensitive) {
+	public ThetaJoinStaticComponent(Component firstParent, Component secondParent, boolean isContentSensitive) {
 		_firstParent = firstParent;
 		_firstParent.setChild(this);
 		_secondParent = secondParent;
 		_secondParent.setChild(this);
 		_componentName = firstParent.getName() + "_" + secondParent.getName();
 		_isContentSensitive=isContentSensitive;
-
-		queryPlan.add(this);
 	}
 
 	@Override

@@ -35,7 +35,7 @@ public class TPCH9Plan {
 
 	private static final String COLOR = "%green%";
 
-	private final QueryPlan _queryPlan = new QueryPlan();
+	private final QueryBuilder _queryPlan = new QueryBuilder();
 
 	public TPCH9Plan(String dataPath, String extension, Map conf) {
 		// -------------------------------------------------------------------------------------
@@ -142,7 +142,7 @@ public class TPCH9Plan {
 
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 }

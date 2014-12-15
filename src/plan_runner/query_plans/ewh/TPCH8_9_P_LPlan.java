@@ -18,7 +18,7 @@ import plan_runner.conversion.TypeConversion;
 import plan_runner.expressions.ColumnReference;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.predicates.ComparisonPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 
 public class TPCH8_9_P_LPlan {
     private static Logger LOG = Logger.getLogger(TPCH8_9_P_LPlan.class);
@@ -29,7 +29,7 @@ public class TPCH8_9_P_LPlan {
     
     private static final String COLOR = "%green%";
 
-    private QueryPlan _queryPlan = new QueryPlan();
+    private QueryBuilder _queryPlan = new QueryBuilder();
     
     private static final IntegerConversion _ic = new IntegerConversion();	    
 
@@ -88,7 +88,7 @@ public class TPCH8_9_P_LPlan {
 
     }
 
-    public QueryPlan getQueryPlan() {
+    public QueryBuilder getQueryPlan() {
         return _queryPlan;
     }
 }

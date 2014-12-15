@@ -30,7 +30,7 @@ import plan_runner.predicates.ComparisonPredicate;
 public class TPCH8Plan {
 	private static Logger LOG = Logger.getLogger(TPCH8Plan.class);
 
-	private final QueryPlan _queryPlan = new QueryPlan();
+	private final QueryBuilder _queryPlan = new QueryBuilder();
 
 	private static final String _region = "AMERICA";
 	private static final String _type = "ECONOMY ANODIZED STEEL";
@@ -188,7 +188,7 @@ public class TPCH8Plan {
 
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 }

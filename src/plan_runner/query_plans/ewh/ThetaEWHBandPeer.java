@@ -30,13 +30,13 @@ import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.OrPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
 
 public class ThetaEWHBandPeer {
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final TypeConversion<String> _stringConv = new StringConversion();
 	private static final IntegerConversion _ic = new IntegerConversion();
 	private DateIntegerConversion _dic = new DateIntegerConversion();
@@ -83,18 +83,22 @@ public class ThetaEWHBandPeer {
 			
 			// build relations
 			relationPeer1 = new DataSourceComponent("PEER1", dataPath
-					+ "peersnapshot-01" + extension, _queryPlan).addOperator(selectionPeer1).addOperator(print1).addOperator(
+					+ "peersnapshot-01" + extension).addOperator(selectionPeer1).addOperator(print1).addOperator(
 					projectionPeer1).setHashIndexes(hashPeer1);
+			_queryBuilder.add(relationPeer1);
 			
 			relationPeer2 = new DataSourceComponent("PEER2", dataPath
-					+ "peersnapshot-01" + extension, _queryPlan).addOperator(selectionPeer2).addOperator(print2).addOperator(
+					+ "peersnapshot-01" + extension).addOperator(selectionPeer2).addOperator(print2).addOperator(
 					projectionPeer2).setHashIndexes(hashPeer2);
+			_queryBuilder.add(relationPeer2);
 		}else{
 			relationPeer1 = new DataSourceComponent("PEER1", dataPath
-					+ matName1 + extension, _queryPlan).addOperator(projectionPeer1).setHashIndexes(hashPeer1);
-
+					+ matName1 + extension).addOperator(projectionPeer1).setHashIndexes(hashPeer1);
+			_queryBuilder.add(relationPeer1);
+			
 			relationPeer2 = new DataSourceComponent("PEER1", dataPath
-					+ matName2 + extension, _queryPlan).addOperator(projectionPeer2).setHashIndexes(hashPeer2);
+					+ matName2 + extension).addOperator(projectionPeer2).setHashIndexes(hashPeer2);
+			_queryBuilder.add(relationPeer2);
 		}
 	
 		
@@ -108,11 +112,11 @@ public class ThetaEWHBandPeer {
 			relationPeer1.setPrintOut(false);
 			relationPeer2.setPrintOut(false);
 		}else if(isOkcanSampling){
-			_queryPlan = MyUtilities.addOkcanSampler(relationPeer1, relationPeer2, firstKeyProject, secondKeyProject,
-					_queryPlan, keyType, comparison, conf);
+			_queryBuilder = MyUtilities.addOkcanSampler(relationPeer1, relationPeer2, firstKeyProject, secondKeyProject,
+					_queryBuilder, keyType, comparison, conf);
 		}else if(isEWHSampling){
-			_queryPlan = MyUtilities.addEWHSampler(relationPeer1, relationPeer2, firstKeyProject, secondKeyProject,
-					_queryPlan, keyType, comparison, conf); 
+			_queryBuilder = MyUtilities.addEWHSampler(relationPeer1, relationPeer2, firstKeyProject, secondKeyProject,
+					_queryBuilder, keyType, comparison, conf); 
 		}else{
 			final int Theta_JoinType = ThetaQueryPlansParameters.getThetaJoinType(conf);
 			final ColumnReference colO1 = new ColumnReference(keyType, firstKeyProject);
@@ -123,18 +127,19 @@ public class ThetaEWHBandPeer {
 
 			//AggregateCountOperator agg = new AggregateCountOperator(conf);		
 			Component lastJoiner = ThetaJoinComponentFactory.createThetaJoinOperator(
-					Theta_JoinType, relationPeer1, relationPeer2, _queryPlan).setJoinPredicate(
+					Theta_JoinType, relationPeer1, relationPeer2, _queryBuilder).setJoinPredicate(
 							pred5).setContentSensitiveThetaJoinWrapper(keyType)
 							;
 			// .addOperator(agg)
 			// lastJoiner.setPrintOut(false);
 			
-			DummyComponent dummy = new DummyComponent(lastJoiner, "DUMMY", _queryPlan);
+			DummyComponent dummy = new DummyComponent(lastJoiner, "DUMMY");
+			_queryBuilder.add(dummy);
 		}
 
 	}
 
-	public QueryPlan getQueryPlan() {
-		return _queryPlan;
+	public QueryBuilder getQueryPlan() {
+		return _queryBuilder;
 	}
 }

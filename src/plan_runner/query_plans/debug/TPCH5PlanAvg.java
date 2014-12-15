@@ -28,7 +28,7 @@ import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.BetweenPredicate;
 import plan_runner.predicates.ComparisonPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 
 public class TPCH5PlanAvg {
 	private static Logger LOG = Logger.getLogger(TPCH5PlanAvg.class);
@@ -37,7 +37,7 @@ public class TPCH5PlanAvg {
 	private static final TypeConversion<String> _sc = new StringConversion();
 	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
 
-	private final QueryPlan _queryPlan = new QueryPlan();
+	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
 	// query variables
 	private static Date _date1, _date2;
@@ -72,68 +72,79 @@ public class TPCH5PlanAvg {
 		final ProjectOperator projectionRegion = new ProjectOperator(new int[] { 0 });
 
 		final DataSourceComponent relationRegion = new DataSourceComponent("REGION", dataPath
-				+ "region" + extension, _queryPlan).setHashIndexes(hashRegion)
+				+ "region" + extension).setHashIndexes(hashRegion)
 				.addOperator(selectionRegion).addOperator(projectionRegion);
-
+		_queryBuilder.add(relationRegion);
+		
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashNation = Arrays.asList(2);
 
 		final ProjectOperator projectionNation = new ProjectOperator(new int[] { 0, 1, 2 });
 
 		final DataSourceComponent relationNation = new DataSourceComponent("NATION", dataPath
-				+ "nation" + extension, _queryPlan).setHashIndexes(hashNation).addOperator(
+				+ "nation" + extension).setHashIndexes(hashNation).addOperator(
 				projectionNation);
+		_queryBuilder.add(relationNation);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashRN = Arrays.asList(0);
 
 		final ProjectOperator projectionRN = new ProjectOperator(new int[] { 1, 2 });
 
-		final EquiJoinComponent R_Njoin = new EquiJoinComponent(relationRegion, relationNation,
-				_queryPlan).setHashIndexes(hashRN).addOperator(projectionRN);
-
+		final EquiJoinComponent R_Njoin = new EquiJoinComponent(relationRegion,
+				relationNation).setHashIndexes(hashRN)
+				.addOperator(projectionRN);
+		_queryBuilder.add(R_Njoin);
+		
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashSupplier = Arrays.asList(1);
 
 		final ProjectOperator projectionSupplier = new ProjectOperator(new int[] { 0, 3 });
 
 		final DataSourceComponent relationSupplier = new DataSourceComponent("SUPPLIER", dataPath
-				+ "supplier" + extension, _queryPlan).setHashIndexes(hashSupplier).addOperator(
+				+ "supplier" + extension).setHashIndexes(hashSupplier).addOperator(
 				projectionSupplier);
+		_queryBuilder.add(relationSupplier);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashRNS = Arrays.asList(2);
 
 		final ProjectOperator projectionRNS = new ProjectOperator(new int[] { 0, 1, 2 });
 
-		final EquiJoinComponent R_N_Sjoin = new EquiJoinComponent(R_Njoin, relationSupplier,
-				_queryPlan).setHashIndexes(hashRNS).addOperator(projectionRNS);
-
+		final EquiJoinComponent R_N_Sjoin = new EquiJoinComponent(R_Njoin,
+				relationSupplier).setHashIndexes(hashRNS).addOperator(
+				projectionRNS);
+		_queryBuilder.add(R_N_Sjoin);
+		
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashLineitem = Arrays.asList(1);
 
 		final ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0, 2, 5, 6 });
 
 		final DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension, _queryPlan).setHashIndexes(hashLineitem).addOperator(
+				+ "lineitem" + extension).setHashIndexes(hashLineitem).addOperator(
 				projectionLineitem);
+		_queryBuilder.add(relationLineitem);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashRNSL = Arrays.asList(0, 2);
 
 		final ProjectOperator projectionRNSL = new ProjectOperator(new int[] { 0, 1, 3, 4, 5 });
 
-		final EquiJoinComponent R_N_S_Ljoin = new EquiJoinComponent(R_N_Sjoin, relationLineitem,
-				_queryPlan).setHashIndexes(hashRNSL).addOperator(projectionRNSL);
-
+		final EquiJoinComponent R_N_S_Ljoin = new EquiJoinComponent(R_N_Sjoin,
+				relationLineitem).setHashIndexes(hashRNSL).addOperator(
+				projectionRNSL);
+		_queryBuilder.add(R_N_S_Ljoin);
+		
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashCustomer = Arrays.asList(0);
 
 		final ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0, 3 });
 
 		final DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath
-				+ "customer" + extension, _queryPlan).setHashIndexes(hashCustomer).addOperator(
+				+ "customer" + extension).setHashIndexes(hashCustomer).addOperator(
 				projectionCustomer);
+		_queryBuilder.add(relationCustomer);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashOrders = Arrays.asList(1);
@@ -145,25 +156,30 @@ public class TPCH5PlanAvg {
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 1 });
 
 		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension, _queryPlan).setHashIndexes(hashOrders)
+				+ "orders" + extension).setHashIndexes(hashOrders)
 				.addOperator(selectionOrders).addOperator(projectionOrders);
-
+		_queryBuilder.add(relationOrders);
+		
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashCO = Arrays.asList(0, 1);
 
 		final ProjectOperator projectionCO = new ProjectOperator(new int[] { 1, 2 });
 
-		final EquiJoinComponent C_Ojoin = new EquiJoinComponent(relationCustomer, relationOrders,
-				_queryPlan).setHashIndexes(hashCO).addOperator(projectionCO);
+		final EquiJoinComponent C_Ojoin = new EquiJoinComponent(
+				relationCustomer, relationOrders).setHashIndexes(hashCO)
+				.addOperator(projectionCO);
+		_queryBuilder.add(C_Ojoin);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashRNSLCO = Arrays.asList(0);
 
 		final ProjectOperator projectionRNSLCO = new ProjectOperator(new int[] { 1, 3, 4 });
 
-		final EquiJoinComponent R_N_S_L_C_Ojoin = new EquiJoinComponent(R_N_S_Ljoin, C_Ojoin,
-				_queryPlan).setHashIndexes(hashRNSLCO).addOperator(projectionRNSLCO);
-
+		final EquiJoinComponent R_N_S_L_C_Ojoin = new EquiJoinComponent(
+				R_N_S_Ljoin, C_Ojoin).setHashIndexes(hashRNSLCO).addOperator(
+				projectionRNSLCO);
+		_queryBuilder.add(R_N_S_L_C_Ojoin);
+		
 		// -------------------------------------------------------------------------------------
 		// set up aggregation function on a separate StormComponent(Bolt)
 
@@ -175,12 +191,13 @@ public class TPCH5PlanAvg {
 
 		final AggregateOperator aggOp = new AggregateAvgOperator(product, conf)
 				.setGroupByColumns(Arrays.asList(0));
-		new OperatorComponent(R_N_S_L_C_Ojoin, "FINAL_RESULT", _queryPlan).addOperator(aggOp);
+		OperatorComponent oc = new OperatorComponent(R_N_S_L_C_Ojoin, "FINAL_RESULT").addOperator(aggOp);
+		_queryBuilder.add(oc);
 
 		// -------------------------------------------------------------------------------------
 	}
 
-	public QueryPlan getQueryPlan() {
-		return _queryPlan;
+	public QueryBuilder getQueryPlan() {
+		return _queryBuilder;
 	}
 }

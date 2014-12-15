@@ -16,7 +16,7 @@ import plan_runner.conversion.StringConversion;
 import plan_runner.expressions.ColumnReference;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.predicates.ComparisonPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 
 public class ThetaTPCH8_9_P_LPlan {
@@ -25,7 +25,7 @@ public class ThetaTPCH8_9_P_LPlan {
 	private static final StringConversion _sc = new StringConversion();
 	private static final IntegerConversion _ic = new IntegerConversion();
 
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryPlan = new QueryBuilder();
 
 	public ThetaTPCH8_9_P_LPlan(String dataPath, String extension, Map conf) {
 		int Theta_JoinType = ThetaQueryPlansParameters.getThetaJoinType(conf);
@@ -67,7 +67,7 @@ public class ThetaTPCH8_9_P_LPlan {
 		//-------------------------------------------------------------------------------------
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 }

@@ -21,7 +21,7 @@ import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
 import plan_runner.predicates.Predicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.storm_components.InterchangingComponent;
 import plan_runner.storm_components.StormComponent;
 import plan_runner.storm_components.StormEmitter;
@@ -55,8 +55,7 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 	private int _joinerParallelism;
 	private InterchangingComponent _interComp = null;
 
-	public ThetaJoinDynamicComponentAdvisedEpochs(Component firstParent, Component secondParent,
-			QueryPlan queryPlan) {
+	public ThetaJoinDynamicComponentAdvisedEpochs(Component firstParent, Component secondParent) {
 		_firstParent = firstParent;
 		_firstParent.setChild(this);
 		_secondParent = secondParent;
@@ -66,7 +65,6 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 		} else
 			_componentName = new String(firstParent.getName().split("-")[0]) + "_"
 					+ new String(firstParent.getName().split("-")[1]);
-		queryPlan.add(this);
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package plan_runner.query_plans.ewh;
+package plan_runner.query_plans.theta;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -21,21 +21,19 @@ import plan_runner.expressions.ValueSpecification;
 import plan_runner.operators.AggregateCountOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
-import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.OrPredicate;
-import plan_runner.query_plans.QueryPlan;
-import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
+import plan_runner.query_plans.QueryBuilder;
 
-public class ThetaLineitemSelfJoinInputDominated4_16 {
+public class ThetaLineitemSelfJoinInputDominated8_8 {
 
 	/* For 0.01G
-	 * Input: 3530 + 15010
-	 * Output = 10559
+	 * Input: 15010 + 15010
+	 * Output = 56346
 
 	 */
 
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryPlan = new QueryBuilder();
 	private static final String _date1Str = "1993-06-17";
 	private static final TypeConversion<Date> _dateConv = new DateConversion();
 	//	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();   
@@ -46,7 +44,7 @@ public class ThetaLineitemSelfJoinInputDominated4_16 {
 	private static final IntegerConversion _ic = new IntegerConversion();
 	private static final DoubleConversion _dblConv = new DoubleConversion();
 
-	public ThetaLineitemSelfJoinInputDominated4_16(String dataPath, String extension, Map conf) {
+	public ThetaLineitemSelfJoinInputDominated8_8(String dataPath, String extension, Map conf) {
 
 		int Theta_JoinType = ThetaQueryPlansParameters.getThetaJoinType(conf);
 
@@ -54,13 +52,15 @@ public class ThetaLineitemSelfJoinInputDominated4_16 {
 		ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 10, 12, 11, 13, 4, 0 });
 		final List<Integer> hashLineitem = Arrays.asList(5);
 		
-		ComparisonPredicate comp1 = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP,
-				new ColumnReference(_stringConv, 14), new ValueSpecification(_stringConv, "TRUCK"));
-		ComparisonPredicate comp2 = new ComparisonPredicate(ComparisonPredicate.GREATER_OP,
-				new ColumnReference(_ic, 4), new ValueSpecification(_ic, 30));
-
+		/*
+		ComparisonPredicate comp1= new ComparisonPredicate(ComparisonPredicate.EQUAL_OP, new ColumnReference(_stringConv, 14), new ValueSpecification(_stringConv, "TRUCK"));
+		ComparisonPredicate comp2 = new ComparisonPredicate(ComparisonPredicate.GREATER_OP,new ColumnReference(_ic, 4), new ValueSpecification(_ic,0));
 		AndPredicate and = new AndPredicate(comp1, comp2);
-		SelectOperator selectionOrders1 = new SelectOperator(and);
+		*/
+		ComparisonPredicate comp = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP,
+				new ColumnReference(_stringConv, 13), new ValueSpecification(_stringConv, "NONE"));
+
+		SelectOperator selectionOrders1 = new SelectOperator(comp);
 
 		DataSourceComponent relationLineitem1 = new DataSourceComponent("LINEITEM1", dataPath
 				+ "lineitem" + extension, _queryPlan).addOperator(selectionOrders1).addOperator(
@@ -108,11 +108,12 @@ public class ThetaLineitemSelfJoinInputDominated4_16 {
 				pred5).setContentSensitiveThetaJoinWrapper(_ic);
 		//     .addOperator(agg)
 		;
+
 		LINEITEMS_LINEITEMSjoin.setPrintOut(false);
 
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 }

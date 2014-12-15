@@ -5,7 +5,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import plan_runner.main.Main;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.Optimizer;
 import sql.optimizers.index.IndexRuleOptimizer;
@@ -26,7 +26,7 @@ public class ParserMain {
 
 		Map map = pm.createConfig(parserConfPath);
 		// map has to filled before plan is created
-		final QueryPlan plan = pm.generatePlan(map);
+		final QueryBuilder plan = pm.generatePlan(map);
 		// we have to set ackers after we know how many workers are there(which
 		// is done in generatePlan)
 		map = pm.putAckers(plan, map);
@@ -50,7 +50,7 @@ public class ParserMain {
 		return map;
 	}
 
-	public QueryPlan generatePlan(Map map) {
+	public QueryBuilder generatePlan(Map map) {
 		final Optimizer opt = pickOptimizer(map);
 		return opt.generate();
 	}
@@ -76,7 +76,7 @@ public class ParserMain {
 		throw new RuntimeException("Unknown " + optStr + " optimizer!");
 	}
 
-	private Map putAckers(QueryPlan plan, Map map) {
+	private Map putAckers(QueryBuilder plan, Map map) {
 		final int numWorkers = ParserUtil.getTotalParallelism(plan, map);
 		int localAckers, clusterAckers;
 

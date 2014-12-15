@@ -9,7 +9,7 @@ import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
 import plan_runner.components.EquiJoinComponent;
 import plan_runner.expressions.ValueExpression;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.CompGen;
 import sql.schema.Schema;
@@ -28,7 +28,7 @@ public class IndexCompGen implements CompGen {
 	private final String _dataPath;
 	private final String _extension;
 
-	private final QueryPlan _queryPlan = new QueryPlan();
+	private final QueryBuilder _queryPlan = new QueryBuilder();
 
 	// List of Components which are already added throughEquiJoinComponent and
 	// OperatorComponent
@@ -109,7 +109,7 @@ public class IndexCompGen implements CompGen {
 	}
 
 	@Override
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 

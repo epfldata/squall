@@ -32,7 +32,7 @@ import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.OrPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
@@ -40,7 +40,7 @@ import plan_runner.utilities.SystemParameters.HistogramType;
 
 public class ThetaEWHBandOrdersOrderkeyCustkeyJoin {
 	private static Logger LOG = Logger.getLogger(ThetaEWHBandOrdersOrderkeyCustkeyJoin.class);	
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final TypeConversion<String> _stringConv = new StringConversion();
 	private static final IntegerConversion _ic = new IntegerConversion();
 	private DateIntegerConversion _dic = new DateIntegerConversion();
@@ -105,19 +105,23 @@ public class ThetaEWHBandOrdersOrderkeyCustkeyJoin {
 		
 		if(!isMaterialized){
 			relationOrders1 = new DataSourceComponent("ORDERS1", dataPath
-					+ "orders" + extension, _queryPlan).addOperator(print1).addOperator(
+					+ "orders" + extension).addOperator(print1).addOperator(
 					projectionLineitem1).setHashIndexes(hashLineitem);
+			_queryBuilder.add(relationOrders1);
 			
 			relationOrders2 = new DataSourceComponent("ORDERS2", dataPath
-					+ "orders" + extension, _queryPlan).addOperator(print2).addOperator(
+					+ "orders" + extension).addOperator(print2).addOperator(
 					projectionLineitem2).setHashIndexes(hashLineitem);
+			_queryBuilder.add(relationOrders2);
 		}else{
 			// WATCH OUT ON PROJECTIONS AFTER MATERIALIZATIONS
 			relationOrders1 = new DataSourceComponent("ORDERS1", dataPath
-					+ matName1 + extension, _queryPlan).addOperator(projectionLineitem1).setHashIndexes(hashLineitem);
+					+ matName1 + extension).addOperator(projectionLineitem1).setHashIndexes(hashLineitem);
+			_queryBuilder.add(relationOrders1);
 
 			relationOrders2 = new DataSourceComponent("LINEITEM2", dataPath
-					+ matName2 + extension, _queryPlan).addOperator(projectionLineitem2).setHashIndexes(hashLineitem);
+					+ matName2 + extension).addOperator(projectionLineitem2).setHashIndexes(hashLineitem);
+			_queryBuilder.add(relationOrders2);
 		}
 	
 		
@@ -144,14 +148,14 @@ public class ThetaEWHBandOrdersOrderkeyCustkeyJoin {
 			relationOrders1.setPrintOut(false);
 			relationOrders2.setPrintOut(false);
 		}else if(isSrcHistogram){
-			_queryPlan = MyUtilities.addSrcHistogram(relationOrders1, firstKeyProject, relationOrders2, secondKeyProject, 
+			_queryBuilder = MyUtilities.addSrcHistogram(relationOrders1, firstKeyProject, relationOrders2, secondKeyProject, 
 					keyType, comparison, isEWHD2Histogram, isEWHS1Histogram, conf);
 		}else if(isOkcanSampling){
-			_queryPlan = MyUtilities.addOkcanSampler(relationOrders1, relationOrders2, firstKeyProject, secondKeyProject,
-					_queryPlan, keyType, comparison, conf);
+			_queryBuilder = MyUtilities.addOkcanSampler(relationOrders1, relationOrders2, firstKeyProject, secondKeyProject,
+					_queryBuilder, keyType, comparison, conf);
 		}else if(isEWHSampling){
-			_queryPlan = MyUtilities.addEWHSampler(relationOrders1, relationOrders2, firstKeyProject, secondKeyProject,
-					_queryPlan, keyType, comparison, conf); 
+			_queryBuilder = MyUtilities.addEWHSampler(relationOrders1, relationOrders2, firstKeyProject, secondKeyProject,
+					_queryBuilder, keyType, comparison, conf); 
 		}else{
 			final int Theta_JoinType = ThetaQueryPlansParameters.getThetaJoinType(conf);
 			final ColumnReference colO1 = new ColumnReference(keyType, firstKeyProject);
@@ -162,18 +166,19 @@ public class ThetaEWHBandOrdersOrderkeyCustkeyJoin {
 
 			//AggregateCountOperator agg = new AggregateCountOperator(conf);		
 			Component lastJoiner = ThetaJoinComponentFactory.createThetaJoinOperator(
-					Theta_JoinType, relationOrders1, relationOrders2, _queryPlan).setJoinPredicate(
+					Theta_JoinType, relationOrders1, relationOrders2, _queryBuilder).setJoinPredicate(
 							pred5).setContentSensitiveThetaJoinWrapper(keyType)
 							;
 			// .addOperator(agg)
 			// lastJoiner.setPrintOut(false);
 			
-			DummyComponent dummy = new DummyComponent(lastJoiner, "DUMMY", _queryPlan);
+			DummyComponent dummy = new DummyComponent(lastJoiner, "DUMMY");
+			_queryBuilder.add(dummy);
 		}
 
 	}
 
-	public QueryPlan getQueryPlan() {
-		return _queryPlan;
+	public QueryBuilder getQueryPlan() {
+		return _queryBuilder;
 	}
 }

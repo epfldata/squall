@@ -17,13 +17,13 @@ import plan_runner.expressions.ColumnReference;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.AggregateSumOperator;
 import plan_runner.operators.ProjectOperator;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 
 public class ThetaOutputDominatedPlan {
 
 	private static Logger LOG = Logger.getLogger(ThetaOutputDominatedPlan.class);
 
-	private final QueryPlan _queryPlan = new QueryPlan();
+	private final QueryBuilder _queryPlan = new QueryBuilder();
 
 	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
 
@@ -64,7 +64,7 @@ public class ThetaOutputDominatedPlan {
 
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 }

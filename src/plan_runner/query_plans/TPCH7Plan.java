@@ -32,7 +32,7 @@ import plan_runner.predicates.OrPredicate;
 public class TPCH7Plan {
 	private static Logger LOG = Logger.getLogger(TPCH7Plan.class);
 
-	private final QueryPlan _queryPlan = new QueryPlan();
+	private final QueryBuilder _queryPlan = new QueryBuilder();
 
 	private static final String _date1Str = "1995-01-01";
 	private static final String _date2Str = "1996-12-31";
@@ -164,7 +164,7 @@ public class TPCH7Plan {
 
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 }

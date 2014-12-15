@@ -30,13 +30,13 @@ import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.BetweenPredicate;
 import plan_runner.predicates.ComparisonPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 
 public class ThetaTPCH8Plan {
 	private static Logger LOG = Logger.getLogger(ThetaTPCH8Plan.class);
 
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryPlan = new QueryBuilder();
 
 	// the field nation is not used, since we cannot provide final result if having more final components
 	private static final String _nation = "BRAZIL";
@@ -246,7 +246,7 @@ public class ThetaTPCH8Plan {
 
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 }

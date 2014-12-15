@@ -4,7 +4,7 @@ import java.util.List;
 
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 
 public interface CompGen {
 
@@ -19,7 +19,7 @@ public interface CompGen {
 	 */
 	public Component generateEquiJoin(Component left, Component right);
 
-	public QueryPlan getQueryPlan();
+	public QueryBuilder getQueryPlan();
 
 	public List<Component> getSubPlans();
 

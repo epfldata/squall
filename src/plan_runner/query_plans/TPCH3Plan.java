@@ -45,7 +45,7 @@ public class TPCH3Plan {
 	private static final TypeConversion<String> _sc = new StringConversion();
 	private static final Date _date = _dateConv.fromString(_dateStr);
 
-	private final QueryPlan _queryPlan = new QueryPlan();
+	private final QueryBuilder _queryPlan = new QueryBuilder();
 
 	public TPCH3Plan(String dataPath, String extension, Map conf) {
 
@@ -111,7 +111,7 @@ public class TPCH3Plan {
 
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 }

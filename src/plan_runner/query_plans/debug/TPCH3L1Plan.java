@@ -18,7 +18,7 @@ import plan_runner.expressions.ValueSpecification;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.ComparisonPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 
 public class TPCH3L1Plan {
 	private static Logger LOG = Logger.getLogger(TPCH3L1Plan.class);
@@ -31,7 +31,7 @@ public class TPCH3L1Plan {
 	private static final TypeConversion<String> _sc = new StringConversion();
 	private static final Date _date = _dateConv.fromString(_dateStr);
 
-	private final QueryPlan _queryPlan = new QueryPlan();
+	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
 	public TPCH3L1Plan(String dataPath, String extension, Map conf) {
 
@@ -43,10 +43,11 @@ public class TPCH3L1Plan {
 
 		final ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0 });
 
-		new DataSourceComponent("CUSTOMER", dataPath + "customer" + extension, _queryPlan)
+		DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath + "customer" + extension)
 				.setHashIndexes(hashCustomer).addOperator(selectionCustomer)
 				.addOperator(projectionCustomer).setPrintOut(false);
-
+		_queryBuilder.add(relationCustomer);
+		
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashOrders = Arrays.asList(1);
 
@@ -56,15 +57,16 @@ public class TPCH3L1Plan {
 
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 1, 4, 7 });
 
-		new DataSourceComponent("ORDERS", dataPath + "orders" + extension, _queryPlan)
+		DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath + "orders" + extension)
 				.setHashIndexes(hashOrders).addOperator(selectionOrders)
 				.addOperator(projectionOrders).setPrintOut(false);
-
+		_queryBuilder.add(relationOrders);
+		
 		// -------------------------------------------------------------------------------------
 
 	}
 
-	public QueryPlan getQueryPlan() {
-		return _queryPlan;
+	public QueryBuilder getQueryPlan() {
+		return _queryBuilder;
 	}
 }

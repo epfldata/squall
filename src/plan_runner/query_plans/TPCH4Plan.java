@@ -39,7 +39,7 @@ public class TPCH4Plan {
 
 	private static final TypeConversion<Date> _dc = new DateConversion();
 	private static final IntegerConversion _ic = new IntegerConversion();
-	private final QueryPlan _queryPlan = new QueryPlan();
+	private final QueryBuilder _queryPlan = new QueryBuilder();
 
 	// query variables
 	private static Date _date1, _date2;
@@ -105,7 +105,7 @@ public class TPCH4Plan {
 
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 }

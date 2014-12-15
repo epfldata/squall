@@ -31,7 +31,7 @@ import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.LikePredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 
 public class ThetaTPCH9Plan {
@@ -44,7 +44,7 @@ public class ThetaTPCH9Plan {
 
 	private static final String COLOR = "%green%";
 
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryPlan = new QueryBuilder();
 
 	public ThetaTPCH9Plan(String dataPath, String extension, Map conf) {
 		int Theta_JoinType = ThetaQueryPlansParameters.getThetaJoinType(conf);
@@ -193,7 +193,7 @@ public class ThetaTPCH9Plan {
 
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 }

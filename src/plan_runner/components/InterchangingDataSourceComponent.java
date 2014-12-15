@@ -9,7 +9,7 @@ import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
 import plan_runner.predicates.Predicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.storm_components.InterchangingComponent;
 import plan_runner.storm_components.StormComponent;
 import plan_runner.storm_components.StormInterchangingDataSource;
@@ -42,12 +42,11 @@ public class InterchangingDataSourceComponent implements Component {
 	private final int _multFactor;
 
 	public InterchangingDataSourceComponent(String componentName, String inputPath1,
-			String inputPath2, QueryPlan queryPlan, int multfactor) {
+			String inputPath2, int multfactor) {
 		_componentName = componentName;
 		_inputPathRel1 = inputPath1;
 		_inputPathRel2 = inputPath2;
 		_multFactor = multfactor;
-		queryPlan.add(this);
 	}
 
 	@Override

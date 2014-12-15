@@ -36,7 +36,7 @@ public class TPCH5Plan {
 	private static final TypeConversion<String> _sc = new StringConversion();
 	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
 
-	private final QueryPlan _queryPlan = new QueryPlan();
+	private final QueryBuilder _queryPlan = new QueryBuilder();
 
 	// query variables
 	private static Date _date1, _date2;
@@ -179,7 +179,7 @@ public class TPCH5Plan {
 		// -------------------------------------------------------------------------------------
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 }

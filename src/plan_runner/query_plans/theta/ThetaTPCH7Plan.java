@@ -32,12 +32,12 @@ import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.BetweenPredicate;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.OrPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 
 public class ThetaTPCH7Plan {
 	private static Logger LOG = Logger.getLogger(ThetaTPCH7Plan.class);
 
-	private final QueryPlan _queryPlan = new QueryPlan();
+	private final QueryBuilder _queryPlan = new QueryBuilder();
 
 	private static final IntegerConversion _ic = new IntegerConversion();
 
@@ -204,7 +204,7 @@ public class ThetaTPCH7Plan {
 		//lastJoiner.setPrintOut(false);
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 }

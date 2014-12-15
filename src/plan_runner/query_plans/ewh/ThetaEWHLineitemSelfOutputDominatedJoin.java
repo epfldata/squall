@@ -25,7 +25,7 @@ import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.OrPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
@@ -33,7 +33,7 @@ import plan_runner.utilities.SystemParameters;
 public class ThetaEWHLineitemSelfOutputDominatedJoin {
 	// never actually tried
 
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final TypeConversion<String> _stringConv = new StringConversion();
 	private static final TypeConversion<Integer> _dateIntConv = new DateIntegerConversion();
 	private static final IntegerConversion _ic = new IntegerConversion();
@@ -65,22 +65,25 @@ public class ThetaEWHLineitemSelfOutputDominatedJoin {
 			SelectOperator selectionLineitem1 = new SelectOperator(and1);
 
 			relationLineitem1 = new DataSourceComponent("LINEITEM1", dataPath
-					+ "lineitem" + extension, _queryPlan).addOperator(selectionLineitem1).addOperator(print1).addOperator(
+					+ "lineitem" + extension).addOperator(selectionLineitem1).addOperator(print1).addOperator(
 							projectionLineitem).setHashIndexes(hashLineitem);
-
+			_queryBuilder.add(relationLineitem1);
 
 			SelectOperator selectionLineitem2 = new SelectOperator(new ComparisonPredicate(
 					ComparisonPredicate.NONEQUAL_OP, new ColumnReference(_stringConv, 14),
 					new ValueSpecification(_stringConv, "TRUCK")));			
 			relationLineitem2 = new DataSourceComponent("LINEITEM2", dataPath
-					+ "lineitem" + extension, _queryPlan).addOperator(selectionLineitem2).addOperator(print2).addOperator(
+					+ "lineitem" + extension).addOperator(selectionLineitem2).addOperator(print2).addOperator(
 							projectionLineitem).setHashIndexes(hashLineitem);
+			_queryBuilder.add(relationLineitem2);
 		}else{
 			relationLineitem1 = new DataSourceComponent("LINEITEM1", dataPath
-					+ "bci_ewhod_1" + extension, _queryPlan).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
+					+ "bci_ewhod_1" + extension).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
+			_queryBuilder.add(relationLineitem1);
 
 			relationLineitem2 = new DataSourceComponent("LINEITEM2", dataPath
-					+ "bci_ewhod_2" + extension, _queryPlan).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
+					+ "bci_ewhod_2" + extension).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
+			_queryBuilder.add(relationLineitem2);
 		}
 
 		NumericConversion keyType = (NumericConversion) _dateIntConv;
@@ -92,11 +95,11 @@ public class ThetaEWHLineitemSelfOutputDominatedJoin {
 			relationLineitem1.setPrintOut(false);
 			relationLineitem2.setPrintOut(false);
 		}else if(isOkcanSampling){
-			_queryPlan = MyUtilities.addOkcanSampler(relationLineitem1, relationLineitem2, firstKeyProject, secondKeyProject,
-					_queryPlan, keyType, comparison, conf);
+			_queryBuilder = MyUtilities.addOkcanSampler(relationLineitem1, relationLineitem2, firstKeyProject, secondKeyProject,
+					_queryBuilder, keyType, comparison, conf);
 		}else if(isEWHSampling){
-			_queryPlan = MyUtilities.addEWHSampler(relationLineitem1, relationLineitem2, firstKeyProject, secondKeyProject,
-					_queryPlan, keyType, comparison, conf); 
+			_queryBuilder = MyUtilities.addEWHSampler(relationLineitem1, relationLineitem2, firstKeyProject, secondKeyProject,
+					_queryBuilder, keyType, comparison, conf); 
 		}else{
 			int Theta_JoinType = ThetaQueryPlansParameters.getThetaJoinType(conf);
 			boolean isBDB = MyUtilities.isBDB(conf);
@@ -128,7 +131,7 @@ public class ThetaEWHLineitemSelfOutputDominatedJoin {
 
 			AggregateCountOperator agg = new AggregateCountOperator(conf);		
 			Component LINEITEMS_LINEITEMSjoin = ThetaJoinComponentFactory.createThetaJoinOperator(
-					Theta_JoinType, relationLineitem1, relationLineitem2, _queryPlan).setJoinPredicate(
+					Theta_JoinType, relationLineitem1, relationLineitem2, _queryBuilder).setJoinPredicate(
 							pred5).setContentSensitiveThetaJoinWrapper(keyType)
 							.addOperator(agg)
 							;
@@ -138,7 +141,7 @@ public class ThetaEWHLineitemSelfOutputDominatedJoin {
 
 	}
 
-	public QueryPlan getQueryPlan() {
-		return _queryPlan;
+	public QueryBuilder getQueryPlan() {
+		return _queryBuilder;
 	}
 }

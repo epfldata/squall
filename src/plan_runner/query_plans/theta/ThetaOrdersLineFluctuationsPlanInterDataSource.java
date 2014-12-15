@@ -1,4 +1,4 @@
-package plan_runner.query_plans.ewh;
+package plan_runner.query_plans.theta;
 
 import java.util.Arrays;
 import java.util.List;
@@ -17,13 +17,12 @@ import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.ComparisonPredicate;
-import plan_runner.query_plans.QueryPlan;
-import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.utilities.SystemParameters;
 
 public class ThetaOrdersLineFluctuationsPlanInterDataSource {
 
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryPlan = new QueryBuilder();
 	private static final IntegerConversion _ic = new IntegerConversion();
 	private static final StringConversion _sc = new StringConversion();
 
@@ -103,7 +102,7 @@ public class ThetaOrdersLineFluctuationsPlanInterDataSource {
 
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 

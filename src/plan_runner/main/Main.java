@@ -11,7 +11,7 @@ import plan_runner.components.theta.ThetaJoinDynamicComponentAdvisedEpochs;
 import plan_runner.ewh.components.DummyComponent;
 import plan_runner.query_plans.HyracksPlan;
 import plan_runner.query_plans.HyracksPreAggPlan;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.query_plans.RSTPlan;
 import plan_runner.query_plans.TPCH10Plan;
 import plan_runner.query_plans.TPCH3Plan;
@@ -32,7 +32,6 @@ import plan_runner.query_plans.ewh.OkcanSampleMatrixPlan;
 import plan_runner.query_plans.ewh.TPCH5_R_N_S_LPlan;
 import plan_runner.query_plans.ewh.TPCH7_L_S_N1Plan;
 import plan_runner.query_plans.ewh.TPCH8_9_P_LPlan;
-import plan_runner.query_plans.ewh.ThetaAirLinePlan;
 import plan_runner.query_plans.ewh.ThetaEWHBandJPS;
 import plan_runner.query_plans.ewh.ThetaEWHBandLineitemSelfOrderkeyJoin;
 import plan_runner.query_plans.ewh.ThetaEWHBandOrdersCustkeyCustkeyJoin;
@@ -44,21 +43,21 @@ import plan_runner.query_plans.ewh.ThetaEWHEquiOrdersCustkeyCustkeyJoin;
 import plan_runner.query_plans.ewh.ThetaEWHLineitemSelfOutputDominatedJoin;
 import plan_runner.query_plans.ewh.ThetaEWHOrdersScaleJoin;
 import plan_runner.query_plans.ewh.ThetaEWHPartSuppJoin;
-import plan_runner.query_plans.ewh.ThetaLineitemPricesSelfJoin;
-import plan_runner.query_plans.ewh.ThetaLineitemSelfJoin;
-import plan_runner.query_plans.ewh.ThetaLineitemSelfJoinInputDominated;
-import plan_runner.query_plans.ewh.ThetaLineitemSelfJoinInputDominated2_32;
-import plan_runner.query_plans.ewh.ThetaLineitemSelfJoinInputDominated4_16;
-import plan_runner.query_plans.ewh.ThetaLineitemSelfJoinInputDominated8_8;
-import plan_runner.query_plans.ewh.ThetaOrdersLineFluctuationsPlanInterDataSource;
-import plan_runner.query_plans.ewh.ThetaOrdersSelfJoin;
 import plan_runner.query_plans.ewh.ThetaTPCH3Plan;
 import plan_runner.query_plans.ewh.ThetaTPCH5_R_N_S_LPlan;
 import plan_runner.query_plans.ewh.ThetaTPCH7_L_S_N1Plan;
 import plan_runner.query_plans.ewh.ThetaTPCH8_9_P_LPlan;
 import plan_runner.query_plans.theta.ThetaHyracksPlan;
 import plan_runner.query_plans.theta.ThetaInputDominatedPlan;
+import plan_runner.query_plans.theta.ThetaLineitemPricesSelfJoin;
+import plan_runner.query_plans.theta.ThetaLineitemSelfJoin;
+import plan_runner.query_plans.theta.ThetaLineitemSelfJoinInputDominated;
+import plan_runner.query_plans.theta.ThetaLineitemSelfJoinInputDominated2_32;
+import plan_runner.query_plans.theta.ThetaLineitemSelfJoinInputDominated4_16;
+import plan_runner.query_plans.theta.ThetaLineitemSelfJoinInputDominated8_8;
 import plan_runner.query_plans.theta.ThetaMultipleJoinPlan;
+import plan_runner.query_plans.theta.ThetaOrdersLineFluctuationsPlanInterDataSource;
+import plan_runner.query_plans.theta.ThetaOrdersSelfJoin;
 import plan_runner.query_plans.theta.ThetaOutputDominatedPlan;
 import plan_runner.query_plans.theta.ThetaTPCH10Plan;
 import plan_runner.query_plans.theta.ThetaTPCH4Plan;
@@ -85,7 +84,7 @@ public class Main {
 	public Main(String[] args){
 		String confPath = args[0];
 		Config conf = SystemParameters.fileToStormConfig(confPath);
-		QueryPlan queryPlan = chooseQueryPlan(conf);
+		QueryBuilder queryPlan = chooseQueryPlan(conf);
 
 		//            conf.put(conf.TOPOLOGY_EXECUTOR_RECEIVE_BUFFER_SIZE, 262144);
 		//            conf.put(conf.TOPOLOGY_EXECUTOR_SEND_BUFFER_SIZE, 262144);
@@ -98,7 +97,7 @@ public class Main {
 		StormWrapper.submitTopology(conf, builder);
 	}
 
-	public Main(QueryPlan queryPlan, Map map, String confPath){
+	public Main(QueryBuilder queryPlan, Map map, String confPath){
 		Config conf = SystemParameters.mapToStormConfig(map);
 
 		addVariablesToMap(conf, confPath);
@@ -117,7 +116,7 @@ public class Main {
 
 	//this method is a skeleton for more complex ones
 	//  an optimizer should do this in a smarter way
-	private static void putBatchSizes(QueryPlan plan, Map map) {
+	private static void putBatchSizes(QueryBuilder plan, Map map) {
 		if(SystemParameters.isExisting(map, "BATCH_SIZE")){
 
 			//if the batch mode is specified, but nothing is put in map yet (because other than MANUAL_BATCH optimizer is used)
@@ -142,7 +141,7 @@ public class Main {
 		}
 	} 
 
-	private static TopologyBuilder createTopology(QueryPlan qp, Config conf) {
+	private static TopologyBuilder createTopology(QueryBuilder qp, Config conf) {
 		TopologyBuilder builder = new TopologyBuilder();
 		TopologyKiller killer = new TopologyKiller(builder);
 
@@ -196,7 +195,7 @@ public class Main {
 	}
 
 
-	public static QueryPlan chooseQueryPlan(Map conf){
+	public static QueryBuilder chooseQueryPlan(Map conf){
 		String queryName = SystemParameters.getString(conf, "DIP_QUERY_NAME");
 		//if "/" is the last character, adding one more is not a problem
 		String dataPath = SystemParameters.getString(conf, "DIP_DATA_PATH") + "/";
@@ -205,7 +204,7 @@ public class Main {
 		boolean isOkcanSampling = SystemParameters.isExisting(conf, "DIP_SAMPLING") && SystemParameters.getBoolean(conf, "DIP_SAMPLING");
 		boolean isEWHSampling = SystemParameters.isExisting(conf, "DIP_EWH_SAMPLING") && SystemParameters.getBoolean(conf, "DIP_EWH_SAMPLING");
 
-		QueryPlan queryPlan = null;
+		QueryBuilder queryPlan = null;
 		/*
             if(isSampling && isMaterialized){
             	// still can be used when the query plan code is not adjusted, and the query is materialized
@@ -219,7 +218,7 @@ public class Main {
 		if(queryName.equalsIgnoreCase("rst")){
 			queryPlan = new RSTPlan(dataPath, extension, conf).getQueryPlan();
 		}else if (queryName.equalsIgnoreCase("hyracks")){
-			queryPlan = new HyracksPlan(dataPath, extension, conf).getQueryPlan();
+			queryPlan = new HyracksPlan(dataPath, extension, conf).getQueryBuilder();
 		}else if (queryName.equalsIgnoreCase("hyracks_pre_agg")){
 			queryPlan = new HyracksPreAggPlan(dataPath, extension, conf).getQueryPlan();
 		}else if (queryName.equalsIgnoreCase("hyracks_l1")){
@@ -298,8 +297,6 @@ public class Main {
 			queryPlan = new ThetaLineitemSelfJoinInputDominated8_8(dataPath, extension, conf).getQueryPlan();
 		}else if(queryName.equalsIgnoreCase("theta_lines_self_join_prices")){
 			queryPlan = new ThetaLineitemPricesSelfJoin(dataPath, extension, conf).getQueryPlan();
-		}else if(queryName.equalsIgnoreCase("theta_Airlines_join")){
-			queryPlan = new ThetaAirLinePlan(dataPath, extension, conf).getQueryPlan();
 		}else if(queryName.equalsIgnoreCase("orders_line_fluctuations_join")){
 			queryPlan = new ThetaOrdersLineFluctuationsPlanInterDataSource(dataPath, extension, conf).getQueryPlan();
 		}else if(queryName.equalsIgnoreCase("theta_lineitem_orders_join")){

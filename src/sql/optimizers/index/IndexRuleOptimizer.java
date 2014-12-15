@@ -20,7 +20,7 @@ import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.utilities.DeepCopy;
 import sql.optimizers.Optimizer;
 import sql.schema.Schema;
@@ -110,13 +110,13 @@ public class IndexRuleOptimizer implements Optimizer {
 		affectedComponent.addOperator(select);
 	}
 
-	private void earlyProjection(QueryPlan queryPlan) {
+	private void earlyProjection(QueryBuilder queryPlan) {
 		final EarlyProjection early = new EarlyProjection(_schema, _pq.getTan());
 		early.operate(queryPlan);
 	}
 
 	@Override
-	public QueryPlan generate() {
+	public QueryBuilder generate() {
 		_cg = generateTableJoins();
 
 		LOG.info("Before WHERE, SELECT and EarlyProjection: ");

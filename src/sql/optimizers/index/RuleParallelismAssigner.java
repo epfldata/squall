@@ -5,7 +5,7 @@ import java.util.Map;
 
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.utilities.SystemParameters;
 import sql.schema.Schema;
 import sql.util.TableAliasName;
@@ -14,13 +14,13 @@ public class RuleParallelismAssigner {
 	private final int THRESHOLD_TUPLES = 100; // both nation and region has less
 	// number of tuples
 
-	private final QueryPlan _plan;
+	private final QueryBuilder _plan;
 	private final int _maxInputPar;
 	private final TableAliasName _tan;
 	private final Schema _schema;
 	private final Map _map;
 
-	public RuleParallelismAssigner(QueryPlan plan, TableAliasName tan, Schema schema, Map map) {
+	public RuleParallelismAssigner(QueryBuilder plan, TableAliasName tan, Schema schema, Map map) {
 		_plan = plan;
 		_tan = tan;
 		_schema = schema;

@@ -10,7 +10,7 @@ import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
 import plan_runner.predicates.Predicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.storm_components.InterchangingComponent;
 import plan_runner.storm_components.StormComponent;
 import plan_runner.storm_components.StormDataSource;
@@ -44,11 +44,9 @@ public class DataSourceComponent implements Component {
 	//equi-weight histogram
 	private boolean _isPartitioner;
 
-	public DataSourceComponent(String componentName, String inputPath, QueryPlan queryPlan) {
+	public DataSourceComponent(String componentName, String inputPath) {
 		_componentName = componentName;
 		_inputPath = inputPath;
-
-		queryPlan.add(this);
 	}
 
 	@Override

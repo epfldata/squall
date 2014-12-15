@@ -10,7 +10,7 @@ import plan_runner.expressions.ColumnReference;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.ProjectOperator;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import sql.schema.Schema;
 import sql.util.ParserUtil;
 import sql.util.TableAliasName;
@@ -174,7 +174,7 @@ public class EarlyProjection {
 		}
 	}
 
-	private void bottomUp(QueryPlan queryPlan) {
+	private void bottomUp(QueryBuilder queryPlan) {
 		final List<Integer> inheritedUsed = new ArrayList<Integer>();
 		bottomUp(queryPlan.getLastComponent(), inheritedUsed, 0);
 	}
@@ -284,7 +284,7 @@ public class EarlyProjection {
 		return result;
 	}
 
-	public void operate(QueryPlan queryPlan) {
+	public void operate(QueryBuilder queryPlan) {
 		bottomUp(queryPlan);
 		topDown();
 	}

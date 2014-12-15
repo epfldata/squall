@@ -1,4 +1,4 @@
-package plan_runner.query_plans.ewh;
+package plan_runner.query_plans.theta;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -24,8 +24,7 @@ import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.ComparisonPredicate;
-import plan_runner.query_plans.QueryPlan;
-import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
 
@@ -36,7 +35,7 @@ public class ThetaLineitemSelfJoin {
 	 * Output= 54.206.000.000
 	 */
 
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryPlan = new QueryBuilder();
 	private static final String _date1Str = "1993-06-17";
 	private static final TypeConversion<Date> _dateConv = new DateConversion();
 	//	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();   
@@ -151,7 +150,7 @@ public class ThetaLineitemSelfJoin {
 
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 }

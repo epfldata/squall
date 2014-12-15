@@ -49,7 +49,7 @@ import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SampleOperator;
 import plan_runner.predicates.ComparisonPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.storm_components.InterchangingComponent;
 import plan_runner.storm_components.StormComponent;
 import plan_runner.storm_components.StormEmitter;
@@ -1064,8 +1064,8 @@ public class MyUtilities {
 		return getHistogramFilename(conf, filePrefix) + "_" + numJoiners + "j";
 	}
 	
-	public static QueryPlan addOkcanSampler(Component firstParent, Component secondParent, int firstKeyProject, int secondKeyProject,
-			QueryPlan queryPlan, NumericConversion keyType, ComparisonPredicate comparison, Map conf){
+	public static QueryBuilder addOkcanSampler(Component firstParent, Component secondParent, int firstKeyProject, int secondKeyProject,
+			QueryBuilder queryPlan, NumericConversion keyType, ComparisonPredicate comparison, Map conf){
 		ProjectOperator project1 = new ProjectOperator(new int[]{firstKeyProject});
 		ProjectOperator project2 = new ProjectOperator(new int[]{secondKeyProject});
 		
@@ -1073,8 +1073,8 @@ public class MyUtilities {
 				queryPlan, keyType, comparison, conf);
 	}
 	
-	public static QueryPlan addOkcanSampler(Component firstParent, Component secondParent, ProjectOperator project1, ProjectOperator project2,
-			QueryPlan queryPlan, NumericConversion keyType, ComparisonPredicate comparison, Map conf){
+	public static QueryBuilder addOkcanSampler(Component firstParent, Component secondParent, ProjectOperator project1, ProjectOperator project2,
+			QueryBuilder queryPlan, NumericConversion keyType, ComparisonPredicate comparison, Map conf){
 		int firstRelSize = SystemParameters.getInt(conf, "FIRST_REL_SIZE");
 		int secondRelSize = SystemParameters.getInt(conf, "SECOND_REL_SIZE");
 		int firstNumOfBuckets = SystemParameters.getInt(conf, "FIRST_NUM_OF_BUCKETS");
@@ -1101,9 +1101,9 @@ public class MyUtilities {
 		return queryPlan;
 	}
 	
-	public static QueryPlan addSrcHistogram(Component relationJPS1, int firstKeyProject, Component relationJPS2, int secondKeyProject, 
+	public static QueryBuilder addSrcHistogram(Component relationJPS1, int firstKeyProject, Component relationJPS2, int secondKeyProject, 
 			NumericConversion keyType, ComparisonPredicate comparison, boolean isEWHD2Histogram, boolean isEWHS1Histogram, Map conf){
-		QueryPlan queryPlan = new QueryPlan();
+		QueryBuilder queryPlan = new QueryBuilder();
 		int relSize1 = -1, relSize2 = -1;
 		int keyProject1 = -1, keyProject2 = -1;
 		Component r1 = null, r2 = null; // r2 feeds D2Combiner, r1 feeds S1Reservoir directly
@@ -1158,16 +1158,16 @@ public class MyUtilities {
 		parent.addOperator(sample).addOperator(project).setHashIndexes(hash);
 	}
 	
-	public static QueryPlan addEWHSampler(Component firstParent, Component secondParent, int firstKeyProject, int secondKeyProject,
-			QueryPlan queryPlan, NumericConversion keyType, ComparisonPredicate comparison, Map conf){
+	public static QueryBuilder addEWHSampler(Component firstParent, Component secondParent, int firstKeyProject, int secondKeyProject,
+			QueryBuilder queryPlan, NumericConversion keyType, ComparisonPredicate comparison, Map conf){
 		ProjectOperator project1 = new ProjectOperator(new int[]{firstKeyProject});
 		ProjectOperator project2 = new ProjectOperator(new int[]{secondKeyProject});
 		return addEWHSampler(firstParent, secondParent, project1, project2,
 				queryPlan, keyType, comparison, conf);
 	}
 	
-	public static QueryPlan addEWHSampler(Component firstParent, Component secondParent, ProjectOperator project1, ProjectOperator project2,
-			QueryPlan queryPlan, NumericConversion keyType, ComparisonPredicate comparison, Map conf){
+	public static QueryBuilder addEWHSampler(Component firstParent, Component secondParent, ProjectOperator project1, ProjectOperator project2,
+			QueryBuilder queryPlan, NumericConversion keyType, ComparisonPredicate comparison, Map conf){
 		int firstRelSize = SystemParameters.getInt(conf, "FIRST_REL_SIZE");
 		int secondRelSize = SystemParameters.getInt(conf, "SECOND_REL_SIZE");
 		int numLastJoiners = SystemParameters.getInt(conf, "PAR_LAST_JOINERS");

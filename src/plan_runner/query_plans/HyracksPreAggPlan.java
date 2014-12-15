@@ -22,7 +22,7 @@ import plan_runner.storage.AggregationStorage;
 public class HyracksPreAggPlan {
 	private static Logger LOG = Logger.getLogger(HyracksPreAggPlan.class);
 
-	private final QueryPlan _queryPlan = new QueryPlan();
+	private final QueryBuilder _queryPlan = new QueryBuilder();
 
 	private static final DoubleConversion _dc = new DoubleConversion();
 	private static final StringConversion _sc = new StringConversion();
@@ -68,7 +68,7 @@ public class HyracksPreAggPlan {
 
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 

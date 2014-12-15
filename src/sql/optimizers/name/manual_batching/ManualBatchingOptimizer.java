@@ -7,7 +7,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import plan_runner.components.Component;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.utilities.SystemParameters;
 import sql.optimizers.Optimizer;
 import sql.optimizers.name.CostParams;
@@ -67,7 +67,7 @@ public class ManualBatchingOptimizer implements Optimizer {
 	}
 
 	@Override
-	public QueryPlan generate() {
+	public QueryBuilder generate() {
 		final int totalSourcePar = SystemParameters.getInt(_map, "DIP_TOTAL_SRC_PAR");
 		final ManualBatchingCompGenFactory factory = new ManualBatchingCompGenFactory(_map,
 				_pq.getTan(), totalSourcePar);

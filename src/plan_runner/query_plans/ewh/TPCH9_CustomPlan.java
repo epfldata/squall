@@ -25,7 +25,7 @@ import plan_runner.operators.AggregateSumOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.LikePredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 
 public class TPCH9_CustomPlan {
     private static Logger LOG = Logger.getLogger(TPCH9_CustomPlan.class);
@@ -36,7 +36,7 @@ public class TPCH9_CustomPlan {
     
     private static final String COLOR = "%green%";
 
-    private QueryPlan _queryPlan = new QueryPlan();
+    private QueryBuilder _queryPlan = new QueryBuilder();
 
     public TPCH9_CustomPlan(String dataPath, String extension, Map conf){
         //-------------------------------------------------------------------------------------
@@ -178,7 +178,7 @@ public class TPCH9_CustomPlan {
 
     }
 
-    public QueryPlan getQueryPlan() {
+    public QueryBuilder getQueryPlan() {
         return _queryPlan;
     }
 }

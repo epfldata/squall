@@ -16,12 +16,12 @@ import plan_runner.expressions.ColumnReference;
 import plan_runner.operators.AggregateCountOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.predicates.ComparisonPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 
 public class ThetaHyracksPlan {
 	private static Logger LOG = Logger.getLogger(ThetaHyracksPlan.class);
 
-	private final QueryPlan _queryPlan = new QueryPlan();
+	private final QueryBuilder _queryPlan = new QueryBuilder();
 
 	private static final IntegerConversion _ic = new IntegerConversion();
 
@@ -62,7 +62,7 @@ public class ThetaHyracksPlan {
 
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 

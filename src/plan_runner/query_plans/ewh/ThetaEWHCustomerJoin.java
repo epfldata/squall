@@ -34,7 +34,7 @@ import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.OrPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
@@ -43,7 +43,7 @@ import plan_runner.utilities.SystemParameters.HistogramType;
 // a candidate for new Eocd for the new Linux cluster
 public class ThetaEWHCustomerJoin {
 	
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final TypeConversion<String> _stringConv = new StringConversion();
 	private static final LongConversion _lc = new LongConversion();
 
@@ -93,16 +93,20 @@ public class ThetaEWHCustomerJoin {
 		
 		if(!isMaterialized){
 			relationCustomer1 = new DataSourceComponent("CUSTOMER1", dataPath
-					+ "customer" + extension, _queryPlan).addOperator(print1).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+					+ "customer" + extension).addOperator(print1).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+			_queryBuilder.add(relationCustomer1);
 			
 			relationCustomer2 = new DataSourceComponent("CUSTOMER2", dataPath
-					+ "customer" + extension, _queryPlan).addOperator(print2).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+					+ "customer" + extension).addOperator(print2).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+			_queryBuilder.add(relationCustomer2);
 		}else{
 			relationCustomer1 = new DataSourceComponent("CUSTOMER1", dataPath
-					+ matName1 + extension, _queryPlan).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+					+ matName1 + extension).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+			_queryBuilder.add(relationCustomer1);
 
 			relationCustomer2 = new DataSourceComponent("CUSTOMER2", dataPath
-					+ matName2 + extension, _queryPlan).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+					+ matName2 + extension).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+			_queryBuilder.add(relationCustomer2);
 		}
 
 		NumericConversion keyType = (NumericConversion) _lc;
@@ -114,14 +118,14 @@ public class ThetaEWHCustomerJoin {
 			relationCustomer1.setPrintOut(false);
 			relationCustomer2.setPrintOut(false);
 		}else if(isSrcHistogram){
-			_queryPlan = MyUtilities.addSrcHistogram(relationCustomer1, firstKeyProject, relationCustomer2, secondKeyProject, 
+			_queryBuilder = MyUtilities.addSrcHistogram(relationCustomer1, firstKeyProject, relationCustomer2, secondKeyProject, 
 					keyType, comparison, isEWHD2Histogram, isEWHS1Histogram, conf);
 		}else if(isOkcanSampling){
-			_queryPlan = MyUtilities.addOkcanSampler(relationCustomer1, relationCustomer2, firstKeyProject, secondKeyProject,
-					_queryPlan, keyType, comparison, conf);
+			_queryBuilder = MyUtilities.addOkcanSampler(relationCustomer1, relationCustomer2, firstKeyProject, secondKeyProject,
+					_queryBuilder, keyType, comparison, conf);
 		}else if(isEWHSampling){
-			_queryPlan = MyUtilities.addEWHSampler(relationCustomer1, relationCustomer2, firstKeyProject, secondKeyProject,
-					_queryPlan, keyType, comparison, conf); 
+			_queryBuilder = MyUtilities.addEWHSampler(relationCustomer1, relationCustomer2, firstKeyProject, secondKeyProject,
+					_queryBuilder, keyType, comparison, conf); 
 		}else{
 			final int Theta_JoinType = ThetaQueryPlansParameters.getThetaJoinType(conf);
 			final ColumnReference colC1 = new ColumnReference(keyType, firstKeyProject);
@@ -132,17 +136,18 @@ public class ThetaEWHCustomerJoin {
 
 			//AggregateCountOperator agg = new AggregateCountOperator(conf);
 			Component lastJoiner = ThetaJoinComponentFactory
-					.createThetaJoinOperator(Theta_JoinType, relationCustomer1, relationCustomer2, _queryPlan)
+					.createThetaJoinOperator(Theta_JoinType, relationCustomer1, relationCustomer2, _queryBuilder)
 					.setJoinPredicate(C1_C2_comp).setContentSensitiveThetaJoinWrapper(keyType);
 			//.addOperator(agg)
 			// lastJoiner.setPrintOut(false);
 			
-			DummyComponent dummy = new DummyComponent(lastJoiner, "DUMMY", _queryPlan);
+			DummyComponent dummy = new DummyComponent(lastJoiner, "DUMMY");
+			_queryBuilder.add(dummy);
 		}
 
 	}
 
-	public QueryPlan getQueryPlan() {
-		return _queryPlan;
+	public QueryBuilder getQueryPlan() {
+		return _queryBuilder;
 	}
 }

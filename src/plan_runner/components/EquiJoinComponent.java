@@ -11,7 +11,7 @@ import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.predicates.Predicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.storage.AggregationStorage;
 import plan_runner.storage.BasicStore;
 import plan_runner.storage.KeyValueStore;
@@ -60,15 +60,13 @@ public class EquiJoinComponent implements Component {
 	private List<String> _fullHashList;
 	private Predicate _joinPredicate;
 
-	public EquiJoinComponent(Component firstParent, Component secondParent, QueryPlan queryPlan) {
+	public EquiJoinComponent(Component firstParent, Component secondParent) {
 		_firstParent = firstParent;
 		_firstParent.setChild(this);
 		_secondParent = secondParent;
 		_secondParent.setChild(this);
 
 		_componentName = firstParent.getName() + "_" + secondParent.getName();
-
-		queryPlan.add(this);
 	}
 
 	@Override

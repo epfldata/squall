@@ -28,12 +28,12 @@ import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.BetweenPredicate;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.OrPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 
 public class TPCH7_CustomPlan {
     private static Logger LOG = Logger.getLogger(TPCH7_CustomPlan.class);
 
-    private QueryPlan _queryPlan = new QueryPlan();
+    private QueryBuilder _queryPlan = new QueryBuilder();
 
 	private static final String    _date1Str = "1995-01-01";
 	private static final String    _date2Str = "1996-12-31";
@@ -218,7 +218,7 @@ public class TPCH7_CustomPlan {
 
     }
 
-    public QueryPlan getQueryPlan() {
+    public QueryBuilder getQueryPlan() {
         return _queryPlan;
     }
 }

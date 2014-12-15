@@ -25,7 +25,7 @@ public class RSTPlan {
 	private static final NumericConversion<Double> _dc = new DoubleConversion();
 	private static final NumericConversion<Integer> _ic = new IntegerConversion();
 
-	private final QueryPlan _queryPlan = new QueryPlan();
+	private final QueryBuilder _queryPlan = new QueryBuilder();
 
 	public RSTPlan(String dataPath, String extension, Map conf) {
 		// -------------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ public class RSTPlan {
 
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 }

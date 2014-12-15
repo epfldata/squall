@@ -28,7 +28,7 @@ import plan_runner.operators.AggregateSumOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.ComparisonPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 
 public class ThetaTPCH3Plan {
@@ -44,7 +44,7 @@ public class ThetaTPCH3Plan {
 	private static final TypeConversion<String> _sc = new StringConversion();
 	private static final Date _date = _dateConv.fromString(_dateStr);
 
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryBuilder = new QueryBuilder();
 
 	public ThetaTPCH3Plan(String dataPath, String extension, Map conf) {
 
@@ -58,8 +58,9 @@ public class ThetaTPCH3Plan {
 		ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0 });
 
 		DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath
-				+ "customer" + extension, _queryPlan).setHashIndexes(hashCustomer)
+				+ "customer" + extension).setHashIndexes(hashCustomer)
 				.addOperator(selectionCustomer).addOperator(projectionCustomer);
+		_queryBuilder.add(relationCustomer);
 
 		//-------------------------------------------------------------------------------------
 		List<Integer> hashOrders = Arrays.asList(1);
@@ -71,8 +72,9 @@ public class ThetaTPCH3Plan {
 		ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 1, 4, 7 });
 
 		DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath + "orders"
-				+ extension, _queryPlan).setHashIndexes(hashOrders).addOperator(selectionOrders)
+				+ extension).setHashIndexes(hashOrders).addOperator(selectionOrders)
 				.addOperator(projectionOrders);
+		_queryBuilder.add(relationOrders);
 
 		ColumnReference colC = new ColumnReference(_ic, 0);
 		ColumnReference colO = new ColumnReference(_ic, 1);
@@ -82,7 +84,7 @@ public class ThetaTPCH3Plan {
 		//-------------------------------------------------------------------------------------
 		Component C_Ojoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationCustomer, relationOrders,
-						_queryPlan).addOperator(new ProjectOperator(new int[] { 1, 2, 3 }))
+						_queryBuilder).addOperator(new ProjectOperator(new int[] { 1, 2, 3 }))
 				.setHashIndexes(Arrays.asList(0)).setJoinPredicate(C_O_comp);
 
 		//-------------------------------------------------------------------------------------
@@ -95,9 +97,10 @@ public class ThetaTPCH3Plan {
 		ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0, 5, 6 });
 
 		DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension, _queryPlan).setHashIndexes(hashLineitem)
+				+ "lineitem" + extension).setHashIndexes(hashLineitem)
 				.addOperator(selectionLineitem).addOperator(projectionLineitem);
-
+		_queryBuilder.add(relationLineitem);
+		
 		//-------------------------------------------------------------------------------------
 		// set up aggregation function on the StormComponent(Bolt) where join is performed
 
@@ -116,14 +119,14 @@ public class ThetaTPCH3Plan {
 				colC_O, colL);
 
 		Component C_O_Ljoin = ThetaJoinComponentFactory
-				.createThetaJoinOperator(Theta_JoinType, C_Ojoin, relationLineitem, _queryPlan)
+				.createThetaJoinOperator(Theta_JoinType, C_Ojoin, relationLineitem, _queryBuilder)
 				.addOperator(agg).setJoinPredicate(C_O_L_comp).setContentSensitiveThetaJoinWrapper(_ic);
 
 		//-------------------------------------------------------------------------------------
 
 	}
 
-	public QueryPlan getQueryPlan() {
-		return _queryPlan;
+	public QueryBuilder getQueryPlan() {
+		return _queryBuilder;
 	}
 }

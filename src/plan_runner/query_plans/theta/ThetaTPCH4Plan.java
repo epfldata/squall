@@ -28,7 +28,7 @@ import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.BetweenPredicate;
 import plan_runner.predicates.ComparisonPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 
 public class ThetaTPCH4Plan {
@@ -36,7 +36,7 @@ public class ThetaTPCH4Plan {
 
 	private static final TypeConversion<Date> _dc = new DateConversion();
 	private static final IntegerConversion _ic = new IntegerConversion();
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryPlan = new QueryBuilder();
 
 	//query variables
 	private static Date _date1, _date2;
@@ -110,7 +110,7 @@ public class ThetaTPCH4Plan {
 
 	}
 
-	public QueryPlan getQueryPlan() {
+	public QueryBuilder getQueryPlan() {
 		return _queryPlan;
 	}
 }

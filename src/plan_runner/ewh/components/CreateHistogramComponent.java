@@ -18,7 +18,7 @@ import plan_runner.operators.Operator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.Predicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.storage.AggregationStorage;
 import plan_runner.storage.BasicStore;
 import plan_runner.storage.KeyValueStore;
@@ -49,8 +49,7 @@ public class CreateHistogramComponent implements Component {
 	private NumericConversion _wrapper;
 
 	public CreateHistogramComponent(Component r1, Component r2,
-			NumericConversion keyType, ComparisonPredicate comparison, int numOfLastJoiners, 
-			QueryPlan queryPlan) {
+			NumericConversion keyType, ComparisonPredicate comparison, int numOfLastJoiners) {
 		_r1 = r1;
 		_r2 = r2;
 		if(_r1 != null){
@@ -66,8 +65,6 @@ public class CreateHistogramComponent implements Component {
 		_numOfLastJoiners = numOfLastJoiners;
 		_comparison = comparison;
 		_wrapper = keyType;
-		
-		queryPlan.add(this);
 	}
 
 	@Override

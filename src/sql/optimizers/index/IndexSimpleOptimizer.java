@@ -13,7 +13,7 @@ import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.AggregateOperator;
 import plan_runner.operators.ProjectOperator;
 import plan_runner.operators.SelectOperator;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.utilities.DeepCopy;
 import sql.optimizers.Optimizer;
 import sql.schema.Schema;
@@ -104,7 +104,7 @@ public class IndexSimpleOptimizer implements Optimizer {
 	}
 
 	@Override
-	public QueryPlan generate() {
+	public QueryBuilder generate() {
 		_cg = generateTableJoins();
 
 		// selectItems might add OperatorComponent, this is why it goes first

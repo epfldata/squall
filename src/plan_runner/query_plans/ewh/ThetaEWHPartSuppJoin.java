@@ -34,7 +34,7 @@ import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.ComparisonPredicate;
 import plan_runner.predicates.OrPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
@@ -43,7 +43,7 @@ import plan_runner.utilities.SystemParameters.HistogramType;
 // a candidate for new Eocd for the new Linux cluster
 public class ThetaEWHPartSuppJoin {
 	
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final TypeConversion<String> _stringConv = new StringConversion();
 	private static final IntegerConversion _ic = new IntegerConversion();
 
@@ -73,16 +73,20 @@ public class ThetaEWHPartSuppJoin {
 		
 		if(!isMaterialized){
 			relationPartSupp1 = new DataSourceComponent("PARTSUPP1", dataPath
-					+ "partsupp" + extension, _queryPlan).addOperator(print1).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+					+ "partsupp" + extension).addOperator(print1).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+			_queryBuilder.add(relationPartSupp1);
 			
 			relationPartSupp2 = new DataSourceComponent("PARTSUPP2", dataPath
-					+ "partsupp" + extension, _queryPlan).addOperator(print2).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+					+ "partsupp" + extension).addOperator(print2).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+			_queryBuilder.add(relationPartSupp2);
 		}else{
 			relationPartSupp1 = new DataSourceComponent("PARTSUPP1", dataPath
-					+ matName1 + extension, _queryPlan).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+					+ matName1 + extension).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+			_queryBuilder.add(relationPartSupp1);
 
 			relationPartSupp2 = new DataSourceComponent("PARTSUPP2", dataPath
-					+ matName2 + extension, _queryPlan).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+					+ matName2 + extension).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+			_queryBuilder.add(relationPartSupp2);
 		}
 
 		NumericConversion keyType = (NumericConversion) _ic;
@@ -94,14 +98,14 @@ public class ThetaEWHPartSuppJoin {
 			relationPartSupp1.setPrintOut(false);
 			relationPartSupp2.setPrintOut(false);
 		}else if(isSrcHistogram){
-			_queryPlan = MyUtilities.addSrcHistogram(relationPartSupp1, firstKeyProject, relationPartSupp2, secondKeyProject, 
+			_queryBuilder = MyUtilities.addSrcHistogram(relationPartSupp1, firstKeyProject, relationPartSupp2, secondKeyProject, 
 					keyType, comparison, isEWHD2Histogram, isEWHS1Histogram, conf);
 		}else if(isOkcanSampling){
-			_queryPlan = MyUtilities.addOkcanSampler(relationPartSupp1, relationPartSupp2, firstKeyProject, secondKeyProject,
-					_queryPlan, keyType, comparison, conf);
+			_queryBuilder = MyUtilities.addOkcanSampler(relationPartSupp1, relationPartSupp2, firstKeyProject, secondKeyProject,
+					_queryBuilder, keyType, comparison, conf);
 		}else if(isEWHSampling){
-			_queryPlan = MyUtilities.addEWHSampler(relationPartSupp1, relationPartSupp2, firstKeyProject, secondKeyProject,
-					_queryPlan, keyType, comparison, conf); 
+			_queryBuilder = MyUtilities.addEWHSampler(relationPartSupp1, relationPartSupp2, firstKeyProject, secondKeyProject,
+					_queryBuilder, keyType, comparison, conf); 
 		}else{
 			final int Theta_JoinType = ThetaQueryPlansParameters.getThetaJoinType(conf);
 			final ColumnReference colPS1 = new ColumnReference(keyType, firstKeyProject);
@@ -112,17 +116,18 @@ public class ThetaEWHPartSuppJoin {
 
 			//AggregateCountOperator agg = new AggregateCountOperator(conf);
 			Component lastJoiner = ThetaJoinComponentFactory
-					.createThetaJoinOperator(Theta_JoinType, relationPartSupp1, relationPartSupp2, _queryPlan)
+					.createThetaJoinOperator(Theta_JoinType, relationPartSupp1, relationPartSupp2, _queryBuilder)
 					.setJoinPredicate(PS1_PS2_comp).setContentSensitiveThetaJoinWrapper(keyType);
 			//.addOperator(agg)
 			// lastJoiner.setPrintOut(false);
 			
-			DummyComponent dummy = new DummyComponent(lastJoiner, "DUMMY", _queryPlan);
+			DummyComponent dummy = new DummyComponent(lastJoiner, "DUMMY");
+			_queryBuilder.add(dummy);
 		}
 
 	}
 
-	public QueryPlan getQueryPlan() {
-		return _queryPlan;
+	public QueryBuilder getQueryPlan() {
+		return _queryBuilder;
 	}
 }

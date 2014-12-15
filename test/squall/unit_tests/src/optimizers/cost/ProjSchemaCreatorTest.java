@@ -12,7 +12,7 @@ import plan_runner.components.EquiJoinComponent;
 import plan_runner.conversion.*;
 import plan_runner.expressions.*;
 import plan_runner.operators.ProjectOperator;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import sql.main.ParserMain;
 import sql.optimizers.name.ProjGlobalCollect;
 import sql.optimizers.name.ProjSchemaCreator;
@@ -189,7 +189,7 @@ public class ProjSchemaCreatorTest {
     private EquiJoinComponent createTPCH7_LSNSubplan() {
         //not used, but has to be initialized
         String dataPath = ""; String extension = "";
-        QueryPlan queryPlan = new QueryPlan();
+        QueryBuilder queryPlan = new QueryBuilder();
 
         DataSourceComponent relationSupplier = new DataSourceComponent(
                 "SUPPLIER",

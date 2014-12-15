@@ -33,13 +33,13 @@ import plan_runner.operators.SampleOperator;
 import plan_runner.operators.SelectOperator;
 import plan_runner.predicates.AndPredicate;
 import plan_runner.predicates.ComparisonPredicate;
-import plan_runner.query_plans.QueryPlan;
+import plan_runner.query_plans.QueryBuilder;
 import plan_runner.utilities.MyUtilities;
 import plan_runner.utilities.SystemParameters;
 
 public class EWHSampleMatrixPlan {
 	private static Logger LOG = Logger.getLogger(EWHSampleMatrixPlan.class);
-	private QueryPlan _queryPlan = new QueryPlan();
+	private QueryBuilder _queryBuilder = new QueryBuilder();
 
 	public EWHSampleMatrixPlan(String dataPath, String extension, Map conf) {
 		//can be extracted from the complete query plan
@@ -86,10 +86,12 @@ public class EWHSampleMatrixPlan {
 		LOG.info("In the sample matrix, FirstNumOfBuckets = " + firstNumOfBuckets + ", SecondNumOfBuckets = " + secondNumOfBuckets);
 		
 		DataSourceComponent relation1 = new DataSourceComponent(firstCompName, dataPath
-				+ firstSrcFile + extension, _queryPlan).addOperator(projectionLineitem1).setHashIndexes(hash);
+				+ firstSrcFile + extension).addOperator(projectionLineitem1).setHashIndexes(hash);
+		_queryBuilder.add(relation1);
 		
 		DataSourceComponent relation2 = new DataSourceComponent(secondCompName, dataPath
-				+ secondSrcFile + extension, _queryPlan).addOperator(projectionLineitem2).setHashIndexes(hash);
+				+ secondSrcFile + extension).addOperator(projectionLineitem2).setHashIndexes(hash);
+		_queryBuilder.add(relation2);
 		
 		// equi-weight histogram
 		// send something to the extra partitioner node
@@ -105,10 +107,11 @@ public class EWHSampleMatrixPlan {
 		boolean isFirstD2 = SystemParameters.getBoolean(conf, "IS_FIRST_D2");
 		EWHSampleMatrixComponent ewhComp = new EWHSampleMatrixComponent(relation1, relation2, isFirstD2, keyType, comparison,  
 				numLastJoiners, firstRelSize, secondRelSize,
-				firstNumOfBuckets, secondNumOfBuckets, _queryPlan);
+				firstNumOfBuckets, secondNumOfBuckets);
+		_queryBuilder.add(ewhComp);
 	}
 
-	public QueryPlan getQueryPlan() {
-		return _queryPlan;
+	public QueryBuilder getQueryPlan() {
+		return _queryBuilder;
 	}
 }
