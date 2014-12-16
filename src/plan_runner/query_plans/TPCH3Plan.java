@@ -58,8 +58,8 @@ public class TPCH3Plan {
 		final ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0 });
 
 		final DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath
-				+ "customer" + extension).setHashIndexes(hashCustomer)
-				.addOperator(selectionCustomer).addOperator(projectionCustomer);
+				+ "customer" + extension).setOutputPartKey(hashCustomer)
+				.add(selectionCustomer).add(projectionCustomer);
 		_queryBuilder.add(relationCustomer);
 
 		// -------------------------------------------------------------------------------------
@@ -72,13 +72,13 @@ public class TPCH3Plan {
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 1, 4, 7 });
 
 		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension).setHashIndexes(hashOrders)
-				.addOperator(selectionOrders).addOperator(projectionOrders);
+				+ "orders" + extension).setOutputPartKey(hashOrders)
+				.add(selectionOrders).add(projectionOrders);
 		_queryBuilder.add(relationOrders);
 
 		// -------------------------------------------------------------------------------------
 		final EquiJoinComponent C_Ojoin = new EquiJoinComponent(relationCustomer, relationOrders)
-				.addOperator(new ProjectOperator(new int[] { 1, 2, 3 })).setHashIndexes(
+				.add(new ProjectOperator(new int[] { 1, 2, 3 })).setOutputPartKey(
 				Arrays.asList(0));
 		_queryBuilder.add(C_Ojoin);
 
@@ -92,8 +92,8 @@ public class TPCH3Plan {
 		final ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0, 5, 6 });
 
 		final DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension).setHashIndexes(hashLineitem)
-				.addOperator(selectionLineitem).addOperator(projectionLineitem);
+				+ "lineitem" + extension).setOutputPartKey(hashLineitem)
+				.add(selectionLineitem).add(projectionLineitem);
 		_queryBuilder.add(relationLineitem);
 
 		// -------------------------------------------------------------------------------------
@@ -109,7 +109,7 @@ public class TPCH3Plan {
 		final AggregateOperator agg = new AggregateSumOperator(product, conf)
 				.setGroupByColumns(Arrays.asList(0, 1, 2));
 
-		EquiJoinComponent finalComp = new EquiJoinComponent(C_Ojoin, relationLineitem).addOperator(agg);
+		EquiJoinComponent finalComp = new EquiJoinComponent(C_Ojoin, relationLineitem).add(agg);
 		_queryBuilder.add(finalComp);
 		// -------------------------------------------------------------------------------------
 

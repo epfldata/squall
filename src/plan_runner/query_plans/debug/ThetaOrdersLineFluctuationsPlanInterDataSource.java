@@ -51,7 +51,7 @@ public class ThetaOrdersLineFluctuationsPlanInterDataSource {
 		InterchangingDataSourceComponent relOrdersLineItem = new InterchangingDataSourceComponent(
 				"ORDERS-LINEITEM", dataPath + "orders" + extension, dataPath + "lineitem"
 						+ extension, multFactor).addOperatorRel1(selectionOrders)
-				.addOperatorRel1(projectionOrders).addOperatorRel2(projectionLineitem).setHashIndexes(hashLineitem);
+				.addOperatorRel1(projectionOrders).addOperatorRel2(projectionLineitem).setOutputPartKey(hashLineitem);
 		_queryBuilder.add(relOrdersLineItem);
 
 		ColumnReference colO = new ColumnReference(_ic, 0);

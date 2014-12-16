@@ -63,7 +63,7 @@ public class IndexCompGen implements CompGen {
 			final List<Integer> hashIndexes = ParserUtil.extractColumnIndexes(hashExpressions);
 
 			// hash indexes in join condition
-			component.setHashIndexes(hashIndexes);
+			component.setOutputPartKey(hashIndexes);
 		} else
 			// hahs expressions in join condition
 			component.setHashExpressions(hashExpressions);

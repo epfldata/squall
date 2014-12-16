@@ -65,24 +65,24 @@ public class ThetaEWHLineitemSelfOutputDominatedJoin {
 			SelectOperator selectionLineitem1 = new SelectOperator(and1);
 
 			relationLineitem1 = new DataSourceComponent("LINEITEM1", dataPath
-					+ "lineitem" + extension).addOperator(selectionLineitem1).addOperator(print1).addOperator(
-							projectionLineitem).setHashIndexes(hashLineitem);
+					+ "lineitem" + extension).add(selectionLineitem1).add(print1).add(
+							projectionLineitem).setOutputPartKey(hashLineitem);
 			_queryBuilder.add(relationLineitem1);
 
 			SelectOperator selectionLineitem2 = new SelectOperator(new ComparisonPredicate(
 					ComparisonPredicate.NONEQUAL_OP, new ColumnReference(_stringConv, 14),
 					new ValueSpecification(_stringConv, "TRUCK")));			
 			relationLineitem2 = new DataSourceComponent("LINEITEM2", dataPath
-					+ "lineitem" + extension).addOperator(selectionLineitem2).addOperator(print2).addOperator(
-							projectionLineitem).setHashIndexes(hashLineitem);
+					+ "lineitem" + extension).add(selectionLineitem2).add(print2).add(
+							projectionLineitem).setOutputPartKey(hashLineitem);
 			_queryBuilder.add(relationLineitem2);
 		}else{
 			relationLineitem1 = new DataSourceComponent("LINEITEM1", dataPath
-					+ "bci_ewhod_1" + extension).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
+					+ "bci_ewhod_1" + extension).add(projectionLineitem).setOutputPartKey(hashLineitem);
 			_queryBuilder.add(relationLineitem1);
 
 			relationLineitem2 = new DataSourceComponent("LINEITEM2", dataPath
-					+ "bci_ewhod_2" + extension).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
+					+ "bci_ewhod_2" + extension).add(projectionLineitem).setOutputPartKey(hashLineitem);
 			_queryBuilder.add(relationLineitem2);
 		}
 
@@ -133,7 +133,7 @@ public class ThetaEWHLineitemSelfOutputDominatedJoin {
 			Component LINEITEMS_LINEITEMSjoin = ThetaJoinComponentFactory.createThetaJoinOperator(
 					Theta_JoinType, relationLineitem1, relationLineitem2, _queryBuilder).setJoinPredicate(
 							pred5).setContentSensitiveThetaJoinWrapper(keyType)
-							.addOperator(agg)
+							.add(agg)
 							;
 
 			// LINEITEMS_LINEITEMSjoin.setPrintOut(false);

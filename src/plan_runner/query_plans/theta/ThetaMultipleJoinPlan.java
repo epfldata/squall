@@ -52,7 +52,7 @@ public class ThetaMultipleJoinPlan {
 		final ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0, 1, 2, 5, 6 });
 
 		final DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension).setHashIndexes(hashLineitem).addOperator(
+				+ "lineitem" + extension).setOutputPartKey(hashLineitem).add(
 				projectionLineitem);
 		_queryBuilder.add(relationLineitem);
 
@@ -62,7 +62,7 @@ public class ThetaMultipleJoinPlan {
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 3 });
 
 		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension).setHashIndexes(hashOrders).addOperator(
+				+ "orders" + extension).setOutputPartKey(hashOrders).add(
 				projectionOrders);
 		_queryBuilder.add(relationOrders);
 
@@ -72,7 +72,7 @@ public class ThetaMultipleJoinPlan {
 		final ProjectOperator projectionSupplier = new ProjectOperator(new int[] { 0 });
 
 		final DataSourceComponent relationSupplier = new DataSourceComponent("SUPPLIER", dataPath
-				+ "supplier" + extension).setHashIndexes(hashSupplier).addOperator(
+				+ "supplier" + extension).setOutputPartKey(hashSupplier).add(
 				projectionSupplier);
 		_queryBuilder.add(relationSupplier);
 
@@ -83,7 +83,7 @@ public class ThetaMultipleJoinPlan {
 		final ProjectOperator projectionPartsSupp = new ProjectOperator(new int[] { 0, 1, 2 });
 
 		final DataSourceComponent relationPartsupp = new DataSourceComponent("PARTSUPP", dataPath
-				+ "partsupp" + extension).setHashIndexes(hashPartsSupp).addOperator(
+				+ "partsupp" + extension).setOutputPartKey(hashPartsSupp).add(
 				projectionPartsSupp);		
 		_queryBuilder.add(relationPartsupp);
 
@@ -106,7 +106,7 @@ public class ThetaMultipleJoinPlan {
 		Component LINEITEMS_ORDERSjoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationLineitem, relationOrders,
 						_queryBuilder).setJoinPredicate(predL_O)
-				.addOperator(new ProjectOperator(new int[] { 1, 2, 3, 4 }));
+				.add(new ProjectOperator(new int[] { 1, 2, 3, 4 }));
 
 		// -------------------------------------------------------------------------------------
 
@@ -122,8 +122,8 @@ public class ThetaMultipleJoinPlan {
 		Component SUPPLIER_PARTSUPPjoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationSupplier, relationPartsupp,
 						_queryBuilder).setJoinPredicate(predS_P)
-				.addOperator(new ProjectOperator(new int[] { 0, 1, 3 }))
-				.addOperator(selectionPartSupp);
+				.add(new ProjectOperator(new int[] { 0, 1, 3 }))
+				.add(selectionPartSupp);
 
 		// -------------------------------------------------------------------------------------
 
@@ -151,7 +151,7 @@ public class ThetaMultipleJoinPlan {
 		Component lastJoiner = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, LINEITEMS_ORDERSjoin,
 						SUPPLIER_PARTSUPPjoin, _queryBuilder).setJoinPredicate(predL_P)
-				.addOperator(new ProjectOperator(new int[] { 0, 1, 2, 3 })).addOperator(agg);
+				.add(new ProjectOperator(new int[] { 0, 1, 2, 3 })).add(agg);
 		//lastJoiner.setPrintOut(false);
 		// -------------------------------------------------------------------------------------
 

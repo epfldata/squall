@@ -58,8 +58,8 @@ public class TPCH7Plan {
 		final ProjectOperator projectionNation2 = new ProjectOperator(new int[] { 1, 0 });
 
 		final DataSourceComponent relationNation2 = new DataSourceComponent("NATION2", dataPath
-				+ "nation" + extension).setHashIndexes(hashNation2)
-				.addOperator(selectionNation2).addOperator(projectionNation2);
+				+ "nation" + extension).setOutputPartKey(hashNation2)
+				.add(selectionNation2).add(projectionNation2);
 		_queryBuilder.add(relationNation2);
 
 		// -------------------------------------------------------------------------------------
@@ -68,13 +68,13 @@ public class TPCH7Plan {
 		final ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0, 3 });
 
 		final DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath
-				+ "customer" + extension).setHashIndexes(hashCustomer).addOperator(
+				+ "customer" + extension).setOutputPartKey(hashCustomer).add(
 				projectionCustomer);
 		_queryBuilder.add(relationCustomer);
 
 		// -------------------------------------------------------------------------------------
 		final EquiJoinComponent N_Cjoin = new EquiJoinComponent(relationNation2, relationCustomer)
-				.addOperator(new ProjectOperator(new int[] { 0, 2 })).setHashIndexes(
+				.add(new ProjectOperator(new int[] { 0, 2 })).setOutputPartKey(
 				Arrays.asList(1));
 		_queryBuilder.add(N_Cjoin);
 
@@ -84,13 +84,13 @@ public class TPCH7Plan {
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 1 });
 
 		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension).setHashIndexes(hashOrders).addOperator(
+				+ "orders" + extension).setOutputPartKey(hashOrders).add(
 				projectionOrders);
 		_queryBuilder.add(relationOrders);
 
 		// -------------------------------------------------------------------------------------
 		final EquiJoinComponent N_C_Ojoin = new EquiJoinComponent(N_Cjoin, relationOrders)
-				.addOperator(new ProjectOperator(new int[] { 0, 2 })).setHashIndexes(
+				.add(new ProjectOperator(new int[] { 0, 2 })).setOutputPartKey(
 				Arrays.asList(1));
 		_queryBuilder.add(N_C_Ojoin);
 
@@ -100,7 +100,7 @@ public class TPCH7Plan {
 		final ProjectOperator projectionSupplier = new ProjectOperator(new int[] { 0, 3 });
 
 		final DataSourceComponent relationSupplier = new DataSourceComponent("SUPPLIER", dataPath
-				+ "supplier" + extension).setHashIndexes(hashSupplier).addOperator(
+				+ "supplier" + extension).setOutputPartKey(hashSupplier).add(
 				projectionSupplier);
 		_queryBuilder.add(relationSupplier);
 
@@ -110,13 +110,13 @@ public class TPCH7Plan {
 		final ProjectOperator projectionNation1 = new ProjectOperator(new int[] { 1, 0 });
 
 		final DataSourceComponent relationNation1 = new DataSourceComponent("NATION1", dataPath
-				+ "nation" + extension).setHashIndexes(hashNation1)
-				.addOperator(selectionNation2).addOperator(projectionNation1);
+				+ "nation" + extension).setOutputPartKey(hashNation1)
+				.add(selectionNation2).add(projectionNation1);
 		_queryBuilder.add(relationNation1);
 
 		// -------------------------------------------------------------------------------------
 		final EquiJoinComponent S_Njoin = new EquiJoinComponent(relationSupplier, relationNation1)
-				.addOperator(new ProjectOperator(new int[] { 0, 2 })).setHashIndexes(
+				.add(new ProjectOperator(new int[] { 0, 2 })).setOutputPartKey(
 				Arrays.asList(0));
 		_queryBuilder.add(S_Njoin);
 
@@ -146,14 +146,14 @@ public class TPCH7Plan {
 				supplierKey, orderKey);
 
 		final DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension).setHashIndexes(hashLineitem)
-				.addOperator(selectionLineitem).addOperator(projectionLineitem);
+				+ "lineitem" + extension).setOutputPartKey(hashLineitem)
+				.add(selectionLineitem).add(projectionLineitem);
 		_queryBuilder.add(relationLineitem);
 
 		// -------------------------------------------------------------------------------------
 		final EquiJoinComponent L_S_Njoin = new EquiJoinComponent(relationLineitem, S_Njoin)
-				.addOperator(new ProjectOperator(new int[] { 4, 0, 1, 3 }))
-				.setHashIndexes(Arrays.asList(3));
+				.add(new ProjectOperator(new int[] { 4, 0, 1, 3 }))
+				.setOutputPartKey(Arrays.asList(3));
 		_queryBuilder.add(L_S_Njoin);
 
 		// -------------------------------------------------------------------------------------
@@ -171,7 +171,7 @@ public class TPCH7Plan {
 				conf).setGroupByColumns(Arrays.asList(2, 0, 3));
 
 		EquiJoinComponent finalComp = new EquiJoinComponent(N_C_Ojoin, L_S_Njoin)
-				.addOperator(so).addOperator(agg);
+				.add(so).add(agg);
 		_queryBuilder.add(finalComp);
 
 	}

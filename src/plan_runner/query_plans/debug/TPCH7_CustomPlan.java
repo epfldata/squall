@@ -68,9 +68,9 @@ public class TPCH7_CustomPlan {
 
         DataSourceComponent relationNation2 = new DataSourceComponent(
                 "NATION2",
-                dataPath + "nation" + extension).setHashIndexes(hashNation2)
-                           .addOperator(selectionNation2)
-                           .addOperator(projectionNation2);
+                dataPath + "nation" + extension).setOutputPartKey(hashNation2)
+                           .add(selectionNation2)
+                           .add(projectionNation2);
         _queryBuilder.add(relationNation2);
 
         //-------------------------------------------------------------------------------------
@@ -80,15 +80,15 @@ public class TPCH7_CustomPlan {
 
         DataSourceComponent relationCustomer = new DataSourceComponent(
                 "CUSTOMER",
-                dataPath + "customer" + extension).setHashIndexes(hashCustomer)
-                           .addOperator(projectionCustomer);
+                dataPath + "customer" + extension).setOutputPartKey(hashCustomer)
+                           .add(projectionCustomer);
         _queryBuilder.add(relationCustomer);
 
         //-------------------------------------------------------------------------------------
         EquiJoinComponent N_Cjoin = new EquiJoinComponent(
                 relationNation2,
-                relationCustomer).addOperator(new ProjectOperator(new int[]{0, 2}))
-                           .setHashIndexes(Arrays.asList(1));
+                relationCustomer).add(new ProjectOperator(new int[]{0, 2}))
+                           .setOutputPartKey(Arrays.asList(1));
         _queryBuilder.add(N_Cjoin);
 
         //-------------------------------------------------------------------------------------
@@ -98,15 +98,15 @@ public class TPCH7_CustomPlan {
 
         DataSourceComponent relationOrders = new DataSourceComponent(
                 "ORDERS",
-                dataPath + "orders" + extension).setHashIndexes(hashOrders)
-                           .addOperator(projectionOrders);
+                dataPath + "orders" + extension).setOutputPartKey(hashOrders)
+                           .add(projectionOrders);
         _queryBuilder.add(relationOrders);
 
         //-------------------------------------------------------------------------------------
         EquiJoinComponent N_C_Ojoin = new EquiJoinComponent(
                 N_Cjoin,
-                relationOrders).addOperator(new ProjectOperator(new int[]{0, 2}))
-                           .setHashIndexes(Arrays.asList(1));
+                relationOrders).add(new ProjectOperator(new int[]{0, 2}))
+                           .setOutputPartKey(Arrays.asList(1));
         _queryBuilder.add(N_C_Ojoin);
 
         //-------------------------------------------------------------------------------------
@@ -116,8 +116,8 @@ public class TPCH7_CustomPlan {
 
         DataSourceComponent relationSupplier = new DataSourceComponent(
                 "SUPPLIER",
-                dataPath + "supplier" + extension).setHashIndexes(hashSupplier)
-                           .addOperator(projectionSupplier);
+                dataPath + "supplier" + extension).setOutputPartKey(hashSupplier)
+                           .add(projectionSupplier);
         _queryBuilder.add(relationSupplier);
 
         //-------------------------------------------------------------------------------------
@@ -127,16 +127,16 @@ public class TPCH7_CustomPlan {
 
         DataSourceComponent relationNation1 = new DataSourceComponent(
                 "NATION1",
-                dataPath + "nation" + extension).setHashIndexes(hashNation1)
-                           .addOperator(selectionNation2)
-                           .addOperator(projectionNation1);
+                dataPath + "nation" + extension).setOutputPartKey(hashNation1)
+                           .add(selectionNation2)
+                           .add(projectionNation1);
         _queryBuilder.add(relationNation1);
 
         //-------------------------------------------------------------------------------------
         EquiJoinComponent S_Njoin = new EquiJoinComponent(
                 relationSupplier,
-                relationNation1).addOperator(new ProjectOperator(new int[]{0, 2}))
-                           .setHashIndexes(Arrays.asList(0));
+                relationNation1).add(new ProjectOperator(new int[]{0, 2}))
+                           .setOutputPartKey(Arrays.asList(0));
         _queryBuilder.add(S_Njoin);
 
        //-------------------------------------------------------------------------------------
@@ -169,16 +169,16 @@ public class TPCH7_CustomPlan {
 
         DataSourceComponent relationLineitem = new DataSourceComponent(
                 "LINEITEM",
-                dataPath + "lineitem" + extension).setHashIndexes(hashLineitem)
-                           .addOperator(selectionLineitem)
-                           .addOperator(projectionLineitem);
+                dataPath + "lineitem" + extension).setOutputPartKey(hashLineitem)
+                           .add(selectionLineitem)
+                           .add(projectionLineitem);
         _queryBuilder.add(relationLineitem);
 
         //-------------------------------------------------------------------------------------
         EquiJoinComponent L_S_Njoin = new EquiJoinComponent(
                 relationLineitem,
-                S_Njoin).addOperator(new ProjectOperator(new int[]{4, 0, 1, 3}))
-                           .setHashIndexes(Arrays.asList(3))
+                S_Njoin).add(new ProjectOperator(new int[]{4, 0, 1, 3}))
+                           .setOutputPartKey(Arrays.asList(3))
                            ;
         _queryBuilder.add(L_S_Njoin);
 
@@ -211,8 +211,8 @@ public class TPCH7_CustomPlan {
 
         EquiJoinComponent N_C_O_L_S_Njoin = new EquiJoinComponent(
                 N_C_Ojoin,
-                L_S_Njoin).addOperator(so)
-                           .addOperator(agg);
+                L_S_Njoin).add(so)
+                           .add(agg);
         _queryBuilder.add(N_C_O_L_S_Njoin);
         //-------------------------------------------------------------------------------------
 

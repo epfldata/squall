@@ -83,21 +83,21 @@ public class ThetaEWHBandPeer {
 			
 			// build relations
 			relationPeer1 = new DataSourceComponent("PEER1", dataPath
-					+ "peersnapshot-01" + extension).addOperator(selectionPeer1).addOperator(print1).addOperator(
-					projectionPeer1).setHashIndexes(hashPeer1);
+					+ "peersnapshot-01" + extension).add(selectionPeer1).add(print1).add(
+					projectionPeer1).setOutputPartKey(hashPeer1);
 			_queryBuilder.add(relationPeer1);
 			
 			relationPeer2 = new DataSourceComponent("PEER2", dataPath
-					+ "peersnapshot-01" + extension).addOperator(selectionPeer2).addOperator(print2).addOperator(
-					projectionPeer2).setHashIndexes(hashPeer2);
+					+ "peersnapshot-01" + extension).add(selectionPeer2).add(print2).add(
+					projectionPeer2).setOutputPartKey(hashPeer2);
 			_queryBuilder.add(relationPeer2);
 		}else{
 			relationPeer1 = new DataSourceComponent("PEER1", dataPath
-					+ matName1 + extension).addOperator(projectionPeer1).setHashIndexes(hashPeer1);
+					+ matName1 + extension).add(projectionPeer1).setOutputPartKey(hashPeer1);
 			_queryBuilder.add(relationPeer1);
 			
 			relationPeer2 = new DataSourceComponent("PEER1", dataPath
-					+ matName2 + extension).addOperator(projectionPeer2).setHashIndexes(hashPeer2);
+					+ matName2 + extension).add(projectionPeer2).setOutputPartKey(hashPeer2);
 			_queryBuilder.add(relationPeer2);
 		}
 	

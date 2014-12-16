@@ -1,8 +1,10 @@
 package plan_runner.components.theta;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import plan_runner.components.Component;
@@ -55,7 +57,7 @@ public class ThetaJoinStaticComponent implements Component {
 	}
 
 	@Override
-	public ThetaJoinStaticComponent addOperator(Operator operator) {
+	public ThetaJoinStaticComponent add(Operator operator) {
 		_chain.addOperator(operator);
 		return this;
 	}
@@ -194,9 +196,14 @@ public class ThetaJoinStaticComponent implements Component {
 	}
 
 	@Override
-	public ThetaJoinStaticComponent setHashIndexes(List<Integer> hashIndexes) {
+	public ThetaJoinStaticComponent setOutputPartKey(List<Integer> hashIndexes) {
 		_hashIndexes = hashIndexes;
 		return this;
+	}
+	
+	@Override
+	public ThetaJoinStaticComponent setOutputPartKey(int... hashIndexes) {
+		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
 	}
 
 	@Override

@@ -82,7 +82,7 @@ public class ThetaEWHEquiLineitemOrders {
 				ComparisonPredicate.LESS_OP, new ColumnReference(_ic, 3),
 				new ValueSpecification(_ic, 2)));
 		DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension).addOperator(selectionLineitem).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
+				+ "lineitem" + extension).add(selectionLineitem).add(projectionLineitem).setOutputPartKey(hashLineitem);
 		_queryBuilder.add(relationLineitem);
 		
 		/*
@@ -96,7 +96,7 @@ public class ThetaEWHEquiLineitemOrders {
 		.addOperator(selectionOrders)
 		*/
 		DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension).addOperator(projectionOrders).setHashIndexes(hashOrders);
+				+ "orders" + extension).add(projectionOrders).setOutputPartKey(hashOrders);
 		_queryBuilder.add(relationOrders);
 
 		NumericConversion keyType = (NumericConversion) _ic;

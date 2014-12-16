@@ -61,7 +61,7 @@ public class IndexRuleOptimizer implements Optimizer {
 			List<ValueExpression> groupByVEs) {
 		if (aggOps.isEmpty()) {
 			final ProjectOperator project = new ProjectOperator(groupByVEs);
-			lastComponent.addOperator(project);
+			lastComponent.add(project);
 		} else if (aggOps.size() == 1) {
 			// all the others are group by
 			final AggregateOperator firstAgg = aggOps.get(0);
@@ -77,13 +77,13 @@ public class IndexRuleOptimizer implements Optimizer {
 				// on nodes by group by columns.
 				final boolean newLevel = !(_it.isHashedBy(lastComponent, groupByColumns));
 				if (newLevel) {
-					lastComponent.setHashIndexes(groupByColumns);
+					lastComponent.setOutputPartKey(groupByColumns);
 					OperatorComponent oc = new OperatorComponent(lastComponent, 
-							ParserUtil.generateUniqueName("OPERATOR")).addOperator(firstAgg);
+							ParserUtil.generateUniqueName("OPERATOR")).add(firstAgg);
 					_cg.getQueryBuilder().add(oc);
 
 				} else
-					lastComponent.addOperator(firstAgg);
+					lastComponent.add(firstAgg);
 			} else {
 				// Sometimes groupByVEs contains other functions, so we have to
 				// use projections instead of simple groupBy
@@ -101,7 +101,7 @@ public class IndexRuleOptimizer implements Optimizer {
 				lastComponent.setHashExpressions((List<ValueExpression>) DeepCopy.copy(groupByVEs));
 
 				OperatorComponent oc = new OperatorComponent(lastComponent, 
-						ParserUtil.generateUniqueName("OPERATOR")).addOperator(firstAgg);
+						ParserUtil.generateUniqueName("OPERATOR")).add(firstAgg);
 				_cg.getQueryBuilder().add(oc);
 			}
 		} else
@@ -109,7 +109,7 @@ public class IndexRuleOptimizer implements Optimizer {
 	}
 
 	private void attachWhereClause(Component affectedComponent, SelectOperator select) {
-		affectedComponent.addOperator(select);
+		affectedComponent.add(select);
 	}
 
 	private void earlyProjection(QueryBuilder queryPlan) {

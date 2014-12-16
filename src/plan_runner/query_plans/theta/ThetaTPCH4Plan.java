@@ -72,8 +72,8 @@ public class ThetaTPCH4Plan {
 		ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 5 });
 
 		DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath + "orders"
-				+ extension).setHashIndexes(hashOrders).addOperator(selectionOrders)
-				.addOperator(projectionOrders);
+				+ extension).setOutputPartKey(hashOrders).add(selectionOrders)
+				.add(projectionOrders);
 		_queryBuilder.add(relationOrders);
 
 		//-------------------------------------------------------------------------------------
@@ -86,8 +86,8 @@ public class ThetaTPCH4Plan {
 		DistinctOperator distinctLineitem = new DistinctOperator(conf, new int[] { 0 });
 
 		DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension).setHashIndexes(hashLineitem)
-				.addOperator(selectionLineitem).addOperator(distinctLineitem);
+				+ "lineitem" + extension).setOutputPartKey(hashLineitem)
+				.add(selectionLineitem).add(distinctLineitem);
 		_queryBuilder.add(relationLineitem);
 
 		//-------------------------------------------------------------------------------------
@@ -99,14 +99,14 @@ public class ThetaTPCH4Plan {
 
 		Component O_Ljoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationOrders, relationLineitem,
-						_queryBuilder).setHashIndexes(Arrays.asList(1)).setJoinPredicate(O_L_comp);
+						_queryBuilder).setOutputPartKey(Arrays.asList(1)).setJoinPredicate(O_L_comp);
 
 		//-------------------------------------------------------------------------------------
 		// set up aggregation function on a separate StormComponent(Bolt)
 		AggregateOperator aggOp = new AggregateCountOperator(conf).setGroupByColumns(Arrays
 				.asList(1));
 		OperatorComponent finalComponent = new OperatorComponent(O_Ljoin, "FINAL_RESULT")
-			.addOperator(aggOp);
+			.add(aggOp);
 		_queryBuilder.add(finalComponent);
 
 		//-------------------------------------------------------------------------------------

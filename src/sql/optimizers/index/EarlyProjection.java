@@ -147,7 +147,7 @@ public class EarlyProjection {
 		// set projection as if parent do not change
 		final ProjectOperator projection = new ProjectOperator(
 				ParserUtil.listToArr(afterProjIndexes));
-		component.addOperator(projection);
+		component.add(projection);
 
 		// projection changed, everybody after it should notice that
 		updateColumnRefs(afterProjColRefs, afterProjIndexes);
@@ -374,7 +374,7 @@ public class EarlyProjection {
 		final List<Integer> oldHashIndexes = component.getHashIndexes();
 		if (oldHashIndexes != null) {
 			final List<Integer> newHashIndexes = elemsBefore(oldHashIndexes, filteredIndexList);
-			component.setHashIndexes(newHashIndexes);
+			component.setOutputPartKey(newHashIndexes);
 		}
 		final AggregateOperator agg = component.getChainOperator().getAggregation();
 		if (agg != null) {

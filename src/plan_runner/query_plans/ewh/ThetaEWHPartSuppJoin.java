@@ -73,19 +73,19 @@ public class ThetaEWHPartSuppJoin {
 		
 		if(!isMaterialized){
 			relationPartSupp1 = new DataSourceComponent("PARTSUPP1", dataPath
-					+ "partsupp" + extension).addOperator(print1).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+					+ "partsupp" + extension).add(print1).add(projectionCustomer).setOutputPartKey(hashCustomer);
 			_queryBuilder.add(relationPartSupp1);
 			
 			relationPartSupp2 = new DataSourceComponent("PARTSUPP2", dataPath
-					+ "partsupp" + extension).addOperator(print2).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+					+ "partsupp" + extension).add(print2).add(projectionCustomer).setOutputPartKey(hashCustomer);
 			_queryBuilder.add(relationPartSupp2);
 		}else{
 			relationPartSupp1 = new DataSourceComponent("PARTSUPP1", dataPath
-					+ matName1 + extension).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+					+ matName1 + extension).add(projectionCustomer).setOutputPartKey(hashCustomer);
 			_queryBuilder.add(relationPartSupp1);
 
 			relationPartSupp2 = new DataSourceComponent("PARTSUPP2", dataPath
-					+ matName2 + extension).addOperator(projectionCustomer).setHashIndexes(hashCustomer);
+					+ matName2 + extension).add(projectionCustomer).setOutputPartKey(hashCustomer);
 			_queryBuilder.add(relationPartSupp2);
 		}
 

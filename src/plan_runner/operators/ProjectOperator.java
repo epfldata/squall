@@ -16,7 +16,7 @@ public class ProjectOperator implements Operator {
 
 	private int _numTuplesProcessed = 0;
 
-	public ProjectOperator(int[] projectIndexes) {
+	public ProjectOperator(int... projectIndexes) {
 		for (final int columnNumber : projectIndexes) {
 			final ColumnReference columnReference = new ColumnReference(new StringConversion(),
 					columnNumber);

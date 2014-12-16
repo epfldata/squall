@@ -1,16 +1,18 @@
 package plan_runner.components;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import plan_runner.conversion.TypeConversion;
+import plan_runner.ewh.components.CreateHistogramComponent;
 import plan_runner.expressions.ValueExpression;
 import plan_runner.operators.ChainOperator;
 import plan_runner.operators.Operator;
 import plan_runner.predicates.Predicate;
-import plan_runner.query_plans.QueryBuilder;
 import plan_runner.storm_components.InterchangingComponent;
 import plan_runner.storm_components.StormComponent;
 import plan_runner.storm_components.StormDataSource;
@@ -50,7 +52,7 @@ public class DataSourceComponent implements Component {
 	}
 
 	@Override
-	public DataSourceComponent addOperator(Operator operator) {
+	public DataSourceComponent add(Operator operator) {
 		_chain.addOperator(operator);
 		return this;
 	}
@@ -179,9 +181,14 @@ public class DataSourceComponent implements Component {
 	}
 
 	@Override
-	public DataSourceComponent setHashIndexes(List<Integer> hashIndexes) {
+	public DataSourceComponent setOutputPartKey(List<Integer> hashIndexes) {
 		_hashIndexes = hashIndexes;
 		return this;
+	}
+	
+	@Override
+	public DataSourceComponent setOutputPartKey(int... hashIndexes) {
+		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
 	}
 
 	@Override

@@ -46,7 +46,7 @@ public class IndexSimpleOptimizer implements Optimizer {
 			List<ValueExpression> groupByVEs, Component affectedComponent) {
 		if (aggOps.isEmpty()) {
 			final ProjectOperator project = new ProjectOperator(groupByVEs);
-			affectedComponent.addOperator(project);
+			affectedComponent.add(project);
 		} else if (aggOps.size() == 1) {
 			// all the others are group by
 			final AggregateOperator firstAgg = aggOps.get(0);
@@ -62,13 +62,13 @@ public class IndexSimpleOptimizer implements Optimizer {
 				// on nodes by group by columns.
 				final boolean newLevel = !(_it.isHashedBy(affectedComponent, groupByColumns));
 				if (newLevel) {
-					affectedComponent.setHashIndexes(groupByColumns);
+					affectedComponent.setOutputPartKey(groupByColumns);
 					OperatorComponent oc = new OperatorComponent(affectedComponent,
 							ParserUtil.generateUniqueName("OPERATOR"))
-							.addOperator(firstAgg);
+							.add(firstAgg);
 					_cg.getQueryBuilder().add(oc);
 				} else
-					affectedComponent.addOperator(firstAgg);
+					affectedComponent.add(firstAgg);
 			} else {
 				// Sometimes groupByVEs contains other functions, so we have to
 				// use projections instead of simple groupBy
@@ -92,7 +92,7 @@ public class IndexSimpleOptimizer implements Optimizer {
 						.copy(groupByVEs));
 
 				OperatorComponent oc = new OperatorComponent(affectedComponent, 
-						ParserUtil.generateUniqueName("OPERATOR")).addOperator(firstAgg);
+						ParserUtil.generateUniqueName("OPERATOR")).add(firstAgg);
 				_cg.getQueryBuilder().add(oc);
 
 			}
@@ -101,7 +101,7 @@ public class IndexSimpleOptimizer implements Optimizer {
 	}
 
 	private void attachWhereClause(SelectOperator select, Component affectedComponent) {
-		affectedComponent.addOperator(select);
+		affectedComponent.add(select);
 	}
 
 	@Override

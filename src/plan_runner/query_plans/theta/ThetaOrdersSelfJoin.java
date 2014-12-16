@@ -51,8 +51,8 @@ public class ThetaOrdersSelfJoin {
 		//		SelectOperator selectionOrders1 = new SelectOperator(new AndPredicate(comp1, comp2));
 
 		DataSourceComponent relationOrders1 = new DataSourceComponent("ORDERS1", dataPath
-				+ "orders" + extension).addOperator(selectionOrders1).addOperator(
-				new ProjectOperator(new int[] { 0, 3 })).setHashIndexes(hashLineitem);
+				+ "orders" + extension).add(selectionOrders1).add(
+				new ProjectOperator(new int[] { 0, 3 })).setOutputPartKey(hashLineitem);
 		_queryBuilder.add(relationOrders1);
 
 		SelectOperator selectionOrders2 = new SelectOperator(new ComparisonPredicate(
@@ -60,8 +60,8 @@ public class ThetaOrdersSelfJoin {
 				new ValueSpecification(_dateConv, _date1)));
 
 		DataSourceComponent relationOrders2 = new DataSourceComponent("ORDERS2", dataPath
-				+ "orders" + extension).addOperator(selectionOrders2).addOperator(
-				new ProjectOperator(new int[] { 0, 3 })).setHashIndexes(hashLineitem);
+				+ "orders" + extension).add(selectionOrders2).add(
+				new ProjectOperator(new int[] { 0, 3 })).setOutputPartKey(hashLineitem);
 		_queryBuilder.add(relationOrders2);
 
 		//Aggregate
@@ -88,7 +88,7 @@ public class ThetaOrdersSelfJoin {
 
 		Component ORDERS_ORDERSjoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationOrders1, relationOrders2,
-						_queryBuilder).setJoinPredicate(pred3).addOperator(agg).setContentSensitiveThetaJoinWrapper(_doubleConv);
+						_queryBuilder).setJoinPredicate(pred3).add(agg).setContentSensitiveThetaJoinWrapper(_doubleConv);
 	}
 
 	public QueryBuilder getQueryPlan() {

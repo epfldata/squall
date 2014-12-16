@@ -1,7 +1,10 @@
 package plan_runner.storm_components;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
+import org.apache.commons.lang.ArrayUtils;
 
 import plan_runner.components.Component;
 import plan_runner.components.DataSourceComponent;
@@ -41,7 +44,7 @@ public class InterchangingComponent implements Component {
 	}
 
 	@Override
-	public Component addOperator(Operator operator) {
+	public Component add(Operator operator) {
 		return this;
 	}
 
@@ -156,9 +159,14 @@ public class InterchangingComponent implements Component {
 	}
 
 	@Override
-	public Component setHashIndexes(List<Integer> hashIndexes) {
+	public Component setOutputPartKey(List<Integer> hashIndexes) {
 		_hashIndexes = hashIndexes;
 		return this;
+	}
+	
+	@Override
+	public Component setOutputPartKey(int... hashIndexes) {
+		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
 	}
 
 	@Override

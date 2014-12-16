@@ -76,9 +76,9 @@ public class TPCH5_CustomPlan {
         ProjectOperator projectionRegion = new ProjectOperator(new int[]{0});
 
         DataSourceComponent relationRegion = new DataSourceComponent(
-                "REGION", dataPath + "region" + extension).setHashIndexes(hashRegion)
-                           .addOperator(selectionRegion)
-                           .addOperator(projectionRegion);
+                "REGION", dataPath + "region" + extension).setOutputPartKey(hashRegion)
+                           .add(selectionRegion)
+                           .add(projectionRegion);
         _queryBuilder.add(relationRegion);
 
         //-------------------------------------------------------------------------------------
@@ -88,8 +88,8 @@ public class TPCH5_CustomPlan {
 
         DataSourceComponent relationNation = new DataSourceComponent(
                 "NATION",
-                dataPath + "nation" + extension).setHashIndexes(hashNation)
-                           .addOperator(projectionNation);
+                dataPath + "nation" + extension).setOutputPartKey(hashNation)
+                           .add(projectionNation);
         _queryBuilder.add(relationNation);
 
 
@@ -100,8 +100,8 @@ public class TPCH5_CustomPlan {
 
         EquiJoinComponent R_Njoin = new EquiJoinComponent(
                 relationRegion,
-                relationNation).setHashIndexes(hashRN)
-                           .addOperator(projectionRN);
+                relationNation).setOutputPartKey(hashRN)
+                           .add(projectionRN);
         _queryBuilder.add(R_Njoin);
 
         //-------------------------------------------------------------------------------------
@@ -111,8 +111,8 @@ public class TPCH5_CustomPlan {
 
         DataSourceComponent relationSupplier = new DataSourceComponent(
                 "SUPPLIER",
-                dataPath + "supplier" + extension).setHashIndexes(hashSupplier)
-                           .addOperator(projectionSupplier);
+                dataPath + "supplier" + extension).setOutputPartKey(hashSupplier)
+                           .add(projectionSupplier);
         _queryBuilder.add(relationSupplier);
 
         //-------------------------------------------------------------------------------------
@@ -122,8 +122,8 @@ public class TPCH5_CustomPlan {
 
         EquiJoinComponent R_N_Sjoin = new EquiJoinComponent(
                 R_Njoin,
-                relationSupplier).setHashIndexes(hashRNS)
-                           .addOperator(projectionRNS);
+                relationSupplier).setOutputPartKey(hashRNS)
+                           .add(projectionRNS);
         _queryBuilder.add(R_N_Sjoin);
 
         //-------------------------------------------------------------------------------------
@@ -133,8 +133,8 @@ public class TPCH5_CustomPlan {
 
         DataSourceComponent relationLineitem = new DataSourceComponent(
                 "LINEITEM",
-                dataPath + "lineitem" + extension).setHashIndexes(hashLineitem)
-                           .addOperator(projectionLineitem);
+                dataPath + "lineitem" + extension).setOutputPartKey(hashLineitem)
+                           .add(projectionLineitem);
         _queryBuilder.add(relationLineitem);
 
         //-------------------------------------------------------------------------------------
@@ -147,8 +147,8 @@ public class TPCH5_CustomPlan {
         
         EquiJoinComponent R_N_S_Ljoin = new EquiJoinComponent(
                 R_N_Sjoin,
-                relationLineitem).setHashIndexes(hashRNSL)
-                           .addOperator(projectionRNSL)
+                relationLineitem).setOutputPartKey(hashRNSL)
+                           .add(projectionRNSL)
 //                           .addOperator(agg)
                            ;
         _queryBuilder.add(R_N_S_Ljoin);
@@ -160,8 +160,8 @@ public class TPCH5_CustomPlan {
 
         DataSourceComponent relationCustomer = new DataSourceComponent(
                 "CUSTOMER",
-                dataPath + "customer" + extension).setHashIndexes(hashCustomer)
-                           .addOperator(projectionCustomer);
+                dataPath + "customer" + extension).setOutputPartKey(hashCustomer)
+                           .add(projectionCustomer);
         _queryBuilder.add(relationCustomer);
 
         //-------------------------------------------------------------------------------------
@@ -178,9 +178,9 @@ public class TPCH5_CustomPlan {
 
         DataSourceComponent relationOrders = new DataSourceComponent(
                 "ORDERS",
-                dataPath + "orders" + extension).setHashIndexes(hashOrders)
-                           .addOperator(selectionOrders)
-                           .addOperator(projectionOrders);
+                dataPath + "orders" + extension).setOutputPartKey(hashOrders)
+                           .add(selectionOrders)
+                           .add(projectionOrders);
         _queryBuilder.add(relationOrders);
 
         //-------------------------------------------------------------------------------------
@@ -190,8 +190,8 @@ public class TPCH5_CustomPlan {
 
         EquiJoinComponent C_Ojoin = new EquiJoinComponent(
                 relationCustomer,
-                relationOrders).setHashIndexes(hashCO)
-                           .addOperator(projectionCO);
+                relationOrders).setOutputPartKey(hashCO)
+                           .add(projectionCO);
         _queryBuilder.add(C_Ojoin);
 
         //-------------------------------------------------------------------------------------
@@ -201,8 +201,8 @@ public class TPCH5_CustomPlan {
 
         EquiJoinComponent R_N_S_L_C_Ojoin = new EquiJoinComponent(
                 R_N_S_Ljoin,
-                C_Ojoin).setHashIndexes(hashRNSLCO)
-                           .addOperator(projectionRNSLCO);
+                C_Ojoin).setOutputPartKey(hashRNSLCO)
+                           .add(projectionRNSLCO);
         _queryBuilder.add(R_N_S_L_C_Ojoin);
 
         //-------------------------------------------------------------------------------------
@@ -219,7 +219,7 @@ public class TPCH5_CustomPlan {
         AggregateOperator aggOp = new AggregateSumOperator(product, conf).setGroupByColumns(Arrays.asList(0));
         OperatorComponent finalComponent = new OperatorComponent(
                 R_N_S_L_C_Ojoin,
-                "FINAL_RESULT").addOperator(aggOp);
+                "FINAL_RESULT").add(aggOp);
         _queryBuilder.add(finalComponent);
 
         //-------------------------------------------------------------------------------------

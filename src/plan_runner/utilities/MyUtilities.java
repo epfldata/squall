@@ -1090,8 +1090,8 @@ public class MyUtilities {
 		
 		SampleOperator sample1 = new SampleOperator(firstRelSize, firstNumOfBuckets);
 		SampleOperator sample2 = new SampleOperator(secondRelSize, secondNumOfBuckets);
-		firstParent.addOperator(sample1).addOperator(project1).setHashIndexes(hash);
-		secondParent.addOperator(sample2).addOperator(project2).setHashIndexes(hash);
+		firstParent.add(sample1).add(project1).setOutputPartKey(hash);
+		secondParent.add(sample2).add(project2).setOutputPartKey(hash);
 
 		// In principle, we could run this on non-materialized relations as well		
 		//   Instead of JoinComponent, we just put OkcanSampleMatrixComponent
@@ -1157,7 +1157,7 @@ public class MyUtilities {
 		List<Integer> hash = new ArrayList<Integer>(Arrays.asList(0));
 		
 		SampleOperator sample = new SampleOperator(relSize, numLastJoiners);
-		parent.addOperator(sample).addOperator(project).setHashIndexes(hash);
+		parent.add(sample).add(project).setOutputPartKey(hash);
 	}
 	
 	public static QueryBuilder addEWHSampler(Component firstParent, Component secondParent, int firstKeyProject, int secondKeyProject,
@@ -1183,8 +1183,8 @@ public class MyUtilities {
 		// hash is always 0 as the key is there
 		List<Integer> hash = new ArrayList<Integer>(Arrays.asList(0));
 		
-		firstParent.addOperator(project1).setHashIndexes(hash);
-		secondParent.addOperator(project2).setHashIndexes(hash);
+		firstParent.add(project1).setOutputPartKey(hash);
+		secondParent.add(project2).setOutputPartKey(hash);
 
 		// equi-weight histogram
 		// send something to the extra partitioner node
@@ -1193,8 +1193,8 @@ public class MyUtilities {
 		// add operators which samples for partitioner
 		SampleAsideAndForwardOperator saf1 = new SampleAsideAndForwardOperator(firstRelSize, firstNumOfBuckets, SystemParameters.PARTITIONER, conf);
 		SampleAsideAndForwardOperator saf2 = new SampleAsideAndForwardOperator(secondRelSize, secondNumOfBuckets, SystemParameters.PARTITIONER, conf);
-		firstParent.addOperator(saf1);
-		secondParent.addOperator(saf2);
+		firstParent.add(saf1);
+		secondParent.add(saf2);
 		
 		// do we build d2 out of the first relation (_firstParent)?
 		boolean isFirstD2 = SystemParameters.getBoolean(conf, "IS_FIRST_D2");

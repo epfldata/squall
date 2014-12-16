@@ -74,8 +74,8 @@ public class TPCH4Plan {
 		final ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0 });
 
 		final DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension).setHashIndexes(hashLineitem)
-				.addOperator(selectionLineitem).addOperator(projectionLineitem);
+				+ "lineitem" + extension).setOutputPartKey(hashLineitem)
+				.add(selectionLineitem).add(projectionLineitem);
 		_queryBuilder.add(relationLineitem);
 
 		// -------------------------------------------------------------------------------------
@@ -88,13 +88,13 @@ public class TPCH4Plan {
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 5 });
 
 		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension).setHashIndexes(hashOrders)
-				.addOperator(selectionOrders).addOperator(projectionOrders);
+				+ "orders" + extension).setOutputPartKey(hashOrders)
+				.add(selectionOrders).add(projectionOrders);
 		_queryBuilder.add(relationOrders);
 
 		// -------------------------------------------------------------------------------------
 		final EquiJoinComponent O_Ljoin = new EquiJoinComponent(relationOrders, relationLineitem)
-				.setHashIndexes(Arrays.asList(1));
+				.setOutputPartKey(Arrays.asList(1));
 		_queryBuilder.add(O_Ljoin);
 
 		// -------------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ public class TPCH4Plan {
 		final AggregateOperator aggOp = new AggregateCountOperator(conf).setGroupByColumns(
 				Arrays.asList(1)).setDistinct(distinctOp);
 		OperatorComponent oc = new OperatorComponent(O_Ljoin, "FINAL_RESULT")
-				.addOperator(aggOp);
+				.add(aggOp);
 		_queryBuilder.add(oc);
 
 		// -------------------------------------------------------------------------------------

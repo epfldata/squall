@@ -3,8 +3,12 @@ package plan_runner.query_plans;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import plan_runner.components.Component;
+import plan_runner.components.DataSourceComponent;
+import plan_runner.components.EquiJoinComponent;
+import plan_runner.utilities.SystemParameters;
 
 public class QueryBuilder implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -12,6 +16,24 @@ public class QueryBuilder implements Serializable {
 
 	public void add(Component component) {
 		_plan.add(component);
+	}
+	
+	public DataSourceComponent createDataSource(String componentName, String inputPath){
+		DataSourceComponent dsc = new DataSourceComponent(componentName, inputPath);
+		add(dsc);
+		return dsc;
+	}
+
+	public DataSourceComponent createDataSource(String tableName, Map conf){
+		String dataPath = SystemParameters.getString(conf, "DIP_DATA_PATH") + "/";
+		String extension = SystemParameters.getString(conf, "DIP_EXTENSION");
+		return createDataSource(tableName.toUpperCase(), dataPath + tableName + extension);
+	}
+	
+	public EquiJoinComponent createEquiJoin(Component firstParent, Component secondParent){
+		EquiJoinComponent ejc = new EquiJoinComponent(firstParent, secondParent);
+		add(ejc);
+		return ejc;
 	}
 
 	// Component names are unique - alias is used for tables

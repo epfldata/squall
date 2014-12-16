@@ -74,9 +74,9 @@ public class TPCH5_R_N_S_LPlan {
 
         DataSourceComponent relationRegion = new DataSourceComponent(
                 "REGION",
-                dataPath + "region" + extension).setHashIndexes(hashRegion)
-                           .addOperator(selectionRegion)
-                           .addOperator(projectionRegion);
+                dataPath + "region" + extension).setOutputPartKey(hashRegion)
+                           .add(selectionRegion)
+                           .add(projectionRegion);
         _queryBuilder.add(relationRegion);
 
         //-------------------------------------------------------------------------------------
@@ -86,8 +86,8 @@ public class TPCH5_R_N_S_LPlan {
 
         DataSourceComponent relationNation = new DataSourceComponent(
                 "NATION",
-                dataPath + "nation" + extension).setHashIndexes(hashNation)
-                           .addOperator(projectionNation);
+                dataPath + "nation" + extension).setOutputPartKey(hashNation)
+                           .add(projectionNation);
         _queryBuilder.add(relationNation);
 
 
@@ -103,9 +103,9 @@ public class TPCH5_R_N_S_LPlan {
         
         EquiJoinComponent R_Njoin = new EquiJoinComponent(
                 relationRegion,
-                relationNation).setHashIndexes(hashRN)
+                relationNation).setOutputPartKey(hashRN)
                 		   .setJoinPredicate(R_N_pred)
-                           .addOperator(projectionRN);
+                           .add(projectionRN);
         _queryBuilder.add(R_Njoin);
 
         //-------------------------------------------------------------------------------------
@@ -115,8 +115,8 @@ public class TPCH5_R_N_S_LPlan {
 
         DataSourceComponent relationSupplier = new DataSourceComponent(
                 "SUPPLIER",
-                dataPath + "supplier" + extension).setHashIndexes(hashSupplier)
-                           .addOperator(projectionSupplier);
+                dataPath + "supplier" + extension).setOutputPartKey(hashSupplier)
+                           .add(projectionSupplier);
         _queryBuilder.add(relationSupplier);
 
         //-------------------------------------------------------------------------------------
@@ -131,9 +131,9 @@ public class TPCH5_R_N_S_LPlan {
         
         EquiJoinComponent R_N_Sjoin = new EquiJoinComponent(
                 R_Njoin,
-                relationSupplier).setHashIndexes(hashRNS)
+                relationSupplier).setOutputPartKey(hashRNS)
                 		   .setJoinPredicate(R_N_S_pred)
-                           .addOperator(projectionRNS);
+                           .add(projectionRNS);
         _queryBuilder.add(R_N_Sjoin);
 
         //-------------------------------------------------------------------------------------
@@ -143,8 +143,8 @@ public class TPCH5_R_N_S_LPlan {
 
         DataSourceComponent relationLineitem = new DataSourceComponent(
                 "LINEITEM",
-                dataPath + "lineitem" + extension).setHashIndexes(hashLineitem)
-                           .addOperator(projectionLineitem);
+                dataPath + "lineitem" + extension).setOutputPartKey(hashLineitem)
+                           .add(projectionLineitem);
         _queryBuilder.add(relationLineitem);
 
         //-------------------------------------------------------------------------------------
@@ -176,8 +176,8 @@ public class TPCH5_R_N_S_LPlan {
         
         EquiJoinComponent R_N_S_Ljoin = new EquiJoinComponent(
                 R_N_Sjoin,
-                relationLineitem).setHashIndexes(hashRNSL)
-                           .addOperator(projectionRNSL)
+                relationLineitem).setOutputPartKey(hashRNSL)
+                           .add(projectionRNSL)
                            .setJoinPredicate(R_N_S_L_pred)
                            ;
         _queryBuilder.add(R_N_S_Ljoin);

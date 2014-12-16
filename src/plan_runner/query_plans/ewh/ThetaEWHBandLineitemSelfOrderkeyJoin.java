@@ -61,8 +61,8 @@ public class ThetaEWHBandLineitemSelfOrderkeyJoin {
 					ComparisonPredicate.LESS_OP, new ColumnReference(_ic, 3),
 					new ValueSpecification(_ic, 2)));
 			relationLineitem1 = new DataSourceComponent("LINEITEM1", dataPath
-					+ "lineitem" + extension).addOperator(selectionLineitem1).addOperator(print1).addOperator(
-					projectionLineitem).setHashIndexes(hashLineitem);
+					+ "lineitem" + extension).add(selectionLineitem1).add(print1).add(
+					projectionLineitem).setOutputPartKey(hashLineitem);
 			_queryBuilder.add(relationLineitem1);
 
 			// 15 - 15 cond_same
@@ -84,16 +84,16 @@ public class ThetaEWHBandLineitemSelfOrderkeyJoin {
 			SelectOperator selectionLineitem2 = new SelectOperator(or2);
 
 			relationLineitem2 = new DataSourceComponent("LINEITEM2", dataPath
-					+ "lineitem" + extension).addOperator(selectionLineitem2).addOperator(print2).addOperator(
-					projectionLineitem).setHashIndexes(hashLineitem);
+					+ "lineitem" + extension).add(selectionLineitem2).add(print2).add(
+					projectionLineitem).setOutputPartKey(hashLineitem);
 			_queryBuilder.add(relationLineitem2);
 		}else{
 			relationLineitem1 = new DataSourceComponent("LINEITEM1", dataPath
-					+ "bci_ewh_1" + extension).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
+					+ "bci_ewh_1" + extension).add(projectionLineitem).setOutputPartKey(hashLineitem);
 			_queryBuilder.add(relationLineitem1);
 			
 			relationLineitem2 = new DataSourceComponent("LINEITEM2", dataPath
-					+ "bci_ewh_2" + extension).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
+					+ "bci_ewh_2" + extension).add(projectionLineitem).setOutputPartKey(hashLineitem);
 			_queryBuilder.add(relationLineitem2);
 		}
 

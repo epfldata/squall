@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import plan_runner.conversion.NumericConversion;
@@ -191,6 +192,11 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
 			return this;
 		} else
 			throw new RuntimeException("Aggragation already has groupBy set!");
+	}
+	
+	@Override
+	public AggregateSumOperator<T> setGroupByColumns(int... hashIndexes) {
+		return setGroupByColumns(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
 	}
 
 	@Override

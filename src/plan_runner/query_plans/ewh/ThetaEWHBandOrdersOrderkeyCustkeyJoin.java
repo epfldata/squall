@@ -105,22 +105,22 @@ public class ThetaEWHBandOrdersOrderkeyCustkeyJoin {
 		
 		if(!isMaterialized){
 			relationOrders1 = new DataSourceComponent("ORDERS1", dataPath
-					+ "orders" + extension).addOperator(print1).addOperator(
-					projectionLineitem1).setHashIndexes(hashLineitem);
+					+ "orders" + extension).add(print1).add(
+					projectionLineitem1).setOutputPartKey(hashLineitem);
 			_queryBuilder.add(relationOrders1);
 			
 			relationOrders2 = new DataSourceComponent("ORDERS2", dataPath
-					+ "orders" + extension).addOperator(print2).addOperator(
-					projectionLineitem2).setHashIndexes(hashLineitem);
+					+ "orders" + extension).add(print2).add(
+					projectionLineitem2).setOutputPartKey(hashLineitem);
 			_queryBuilder.add(relationOrders2);
 		}else{
 			// WATCH OUT ON PROJECTIONS AFTER MATERIALIZATIONS
 			relationOrders1 = new DataSourceComponent("ORDERS1", dataPath
-					+ matName1 + extension).addOperator(projectionLineitem1).setHashIndexes(hashLineitem);
+					+ matName1 + extension).add(projectionLineitem1).setOutputPartKey(hashLineitem);
 			_queryBuilder.add(relationOrders1);
 
 			relationOrders2 = new DataSourceComponent("LINEITEM2", dataPath
-					+ matName2 + extension).addOperator(projectionLineitem2).setHashIndexes(hashLineitem);
+					+ matName2 + extension).add(projectionLineitem2).setOutputPartKey(hashLineitem);
 			_queryBuilder.add(relationOrders2);
 		}
 	

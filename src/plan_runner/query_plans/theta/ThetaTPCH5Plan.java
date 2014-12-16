@@ -82,8 +82,8 @@ public class ThetaTPCH5Plan {
 		ProjectOperator projectionRegion = new ProjectOperator(new int[] { 0 });
 
 		DataSourceComponent relationRegion = new DataSourceComponent("REGION", dataPath + "region"
-				+ extension).setHashIndexes(hashRegion).addOperator(selectionRegion)
-				.addOperator(projectionRegion);
+				+ extension).setOutputPartKey(hashRegion).add(selectionRegion)
+				.add(projectionRegion);
 		_queryBuilder.add(relationRegion);
 
 		//-------------------------------------------------------------------------------------
@@ -92,7 +92,7 @@ public class ThetaTPCH5Plan {
 		ProjectOperator projectionNation = new ProjectOperator(new int[] { 0, 1, 2 });
 
 		DataSourceComponent relationNation = new DataSourceComponent("NATION", dataPath + "nation"
-				+ extension).setHashIndexes(hashNation).addOperator(projectionNation);
+				+ extension).setOutputPartKey(hashNation).add(projectionNation);
 		_queryBuilder.add(relationNation);
 
 		//-------------------------------------------------------------------------------------
@@ -107,7 +107,7 @@ public class ThetaTPCH5Plan {
 
 		Component R_Njoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationRegion, relationNation, _queryBuilder)
-				.setHashIndexes(hashRN).addOperator(projectionRN).setJoinPredicate(R_N_comp);
+				.setOutputPartKey(hashRN).add(projectionRN).setJoinPredicate(R_N_comp);
 
 		//-------------------------------------------------------------------------------------
 		List<Integer> hashSupplier = Arrays.asList(1);
@@ -115,7 +115,7 @@ public class ThetaTPCH5Plan {
 		ProjectOperator projectionSupplier = new ProjectOperator(new int[] { 0, 3 });
 
 		DataSourceComponent relationSupplier = new DataSourceComponent("SUPPLIER", dataPath
-				+ "supplier" + extension).setHashIndexes(hashSupplier).addOperator(
+				+ "supplier" + extension).setOutputPartKey(hashSupplier).add(
 				projectionSupplier);
 		_queryBuilder.add(relationSupplier);
 
@@ -131,7 +131,7 @@ public class ThetaTPCH5Plan {
 
 		Component R_N_Sjoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, R_Njoin, relationSupplier, _queryBuilder)
-				.setHashIndexes(hashRNS).addOperator(projectionRNS).setJoinPredicate(R_N_S_comp);
+				.setOutputPartKey(hashRNS).add(projectionRNS).setJoinPredicate(R_N_S_comp);
 
 		//-------------------------------------------------------------------------------------
 		List<Integer> hashLineitem = Arrays.asList(1);
@@ -139,7 +139,7 @@ public class ThetaTPCH5Plan {
 		ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0, 2, 5, 6 });
 
 		DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension).setHashIndexes(hashLineitem).addOperator(
+				+ "lineitem" + extension).setOutputPartKey(hashLineitem).add(
 				projectionLineitem);
 		_queryBuilder.add(relationLineitem);
 
@@ -155,7 +155,7 @@ public class ThetaTPCH5Plan {
 
 		Component R_N_S_Ljoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, R_N_Sjoin, relationLineitem, _queryBuilder)
-				.setHashIndexes(hashRNSL).addOperator(projectionRNSL)
+				.setOutputPartKey(hashRNSL).add(projectionRNSL)
 				.setJoinPredicate(R_N_S_L_comp);
 
 		//-------------------------------------------------------------------------------------
@@ -164,7 +164,7 @@ public class ThetaTPCH5Plan {
 		ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0, 3 });
 
 		DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath
-				+ "customer" + extension).setHashIndexes(hashCustomer).addOperator(
+				+ "customer" + extension).setOutputPartKey(hashCustomer).add(
 				projectionCustomer);
 		_queryBuilder.add(relationCustomer);
 
@@ -178,8 +178,8 @@ public class ThetaTPCH5Plan {
 		ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 1 });
 
 		DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath + "orders"
-				+ extension).setHashIndexes(hashOrders).addOperator(selectionOrders)
-				.addOperator(projectionOrders);
+				+ extension).setOutputPartKey(hashOrders).add(selectionOrders)
+				.add(projectionOrders);
 		_queryBuilder.add(relationOrders);
 
 		//-------------------------------------------------------------------------------------
@@ -194,7 +194,7 @@ public class ThetaTPCH5Plan {
 
 		Component C_Ojoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationCustomer, relationOrders,
-						_queryBuilder).setHashIndexes(hashCO).addOperator(projectionCO)
+						_queryBuilder).setOutputPartKey(hashCO).add(projectionCO)
 				.setJoinPredicate(C_O_comp);
 
 		//-------------------------------------------------------------------------------------
@@ -219,7 +219,7 @@ public class ThetaTPCH5Plan {
 
 		Component R_N_S_L_C_Ojoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, R_N_S_Ljoin, C_Ojoin, _queryBuilder)
-				.setHashIndexes(hashRNSLCO).addOperator(projectionRNSLCO)
+				.setOutputPartKey(hashRNSLCO).add(projectionRNSLCO)
 				.setJoinPredicate(R_N_S_L_C_O_comp);
 
 		//-------------------------------------------------------------------------------------
@@ -234,7 +234,7 @@ public class ThetaTPCH5Plan {
 		AggregateOperator aggOp = new AggregateSumOperator(product, conf).setGroupByColumns(Arrays
 				.asList(0));
 		OperatorComponent finalComponent = new OperatorComponent(R_N_S_L_C_Ojoin, "FINAL_RESULT")
-			.addOperator(aggOp);
+			.add(aggOp);
 		_queryBuilder.add(finalComponent);
 
 		//-------------------------------------------------------------------------------------

@@ -95,7 +95,7 @@ public class ThetaTPCH7_L_S_N1Plan {
 			final ProjectOperator projectionSupplier = new ProjectOperator(new int[] { 0, 3 });
 
 			final DataSourceComponent relationSupplier = new DataSourceComponent("SUPPLIER", dataPath
-					+ "supplier" + extension).setHashIndexes(hashSupplier).addOperator(
+					+ "supplier" + extension).setOutputPartKey(hashSupplier).add(
 					projectionSupplier);
 			_queryBuilder.add(relationSupplier);
 
@@ -110,8 +110,8 @@ public class ThetaTPCH7_L_S_N1Plan {
 			final ProjectOperator projectionNation1 = new ProjectOperator(new int[] { 1, 0 });
 
 			final DataSourceComponent relationNation1 = new DataSourceComponent("NATION1", dataPath
-					+ "nation" + extension).setHashIndexes(hashNation1)
-					.addOperator(selectionNation2).addOperator(projectionNation1);
+					+ "nation" + extension).setOutputPartKey(hashNation1)
+					.add(selectionNation2).add(projectionNation1);
 			_queryBuilder.add(relationNation1);
 
 			// -------------------------------------------------------------------------------------
@@ -123,8 +123,8 @@ public class ThetaTPCH7_L_S_N1Plan {
 			
 			S_Njoin = ThetaJoinComponentFactory
 					.createThetaJoinOperator(Theta_JoinType, relationSupplier, relationNation1,
-							_queryBuilder).addOperator(printSN).addOperator(projectSN)
-							.setJoinPredicate(S_N_comp).setHashIndexes(hashSN);
+							_queryBuilder).add(printSN).add(projectSN)
+							.setJoinPredicate(S_N_comp).setOutputPartKey(hashSN);
 
 			// -------------------------------------------------------------------------------------
 
@@ -134,16 +134,16 @@ public class ThetaTPCH7_L_S_N1Plan {
 							_date2)));
 
 			relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-					+ "lineitem" + extension).setHashIndexes(hashLineitem)
-					.addOperator(selectionLineitem).addOperator(printL).addOperator(projectionLineitem);
+					+ "lineitem" + extension).setOutputPartKey(hashLineitem)
+					.add(selectionLineitem).add(printL).add(projectionLineitem);
 			_queryBuilder.add(relationLineitem);
 		}else{
 			S_Njoin = new DataSourceComponent("SUPPLIER_NATION1", dataPath
-					+ "tpch7_sn" + extension).addOperator(projectSN).setHashIndexes(hashSN);
+					+ "tpch7_sn" + extension).add(projectSN).setOutputPartKey(hashSN);
 			_queryBuilder.add(S_Njoin);
 
 			relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-					+ "tpch7_l" + extension).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
+					+ "tpch7_l" + extension).add(projectionLineitem).setOutputPartKey(hashLineitem);
 			_queryBuilder.add(relationLineitem);
 		}
 
@@ -173,8 +173,8 @@ public class ThetaTPCH7_L_S_N1Plan {
 			AggregateCountOperator agg = new AggregateCountOperator(conf);
 			Component lastJoiner = ThetaJoinComponentFactory
 					.createThetaJoinOperator(Theta_JoinType, relationLineitem, S_Njoin, _queryBuilder)
-					.addOperator(new ProjectOperator(new int[] { 5, 0, 1, 3 }))
-					.setJoinPredicate(L_S_N_comp).addOperator(agg).setContentSensitiveThetaJoinWrapper(keyType);
+					.add(new ProjectOperator(new int[] { 5, 0, 1, 3 }))
+					.setJoinPredicate(L_S_N_comp).add(agg).setContentSensitiveThetaJoinWrapper(keyType);
 			// lastJoiner.setPrintOut(false);
 		}
 	}

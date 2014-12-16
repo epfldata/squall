@@ -56,8 +56,8 @@ public class TPCH7_L_S_N1Plan {
 
         DataSourceComponent relationSupplier = new DataSourceComponent(
                 "SUPPLIER",
-                dataPath + "supplier" + extension).setHashIndexes(hashSupplier)
-                           .addOperator(projectionSupplier);
+                dataPath + "supplier" + extension).setOutputPartKey(hashSupplier)
+                           .add(projectionSupplier);
         _queryBuilder.add(relationSupplier);
 
         //-------------------------------------------------------------------------------------
@@ -78,9 +78,9 @@ public class TPCH7_L_S_N1Plan {
 
         DataSourceComponent relationNation1 = new DataSourceComponent(
                 "NATION1",
-                dataPath + "nation" + extension).setHashIndexes(hashNation1)
-                           .addOperator(selectionNation2)
-                           .addOperator(projectionNation1);
+                dataPath + "nation" + extension).setOutputPartKey(hashNation1)
+                           .add(selectionNation2)
+                           .add(projectionNation1);
         _queryBuilder.add(relationNation1);
 
         //-------------------------------------------------------------------------------------
@@ -92,9 +92,9 @@ public class TPCH7_L_S_N1Plan {
         
         EquiJoinComponent S_Njoin = new EquiJoinComponent(
                 relationSupplier,
-                relationNation1).addOperator(new ProjectOperator(new int[]{0, 2}))
+                relationNation1).add(new ProjectOperator(new int[]{0, 2}))
                 		   .setJoinPredicate(S_N_pred)	
-                           .setHashIndexes(Arrays.asList(0));
+                           .setOutputPartKey(Arrays.asList(0));
         _queryBuilder.add(S_Njoin);
 
        //-------------------------------------------------------------------------------------
@@ -127,9 +127,9 @@ public class TPCH7_L_S_N1Plan {
 
         DataSourceComponent relationLineitem = new DataSourceComponent(
                 "LINEITEM",
-                dataPath + "lineitem" + extension).setHashIndexes(hashLineitem)
-                           .addOperator(selectionLineitem)
-                           .addOperator(projectionLineitem);
+                dataPath + "lineitem" + extension).setOutputPartKey(hashLineitem)
+                           .add(selectionLineitem)
+                           .add(projectionLineitem);
         _queryBuilder.add(relationLineitem);
 
         //-------------------------------------------------------------------------------------
@@ -152,8 +152,8 @@ public class TPCH7_L_S_N1Plan {
 		
 		EquiJoinComponent L_S_Njoin = new EquiJoinComponent(
                 relationLineitem,
-                S_Njoin).addOperator(new ProjectOperator(new int[]{5, 0, 1, 3}))
-                           .setHashIndexes(Arrays.asList(3))
+                S_Njoin).add(new ProjectOperator(new int[]{5, 0, 1, 3}))
+                           .setOutputPartKey(Arrays.asList(3))
                            .setJoinPredicate(L_S_N_pred)
                            ;
 		_queryBuilder.add(L_S_Njoin);

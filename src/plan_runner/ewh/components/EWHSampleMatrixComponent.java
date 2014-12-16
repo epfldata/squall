@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import plan_runner.components.Component;
@@ -163,7 +164,7 @@ public class EWHSampleMatrixComponent implements Component {
 
 	// below is not used
 	@Override
-	public EWHSampleMatrixComponent addOperator(Operator operator) {
+	public EWHSampleMatrixComponent add(Operator operator) {
 		throw new RuntimeException("Should not be here!");
 	}
 	
@@ -228,7 +229,12 @@ public class EWHSampleMatrixComponent implements Component {
 	}
 
 	@Override
-	public EWHSampleMatrixComponent setHashIndexes(List<Integer> hashIndexes) {
+	public EWHSampleMatrixComponent setOutputPartKey(List<Integer> hashIndexes) {
+		throw new RuntimeException("Should not be here!");
+	}
+	
+	@Override
+	public EWHSampleMatrixComponent setOutputPartKey(int... hashIndexes) {
 		throw new RuntimeException("Should not be here!");
 	}
 

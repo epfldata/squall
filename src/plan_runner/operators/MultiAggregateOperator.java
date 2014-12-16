@@ -1,8 +1,11 @@
 package plan_runner.operators;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang.ArrayUtils;
 
 import plan_runner.conversion.TypeConversion;
 import plan_runner.storage.BasicStore;
@@ -160,6 +163,11 @@ public class MultiAggregateOperator implements AggregateOperator {
 	public AggregateOperator setGroupByColumns(List groupByColumns) {
 		throw new UnsupportedOperationException(
 				"You are not supposed to call this method from MultiAggregateOperator.");
+	}
+	
+	@Override
+	public AggregateOperator setGroupByColumns(int... hashIndexes) {
+		return setGroupByColumns(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
 	}
 
 	@Override

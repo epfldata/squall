@@ -1,11 +1,14 @@
 package plan_runner.operators;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
+import plan_runner.components.DataSourceComponent;
 import plan_runner.conversion.NumericConversion;
 import plan_runner.conversion.SumCount;
 import plan_runner.conversion.SumCountConversion;
@@ -202,6 +205,11 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 			return this;
 		} else
 			throw new RuntimeException("Aggragation already has groupBy set!");
+	}
+	
+	@Override
+	public AggregateAvgOperator setGroupByColumns(int... hashIndexes) {
+		return setGroupByColumns(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
 	}
 
 	@Override

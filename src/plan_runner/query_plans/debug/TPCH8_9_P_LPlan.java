@@ -41,9 +41,9 @@ public class TPCH8_9_P_LPlan {
 
         DataSourceComponent relationPart = new DataSourceComponent(
                 "PART",
-                dataPath + "part" + extension).setHashIndexes(hashPart)
+                dataPath + "part" + extension).setOutputPartKey(hashPart)
 //                           .addOperator(selectionPart)
-                           .addOperator(projectionPart);
+                           .add(projectionPart);
         _queryBuilder.add(relationPart);
 
         //-------------------------------------------------------------------------------------
@@ -53,8 +53,8 @@ public class TPCH8_9_P_LPlan {
 
         DataSourceComponent relationLineitem = new DataSourceComponent(
                 "LINEITEM",
-                dataPath + "lineitem" + extension).setHashIndexes(hashLineitem)
-                           .addOperator(projectionLineitem);
+                dataPath + "lineitem" + extension).setOutputPartKey(hashLineitem)
+                           .add(projectionLineitem);
         _queryBuilder.add(relationLineitem);
         
 //        AggregateCountOperator agg= new AggregateCountOperator(conf);
@@ -77,9 +77,9 @@ public class TPCH8_9_P_LPlan {
         
 		EquiJoinComponent P_Ljoin = new EquiJoinComponent(
 				relationPart,
-				relationLineitem).setHashIndexes(Arrays.asList(0, 2))
+				relationLineitem).setOutputPartKey(Arrays.asList(0, 2))
 						   .setJoinPredicate(P_L_pred)
-						   .addOperator(new ProjectOperator(new int[]{0, 1, 3, 4, 5, 6}))
+						   .add(new ProjectOperator(new int[]{0, 1, 3, 4, 5, 6}))
 				;
 		_queryBuilder.add(P_Ljoin);
         P_Ljoin.setPrintOut(false);

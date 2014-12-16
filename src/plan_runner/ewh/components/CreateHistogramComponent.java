@@ -121,7 +121,7 @@ public class CreateHistogramComponent implements Component {
 
 	// below is not used
 	@Override
-	public CreateHistogramComponent addOperator(Operator operator) {
+	public CreateHistogramComponent add(Operator operator) {
 		throw new RuntimeException("Should not be here!");
 	}
 	
@@ -191,9 +191,14 @@ public class CreateHistogramComponent implements Component {
 	}
 
 	@Override
-	public CreateHistogramComponent setHashIndexes(List<Integer> hashIndexes) {
+	public CreateHistogramComponent setOutputPartKey(List<Integer> hashIndexes) {
 		throw new RuntimeException("Should not be here!");
 	}
+	
+	@Override
+	public CreateHistogramComponent setOutputPartKey(int... hashIndexes) {
+		throw new RuntimeException("Should not be here!");
+	}	
 
 	@Override
 	public CreateHistogramComponent setPrintOut(boolean printOut) {

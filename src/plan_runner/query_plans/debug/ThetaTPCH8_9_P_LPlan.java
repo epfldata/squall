@@ -35,7 +35,7 @@ public class ThetaTPCH8_9_P_LPlan {
 		ProjectOperator projectionPart = new ProjectOperator(new int[] { 0 });
 
 		DataSourceComponent relationPart = new DataSourceComponent("PART", dataPath + "part"
-				+ extension).setHashIndexes(hashPart).addOperator(projectionPart);
+				+ extension).setOutputPartKey(hashPart).add(projectionPart);
 		_queryBuilder.add(relationPart);
 
 		//-------------------------------------------------------------------------------------
@@ -44,7 +44,7 @@ public class ThetaTPCH8_9_P_LPlan {
 		ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0, 1, 2, 4, 5, 6 });
 
 		DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension).setHashIndexes(hashLineitem).addOperator(
+				+ "lineitem" + extension).setOutputPartKey(hashLineitem).add(
 				projectionLineitem);
 		_queryBuilder.add(relationLineitem);
 
@@ -59,8 +59,8 @@ public class ThetaTPCH8_9_P_LPlan {
 
 		Component P_Ljoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationPart, relationLineitem, _queryBuilder)
-				.setHashIndexes(Arrays.asList(0, 2)).setJoinPredicate(P_L_comp)
-				.addOperator(new ProjectOperator(new int[] { 0, 1, 3, 4, 5, 6 })).setContentSensitiveThetaJoinWrapper(_ic)
+				.setOutputPartKey(Arrays.asList(0, 2)).setJoinPredicate(P_L_comp)
+				.add(new ProjectOperator(new int[] { 0, 1, 3, 4, 5, 6 })).setContentSensitiveThetaJoinWrapper(_ic)
 		//					.addOperator(agg)
 		;
 

@@ -1,8 +1,10 @@
 package plan_runner.ewh.components;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import plan_runner.components.Component;
@@ -113,7 +115,7 @@ public class OkcanSampleMatrixComponent implements Component {
 
 	// below is not used
 	@Override
-	public OkcanSampleMatrixComponent addOperator(Operator operator) {
+	public OkcanSampleMatrixComponent add(Operator operator) {
 		throw new RuntimeException("Should not be here!");
 	}
 	
@@ -183,7 +185,12 @@ public class OkcanSampleMatrixComponent implements Component {
 	}
 
 	@Override
-	public OkcanSampleMatrixComponent setHashIndexes(List<Integer> hashIndexes) {
+	public OkcanSampleMatrixComponent setOutputPartKey(List<Integer> hashIndexes) {
+		throw new RuntimeException("Should not be here!");
+	}
+	
+	@Override
+	public OkcanSampleMatrixComponent setOutputPartKey(int... hashIndexes) {
 		throw new RuntimeException("Should not be here!");
 	}
 

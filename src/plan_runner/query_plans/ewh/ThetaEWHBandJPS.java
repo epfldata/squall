@@ -84,23 +84,23 @@ public class ThetaEWHBandJPS {
 		if(!isMaterialized){		
 			// build relations
 			relationJPS1 = new DataSourceComponent("JPS1", dataPath
-					+ "jps_1" + extension).addOperator(print1).addOperator(
-					projectionJPS1).setHashIndexes(hashJPS1);
+					+ "jps_1" + extension).add(print1).add(
+					projectionJPS1).setOutputPartKey(hashJPS1);
 			_queryBuilder.add(relationJPS1);
 			
 			relationJPS2 = new DataSourceComponent("JPS2", dataPath
-					+ "jps_2" + extension).addOperator(print2).addOperator(
-					projectionJPS2).setHashIndexes(hashJPS2);
+					+ "jps_2" + extension).add(print2).add(
+					projectionJPS2).setOutputPartKey(hashJPS2);
 			_queryBuilder.add(relationJPS2);
 		}else{
 			relationJPS1 = new DataSourceComponent("JPS1", dataPath
-					+ matName1 + extension).addOperator(print1).addOperator(
-					projectionJPS1).setHashIndexes(hashJPS1);
+					+ matName1 + extension).add(print1).add(
+					projectionJPS1).setOutputPartKey(hashJPS1);
 			_queryBuilder.add(relationJPS1);
 			
 			relationJPS2 = new DataSourceComponent("JPS2", dataPath
-					+ matName2 + extension).addOperator(print2).addOperator(
-					projectionJPS2).setHashIndexes(hashJPS2);
+					+ matName2 + extension).add(print2).add(
+					projectionJPS2).setOutputPartKey(hashJPS2);
 			_queryBuilder.add(relationJPS2);
 		}
 	

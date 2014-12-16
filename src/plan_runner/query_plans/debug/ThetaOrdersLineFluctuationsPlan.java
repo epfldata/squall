@@ -48,13 +48,13 @@ public class ThetaOrdersLineFluctuationsPlan {
 		//Orders
 		ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0 });
 		DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath + "orders"
-				+ extension).addOperator(selectionOrders).addOperator(projectionOrders).setHashIndexes(hashLineitem);
+				+ extension).add(selectionOrders).add(projectionOrders).setOutputPartKey(hashLineitem);
 		_queryBuilder.add(relationOrders);
 
 		//Lineitem
 		ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0 });
 		DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
+				+ "lineitem" + extension).add(projectionLineitem).setOutputPartKey(hashLineitem);
 		_queryBuilder.add(relationLineitem);
 
 		InterchangingComponent interComp = new InterchangingComponent(relationOrders,

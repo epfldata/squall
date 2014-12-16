@@ -33,28 +33,28 @@ public class RSTPlan {
 		final List<Integer> hashR = Arrays.asList(1);
 
 		final DataSourceComponent relationR = new DataSourceComponent("R", dataPath + "r"
-				+ extension).setHashIndexes(hashR);
+				+ extension).setOutputPartKey(hashR);
 		_queryBuilder.add(relationR);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashS = Arrays.asList(0);
 
 		final DataSourceComponent relationS = new DataSourceComponent("S", dataPath + "s"
-				+ extension).setHashIndexes(hashS);
+				+ extension).setOutputPartKey(hashS);
 		_queryBuilder.add(relationS);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashIndexes = Arrays.asList(2);
 
 		final EquiJoinComponent R_Sjoin = new EquiJoinComponent(relationR, relationS)
-				.setHashIndexes(hashIndexes);
+				.setOutputPartKey(hashIndexes);
 		_queryBuilder.add(R_Sjoin);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashT = Arrays.asList(0);
 
 		final DataSourceComponent relationT = new DataSourceComponent("T", dataPath + "t"
-				+ extension).setHashIndexes(hashT);
+				+ extension).setOutputPartKey(hashT);
 		_queryBuilder.add(relationT);
 
 		// -------------------------------------------------------------------------------------
@@ -64,9 +64,9 @@ public class RSTPlan {
 		final AggregateSumOperator sp = new AggregateSumOperator(aggVe, conf);
 
 		EquiJoinComponent rstJoin = new EquiJoinComponent(R_Sjoin, relationT)
-			.addOperator(
+			.add(
 				new SelectOperator(new ComparisonPredicate(new ColumnReference(_ic, 1),
-						new ValueSpecification(_ic, 10)))).addOperator(sp);
+						new ValueSpecification(_ic, 10)))).add(sp);
 		_queryBuilder.add(rstJoin);
 	}
 

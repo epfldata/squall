@@ -44,8 +44,8 @@ public class TPCH3L1Plan {
 		final ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0 });
 
 		DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath + "customer" + extension)
-				.setHashIndexes(hashCustomer).addOperator(selectionCustomer)
-				.addOperator(projectionCustomer).setPrintOut(false);
+				.setOutputPartKey(hashCustomer).add(selectionCustomer)
+				.add(projectionCustomer).setPrintOut(false);
 		_queryBuilder.add(relationCustomer);
 		
 		// -------------------------------------------------------------------------------------
@@ -58,8 +58,8 @@ public class TPCH3L1Plan {
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 1, 4, 7 });
 
 		DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath + "orders" + extension)
-				.setHashIndexes(hashOrders).addOperator(selectionOrders)
-				.addOperator(projectionOrders).setPrintOut(false);
+				.setOutputPartKey(hashOrders).add(selectionOrders)
+				.add(projectionOrders).setPrintOut(false);
 		_queryBuilder.add(relationOrders);
 		
 		// -------------------------------------------------------------------------------------

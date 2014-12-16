@@ -48,7 +48,7 @@ public class ThetaInputDominatedPlan {
 		final ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0, 5, 6 });
 
 		final DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension).setHashIndexes(hashLineitem).addOperator(
+				+ "lineitem" + extension).setOutputPartKey(hashLineitem).add(
 				projectionLineitem);
 		_queryBuilder.add(relationLineitem);
 
@@ -58,7 +58,7 @@ public class ThetaInputDominatedPlan {
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 3 });
 
 		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension).setHashIndexes(hashOrders).addOperator(
+				+ "orders" + extension).setOutputPartKey(hashOrders).add(
 				projectionOrders);
 		_queryBuilder.add(relationOrders);
 
@@ -92,7 +92,7 @@ public class ThetaInputDominatedPlan {
 		Component lastJoiner = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationLineitem, relationOrders,
 						_queryBuilder).setJoinPredicate(overallPred)
-				.addOperator(new ProjectOperator(new int[] { 1, 2, 4 })).addOperator(agg);
+				.add(new ProjectOperator(new int[] { 1, 2, 4 })).add(agg);
 		;
 
 		//lastJoiner.setPrintOut(false);

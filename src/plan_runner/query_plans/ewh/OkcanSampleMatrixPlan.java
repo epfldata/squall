@@ -76,11 +76,11 @@ public class OkcanSampleMatrixPlan {
 		SampleOperator sample2 = new SampleOperator(secondRelSize, secondNumOfBuckets);
 		
 		DataSourceComponent relation1 = new DataSourceComponent(firstCompName, dataPath
-				+ firstSrcFile + extension).addOperator(projectionLineitem1).addOperator(sample1).setHashIndexes(hash);
+				+ firstSrcFile + extension).add(projectionLineitem1).add(sample1).setOutputPartKey(hash);
 		_queryBuilder.add(relation1);
 		
 		DataSourceComponent relation2 = new DataSourceComponent(secondCompName, dataPath
-				+ secondSrcFile + extension).addOperator(projectionLineitem2).addOperator(sample2).setHashIndexes(hash);
+				+ secondSrcFile + extension).add(projectionLineitem2).add(sample2).setOutputPartKey(hash);
 		_queryBuilder.add(relation2);
 		
 		OkcanSampleMatrixComponent okcanComp = new OkcanSampleMatrixComponent(relation1, relation2, keyType, comparison, 

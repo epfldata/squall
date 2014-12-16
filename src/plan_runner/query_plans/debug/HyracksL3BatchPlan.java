@@ -29,15 +29,15 @@ public class HyracksL3BatchPlan {
 		final ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0, 6 });
 		final List<Integer> hashCustomer = Arrays.asList(0);
 		final DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath
-				+ "customer" + extension).addOperator(projectionCustomer)
-				.setHashIndexes(hashCustomer);
+				+ "customer" + extension).add(projectionCustomer)
+				.setOutputPartKey(hashCustomer);
 		_queryBuilder.add(relationCustomer);
 
 		// -------------------------------------------------------------------------------------
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 1 });
 		final List<Integer> hashOrders = Arrays.asList(0);
 		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension).addOperator(projectionOrders).setHashIndexes(
+				+ "orders" + extension).add(projectionOrders).setOutputPartKey(
 				hashOrders);
 		_queryBuilder.add(relationOrders);
 
@@ -47,7 +47,7 @@ public class HyracksL3BatchPlan {
 				.setGroupByColumns(Arrays.asList(1));
 		final List<Integer> hashIndexes = Arrays.asList(0);
 		final EquiJoinComponent CUSTOMER_ORDERSjoin = new EquiJoinComponent(relationCustomer,
-				relationOrders).addOperator(postAgg).setHashIndexes(hashIndexes)
+				relationOrders).add(postAgg).setOutputPartKey(hashIndexes)
 				.setBatchOutputMillis(1000);
 		_queryBuilder.add(CUSTOMER_ORDERSjoin);
 
@@ -55,7 +55,7 @@ public class HyracksL3BatchPlan {
 		final AggregateSumOperator agg = new AggregateSumOperator(new ColumnReference(_ic, 1), conf)
 				.setGroupByColumns(Arrays.asList(0));
 
-		OperatorComponent oc = new OperatorComponent(CUSTOMER_ORDERSjoin, "COUNTAGG").addOperator(agg)
+		OperatorComponent oc = new OperatorComponent(CUSTOMER_ORDERSjoin, "COUNTAGG").add(agg)
 				.setFullHashList(
 						Arrays.asList("FURNITURE", "BUILDING", "MACHINERY", "HOUSEHOLD",
 								"AUTOMOBILE"));

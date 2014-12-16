@@ -72,8 +72,8 @@ public class TPCH5PlanAvg {
 		final ProjectOperator projectionRegion = new ProjectOperator(new int[] { 0 });
 
 		final DataSourceComponent relationRegion = new DataSourceComponent("REGION", dataPath
-				+ "region" + extension).setHashIndexes(hashRegion)
-				.addOperator(selectionRegion).addOperator(projectionRegion);
+				+ "region" + extension).setOutputPartKey(hashRegion)
+				.add(selectionRegion).add(projectionRegion);
 		_queryBuilder.add(relationRegion);
 		
 		// -------------------------------------------------------------------------------------
@@ -82,7 +82,7 @@ public class TPCH5PlanAvg {
 		final ProjectOperator projectionNation = new ProjectOperator(new int[] { 0, 1, 2 });
 
 		final DataSourceComponent relationNation = new DataSourceComponent("NATION", dataPath
-				+ "nation" + extension).setHashIndexes(hashNation).addOperator(
+				+ "nation" + extension).setOutputPartKey(hashNation).add(
 				projectionNation);
 		_queryBuilder.add(relationNation);
 
@@ -92,8 +92,8 @@ public class TPCH5PlanAvg {
 		final ProjectOperator projectionRN = new ProjectOperator(new int[] { 1, 2 });
 
 		final EquiJoinComponent R_Njoin = new EquiJoinComponent(relationRegion,
-				relationNation).setHashIndexes(hashRN)
-				.addOperator(projectionRN);
+				relationNation).setOutputPartKey(hashRN)
+				.add(projectionRN);
 		_queryBuilder.add(R_Njoin);
 		
 		// -------------------------------------------------------------------------------------
@@ -102,7 +102,7 @@ public class TPCH5PlanAvg {
 		final ProjectOperator projectionSupplier = new ProjectOperator(new int[] { 0, 3 });
 
 		final DataSourceComponent relationSupplier = new DataSourceComponent("SUPPLIER", dataPath
-				+ "supplier" + extension).setHashIndexes(hashSupplier).addOperator(
+				+ "supplier" + extension).setOutputPartKey(hashSupplier).add(
 				projectionSupplier);
 		_queryBuilder.add(relationSupplier);
 
@@ -112,7 +112,7 @@ public class TPCH5PlanAvg {
 		final ProjectOperator projectionRNS = new ProjectOperator(new int[] { 0, 1, 2 });
 
 		final EquiJoinComponent R_N_Sjoin = new EquiJoinComponent(R_Njoin,
-				relationSupplier).setHashIndexes(hashRNS).addOperator(
+				relationSupplier).setOutputPartKey(hashRNS).add(
 				projectionRNS);
 		_queryBuilder.add(R_N_Sjoin);
 		
@@ -122,7 +122,7 @@ public class TPCH5PlanAvg {
 		final ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0, 2, 5, 6 });
 
 		final DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension).setHashIndexes(hashLineitem).addOperator(
+				+ "lineitem" + extension).setOutputPartKey(hashLineitem).add(
 				projectionLineitem);
 		_queryBuilder.add(relationLineitem);
 
@@ -132,7 +132,7 @@ public class TPCH5PlanAvg {
 		final ProjectOperator projectionRNSL = new ProjectOperator(new int[] { 0, 1, 3, 4, 5 });
 
 		final EquiJoinComponent R_N_S_Ljoin = new EquiJoinComponent(R_N_Sjoin,
-				relationLineitem).setHashIndexes(hashRNSL).addOperator(
+				relationLineitem).setOutputPartKey(hashRNSL).add(
 				projectionRNSL);
 		_queryBuilder.add(R_N_S_Ljoin);
 		
@@ -142,7 +142,7 @@ public class TPCH5PlanAvg {
 		final ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0, 3 });
 
 		final DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath
-				+ "customer" + extension).setHashIndexes(hashCustomer).addOperator(
+				+ "customer" + extension).setOutputPartKey(hashCustomer).add(
 				projectionCustomer);
 		_queryBuilder.add(relationCustomer);
 
@@ -156,8 +156,8 @@ public class TPCH5PlanAvg {
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 1 });
 
 		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension).setHashIndexes(hashOrders)
-				.addOperator(selectionOrders).addOperator(projectionOrders);
+				+ "orders" + extension).setOutputPartKey(hashOrders)
+				.add(selectionOrders).add(projectionOrders);
 		_queryBuilder.add(relationOrders);
 		
 		// -------------------------------------------------------------------------------------
@@ -166,8 +166,8 @@ public class TPCH5PlanAvg {
 		final ProjectOperator projectionCO = new ProjectOperator(new int[] { 1, 2 });
 
 		final EquiJoinComponent C_Ojoin = new EquiJoinComponent(
-				relationCustomer, relationOrders).setHashIndexes(hashCO)
-				.addOperator(projectionCO);
+				relationCustomer, relationOrders).setOutputPartKey(hashCO)
+				.add(projectionCO);
 		_queryBuilder.add(C_Ojoin);
 
 		// -------------------------------------------------------------------------------------
@@ -176,7 +176,7 @@ public class TPCH5PlanAvg {
 		final ProjectOperator projectionRNSLCO = new ProjectOperator(new int[] { 1, 3, 4 });
 
 		final EquiJoinComponent R_N_S_L_C_Ojoin = new EquiJoinComponent(
-				R_N_S_Ljoin, C_Ojoin).setHashIndexes(hashRNSLCO).addOperator(
+				R_N_S_Ljoin, C_Ojoin).setOutputPartKey(hashRNSLCO).add(
 				projectionRNSLCO);
 		_queryBuilder.add(R_N_S_L_C_Ojoin);
 		
@@ -191,7 +191,7 @@ public class TPCH5PlanAvg {
 
 		final AggregateOperator aggOp = new AggregateAvgOperator(product, conf)
 				.setGroupByColumns(Arrays.asList(0));
-		OperatorComponent oc = new OperatorComponent(R_N_S_L_C_Ojoin, "FINAL_RESULT").addOperator(aggOp);
+		OperatorComponent oc = new OperatorComponent(R_N_S_L_C_Ojoin, "FINAL_RESULT").add(aggOp);
 		_queryBuilder.add(oc);
 
 		// -------------------------------------------------------------------------------------

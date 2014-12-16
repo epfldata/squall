@@ -24,14 +24,14 @@ public class HyracksL1Plan {
 		final ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0, 6 });
 		final List<Integer> hashCustomer = Arrays.asList(0);
 		DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath + "customer" + extension)
-				.addOperator(projectionCustomer).setHashIndexes(hashCustomer).setPrintOut(false);
+				.add(projectionCustomer).setOutputPartKey(hashCustomer).setPrintOut(false);
 		_queryBuilder.add(relationCustomer);
 
 		// -------------------------------------------------------------------------------------
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 1 });
 		final List<Integer> hashOrders = Arrays.asList(0);
 		DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath + "orders" + extension)
-				.addOperator(projectionOrders).setHashIndexes(hashOrders).setPrintOut(false);
+				.add(projectionOrders).setOutputPartKey(hashOrders).setPrintOut(false);
 		_queryBuilder.add(relationOrders);
 
 	}

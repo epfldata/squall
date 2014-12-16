@@ -10,8 +10,10 @@
 package plan_runner.components.theta;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import plan_runner.components.Component;
@@ -68,7 +70,7 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 	}
 
 	@Override
-	public ThetaJoinDynamicComponentAdvisedEpochs addOperator(Operator operator) {
+	public ThetaJoinDynamicComponentAdvisedEpochs add(Operator operator) {
 		_chain.addOperator(operator);
 		return this;
 	}
@@ -277,9 +279,14 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 	}
 
 	@Override
-	public ThetaJoinDynamicComponentAdvisedEpochs setHashIndexes(List<Integer> hashIndexes) {
+	public ThetaJoinDynamicComponentAdvisedEpochs setOutputPartKey(List<Integer> hashIndexes) {
 		_hashIndexes = hashIndexes;
 		return this;
+	}
+	
+	@Override
+	public ThetaJoinDynamicComponentAdvisedEpochs setOutputPartKey(int... hashIndexes) {
+		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
 	}
 
 	public ThetaJoinDynamicComponentAdvisedEpochs setInterComp(InterchangingComponent _interComp) {

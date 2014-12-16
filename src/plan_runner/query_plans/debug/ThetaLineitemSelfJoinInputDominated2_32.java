@@ -62,8 +62,8 @@ public class ThetaLineitemSelfJoinInputDominated2_32 {
 		SelectOperator selectionOrders1 = new SelectOperator(and);
 
 		DataSourceComponent relationLineitem1 = new DataSourceComponent("LINEITEM1", dataPath
-				+ "lineitem" + extension).addOperator(selectionOrders1).addOperator(
-				projectionLineitem).setHashIndexes(hashLineitem);
+				+ "lineitem" + extension).add(selectionOrders1).add(
+				projectionLineitem).setOutputPartKey(hashLineitem);
 		_queryBuilder.add(relationLineitem1);
 
 		//SelectOperator selectionOrders2 = new SelectOperator(new ComparisonPredicate(ComparisonPredicate.NONEQUAL_OP, new ColumnReference(_stringConv, 14), new ValueSpecification(_stringConv, "TRUCK")));
@@ -76,8 +76,8 @@ public class ThetaLineitemSelfJoinInputDominated2_32 {
 		//SelectOperator selectionOrders2 = new SelectOperator(and2);
 		SelectOperator selectionOrders2 = new SelectOperator(cond1);
 		DataSourceComponent relationLineitem2 = new DataSourceComponent("LINEITEM2", dataPath
-				+ "lineitem" + extension).addOperator(selectionOrders2).addOperator(
-				projectionLineitem).setHashIndexes(hashLineitem);
+				+ "lineitem" + extension).add(selectionOrders2).add(
+				projectionLineitem).setOutputPartKey(hashLineitem);
 		_queryBuilder.add(relationLineitem2);
 
 		AggregateCountOperator agg = new AggregateCountOperator(conf);

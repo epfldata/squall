@@ -15,7 +15,7 @@ import backtype.storm.topology.TopologyBuilder;
 
 public interface Component extends Serializable, ComponentProperties, StormEmitter {
 
-	public Component addOperator(Operator operator); // add to the end of
+	public Component add(Operator operator); // add to the end of
 	// ChainOperator
 
 	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
@@ -37,7 +37,8 @@ public interface Component extends Serializable, ComponentProperties, StormEmitt
 	// Parser.SelectItemsVisitor.ComplexCondition
 	// in short, whether the component uses indexes or expressions
 	// is also dependent on on other component taking part in a join
-	public Component setHashIndexes(List<Integer> hashIndexes);
+	public Component setOutputPartKey(List<Integer> hashIndexes);
+	public Component setOutputPartKey(int... hashIndexes); //this is a shortcut
 
 	public Component setPrintOut(boolean printOut);
 	

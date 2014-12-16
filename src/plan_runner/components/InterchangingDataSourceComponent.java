@@ -1,7 +1,9 @@
 package plan_runner.components;
 
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import plan_runner.conversion.TypeConversion;
@@ -50,7 +52,7 @@ public class InterchangingDataSourceComponent implements Component {
 	}
 
 	@Override
-	public Component addOperator(Operator operator) {
+	public Component add(Operator operator) {
 		return null;
 	}
 
@@ -190,9 +192,14 @@ public class InterchangingDataSourceComponent implements Component {
 	}
 
 	@Override
-	public InterchangingDataSourceComponent setHashIndexes(List<Integer> hashIndexes) {
+	public InterchangingDataSourceComponent setOutputPartKey(List<Integer> hashIndexes) {
 		_hashIndexes = hashIndexes;
 		return this;
+	}
+	
+	@Override
+	public InterchangingDataSourceComponent setOutputPartKey(int... hashIndexes) {
+		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
 	}
 
 	@Override

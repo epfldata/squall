@@ -1,8 +1,10 @@
 package plan_runner.ewh.components;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import plan_runner.components.Component;
@@ -56,7 +58,7 @@ public class DummyComponent implements Component {
 	}
 
 	@Override
-	public DummyComponent addOperator(Operator operator) {
+	public DummyComponent add(Operator operator) {
 		_chain.addOperator(operator);
 		return this;
 	}
@@ -178,8 +180,14 @@ public class DummyComponent implements Component {
 	}
 
 	@Override
-	public DummyComponent setHashIndexes(List<Integer> hashIndexes) {
+	public DummyComponent setOutputPartKey(List<Integer> hashIndexes) {
 		_hashIndexes = hashIndexes;
+		return this;
+	}
+	
+	@Override
+	public DummyComponent setOutputPartKey(int... hashIndexes) {
+		_hashIndexes = Arrays.asList(ArrayUtils.toObject(hashIndexes));
 		return this;
 	}
 

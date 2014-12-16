@@ -52,9 +52,9 @@ public class TPCH9_CustomPlan {
 
         DataSourceComponent relationPart = new DataSourceComponent(
                 "PART",
-                dataPath + "part" + extension).setHashIndexes(hashPart)
+                dataPath + "part" + extension).setOutputPartKey(hashPart)
 //                           .addOperator(selectionPart)
-                           .addOperator(projectionPart);
+                           .add(projectionPart);
         _queryBuilder.add(relationPart);
 
         //-------------------------------------------------------------------------------------
@@ -64,14 +64,14 @@ public class TPCH9_CustomPlan {
 
         DataSourceComponent relationLineitem = new DataSourceComponent(
                 "LINEITEM",
-                dataPath + "lineitem" + extension).setHashIndexes(hashLineitem)
-                           .addOperator(projectionLineitem);
+                dataPath + "lineitem" + extension).setOutputPartKey(hashLineitem)
+                           .add(projectionLineitem);
         _queryBuilder.add(relationLineitem);
         
         //-------------------------------------------------------------------------------------
         EquiJoinComponent P_Ljoin = new EquiJoinComponent(
 				relationPart,
-				relationLineitem).setHashIndexes(Arrays.asList(0, 2))
+				relationLineitem).setOutputPartKey(Arrays.asList(0, 2))
 				;
         _queryBuilder.add(P_Ljoin);
         //-------------------------------------------------------------------------------------
@@ -82,15 +82,15 @@ public class TPCH9_CustomPlan {
 
         DataSourceComponent relationPartsupp = new DataSourceComponent(
                 "PARTSUPP",
-                dataPath + "partsupp" + extension).setHashIndexes(hashPartsupp)
-                           .addOperator(projectionPartsupp);
+                dataPath + "partsupp" + extension).setOutputPartKey(hashPartsupp)
+                           .add(projectionPartsupp);
         _queryBuilder.add(relationPartsupp);
 
         //-------------------------------------------------------------------------------------
         EquiJoinComponent P_L_PSjoin = new EquiJoinComponent(
 				P_Ljoin,
-				relationPartsupp).setHashIndexes(Arrays.asList(0))
-                                           .addOperator(new ProjectOperator(new int[]{1, 2, 3, 4, 5, 6}));
+				relationPartsupp).setOutputPartKey(Arrays.asList(0))
+                                           .add(new ProjectOperator(new int[]{1, 2, 3, 4, 5, 6}));
         _queryBuilder.add(P_L_PSjoin);
         //-------------------------------------------------------------------------------------
 
@@ -102,16 +102,16 @@ public class TPCH9_CustomPlan {
 
         DataSourceComponent relationOrders = new DataSourceComponent(
                 "ORDERS",
-                dataPath + "orders" + extension).setHashIndexes(hashOrders)
-                           .addOperator(projectionOrders);
+                dataPath + "orders" + extension).setOutputPartKey(hashOrders)
+                           .add(projectionOrders);
         _queryBuilder.add(relationOrders);
 
         //-------------------------------------------------------------------------------------
 
         EquiJoinComponent P_L_PS_Ojoin = new EquiJoinComponent(
 				P_L_PSjoin,
-				relationOrders).setHashIndexes(Arrays.asList(0))
-                                           .addOperator(new ProjectOperator(new int[]{1, 2, 3, 4, 5, 6}));
+				relationOrders).setOutputPartKey(Arrays.asList(0))
+                                           .add(new ProjectOperator(new int[]{1, 2, 3, 4, 5, 6}));
         _queryBuilder.add(P_L_PS_Ojoin);
         //-------------------------------------------------------------------------------------
 
@@ -121,15 +121,15 @@ public class TPCH9_CustomPlan {
 
         DataSourceComponent relationSupplier = new DataSourceComponent(
                 "SUPPLIER",
-                dataPath + "supplier" + extension).setHashIndexes(hashSupplier)
-                           .addOperator(projectionSupplier);
+                dataPath + "supplier" + extension).setOutputPartKey(hashSupplier)
+                           .add(projectionSupplier);
         _queryBuilder.add(relationSupplier);
 
         //-------------------------------------------------------------------------------------
         EquiJoinComponent P_L_PS_O_Sjoin = new EquiJoinComponent(
 				P_L_PS_Ojoin,
-				relationSupplier).setHashIndexes(Arrays.asList(5))
-                                           .addOperator(new ProjectOperator(new int[]{1, 2, 3, 4, 5, 6}));
+				relationSupplier).setOutputPartKey(Arrays.asList(5))
+                                           .add(new ProjectOperator(new int[]{1, 2, 3, 4, 5, 6}));
         _queryBuilder.add(P_L_PS_O_Sjoin);
         //-------------------------------------------------------------------------------------
         List<Integer> hashNation = Arrays.asList(0);
@@ -138,8 +138,8 @@ public class TPCH9_CustomPlan {
 
         DataSourceComponent relationNation = new DataSourceComponent(
                 "NATION",
-                dataPath + "nation" + extension).setHashIndexes(hashNation)
-                           .addOperator(projectionNation);
+                dataPath + "nation" + extension).setOutputPartKey(hashNation)
+                           .add(projectionNation);
         _queryBuilder.add(relationNation);
 
         //-------------------------------------------------------------------------------------
@@ -170,8 +170,8 @@ public class TPCH9_CustomPlan {
 
         EquiJoinComponent P_L_PS_O_S_Njoin = new EquiJoinComponent(
 				P_L_PS_O_Sjoin,
-				relationNation).addOperator(new ProjectOperator(new int[]{0, 1, 2, 3, 4, 6}))
-                                           .addOperator(agg)
+				relationNation).add(new ProjectOperator(new int[]{0, 1, 2, 3, 4, 6}))
+                                           .add(agg)
                                            ;
         _queryBuilder.add(P_L_PS_O_S_Njoin);
         //-------------------------------------------------------------------------------------

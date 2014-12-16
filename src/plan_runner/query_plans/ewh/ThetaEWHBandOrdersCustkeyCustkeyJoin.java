@@ -73,8 +73,8 @@ public class ThetaEWHBandOrdersCustkeyCustkeyJoin {
 			SelectOperator selectionOrders1 = new SelectOperator(andOrders1);
 			
 			relationOrders1 = new DataSourceComponent("ORDERS1", dataPath
-					+ "orders" + extension).addOperator(selectionOrders1).addOperator(print1).addOperator(
-					projectionLineitem).setHashIndexes(hashLineitem);
+					+ "orders" + extension).add(selectionOrders1).add(print1).add(
+					projectionLineitem).setOutputPartKey(hashLineitem);
 			_queryBuilder.add(relationOrders1);
 
 			ComparisonPredicate sel21 = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP,
@@ -82,16 +82,16 @@ public class ThetaEWHBandOrdersCustkeyCustkeyJoin {
 			SelectOperator selectionOrders2 = new SelectOperator(sel21);
 			
 			relationOrders2 = new DataSourceComponent("ORDERS2", dataPath
-					+ "orders" + extension).addOperator(selectionOrders2).addOperator(print2).addOperator(
-					projectionLineitem).setHashIndexes(hashLineitem);
+					+ "orders" + extension).add(selectionOrders2).add(print2).add(
+					projectionLineitem).setOutputPartKey(hashLineitem);
 			_queryBuilder.add(relationOrders2);
 		}else{
 			relationOrders1 = new DataSourceComponent("ORDERS1", dataPath
-					+ matName1 + extension).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
+					+ matName1 + extension).add(projectionLineitem).setOutputPartKey(hashLineitem);
 			_queryBuilder.add(relationOrders1);
 
 			relationOrders2 = new DataSourceComponent("LINEITEM2", dataPath
-					+ matName2 + extension).addOperator(projectionLineitem).setHashIndexes(hashLineitem);
+					+ matName2 + extension).add(projectionLineitem).setOutputPartKey(hashLineitem);
 			_queryBuilder.add(relationOrders2);
 		}
 	

@@ -32,15 +32,15 @@ public class ThetaHyracksPlan {
 		final ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0, 6 });
 		final List<Integer> hashCustomer = Arrays.asList(0);
 		final DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath
-				+ "customer" + extension).addOperator(projectionCustomer)
-				.setHashIndexes(hashCustomer);
+				+ "customer" + extension).add(projectionCustomer)
+				.setOutputPartKey(hashCustomer);
 		_queryBuilder.add(relationCustomer);
 
 		// -------------------------------------------------------------------------------------
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 1 });
 		final List<Integer> hashOrders = Arrays.asList(0);
 		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension).addOperator(projectionOrders).setHashIndexes(
+				+ "orders" + extension).add(projectionOrders).setOutputPartKey(
 				hashOrders);
 		_queryBuilder.add(relationOrders);
 
@@ -56,7 +56,7 @@ public class ThetaHyracksPlan {
 		
 		Component lastJoiner = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationCustomer, relationOrders,
-						_queryBuilder).addOperator(agg).setJoinPredicate(comp).setContentSensitiveThetaJoinWrapper(_ic);
+						_queryBuilder).add(agg).setJoinPredicate(comp).setContentSensitiveThetaJoinWrapper(_ic);
 
 		//lastJoiner.setPrintOut(false);
 

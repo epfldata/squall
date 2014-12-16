@@ -86,11 +86,11 @@ public class EWHSampleMatrixPlan {
 		LOG.info("In the sample matrix, FirstNumOfBuckets = " + firstNumOfBuckets + ", SecondNumOfBuckets = " + secondNumOfBuckets);
 		
 		DataSourceComponent relation1 = new DataSourceComponent(firstCompName, dataPath
-				+ firstSrcFile + extension).addOperator(projectionLineitem1).setHashIndexes(hash);
+				+ firstSrcFile + extension).add(projectionLineitem1).setOutputPartKey(hash);
 		_queryBuilder.add(relation1);
 		
 		DataSourceComponent relation2 = new DataSourceComponent(secondCompName, dataPath
-				+ secondSrcFile + extension).addOperator(projectionLineitem2).setHashIndexes(hash);
+				+ secondSrcFile + extension).add(projectionLineitem2).setOutputPartKey(hash);
 		_queryBuilder.add(relation2);
 		
 		// equi-weight histogram
@@ -100,8 +100,8 @@ public class EWHSampleMatrixPlan {
 		// add operators which samples for partitioner
 		SampleAsideAndForwardOperator saf1 = new SampleAsideAndForwardOperator(firstRelSize, firstNumOfBuckets, SystemParameters.PARTITIONER, conf);
 		SampleAsideAndForwardOperator saf2 = new SampleAsideAndForwardOperator(secondRelSize, secondNumOfBuckets, SystemParameters.PARTITIONER, conf);
-		relation1.addOperator(saf1);
-		relation2.addOperator(saf2);
+		relation1.add(saf1);
+		relation2.add(saf2);
 		
 		// do we build d2 out of the first relation (_firstParent)?
 		boolean isFirstD2 = SystemParameters.getBoolean(conf, "IS_FIRST_D2");

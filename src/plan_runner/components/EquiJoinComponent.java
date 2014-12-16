@@ -1,8 +1,10 @@
 package plan_runner.components;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import plan_runner.conversion.TypeConversion;
@@ -70,7 +72,7 @@ public class EquiJoinComponent implements Component {
 	}
 
 	@Override
-	public EquiJoinComponent addOperator(Operator operator) {
+	public EquiJoinComponent add(Operator operator) {
 		_chain.addOperator(operator);
 		return this;
 	}
@@ -240,12 +242,15 @@ public class EquiJoinComponent implements Component {
 	}
 
 	@Override
-	public EquiJoinComponent setHashIndexes(List<Integer> hashIndexes) {
+	public EquiJoinComponent setOutputPartKey(List<Integer> hashIndexes) {
 		_hashIndexes = hashIndexes;
 		return this;
 	}
 
-
+	@Override
+	public EquiJoinComponent setOutputPartKey(int... hashIndexes) {
+		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
+	}
 
 	@Override
 	public EquiJoinComponent setPrintOut(boolean printOut) {

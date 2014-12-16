@@ -42,8 +42,8 @@ public class ThetaLineitemPricesSelfJoin {
 				ComparisonPredicate.EQUAL_OP, new ColumnReference(_stringConv, 14),
 				new ValueSpecification(_stringConv, "TRUCK")));
 		DataSourceComponent relationLineitem1 = new DataSourceComponent("LINEITEM1", dataPath
-				+ "lineitem" + extension).addOperator(selectionLineitem1).addOperator(
-				projectionLineitem).setHashIndexes(hashLineitem1);
+				+ "lineitem" + extension).add(selectionLineitem1).add(
+				projectionLineitem).setOutputPartKey(hashLineitem1);
 		_queryBuilder.add(relationLineitem1);
 
 		SelectOperator selectionLinitem2 = new SelectOperator(new ComparisonPredicate(
@@ -51,8 +51,8 @@ public class ThetaLineitemPricesSelfJoin {
 				new ValueSpecification(_stringConv, "TRUCK")));
 		final List<Integer> hashLineitem2 = Arrays.asList(0);
 		DataSourceComponent relationLineitem2 = new DataSourceComponent("LINEITEM2", dataPath
-				+ "lineitem" + extension).addOperator(selectionLinitem2).addOperator(
-				projectionLineitem).setHashIndexes(hashLineitem2);
+				+ "lineitem" + extension).add(selectionLinitem2).add(
+				projectionLineitem).setOutputPartKey(hashLineitem2);
 		_queryBuilder.add(relationLineitem2);
 
 		AggregateCountOperator agg = new AggregateCountOperator(conf);
@@ -82,7 +82,7 @@ public class ThetaLineitemPricesSelfJoin {
 
 		Component LINEITEMS_LINEITEMSjoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationLineitem1, relationLineitem2,
-						_queryBuilder).setJoinPredicate(pred3).addOperator(agg).setContentSensitiveThetaJoinWrapper(_doubleConv);
+						_queryBuilder).setJoinPredicate(pred3).add(agg).setContentSensitiveThetaJoinWrapper(_doubleConv);
 
 	}
 

@@ -45,8 +45,8 @@ public class TPCH3L2Plan {
 		final ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0 });
 
 		final DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath
-				+ "customer" + extension).setHashIndexes(hashCustomer)
-				.addOperator(selectionCustomer).addOperator(projectionCustomer);
+				+ "customer" + extension).setOutputPartKey(hashCustomer)
+				.add(selectionCustomer).add(projectionCustomer);
 		_queryBuilder.add(relationCustomer);
 		
 		// -------------------------------------------------------------------------------------
@@ -59,13 +59,13 @@ public class TPCH3L2Plan {
 		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 1, 4, 7 });
 
 		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension).setHashIndexes(hashOrders)
-				.addOperator(selectionOrders).addOperator(projectionOrders);
+				+ "orders" + extension).setOutputPartKey(hashOrders)
+				.add(selectionOrders).add(projectionOrders);
 		_queryBuilder.add(relationOrders);
 		
 		EquiJoinComponent joinCustOrders = new EquiJoinComponent(relationCustomer, relationOrders)
-				.addOperator(new ProjectOperator(new int[] { 1, 2, 3 }))
-				.setHashIndexes(Arrays.asList(0)).setPrintOut(false);
+				.add(new ProjectOperator(new int[] { 1, 2, 3 }))
+				.setOutputPartKey(Arrays.asList(0)).setPrintOut(false);
 		_queryBuilder.add(joinCustOrders);
 
 		// -------------------------------------------------------------------------------------

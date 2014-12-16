@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import plan_runner.conversion.LongConversion;
@@ -181,6 +182,11 @@ public class AggregateCountOperator implements AggregateOperator<Long> {
 			return this;
 		} else
 			throw new RuntimeException("Aggragation already has groupBy set!");
+	}
+	
+	@Override
+	public AggregateCountOperator setGroupByColumns(int... hashIndexes) {
+		return setGroupByColumns(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
 	}
 
 	@Override

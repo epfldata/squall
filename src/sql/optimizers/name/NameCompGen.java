@@ -124,7 +124,7 @@ public class NameCompGen implements CompGen {
 			final List<Integer> hashIndexes = ParserUtil.extractColumnIndexes(hashExpressions);
 
 			// hash indexes in join condition
-			component.setHashIndexes(hashIndexes);
+			component.setOutputPartKey(hashIndexes);
 		} else
 			// hash expressions in join condition
 			component.setHashExpressions(hashExpressions);
@@ -202,7 +202,7 @@ public class NameCompGen implements CompGen {
 	}
 
 	private void attachProjectOperator(Component component, ProjectOperator project) {
-		component.addOperator(project);
+		component.add(project);
 	}
 
 	private void attachSelectClauseOnLastJoin(Component lastComponent,
@@ -214,7 +214,7 @@ public class NameCompGen implements CompGen {
 
 		if (aggOps.isEmpty()) {
 			if (project != null)
-				lastComponent.addOperator(project);
+				lastComponent.add(project);
 		} else if (aggOps.size() == 1) {
 			// all the others are group by
 			final AggregateOperator firstAgg = aggOps.get(0);
@@ -231,7 +231,7 @@ public class NameCompGen implements CompGen {
 			 * opted for a)
 			 */
 			if (firstAgg.getDistinct() == null)
-				lastComponent.addOperator(firstAgg);
+				lastComponent.add(firstAgg);
 			else
 				// in general groupByVEs is not a ColumnReference (it can be an
 				// addition, for example).
@@ -243,7 +243,7 @@ public class NameCompGen implements CompGen {
 	}
 
 	private void attachWhereClause(Component affectedComponent, SelectOperator select) {
-		affectedComponent.addOperator(select);
+		affectedComponent.add(select);
 	}
 
 	private DataSourceComponent createAddDataSource(String tableCompName) {
@@ -486,7 +486,7 @@ public class NameCompGen implements CompGen {
 			// we can use the same firstAgg, because we no tupleSchema change
 			// occurred after LAST_COMPONENT:FinalAgg and NEW_COMPONENT:FinalAgg
 			// Namely, NEW_COMPONENT has only FinalAgg operator
-			opComp.addOperator(firstAgg);
+			opComp.add(firstAgg);
 
 			if (_costEst != null)
 				_costEst.setOutputParamsAndPar(opComp);

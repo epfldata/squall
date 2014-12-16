@@ -38,8 +38,8 @@ public class ThetaOutputDominatedPlan {
 		final ProjectOperator projectionSupplier = new ProjectOperator(new int[] { 0 });
 
 		final DataSourceComponent relationSupplier = new DataSourceComponent("SUPPLIER", dataPath
-				+ "supplier" + extension).addOperator(projectionSupplier)
-				.setHashIndexes(hashSupplier);
+				+ "supplier" + extension).add(projectionSupplier)
+				.setOutputPartKey(hashSupplier);
 		_queryBuilder.add(relationSupplier);
 
 		// -------------------------------------------------------------------------------------
@@ -48,7 +48,7 @@ public class ThetaOutputDominatedPlan {
 		final ProjectOperator projectionNation = new ProjectOperator(new int[] { 1 });
 
 		final DataSourceComponent relationNation = new DataSourceComponent("NATION", dataPath
-				+ "nation" + extension).addOperator(projectionNation).setHashIndexes(
+				+ "nation" + extension).add(projectionNation).setOutputPartKey(
 				hashNation);
 		_queryBuilder.add(relationNation);
 
@@ -58,8 +58,8 @@ public class ThetaOutputDominatedPlan {
 
 		Component lastJoiner = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationSupplier, relationNation,
-						_queryBuilder).addOperator(new ProjectOperator(new int[] { 0 }))
-				.addOperator(agg);
+						_queryBuilder).add(new ProjectOperator(new int[] { 0 }))
+				.add(agg);
 		//lastJoiner.setPrintOut(false);
 
 		// -------------------------------------------------------------------------------------
