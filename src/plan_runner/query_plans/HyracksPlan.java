@@ -25,7 +25,7 @@ public class HyracksPlan {
 				.setOutputPartKey(0);
 
 		// -------------------------------------------------------------------------------------
-		Component joinCustOrders = _queryBuilder.createEquiJoin(relationCustomer, relationOrders)
+		_queryBuilder.createEquiJoin(relationCustomer, relationOrders)
 				.add(new AggregateCountOperator(conf).setGroupByColumns(1));
 		// -------------------------------------------------------------------------------------
 	}
