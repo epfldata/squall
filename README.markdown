@@ -28,13 +28,13 @@ Through the Squall API, the online distributed query plan ([full code](https://g
 Component relationCustomer = _queryBuilder.createDataSource("customer", conf)
                                           .add(new ProjectOperator(0, 6))
                                           .setOutputPartKey(0);
-Component relationOrders = _queryBuilder.createDataSource("orders", conf)
-                                        .add(new ProjectOperator(1))
-                                        .setOutputPartKey(0);
+Component relationOrders  = _queryBuilder.createDataSource("orders", conf)
+                                          .add(new ProjectOperator(1))
+                                          .setOutputPartKey(0);
 _queryBuilder.createEquiJoin(relationCustomer, relationOrders)
-             .add(new AggregateCountOperator(conf).setGroupByColumns(1));
+                                          .add(new AggregateCountOperator(conf)
+                                          .setGroupByColumns(1));
 ```
-
 
 ### Documentation
 Detailed documentation can be found on the [Squall wiki](http://github.com/epfldata/squall/wiki).
