@@ -25,33 +25,14 @@ GROUP BY C_MKTSEGMENT
 Through the Squall API, the online distributed query plan ([full code](https://github.com/epfldata/squall/blob/master/src/plan_runner/query_plans/HyracksPlan.java)) can be simply formulated as follows:
 
 ```java
-ProjectOperator projectionCustomer = new ProjectOperator(new int[]{0, 6});
-ArrayList<Integer> hashCustomer = new ArrayList<Integer>(Arrays.asList(0));
-DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER",dataPath +
-                                                              "customer" + extension,
-                                                              _queryPlan).
-                                                              addOperator(projectionCustomer)
-                                                              .setHashIndexes(hashCustomer);
-
-ProjectOperator projectionOrders = new ProjectOperator(new int[]{1});
-ArrayList<Integer> hashOrders = new ArrayList<Integer>(Arrays.asList(0));
-DataSourceComponent relationOrders = new DataSourceComponent("ORDERS",dataPath + 
-                                                              "orders" + extension,
-                                                              _queryPlan)
-                                                              .addOperator(projectionOrders)
-                                                              .setHashIndexes(hashOrders);
-
-ArrayList<Integer> hashIndexes = new ArrayList<Integer>(Arrays.asList(1));
-EquiJoinComponent CUSTOMER_ORDERSjoin = new EquiJoinComponent(relationCustomer,
-                                                              relationOrders,
-                                                             _queryPlan)
-                                                             .setHashIndexes(hashIndexes);
-
-AggregateCountOperator agg = new AggregateCountOperator().setGroupByColumns(Arrays.asList(1));
-OperatorComponent oc = new OperatorComponent(CUSTOMER_ORDERSjoin,
-                                                              "COUNTAGG",
-                                                              _queryPlan)
-                                                              .setOperator(agg);
+Component relationCustomer = _queryBuilder.createDataSource("customer", conf)
+    .add(new ProjectOperator(0, 6))
+    .setOutputPartKey(0);
+Component relationOrders = _queryBuilder.createDataSource("orders", conf)
+    .add(new ProjectOperator(1))
+    .setOutputPartKey(0);
+_queryBuilder.createEquiJoin(relationCustomer, relationOrders)
+    .add(new AggregateCountOperator(conf).setGroupByColumns(1));
 ```
 
 
