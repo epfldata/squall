@@ -12,6 +12,7 @@ Squall is an online query processing engine built on top of [Storm](https://stor
 - [x] Usage: An API for arbitrary SQL query processing or a frontend query processor that parses SQL to a storm topology.
 - [x] Throughput rates of upto Millions of tuples/second and latencies of milliseconds on a 16 machine cluster. Scalable to large cluster settings.
 - [x] Out-of-Core Processing: Can operate efficiently under limited memory resources through efficient disk based datastructures and indexes.
+- [x] Guarantees: At least-once or at most-once semantics. No support for exactly-once semantics yet, however it is planned for.
 - [ ] Elasticity: Scaling out according to the load.
 - [ ] DashBoard: Integrating support for real time visualizations.
 
