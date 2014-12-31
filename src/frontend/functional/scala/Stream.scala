@@ -26,7 +26,6 @@ object Stream{
  }
  
    abstract class TailStream[T:SquallType,Number]{
-     
    }
  
 
