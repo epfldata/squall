@@ -1,6 +1,7 @@
 package frontend.functional.scala
 import backtype.storm.tuple._
 import scala.reflect.runtime.universe._
+import frontend.functional.scala.Types.SquallType
 
 /**
  * @author mohamed
@@ -22,7 +23,7 @@ object Stream{
      def groupby[Number](agg: T => Number, ind: List[Int]): TailStream[T,Number] = GroupedStream[T,Number](this, agg, ind)
    }
  
-   sealed trait TailStream[T<:SquallType,A] extends Stream[T]{
+   sealed trait TailStream[T:SquallType,A] extends Stream[T]{
    
    }
  

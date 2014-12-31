@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat
 /**
  * @author mohamed
  */
-class SquallType {
+object Types {
  
   trait SquallType[T] {
   def convert(v: T): List[String]
