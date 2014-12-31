@@ -33,10 +33,18 @@ object Stream{
    interp(str) 
  }
  def interp[T: SquallType](str: Stream[T]): Unit = str match {
-  case Source(x) => {println("Reached Source")}
-  case FilteredStream(parent, fn) => {interp(parent);println("Reached Filtered Stream")}
-  case MappedStream(parent, fn) => {interp(parent)(parent.squalType);println("Reached Mapped Stream")}
-  case JoinedStream(parent1, parent2, ind) => {interp(parent1)(parent1.squalType);interp(parent2)(parent2.squalType);println("Reached Joined Stream")}      
+  case Source(x) => {
+    println("Reached Source")
+    }
+  case FilteredStream(parent, fn) => {
+    interp(parent);println("Reached Filtered Stream")
+    }
+  case MappedStream(parent, fn) => {
+    interp(parent)(parent.squalType);println("Reached Mapped Stream")
+    }
+  case JoinedStream(parent1, parent2, ind) => {
+    interp(parent1)(parent1.squalType);interp(parent2)(parent2.squalType);println("Reached Joined Stream")
+    }      
 }
  
   def interp[T: SquallType, Number](str:TailStream[T, Number]): Unit = str match {
