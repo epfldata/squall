@@ -1,7 +1,7 @@
 package frontend.functional.scala
 import backtype.storm.tuple._
 import scala.reflect.runtime.universe._
-import frontend.functional.scala.Types.SquallType
+import frontend.functional.scala.Types._
 
 /**
  * @author mohamed
@@ -15,15 +15,15 @@ object Stream{
   case class GroupedStream[T:SquallType,Number](Str:Stream[T], agg: T => Number, ind: List[Int]) extends TailStream[T,Number]
     
   //TODO change types to be generic
-   sealed trait Stream[T:SquallType] {
+   sealed trait Stream[T:SquallType]{
      def filter(fn: T => Boolean): Stream[T] = FilteredStream(this, fn)
      def map[U:SquallType](fn: T => U): Stream[U] = MappedStream[T,U](this, fn)
      //def project(fn: List[Int]): Stream[List[String]] = map( myList =>  myList.zipWithIndex.filter(x=>myList.contains(x._2)).map(_._1) )
      def join(other: Stream[T], ind: List[Int]): Stream[T] = JoinedStream(this, other, ind)
      def groupby[Number](agg: T => Number, ind: List[Int]): TailStream[T,Number] = GroupedStream[T,Number](this, agg, ind)
-   }
+ }
  
-   sealed trait TailStream[T:SquallType,A] extends Stream[T]{
+   sealed trait TailStream[T:SquallType,Number] extends Stream[T]{
    
    }
  
@@ -44,7 +44,7 @@ object Stream{
  
  def main(args: Array[String]) {
    
-   createPlan(Source[Int]("hello").filter{ x:Int => true }.map[Int]{ y:Int => 2*y }.groupby(x => x._1, List(1,2)));
+   //createPlan(Source[Int]("hello").filter{ x:Int => true }.map[Int]{ y:Int => 2*y }.groupby(x => x._1, List(1,2)));
    
  }
  
