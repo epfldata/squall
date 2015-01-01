@@ -103,6 +103,11 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 	public void setSingleEntry(boolean singleEntry) {
 		this._singleEntry = singleEntry;
 	}
+	
+	
+	public V getInitialValue(){
+		return (V)_wrapper.getInitialValue();
+	}
 
 	@Override
 	public V update(Object... data) {
@@ -111,7 +116,7 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 		V value, newValue;
 		final ArrayList<V> list = super.__access(false, key);
 		if (list == null) {
-			value = (V) _wrapper.getInitialValue();
+			value = getInitialValue(); 
 			super.onInsert(key, value);
 		} else
 			value = list.get(0);

@@ -8,7 +8,7 @@ import scala.collection.JavaConverters._
 /**
  * @author mohamed
  */
-class ScalaSelectOperator[T:SquallType, U:SquallType](fn: T => U) extends Operator {
+class ScalaMapOperator[T:SquallType, U:SquallType](fn: T => U) extends Operator {
   
   private var _numTuplesProcessed:Int = 0;
   
