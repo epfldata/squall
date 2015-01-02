@@ -13,6 +13,7 @@ import plan_runner.components.Component
 import plan_runner.components.DataSourceComponent
 import frontend.functional.scala.operators.ScalaPredicate
 import plan_runner.operators.SelectOperator
+import java.beans.MetaData
 
 /**
  * @author mohamed
@@ -50,6 +51,11 @@ object Stream{
     if(operatorList!=null){
       operatorList.foreach { operator => dataSourceComponent=dataSourceComponent.add(operator)}
     }
+    if(metaData._2!=null)
+      dataSourceComponent=dataSourceComponent.setOutputPartKey(metaData._2: _*)
+    else if(metaData._3!=null)
+      dataSourceComponent=dataSourceComponent.setOutputPartKey(metaData._3: _*)
+      
     dataSourceComponent
     }
   case FilteredStream(parent, fn) => {
@@ -92,9 +98,11 @@ object Stream{
   }
   
   def hyracksQueryPlan(conf:java.util.Map[String,String]):QueryBuilder = {
-    val customers=Source[Tuple8[Int,String,String,Int,Int,Double,String,String]]("customer").map{tuple => Tuple2(tuple._1,tuple._7)}
+    val customers=Source[Tuple8[Int,String,String,Int,String,Double,String,String]]("customer").map{tuple => Tuple2(tuple._1,tuple._7)}
     
-    val orders=Source[Tuple16[Int,Int,Int,Int,Int,Double,Double,Double,String,String,java.util.Date,java.util.Date,java.util.Date,String,String,String]]("orders").map{tuple => tuple._1}
+    //val lineitems=Source[Tuple16[Int,Int,Int,Int,Int,Double,Double,Double,String,String,java.util.Date,java.util.Date,java.util.Date,String,String,String]]("orders").map{tuple => tuple._1}
+    
+    val orders=Source[Tuple9[Int,Int,String,Double,java.util.Date,String,String,String,String]]("orders").map{tuple => tuple._2}
     
     val join=customers.join[Int,(Int,Int)](orders, List(0), List(0))
     

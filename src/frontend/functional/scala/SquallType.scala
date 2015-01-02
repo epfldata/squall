@@ -2,13 +2,15 @@ package frontend.functional.scala
 
 import java.util.Date
 import java.text.SimpleDateFormat
-import sunw.io.Serializable
+import java.io.{ObjectOutputStream, ObjectInputStream}
+import java.io.{FileOutputStream, FileInputStream}
+import java.io.Serializable
 /**
  * @author mohamed
  */
 object Types extends Serializable{
  
-  trait SquallType[T] {
+  trait SquallType[T] extends Serializable{
   def convert(v: T): List[String]
   def convertBack(v: List[String]): T
   }

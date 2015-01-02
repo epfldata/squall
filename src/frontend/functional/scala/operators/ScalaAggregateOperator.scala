@@ -26,7 +26,7 @@ class ScalaAggregateOperator[T:SquallType, A:Numeric](_agg: T => A, _keyIndices:
   
   
   private val serialVersionUID = 1L
-  private val log = Logger.getLogger(getClass.getName)
+  //private val log = Logger.getLogger(getClass.getName)
 
   // the GroupBy type
   val GB_UNSET = -1
