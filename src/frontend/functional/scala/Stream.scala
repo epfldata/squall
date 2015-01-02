@@ -67,8 +67,8 @@ object Stream{
     }
   case JoinedStream(parent1, parent2, ind1, ind2) => {
     println("Reached Joined Stream")
-    val firstComponent = interp(parent1,qb,Tuple3(null, ind1, null),confmap)(parent1.squalType)
-    val secondComponent = interp(parent2,qb,Tuple3(null, null, ind2),confmap)(parent2.squalType)
+    val firstComponent = interp(parent1,qb,Tuple3(List(), ind1, null),confmap)(parent1.squalType)
+    val secondComponent = interp(parent2,qb,Tuple3(List(), null, ind2),confmap)(parent2.squalType)
     var equijoinComponent= qb.createEquiJoin(firstComponent,secondComponent)
     
     val operatorList=metaData._1
@@ -89,11 +89,22 @@ object Stream{
     
     _queryBuilder
     }
+  }
   
+  def hyracksQueryPlan(conf:java.util.Map[String,String]):QueryBuilder = {
+    val customers=Source[Tuple8[Int,String,String,Int,Int,Double,String,String]]("customer").map{tuple => Tuple2(tuple._1,tuple._7)}
+    
+    val orders=Source[Tuple16[Int,Int,Int,Int,Int,Double,Double,Double,String,String,java.util.Date,java.util.Date,java.util.Date,String,String,String]]("orders").map{tuple => tuple._1}
+    
+    val join=customers.join[Int,(Int,Int)](orders, List(0), List(0))
+    
+    val agg= join.reduceByKey( x=> 1, List(1))
+    
+    
+    interp(agg,conf)
+  }
   
-  
-  
-}
+
  
  def main(args: Array[String]) {
    
