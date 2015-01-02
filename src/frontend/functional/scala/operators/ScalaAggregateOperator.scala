@@ -25,20 +25,20 @@ import java.util.ArrayList
 class ScalaAggregateOperator[T:SquallType, A:Numeric](_agg: T => A, _keyIndices: List[Int], _map:java.util.Map[_,_]) extends AggregateOperator[A] {
   
   
-  private val serialVersionUID = 1L;
-  private val log = Logger.getLogger(getClass.getName);
+  private val serialVersionUID = 1L
+  private val log = Logger.getLogger(getClass.getName)
 
   // the GroupBy type
-  val GB_UNSET = -1;
-  val GB_COLUMNS = 0;
-  val GB_PROJECTION = 1;
+  val GB_UNSET = -1
+  val GB_COLUMNS = 0
+  val GB_PROJECTION = 1
 
-  var _distinct:DistinctOperator
-  var _groupByType = GB_UNSET;
-  var _groupByColumns = new java.util.ArrayList[Integer]();
-  var _groupByProjection:ProjectOperator;
-  var _numTuplesProcessed = 0;
-  val _storage:AggregationStorage[A]= new ScalaAggregationStorage[A](this, _map, true);
+  var _distinct:DistinctOperator=null
+  var _groupByType = GB_UNSET
+  var _groupByColumns = new java.util.ArrayList[Integer]()
+  var _groupByProjection:ProjectOperator=null
+  var _numTuplesProcessed = 0
+  val _storage:AggregationStorage[A]= new ScalaAggregationStorage[A](this, _map, true)
 
   
   override def accept(ov: OperatorVisitor): Unit = {
@@ -155,14 +155,14 @@ class ScalaAggregateOperator[T:SquallType, A:Numeric](_agg: T => A, _keyIndices:
     x$1+res
   }
   
-  @Override
+  
   override def setDistinct(distinct:DistinctOperator):ScalaAggregateOperator[T,A] = {
     _distinct = distinct;
     return this;
   }
 
   // from AgregateOperator
-  @Override
+  
    override def setGroupByColumns(groupByColumns:java.util.List[Integer]):ScalaAggregateOperator[T,A] = {
     if (!alreadySetOther(GB_COLUMNS)) {
       _groupByType = GB_COLUMNS;
@@ -173,12 +173,12 @@ class ScalaAggregateOperator[T:SquallType, A:Numeric](_agg: T => A, _keyIndices:
       throw new RuntimeException("Aggragation already has groupBy set!");
   }
   
-  @Override
+  
   override def setGroupByColumns(hashIndexes:Int*):ScalaAggregateOperator[T,A] ={
     setGroupByColumns(Arrays.asList(ArrayUtils.toObject(hashIndexes.toArray)).asInstanceOf[java.util.ArrayList[Integer]]);
   }
 
-  @Override
+  
   override def setGroupByProjection(groupByProjection:ProjectOperator):ScalaAggregateOperator[T,A]= {
     if (!alreadySetOther(GB_PROJECTION)) {
       _groupByType = GB_PROJECTION;
@@ -189,7 +189,7 @@ class ScalaAggregateOperator[T:SquallType, A:Numeric](_agg: T => A, _keyIndices:
       throw new RuntimeException("Aggragation already has groupBy set!");
   }
 
-  @Override
+  
   override def toString():String= {
     var sb:StringBuilder = new StringBuilder();
     sb.append("AggregateSumOperator with VE: ");
@@ -205,6 +205,8 @@ class ScalaAggregateOperator[T:SquallType, A:Numeric](_agg: T => A, _keyIndices:
       sb.append("\n  It also has distinct ").append(_distinct.toString());
     return sb.toString();
   }
+
+  
 
   
 }

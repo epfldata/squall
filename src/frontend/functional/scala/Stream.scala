@@ -7,6 +7,12 @@ import frontend.functional.scala.operators.ScalaAggregateOperator
 import frontend.functional.scala.operators.ScalaAggregateOperator
 import frontend.functional.scala.operators.ScalaMapOperator
 import frontend.functional.scala.operators.ScalaMapOperator
+import plan_runner.operators.Operator
+import plan_runner.components.EquiJoinComponent
+import plan_runner.components.Component
+import plan_runner.components.DataSourceComponent
+import frontend.functional.scala.operators.ScalaPredicate
+import plan_runner.operators.SelectOperator
 
 /**
  * @author mohamed
@@ -34,42 +40,52 @@ object Stream{
    }
  
 
- def createPlan[T: SquallType,Numeric](str:TailStream[T,Numeric]): Unit = {
-   interp(str) 
- }
- private def interp[T: SquallType](str: Stream[T], qb:QueryBuilder):QueryBuilder = str match {
+ 
+ 
+ private def interp[T: SquallType](str: Stream[T], qb:QueryBuilder, metaData:Tuple3[List[Operator],List[Int],List[Int]], confmap:java.util.Map[String,String]):Component = str match {
   case Source(name) => {
     println("Reached Source")
-    return qb
-    
+    var dataSourceComponent=qb.createDataSource(name, confmap)
+    val operatorList=metaData._1
+    if(operatorList!=null){
+      operatorList.foreach { operator => dataSourceComponent=dataSourceComponent.add(operator)}
+    }
+    dataSourceComponent
     }
   case FilteredStream(parent, fn) => {
-    interp(parent,qb)
     println("Reached Filtered Stream")
-    return null
+    val filterPredicate= new ScalaPredicate(fn)
+    val filterOperator= new SelectOperator(filterPredicate)
+    interp(parent,qb,Tuple3(metaData._1:+filterOperator, metaData._2, metaData._3),confmap)
     }
-  case MappedStream(parent, fn) => {
+  case MappedStream(parent, fn ) => {
     println("Reached Mapped Stream")
-    interp(parent,qb)(parent.squalType)
-    //val mapOp= new ScalaMapOperator(fn)
+    //interp(parent,qb)(parent.squalType)
+    val mapOp= new ScalaMapOperator(fn)(parent.squalType, str.squalType)
+    interp(parent,qb,Tuple3(metaData._1:+mapOp, metaData._2, metaData._3),confmap)(parent.squalType)
     
-    
-    return null
     }
   case JoinedStream(parent1, parent2, ind1, ind2) => {
-    interp(parent1,qb)(parent1.squalType)
-    interp(parent2,qb)(parent2.squalType)
     println("Reached Joined Stream")
-    return null
+    val firstComponent = interp(parent1,qb,Tuple3(null, ind1, null),confmap)(parent1.squalType)
+    val secondComponent = interp(parent2,qb,Tuple3(null, null, ind2),confmap)(parent2.squalType)
+    var equijoinComponent= qb.createEquiJoin(firstComponent,secondComponent)
+    
+    val operatorList=metaData._1
+    if(operatorList!=null){
+      operatorList.foreach { operator => equijoinComponent=equijoinComponent.add(operator)}
+    }
+    equijoinComponent 
     }      
 }
  
-  def interp[T: SquallType, A:Numeric](str:TailStream[T, A], map:java.util.Map[_,_]):QueryBuilder = str match {
+  def interp[T: SquallType, A:Numeric](str:TailStream[T, A], map:java.util.Map[String,String]):QueryBuilder = str match {
   case GroupedStream(parent, agg, ind) => {
     println("Reached Grouped Stream")
     
     val aggOp= new ScalaAggregateOperator(agg,ind,map)
-    val _queryBuilder=interp(parent,new QueryBuilder())
+    val _queryBuilder= new QueryBuilder();
+    interp(parent,_queryBuilder,Tuple3(List(aggOp),null,null),map)
     
     _queryBuilder
     }
