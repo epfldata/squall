@@ -21,8 +21,9 @@ import scala.collection.JavaConverters._
 import plan_runner.utilities.MyUtilities
 import java.util.Arrays.ArrayList
 import java.util.ArrayList
+import java.util.Arrays.ArrayList
 
-class ScalaAggregateOperator[T:SquallType, A:Numeric](_agg: T => A, _keyIndices: List[Int], _map:java.util.Map[_,_]) extends AggregateOperator[A] {
+class ScalaAggregateOperator[T:SquallType, A:Numeric](_agg: T => A, _map:java.util.Map[_,_]) extends AggregateOperator[A] {
   
   
   private val serialVersionUID = 1L
@@ -39,6 +40,8 @@ class ScalaAggregateOperator[T:SquallType, A:Numeric](_agg: T => A, _keyIndices:
   var _groupByProjection:ProjectOperator=null
   var _numTuplesProcessed = 0
   val _storage:AggregationStorage[A]= new ScalaAggregationStorage[A](this, _map, true)
+  
+  
 
   
   override def accept(ov: OperatorVisitor): Unit = {
@@ -115,7 +118,6 @@ class ScalaAggregateOperator[T:SquallType, A:Numeric](_agg: T => A, _keyIndices:
   override def process(tupleList: java.util.List[String]): java.util.List[String] = {
     
     _numTuplesProcessed+=1;
-    
     val refinedTuple=
     if (_distinct != null) {
       val refinedTuple = _distinct.process(tupleList);
@@ -123,7 +125,7 @@ class ScalaAggregateOperator[T:SquallType, A:Numeric](_agg: T => A, _keyIndices:
         return null;
       refinedTuple
     }
-    else null
+    else tupleList
     
     val tupleHash = if (_groupByType == GB_PROJECTION)
       MyUtilities.createHashString(refinedTuple, _groupByColumns,
@@ -144,6 +146,8 @@ class ScalaAggregateOperator[T:SquallType, A:Numeric](_agg: T => A, _keyIndices:
   }
 
   override def runAggregateFunction(x$1: A, x$2: A): A = {
+    println(x$1)
+    println(x$2)
     x$1+x$2
   }
 
@@ -164,9 +168,11 @@ class ScalaAggregateOperator[T:SquallType, A:Numeric](_agg: T => A, _keyIndices:
   // from AgregateOperator
   
    override def setGroupByColumns(groupByColumns:java.util.List[Integer]):ScalaAggregateOperator[T,A] = {
+     if(groupByColumns==null)
+       return this
     if (!alreadySetOther(GB_COLUMNS)) {
       _groupByType = GB_COLUMNS;
-      _groupByColumns = groupByColumns.asInstanceOf[java.util.ArrayList[Integer]];
+      _groupByColumns = new ArrayList(groupByColumns)
       _storage.setSingleEntry(false);
       return this;
     } else
