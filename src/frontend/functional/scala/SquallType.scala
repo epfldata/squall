@@ -5,6 +5,9 @@ import java.text.SimpleDateFormat
 import java.io.{ObjectOutputStream, ObjectInputStream}
 import java.io.{FileOutputStream, FileInputStream}
 import java.io.Serializable
+import scala.language.experimental.macros
+import scala.reflect.macros.Context
+
 /**
  * @author mohamed
  */
@@ -713,6 +716,38 @@ implicit def tuple22Type[T1: SquallType, T2: SquallType, T3: SquallType, T4: Squ
      val st22 = implicitly[SquallType[T22]]
      Tuple22(st1.convertBack(List(v(0))), st2.convertBack(List(v(1))), st3.convertBack(List(v(2))), st4.convertBack(List(v(3))), st5.convertBack(List(v(4))), st6.convertBack(List(v(5))), st7.convertBack(List(v(6))), st8.convertBack(List(v(7))), st9.convertBack(List(v(8))), st10.convertBack(List(v(9))), st11.convertBack(List(v(10))), st12.convertBack(List(v(11))), st13.convertBack(List(v(12))), st14.convertBack(List(v(13))), st15.convertBack(List(v(14))), st16.convertBack(List(v(15))), st17.convertBack(List(v(16))), st18.convertBack(List(v(17))), st19.convertBack(List(v(18))), st20.convertBack(List(v(19))), st21.convertBack(List(v(20))), st22.convertBack(List(v(21))) )
   }
+  
+  
+  
+  
+  def materializeSquallTypeImpl[T : c.WeakTypeTag](c: Context): c.Expr[SquallType[T]] = {
+    import c.universe._
+    val tpe = weakTypeOf[T]
+    val fieldTypes = tpe.decls.filter(_.asTerm.isVal).map(f => f.asTerm.getter.name.toTermName -> f.typeSignature)
+    val implicitFields = fieldTypes.map(t => q"val ${t._1} = implicitly[SquallType[${t._2}]]")
+    val convertBody = fieldTypes.map(t => q"implicitly[SquallType[${t._2}]].convert(v.${t._1})").foldLeft(q"List()")((acc, cur) => q"$acc ++ $cur")
+    val convertBackBody = {
+      val fields = fieldTypes.zipWithIndex.map({ case (t, index) =>
+        q"implicitly[SquallType[${t._2}]].convertBack(List(v(${index})))"
+      })
+      q"new $tpe(..$fields)"
+    }
+
+    c.Expr[SquallType[T]] { q"""
+      new SquallType[$tpe] {
+        def convert(v: $tpe): List[String] = {
+          $convertBody
+
+        }
+        def convertBack(v: List[String]):$tpe = {
+          $convertBackBody
+        }
+      }
+    """ }
+   }
+
+//   implicit def materializeSquallType[T ]: SquallType[T] = macro materializeSquallTypeImpl[T]
+
 }
 
 

@@ -15,6 +15,7 @@ import frontend.functional.scala.operators.ScalaPredicate
 import plan_runner.operators.SelectOperator
 import java.beans.MetaData
 import scala.collection.JavaConverters._
+import frontend.functional.scala.TPCHSchema._
 
 /**
  * @author mohamed
@@ -28,7 +29,7 @@ object Stream{
   case class GroupedStream[T:SquallType,Numeric](Str:Stream[T], agg: T => Numeric, ind: List[Int]) extends TailStream[T,Numeric]
     
   //TODO change types to be generic
-   abstract class Stream[T:SquallType]{
+   class Stream[T:SquallType]{
     val squalType: SquallType[T] = implicitly[SquallType[T]]
     
      def filter(fn: T => Boolean): Stream[T] = FilteredStream(this, fn)
@@ -38,11 +39,9 @@ object Stream{
      
  }
  
-   abstract class TailStream[T:SquallType,Numeric]{
+   class TailStream[T:SquallType,Numeric]{
    }
- 
-
- 
+  
  
  private def interp[T: SquallType](str: Stream[T], qb:QueryBuilder, metaData:Tuple3[List[Operator],List[Int],List[Int]], confmap:java.util.Map[String,String]):Component = str match {
   case Source(name) => {
@@ -89,7 +88,7 @@ object Stream{
  implicit def toIntegerList( lst: List[Int] ) =
   seqAsJavaListConverter( lst.map( i => i:java.lang.Integer ) ).asJava
  
-  def interp[T: SquallType, A:Numeric](str:TailStream[T, A], map:java.util.Map[String,String]):QueryBuilder = str match {
+  def interprete[T: SquallType, A:Numeric](str:TailStream[T, A], map:java.util.Map[String,String]): QueryBuilder = str match {
   case GroupedStream(parent, agg, ind) => {
     
     val aggOp= new ScalaAggregateOperator(agg,map).setGroupByColumns(toIntegerList(ind))
@@ -100,36 +99,14 @@ object Stream{
     }
   }
   
-  def hyracksQueryPlan(conf:java.util.Map[String,String]):QueryBuilder = {
-    
-    //val lineitems=Source[Tuple16[Int,Int,Int,Int,Int,Double,Double,Double,String,String,java.util.Date,java.util.Date,java.util.Date,String,String,String]]("orders").map{tuple => tuple._1}
-    
-    val customers=Source[Tuple8[Int,String,String,Int,String,Double,String,String]]("customer").map{tuple => Tuple2(tuple._1,tuple._7)}
-    
-    val orders=Source[Tuple9[Int,Int,String,Double,java.util.Date,String,String,String,String]]("orders").map{tuple => tuple._2}
-    
-    val join=customers.join[Int,(Int,String)](orders, List(0), List(0))
-    
-    val agg= join.reduceByKey( x=> 1, List(1))
-    
-    interp(agg,conf)
-  }
-  
-
- 
  def main(args: Array[String]) {
-   
    /*
    val x=Source[Int]("hello").filter{ x:Int => true }.map[(Int,Int)]{ y:Int => Tuple2(2*y,3*y) };
    val y = Source[Int]("hello").filter{ x:Int => true }.map[Int]{ y:Int => 2*y };
    val z = x.join[Int,(Int,Int)](y, List(2),List(2)).reduceByKey(x => 3*x._2, List(1,2))
    val conf= new java.util.HashMap[String,String]()
    interp(z,conf)
-   */
-   
-   
-   
-   
+   */   
  }
  
   
