@@ -9,19 +9,29 @@ import java.text.SimpleDateFormat
 
 /**
  * @author mohamed
- */
+ * TPC_H Query 3 - Shipping Priority:
+ * 
+ * SELECT TOP 10 L_ORDERKEY, SUM(L_EXTENDEDPRICE*(1-L_DISCOUNT)) AS REVENUE, O_ORDERDATE, O_SHIPPRIORITY
+ * FROM CUSTOMER, ORDERS, LINEITEM
+ * WHERE C_MKTSEGMENT = 'BUILDING' AND C_CUSTKEY = O_CUSTKEY AND L_ORDERKEY = O_ORDERKEY AND
+ * O_ORDERDATE < '1995-03-15' AND L_SHIPDATE > '1995-03-15'
+ * GROUP BY L_ORDERKEY, O_ORDERDATE, O_SHIPPRIORITY
+ * ORDER BY REVENUE DESC, O_ORDERDATE
+*/
+
+
 object ScalaTPCH3Plan {
   val string_format = new SimpleDateFormat("yyyy-MM-dd")
   val compDate=string_format.parse("1995-03-15")
   
   def getQueryPlan(conf:java.util.Map[String,String]):QueryBuilder = {
     
-    val customers=Source[customer]("CUSTOMER").filter{tuple => tuple._7.equals("BUILDING")}.map{ tuple => tuple._1}    
-    val orders=Source[orders]("ORDERS").filter { tuple => tuple._5.compareTo(compDate)<0}.map{tuple => Tuple4(tuple._1, tuple._2, tuple._5, tuple._8)}
-    val COjoin=customers.join[(Int,Int,Date,Int),(Int,Int,Date,Int)](orders, List(0), List(1)).map(tuple=> Tuple3(tuple._2, tuple._3, tuple._4))
-    val lineitems=Source[lineitems]("LINEITEM").filter{ tuple => tuple._11.compareTo(compDate)>0}.map { tuple => Tuple3(tuple._1,tuple._6,tuple._7) }
+    val customers=Source[customer]("CUSTOMER").filter{t => t._7.equals("BUILDING")}.map{ t => t._1}    
+    val orders=Source[orders]("ORDERS").filter { t => t._5.compareTo(compDate)<0}.map{t => Tuple4(t._1, t._2, t._5, t._8)}
+    val COjoin=customers.join[(Int,Int,Date,Int),(Int,Int,Date,Int)](orders, List(0), List(1)).map(t=> Tuple3(t._2, t._3, t._4))
+    val lineitems=Source[lineitems]("LINEITEM").filter{ t => t._11.compareTo(compDate)>0}.map { t => Tuple3(t._1,t._6,t._7) }
     val COLjoin=COjoin.join[(Int,Double,Double), (Int, Date, Int, Double, Double)](lineitems, List(0), List(0))
-    val agg= COLjoin.reduceByKey( tuple=> (1-tuple._5)*tuple._4, List(0,1,2))
+    val agg= COLjoin.reduceByKey( t=> (1-t._5)*t._4, List(0,1,2))
     
     agg.execute(conf)
   }  
