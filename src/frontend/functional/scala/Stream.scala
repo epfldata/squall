@@ -26,7 +26,7 @@ object Stream{
   case class FilteredStream[T:SquallType](Str:Stream[T], fn: T => Boolean) extends Stream[T]
   case class MappedStream[T:SquallType,U:SquallType](Str:Stream[T], fn: T => U) extends Stream[U]
   case class JoinedStream[T:SquallType,U:SquallType,V:SquallType](Str1:Stream[T], Str2:Stream[U], ind1: List[Int],ind2: List[Int]) extends Stream[V]
-  case class GroupedStream[T:SquallType,Numeric](Str:Stream[T], agg: T => Numeric, ind: List[Int]) extends TailStream[T,Numeric]
+  case class GroupedStream[T:SquallType,N: Numeric](Str:Stream[T], agg: T => N, ind: List[Int]) extends TailStream[T,N]
     
   //TODO change types to be generic
    class Stream[T:SquallType]{
@@ -35,11 +35,17 @@ object Stream{
      def filter(fn: T => Boolean): Stream[T] = FilteredStream(this, fn)
      def map[U:SquallType](fn: T => U): Stream[U] = MappedStream[T,U](this, fn)
      def join[U:SquallType,V:SquallType](other: Stream[U], joinIndices1: List[Int], joinIndices2: List[Int]): Stream[V] = JoinedStream(this, other, joinIndices1, joinIndices2)
-     def reduceByKey[Numeric](agg: T => Numeric, keyIndices: List[Int]): TailStream[T,Numeric] = GroupedStream[T,Numeric](this, agg, keyIndices)
+     def reduceByKey[N:Numeric](agg: T => N, keyIndices: List[Int]): TailStream[T,N] = GroupedStream[T,N](this, agg, keyIndices)
      
  }
  
-   class TailStream[T:SquallType,Numeric]{
+   class TailStream[T:SquallType,N:Numeric]{
+     
+     def execute(map:java.util.Map[String,String]): QueryBuilder={
+       interprete[T,N](this,map)
+     }
+       
+       
    }
   
  
@@ -49,7 +55,7 @@ object Stream{
     var dataSourceComponent=qb.createDataSource(name, confmap)
     val operatorList=metaData._1
     if(operatorList!=null){
-      operatorList.foreach { operator => dataSourceComponent=dataSourceComponent.add(operator)}
+      operatorList.foreach { operator =>  println("   adding operator: "+operator) ;dataSourceComponent=dataSourceComponent.add(operator)}
     }
     if(metaData._2!=null)
       dataSourceComponent=dataSourceComponent.setOutputPartKey(metaData._2: _*)
@@ -62,13 +68,13 @@ object Stream{
     println("Reached Filtered Stream")
     val filterPredicate= new ScalaPredicate(fn)
     val filterOperator= new SelectOperator(filterPredicate)
-    interp(parent,qb,Tuple3(metaData._1:+filterOperator, metaData._2, metaData._3),confmap)
+    interp(parent,qb,Tuple3(filterOperator::metaData._1, metaData._2, metaData._3),confmap)
     }
   case MappedStream(parent, fn ) => {
     println("Reached Mapped Stream")
     //interp(parent,qb)(parent.squalType)
     val mapOp= new ScalaMapOperator(fn)(parent.squalType, str.squalType)
-    interp(parent,qb,Tuple3(metaData._1:+mapOp, metaData._2, metaData._3),confmap)(parent.squalType)
+    interp(parent,qb,Tuple3(mapOp::metaData._1, metaData._2, metaData._3),confmap)(parent.squalType)
     
     }
   case JoinedStream(parent1, parent2, ind1, ind2) => {
@@ -81,6 +87,12 @@ object Stream{
     if(operatorList!=null){
       operatorList.foreach { operator => equijoinComponent=equijoinComponent.add(operator)}
     }
+    
+    if(metaData._2!=null)
+      equijoinComponent =equijoinComponent.setOutputPartKey(metaData._2: _*)
+    else if(metaData._3!=null)
+      equijoinComponent=equijoinComponent.setOutputPartKey(metaData._3: _*)
+    
     equijoinComponent 
     }      
 }
@@ -88,7 +100,7 @@ object Stream{
  implicit def toIntegerList( lst: List[Int] ) =
   seqAsJavaListConverter( lst.map( i => i:java.lang.Integer ) ).asJava
  
-  def interprete[T: SquallType, A:Numeric](str:TailStream[T, A], map:java.util.Map[String,String]): QueryBuilder = str match {
+  private def interprete[T: SquallType, A:Numeric](str:TailStream[T, A], map:java.util.Map[String,String]): QueryBuilder = str match {
   case GroupedStream(parent, agg, ind) => {
     
     val aggOp= new ScalaAggregateOperator(agg,map).setGroupByColumns(toIntegerList(ind))

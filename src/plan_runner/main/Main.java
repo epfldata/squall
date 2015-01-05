@@ -7,6 +7,8 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import frontend.functional.scala.queries.ScalaHyracksPlan;
+import frontend.functional.scala.queries.ScalaTPCH3Plan;
+import frontend.functional.scala.queries.ScalaTPCH7Plan;
 import plan_runner.components.Component;
 import plan_runner.components.theta.ThetaJoinDynamicComponentAdvisedEpochs;
 import plan_runner.ewh.components.DummyComponent;
@@ -221,6 +223,10 @@ public class Main {
 			queryPlan = new RSTPlan(dataPath, extension, conf).getQueryPlan();
 		}else if (queryName.equalsIgnoreCase("scalaHyracks")){
 			queryPlan = ScalaHyracksPlan.getQueryPlan(conf);
+		}else if (queryName.equalsIgnoreCase("scalaTPCH3")){
+			queryPlan = ScalaTPCH3Plan.getQueryPlan(conf);
+		}else if (queryName.equalsIgnoreCase("scalaTPCH7")){
+			queryPlan = ScalaTPCH7Plan.getQueryPlan(conf);
 		}else if (queryName.equalsIgnoreCase("hyracks")){
 			queryPlan = new HyracksPlan(conf).getQueryBuilder();
 		}else if (queryName.equalsIgnoreCase("hyracks_pre_agg")){

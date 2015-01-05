@@ -17,7 +17,7 @@ object ScalaHyracksPlan {
     val join=customers.join[Int,(Int,String)](orders, List(0), List(0))
     val agg= join.reduceByKey( x=> 1, List(1))
     
-    interprete(agg,conf)
+     agg.execute(conf)
   }
   
 }

@@ -45,12 +45,14 @@ public class StormDataSource extends StormSpoutComponent {
 	private int _numSentTuples = 0;
 
 	private final ChainOperator _operatorChain;
-
+	
 	// for aggregate batch sending
 	private final Semaphore _semAgg = new Semaphore(1, true);
 	private boolean _firstTime = true;
 	private PeriodicAggBatchSend _periodicAggBatch;
 	private final long _aggBatchOutputMillis;
+	
+	private String _name;
 
 	public StormDataSource(ComponentProperties cp, List<String> allCompNames, String inputPath,
 			int hierarchyPosition, int parallelism, boolean isPartitioner,
@@ -58,7 +60,7 @@ public class StormDataSource extends StormSpoutComponent {
 
 		super(cp, allCompNames, hierarchyPosition, isPartitioner, conf);
 		_operatorChain = cp.getChainOperator();
-
+		_name=cp.getName();
 		_aggBatchOutputMillis = cp.getBatchOutputMillis();
 		_inputPath = inputPath;
 		_fileParts = parallelism;
@@ -108,6 +110,7 @@ public class StormDataSource extends StormSpoutComponent {
 			} catch (final InterruptedException ex) {
 			}
 		tuple = _operatorChain.process(tuple);
+		
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			_semAgg.release();
 

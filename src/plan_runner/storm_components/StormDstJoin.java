@@ -48,6 +48,7 @@ public class StormDstJoin extends StormBoltComponent {
 
 	// for load-balancing
 	private final List<String> _fullHashList;
+	private String _name;
 
 	// for batch sending
 	private final Semaphore _semAgg = new Semaphore(1, true);
@@ -83,6 +84,8 @@ public class StormDstJoin extends StormBoltComponent {
 		_aggBatchOutputMillis = cp.getBatchOutputMillis();
 
 		_statsUtils = new StatisticsUtilities(getConf(), LOG);
+		
+		_name=cp.getName();
 
 		final int parallelism = SystemParameters.getInt(getConf(), getID() + "_PAR");
 
@@ -139,8 +142,10 @@ public class StormDstJoin extends StormBoltComponent {
 				_semAgg.acquire();
 			} catch (final InterruptedException ex) {
 			}
+
 		tuple = _operatorChain.process(tuple);
-		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
+		
+				if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			_semAgg.release();
 
 		if (tuple == null)
@@ -182,7 +187,7 @@ public class StormDstJoin extends StormBoltComponent {
 			MyUtilities.dumpSignal(this, stormTupleRcv, getCollector());
 			return;
 		}
-
+		
 		if (!MyUtilities.isManualBatchingMode(getConf())) {
 			final String inputComponentIndex = stormTupleRcv
 					.getStringByField(StormComponent.COMP_INDEX); // getString(0);
@@ -311,7 +316,8 @@ public class StormDstJoin extends StormBoltComponent {
 				if (projPreAgg != null)
 					// preaggregation
 					outputTuple = projPreAgg.process(outputTuple);
-
+				
+				
 				applyOperatorsAndSend(stormTupleRcv, outputTuple, isLastInBatch);
 			}
 	}

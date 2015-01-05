@@ -116,7 +116,6 @@ class ScalaAggregateOperator[T:SquallType, A:Numeric](_agg: T => A, _map:java.ut
   }
 
   override def process(tupleList: java.util.List[String]): java.util.List[String] = {
-    
     _numTuplesProcessed+=1;
     val refinedTuple=
     if (_distinct != null) {
