@@ -7,6 +7,11 @@ import frontend.functional.scala.TPCHSchema._
 
 /**
  * @author mohamed
+ * Hyracks Query
+ * 
+ * SELECT C_MKTSEGMENT, COUNT(O_ORDERKEY)
+ * FROM CUSTOMER join ORDERS on C_CUSTKEY = O_CUSTKEY
+ * GROUP BY C_MKTSEGMENT
  */
 object ScalaHyracksPlan {
   

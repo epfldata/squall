@@ -10,7 +10,7 @@ import java.text.SimpleDateFormat
 
 /**
  * @author mohamed
- *  TPC_H Query 7 - Volume Shipping:
+ *  TPC_H Query 7 - Volume Shipping: (http://www.tpc.org/tpch/)
  * 
  * SELECT SUPP_NATION, CUST_NATION, L_YEAR, SUM(VOLUME) AS REVENUE
  * FROM ( SELECT N1.N_NAME AS SUPP_NATION, N2.N_NAME AS CUST_NATION, datepart(yy, L_SHIPDATE) AS L_YEAR,

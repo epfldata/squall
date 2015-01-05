@@ -9,7 +9,7 @@ import java.text.SimpleDateFormat
 
 /**
  * @author mohamed
- * TPC_H Query 3 - Shipping Priority:
+ * TPC_H Query 3 - Shipping Priority:(http://www.tpc.org/tpch/)
  * 
  * SELECT TOP 10 L_ORDERKEY, SUM(L_EXTENDEDPRICE*(1-L_DISCOUNT)) AS REVENUE, O_ORDERDATE, O_SHIPPRIORITY
  * FROM CUSTOMER, ORDERS, LINEITEM
