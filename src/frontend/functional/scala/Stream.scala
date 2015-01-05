@@ -106,10 +106,10 @@ object Stream{
     val st1 = implicitly[SquallType[T]]
     val st2 = implicitly[SquallType[U]]
     
-    val image= st1.getIndexestypeT()
+    val image= st1.convertToIndexesOfTypeT()
     val res= ind(image)
     
-    val indices=st2.getIndexes(res)
+    val indices=st2.convertIndexesOfTypeToListOfInt(res)
     
     val aggOp= new ScalaAggregateOperator(agg,map).setGroupByColumns(toIntegerList(indices))
     val _queryBuilder= new QueryBuilder();
