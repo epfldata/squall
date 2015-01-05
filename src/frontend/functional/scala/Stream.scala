@@ -26,7 +26,7 @@ object Stream{
   case class FilteredStream[T:SquallType](Str:Stream[T], fn: T => Boolean) extends Stream[T]
   case class MappedStream[T:SquallType,U:SquallType](Str:Stream[T], fn: T => U) extends Stream[U]
   case class JoinedStream[T:SquallType,U:SquallType,V:SquallType](Str1:Stream[T], Str2:Stream[U], ind1: List[Int],ind2: List[Int]) extends Stream[V]
-  case class GroupedStream[T:SquallType,N: Numeric](Str:Stream[T], agg: T => N, ind: List[Int]) extends TailStream[T,N]
+  case class GroupedStream[T:SquallType,U:SquallType,N: Numeric](Str:Stream[T], agg: T => N, ind: T=>U) extends TailStream[T,U,N]
     
   //TODO change types to be generic
    class Stream[T:SquallType]{
@@ -35,14 +35,14 @@ object Stream{
      def filter(fn: T => Boolean): Stream[T] = FilteredStream(this, fn)
      def map[U:SquallType](fn: T => U): Stream[U] = MappedStream[T,U](this, fn)
      def join[U:SquallType,V:SquallType](other: Stream[U], joinIndices1: List[Int], joinIndices2: List[Int]): Stream[V] = JoinedStream(this, other, joinIndices1, joinIndices2)
-     def reduceByKey[N:Numeric](agg: T => N, keyIndices: List[Int]): TailStream[T,N] = GroupedStream[T,N](this, agg, keyIndices)
+     def reduceByKey[N:Numeric, U:SquallType](agg: T => N, keyIndices: T=>U): TailStream[T,U,N] = GroupedStream[T,U,N](this, agg, keyIndices)
      
  }
  
-   class TailStream[T:SquallType,N:Numeric]{
+   class TailStream[T:SquallType,U:SquallType,N:Numeric]{
      
      def execute(map:java.util.Map[String,String]): QueryBuilder={
-       interprete[T,N](this,map)
+       interprete[T,U,N](this,map)
      }
        
        
@@ -100,10 +100,18 @@ object Stream{
  implicit def toIntegerList( lst: List[Int] ) =
   seqAsJavaListConverter( lst.map( i => i:java.lang.Integer ) ).asJava
  
-  private def interprete[T: SquallType, A:Numeric](str:TailStream[T, A], map:java.util.Map[String,String]): QueryBuilder = str match {
+  private def interprete[T: SquallType,U: SquallType, A:Numeric](str:TailStream[T, U,A], map:java.util.Map[String,String]): QueryBuilder = str match {
   case GroupedStream(parent, agg, ind) => {
     
-    val aggOp= new ScalaAggregateOperator(agg,map).setGroupByColumns(toIntegerList(ind))
+    val st1 = implicitly[SquallType[T]]
+    val st2 = implicitly[SquallType[U]]
+    
+    val image= st1.getIndexestypeT()
+    val res= ind(image)
+    
+    val indices=st2.getIndexes(res)
+    
+    val aggOp= new ScalaAggregateOperator(agg,map).setGroupByColumns(toIntegerList(indices))
     val _queryBuilder= new QueryBuilder();
     interp(parent,_queryBuilder,Tuple3(List(aggOp),null,null),map)
     
