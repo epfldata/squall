@@ -16,7 +16,7 @@ import plan_runner.operators.SelectOperator
 import java.beans.MetaData
 import scala.collection.JavaConverters._
 import frontend.functional.scala.TPCHSchema._
-import scala.reflect._
+//import scala.reflect._
 
 /**
  * @author mohamed
@@ -40,7 +40,7 @@ object Stream{
     
      def filter(fn: T => Boolean): Stream[T] = FilteredStream(this, fn)
      def map[U:SquallType](fn: T => U): Stream[U] = MappedStream[T,U](this, fn)
-     def join[U:SquallType:ClassTag, L:SquallType](other: Stream[U], joinIndices1: T=>L, joinIndices2: U=>L): Stream[Tuple2[T,U]] = JoinedStream[T,U,Tuple2[T,U],L](this, other, joinIndices1, joinIndices2)
+     def join[U:SquallType, L:SquallType](other: Stream[U], joinIndices1: T=>L, joinIndices2: U=>L): Stream[Tuple2[T,U]] = JoinedStream[T,U,Tuple2[T,U],L](this, other, joinIndices1, joinIndices2)
      def reduceByKey[N:Numeric, U:SquallType](agg: T => N, keyIndices: T=>U): TailStream[T,U,N] = GroupedStream[T,U,N](this, agg, keyIndices)
      
  }
