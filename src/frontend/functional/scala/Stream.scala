@@ -16,6 +16,7 @@ import plan_runner.operators.SelectOperator
 import java.beans.MetaData
 import scala.collection.JavaConverters._
 import frontend.functional.scala.TPCHSchema._
+import scala.reflect._
 
 /**
  * @author mohamed
@@ -25,7 +26,12 @@ object Stream{
   case class Source[T:SquallType](name:String) extends Stream[T]
   case class FilteredStream[T:SquallType](Str:Stream[T], fn: T => Boolean) extends Stream[T]
   case class MappedStream[T:SquallType,U:SquallType](Str:Stream[T], fn: T => U) extends Stream[U]
-  case class JoinedStream[T:SquallType,U:SquallType,V:SquallType, L:SquallType](Str1:Stream[T], Str2:Stream[U], ind1: T=>L,ind2: U=>L) extends Stream[V]
+  case class JoinedStream[T:SquallType,U:SquallType,V:SquallType, L:SquallType](Str1:Stream[T], Str2:Stream[U], ind1: T=>L,ind2: U=>L) extends Stream[V]{
+    val tpT =implicitly[SquallType[T]]
+    val tpU =implicitly[SquallType[U]]
+    val tpL =implicitly[SquallType[L]]
+    val tpV =implicitly[SquallType[V]]
+  }
   case class GroupedStream[T:SquallType,U:SquallType,N: Numeric](Str:Stream[T], agg: T => N, ind: T=>U) extends TailStream[T,U,N]
     
   //TODO change types to be generic
@@ -34,22 +40,19 @@ object Stream{
     
      def filter(fn: T => Boolean): Stream[T] = FilteredStream(this, fn)
      def map[U:SquallType](fn: T => U): Stream[U] = MappedStream[T,U](this, fn)
-     def join[U:SquallType, L:SquallType](other: Stream[U], joinIndices1: T=>L, joinIndices2: U=>L): Stream[Tuple2[T,U]] = JoinedStream(this, other, joinIndices1, joinIndices2)
+     def join[U:SquallType:ClassTag, L:SquallType](other: Stream[U], joinIndices1: T=>L, joinIndices2: U=>L): Stream[Tuple2[T,U]] = JoinedStream[T,U,Tuple2[T,U],L](this, other, joinIndices1, joinIndices2)
      def reduceByKey[N:Numeric, U:SquallType](agg: T => N, keyIndices: T=>U): TailStream[T,U,N] = GroupedStream[T,U,N](this, agg, keyIndices)
      
  }
  
    class TailStream[T:SquallType,U:SquallType,N:Numeric]{
-     
      def execute(map:java.util.Map[String,String]): QueryBuilder={
        interprete[T,U,N](this,map)
      }
-       
-       
    }
   
  
- private def interp[T: SquallType,L: SquallType](str: Stream[T], qb:QueryBuilder, metaData:Tuple3[List[Operator],List[Int],List[Int]], confmap:java.util.Map[String,String]):Component = str match {
+ private def interp[T: SquallType](str: Stream[T], qb:QueryBuilder, metaData:Tuple3[List[Operator],List[Int],List[Int]], confmap:java.util.Map[String,String]):Component = str match {
   case Source(name) => {
     println("Reached Source")
     var dataSourceComponent=qb.createDataSource(name, confmap)
@@ -68,19 +71,52 @@ object Stream{
     println("Reached Filtered Stream")
     val filterPredicate= new ScalaPredicate(fn)
     val filterOperator= new SelectOperator(filterPredicate)
-    interp[T,L](parent,qb,Tuple3(filterOperator::metaData._1, metaData._2, metaData._3),confmap)
+    interp(parent,qb,Tuple3(filterOperator::metaData._1, metaData._2, metaData._3),confmap)
     }
   case MappedStream(parent, fn ) => {
     println("Reached Mapped Stream")
     //interp(parent,qb)(parent.squalType)
     val mapOp= new ScalaMapOperator(fn)(parent.squalType, str.squalType)
-    interp[T,L](parent,qb,Tuple3(mapOp::metaData._1, metaData._2, metaData._3),confmap)(parent.squalType)
+    interp(parent,qb,Tuple3(mapOp::metaData._1, metaData._2, metaData._3),confmap)(parent.squalType)
     
     }
-  case JoinedStream(parent1, parent2, ind1, ind2) => {
+  case j@JoinedStream(parent1, parent2, ind1, ind2) => {
     println("Reached Joined Stream")
-    val firstComponent = interp(parent1,qb,Tuple3(List(), ind1, null),confmap)(parent1.squalType)
-    val secondComponent = interp(parent2,qb,Tuple3(List(), null, ind2),confmap)(parent2.squalType)
+    
+    val typeT = j.tpT
+    val typeU = j.tpU
+    val typeL = j.tpL
+    val typeV = j.tpV
+    
+    interpJoin(j, qb, metaData, confmap)(typeT, typeU, typeV, typeL)
+  }
+}
+ 
+ def interpJoin[T: SquallType,U:SquallType,V:SquallType, L:SquallType](j: JoinedStream[T, U, V, L], qb:QueryBuilder, metaData:Tuple3[List[Operator],List[Int],List[Int]], confmap:java.util.Map[String,String]):Component = {
+   val typeT =  j.tpT
+    val typeU = j.tpU
+    val typeL = j.tpL
+    val typeV = j.tpV
+    val lengthT = typeT.getLength()
+    val lengthU = typeU.getLength()
+    val lengthL = typeL.getLength()
+    
+    val indexArrayT= List.range(0, lengthT)
+    val indexArrayU= List.range(0, lengthU)
+    val indexArrayL= List.range(0, lengthL)
+    
+    val imageT= typeT.convertToIndexesOfTypeT(indexArrayT)
+    val imageU= typeU.convertToIndexesOfTypeT(indexArrayU)
+    val imageL= typeL.convertToIndexesOfTypeT(indexArrayL)
+    
+    val resT= j.ind1(imageT)
+    val resU= j.ind2(imageU)
+    
+    val indicesL1=typeL.convertIndexesOfTypeToListOfInt(resT)
+    val indicesL2=typeL.convertIndexesOfTypeToListOfInt(resU)
+
+    val firstComponent = interp(j.Str1,qb,Tuple3(List(), indicesL1, null),confmap)(j.Str1.squalType)
+    val secondComponent = interp(j.Str2,qb,Tuple3(List(), null, indicesL2),confmap)(j.Str2.squalType)
     var equijoinComponent= qb.createEquiJoin(firstComponent,secondComponent)
     
     val operatorList=metaData._1
@@ -94,8 +130,7 @@ object Stream{
       equijoinComponent=equijoinComponent.setOutputPartKey(metaData._3: _*)
     
     equijoinComponent 
-    }      
-}
+ }
  
  private implicit def toIntegerList( lst: List[Int] ) =
   seqAsJavaListConverter( lst.map( i => i:java.lang.Integer ) ).asJava
