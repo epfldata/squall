@@ -25,7 +25,7 @@ object Stream{
   case class Source[T:SquallType](name:String) extends Stream[T]
   case class FilteredStream[T:SquallType](Str:Stream[T], fn: T => Boolean) extends Stream[T]
   case class MappedStream[T:SquallType,U:SquallType](Str:Stream[T], fn: T => U) extends Stream[U]
-  case class JoinedStream[T:SquallType,U:SquallType,V:SquallType](Str1:Stream[T], Str2:Stream[U], ind1: List[Int],ind2: List[Int]) extends Stream[V]
+  case class JoinedStream[T:SquallType,U:SquallType,V:SquallType, L:SquallType](Str1:Stream[T], Str2:Stream[U], ind1: T=>L,ind2: U=>L) extends Stream[V]
   case class GroupedStream[T:SquallType,U:SquallType,N: Numeric](Str:Stream[T], agg: T => N, ind: T=>U) extends TailStream[T,U,N]
     
   //TODO change types to be generic
@@ -34,7 +34,7 @@ object Stream{
     
      def filter(fn: T => Boolean): Stream[T] = FilteredStream(this, fn)
      def map[U:SquallType](fn: T => U): Stream[U] = MappedStream[T,U](this, fn)
-     def join[U:SquallType](other: Stream[U], joinIndices1: List[Int], joinIndices2: List[Int]): Stream[Tuple2[T,U]] = JoinedStream(this, other, joinIndices1, joinIndices2)
+     def join[U:SquallType, L:SquallType](other: Stream[U], joinIndices1: T=>L, joinIndices2: U=>L): Stream[Tuple2[T,U]] = JoinedStream(this, other, joinIndices1, joinIndices2)
      def reduceByKey[N:Numeric, U:SquallType](agg: T => N, keyIndices: T=>U): TailStream[T,U,N] = GroupedStream[T,U,N](this, agg, keyIndices)
      
  }
@@ -49,7 +49,7 @@ object Stream{
    }
   
  
- private def interp[T: SquallType](str: Stream[T], qb:QueryBuilder, metaData:Tuple3[List[Operator],List[Int],List[Int]], confmap:java.util.Map[String,String]):Component = str match {
+ private def interp[T: SquallType,L: SquallType](str: Stream[T], qb:QueryBuilder, metaData:Tuple3[List[Operator],List[Int],List[Int]], confmap:java.util.Map[String,String]):Component = str match {
   case Source(name) => {
     println("Reached Source")
     var dataSourceComponent=qb.createDataSource(name, confmap)
@@ -68,13 +68,13 @@ object Stream{
     println("Reached Filtered Stream")
     val filterPredicate= new ScalaPredicate(fn)
     val filterOperator= new SelectOperator(filterPredicate)
-    interp(parent,qb,Tuple3(filterOperator::metaData._1, metaData._2, metaData._3),confmap)
+    interp[T,L](parent,qb,Tuple3(filterOperator::metaData._1, metaData._2, metaData._3),confmap)
     }
   case MappedStream(parent, fn ) => {
     println("Reached Mapped Stream")
     //interp(parent,qb)(parent.squalType)
     val mapOp= new ScalaMapOperator(fn)(parent.squalType, str.squalType)
-    interp(parent,qb,Tuple3(mapOp::metaData._1, metaData._2, metaData._3),confmap)(parent.squalType)
+    interp[T,L](parent,qb,Tuple3(mapOp::metaData._1, metaData._2, metaData._3),confmap)(parent.squalType)
     
     }
   case JoinedStream(parent1, parent2, ind1, ind2) => {
@@ -97,7 +97,7 @@ object Stream{
     }      
 }
  
- implicit def toIntegerList( lst: List[Int] ) =
+ private implicit def toIntegerList( lst: List[Int] ) =
   seqAsJavaListConverter( lst.map( i => i:java.lang.Integer ) ).asJava
  
   private def interprete[T: SquallType,U: SquallType, A:Numeric](str:TailStream[T, U,A], map:java.util.Map[String,String]): QueryBuilder = str match {
@@ -130,10 +130,6 @@ object Stream{
    val conf= new java.util.HashMap[String,String]()
    interp(z,conf)
    */
-   
-   var x= List.range(0, 3)
-   println(x.slice(0, 2))
-   
  }
  
   
