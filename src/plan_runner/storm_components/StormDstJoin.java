@@ -29,6 +29,8 @@ import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Tuple;
 
 public class StormDstJoin extends StormBoltComponent {
+	public static boolean HACK=false;
+	
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormDstJoin.class);
 
@@ -145,7 +147,7 @@ public class StormDstJoin extends StormBoltComponent {
 
 		tuple = _operatorChain.process(tuple);
 		
-				if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
+		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			_semAgg.release();
 
 		if (tuple == null)
@@ -306,17 +308,17 @@ public class StormDstJoin extends StormBoltComponent {
 
 				List<String> outputTuple;
 				// Before fixing preaggregations, here was instanceof BasicStore
-				if (oppositeStorage instanceof AggregationStorage)
+				if (oppositeStorage instanceof AggregationStorage || HACK){
 					// preaggregation
-					outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);
-				else
+					outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);}
+				else{
 					outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple,
 							_rightHashIndexes);
+				}
 
 				if (projPreAgg != null)
 					// preaggregation
 					outputTuple = projPreAgg.process(outputTuple);
-				
 				
 				applyOperatorsAndSend(stormTupleRcv, outputTuple, isLastInBatch);
 			}

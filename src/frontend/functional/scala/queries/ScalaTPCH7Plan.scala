@@ -6,6 +6,7 @@ import frontend.functional.scala._
 import frontend.functional.scala.TPCHSchema._
 import java.util.Date
 import java.text.SimpleDateFormat
+import plan_runner.storm_components.StormDstJoin
 
 
 /**
@@ -35,24 +36,26 @@ object ScalaTPCH7Plan {
   
   def getQueryPlan(conf:java.util.Map[String,String]):QueryBuilder = {
     
+    StormDstJoin.HACK=true;
+    
     val nation2=Source[nation]("Nation2").filter{t => t._2.equals(_firstCountryName) ||  t._2.equals(_secondCountryName)}.map{ t => Tuple2(t._2,t._1)}
     val customers=Source[customer]("CUSTOMER").map{ t => Tuple2(t._1,t._4)}
-    val NCjoin=nation2.join[(Int,Int),(String,Int,Int)](customers, List(1), List(1)).map(t=>Tuple2(t._1,t._3))
+    val NCjoin=nation2.join(customers, List(1), List(1)).map(t=>Tuple2(t._1._1,t._2._1))
     
     val orders=Source[orders]("ORDERS").map{t => Tuple2(t._1, t._2)}
-    val NCOjoin=NCjoin.join[(Int,Int),(String,Int,Int)](orders, List(1), List(1)).map(t=> Tuple2(t._1, t._3))
+    val NCOjoin=NCjoin.join(orders, List(1), List(1)).map(t=>Tuple2(t._1._1,t._2._1))
     
     val supplier=Source[supplier]("SUPPLIER").map{t=> Tuple2(t._1,t._4)}  
     val nation1=Source[nation]("Nation1").filter{t => t._2.equals(_firstCountryName) ||  t._2.equals(_secondCountryName)}.map{t=> Tuple2(t._2,t._1)}
-    val SNjoin= supplier.join[(String, Int), (Int,Int,String)](nation1, List(1), List(1)).map(t=>Tuple2(t._1,t._3))
+    val SNjoin= supplier.join(nation1, List(1), List(1)).map(t=>Tuple2(t._1._1,t._2._1))
       
     val lineitems=Source[lineitems]("LINEITEM").filter{ t => t._11.compareTo(_date1)>=0 && t._11.compareTo(_date2)<=0}.map{ t => Tuple4(_year_format.format(t._11),(1-t._7)*t._6,t._3,t._1) }
-    val LSNjoin=lineitems.join[(Int,String), (String, Double, Int,Int,String)](SNjoin, List(2), List(0)).map(t=>Tuple4(t._5, t._1,t._2,t._4))
+    val LSNjoin=lineitems.join(SNjoin, List(2), List(0)).map(t=>Tuple4(t._2._2, t._1._1,t._1._2,t._1._4))
     
-    val NCOLSNJoin =NCOjoin.join[(String, String, Double, Int),(String,Int,String, String, Double)](LSNjoin, List(1), List(3))
-    .filter(t=> (t._1.equals(_firstCountryName) && t._3.equals(_secondCountryName)) || (t._3.equals(_firstCountryName) && t._1.equals(_secondCountryName)) )    
+    val NCOLSNJoin =NCOjoin.join(LSNjoin, List(1), List(3))
+    .filter(t=> (t._1._1.equals(_firstCountryName) && t._2._1.equals(_secondCountryName)) || (t._2._1.equals(_firstCountryName) && t._1._1.equals(_secondCountryName)) )    
     
-    val agg= NCOLSNJoin.reduceByKey( t=> t._5, t=>Tuple3(t._3,t._1,t._4)) //List(2,0,3)
+    val agg= NCOLSNJoin.reduceByKey( t=> t._2._3, t=>Tuple3(t._2._3,t._1._1,t._2._2)) //List(2,0,3)
     
     agg.execute(conf)
   }

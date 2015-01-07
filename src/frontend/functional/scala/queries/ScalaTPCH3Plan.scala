@@ -26,6 +26,7 @@ object ScalaTPCH3Plan {
   
   def getQueryPlan(conf:java.util.Map[String,String]):QueryBuilder = {
     
+    /*
     val customers=Source[customer]("CUSTOMER").filter{t => t._7.equals("BUILDING")}.map{ t => t._1}    
     val orders=Source[orders]("ORDERS").filter { t => t._5.compareTo(compDate)<0}.map{t => Tuple4(t._1, t._2, t._5, t._8)}
     val COjoin=customers.join[(Int,Int,Date,Int),(Int,Int,Date,Int)](orders, List(0), List(1)).map(t=> Tuple3(t._2, t._3, t._4))
@@ -34,6 +35,8 @@ object ScalaTPCH3Plan {
     val agg= COLjoin.reduceByKey( t=> (1-t._5)*t._4, t=>Tuple3(t._1,t._2,t._3)) //List(0,1,2)
     
     agg.execute(conf)
+    * */
+    ???
   }  
   
   

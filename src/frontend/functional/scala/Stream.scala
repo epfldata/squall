@@ -34,7 +34,7 @@ object Stream{
     
      def filter(fn: T => Boolean): Stream[T] = FilteredStream(this, fn)
      def map[U:SquallType](fn: T => U): Stream[U] = MappedStream[T,U](this, fn)
-     def join[U:SquallType,V:SquallType](other: Stream[U], joinIndices1: List[Int], joinIndices2: List[Int]): Stream[V] = JoinedStream(this, other, joinIndices1, joinIndices2)
+     def join[U:SquallType](other: Stream[U], joinIndices1: List[Int], joinIndices2: List[Int]): Stream[Tuple2[T,U]] = JoinedStream(this, other, joinIndices1, joinIndices2)
      def reduceByKey[N:Numeric, U:SquallType](agg: T => N, keyIndices: T=>U): TailStream[T,U,N] = GroupedStream[T,U,N](this, agg, keyIndices)
      
  }
@@ -106,7 +106,10 @@ object Stream{
     val st1 = implicitly[SquallType[T]]
     val st2 = implicitly[SquallType[U]]
     
-    val image= st1.convertToIndexesOfTypeT()
+    val length = st1.getLength()
+    val indexArray= List.range(0, length)
+    //println(indexArray)
+    val image= st1.convertToIndexesOfTypeT(indexArray)
     val res= ind(image)
     
     val indices=st2.convertIndexesOfTypeToListOfInt(res)
@@ -126,7 +129,11 @@ object Stream{
    val z = x.join[Int,(Int,Int)](y, List(2),List(2)).reduceByKey(x => 3*x._2, List(1,2))
    val conf= new java.util.HashMap[String,String]()
    interp(z,conf)
-   */   
+   */
+   
+   var x= List.range(0, 3)
+   println(x.slice(0, 2))
+   
  }
  
   
