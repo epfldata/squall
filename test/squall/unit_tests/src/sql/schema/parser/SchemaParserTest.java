@@ -1,10 +1,14 @@
 package sql.schema.parser;
 
 import java.util.Map;
+
 import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
-import plan_runner.utilities.MyUtilities;
-import sql.schema.parser.SchemaParser.TableInfo;
+
+import ch.epfl.data.plan_runner.utilities.MyUtilities;
+import ch.epfl.data.sql.schema.parser.SchemaParser;
+import ch.epfl.data.sql.schema.parser.SchemaParser.TableInfo;
 
 /**
  *

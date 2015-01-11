@@ -1,16 +1,19 @@
 package optimizers.cost;
 
 import java.util.Map;
+
 import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
-import plan_runner.components.Component;
-import plan_runner.components.DataSourceComponent;
-import plan_runner.utilities.MyUtilities;
-import sql.main.ParserMain;
-import sql.optimizers.name.NameCompGen;
-import sql.optimizers.name.NameCompGenFactory;
-import sql.util.ParserUtil;
-import sql.visitors.jsql.SQLVisitor;
+
+import ch.epfl.data.plan_runner.components.Component;
+import ch.epfl.data.plan_runner.components.DataSourceComponent;
+import ch.epfl.data.plan_runner.utilities.MyUtilities;
+import ch.epfl.data.sql.main.ParserMain;
+import ch.epfl.data.sql.optimizers.name.NameCompGen;
+import ch.epfl.data.sql.optimizers.name.NameCompGenFactory;
+import ch.epfl.data.sql.util.ParserUtil;
+import ch.epfl.data.sql.visitors.jsql.SQLVisitor;
 
 /**
  *

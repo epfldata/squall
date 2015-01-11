@@ -3,24 +3,26 @@ package optimizers.cost;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 import static org.junit.Assert.assertEquals;
 
 import org.apache.log4j.Logger;
 import org.junit.Test;
-import plan_runner.components.DataSourceComponent;
-import plan_runner.components.EquiJoinComponent;
-import plan_runner.conversion.*;
-import plan_runner.expressions.*;
-import plan_runner.operators.ProjectOperator;
-import plan_runner.query_plans.QueryBuilder;
-import sql.main.ParserMain;
-import sql.optimizers.name.ProjGlobalCollect;
-import sql.optimizers.name.ProjSchemaCreator;
-import sql.schema.ColumnNameType;
-import sql.schema.Schema;
-import sql.util.ParserUtil;
-import sql.util.TupleSchema;
-import sql.visitors.jsql.SQLVisitor;
+
+import ch.epfl.data.plan_runner.components.DataSourceComponent;
+import ch.epfl.data.plan_runner.components.EquiJoinComponent;
+import ch.epfl.data.plan_runner.conversion.*;
+import ch.epfl.data.plan_runner.expressions.*;
+import ch.epfl.data.plan_runner.operators.ProjectOperator;
+import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
+import ch.epfl.data.sql.main.ParserMain;
+import ch.epfl.data.sql.optimizers.name.ProjGlobalCollect;
+import ch.epfl.data.sql.optimizers.name.ProjSchemaCreator;
+import ch.epfl.data.sql.schema.ColumnNameType;
+import ch.epfl.data.sql.schema.Schema;
+import ch.epfl.data.sql.util.ParserUtil;
+import ch.epfl.data.sql.util.TupleSchema;
+import ch.epfl.data.sql.visitors.jsql.SQLVisitor;
 
 /**
  *

@@ -4,6 +4,7 @@ package optimizers.cost;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
 import net.sf.jsqlparser.expression.operators.arithmetic.Subtraction;
@@ -17,10 +18,11 @@ import static org.junit.Assert.assertEquals;
 
 import org.apache.log4j.Logger;
 import org.junit.Test;
-import sql.main.ParserMain;
-import sql.optimizers.name.ProjGlobalCollect;
-import sql.util.ParserUtil;
-import sql.visitors.jsql.SQLVisitor;
+
+import ch.epfl.data.sql.main.ParserMain;
+import ch.epfl.data.sql.optimizers.name.ProjGlobalCollect;
+import ch.epfl.data.sql.util.ParserUtil;
+import ch.epfl.data.sql.visitors.jsql.SQLVisitor;
 
 /**
  *

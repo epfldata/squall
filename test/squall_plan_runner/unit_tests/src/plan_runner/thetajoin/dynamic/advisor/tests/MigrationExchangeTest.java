@@ -6,7 +6,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import plan_runner.thetajoin.dynamic.advisor.Migration;
+import ch.epfl.data.plan_runner.thetajoin.dynamic.advisor.Migration;
 
 
 public class MigrationExchangeTest {

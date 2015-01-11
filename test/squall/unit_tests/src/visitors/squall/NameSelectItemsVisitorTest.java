@@ -4,24 +4,26 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
 import net.sf.jsqlparser.statement.select.SelectItem;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.log4j.Logger;
 import org.junit.Test;
-import plan_runner.components.DataSourceComponent;
-import plan_runner.conversion.*;
-import plan_runner.expressions.ColumnReference;
-import plan_runner.expressions.ValueExpression;
-import plan_runner.operators.AggregateOperator;
-import plan_runner.operators.AggregateSumOperator;
-import plan_runner.query_plans.QueryBuilder;
-import sql.main.ParserMain;
-import sql.schema.ColumnNameType;
-import sql.util.ParserUtil;
-import sql.util.TupleSchema;
-import sql.visitors.jsql.SQLVisitor;
-import sql.visitors.squall.NameSelectItemsVisitor;
+
+import ch.epfl.data.plan_runner.components.DataSourceComponent;
+import ch.epfl.data.plan_runner.conversion.*;
+import ch.epfl.data.plan_runner.expressions.ColumnReference;
+import ch.epfl.data.plan_runner.expressions.ValueExpression;
+import ch.epfl.data.plan_runner.operators.AggregateOperator;
+import ch.epfl.data.plan_runner.operators.AggregateSumOperator;
+import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
+import ch.epfl.data.sql.main.ParserMain;
+import ch.epfl.data.sql.schema.ColumnNameType;
+import ch.epfl.data.sql.util.ParserUtil;
+import ch.epfl.data.sql.util.TupleSchema;
+import ch.epfl.data.sql.visitors.jsql.SQLVisitor;
+import ch.epfl.data.sql.visitors.squall.NameSelectItemsVisitor;
 
 /**
  *

@@ -2,6 +2,7 @@ package estimators;
 
 import java.util.Calendar;
 import java.util.Date;
+
 import net.sf.jsqlparser.expression.DateValue;
 import net.sf.jsqlparser.expression.Expression;
 import static org.junit.Assert.assertEquals;
@@ -9,10 +10,11 @@ import static org.junit.Assert.assertEquals;
 import org.apache.log4j.Logger;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import plan_runner.conversion.DateConversion;
-import plan_runner.expressions.DateSum;
-import plan_runner.expressions.ValueSpecification;
-import sql.estimators.JSQLTypeConverter;
+
+import ch.epfl.data.plan_runner.conversion.DateConversion;
+import ch.epfl.data.plan_runner.expressions.DateSum;
+import ch.epfl.data.plan_runner.expressions.ValueSpecification;
+import ch.epfl.data.sql.estimators.JSQLTypeConverter;
 
 /**
  *

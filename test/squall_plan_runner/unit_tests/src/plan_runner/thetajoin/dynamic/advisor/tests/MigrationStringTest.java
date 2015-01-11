@@ -6,8 +6,8 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import plan_runner.thetajoin.dynamic.advisor.Action;
-import plan_runner.thetajoin.dynamic.advisor.Migration;
+import ch.epfl.data.plan_runner.thetajoin.dynamic.advisor.Action;
+import ch.epfl.data.plan_runner.thetajoin.dynamic.advisor.Migration;
 
 
 public class MigrationStringTest {
