@@ -143,10 +143,8 @@ object Stream{
     
     val length = st1.getLength()
     val indexArray= List.range(0, length)
-    //println(indexArray)
     val image= st1.convertToIndexesOfTypeT(indexArray)
     val res= ind(image)
-    
     val indices=st2.convertIndexesOfTypeToListOfInt(res)
     
     val aggOp= new ScalaAggregateOperator(agg,map).setGroupByColumns(toIntegerList(indices))

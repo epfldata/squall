@@ -7,6 +7,7 @@ import java.io.{FileOutputStream, FileInputStream}
 import java.io.Serializable
 import scala.language.experimental.macros
 import scala.reflect.macros.Context
+import org.joda.time.DateTime
 
 /**
  * @author mohamed
@@ -48,8 +49,8 @@ object Types extends Serializable{
   implicit def DateType = new SquallType[Date] {
   def convert(v: Date): List[String] = List((new SimpleDateFormat("yyyy-MM-dd")).format(v))
   def convertBack(v: List[String]): Date = (new SimpleDateFormat("yyyy-MM-dd")).parse(v.head)
-  def convertIndexesOfTypeToListOfInt(index: Date): List[Int] = List(index.getDay)
-  def convertToIndexesOfTypeT(index: List[Int]):Date = new Date(7,index(0),2000) //hacked the index represents the day
+  def convertIndexesOfTypeToListOfInt(index: Date): List[Int] = List(new DateTime(index).getDayOfMonth)
+  def convertToIndexesOfTypeT(index: List[Int]):Date = (new SimpleDateFormat("yyyy-MM-dd")).parse("2000-07-"+index(0)) //hacked the index represents the day
   def getLength():Int = 1
   }
 
