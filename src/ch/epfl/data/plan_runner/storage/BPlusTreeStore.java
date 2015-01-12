@@ -7,6 +7,7 @@ import java.util.List;
  */
 public interface BPlusTreeStore<KeyType> {
 
+	
 	public String getStatistics();
 
 	/**
@@ -40,5 +41,14 @@ public interface BPlusTreeStore<KeyType> {
 	 * @return
 	 */
 	public int size();
+	
+	
+	/**
+	 * Return the size of the storage (the number of tuples stored inside)
+	 * 
+	 * @return
+	 */
+	public void purgeState(long tillTimeStamp);
+	
 
 }

@@ -8,41 +8,78 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 import ch.epfl.data.plan_runner.conversion.DateConversion;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 
+import com.sleepycat.bind.serial.ClassCatalog;
+import com.sleepycat.bind.serial.SerialSerialKeyCreator;
+import com.sleepycat.bind.serial.StoredClassCatalog;
 import com.sleepycat.bind.tuple.DoubleBinding;
 import com.sleepycat.bind.tuple.IntegerBinding;
 import com.sleepycat.bind.tuple.LongBinding;
 import com.sleepycat.bind.tuple.StringBinding;
-import com.sleepycat.je.CacheMode;
+import com.sleepycat.bind.tuple.TupleBinding;
+import com.sleepycat.bind.tuple.TupleOutput;
 import com.sleepycat.je.Cursor;
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.DatabaseEntry;
+import com.sleepycat.je.DatabaseException;
 import com.sleepycat.je.Environment;
 import com.sleepycat.je.EnvironmentConfig;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
+import com.sleepycat.je.SecondaryConfig;
+import com.sleepycat.je.SecondaryDatabase;
+import com.sleepycat.je.SecondaryKeyCreator;
 import com.sleepycat.je.StatsConfig;
 
 public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 	private String _storagePath;
 	private Environment _env;
 	private Database _db;
-
-	private final DateConversion _dc = new DateConversion();
+	private SecondaryDatabase _timeStampDB;
+	private static final DateConversion _dc = new DateConversion();
 	private final Class<KeyType> _type;
+	private int _size;	
+	private boolean _isTimeStamped;
+	private int _taskIndex;
+	private boolean isClosed=false;
+	
+	
+	
+	final class TimestampKeyCreator implements SecondaryKeyCreator {
+	    TimestampKeyCreator(){}
+	    @Override
+	    public boolean createSecondaryKey(SecondaryDatabase secDb, DatabaseEntry keyEntry, DatabaseEntry valueEntry,
+	            DatabaseEntry resultEntry) throws DatabaseException {
+	    	String valString = StringBinding.entryToString(valueEntry);
+			final String parts[] = valString.split("\\@");
+			final long storedTimestamp = Long.valueOf(new String(parts[0]));
+	    	
+	        TupleOutput to = new TupleOutput();
+	        to.writeLong(storedTimestamp);
+	        resultEntry.setData(to.getBufferBytes());
+	        return true;
+	    }
+	}
 
-	private int _size;
 
 	public BerkeleyDBStore(Class<KeyType> type, String storagePath) {
+		this(type, storagePath,false,-1);
+	}
+	
+	public BerkeleyDBStore(Class<KeyType> type, String storagePath, boolean isTimestamped, int taskIndex) {
+		_isTimeStamped=isTimestamped;
 		_type = type;
 		createPath(storagePath);
 		createStore();
+		_taskIndex=taskIndex;
+	
 	}
 
 	private void createPath(String storagePath) {
@@ -53,7 +90,9 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		}
 		// System.out.println(hostname);
 		// STORAGE_PATH = storagePath + "/" + hostname ;
-		_storagePath = storagePath;
+		Random rnd= new Random();
+		int pth=rnd.nextInt(100000000);
+		_storagePath = storagePath+pth;
 	}
 
 	private void createStore() {
@@ -86,7 +125,21 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		dbConfig.setTransactional(false);
 		// dbConfig.setCacheMode(CacheMode.EVICT_LN); // keeps only internal nodes in the memory
 		// dbConfig.setSortedDuplicates(true); // terribly slow
-		_db = _env.openDatabase(null, "simpleDb", dbConfig);
+		_db = _env.openDatabase(null, "simpleDb"+_storagePath+_taskIndex, dbConfig);
+		
+		if(_isTimeStamped){
+			SecondaryConfig secConfig= new SecondaryConfig();
+			secConfig.setAllowCreate(true);
+			secConfig.setTemporary(true); // opposite to DiskPermanent
+			secConfig.setTransactional(false);
+			secConfig.setSortedDuplicates(true);
+			ClassCatalog catalog = new StoredClassCatalog(_db);
+			//secConfig.setKeyCreator(new TimeStampKeyCreator(catalog, _type, String.class, long.class));
+			secConfig.setKeyCreator(new TimestampKeyCreator());
+			_timeStampDB= _env.openSecondaryDatabase(null, "TimeStamp"+_taskIndex, _db, secConfig);
+		}
+		
+		
 	}
 	
 	@Override
@@ -166,7 +219,38 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		final KeyType leftBoundary = getKeyOffset(key, -diff);
 		final KeyType rightBoundary = getKeyOffset(key, diff);
 		return getRange(leftBoundary, false, rightBoundary, false);
-	}	
+	}
+	
+	@Override
+	public void purgeState(long tillTimeStamp) {
+		
+		if(!_isTimeStamped || isClosed) //
+			return;
+		final List<String> result = new ArrayList<String>();
+
+		// initialize left and rightBoundary
+		final DatabaseEntry keyEntry = new DatabaseEntry();
+		final DatabaseEntry dataEntry = new DatabaseEntry();
+		final DatabaseEntry rightBoundary = new DatabaseEntry();
+				
+		//TODO // or call getFirst!!
+		LongBinding.longToEntry(10000, keyEntry);  
+		// initialize cursor 
+		final Cursor cursor = _timeStampDB.openCursor(null, null);
+		OperationStatus status = cursor.getSearchKeyRange(keyEntry, dataEntry, LockMode.DEFAULT);
+		while (status == OperationStatus.SUCCESS) {
+			// check if this is right of righBoundary
+			final long currentKey = LongBinding.entryToLong(keyEntry);
+			//System.out.println("checking currentKey"+currentKey);
+			if (currentKey > tillTimeStamp)
+				break;
+			//System.out.println("deleteing currentKey"+currentKey);
+			cursor.delete();
+			_size--;
+			status = cursor.getNext(keyEntry, dataEntry, LockMode.DEFAULT);
+		}
+		cursor.close();
+	}
 
 	protected List<String> getRange(Object leftBoundary, boolean includeLeft, Object rightBoundary, boolean includeRight) {
 		final List<String> result = new ArrayList<String>();
@@ -237,7 +321,7 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 		return result;
 	}
 
-	protected void objectToEntry(Object key, DatabaseEntry keyEntry) {
+	protected static void objectToEntry(Object key, DatabaseEntry keyEntry) {
 		if (key instanceof String)
 			StringBinding.stringToEntry((String) key, keyEntry);
 		else if (key instanceof Integer)
@@ -302,9 +386,12 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStore<KeyType> {
 
 	@Override
 	public void shutdown() {
+		if(_timeStampDB!=null)
+			_timeStampDB.close();
 		_db.close();
 		_env.close();
 		emptyFolder(new File(_storagePath), false);
+		isClosed=true;
 	}
 
 	protected void incrementSize(){

@@ -1,5 +1,6 @@
 package ch.epfl.data.plan_runner.storm_components.theta;
 
+import java.io.File;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -33,6 +34,7 @@ import ch.epfl.data.plan_runner.utilities.SystemParameters;
 import ch.epfl.data.plan_runner.utilities.statistics.StatisticsUtilities;
 import ch.epfl.data.plan_runner.visitors.PredicateCreateIndexesVisitor;
 import ch.epfl.data.plan_runner.visitors.PredicateUpdateIndexesVisitor;
+import ch.epfl.data.plan_runner.window_semantics.WindowSemanticsManager;
 import backtype.storm.Config;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -140,6 +142,7 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 		printTuple(tuple);
 		if (_numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
 			printStatistics(SystemParameters.OUTPUT_PRINT);
+		
 		if (MyUtilities.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
 			long timestamp = 0;
 			if (MyUtilities.isCustomTimestampMode(getConf()))
@@ -148,8 +151,9 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 					// next to last
 					// because we measure the latency of the last operator
 					timestamp = System.currentTimeMillis();
-			// timestamp = System.nanoTime();
-			tupleSend(tuple, stormTupleRcv, timestamp);
+			//TODO
+			if(!WindowSemanticsManager.sendTupleIfSlidingWindowSemantics(this, tuple, stormTupleRcv, lineageTimestamp))	
+				tupleSend(tuple, stormTupleRcv, timestamp);			
 		}
 		if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
 			printTupleLatency(_numSentTuples - 1, lineageTimestamp);
@@ -166,19 +170,26 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 		else
 			storagePath = SystemParameters.getString(getConf(), "STORAGE_LOCAL_DIR");
 		// TODO We assume that there is only one index !!
+		
+		// TODO This assumes that there is only one index !!
+		boolean isWindow;
+		if(_windowSize>0 || _tumblingWindowSize>0) 
+			isWindow=true; 
+		else isWindow=false;
+		
 		if(MyUtilities.isBDBUniform(getConf())){
 			if (_typeOfValueIndexed.get(0) instanceof Integer) {
-				_firstRelationStorage = new BerkeleyDBStore(Integer.class, storagePath + "/first");
-				_secondRelationStorage = new BerkeleyDBStore(Integer.class, storagePath + "/second");
+				_firstRelationStorage = new BerkeleyDBStore(Integer.class, storagePath + "/first/"+this.getName()+_thisTaskID ,isWindow,_thisTaskID);
+				_secondRelationStorage = new BerkeleyDBStore(Integer.class, storagePath + "/second/"+this.getName()+_thisTaskID,isWindow,_thisTaskID);
 			} else if (_typeOfValueIndexed.get(0) instanceof Double) {
-				_firstRelationStorage = new BerkeleyDBStore(Double.class, storagePath + "/first");
-				_secondRelationStorage = new BerkeleyDBStore(Double.class, storagePath + "/second");
+				_firstRelationStorage = new BerkeleyDBStore(Double.class, storagePath + "/first/"+this.getName()+_thisTaskID,isWindow,_thisTaskID);
+				_secondRelationStorage = new BerkeleyDBStore(Double.class, storagePath + "/second/"+this.getName()+_thisTaskID,isWindow,_thisTaskID);
 			} else if (_typeOfValueIndexed.get(0) instanceof Date) {
-				_firstRelationStorage = new BerkeleyDBStore(Date.class, storagePath + "/first");
-				_secondRelationStorage = new BerkeleyDBStore(Date.class, storagePath + "/second");
+				_firstRelationStorage = new BerkeleyDBStore(Date.class, storagePath + "/first/"+this.getName()+_thisTaskID,isWindow,_thisTaskID);
+				_secondRelationStorage = new BerkeleyDBStore(Date.class, storagePath + "/second/"+this.getName()+_thisTaskID,isWindow,_thisTaskID);
 			} else if (_typeOfValueIndexed.get(0) instanceof String) {
-				_firstRelationStorage = new BerkeleyDBStore(String.class, storagePath + "/first");
-				_secondRelationStorage = new BerkeleyDBStore(String.class, storagePath + "/second");
+				_firstRelationStorage = new BerkeleyDBStore(String.class, storagePath + "/first/"+this.getName()+_thisTaskID,isWindow,_thisTaskID);
+				_secondRelationStorage = new BerkeleyDBStore(String.class, storagePath + "/second/"+this.getName()+_thisTaskID,isWindow,_thisTaskID);
 			} else
 				throw new RuntimeException("non supported type");
 			LOG.info("Storage with Uniform BDB!");			
@@ -209,6 +220,12 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 
 	@Override
 	public void execute(Tuple stormTupleRcv) {
+		//TODO
+		//short circuit that this is a window configuration
+		if(WindowSemanticsManager.evictStateIfSlidingWindowSemantics(this, stormTupleRcv)){
+			 return;
+		}
+		
 		if (_firstTime && MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis)) {
 			_periodicAggBatch = new PeriodicAggBatchSend(_aggBatchOutputMillis, this);
 			_firstTime = false;
@@ -266,6 +283,9 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 							inputTupleHash, stormTupleRcv, false);
 			}
 		}
+		//TODO
+		//Update LatestTimeStamp
+		WindowSemanticsManager.updateLatestTimeStamp(this, stormTupleRcv);
 		getCollector().ack(stormTupleRcv);
 	}
 
@@ -318,20 +338,13 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 		if (oppositeStorage == null || oppositeStorage.size() == 0)
 			return;
 		for (int i = 0; i < oppositeStorage.size(); i++) {
-			String oppositeTupleString = oppositeStorage.get(i);
-			long lineageTimestamp = 0;
-			if (MyUtilities.isCustomTimestampMode(getConf()))
-				lineageTimestamp = stormTuple.getLongByField(StormComponent.TIMESTAMP);
-			if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
-				// timestamp has to be removed
-				final String parts[] = oppositeTupleString.split("\\@");
-				final long storedTimestamp = Long.valueOf(new String(parts[0]));
-				oppositeTupleString = new String(parts[1]);
-				// now we set the maximum TS to the tuple
-				if (storedTimestamp > lineageTimestamp)
-					lineageTimestamp = storedTimestamp;
-			}
-			final List<String> oppositeTuple = MyUtilities.stringToTuple(oppositeTupleString,
+			//TODO
+			StringBuilder  oppositeTupleString = new StringBuilder(oppositeStorage.get(i));
+			long lineageTimestamp = WindowSemanticsManager.joinPreProcessingIfSlidingWindowSemantics(this, oppositeTupleString, stormTuple);
+			if(lineageTimestamp<0)
+				continue;
+			//end todo
+			final List<String> oppositeTuple = MyUtilities.stringToTuple(oppositeTupleString.toString(),
 					getComponentConfiguration());
 			List<String> firstTuple, secondTuple;
 			if (isFromFirstEmitter) {
@@ -445,16 +458,24 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 		super.finalizeProcessing();
 		//BDB shutdown
 		_firstRelationStorage.shutdown();
+		
+		String storagePath = null;
+		if (SystemParameters.getBoolean(getConf(), "DIP_DISTRIBUTED"))
+			storagePath = SystemParameters.getString(getConf(), "STORAGE_CLUSTER_DIR");
+		else
+			storagePath = SystemParameters.getString(getConf(), "STORAGE_LOCAL_DIR");
+		File f = new File(storagePath + "/first/"+this.getName()+_thisTaskID);
+		f.delete();
 		_secondRelationStorage.shutdown();
+		f = new File(storagePath + "/second/"+this.getName()+_thisTaskID);
+		f.delete();
 	}
 
 	private void processNonLastTuple(String inputComponentIndex, String inputTupleString, //
 			List<String> tuple, // these two are the same
 			String inputTupleHash, Tuple stormTupleRcv, boolean isLastInBatch) {
 		boolean isFromFirstEmitter = false;
-
 		BPlusTreeStore affectedStorage, oppositeStorage;
-
 		if (_firstEmitterIndex.equals(inputComponentIndex)) {
 			// R update
 			isFromFirstEmitter = true;
@@ -469,16 +490,16 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 			throw new RuntimeException("InputComponentName " + inputComponentIndex
 					+ " doesn't match neither " + _firstEmitterIndex + " nor "
 					+ _secondEmitterIndex + ".");
-		if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
-			final long incomingTimestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
-			inputTupleString = incomingTimestamp + SystemParameters.STORE_TIMESTAMP_DELIMITER
-					+ inputTupleString;
-		}
 		// NEW
 		final PredicateUpdateIndexesVisitor visitor = new PredicateUpdateIndexesVisitor(
 				isFromFirstEmitter, tuple);
 		_joinPredicate.accept(visitor);
 		final String keyValue = new ArrayList<String>(visitor._valuesToIndex).get(0);
+		
+		//TODO
+		// add the stormTuple to the specific storage
+		inputTupleString=WindowSemanticsManager.AddTimeStampToStoredDataIfWindowSemantics(this, inputTupleString, stormTupleRcv);
+		
 		// add the stormTuple to the specific storage
 		insertIntoBDBStorage(affectedStorage, keyValue, inputTupleString);
 
@@ -541,5 +562,13 @@ public class StormThetaJoinBDB extends StormBoltComponent {
 		else
 			throw new RuntimeException("non supported type");
 
+	}
+
+	@Override
+	public void purgeStaleStateFromWindow() {
+		//TODO
+		_firstRelationStorage.purgeState(_latestTimeStamp-_GC_PeriodicTickSec);
+		_secondRelationStorage.purgeState(_latestTimeStamp-_GC_PeriodicTickSec);
+		System.gc();		
 	}
 }

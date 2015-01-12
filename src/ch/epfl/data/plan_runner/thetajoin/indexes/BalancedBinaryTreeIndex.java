@@ -152,4 +152,9 @@ public class BalancedBinaryTreeIndex<KeyType extends Comparable<KeyType>> implem
 		return this;
 	}
 
+	@Override
+	public void remove(Integer row_id, KeyType key) {
+		throw new RuntimeException("Not implemented yet");
+	}
+
 }

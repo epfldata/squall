@@ -17,6 +17,7 @@ import ch.epfl.data.plan_runner.operators.Operator;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
+import backtype.storm.Config;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -26,6 +27,9 @@ import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
 public abstract class StormBoltComponent extends BaseRichBolt implements StormJoin, StormComponent {
+	
+	public static final long INITIAL_TUMBLING_TIMESTAMP= System.currentTimeMillis();        
+	
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormBoltComponent.class);
 
@@ -76,11 +80,10 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormJo
 		_componentIndex = String.valueOf(allCompNames.indexOf(_ID));
 		_printOut = cp.getPrintOut();
 		_hierarchyPosition = hierarchyPosition;
-
 		_parentEmitters = cp.getParents();
-
 		_hashIndexes = cp.getHashIndexes();
 		_hashExpressions = cp.getHashExpressions();
+		setWindowSemantics(conf); //Set Window Semantics if Available in the configuration file
 	}
 	
 	public StormBoltComponent(ComponentProperties cp, List<String> allCompNames,
@@ -132,7 +135,7 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormJo
 				outputFields.add(StormComponent.TUPLE); // list of string
 				outputFields.add(StormComponent.HASH);
 			}
-			if (MyUtilities.isCustomTimestampMode(_conf))
+			if (MyUtilities.isCustomTimestampMode(_conf) || MyUtilities.isWindowTimestampMode(_conf))
 				outputFields.add(StormComponent.TIMESTAMP);
 			declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(outputFields));
 			
@@ -148,12 +151,37 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormJo
 	}
 
 	public abstract ChainOperator getChainOperator();
+	
+	/*//TODO
+	 * For Window Semantics
+	 */
+	////////////////////////////////
+	public long _windowSize=-1; //Width in terms of millis, Default is -1 which is full history
+	public long _latestTimeStamp=-1;
+	protected long _GC_PeriodicTickSec=-1;
+	//protected static int WINDOW_SIZE_MULTIPLE_CONSTANT=3;
+	
+	//For tumbling semantics
+	public long _tumblingWindowSize;
+	
+	
+	
+	public void setWindowSemantics(Map conf){
+		_windowSize= MyUtilities.getWindowSize(conf);
+		_GC_PeriodicTickSec=MyUtilities.getWindowClockTicker(conf);
+		if(_GC_PeriodicTickSec>0) conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, _GC_PeriodicTickSec);
+		_tumblingWindowSize= MyUtilities.getWindowTumblingSize(conf);
+	}
+	
+	public abstract void purgeStaleStateFromWindow();
+	////////////////////////////////
+	////////////////////////////////end
 
-	protected OutputCollector getCollector() {
+	public OutputCollector getCollector() {
 		return _collector;
 	}
 
-	protected Map getConf() {
+	public Map getConf() {
 		return _conf;
 	}
 
@@ -163,7 +191,7 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormJo
 		return new String[] { _ID };
 	}
 
-	protected int getHierarchyPosition() {
+	public int getHierarchyPosition() {
 		return _hierarchyPosition;
 	}
 
@@ -191,7 +219,7 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormJo
 
 			if (!tupleString.isEmpty())
 				// some buffers might be empty
-				if (MyUtilities.isCustomTimestampMode(_conf))
+				if (MyUtilities.isCustomTimestampMode(_conf) || MyUtilities.isWindowTimestampMode(_conf))
 					_collector.emit(new Values(_componentIndex, tupleString, _targetTimestamps[i]));
 				else
 					_collector.emit(new Values(_componentIndex, tupleString));

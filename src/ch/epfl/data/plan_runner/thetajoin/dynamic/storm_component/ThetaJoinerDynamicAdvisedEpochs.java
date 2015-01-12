@@ -294,7 +294,7 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 		dataStreamFields.add(StormComponent.TUPLE);
 		dataStreamFields.add(StormComponent.HASH);
 		dataStreamFields.add(StormComponent.EPOCH);
-		if (MyUtilities.isCustomTimestampMode(getConf()))
+		if (MyUtilities.isCustomTimestampMode(getConf()) || MyUtilities.isWindowTimestampMode(getConf()))
 			dataStreamFields.add(StormComponent.TIMESTAMP);
 		declarer.declareStream(SystemParameters.ThetaDataMigrationJoinerToReshuffler, new Fields(
 				dataStreamFields));
@@ -1296,6 +1296,12 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 		else if (preDim[1] > currDim[1])
 			return 2;
 		return -1;
+	}
+
+	@Override
+	public void purgeStaleStateFromWindow() {
+		//TODO
+		throw new RuntimeException("Window semantics for this operator is not implemented yet");		
 	}
 
 }

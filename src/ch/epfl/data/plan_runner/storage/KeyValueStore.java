@@ -277,6 +277,40 @@ public class KeyValueStore<K, V> extends BasicStore {
 		_objRemId = key.toString();
 		return value;
 	}
+	
+	
+	//TODO HACKED BIG TIME .. NEEDS TO BE CLEANED UP AT A DIFFERNT LEVEL
+	public void purgeState(long tillTimeStamp){
+		ArrayList<V> values;
+		final Set<K> keys = this.keySet();
+		for (final Iterator<K> it = keys.iterator(); it.hasNext();) {
+			final K key = it.next();
+			// Check memory
+			final Object obj = this._memstore.get(key);
+			if (obj != null) {
+				final HashEntry<K, V> entry = _replAlg.get(obj);				
+				values = entry.getValues();
+				String value;
+
+				for (Iterator iterator = values.iterator(); iterator.hasNext();) {
+					V v = (V) iterator.next();
+					if (this._tc != null)
+						value= _tc.toString(v);
+					else
+						value= v.toString();
+					
+					final String parts[] = value.split("\\@");
+					final long storedTimestamp = Long.valueOf(new String(parts[0]));
+					final String tupleString = parts[1];
+					if(storedTimestamp< tillTimeStamp)
+						iterator.remove();
+				}
+				
+			}
+			// Check storage
+			//removed !!!! use DST_TUPLE_STORAGE
+		}
+	}
 
 	@Override
 	public void printStore(PrintStream stream, boolean printStorage) {

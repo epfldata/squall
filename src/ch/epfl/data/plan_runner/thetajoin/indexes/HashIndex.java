@@ -6,6 +6,7 @@ import java.util.HashMap;
 
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 
+
 /**
  * @author Zervos The Theta-Join Hash index used for equalities. Uses a string
  *         as a key and holds a list of row-id's of TupleStorage that have the
@@ -44,5 +45,17 @@ public class HashIndex<KeyType> implements Index<KeyType> {
 		idsList.add(row_id);
 
 	}
+
+	@Override
+	public void remove(Integer row_id, KeyType key) {
+		TIntArrayList idsList = _index.get(key);
+		if (idsList == null)
+			throw new RuntimeException("Error: Removing a nonexisting key from index");
+		idsList.remove(row_id);
+		//int removeIndex=idsList.indexOf(row_id);
+		//idsList.remove(removeIndex);
+	}
+
+	
 
 }

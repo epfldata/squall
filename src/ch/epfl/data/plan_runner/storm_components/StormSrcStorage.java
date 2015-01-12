@@ -244,4 +244,10 @@ public class StormSrcStorage extends StormBoltComponent {
 	protected void printStatistics(int type) {
 		// TODO
 	}
+
+	@Override
+	public void purgeStaleStateFromWindow() {
+			throw new RuntimeException("Window semantics is not implemented for this operator.");
+		
+	}
 }

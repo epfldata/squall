@@ -5,6 +5,7 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.util.Iterator;
 
 /**
  * Tuple storage. Provides ~O(1) random access and insertion
@@ -172,9 +173,10 @@ public class TupleStorage implements Serializable {
 		}
 	}
 
-	protected TIntObjectHashMap<byte[]> getStorage() {
+	public TIntObjectHashMap<byte[]> getStorage() {
 		return _storage;
 	}
+	
 
 	public int insert(String tuple) {
 		_lastId++;

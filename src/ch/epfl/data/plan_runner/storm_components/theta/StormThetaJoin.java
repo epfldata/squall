@@ -1,5 +1,6 @@
 package ch.epfl.data.plan_runner.storm_components.theta;
 
+import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.list.array.TIntArrayList;
 
 import java.text.DateFormat;
@@ -37,6 +38,7 @@ import ch.epfl.data.plan_runner.utilities.SystemParameters;
 import ch.epfl.data.plan_runner.utilities.statistics.StatisticsUtilities;
 import ch.epfl.data.plan_runner.visitors.PredicateCreateIndexesVisitor;
 import ch.epfl.data.plan_runner.visitors.PredicateUpdateIndexesVisitor;
+import ch.epfl.data.plan_runner.window_semantics.WindowSemanticsManager;
 import backtype.storm.Config;
 import backtype.storm.topology.InputDeclarer;
 import backtype.storm.topology.TopologyBuilder;
@@ -159,15 +161,18 @@ public class StormThetaJoin extends StormBoltComponent {
 		printTuple(tuple);
 		if (_numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
 			printStatistics(SystemParameters.OUTPUT_PRINT);
+		
 		if (MyUtilities.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
 			long timestamp = 0;
 			if (MyUtilities.isCustomTimestampMode(getConf()))
 				if (getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
 					// A tuple has a non-null timestamp only if the component is
-					// next to last because we measure the latency of the last operator
+					// next to last
+					// because we measure the latency of the last operator
 					timestamp = System.currentTimeMillis();
-			// timestamp = System.nanoTime();
-			tupleSend(tuple, stormTupleRcv, timestamp);
+			//TODO
+			if(!WindowSemanticsManager.sendTupleIfSlidingWindowSemantics(this, tuple, stormTupleRcv, lineageTimestamp))	
+				tupleSend(tuple, stormTupleRcv, timestamp);			
 		}
 		if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
 			printTupleLatency(_numSentTuples - 1, lineageTimestamp);
@@ -185,6 +190,12 @@ public class StormThetaJoin extends StormBoltComponent {
 
 	@Override
 	public void execute(Tuple stormTupleRcv) {
+		//TODO
+		//short circuit that this is a window configuration
+		if(WindowSemanticsManager.evictStateIfSlidingWindowSemantics(this, stormTupleRcv)){
+			 return;
+		}
+		
 		if (_firstTime && MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis)) {
 			_periodicAggBatch = new PeriodicAggBatchSend(_aggBatchOutputMillis, this);
 			_firstTime = false;
@@ -244,6 +255,9 @@ public class StormThetaJoin extends StormBoltComponent {
 							inputTupleHash, stormTupleRcv, false);
 			}
 		}
+		//TODO
+		//Update LatestTimeStamp
+		WindowSemanticsManager.updateLatestTimeStamp(this, stormTupleRcv);
 		getCollector().ack(stormTupleRcv);
 	}
 
@@ -285,20 +299,13 @@ public class StormThetaJoin extends StormBoltComponent {
 		if (oppositeStorage == null || oppositeStorage.size() == 0)
 			return;
 		for (int i = 0; i < oppositeStorage.size(); i++) {
-			String oppositeTupleString = oppositeStorage.get(i);
-			long lineageTimestamp = 0;
-			if (MyUtilities.isCustomTimestampMode(getConf()))
-				lineageTimestamp = stormTuple.getLongByField(StormComponent.TIMESTAMP);
-			if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
-				// timestamp has to be removed
-				final String parts[] = oppositeTupleString.split("\\@");
-				final long storedTimestamp = Long.valueOf(new String(parts[0]));
-				oppositeTupleString = new String(parts[1]);
-				// now we set the maximum TS to the tuple
-				if (storedTimestamp > lineageTimestamp)
-					lineageTimestamp = storedTimestamp;
-			}
-			final List<String> oppositeTuple = MyUtilities.stringToTuple(oppositeTupleString,
+			//TODO
+			StringBuilder  oppositeTupleString = new StringBuilder(oppositeStorage.get(i));
+			long lineageTimestamp = WindowSemanticsManager.joinPreProcessingIfSlidingWindowSemantics(this, oppositeTupleString, stormTuple);
+			if(lineageTimestamp<0)
+				continue;
+			//end TODO
+			final List<String> oppositeTuple = MyUtilities.stringToTuple(oppositeTupleString.toString(),
 					getComponentConfiguration());
 			List<String> firstTuple, secondTuple;
 			if (isFromFirstEmitter) {
@@ -308,6 +315,7 @@ public class StormThetaJoin extends StormBoltComponent {
 				firstTuple = oppositeTuple;
 				secondTuple = tuple;
 			}
+			
 			// Check joinCondition if existIndexes == true, the join condition is already checked before
 			if (_joinPredicate == null || _existIndexes
 					|| _joinPredicate.test(firstTuple, secondTuple)) {
@@ -418,12 +426,11 @@ public class StormThetaJoin extends StormBoltComponent {
 			throw new RuntimeException("InputComponentName " + inputComponentIndex
 					+ " doesn't match neither " + _firstEmitterIndex + " nor "
 					+ _secondEmitterIndex + ".");
+		
+		//TODO
 		// add the stormTuple to the specific storage
-		if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
-			final long incomingTimestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
-			inputTupleString = incomingTimestamp + SystemParameters.STORE_TIMESTAMP_DELIMITER
-					+ inputTupleString;
-		}
+		inputTupleString=WindowSemanticsManager.AddTimeStampToStoredDataIfWindowSemantics(this, inputTupleString, stormTupleRcv);
+		
 		final int row_id = affectedStorage.insert(inputTupleString);
 		List<String> valuesToApplyOnIndex = null;
 		if (_existIndexes)
@@ -486,9 +493,6 @@ public class StormThetaJoin extends StormBoltComponent {
 			else if (_typeOfValueIndexed.get(i) instanceof Integer)
 				currentRowIds = currentOpposIndex.getValues(currentOperator,
 						Integer.parseInt(value));
-			else if (_typeOfValueIndexed.get(i) instanceof Long)
-				currentRowIds = currentOpposIndex.getValues(currentOperator,
-						Long.parseLong(value));
 			else if (_typeOfValueIndexed.get(i) instanceof Date)
 				try {
 					currentRowIds = currentOpposIndex.getValues(currentOperator,
@@ -541,8 +545,6 @@ public class StormThetaJoin extends StormBoltComponent {
 				affectedIndexes.get(i).put(row_id, Integer.parseInt(valuesToIndex.get(i)));
 			else if (typesOfValuesToIndex.get(i) instanceof Double)
 				affectedIndexes.get(i).put(row_id, Double.parseDouble(valuesToIndex.get(i)));
-			else if (typesOfValuesToIndex.get(i) instanceof Long)
-				affectedIndexes.get(i).put(row_id, Long.parseLong(valuesToIndex.get(i)));
 			else if (typesOfValuesToIndex.get(i) instanceof Date)
 				try {
 					affectedIndexes.get(i).put(row_id, _format.parse(valuesToIndex.get(i)));
@@ -555,5 +557,83 @@ public class StormThetaJoin extends StormBoltComponent {
 			else
 				throw new RuntimeException("non supported type");
 		return valuesToIndex;
+	}
+
+	@Override
+	public void purgeStaleStateFromWindow() {
+		for ( TIntObjectIterator<byte[]> it = _firstRelationStorage.getStorage().iterator(); it.hasNext(); ) {
+			   it.advance();
+			   
+			   int row_id=it.key();
+				String tuple="";
+				try {
+					tuple = new String(it.value(), "UTF-8");
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+				if(tuple.equals("")) return;
+				final String parts[] = tuple.split("\\@");
+				if(parts.length<2) System.out.println("UNEXPECTED TIMESTAMP SIZES: "+parts.length);
+				final long storedTimestamp = Long.valueOf(new String(parts[0]));
+				final String tupleString = parts[1]; 
+				if(storedTimestamp< (_latestTimeStamp-_GC_PeriodicTickSec)){ //delete
+					//Cleaning up storage
+					it.remove();
+					//Cleaning up indexes
+					final PredicateUpdateIndexesVisitor visitor = new PredicateUpdateIndexesVisitor(
+							true, MyUtilities.stringToTuple(tupleString, getConf()));
+					_joinPredicate.accept(visitor);
+					final List<String> valuesToIndex = new ArrayList<String>(visitor._valuesToIndex);
+					final List<Object> typesOfValuesToIndex = new ArrayList<Object>(
+							visitor._typesOfValuesToIndex);
+					for (int i = 0; i < _firstRelationIndexes.size(); i++)
+						if (typesOfValuesToIndex.get(i) instanceof Integer)
+							_firstRelationIndexes.get(i).remove(row_id, Integer.parseInt(valuesToIndex.get(i)));
+						else if (typesOfValuesToIndex.get(i) instanceof Double)
+							_firstRelationIndexes.get(i).remove(row_id, Double.parseDouble(valuesToIndex.get(i)));
+						else if (typesOfValuesToIndex.get(i) instanceof String)
+							_firstRelationIndexes.get(i).remove(row_id, valuesToIndex.get(i));
+						else
+							throw new RuntimeException("non supported type");
+					//ended cleaning indexes
+				}
+			   }
+	
+		for ( TIntObjectIterator<byte[]> it = _secondRelationStorage.getStorage().iterator(); it.hasNext(); ) {
+			   it.advance();
+		
+			int row_id=it.key();
+			String tuple="";
+			try {
+				tuple = new String(it.value(), "UTF-8");
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			final String parts[] = tuple.split("\\@");
+			final long storedTimestamp = Long.valueOf(new String(parts[0]));
+			final String tupleString = parts[1]; 
+			if(storedTimestamp< (_latestTimeStamp-_GC_PeriodicTickSec)){ //delete
+				//Cleaning up storage
+				it.remove();
+				//Cleaning up indexes
+				final PredicateUpdateIndexesVisitor visitor = new PredicateUpdateIndexesVisitor(
+						false, MyUtilities.stringToTuple(tupleString, getConf()));
+				_joinPredicate.accept(visitor);
+				final List<String> valuesToIndex = new ArrayList<String>(visitor._valuesToIndex);
+				final List<Object> typesOfValuesToIndex = new ArrayList<Object>(
+						visitor._typesOfValuesToIndex);
+				for (int i = 0; i < _secondRelationIndexes.size(); i++)
+					if (typesOfValuesToIndex.get(i) instanceof Integer)
+						_secondRelationIndexes.get(i).remove(row_id, Integer.parseInt(valuesToIndex.get(i)));
+					else if (typesOfValuesToIndex.get(i) instanceof Double)
+						_secondRelationIndexes.get(i).remove(row_id, Double.parseDouble(valuesToIndex.get(i)));
+					else if (typesOfValuesToIndex.get(i) instanceof String)
+						_secondRelationIndexes.get(i).remove(row_id, valuesToIndex.get(i));
+					else
+						throw new RuntimeException("non supported type");
+				//ended cleaning indexes
+			}
+		}
+		System.gc();		
 	}
 }

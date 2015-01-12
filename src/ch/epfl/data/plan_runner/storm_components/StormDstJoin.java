@@ -23,6 +23,7 @@ import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 import ch.epfl.data.plan_runner.utilities.statistics.StatisticsUtilities;
+import ch.epfl.data.plan_runner.window_semantics.WindowSemanticsManager;
 import backtype.storm.Config;
 import backtype.storm.topology.InputDeclarer;
 import backtype.storm.topology.TopologyBuilder;
@@ -133,7 +134,7 @@ public class StormDstJoin extends StormBoltComponent {
 	}
 
 	protected void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> tuple,
-			boolean isLastInBatch) {
+			long lineageTimestamp,boolean isLastInBatch) {
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			try {
 				_semAgg.acquire();
@@ -151,10 +152,12 @@ public class StormDstJoin extends StormBoltComponent {
 		if (_numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
 			printStatistics(SystemParameters.OUTPUT_PRINT);
 
-		if (MyUtilities.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
+		if (MyUtilities.isSending(getHierarchyPosition(), _aggBatchOutputMillis)|| MyUtilities.isWindowTimestampMode(getConf())) {
 			long timestamp = 0;
 			if (MyUtilities.isCustomTimestampMode(getConf()))
 				timestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
+			if(MyUtilities.isWindowTimestampMode(getConf()))
+				timestamp=lineageTimestamp;
 			tupleSend(tuple, stormTupleRcv, timestamp);
 		}
 		if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
@@ -173,6 +176,12 @@ public class StormDstJoin extends StormBoltComponent {
 
 	@Override
 	public void execute(Tuple stormTupleRcv) {
+		//TODO
+		//short circuit that this is a window configuration
+		if(WindowSemanticsManager.evictStateIfSlidingWindowSemantics(this, stormTupleRcv)){
+			 return;
+		}
+		
 		if (_firstTime && MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis)) {
 			_periodicAggBatch = new PeriodicAggBatchSend(_aggBatchOutputMillis, this);
 			_firstTime = false;
@@ -237,6 +246,10 @@ public class StormDstJoin extends StormBoltComponent {
 							false);
 			}
 		}
+
+		//TODO
+		//Update LatestTimeStamp
+		WindowSemanticsManager.updateLatestTimeStamp(this, stormTupleRcv);
 		getCollector().ack(stormTupleRcv);
 	}
 
@@ -282,12 +295,20 @@ public class StormDstJoin extends StormBoltComponent {
 
 		final List<String> oppositeStringTupleList = oppositeStorage.access(inputTupleHash);
 
+		long  lineageTimestamp=0;
+		
 		if (oppositeStringTupleList != null)
 			for (int i = 0; i < oppositeStringTupleList.size(); i++) {
 				// ValueOf is because of preaggregations, and it does not hurt
 				// in normal case
-				final String oppositeStringTuple = String.valueOf(oppositeStringTupleList.get(i));
-				final List<String> oppositeTuple = MyUtilities.stringToTuple(oppositeStringTuple,
+				//TODO
+				StringBuilder  oppositeTupleString = new StringBuilder(oppositeStringTupleList.get(i));
+				lineageTimestamp = WindowSemanticsManager.joinPreProcessingIfSlidingWindowSemantics(this, oppositeTupleString, stormTupleRcv);
+				if(lineageTimestamp<0)
+					continue;
+				//end TODO
+				
+				final List<String> oppositeTuple = MyUtilities.stringToTuple(oppositeTupleString.toString(),
 						getComponentConfiguration());
 
 				List<String> firstTuple, secondTuple;
@@ -312,7 +333,7 @@ public class StormDstJoin extends StormBoltComponent {
 					// preaggregation
 					outputTuple = projPreAgg.process(outputTuple);
 
-				applyOperatorsAndSend(stormTupleRcv, outputTuple, isLastInBatch);
+				applyOperatorsAndSend(stormTupleRcv, outputTuple, lineageTimestamp,isLastInBatch);
 			}
 	}
 
@@ -405,8 +426,11 @@ public class StormDstJoin extends StormBoltComponent {
 			// to it
 			affectedStorage.update(tuple, inputTupleHash);
 		else {
-			final String inputTupleString = MyUtilities.tupleToString(tuple, getConf());
-			affectedStorage.insert(inputTupleHash, inputTupleString);
+			String inputTupleString = MyUtilities.tupleToString(tuple, getConf());
+			//TODO
+			// add the stormTuple to the specific storage
+			inputTupleString=WindowSemanticsManager.AddTimeStampToStoredDataIfWindowSemantics(this, inputTupleString, stormTupleRcv);
+			affectedStorage.insert(inputTupleHash, inputTupleString);			
 		}
 		performJoin(stormTupleRcv, tuple, inputTupleHash, isFromFirstEmitter, oppositeStorage,
 				projPreAgg, isLastInBatch);
@@ -414,6 +438,15 @@ public class StormDstJoin extends StormBoltComponent {
 		if ((((KeyValueStore<String, String>) _firstRelationStorage).size() + ((KeyValueStore<String, String>) _secondRelationStorage)
 				.size()) % _statsUtils.getDipInputFreqPrint() == 0)
 			printStatistics(SystemParameters.INPUT_PRINT);
+	}
+
+	@Override
+	public void purgeStaleStateFromWindow() {
+		//TODO inefficient linear scan for now.
+		System.out.println("Cleaning up state");
+		((KeyValueStore<String, String>)_firstRelationStorage).purgeState(_latestTimeStamp-_GC_PeriodicTickSec);
+		((KeyValueStore<String, String>)_secondRelationStorage).purgeState(_latestTimeStamp-_GC_PeriodicTickSec);
+		System.gc();
 	}
 
 }

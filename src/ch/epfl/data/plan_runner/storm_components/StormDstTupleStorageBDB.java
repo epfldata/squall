@@ -29,6 +29,7 @@ import ch.epfl.data.plan_runner.utilities.SystemParameters;
 import ch.epfl.data.plan_runner.utilities.statistics.StatisticsUtilities;
 import ch.epfl.data.plan_runner.visitors.PredicateCreateIndexesVisitor;
 import ch.epfl.data.plan_runner.visitors.PredicateUpdateIndexesVisitor;
+import ch.epfl.data.plan_runner.window_semantics.WindowSemanticsManager;
 import backtype.storm.Config;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -79,6 +80,8 @@ public class StormDstTupleStorageBDB extends StormBoltComponent {
 		
 		super(cp, allCompNames, hierarchyPosition, conf);
 		
+		System.out.println("INITIAL TIME IS :" +INITIAL_TUMBLING_TIMESTAMP);
+		
 		_firstEmitterIndex = String.valueOf(allCompNames.indexOf(firstEmitter.getName()));
 		_secondEmitterIndex = String.valueOf(allCompNames.indexOf(secondEmitter.getName()));
 		
@@ -92,15 +95,6 @@ public class StormDstTupleStorageBDB extends StormBoltComponent {
 		_joinPredicate = joinPredicate;
 		
 		final int parallelism = SystemParameters.getInt(getConf(), getID() + "_PAR");
-		final int firstCardinality = SystemParameters
-				.getInt(conf, firstEmitter.getName() + "_CARD");
-		final int secondCardinality = SystemParameters.getInt(conf, secondEmitter.getName()
-				+ "_CARD");
-		final EquiMatrixAssignment currentMappingAssignment = new EquiMatrixAssignment(
-				firstCardinality, secondCardinality, parallelism, -1);
-		final String dim = currentMappingAssignment.getMappingDimensions();
-		LOG.info(getID() + " Initial Dimensions is: " + dim);
-
 		// connecting with previous level
 		InputDeclarer currentBolt = builder.setBolt(getID(), this, parallelism);
 		if (MyUtilities.isManualBatchingMode(getConf()))
@@ -113,6 +107,7 @@ public class StormDstTupleStorageBDB extends StormBoltComponent {
 		// connecting with Killer
 		if (getHierarchyPosition() == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf)))
 			killer.registerComponent(this, parallelism);
+		
 		if (cp.getPrintOut() && _operatorChain.isBlocking())
 			currentBolt.allGrouping(killer.getID(), SystemParameters.DUMP_RESULTS_STREAM);
 
@@ -200,8 +195,9 @@ public class StormDstTupleStorageBDB extends StormBoltComponent {
 					// next to last
 					// because we measure the latency of the last operator
 					timestamp = System.currentTimeMillis();
-			// timestamp = System.nanoTime();
-			tupleSend(tuple, stormTupleRcv, timestamp);
+			//TODO
+			if(!WindowSemanticsManager.sendTupleIfSlidingWindowSemantics(this, tuple, stormTupleRcv, lineageTimestamp))	
+				tupleSend(tuple, stormTupleRcv, timestamp);				
 		}
 
 		if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
@@ -229,20 +225,24 @@ public class StormDstTupleStorageBDB extends StormBoltComponent {
 			storagePath = SystemParameters.getString(getConf(), "STORAGE_LOCAL_DIR");
 
 		// TODO This assumes that there is only one index !!
-
+				boolean isWindow;
+				if(_windowSize>0 || _tumblingWindowSize>0) 
+					isWindow=true; 
+				else isWindow=false;
+				
 		if(MyUtilities.isBDBUniform(getConf())){
 			if (_typeOfValueIndexed.get(0) instanceof Integer) {
-				_firstRelationStorage = new BerkeleyDBStore(Integer.class, storagePath + "/first");
-				_secondRelationStorage = new BerkeleyDBStore(Integer.class, storagePath + "/second");
+				_firstRelationStorage = new BerkeleyDBStore(Integer.class, storagePath + "/first/"+this.getName()+_thisTaskID ,isWindow,_thisTaskID);
+				_secondRelationStorage = new BerkeleyDBStore(Integer.class, storagePath + "/second/"+this.getName()+_thisTaskID ,isWindow,_thisTaskID);
 			} else if (_typeOfValueIndexed.get(0) instanceof Double) {
-				_firstRelationStorage = new BerkeleyDBStore(Double.class, storagePath + "/first");
-				_secondRelationStorage = new BerkeleyDBStore(Double.class, storagePath + "/second");
+				_firstRelationStorage = new BerkeleyDBStore(Double.class, storagePath + "/first/"+this.getName()+_thisTaskID ,isWindow,_thisTaskID);
+				_secondRelationStorage = new BerkeleyDBStore(Double.class, storagePath + "/second/"+this.getName()+_thisTaskID ,isWindow,_thisTaskID);
 			} else if (_typeOfValueIndexed.get(0) instanceof Date) {
-				_firstRelationStorage = new BerkeleyDBStore(Date.class, storagePath + "/first");
-				_secondRelationStorage = new BerkeleyDBStore(Date.class, storagePath + "/second");
+				_firstRelationStorage = new BerkeleyDBStore(Date.class, storagePath + "/first/"+this.getName()+_thisTaskID ,isWindow,_thisTaskID);
+				_secondRelationStorage = new BerkeleyDBStore(Date.class, storagePath + "/second/"+this.getName()+_thisTaskID ,isWindow,_thisTaskID);
 			} else if (_typeOfValueIndexed.get(0) instanceof String) {
-				_firstRelationStorage = new BerkeleyDBStore(String.class, storagePath + "/first");
-				_secondRelationStorage = new BerkeleyDBStore(String.class, storagePath + "/second");
+				_firstRelationStorage = new BerkeleyDBStore(String.class, storagePath + "/first/"+this.getName()+_thisTaskID ,isWindow,_thisTaskID);
+				_secondRelationStorage = new BerkeleyDBStore(String.class, storagePath + "/second/"+this.getName()+_thisTaskID ,isWindow,_thisTaskID);
 			} else
 				throw new RuntimeException("non supported type");
 			LOG.info("Storage with Uniform BDB!");			
@@ -280,12 +280,19 @@ public class StormDstTupleStorageBDB extends StormBoltComponent {
 
 	@Override
 	public void execute(Tuple stormTupleRcv) {
+		//TODO
+		//short circuit that this is a window configuration
+		if(WindowSemanticsManager.evictStateIfSlidingWindowSemantics(this, stormTupleRcv)){
+			 return;
+		}
+		
 		if (_firstTime && MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis)) {
 			_periodicAggBatch = new PeriodicAggBatchSend(_aggBatchOutputMillis, this);
 			_firstTime = false;
 		}
 
 		if (receivedDumpSignal(stormTupleRcv)) {
+			System.out.println("DUMPING !!!!");
 			MyUtilities.dumpSignal(this, stormTupleRcv, getCollector());
 			return;
 		}
@@ -344,6 +351,9 @@ public class StormDstTupleStorageBDB extends StormBoltComponent {
 							false);
 			}
 		}
+		//TODO
+		//Update LatestTimeStamp
+		WindowSemanticsManager.updateLatestTimeStamp(this, stormTupleRcv);
 		getCollector().ack(stormTupleRcv);
 	}
 	
@@ -376,11 +386,9 @@ public class StormDstTupleStorageBDB extends StormBoltComponent {
 		
 		// second, obtain value
 		String inputTupleString = MyUtilities.tupleToString(tuple, getConf());
-		if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
-			final long incomingTimestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
-			inputTupleString = incomingTimestamp + SystemParameters.STORE_TIMESTAMP_DELIMITER
-					+ inputTupleString;
-		}
+		//TODO
+		// add the stormTuple to the specific storage
+		inputTupleString=WindowSemanticsManager.AddTimeStampToStoredDataIfWindowSemantics(this, inputTupleString, stormTupleRcv);
 		
 		// add the stormTuple to the specific storage
 		insertIntoBDBStorage(affectedStorage, keyValue, inputTupleString);
@@ -389,7 +397,9 @@ public class StormDstTupleStorageBDB extends StormBoltComponent {
 		
 		if((_firstRelationStorage.size() + _secondRelationStorage.size()) % _statsUtils.getDipInputFreqPrint() == 0){
 			printStatistics(SystemParameters.INPUT_PRINT);
-		}	
+		}
+		
+		
 	}
 	
 	@Override
@@ -468,9 +478,9 @@ public class StormDstTupleStorageBDB extends StormBoltComponent {
 								+ ",Sent Tuples," + getNumSentTuples());
 					}
 					LOG.info("First Storage: " + _firstRelationStorage.getStatistics()
-							+ "\nEnd of First Storage");
+							+ "End of First Storage\n");
 					LOG.info("Second Storage: " + _secondRelationStorage.getStatistics()
-							+ "\nEnd of Second Storage");
+							+ "End of Second Storage\n");
 				} else // only final statistics is printed if we are measuring
 					// latency
 					if (type == SystemParameters.FINAL_PRINT) {
@@ -488,9 +498,9 @@ public class StormDstTupleStorageBDB extends StormBoltComponent {
 								+ ",Sent Tuples," + getNumSentTuples());
 						
 						LOG.info("First Storage: " + _firstRelationStorage.getStatistics()
-								+ "\nEnd of First Storage");
+								+ "End of First Storage\n");
 						LOG.info("Second Storage: " + _secondRelationStorage.getStatistics()
-								+ "\nEnd of Second Storage");
+								+ "End of Second Storage\n");
 					}
 			}
 	}
@@ -554,23 +564,15 @@ public class StormDstTupleStorageBDB extends StormBoltComponent {
 			return;
 
 		for (int i = 0; i < oppositeStorage.size(); i++) {
-			String oppositeTupleString = oppositeStorage.get(i);
-
-			long lineageTimestamp = 0;
-			if (MyUtilities.isCustomTimestampMode(getConf()))
-				lineageTimestamp = stormTuple.getLongByField(StormComponent.TIMESTAMP);
-			if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
-				// timestamp has to be removed
-				final String parts[] = oppositeTupleString.split("\\@");
-				final long storedTimestamp = Long.valueOf(new String(parts[0]));
-				oppositeTupleString = new String(parts[1]);
-
-				// now we set the maximum TS to the tuple
-				if (storedTimestamp > lineageTimestamp)
-					lineageTimestamp = storedTimestamp;
-			}
+			//TODO
+			StringBuilder  oppositeTupleString = new StringBuilder(oppositeStorage.get(i));
+			long lineageTimestamp = WindowSemanticsManager.joinPreProcessingIfSlidingWindowSemantics(this, oppositeTupleString, stormTuple);
+			if(lineageTimestamp<0)
+				continue;
+			//end TODO
 			
-			final List<String> oppositeTuple = MyUtilities.stringToTuple(oppositeTupleString,
+			
+			final List<String> oppositeTuple = MyUtilities.stringToTuple(oppositeTupleString.toString(),
 					getComponentConfiguration());
 			List<String> firstTuple, secondTuple;
 			if (isFromFirstEmitter) {
@@ -628,5 +630,19 @@ public class StormDstTupleStorageBDB extends StormBoltComponent {
 			affectedStorage.put(key, inputTupleString);
 		else
 			throw new RuntimeException("non supported type");
+	}
+
+	@Override
+	public void purgeStaleStateFromWindow() {
+		//TODO
+		
+		long first= _firstRelationStorage.size();
+		_firstRelationStorage.purgeState(_latestTimeStamp-_GC_PeriodicTickSec);
+		long firstafter= _firstRelationStorage.size();
+		_secondRelationStorage.purgeState(_latestTimeStamp-_GC_PeriodicTickSec);
+		this.LOG.info("Calling purge state t first size was: "+first+" then it is "+ firstafter);
+		
+		System.gc();
+		
 	}
 }

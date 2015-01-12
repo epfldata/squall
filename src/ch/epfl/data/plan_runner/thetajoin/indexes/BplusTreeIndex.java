@@ -340,4 +340,9 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>> implements Inde
 		return this;
 	}
 
+	@Override
+	public void remove(Integer row_id, KeyType key) {
+		throw new RuntimeException("Not implemented yet");
+	}
+
 }

@@ -111,7 +111,7 @@ public class StormOperator extends StormBoltComponent {
 		_numSentTuples++;
 		printTuple(tuple);
 
-		if (MyUtilities.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
+		if (MyUtilities.isSending(getHierarchyPosition(), _aggBatchOutputMillis) || MyUtilities.isWindowTimestampMode(getConf())) {
 			long timestamp = 0;
 			if (MyUtilities.isCustomTimestampMode(getConf()))
 				timestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
@@ -222,5 +222,10 @@ public class StormOperator extends StormBoltComponent {
 	@Override
 	protected void printStatistics(int type) {
 		// TODO
+	}
+
+	@Override
+	public void purgeStaleStateFromWindow() {
+		throw new RuntimeException("Window semantics is not valid here.");
 	}
 }
