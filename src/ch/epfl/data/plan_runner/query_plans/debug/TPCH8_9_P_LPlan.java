@@ -26,69 +26,62 @@ public class TPCH8_9_P_LPlan {
     private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
     private static final TypeConversion<Date> _dateConv = new DateConversion();
     private static final StringConversion _sc = new StringConversion();
-    
+
     private static final String COLOR = "%green%";
 
     private QueryBuilder _queryBuilder = new QueryBuilder();
-    
-    private static final IntegerConversion _ic = new IntegerConversion();	    
 
-    public TPCH8_9_P_LPlan(String dataPath, String extension, Map conf){
-        //-------------------------------------------------------------------------------------
-        List<Integer> hashPart = Arrays.asList(0);
+    private static final IntegerConversion _ic = new IntegerConversion();
 
-        ProjectOperator projectionPart = new ProjectOperator(new int[]{0});
+    public TPCH8_9_P_LPlan(String dataPath, String extension, Map conf) {
+	// -------------------------------------------------------------------------------------
+	List<Integer> hashPart = Arrays.asList(0);
 
-        DataSourceComponent relationPart = new DataSourceComponent(
-                "PART",
-                dataPath + "part" + extension).setOutputPartKey(hashPart)
-//                           .addOperator(selectionPart)
-                           .add(projectionPart);
-        _queryBuilder.add(relationPart);
+	ProjectOperator projectionPart = new ProjectOperator(new int[] { 0 });
 
-        //-------------------------------------------------------------------------------------
-        List<Integer> hashLineitem = Arrays.asList(1);
+	DataSourceComponent relationPart = new DataSourceComponent("PART",
+		dataPath + "part" + extension).setOutputPartKey(hashPart)
+	// .addOperator(selectionPart)
+		.add(projectionPart);
+	_queryBuilder.add(relationPart);
 
-        ProjectOperator projectionLineitem = new ProjectOperator(new int[]{0, 1, 2, 4, 5, 6});
+	// -------------------------------------------------------------------------------------
+	List<Integer> hashLineitem = Arrays.asList(1);
 
-        DataSourceComponent relationLineitem = new DataSourceComponent(
-                "LINEITEM",
-                dataPath + "lineitem" + extension).setOutputPartKey(hashLineitem)
-                           .add(projectionLineitem);
-        _queryBuilder.add(relationLineitem);
-        
-//        AggregateCountOperator agg= new AggregateCountOperator(conf);
-        
-        //-------------------------------------------------------------------------------------
-        /*
-        EquiJoinComponent P_Ljoin = new EquiJoinComponent(
-				relationPart,
-				relationLineitem,
-				_queryPlan).setHashIndexes(Arrays.asList(0, 2))
-//				.addOperator(agg)
-				;
-        P_Ljoin.setPrintOut(false);
-        */
-        
-        ColumnReference colP = new ColumnReference(_ic, 0);
-		ColumnReference colL = new ColumnReference(_ic, 1);
-		ComparisonPredicate P_L_pred = new ComparisonPredicate(
-				ComparisonPredicate.EQUAL_OP, colP, colL);
-        
-		EquiJoinComponent P_Ljoin = new EquiJoinComponent(
-				relationPart,
-				relationLineitem).setOutputPartKey(Arrays.asList(0, 2))
-						   .setJoinPredicate(P_L_pred)
-						   .add(new ProjectOperator(new int[]{0, 1, 3, 4, 5, 6}))
-				;
-		_queryBuilder.add(P_Ljoin);
-        P_Ljoin.setPrintOut(false);
-        
-        //-------------------------------------------------------------------------------------
+	ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0,
+		1, 2, 4, 5, 6 });
+
+	DataSourceComponent relationLineitem = new DataSourceComponent(
+		"LINEITEM", dataPath + "lineitem" + extension)
+		.setOutputPartKey(hashLineitem).add(projectionLineitem);
+	_queryBuilder.add(relationLineitem);
+
+	// AggregateCountOperator agg= new AggregateCountOperator(conf);
+
+	// -------------------------------------------------------------------------------------
+	/*
+	 * EquiJoinComponent P_Ljoin = new EquiJoinComponent( relationPart,
+	 * relationLineitem, _queryPlan).setHashIndexes(Arrays.asList(0, 2)) //
+	 * .addOperator(agg) ; P_Ljoin.setPrintOut(false);
+	 */
+
+	ColumnReference colP = new ColumnReference(_ic, 0);
+	ColumnReference colL = new ColumnReference(_ic, 1);
+	ComparisonPredicate P_L_pred = new ComparisonPredicate(
+		ComparisonPredicate.EQUAL_OP, colP, colL);
+
+	EquiJoinComponent P_Ljoin = new EquiJoinComponent(relationPart,
+		relationLineitem).setOutputPartKey(Arrays.asList(0, 2))
+		.setJoinPredicate(P_L_pred)
+		.add(new ProjectOperator(new int[] { 0, 1, 3, 4, 5, 6 }));
+	_queryBuilder.add(P_Ljoin);
+	P_Ljoin.setPrintOut(false);
+
+	// -------------------------------------------------------------------------------------
 
     }
 
     public QueryBuilder getQueryPlan() {
-        return _queryBuilder;
+	return _queryBuilder;
     }
 }

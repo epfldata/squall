@@ -12,45 +12,47 @@ import ch.epfl.data.sql.util.TableAliasName;
  * Aggregation only on the last level.
  */
 public class ManualBatchingCompGenFactory {
-	private final Schema _schema;
-	private final Map _map; // map is updates in place
-	private final TableAliasName _tan;
+    private final Schema _schema;
+    private final Map _map; // map is updates in place
+    private final TableAliasName _tan;
 
-	private ManualBatchingParallelismAssigner _parAssigner;
+    private ManualBatchingParallelismAssigner _parAssigner;
 
-	/*
-	 * only plan, no parallelism
-	 */
-	public ManualBatchingCompGenFactory(Map map, TableAliasName tan) {
-		_map = map;
-		_tan = tan;
+    /*
+     * only plan, no parallelism
+     */
+    public ManualBatchingCompGenFactory(Map map, TableAliasName tan) {
+	_map = map;
+	_tan = tan;
 
-		_schema = new Schema(map);
-	}
+	_schema = new Schema(map);
+    }
 
-	/*
-	 * generating plan + parallelism
-	 */
-	public ManualBatchingCompGenFactory(Map map, TableAliasName tan, int totalSourcePar) {
-		this(map, tan);
-		setParAssignerMode(totalSourcePar);
-	}
+    /*
+     * generating plan + parallelism
+     */
+    public ManualBatchingCompGenFactory(Map map, TableAliasName tan,
+	    int totalSourcePar) {
+	this(map, tan);
+	setParAssignerMode(totalSourcePar);
+    }
 
-	public NameCompGen create() {
-		return new NameCompGen(_schema, _map, _parAssigner);
-	}
+    public NameCompGen create() {
+	return new NameCompGen(_schema, _map, _parAssigner);
+    }
 
-	public ManualBatchingParallelismAssigner getParAssigner() {
-		return _parAssigner;
-	}
+    public ManualBatchingParallelismAssigner getParAssigner() {
+	return _parAssigner;
+    }
 
-	public final void setParAssignerMode(int totalSourcePar) {
-		// in general there might be many NameComponentGenerators,
-		// that's why CPA is computed before of NCG
-		_parAssigner = new ManualBatchingParallelismAssigner(_schema, _tan, _map);
+    public final void setParAssignerMode(int totalSourcePar) {
+	// in general there might be many NameComponentGenerators,
+	// that's why CPA is computed before of NCG
+	_parAssigner = new ManualBatchingParallelismAssigner(_schema, _tan,
+		_map);
 
-		// for the same _parAssigner, we might try with different totalSourcePar
-		_parAssigner.computeSourcePar(totalSourcePar);
-	}
+	// for the same _parAssigner, we might try with different totalSourcePar
+	_parAssigner.computeSourcePar(totalSourcePar);
+    }
 
 }

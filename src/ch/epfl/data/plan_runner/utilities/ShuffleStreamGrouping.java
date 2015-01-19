@@ -16,36 +16,38 @@ import backtype.storm.task.WorkerTopologyContext;
  * Because of NoACK possibility, have to be used everywhere in the code.
  */
 public class ShuffleStreamGrouping implements CustomStreamGrouping {
-	private static final long serialVersionUID = 1L;
-	// the number of tasks on the level this stream grouping is sending to
-	private int _numTargetTasks;
-	private List<Integer> _targetTasks;
+    private static final long serialVersionUID = 1L;
+    // the number of tasks on the level this stream grouping is sending to
+    private int _numTargetTasks;
+    private List<Integer> _targetTasks;
 
-	private final Map _map;
-	
-	private Random _rndGen = new Random();
+    private final Map _map;
 
-	/*
-	 * fullHashList is null if grouping is not balanced
-	 */
-	public ShuffleStreamGrouping(Map map) {
-		_map = map;
-	}
+    private Random _rndGen = new Random();
 
-	@Override
-	public List<Integer> chooseTasks(int taskId, List<Object> stormTuple) {
-		final List<String> tuple = (List<String>) stormTuple.get(1);
-		if (MyUtilities.isFinalAck(tuple, _map)){
-			// send to everyone
-			return _targetTasks;
-		}else
-			return Arrays.asList(_targetTasks.get(_rndGen.nextInt(_numTargetTasks)));
-	}
+    /*
+     * fullHashList is null if grouping is not balanced
+     */
+    public ShuffleStreamGrouping(Map map) {
+	_map = map;
+    }
 
-	@Override
-	public void prepare(WorkerTopologyContext wtc, GlobalStreamId gsi, List<Integer> targetTasks) {
-		_targetTasks = targetTasks;
-		_numTargetTasks = targetTasks.size();
-	}
+    @Override
+    public List<Integer> chooseTasks(int taskId, List<Object> stormTuple) {
+	final List<String> tuple = (List<String>) stormTuple.get(1);
+	if (MyUtilities.isFinalAck(tuple, _map)) {
+	    // send to everyone
+	    return _targetTasks;
+	} else
+	    return Arrays.asList(_targetTasks.get(_rndGen
+		    .nextInt(_numTargetTasks)));
+    }
+
+    @Override
+    public void prepare(WorkerTopologyContext wtc, GlobalStreamId gsi,
+	    List<Integer> targetTasks) {
+	_targetTasks = targetTasks;
+	_numTargetTasks = targetTasks.size();
+    }
 
 }
