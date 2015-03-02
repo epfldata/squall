@@ -35,5 +35,6 @@ lazy val frontend = (project in file("frontend")).
   dependsOn(core).
   settings(commonSettings: _*).
   settings(
-    name := "squall-frontend"
+    name := "squall-frontend",
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _)
   )
