@@ -27,7 +27,7 @@ public class UJMPVisualizer implements VisualizerInterface{
 			_visualMatrix = m.getUJMPMatrix();
 		}else{
 			//regions change the matrix, that's why we have to clone
-			_visualMatrix = m.getUJMPMatrix().clone();
+			_visualMatrix = m.getUJMPMatrix();
 			// none of the following two worked
 			// Matrix matrixWithRegions = ujmpMatrix.select(Ret.LINK, "" + 0 + "-" + (xSize - 1) + ";" + 0 + "-" + (ySize - 1));
 			// Matrix matrixWithRegions = ujmpMatrix.select(Ret.LINK, new int[]{0, xSize - 1}, new int[]{0, ySize -1});			
