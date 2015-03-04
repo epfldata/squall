@@ -1,5 +1,6 @@
 package frontend.functional.scala.queries
 
+import frontend.functional.scala.SquallType._
 import frontend.functional.scala.Stream._
 import plan_runner.query_plans.QueryBuilder
 import frontend.functional.scala._

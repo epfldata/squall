@@ -12,11 +12,9 @@ lazy val core = (project in file("core")).
     javacOptions ++= Seq(
       "-target", "1.7",
       "-source", "1.7"),
-
     // We need to add Clojars as a resolver, as Storm depends on some
     // libraries from there.
     resolvers += "clojars" at "https://clojars.org/repo",
-
     libraryDependencies ++= Seq(
       "org.apache.storm" % "storm-core" % "0.9.3",
       "net.sf.trove4j" % "trove4j" % "3.0.2",
@@ -32,9 +30,17 @@ lazy val core = (project in file("core")).
   )
 
 lazy val frontend = (project in file("frontend")).
-  dependsOn(core).
+  dependsOn(core, frontend_core).
   settings(commonSettings: _*).
   settings(
     name := "squall-frontend",
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _)
+  )
+
+lazy val frontend_core = (project in file("frontend-core")).
+  dependsOn(core).
+  settings(commonSettings: _*).
+  settings(
+    name := "squall-frontend-core",
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _)
   )
