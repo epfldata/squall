@@ -3,7 +3,7 @@ package frontend.functional.scala.operators
 import plan_runner.predicates.Predicate
 import plan_runner.visitors.PredicateVisitor
 import scala.collection.JavaConverters._
-import frontend.functional.scala.Types.SquallType
+import frontend.functional.scala.SquallType
 import backtype.storm.clojure.TupleValues
 
 class ScalaPredicate[T:SquallType](fn: T => Boolean) extends Predicate {
