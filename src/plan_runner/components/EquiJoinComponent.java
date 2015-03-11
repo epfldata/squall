@@ -61,6 +61,8 @@ public class EquiJoinComponent implements Component {
 
 	private List<String> _fullHashList;
 	private Predicate _joinPredicate;
+	
+	private boolean _isRemoveIndex;
 
 	public EquiJoinComponent(Component firstParent, Component secondParent) {
 		_firstParent = firstParent;
@@ -69,6 +71,15 @@ public class EquiJoinComponent implements Component {
 		_secondParent.setChild(this);
 
 		_componentName = firstParent.getName() + "_" + secondParent.getName();
+	}
+	
+	public EquiJoinComponent(Component firstParent, Component secondParent, boolean isRemoveIndex) {
+		_firstParent = firstParent;
+		_firstParent.setChild(this);
+		_secondParent = secondParent;
+		_secondParent.setChild(this);
+		_componentName = firstParent.getName() + "_" + secondParent.getName();
+		_isRemoveIndex=isRemoveIndex;
 	}
 
 	@Override
@@ -188,7 +199,7 @@ public class EquiJoinComponent implements Component {
 			// should issue a warning
 			_joiner = new StormDstJoin(_firstParent, _secondParent, this, allCompNames,
 					_firstStorage, _secondStorage, _firstPreAggProj, _secondPreAggProj,
-					hierarchyPosition, builder, killer, conf);
+					hierarchyPosition, builder, killer, conf,_isRemoveIndex);
 		}else if (partitioningType == StormJoin.SRC_ORDERING) {
 			if (_chain.getDistinct() != null)
 				throw new RuntimeException(

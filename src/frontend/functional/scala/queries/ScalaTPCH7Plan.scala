@@ -6,7 +6,6 @@ import frontend.functional.scala._
 import frontend.functional.scala.TPCHSchema._
 import java.util.Date
 import java.text.SimpleDateFormat
-import plan_runner.storm_components.StormDstJoin
 
 
 /**
@@ -35,8 +34,6 @@ object ScalaTPCH7Plan {
   
   
   def getQueryPlan(conf:java.util.Map[String,String]):QueryBuilder = {
-    
-    StormDstJoin.HACK=true;
     
     val nation2=Source[nation]("Nation2").filter{t => t._2.equals(_firstCountryName) ||  t._2.equals(_secondCountryName)}.map{ t => Tuple2(t._2,t._1)}
     val customers: Stream[(Int, Int)]=Source[customer]("CUSTOMER").map{ t => Tuple2(t._1,t._4)}

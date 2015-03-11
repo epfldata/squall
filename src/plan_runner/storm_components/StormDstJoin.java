@@ -29,7 +29,6 @@ import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Tuple;
 
 public class StormDstJoin extends StormBoltComponent {
-	public static boolean HACK=false;
 	
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormDstJoin.class);
@@ -57,18 +56,20 @@ public class StormDstJoin extends StormBoltComponent {
 	private boolean _firstTime = true;
 	private PeriodicAggBatchSend _periodicAggBatch;
 	private final long _aggBatchOutputMillis;
+	private boolean _isRemoveIndex;
 
 	// for printing statistics for creating graphs
 	protected Calendar _cal = Calendar.getInstance();
 	protected DateFormat _statDateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 	protected StatisticsUtilities _statsUtils;
+	
 
 	public StormDstJoin(StormEmitter firstEmitter, StormEmitter secondEmitter,
 			ComponentProperties cp, List<String> allCompNames,
 			BasicStore<ArrayList<String>> firstSquallStorage,
 			BasicStore<ArrayList<String>> secondSquallStorage, ProjectOperator firstPreAggProj,
 			ProjectOperator secondPreAggProj, int hierarchyPosition, TopologyBuilder builder,
-			TopologyKiller killer, Config conf) {
+			TopologyKiller killer, Config conf, boolean isRemoveIndex) {
 		super(cp, allCompNames, hierarchyPosition, conf);
 
 		_firstEmitterIndex = String.valueOf(allCompNames.indexOf(firstEmitter.getName()));
@@ -88,6 +89,8 @@ public class StormDstJoin extends StormBoltComponent {
 		_statsUtils = new StatisticsUtilities(getConf(), LOG);
 		
 		_name=cp.getName();
+		
+		_isRemoveIndex=isRemoveIndex;
 
 		final int parallelism = SystemParameters.getInt(getConf(), getID() + "_PAR");
 
@@ -308,7 +311,7 @@ public class StormDstJoin extends StormBoltComponent {
 
 				List<String> outputTuple;
 				// Before fixing preaggregations, here was instanceof BasicStore
-				if (oppositeStorage instanceof AggregationStorage || HACK){
+				if (oppositeStorage instanceof AggregationStorage || !_isRemoveIndex){
 					// preaggregation
 					outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);}
 				else{

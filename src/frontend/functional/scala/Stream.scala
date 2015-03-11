@@ -11,11 +11,11 @@ import plan_runner.operators.Operator
 import plan_runner.components.EquiJoinComponent
 import plan_runner.components.Component
 import plan_runner.components.DataSourceComponent
-import frontend.functional.scala.operators.ScalaPredicate
 import plan_runner.operators.SelectOperator
 import java.beans.MetaData
 import scala.collection.JavaConverters._
 import frontend.functional.scala.TPCHSchema._
+import frontend.functional.scala.operators.ScalaPredicate
 //import scala.reflect._
 
 /**
@@ -117,7 +117,7 @@ object Stream{
 
     val firstComponent = interp(j.Str1,qb,Tuple3(List(), indicesL1, null),confmap)(j.Str1.squalType)
     val secondComponent = interp(j.Str2,qb,Tuple3(List(), null, indicesL2),confmap)(j.Str2.squalType)
-    var equijoinComponent= qb.createEquiJoin(firstComponent,secondComponent)
+    var equijoinComponent= qb.createEquiJoin(firstComponent,secondComponent, false)
     
     val operatorList=metaData._1
     if(operatorList!=null){

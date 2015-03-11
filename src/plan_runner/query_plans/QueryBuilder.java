@@ -35,6 +35,12 @@ public class QueryBuilder implements Serializable {
 		add(ejc);
 		return ejc;
 	}
+	
+	public EquiJoinComponent createEquiJoin(Component firstParent, Component secondParent, boolean isRemoveIndex){
+		EquiJoinComponent ejc = new EquiJoinComponent(firstParent, secondParent, isRemoveIndex);
+		add(ejc);
+		return ejc;
+	}
 
 	// Component names are unique - alias is used for tables
 	public boolean contains(String name) {

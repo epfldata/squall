@@ -4,7 +4,6 @@ import frontend.functional.scala.Stream._
 import plan_runner.query_plans.QueryBuilder
 import frontend.functional.scala._
 import frontend.functional.scala.TPCHSchema._
-import plan_runner.storm_components.StormDstJoin
 
 /**
  * @author mohamed
@@ -17,8 +16,6 @@ import plan_runner.storm_components.StormDstJoin
 object ScalaHyracksPlan {
   
   def getQueryPlan(conf:java.util.Map[String,String]):QueryBuilder = {
-    
-    StormDstJoin.HACK=true;
     
     val customers=Source[customer]("customer").map{t => Tuple2(t._1,t._7)}    
     val orders=Source[orders]("orders").map{t => t._2}

@@ -5,7 +5,6 @@ import frontend.functional.scala._
 import frontend.functional.scala.TPCHSchema._
 import java.util.Date
 import java.text.SimpleDateFormat
-import plan_runner.storm_components.StormDstJoin
 
 
 /**
@@ -26,8 +25,6 @@ object ScalaTPCH3Plan {
   val compDate=string_format.parse("1995-03-15")
   
   def getQueryPlan(conf:java.util.Map[String,String]):QueryBuilder = {
-    
-    StormDstJoin.HACK=true;
     
     val customers=Source[customer]("CUSTOMER").filter{t => t._7.equals("BUILDING")}.map{ t => t._1}    
     val orders=Source[orders]("ORDERS").filter { t => t._5.compareTo(compDate)<0}.map{t => Tuple4(t._1, t._2, t._5, t._8)}
