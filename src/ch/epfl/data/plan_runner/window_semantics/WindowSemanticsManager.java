@@ -33,7 +33,10 @@ public class WindowSemanticsManager {
 			sbc._latestTimeStamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
 	}
 	
-	
+	/*
+	 * Populates the stringbuilder in accordance to the tuple format (timestamps/or with out) and returns a response.
+	 *  -1 if wrong result, 0 if not timestamp, or an actual (min/MAX) timestamp. 
+	 */
 	public static long joinPreProcessingIfSlidingWindowSemantics(StormBoltComponent sbc, StringBuilder oppositeTupleString, Tuple stormTuple){
 		//TODO
 		long lineageTimestamp = 0;
