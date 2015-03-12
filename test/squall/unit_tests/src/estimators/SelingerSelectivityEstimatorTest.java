@@ -3,6 +3,7 @@ package estimators;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import net.sf.jsqlparser.expression.DateValue;
 import net.sf.jsqlparser.expression.operators.relational.MinorThan;
 import net.sf.jsqlparser.schema.Column;
@@ -10,10 +11,11 @@ import net.sf.jsqlparser.schema.Table;
 
 import org.apache.log4j.Logger;
 import org.junit.*;
+
+import ch.epfl.data.sql.estimators.SelingerSelectivityEstimator;
+import ch.epfl.data.sql.schema.Schema;
+import ch.epfl.data.sql.util.TableAliasName;
 import static org.junit.Assert.assertEquals;
-import sql.estimators.SelingerSelectivityEstimator;
-import sql.schema.Schema;
-import sql.util.TableAliasName;
 
 /**
  *

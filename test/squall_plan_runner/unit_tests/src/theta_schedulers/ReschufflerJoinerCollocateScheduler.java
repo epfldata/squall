@@ -8,8 +8,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import plan_runner.query_plans.HyracksPlan;
-
+import ch.epfl.data.plan_runner.query_plans.HyracksPlan;
 import backtype.storm.Config;
 import backtype.storm.scheduler.Cluster;
 import backtype.storm.scheduler.EvenScheduler;

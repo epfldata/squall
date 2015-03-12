@@ -25,11 +25,11 @@ fi
 if [ "$MODE" == "PLAN_RUNNER" ]; then
 	CONFIG_DIR=../test/squall/confs/local
 	CONFIG_PATH=$CONFIG_DIR/0_01G_hyracks
-	CLASS=plan_runner.main.Main
+	CLASS=ch.epfl.data.plan_runner.main.Main
 else
 	CONFIG_DIR=../test/squall_plan_runner/confs/local
 	CONFIG_PATH=$CONFIG_DIR/0_01G_hyracks_ncl
-	CLASS=sql.main.ParserMain 
+	CLASS=ch.epfl.data.sql.main.ParserMain 
 fi
 
 # But if user has specified a specific configuration file, run this
@@ -55,8 +55,8 @@ cd ../deploy
 ../bin/lein run -m $CLASS $CONFIG_PATH
 
 #Old version implies specifying libraries explicitly
-#java -Xmx128m -cp ../deploy/squall-0.2.0-standalone.jar:../$STORMNAME/lib/*:../contrib/*:../$STORMNAME/$STORMNAME.jar sql.main.ParserMain $CONFIG_PATH
+#java -Xmx128m -cp ../deploy/squall-0.2.0-standalone.jar:../$STORMNAME/lib/*:../contrib/*:../$STORMNAME/$STORMNAME.jar ch.epfl.data.sql.main.ParserMain $CONFIG_PATH
 # only for 0.8
-#java -Xmx128m -cp ../deploy/squall-0.2.0-standalone.jar:../$STORMNAME/lib/*:../contrib/*:../$STORMNAME/$STORMNAME.jar plan_runner.main.Main $CONFIG_PATH
+#java -Xmx128m -cp ../deploy/squall-0.2.0-standalone.jar:../$STORMNAME/lib/*:../contrib/*:../$STORMNAME/$STORMNAME.jar ch.epfl.data.plan_runner.main.Main $CONFIG_PATH
 # only for 0.9
-#java -Xmx128m -cp ../deploy/squall-0.2.0-standalone.jar:../$STORMNAME/lib/*:../contrib/* plan_runner.main.Main $CONFIG_PATH
+#java -Xmx128m -cp ../deploy/squall-0.2.0-standalone.jar:../$STORMNAME/lib/*:../contrib/* ch.epfl.data.plan_runner.main.Main $CONFIG_PATH

@@ -3,12 +3,17 @@ package sql.schema;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
 import org.junit.Test;
-import plan_runner.conversion.*;
-import sql.util.ParserUtil;
+
+import ch.epfl.data.plan_runner.conversion.*;
+import ch.epfl.data.sql.schema.ColumnNameType;
+import ch.epfl.data.sql.schema.Schema;
+import ch.epfl.data.sql.util.ParserUtil;
 
 /**
  *

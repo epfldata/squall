@@ -4,13 +4,12 @@ package plan_runner.thetajoin.dynamic.advisor.tests;
 
 import static org.junit.Assert.*;
 
-
 import java.util.Arrays;
 import java.util.Random;
 
 import org.junit.Test;
 
-import plan_runner.thetajoin.dynamic.advisor.Discard;
+import ch.epfl.data.plan_runner.thetajoin.dynamic.advisor.Discard;
 
 
 

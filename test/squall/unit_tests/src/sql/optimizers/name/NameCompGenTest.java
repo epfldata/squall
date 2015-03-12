@@ -1,11 +1,16 @@
 package sql.optimizers.name;
 
 import java.util.Map;
+
 import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
-import sql.main.ParserMain;
-import sql.util.ParserUtil;
-import sql.visitors.jsql.SQLVisitor;
+
+import ch.epfl.data.sql.main.ParserMain;
+import ch.epfl.data.sql.optimizers.name.NameCompGen;
+import ch.epfl.data.sql.optimizers.name.NameCompGenFactory;
+import ch.epfl.data.sql.util.ParserUtil;
+import ch.epfl.data.sql.visitors.jsql.SQLVisitor;
 
 /**
  *

@@ -4,10 +4,9 @@ package plan_runner.thetajoin.dynamic.advisor.tests;
 
 import static org.junit.Assert.*;
 
-
 import org.junit.Test;
 
-import plan_runner.thetajoin.dynamic.advisor.Advisor;
+import ch.epfl.data.plan_runner.thetajoin.dynamic.advisor.Advisor;
 
 
 

@@ -4,12 +4,11 @@ package plan_runner.thetajoin.dynamic.advisor.tests;
 
 import static org.junit.Assert.*;
 
-
 import java.util.Random;
 
 import org.junit.Test;
 
-import plan_runner.thetajoin.dynamic.advisor.Action;
+import ch.epfl.data.plan_runner.thetajoin.dynamic.advisor.Action;
 
 
 

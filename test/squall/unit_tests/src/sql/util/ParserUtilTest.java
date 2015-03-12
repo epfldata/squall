@@ -2,7 +2,10 @@ package sql.util;
 
 import net.sf.jsqlparser.schema.Column;
 import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
+
+import ch.epfl.data.sql.util.ParserUtil;
 
 /**
  *

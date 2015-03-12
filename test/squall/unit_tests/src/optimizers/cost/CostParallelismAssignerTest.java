@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import static org.junit.Assert.assertEquals;
@@ -11,13 +12,13 @@ import static org.junit.Assert.assertEquals;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
-import sql.main.ParserMain;
-import sql.optimizers.name.CostParallelismAssigner;
-import sql.optimizers.name.ProjGlobalCollect;
-import sql.schema.Schema;
-import sql.util.ParserUtil;
-import sql.visitors.jsql.AndVisitor;
-import sql.visitors.jsql.SQLVisitor;
+import ch.epfl.data.sql.main.ParserMain;
+import ch.epfl.data.sql.optimizers.name.CostParallelismAssigner;
+import ch.epfl.data.sql.optimizers.name.ProjGlobalCollect;
+import ch.epfl.data.sql.schema.Schema;
+import ch.epfl.data.sql.util.ParserUtil;
+import ch.epfl.data.sql.visitors.jsql.AndVisitor;
+import ch.epfl.data.sql.visitors.jsql.SQLVisitor;
 
 /**
  *

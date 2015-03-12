@@ -3,13 +3,12 @@ package plan_runner.thetajoin.dynamic.advisor.tests;
 
 
 import java.io.BufferedReader;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import plan_runner.thetajoin.dynamic.advisor.Action;
-import plan_runner.thetajoin.dynamic.advisor.Advisor;
-import plan_runner.thetajoin.dynamic.advisor.Maybe;
+import ch.epfl.data.plan_runner.thetajoin.dynamic.advisor.Action;
+import ch.epfl.data.plan_runner.thetajoin.dynamic.advisor.Advisor;
+import ch.epfl.data.plan_runner.thetajoin.dynamic.advisor.Maybe;
 
 
 public class AdvisorMain {
