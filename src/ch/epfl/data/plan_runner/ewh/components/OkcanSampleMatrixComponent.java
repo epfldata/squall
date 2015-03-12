@@ -106,7 +106,7 @@ public class OkcanSampleMatrixComponent implements Component {
 
 	@Override
 	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
-			List<String> allCompNames, Config conf, int partitioningType, int hierarchyPosition) {
+			List<String> allCompNames, Config conf, int hierarchyPosition) {
 		
 		new OkcanSampleMatrixBolt(_firstParent, _secondParent, _componentName, _numOfLastJoiners, 
 				_wrapper, _comparison, _firstNumOfBuckets, _secondNumOfBuckets,

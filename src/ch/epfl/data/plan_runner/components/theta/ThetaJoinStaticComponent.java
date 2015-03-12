@@ -147,7 +147,7 @@ public class ThetaJoinStaticComponent implements Component {
 
 	@Override
 	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
-			List<String> allCompNames, Config conf, int partitioningType, int hierarchyPosition) {
+			List<String> allCompNames, Config conf, int hierarchyPosition) {
 
 		// by default print out for the last component
 		// for other conditions, can be set via setPrintOut

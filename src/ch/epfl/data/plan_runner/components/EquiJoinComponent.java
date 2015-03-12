@@ -169,7 +169,7 @@ public class EquiJoinComponent implements Component {
 
 	@Override
 	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
-			List<String> allCompNames, Config conf, int partitioningType, int hierarchyPosition) {
+			List<String> allCompNames, Config conf, int hierarchyPosition) {
 
 		// by default print out for the last component
 		// for other conditions, can be set via setPrintOut
@@ -195,24 +195,12 @@ public class EquiJoinComponent implements Component {
 		} else if (_joinPredicate != null) {
 				_joiner = new StormDstTupleStorageJoin(_firstParent, _secondParent, this,
 						allCompNames, _joinPredicate, hierarchyPosition, builder, killer, conf);
-		} else if (partitioningType == StormJoin.DST_ORDERING){
+		} else{
 			// should issue a warning
 			_joiner = new StormDstJoin(_firstParent, _secondParent, this, allCompNames,
 					_firstStorage, _secondStorage, _firstPreAggProj, _secondPreAggProj,
 					hierarchyPosition, builder, killer, conf,_isRemoveIndex);
-		}else if (partitioningType == StormJoin.SRC_ORDERING) {
-			if (_chain.getDistinct() != null)
-				throw new RuntimeException(
-						"Cannot instantiate Distinct operator from StormSourceJoin! There are two Bolts processing operators!");
-
-			// since we don't know how data is scattered across StormSrcStorage,
-			// we cannot do customStreamGrouping from the previous level
-			_joiner = new StormSrcJoin(_firstParent, _secondParent, this, allCompNames,
-					_firstStorage, _secondStorage, _firstPreAggProj, _secondPreAggProj,
-					hierarchyPosition, builder, killer, conf);
-
-		} else
-			throw new RuntimeException("Unsupported ordering " + partitioningType);
+		}
 	}
 
 	@Override

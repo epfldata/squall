@@ -19,7 +19,7 @@ public interface Component extends Serializable, ComponentProperties, StormEmitt
 	// ChainOperator
 
 	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
-			List<String> allCompNames, Config conf, int partitioningType, int hierarchyPosition);
+			List<String> allCompNames, Config conf, int hierarchyPosition);
 
 	// sending the content of the component every 'millis' milliseconds
 	public Component setBatchOutputMillis(long millis);

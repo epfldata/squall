@@ -112,7 +112,7 @@ public class CreateHistogramComponent implements Component {
 
 	@Override
 	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
-			List<String> allCompNames, Config conf, int partitioningType, int hierarchyPosition) {
+			List<String> allCompNames, Config conf, int hierarchyPosition) {
 		
 		new CreateHistogramBolt(_r1, _r2, _componentName, _numOfLastJoiners, 
 				_wrapper, _comparison,

@@ -129,7 +129,7 @@ public class InterchangingComponent implements Component {
 
 	@Override
 	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
-			List<String> allCompNames, Config conf, int partitioningType, int hierarchyPosition) {
+			List<String> allCompNames, Config conf, int hierarchyPosition) {
 
 		_interBolt = new InterchangingBolt(_firstParent, _secondParent, this, allCompNames,
 				builder, killer, conf, _multFactor);

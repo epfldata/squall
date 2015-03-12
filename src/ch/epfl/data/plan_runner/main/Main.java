@@ -148,9 +148,6 @@ public class Main {
 		TopologyBuilder builder = new TopologyBuilder();
 		TopologyKiller killer = new TopologyKiller(builder);
 
-		//DST_ORDERING is the optimized version, so it's used by default
-		int partitioningType = StormJoin.DST_ORDERING;
-
 		List<Component> queryPlan = qp.getPlan();
 		List<String> allCompNames = qp.getComponentNames();
 		Collections.sort(allCompNames);
@@ -160,14 +157,14 @@ public class Main {
 			Component child = component.getChild();
 			if(child == null){
 				//a last component (it might be multiple of them)
-				component.makeBolts(builder, killer, allCompNames, conf, partitioningType, StormComponent.FINAL_COMPONENT);
+				component.makeBolts(builder, killer, allCompNames, conf, StormComponent.FINAL_COMPONENT);
 			}else if (child instanceof DummyComponent){
-				component.makeBolts(builder, killer, allCompNames, conf, partitioningType, StormComponent.NEXT_TO_DUMMY);
+				component.makeBolts(builder, killer, allCompNames, conf, StormComponent.NEXT_TO_DUMMY);
 			}else if(child.getChild() == null && !(child instanceof ThetaJoinDynamicComponentAdvisedEpochs)){
 				// if the child is dynamic, then reshuffler is NEXT_TO_LAST
-				component.makeBolts(builder, killer, allCompNames, conf, partitioningType, StormComponent.NEXT_TO_LAST_COMPONENT);
+				component.makeBolts(builder, killer, allCompNames, conf, StormComponent.NEXT_TO_LAST_COMPONENT);
 			}else{
-				component.makeBolts(builder, killer, allCompNames, conf, partitioningType, StormComponent.INTERMEDIATE);
+				component.makeBolts(builder, killer, allCompNames, conf, StormComponent.INTERMEDIATE);
 			}  
 		}
 

@@ -24,7 +24,7 @@ import backtype.storm.topology.InputDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
-
+@Deprecated
 public class StormSrcStorage extends StormBoltComponent {
 	private static Logger LOG = Logger.getLogger(StormSrcStorage.class);
 	private static final long serialVersionUID = 1L;

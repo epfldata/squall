@@ -122,7 +122,7 @@ public class EWHSampleMatrixComponent implements Component {
 
 	@Override
 	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
-			List<String> allCompNames, Config conf, int partitioningType, int hierarchyPosition) {
+			List<String> allCompNames, Config conf, int hierarchyPosition) {
 	
 		Component d2Source = null;
 		Component s1Source = null;

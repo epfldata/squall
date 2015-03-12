@@ -18,7 +18,7 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-
+@Deprecated
 public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormSrcHarmonizer.class);
