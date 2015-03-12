@@ -23,7 +23,6 @@ import ch.epfl.data.plan_runner.storage.BPlusTreeStore;
 import ch.epfl.data.plan_runner.storage.BerkeleyDBStore;
 import ch.epfl.data.plan_runner.storage.BerkeleyDBStoreSkewed;
 import ch.epfl.data.plan_runner.storm_components.InterchangingComponent;
-import ch.epfl.data.plan_runner.storm_components.StormBoltComponent;
 import ch.epfl.data.plan_runner.storm_components.StormComponent;
 import ch.epfl.data.plan_runner.storm_components.StormEmitter;
 import ch.epfl.data.plan_runner.storm_components.StormJoinerBoltComponent;
