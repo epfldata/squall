@@ -1,7 +1,7 @@
 package frontend.functional.scala.queries
 
 import frontend.functional.scala.Stream._
-import plan_runner.query_plans.QueryBuilder
+import ch.epfl.data.plan_runner.query_plans.QueryBuilder
 import frontend.functional.scala._
 import frontend.functional.scala.TPCHSchema._
 

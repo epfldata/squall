@@ -1,8 +1,8 @@
 package frontend.functional.scala.operators
 
-import plan_runner.storage.AggregationStorage
-import plan_runner.operators.AggregateOperator
-import plan_runner.conversion.TypeConversion
+import ch.epfl.data.plan_runner.storage.AggregationStorage
+import ch.epfl.data.plan_runner.operators.AggregateOperator
+import ch.epfl.data.plan_runner.conversion.TypeConversion
 import Numeric.Implicits._
 
 

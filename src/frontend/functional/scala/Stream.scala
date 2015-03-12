@@ -2,20 +2,20 @@ package frontend.functional.scala
 import backtype.storm.tuple._
 import scala.reflect.runtime.universe._
 import frontend.functional.scala.Types._
-import plan_runner.query_plans.QueryBuilder
 import frontend.functional.scala.operators.ScalaAggregateOperator
 import frontend.functional.scala.operators.ScalaAggregateOperator
 import frontend.functional.scala.operators.ScalaMapOperator
 import frontend.functional.scala.operators.ScalaMapOperator
-import plan_runner.operators.Operator
-import plan_runner.components.EquiJoinComponent
-import plan_runner.components.Component
-import plan_runner.components.DataSourceComponent
-import plan_runner.operators.SelectOperator
+import ch.epfl.data.plan_runner.query_plans.QueryBuilder
+import ch.epfl.data.plan_runner.operators.Operator
+import ch.epfl.data.plan_runner.components.EquiJoinComponent
+import ch.epfl.data.plan_runner.components.Component
+import ch.epfl.data.plan_runner.components.DataSourceComponent
+import ch.epfl.data.plan_runner.operators.SelectOperator
 import java.beans.MetaData
 import scala.collection.JavaConverters._
 import frontend.functional.scala.TPCHSchema._
-import frontend.functional.scala.operators.ScalaPredicate
+import frontend.functional.scala.operators.predicates.ScalaPredicate
 //import scala.reflect._
 
 /**
