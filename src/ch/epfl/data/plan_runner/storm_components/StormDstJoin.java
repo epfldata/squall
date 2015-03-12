@@ -29,6 +29,7 @@ import backtype.storm.topology.InputDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Tuple;
 
+@Deprecated
 public class StormDstJoin extends StormBoltComponent {
 	
 	private static final long serialVersionUID = 1L;

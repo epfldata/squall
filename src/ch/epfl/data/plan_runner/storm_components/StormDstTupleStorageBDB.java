@@ -37,7 +37,7 @@ import backtype.storm.topology.InputDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Tuple;
 
-public class StormDstTupleStorageBDB extends StormBoltComponent {
+public class StormDstTupleStorageBDB extends StormJoinerBoltComponent {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormDstTupleStorageBDB.class);
 

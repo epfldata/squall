@@ -22,8 +22,7 @@ import ch.epfl.data.plan_runner.storm_components.StormComponent;
 import ch.epfl.data.plan_runner.storm_components.StormDstJoin;
 import ch.epfl.data.plan_runner.storm_components.StormDstTupleStorageBDB;
 import ch.epfl.data.plan_runner.storm_components.StormDstTupleStorageJoin;
-import ch.epfl.data.plan_runner.storm_components.StormJoin;
-import ch.epfl.data.plan_runner.storm_components.StormSrcJoin;
+import ch.epfl.data.plan_runner.storm_components.StormEmitter;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import backtype.storm.Config;
@@ -44,7 +43,7 @@ public class EquiJoinComponent implements Component {
 	private List<Integer> _hashIndexes;
 	private List<ValueExpression> _hashExpressions;
 
-	private StormJoin _joiner;
+	private StormEmitter _joiner;
 
 	private final ChainOperator _chain = new ChainOperator();
 
@@ -189,6 +188,7 @@ public class EquiJoinComponent implements Component {
 			throw new RuntimeException("Please provide _joinPredicate if you want to run BDB!");
 		}
 		
+		//TODO: what is with the if condition
 		if(isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)){
 			_joiner = new StormDstTupleStorageBDB(_firstParent, _secondParent, this, allCompNames,
 					_joinPredicate, hierarchyPosition, builder, killer, conf);

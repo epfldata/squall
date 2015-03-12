@@ -40,8 +40,9 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
+@Deprecated
 // derived from StormDstTupleStorageJoin
-public class StormDstBDB extends BaseRichBolt implements StormJoin, StormComponent {
+public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComponent {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormDstBDB.class);
 

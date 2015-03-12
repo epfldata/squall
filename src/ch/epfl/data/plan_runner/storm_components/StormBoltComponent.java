@@ -26,7 +26,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
-public abstract class StormBoltComponent extends BaseRichBolt implements StormJoin, StormComponent {
+public abstract class StormBoltComponent extends BaseRichBolt implements StormEmitter, StormComponent {
 	
 	public static final long INITIAL_TUMBLING_TIMESTAMP= System.currentTimeMillis();        
 	

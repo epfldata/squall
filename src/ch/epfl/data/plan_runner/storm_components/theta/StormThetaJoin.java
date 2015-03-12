@@ -27,6 +27,7 @@ import ch.epfl.data.plan_runner.storm_components.InterchangingComponent;
 import ch.epfl.data.plan_runner.storm_components.StormBoltComponent;
 import ch.epfl.data.plan_runner.storm_components.StormComponent;
 import ch.epfl.data.plan_runner.storm_components.StormEmitter;
+import ch.epfl.data.plan_runner.storm_components.StormJoinerBoltComponent;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.plan_runner.thetajoin.indexes.Index;
 import ch.epfl.data.plan_runner.thetajoin.matrix_mapping.ContentSensitiveMatrixAssignment;
@@ -44,7 +45,7 @@ import backtype.storm.topology.InputDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Tuple;
 
-public class StormThetaJoin extends StormBoltComponent {
+public class StormThetaJoin extends StormJoinerBoltComponent {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormThetaJoin.class);
 	private final TupleStorage _firstRelationStorage, _secondRelationStorage;

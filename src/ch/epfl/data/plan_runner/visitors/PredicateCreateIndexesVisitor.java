@@ -12,6 +12,7 @@ import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.predicates.LikePredicate;
 import ch.epfl.data.plan_runner.predicates.OrPredicate;
 import ch.epfl.data.plan_runner.predicates.Predicate;
+import ch.epfl.data.plan_runner.predicates.booleanPrimitive;
 import ch.epfl.data.plan_runner.thetajoin.indexes.BalancedBinaryTreeIndex;
 import ch.epfl.data.plan_runner.thetajoin.indexes.BplusTreeIndex;
 import ch.epfl.data.plan_runner.thetajoin.indexes.HashIndex;
@@ -129,5 +130,10 @@ public class PredicateCreateIndexesVisitor implements PredicateVisitor {
 
 	public void visit(Predicate pred) {
 		pred.accept(this);
+	}
+
+	@Override
+	public void visit(booleanPrimitive bool) {
+		
 	}
 }

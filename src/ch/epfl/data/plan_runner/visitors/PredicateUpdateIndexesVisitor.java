@@ -10,6 +10,7 @@ import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.predicates.LikePredicate;
 import ch.epfl.data.plan_runner.predicates.OrPredicate;
 import ch.epfl.data.plan_runner.predicates.Predicate;
+import ch.epfl.data.plan_runner.predicates.booleanPrimitive;
 
 public class PredicateUpdateIndexesVisitor implements PredicateVisitor {
 
@@ -67,6 +68,11 @@ public class PredicateUpdateIndexesVisitor implements PredicateVisitor {
 
 	public void visit(Predicate pred) {
 		pred.accept(this);
+	}
+
+	@Override
+	public void visit(booleanPrimitive bool) {
+		
 	}
 
 }

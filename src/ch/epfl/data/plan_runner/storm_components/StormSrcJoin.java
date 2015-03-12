@@ -15,7 +15,7 @@ import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
 @Deprecated
-public class StormSrcJoin implements StormJoin, Serializable {
+public class StormSrcJoin implements StormEmitter, Serializable {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormSrcJoin.class);
 

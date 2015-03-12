@@ -16,6 +16,13 @@ import java.beans.MetaData
 import scala.collection.JavaConverters._
 import frontend.functional.scala.TPCHSchema._
 import frontend.functional.scala.operators.predicates.ScalaPredicate
+import ch.epfl.data.plan_runner.predicates.ComparisonPredicate
+import ch.epfl.data.plan_runner.predicates.Predicate
+import ch.epfl.data.plan_runner.expressions.ColumnReference
+import ch.epfl.data.plan_runner.conversion.NumericConversion
+import ch.epfl.data.plan_runner.conversion.IntegerConversion
+import ch.epfl.data.plan_runner.predicates.booleanPrimitive
+import ch.epfl.data.plan_runner.predicates.AndPredicate
 //import scala.reflect._
 
 /**
@@ -92,6 +99,14 @@ object Stream{
   }
 }
  
+ def createPredicate(first:List[Int],second:List[Int]): Predicate = {
+   //NumericConversion
+   val keyType = new IntegerConversion();
+   val inter= first.zip(second).map(keyPairs=> new ComparisonPredicate(ComparisonPredicate.EQUAL_OP, new ColumnReference(keyType,keyPairs._1), new ColumnReference(keyType,keyPairs._2)))
+   val start:Predicate =new booleanPrimitive(true) 
+   inter.foldLeft(start)((pred1,pred2)=>new AndPredicate(pred1,pred2))
+ }
+ 
  def interpJoin[T: SquallType,U:SquallType,V:SquallType, L:SquallType](j: JoinedStream[T, U, V, L], qb:QueryBuilder, metaData:Tuple3[List[Operator],List[Int],List[Int]], confmap:java.util.Map[String,String]):Component = {
    val typeT =  j.tpT
     val typeU = j.tpU
@@ -117,7 +132,10 @@ object Stream{
 
     val firstComponent = interp(j.Str1,qb,Tuple3(List(), indicesL1, null),confmap)(j.Str1.squalType)
     val secondComponent = interp(j.Str2,qb,Tuple3(List(), null, indicesL2),confmap)(j.Str2.squalType)
+    
+    
     var equijoinComponent= qb.createEquiJoin(firstComponent,secondComponent, false)
+    equijoinComponent.setJoinPredicate(createPredicate(indicesL1, indicesL2))
     
     val operatorList=metaData._1
     if(operatorList!=null){
