@@ -46,27 +46,8 @@ public class StormThetaJoinBDB extends StormJoinerBoltComponent {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormThetaJoinBDB.class);
 	private BPlusTreeStore _firstRelationStorage, _secondRelationStorage;
-	private final String _firstEmitterIndex, _secondEmitterIndex;
-	private long _numSentTuples = 0;
-	private final ChainOperator _operatorChain;
-	// position to test for equality in first and second emitter
-	// join params of current storage then other relation interchangably !!
-	List<Integer> _joinParams;
-	private final Predicate _joinPredicate;
-	private List<Integer> _operatorForIndexes;
-	private List<Object> _typeOfValueIndexed;
-	private boolean _existIndexes = false;
-	// for agg batch sending
-	private final Semaphore _semAgg = new Semaphore(1, true);
-	private boolean _firstTime = true;
-	private PeriodicAggBatchSend _periodicAggBatch;
-	private final long _aggBatchOutputMillis;
 	private InterchangingComponent _inter = null;
-	// for printing statistics for creating graphs
-	protected Calendar _cal = Calendar.getInstance();
-	protected DateFormat _dateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
-	protected SimpleDateFormat _format = new SimpleDateFormat("EEE MMM d HH:mm:ss zzz yyyy");
-	protected StatisticsUtilities _statsUtils;
+	
 	public StormThetaJoinBDB(StormEmitter firstEmitter, StormEmitter secondEmitter,
 			ComponentProperties cp, List<String> allCompNames, Predicate joinPredicate,
 			int hierarchyPosition, TopologyBuilder builder, TopologyKiller killer, Config conf,
@@ -323,7 +304,7 @@ public class StormThetaJoinBDB extends StormJoinerBoltComponent {
 			affectedStorage.put(Double.parseDouble(key), inputTupleString);
 		else if (_typeOfValueIndexed.get(0) instanceof Date)
 			try {
-				affectedStorage.put(_format.parse(key), inputTupleString);
+				affectedStorage.put(_convDateFormat.parse(key), inputTupleString);
 			} catch (final ParseException e) {
 				e.printStackTrace();
 			}
@@ -395,7 +376,7 @@ public class StormThetaJoinBDB extends StormJoinerBoltComponent {
 				final int size2 = _secondRelationStorage != null ? _secondRelationStorage.size()
 						: 0;
 				final int totalSize = size1 + size2;
-				final String ts = _dateFormat.format(_cal.getTime());
+				final String ts = _statDateFormat.format(_cal.getTime());
 				// printing
 				if (!MyUtilities.isCustomTimestampMode(getConf())) {
 					final Runtime runtime = Runtime.getRuntime();
@@ -554,7 +535,7 @@ public class StormThetaJoinBDB extends StormJoinerBoltComponent {
 			return oppositeStorage.get(currentOperator, Integer.parseInt(keyValue), diff);
 		else if (_typeOfValueIndexed.get(0) instanceof Date)
 			try {
-				return oppositeStorage.get(currentOperator, _format.parse(keyValue), diff);
+				return oppositeStorage.get(currentOperator, _convDateFormat.parse(keyValue), diff);
 			} catch (final ParseException e) {
 				e.printStackTrace();
 				return null;

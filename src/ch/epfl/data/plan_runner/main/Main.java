@@ -69,7 +69,6 @@ import ch.epfl.data.plan_runner.query_plans.theta.ThetaTPCH7Plan;
 import ch.epfl.data.plan_runner.query_plans.theta.ThetaTPCH8Plan;
 import ch.epfl.data.plan_runner.query_plans.theta.ThetaTPCH9Plan;
 import ch.epfl.data.plan_runner.storm_components.StormComponent;
-import ch.epfl.data.plan_runner.storm_components.StormJoin;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.StormWrapper;

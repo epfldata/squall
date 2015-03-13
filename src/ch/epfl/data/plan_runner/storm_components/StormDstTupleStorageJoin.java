@@ -13,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 
-import javax.management.RuntimeErrorException;
-
 import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.components.ComponentProperties;
@@ -41,39 +39,12 @@ import backtype.storm.tuple.Tuple;
 public class StormDstTupleStorageJoin extends StormJoinerBoltComponent {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormDstTupleStorageJoin.class);
-
 	// components
 	// used as a shorter name, to save some network traffic
-	// it's of type int, but we use String to save more space
-	private final String _firstEmitterIndex, _secondEmitterIndex;
-
+	// it's of type int, but we use String to save more space	
 	private final TupleStorage _firstRelationStorage, _secondRelationStorage;
-
-	private final ChainOperator _operatorChain;
-
-	private long _numSentTuples = 0;
-
 	// for load-balancing
 	private final List<String> _fullHashList;
-
-	// join condition
-	private final Predicate _joinPredicate;
-	private List<Index> _firstRelationIndexes, _secondRelationIndexes;
-	private List<Integer> _operatorForIndexes;
-	private List<Object> _typeOfValueIndexed;
-	private boolean _existIndexes = false;
-
-	// for batch sending
-	private final Semaphore _semAgg = new Semaphore(1, true);
-	private boolean _firstTime = true;
-	private PeriodicAggBatchSend _periodicAggBatch;
-	private final long _aggBatchOutputMillis;
-
-	// for printing statistics for creating graphs
-	protected Calendar _cal = Calendar.getInstance();
-	protected DateFormat _statDateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
-	protected DateFormat _convDateFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss zzz yyyy");
-	protected StatisticsUtilities _statsUtils;
 
 	public StormDstTupleStorageJoin(StormEmitter firstEmitter, StormEmitter secondEmitter,
 			ComponentProperties cp, List<String> allCompNames, Predicate joinPredicate,

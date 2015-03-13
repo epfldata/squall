@@ -28,7 +28,6 @@ import ch.epfl.data.plan_runner.storm_components.StormDstJoin;
 import ch.epfl.data.plan_runner.storm_components.StormDstTupleStorageBDB;
 import ch.epfl.data.plan_runner.storm_components.StormDstTupleStorageJoin;
 import ch.epfl.data.plan_runner.storm_components.StormEmitter;
-import ch.epfl.data.plan_runner.storm_components.StormJoin;
 import ch.epfl.data.plan_runner.storm_components.StormSrcJoin;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;

@@ -49,29 +49,9 @@ public class StormThetaJoin extends StormJoinerBoltComponent {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormThetaJoin.class);
 	private final TupleStorage _firstRelationStorage, _secondRelationStorage;
-	private final String _firstEmitterIndex, _secondEmitterIndex;
-	private long _numSentTuples = 0;
-	private final ChainOperator _operatorChain;
-	// position to test for equality in first and second emitter
-	// join params of current storage then other relation interchangably !!
-	List<Integer> _joinParams;
-	private final Predicate _joinPredicate;
-	// private OptimalPartition _partitioning;
-	private List<Index> _firstRelationIndexes, _secondRelationIndexes;
-	private List<Integer> _operatorForIndexes;
-	private List<Object> _typeOfValueIndexed;
-	private boolean _existIndexes = false;
-	// for agg batch sending
-	private final Semaphore _semAgg = new Semaphore(1, true);
-	private boolean _firstTime = true;
-	private PeriodicAggBatchSend _periodicAggBatch;
-	private final long _aggBatchOutputMillis;
+	
 	private InterchangingComponent _inter = null;
-	// for printing statistics for creating graphs
-	protected Calendar _cal = Calendar.getInstance();
-	protected DateFormat _dateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
-	protected SimpleDateFormat _format = new SimpleDateFormat("EEE MMM d HH:mm:ss zzz yyyy");
-	protected StatisticsUtilities _statsUtils;
+	
 
 	public StormThetaJoin(StormEmitter firstEmitter, StormEmitter secondEmitter,
 			ComponentProperties cp, List<String> allCompNames, Predicate joinPredicate, boolean isPartitioner,
@@ -349,7 +329,7 @@ public class StormThetaJoin extends StormJoinerBoltComponent {
 				final int size1 = _firstRelationStorage.size();
 				final int size2 = _secondRelationStorage.size();
 				final int totalSize = size1 + size2;
-				final String ts = _dateFormat.format(_cal.getTime());
+				final String ts = _statDateFormat.format(_cal.getTime());
 
 				// printing
 				if (!MyUtilities.isCustomTimestampMode(getConf())) {
@@ -497,7 +477,7 @@ public class StormThetaJoin extends StormJoinerBoltComponent {
 			else if (_typeOfValueIndexed.get(i) instanceof Date)
 				try {
 					currentRowIds = currentOpposIndex.getValues(currentOperator,
-							_format.parse(value));
+							_convDateFormat.parse(value));
 				} catch (final ParseException e) {
 					e.printStackTrace();
 				}
@@ -548,7 +528,7 @@ public class StormThetaJoin extends StormJoinerBoltComponent {
 				affectedIndexes.get(i).put(row_id, Double.parseDouble(valuesToIndex.get(i)));
 			else if (typesOfValuesToIndex.get(i) instanceof Date)
 				try {
-					affectedIndexes.get(i).put(row_id, _format.parse(valuesToIndex.get(i)));
+					affectedIndexes.get(i).put(row_id, _convDateFormat.parse(valuesToIndex.get(i)));
 				} catch (final ParseException e) {
 					throw new RuntimeException("Parsing problem in StormThetaJoin.updatedIndexes "
 							+ e.getMessage());

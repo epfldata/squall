@@ -71,7 +71,7 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 	private PushStatisticCollector _sc;
 	
 	//EWH histogram
-	private boolean _isPartitioner;
+	private boolean _isEWHPartitioner;
 
 	public StormBoltComponent(ComponentProperties cp, List<String> allCompNames,
 			int hierarchyPosition, Map conf) {
@@ -89,7 +89,7 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 	public StormBoltComponent(ComponentProperties cp, List<String> allCompNames,
 			int hierarchyPosition, boolean isPartitioner, Map conf) {
 		this(cp, allCompNames, hierarchyPosition, conf);
-		_isPartitioner = isPartitioner;
+		_isEWHPartitioner = isPartitioner;
 	}
 
 	// ManualBatchMode
@@ -139,7 +139,7 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 				outputFields.add(StormComponent.TIMESTAMP);
 			declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(outputFields));
 			
-			if(_isPartitioner){
+			if(_isEWHPartitioner){
 				//	EQUI-WEIGHT HISTOGRAM
 				final List<String> outputFieldsPart = new ArrayList<String>();
 				outputFieldsPart.add(StormComponent.COMP_INDEX);
@@ -252,7 +252,7 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 		}
 		
 		//equi-weight histogram
-		if(_isPartitioner){
+		if(_isEWHPartitioner){
 			//extract sampleAside operator
 			SampleAsideAndForwardOperator saf = getChainOperator().getSampleAside();
 			saf.setCollector(_collector);
@@ -366,7 +366,7 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 			}
 			MyUtilities.processFinalAck(_numRemainingParents, getHierarchyPosition(), getConf(),
 					stormTupleRcv, getCollector(), getPeriodicAggBatch());
-			if(_isPartitioner){
+			if(_isEWHPartitioner){
 				// rel size
 				Values relSize = MyUtilities.createRelSizeTuple(_componentIndex, (int) getNumSentTuples());
 				_collector.emit(SystemParameters.PARTITIONER, relSize);

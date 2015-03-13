@@ -22,7 +22,6 @@ import ch.epfl.data.plan_runner.storage.BerkeleyDBStore;
 import ch.epfl.data.plan_runner.storage.BerkeleyDBStoreSkewed;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.plan_runner.thetajoin.indexes.Index;
-import ch.epfl.data.plan_runner.thetajoin.matrix_mapping.EquiMatrixAssignment;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
@@ -44,36 +43,12 @@ public class StormDstTupleStorageBDB extends StormJoinerBoltComponent {
 	// components
 	// used as a shorter name, to save some network traffic
 	// it's of type int, but we use String to save more space
-	private final String _firstEmitterIndex, _secondEmitterIndex;
 	
 	private BPlusTreeStore _firstRelationStorage, _secondRelationStorage;
 
-	private final ChainOperator _operatorChain;
-	
-	private long _numSentTuples = 0;
-	
 	// for load-balancing
 	private final List<String> _fullHashList;
 	
-	// join condition
-	private final Predicate _joinPredicate;
-	private List<Index> _firstRelationIndexes, _secondRelationIndexes;
-	private List<Integer> _operatorForIndexes;
-	private List<Object> _typeOfValueIndexed;
-	private boolean _existIndexes = false;
-
-	// for batch sending
-	private final Semaphore _semAgg = new Semaphore(1, true);
-	private boolean _firstTime = true;
-	private PeriodicAggBatchSend _periodicAggBatch;
-	private final long _aggBatchOutputMillis;
-
-	// for printing statistics for creating graphs
-	protected Calendar _cal = Calendar.getInstance();
-	protected DateFormat _statDateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
-	protected DateFormat _convDateFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss zzz yyyy");
-	protected StatisticsUtilities _statsUtils;
-
 	public StormDstTupleStorageBDB(StormEmitter firstEmitter, StormEmitter secondEmitter,
 			ComponentProperties cp, List<String> allCompNames, Predicate joinPredicate,
 			int hierarchyPosition, TopologyBuilder builder, TopologyKiller killer, Config conf) {
