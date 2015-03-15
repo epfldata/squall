@@ -8,17 +8,12 @@ import java.io.Serializable;
 
 import org.apache.log4j.Logger;
 
-public class SerializableFileInputStream extends InputStream implements Serializable, CustomReader {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-
-	private static Logger LOG = Logger.getLogger(SerializableFileInputStream.class);
-
+public class SerializableFileInputStream extends InputStream implements
+		Serializable, CustomReader {
 	// self-test
 	public static void main(String args[]) throws IOException {
-		final SerializableFileInputStream reader = new SerializableFileInputStream(args[0]);
+		final SerializableFileInputStream reader = new SerializableFileInputStream(
+				args[0]);
 		while (true) {
 			final String l = reader.readLine();
 			if (l == null)
@@ -26,6 +21,14 @@ public class SerializableFileInputStream extends InputStream implements Serializ
 			LOG.info(l);
 		}
 	}
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	private static Logger LOG = Logger
+			.getLogger(SerializableFileInputStream.class);
 
 	protected final File _file; // The _file to read from
 	protected byte[] _buffer; // The _file _buffer
@@ -56,12 +59,13 @@ public class SerializableFileInputStream extends InputStream implements Serializ
 		this(file, DEFAULT_BUFFER_SIZE, 0, 1);
 	}
 
-	public SerializableFileInputStream(File file, int bufferSize) throws IOException {
+	public SerializableFileInputStream(File file, int bufferSize)
+			throws IOException {
 		this(file, bufferSize, 0, 1);
 	}
 
-	public SerializableFileInputStream(File file, int bufferSize, int section, int parts)
-			throws IOException {
+	public SerializableFileInputStream(File file, int bufferSize, int section,
+			int parts) throws IOException {
 		_file = file;
 		_buffer = new byte[bufferSize];
 		setParameters(section, parts);
@@ -103,7 +107,8 @@ public class SerializableFileInputStream extends InputStream implements Serializ
 
 				// Note that System.arraycopy is explicitly safe for
 				// self-to-self copies.
-				System.arraycopy(_buffer, _bufferPtr, _buffer, 0, _bufferSize - _bufferPtr);
+				System.arraycopy(_buffer, _bufferPtr, _buffer, 0, _bufferSize
+						- _bufferPtr);
 				_bufferSize = _bufferSize - _bufferPtr;
 			} else
 				// If we've precisely exhausted our _buffer (_bufferPtr should
@@ -120,7 +125,8 @@ public class SerializableFileInputStream extends InputStream implements Serializ
 				for (long i = 0; i < _filePtr; i += fis.skip(_filePtr - i)) {
 				}
 
-			bytesRead = fis.read(_buffer, _bufferSize, _buffer.length - _bufferSize);
+			bytesRead = fis.read(_buffer, _bufferSize, _buffer.length
+					- _bufferSize);
 
 			if (bytesRead < 0)
 				_eofReached = true;
@@ -135,7 +141,8 @@ public class SerializableFileInputStream extends InputStream implements Serializ
 
 	protected void fillBufferIfNeeded(int bytesRequested) throws IOException {
 		final int currentBufferBytes = _bufferSize - _bufferPtr;
-		if ((currentBufferBytes < LOW_WATER_MARK) && (bytesRequested > currentBufferBytes))
+		if ((currentBufferBytes < LOW_WATER_MARK)
+				&& (bytesRequested > currentBufferBytes))
 			fillBuffer();
 	}
 
@@ -147,7 +154,8 @@ public class SerializableFileInputStream extends InputStream implements Serializ
 			if (_buffer[i + _bufferPtr] == '\r') {
 				if (i + 1 < _bufferSize)
 					fillBuffer();
-				if ((i + 1 < _bufferSize - _bufferPtr) && (_buffer[i + 1 + _bufferPtr] == '\n'))
+				if ((i + 1 < _bufferSize - _bufferPtr)
+						&& (_buffer[i + 1 + _bufferPtr] == '\n'))
 					i += 1;
 				break;
 			}
@@ -227,7 +235,8 @@ public class SerializableFileInputStream extends InputStream implements Serializ
 	// Modified by Aleksandar
 	private void setParameters(int section, int parts) {
 		if (section >= parts)
-			throw new RuntimeException("The section can take value from 0 to " + (parts - 1));
+			throw new RuntimeException("The section can take value from 0 to "
+					+ (parts - 1));
 
 		final long fileSize = _file.length();
 		final long sectionSize = fileSize / parts;

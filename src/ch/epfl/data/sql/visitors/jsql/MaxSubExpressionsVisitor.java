@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import ch.epfl.data.sql.optimizers.name.NameTranslator;
-import ch.epfl.data.sql.util.ParserUtil;
-import ch.epfl.data.sql.util.TupleSchema;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
 import net.sf.jsqlparser.expression.AnyComparisonExpression;
 import net.sf.jsqlparser.expression.BinaryExpression;
@@ -51,6 +48,9 @@ import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
+import ch.epfl.data.sql.optimizers.name.NameTranslator;
+import ch.epfl.data.sql.util.ParserUtil;
+import ch.epfl.data.sql.util.TupleSchema;
 
 /*
  * This class return a list of (sub)expressions which corresponds to visited expressions
@@ -62,12 +62,14 @@ import net.sf.jsqlparser.statement.select.SubSelect;
  *   this class will return "R.A + 4" expression
  * Used in ProjSchemaCreator
  */
-public class MaxSubExpressionsVisitor implements ExpressionVisitor, ItemsListVisitor {
+public class MaxSubExpressionsVisitor implements ExpressionVisitor,
+		ItemsListVisitor {
 	private final NameTranslator _nt;
 	private final TupleSchema _inputTupleSchema;
 	private final List<Expression> _exprList = new ArrayList<Expression>();
 
-	public MaxSubExpressionsVisitor(NameTranslator nt, TupleSchema inputTupleSchema) {
+	public MaxSubExpressionsVisitor(NameTranslator nt,
+			TupleSchema inputTupleSchema) {
 		_nt = nt;
 		_inputTupleSchema = inputTupleSchema;
 	}
@@ -200,7 +202,8 @@ public class MaxSubExpressionsVisitor implements ExpressionVisitor, ItemsListVis
 
 	@Override
 	public void visit(ExpressionList el) {
-		for (final Iterator iter = el.getExpressions().iterator(); iter.hasNext();) {
+		for (final Iterator iter = el.getExpressions().iterator(); iter
+				.hasNext();) {
 			final Expression expression = (Expression) iter.next();
 			expression.accept(this);
 		}

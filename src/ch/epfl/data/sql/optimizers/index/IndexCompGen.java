@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.jsqlparser.expression.Expression;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
 import ch.epfl.data.plan_runner.components.EquiJoinComponent;
@@ -15,7 +16,6 @@ import ch.epfl.data.sql.schema.Schema;
 import ch.epfl.data.sql.util.ParserUtil;
 import ch.epfl.data.sql.visitors.jsql.SQLVisitor;
 import ch.epfl.data.sql.visitors.squall.IndexJoinHashVisitor;
-import net.sf.jsqlparser.expression.Expression;
 
 /*
  * It is necessary that this class operates with Tables,
@@ -47,8 +47,8 @@ public class IndexCompGen implements CompGen {
 	// We don't want to hash on something which will be used to join with same
 	// later component in the hierarchy.
 	private void addHash(Component component, List<Expression> joinCondition) {
-		final IndexJoinHashVisitor joinOn = new IndexJoinHashVisitor(_schema, component,
-				_pq.getTan());
+		final IndexJoinHashVisitor joinOn = new IndexJoinHashVisitor(_schema,
+				component, _pq.getTan());
 		for (final Expression exp : joinCondition)
 			exp.accept(joinOn);
 		final List<ValueExpression> hashExpressions = joinOn.getExpressions();
@@ -60,7 +60,8 @@ public class IndexCompGen implements CompGen {
 			// visited in the same order
 			// i.e R.A=S.A and R.B=S.B, the columns are (R.A, R.B), (S.A, S.B),
 			// respectively
-			final List<Integer> hashIndexes = ParserUtil.extractColumnIndexes(hashExpressions);
+			final List<Integer> hashIndexes = ParserUtil
+					.extractColumnIndexes(hashExpressions);
 
 			// hash indexes in join condition
 			component.setOutputPartKey(hashIndexes);
@@ -74,11 +75,12 @@ public class IndexCompGen implements CompGen {
 	 */
 	@Override
 	public DataSourceComponent generateDataSource(String tableCompName) {
-		final String tableSchemaName = _pq.getTan().getSchemaName(tableCompName);
+		final String tableSchemaName = _pq.getTan()
+				.getSchemaName(tableCompName);
 		final String sourceFile = tableSchemaName.toLowerCase();
 
-		final DataSourceComponent relation = new DataSourceComponent(tableCompName, _dataPath
-				+ sourceFile + _extension);
+		final DataSourceComponent relation = new DataSourceComponent(
+				tableCompName, _dataPath + sourceFile + _extension);
 		_queryBuilder.add(relation);
 		_subPlans.add(relation);
 		return relation;
@@ -90,14 +92,17 @@ public class IndexCompGen implements CompGen {
 	 */
 	@Override
 	public Component generateEquiJoin(Component left, Component right) {
-		final EquiJoinComponent joinComponent = new EquiJoinComponent(left, right);
+		final EquiJoinComponent joinComponent = new EquiJoinComponent(left,
+				right);
 		_queryBuilder.add(joinComponent);
 
 		// compute join condition
-		final List<Expression> joinCondition = ParserUtil.getJoinCondition(_pq, left, right);
+		final List<Expression> joinCondition = ParserUtil.getJoinCondition(_pq,
+				left, right);
 		if (joinCondition == null)
-			throw new RuntimeException("There is no join conditition between components "
-					+ left.getName() + " and " + right.getName());
+			throw new RuntimeException(
+					"There is no join conditition between components "
+							+ left.getName() + " and " + right.getName());
 
 		// set hashes for two parents
 		addHash(left, joinCondition);

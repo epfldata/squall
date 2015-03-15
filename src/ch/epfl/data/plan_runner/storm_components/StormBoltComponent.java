@@ -7,6 +7,14 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import backtype.storm.Config;
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.base.BaseRichBolt;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
 import ch.epfl.data.plan_runner.ewh.main.PushStatisticCollector;
 import ch.epfl.data.plan_runner.ewh.operators.SampleAsideAndForwardOperator;
@@ -17,19 +25,13 @@ import ch.epfl.data.plan_runner.operators.Operator;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
-import backtype.storm.Config;
-import backtype.storm.task.OutputCollector;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.topology.base.BaseRichBolt;
-import backtype.storm.tuple.Fields;
-import backtype.storm.tuple.Tuple;
-import backtype.storm.tuple.Values;
 
-public abstract class StormBoltComponent extends BaseRichBolt implements StormEmitter, StormComponent {
-	
-	public static final long INITIAL_TUMBLING_TIMESTAMP= System.currentTimeMillis();        
-	
+public abstract class StormBoltComponent extends BaseRichBolt implements
+		StormEmitter, StormComponent {
+
+	public static final long INITIAL_TUMBLING_TIMESTAMP = System
+			.currentTimeMillis();
+
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormBoltComponent.class);
 
@@ -66,15 +68,37 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 	// counting negative values
 	protected long numNegatives = 0;
 	protected double maxNegative = 0;
-	
-	//StatisticsCollector
+
+	// StatisticsCollector
 	private PushStatisticCollector _sc;
-	
-	//EWH histogram
+
+	// EWH histogram
 	private boolean _isEWHPartitioner;
 
-	public StormBoltComponent(ComponentProperties cp, List<String> allCompNames,
-			int hierarchyPosition, Map conf) {
+	/*
+	 * //TODO For Window Semantics
+	 */
+	// //////////////////////////////
+	public long _windowSize = -1; // Width in terms of millis, Default is -1
+									// which is full history
+
+	public long _latestTimeStamp = -1;
+
+	protected long _GC_PeriodicTickSec = -1;
+	// protected static int WINDOW_SIZE_MULTIPLE_CONSTANT=3;
+
+	// For tumbling semantics
+	public long _tumblingWindowSize;
+
+	public StormBoltComponent(ComponentProperties cp,
+			List<String> allCompNames, int hierarchyPosition,
+			boolean _isEWHPartitioner, Map conf) {
+		this(cp, allCompNames, hierarchyPosition, conf);
+		_isEWHPartitioner = _isEWHPartitioner;
+	}
+
+	public StormBoltComponent(ComponentProperties cp,
+			List<String> allCompNames, int hierarchyPosition, Map conf) {
 		_conf = conf;
 		_ID = cp.getName();
 		_componentIndex = String.valueOf(allCompNames.indexOf(_ID));
@@ -83,20 +107,16 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 		_parentEmitters = cp.getParents();
 		_hashIndexes = cp.getHashIndexes();
 		_hashExpressions = cp.getHashExpressions();
-		setWindowSemantics(conf); //Set Window Semantics if Available in the configuration file
-	}
-	
-	public StormBoltComponent(ComponentProperties cp, List<String> allCompNames,
-			int hierarchyPosition, boolean isPartitioner, Map conf) {
-		this(cp, allCompNames, hierarchyPosition, conf);
-		_isEWHPartitioner = isPartitioner;
+		setWindowSemantics(conf); // Set Window Semantics if Available in the
+									// configuration file
 	}
 
 	// ManualBatchMode
 	private void addToManualBatch(List<String> tuple, long timestamp) {
-		final String tupleHash = MyUtilities.createHashString(tuple, _hashIndexes,
-				_hashExpressions, _conf);
-		final int dstIndex = MyUtilities.chooseHashTargetIndex(tupleHash, _targetParallelism);
+		final String tupleHash = MyUtilities.createHashString(tuple,
+				_hashIndexes, _hashExpressions, _conf);
+		final int dstIndex = MyUtilities.chooseHashTargetIndex(tupleHash,
+				_targetParallelism);
 
 		// we put in queueTuple based on tupleHash
 		// the same hash is used in BatchStreamGrouping for deciding where a
@@ -113,7 +133,8 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 				_targetTimestamps[dstIndex] = MyUtilities.getMin(timestamp,
 						_targetTimestamps[dstIndex]);
 		_targetBuffers[dstIndex].append(tupleHash)
-				.append(SystemParameters.MANUAL_BATCH_HASH_DELIMITER).append(tupleString)
+				.append(SystemParameters.MANUAL_BATCH_HASH_DELIMITER)
+				.append(tupleString)
 				.append(SystemParameters.MANUAL_BATCH_TUPLE_DELIMITER);
 	}
 
@@ -123,8 +144,8 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 			// stage not the final
 			// one
 			if (!MyUtilities.isAckEveryTuple(_conf))
-				declarer.declareStream(SystemParameters.EOF_STREAM,
-						new Fields(SystemParameters.EOF));
+				declarer.declareStream(SystemParameters.EOF_STREAM, new Fields(
+						SystemParameters.EOF));
 		} else {
 			final List<String> outputFields = new ArrayList<String>();
 			if (MyUtilities.isManualBatchingMode(_conf)) {
@@ -135,47 +156,35 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 				outputFields.add(StormComponent.TUPLE); // list of string
 				outputFields.add(StormComponent.HASH);
 			}
-			if (MyUtilities.isCustomTimestampMode(_conf) || MyUtilities.isWindowTimestampMode(_conf))
+			if (MyUtilities.isCustomTimestampMode(_conf)
+					|| MyUtilities.isWindowTimestampMode(_conf))
 				outputFields.add(StormComponent.TIMESTAMP);
-			declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(outputFields));
-			
-			if(_isEWHPartitioner){
-				//	EQUI-WEIGHT HISTOGRAM
+			declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(
+					outputFields));
+
+			if (_isEWHPartitioner) {
+				// EQUI-WEIGHT HISTOGRAM
 				final List<String> outputFieldsPart = new ArrayList<String>();
 				outputFieldsPart.add(StormComponent.COMP_INDEX);
 				outputFieldsPart.add(StormComponent.TUPLE); // list of string
 				outputFieldsPart.add(StormComponent.HASH);
-				declarer.declareStream(SystemParameters.PARTITIONER, new Fields(outputFieldsPart));
+				declarer.declareStream(SystemParameters.PARTITIONER,
+						new Fields(outputFieldsPart));
 			}
 		}
 	}
 
-	public abstract ChainOperator getChainOperator();
-	
-	/*//TODO
-	 * For Window Semantics
-	 */
-	////////////////////////////////
-	public long _windowSize=-1; //Width in terms of millis, Default is -1 which is full history
-	public long _latestTimeStamp=-1;
-	protected long _GC_PeriodicTickSec=-1;
-	//protected static int WINDOW_SIZE_MULTIPLE_CONSTANT=3;
-	
-	//For tumbling semantics
-	public long _tumblingWindowSize;
-	
-	
-	
-	public void setWindowSemantics(Map conf){
-		_windowSize= MyUtilities.getWindowSize(conf);
-		_GC_PeriodicTickSec=MyUtilities.getWindowClockTicker(conf);
-		if(_GC_PeriodicTickSec>0) conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, _GC_PeriodicTickSec);
-		_tumblingWindowSize= MyUtilities.getWindowTumblingSize(conf);
+	protected void finalizeProcessing() {
+		printStatistics(SystemParameters.FINAL_PRINT);
+		if (getChainOperator() != null) {
+			getChainOperator().finalizeProcessing();
+		}
+		if (MyUtilities.isStatisticsCollector(_conf, _hierarchyPosition)) {
+			_sc.finalizeProcessing();
+		}
 	}
-	
-	public abstract void purgeStaleStateFromWindow();
-	////////////////////////////////
-	////////////////////////////////end
+
+	public abstract ChainOperator getChainOperator();
 
 	public OutputCollector getCollector() {
 		return _collector;
@@ -219,8 +228,10 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 
 			if (!tupleString.isEmpty())
 				// some buffers might be empty
-				if (MyUtilities.isCustomTimestampMode(_conf) || MyUtilities.isWindowTimestampMode(_conf))
-					_collector.emit(new Values(_componentIndex, tupleString, _targetTimestamps[i]));
+				if (MyUtilities.isCustomTimestampMode(_conf)
+						|| MyUtilities.isWindowTimestampMode(_conf))
+					_collector.emit(new Values(_componentIndex, tupleString,
+							_targetTimestamps[i]));
 				else
 					_collector.emit(new Values(_componentIndex, tupleString));
 		}
@@ -231,10 +242,11 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 	public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
 		setCollector(collector);
 		if (getInterComp() == null)
-			_numRemainingParents = MyUtilities
-					.getNumParentTasks(tc, Arrays.asList(_parentEmitters));
+			_numRemainingParents = MyUtilities.getNumParentTasks(tc,
+					Arrays.asList(_parentEmitters));
 		else
-			_numRemainingParents = MyUtilities.getNumParentTasks(tc, getInterComp());
+			_numRemainingParents = MyUtilities.getNumParentTasks(tc,
+					getInterComp());
 
 		_thisTaskID = tc.getThisTaskId();
 
@@ -247,46 +259,35 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 
 		// initial statistics
 		printStatistics(SystemParameters.INITIAL_PRINT);
-		if(MyUtilities.isStatisticsCollector(_conf, _hierarchyPosition)){
+		if (MyUtilities.isStatisticsCollector(_conf, _hierarchyPosition)) {
 			_sc = new PushStatisticCollector(map);
 		}
-		
-		//equi-weight histogram
-		if(_isEWHPartitioner){
-			//extract sampleAside operator
-			SampleAsideAndForwardOperator saf = getChainOperator().getSampleAside();
+
+		// equi-weight histogram
+		if (_isEWHPartitioner) {
+			// extract sampleAside operator
+			SampleAsideAndForwardOperator saf = getChainOperator()
+					.getSampleAside();
 			saf.setCollector(_collector);
 			saf.setComponentIndex(_componentIndex);
 		}
 	}
-	
-	protected void sendToStatisticsCollector(List<String> tuple, int relationNumber){
-		if(MyUtilities.isStatisticsCollector(_conf, _hierarchyPosition)){
-			_sc.processTuple(tuple, relationNumber);
-		}
-	}
-	
-	protected void finalizeProcessing(){
-		printStatistics(SystemParameters.FINAL_PRINT);
-		if(getChainOperator() != null){
-			getChainOperator().finalizeProcessing();
-		}
-		if(MyUtilities.isStatisticsCollector(_conf, _hierarchyPosition)){
-			_sc.finalizeProcessing();
-		}
-	}	
 
 	@Override
 	public void printContent() {
 		if (_printOut)
 			if ((getChainOperator() != null) && getChainOperator().isBlocking()) {
-				final Operator lastOperator = getChainOperator().getLastOperator();
+				final Operator lastOperator = getChainOperator()
+						.getLastOperator();
 				if (lastOperator instanceof AggregateOperator)
-					MyUtilities.printBlockingResult(_ID, (AggregateOperator) lastOperator,
+					MyUtilities.printBlockingResult(_ID,
+							(AggregateOperator) lastOperator,
 							_hierarchyPosition, _conf, LOG);
 				else
-					MyUtilities.printBlockingResult(_ID, lastOperator.getNumTuplesProcessed(),
-							lastOperator.printContent(), _hierarchyPosition, _conf, LOG);
+					MyUtilities.printBlockingResult(_ID,
+							lastOperator.getNumTuplesProcessed(),
+							lastOperator.printContent(), _hierarchyPosition,
+							_conf, LOG);
 			}
 	}
 
@@ -295,11 +296,13 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 	@Override
 	public void printTuple(List<String> tuple) {
 		if (_printOut)
-			if ((getChainOperator() == null) || !getChainOperator().isBlocking()) {
+			if ((getChainOperator() == null)
+					|| !getChainOperator().isBlocking()) {
 				final StringBuilder sb = new StringBuilder();
 				sb.append("\nComponent ").append(_ID);
 				sb.append("\nReceived tuples: ").append(getNumSentTuples());
-				sb.append(" Tuple: ").append(MyUtilities.tupleToString(tuple, _conf));
+				sb.append(" Tuple: ").append(
+						MyUtilities.tupleToString(tuple, _conf));
 				LOG.info(sb.toString());
 			}
 	}
@@ -308,9 +311,12 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 	// tupleSerialNum starts from 0
 	@Override
 	public void printTupleLatency(long tupleSerialNum, long timestamp) {
-		final int freqCompute = SystemParameters.getInt(_conf, "FREQ_TUPLE_LOG_COMPUTE");
-		final int freqWrite = SystemParameters.getInt(_conf, "FREQ_TUPLE_LOG_WRITE");
-		final int startupIgnoredTuples = SystemParameters.getInt(_conf, "INIT_IGNORED_TUPLES");
+		final int freqCompute = SystemParameters.getInt(_conf,
+				"FREQ_TUPLE_LOG_COMPUTE");
+		final int freqWrite = SystemParameters.getInt(_conf,
+				"FREQ_TUPLE_LOG_WRITE");
+		final int startupIgnoredTuples = SystemParameters.getInt(_conf,
+				"INIT_IGNORED_TUPLES");
 
 		if (tupleSerialNum >= startupIgnoredTuples) {
 			tupleSerialNum = tupleSerialNum - startupIgnoredTuples; // start
@@ -330,8 +336,8 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 					latencyMillis = 0;
 				}
 				if (_numberOfSamples < 0) {
-					LOG.info("Exception! Number of samples is " + _numberOfSamples
-							+ "! Ignoring a tuple!");
+					LOG.info("Exception! Number of samples is "
+							+ _numberOfSamples + "! Ignoring a tuple!");
 					return;
 				}
 				_totalLatencyMillis += latencyMillis;
@@ -339,18 +345,19 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 			}
 			if (tupleSerialNum % freqWrite == 0) {
 				LOG.info("Taking into account every " + freqCompute
-						+ "th tuple, and printing every " + freqWrite + "th one.");
+						+ "th tuple, and printing every " + freqWrite
+						+ "th one.");
 				LOG.info("LAST tuple latency is " + latencyMillis + "ms.");
-				LOG.info("AVERAGE tuple latency so far is " + _totalLatencyMillis
-						/ _numberOfSamples + "ms.");
+				LOG.info("AVERAGE tuple latency so far is "
+						+ _totalLatencyMillis / _numberOfSamples + "ms.");
 			}
 		}
 	}
 
 	protected void printTupleLatencyFinal() {
 		if (_numberOfSamples > 0)
-			LOG.info("AVERAGE tuple latency so far is " + _totalLatencyMillis / _numberOfSamples
-					+ "ms.");
+			LOG.info("AVERAGE tuple latency so far is " + _totalLatencyMillis
+					/ _numberOfSamples + "ms.");
 	}
 
 	// if true, we should exit from method which called this method
@@ -358,38 +365,56 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 		if (MyUtilities.isFinalAck(tuple, getConf())) {
 			_numRemainingParents--;
 			if (_numRemainingParents == 0) {
-				if (MyUtilities.isManualBatchingMode(getConf())){
+				if (MyUtilities.isManualBatchingMode(getConf())) {
 					// flushing before sending lastAck down the hierarchy
 					manualBatchSend();
 				}
 				finalizeProcessing();
 			}
-			MyUtilities.processFinalAck(_numRemainingParents, getHierarchyPosition(), getConf(),
-					stormTupleRcv, getCollector(), getPeriodicAggBatch());
-			if(_isEWHPartitioner){
+			MyUtilities.processFinalAck(_numRemainingParents,
+					getHierarchyPosition(), getConf(), stormTupleRcv,
+					getCollector(), getPeriodicAggBatch());
+			if (_isEWHPartitioner) {
 				// rel size
-				Values relSize = MyUtilities.createRelSizeTuple(_componentIndex, (int) getNumSentTuples());
+				Values relSize = MyUtilities.createRelSizeTuple(
+						_componentIndex, (int) getNumSentTuples());
 				_collector.emit(SystemParameters.PARTITIONER, relSize);
 
 				// final ack
-				MyUtilities.processFinalAckCustomStream(SystemParameters.PARTITIONER, _numRemainingParents, getHierarchyPosition(), getConf(),
-					stormTupleRcv, getCollector(), getPeriodicAggBatch());
+				MyUtilities.processFinalAckCustomStream(
+						SystemParameters.PARTITIONER, _numRemainingParents,
+						getHierarchyPosition(), getConf(), stormTupleRcv,
+						getCollector(), getPeriodicAggBatch());
 			}
 			return true;
 		}
 		return false;
 	}
 
+	public abstract void purgeStaleStateFromWindow();
+
+	// //////////////////////////////
+	// //////////////////////////////end
+
 	protected boolean receivedDumpSignal(Tuple stormTuple) {
-		return stormTuple.getSourceStreamId()
-				.equalsIgnoreCase(SystemParameters.DUMP_RESULTS_STREAM);
+		return stormTuple.getSourceStreamId().equalsIgnoreCase(
+				SystemParameters.DUMP_RESULTS_STREAM);
 	}
 
 	// non-ManualBatchMode
-	private void regularTupleSend(List<String> tuple, Tuple stormTupleRcv, long timestamp) {
-		final Values stormTupleSnd = MyUtilities.createTupleValues(tuple, timestamp,
-				_componentIndex, _hashIndexes, _hashExpressions, _conf);
+	private void regularTupleSend(List<String> tuple, Tuple stormTupleRcv,
+			long timestamp) {
+		final Values stormTupleSnd = MyUtilities.createTupleValues(tuple,
+				timestamp, _componentIndex, _hashIndexes, _hashExpressions,
+				_conf);
 		MyUtilities.sendTuple(stormTupleSnd, stormTupleRcv, _collector, _conf);
+	}
+
+	protected void sendToStatisticsCollector(List<String> tuple,
+			int relationNumber) {
+		if (MyUtilities.isStatisticsCollector(_conf, _hierarchyPosition)) {
+			_sc.processTuple(tuple, relationNumber);
+		}
 	}
 
 	protected void setCollector(OutputCollector collector) {
@@ -401,8 +426,17 @@ public abstract class StormBoltComponent extends BaseRichBolt implements StormEm
 		_numRemainingParents = numParentTasks;
 	}
 
+	public void setWindowSemantics(Map conf) {
+		_windowSize = MyUtilities.getWindowSize(conf);
+		_GC_PeriodicTickSec = MyUtilities.getWindowClockTicker(conf);
+		if (_GC_PeriodicTickSec > 0)
+			conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, _GC_PeriodicTickSec);
+		_tumblingWindowSize = MyUtilities.getWindowTumblingSize(conf);
+	}
+
 	@Override
-	public void tupleSend(List<String> tuple, Tuple stormTupleRcv, long timestamp) {
+	public void tupleSend(List<String> tuple, Tuple stormTupleRcv,
+			long timestamp) {
 		if (!MyUtilities.isManualBatchingMode(_conf))
 			regularTupleSend(tuple, stormTupleRcv, timestamp);
 		else {

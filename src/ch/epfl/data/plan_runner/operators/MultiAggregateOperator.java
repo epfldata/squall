@@ -36,7 +36,8 @@ public class MultiAggregateOperator implements AggregateOperator {
 
 	@Override
 	public List<String> getContent() {
-		throw new RuntimeException("Preaggregation with MultiAggregateOperator does not work yet.");
+		throw new RuntimeException(
+				"Preaggregation with MultiAggregateOperator does not work yet.");
 	}
 
 	@Override
@@ -111,7 +112,8 @@ public class MultiAggregateOperator implements AggregateOperator {
 		final StringBuilder sb = new StringBuilder();
 		int i = 0;
 		for (final AggregateOperator agg : _opList) {
-			sb.append("\nAggregation ").append(i).append("\n").append(agg.printContent());
+			sb.append("\nAggregation ").append(i).append("\n")
+					.append(agg.printContent());
 			i++;
 		}
 		return sb.toString();
@@ -160,14 +162,15 @@ public class MultiAggregateOperator implements AggregateOperator {
 	}
 
 	@Override
+	public AggregateOperator setGroupByColumns(int... hashIndexes) {
+		return setGroupByColumns(Arrays
+				.asList(ArrayUtils.toObject(hashIndexes)));
+	}
+
+	@Override
 	public AggregateOperator setGroupByColumns(List groupByColumns) {
 		throw new UnsupportedOperationException(
 				"You are not supposed to call this method from MultiAggregateOperator.");
-	}
-	
-	@Override
-	public AggregateOperator setGroupByColumns(int... hashIndexes) {
-		return setGroupByColumns(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
 	}
 
 	@Override

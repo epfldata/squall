@@ -31,11 +31,13 @@ public class TheoreticalAdvisorNew extends Advisor {
 	 * @param initialColumns
 	 *            Number of column splits.
 	 */
-	public TheoreticalAdvisorNew(int reducerCount, int initialRows, int initialColumns, Map conf) {
+	public TheoreticalAdvisorNew(int reducerCount, int initialRows,
+			int initialColumns, Map conf) {
 		super(reducerCount, initialRows, initialColumns);
 
 		if (SystemParameters.isExisting(conf, "DIP_FIRST_MIGRATION"))
-			firstMigration = SystemParameters.getInt(conf, "DIP_FIRST_MIGRATION");
+			firstMigration = SystemParameters.getInt(conf,
+					"DIP_FIRST_MIGRATION");
 	}
 
 	@Override
@@ -55,14 +57,14 @@ public class TheoreticalAdvisorNew extends Advisor {
 
 		int nextRows = currentRows, nextColumns = currentColumns;
 
-		double minValue = 1.0 * totalRowTuples / currentRows + 1.0 * totalColumnTuples
-				/ currentColumns;
+		double minValue = 1.0 * totalRowTuples / currentRows + 1.0
+				* totalColumnTuples / currentColumns;
 
 		// System.err.println("Future window: " + futureWindow);
 
 		for (int n = 1; n <= reducerCount; n *= 2) {
-			final double cost = 1.0 * totalRowTuples / n + 1.0 * totalColumnTuples
-					/ (reducerCount / n);
+			final double cost = 1.0 * totalRowTuples / n + 1.0
+					* totalColumnTuples / (reducerCount / n);
 
 			// System.err.println("Cost of " + n + ": " + cost
 			// + " and migration costs: " + migrationCost);
@@ -74,8 +76,8 @@ public class TheoreticalAdvisorNew extends Advisor {
 			}
 		}
 		if (nextRows != currentRows)
-			return new Maybe<Action>(new Migration(reducerCount, currentRows, currentColumns,
-					nextRows, nextColumns));
+			return new Maybe<Action>(new Migration(reducerCount, currentRows,
+					currentColumns, nextRows, nextColumns));
 		return new Maybe<Action>();
 	}
 

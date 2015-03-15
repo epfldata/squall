@@ -3,13 +3,13 @@ package ch.epfl.data.sql.optimizers.index;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.sf.jsqlparser.schema.Column;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
 import ch.epfl.data.sql.schema.ColumnNameType;
 import ch.epfl.data.sql.schema.Schema;
 import ch.epfl.data.sql.util.ParserUtil;
 import ch.epfl.data.sql.util.TableAliasName;
-import net.sf.jsqlparser.schema.Column;
 
 public class IndexTranslator {
 	private final Schema _schema;
@@ -25,7 +25,8 @@ public class IndexTranslator {
 		return index != ParserUtil.NOT_FOUND;
 	}
 
-	public int getChildIndex(int originalIndex, Component originator, Component requestor) {
+	public int getChildIndex(int originalIndex, Component originator,
+			Component requestor) {
 		final Component child = originator.getChild();
 		final Component[] parents = child.getParents();
 
@@ -46,14 +47,15 @@ public class IndexTranslator {
 		if (rightParent.equals(originator))
 			if (!rightParent.getHashIndexes().contains(originalIndex)) {
 				// requested column is *not* in joinColumns
-				final int indexesBefore = ParserUtil.getNumElementsBefore(originalIndex,
-						rightParent.getHashIndexes());
-				index = ParserUtil.getPreOpsOutputSize(leftParent, _schema, _tan) - indexesBefore
-						+ originalIndex;
+				final int indexesBefore = ParserUtil.getNumElementsBefore(
+						originalIndex, rightParent.getHashIndexes());
+				index = ParserUtil.getPreOpsOutputSize(leftParent, _schema,
+						_tan) - indexesBefore + originalIndex;
 			} else {
 				// requested column is in joinColumns
 				// if in the keys have to find lhs index
-				final int joinIndex = rightParent.getHashIndexes().indexOf(originalIndex);
+				final int joinIndex = rightParent.getHashIndexes().indexOf(
+						originalIndex);
 				index = leftParent.getHashIndexes().get(joinIndex);
 			}
 
@@ -66,20 +68,22 @@ public class IndexTranslator {
 	/*
 	 * For a given component and column, find out the index of that column in a
 	 * given component. not meant to be used with projections - EarlyProjection
-	 * is the very last thing done on the plan
-	 * tupleSchema is not used here (it's used for Cost-based optimizer, where
-	 * each component updates the schema after each operator)
+	 * is the very last thing done on the plan tupleSchema is not used here
+	 * (it's used for Cost-based optimizer, where each component updates the
+	 * schema after each operator)
 	 */
 	public int getColumnIndex(Column column, Component requestor) {
 		final String columnName = column.getColumnName();
 		final String tblCompName = ParserUtil.getComponentName(column);
 		final String tableSchemaName = _tan.getSchemaName(tblCompName);
-		final List<ColumnNameType> columns = _schema.getTableSchema(tableSchemaName);
+		final List<ColumnNameType> columns = _schema
+				.getTableSchema(tableSchemaName);
 
 		final int originalIndex = indexOf(columns, columnName);
 
 		// finding originator by name in the list of ancestors
-		final List<DataSourceComponent> sources = requestor.getAncestorDataSources();
+		final List<DataSourceComponent> sources = requestor
+				.getAncestorDataSources();
 		Component originator = null;
 		for (final DataSourceComponent source : sources)
 			if (source.getName().equals(tblCompName)) {
@@ -106,11 +110,11 @@ public class IndexTranslator {
 
 	/*
 	 * Is component already hashed by hashIndexes (does its parent sends tuples
-	 * hashed by hashIndexes). hashIndexes are indexes wrt component.
-	 * If returns true not only if hashes are equivalent, but also if the parent
-	 * groups tuples exactly the same as the affected component, with addition
-	 * of some more columns. This means that Join and Aggregation can be
-	 * performed on the same node. Inspiration taken from the Nephele paper.
+	 * hashed by hashIndexes). hashIndexes are indexes wrt component. If returns
+	 * true not only if hashes are equivalent, but also if the parent groups
+	 * tuples exactly the same as the affected component, with addition of some
+	 * more columns. This means that Join and Aggregation can be performed on
+	 * the same node. Inspiration taken from the Nephele paper.
 	 */
 	public boolean isHashedBy(Component component, List<Integer> hashIndexes) {
 		final Component[] parents = component.getParents();
@@ -123,7 +127,8 @@ public class IndexTranslator {
 			if (parent.getHashExpressions() == null) {
 				final List<Integer> parentHashIndexes = new ArrayList<Integer>();
 				for (final int parentHash : parentHashes)
-					parentHashIndexes.add(getChildIndex(parentHash, parent, component));
+					parentHashIndexes.add(getChildIndex(parentHash, parent,
+							component));
 				return isSuperset(parentHashIndexes, hashIndexes);
 			}
 		}
@@ -132,7 +137,8 @@ public class IndexTranslator {
 		return false;
 	}
 
-	private boolean isSuperset(List<Integer> parentHashIndexes, List<Integer> affectedHashIndexes) {
+	private boolean isSuperset(List<Integer> parentHashIndexes,
+			List<Integer> affectedHashIndexes) {
 		final int parentSize = parentHashIndexes.size();
 		final int affectedSize = affectedHashIndexes.size();
 
@@ -143,7 +149,8 @@ public class IndexTranslator {
 		else {
 			// parent partitions more than necessary for a child
 			for (int i = 0; i < affectedSize; i++)
-				if (!(affectedHashIndexes.get(i).equals(parentHashIndexes.get(i))))
+				if (!(affectedHashIndexes.get(i).equals(parentHashIndexes
+						.get(i))))
 					return false;
 			return true;
 		}

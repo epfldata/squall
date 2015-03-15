@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.Function;
+import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
+import net.sf.jsqlparser.schema.Column;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.conversion.IntegerConversion;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
@@ -18,10 +22,6 @@ import ch.epfl.data.sql.util.TupleSchema;
 import ch.epfl.data.sql.visitors.jsql.MaxSubExpressionsVisitor;
 import ch.epfl.data.sql.visitors.jsql.SQLVisitor;
 import ch.epfl.data.sql.visitors.squall.NameProjectVisitor;
-import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.Function;
-import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
-import net.sf.jsqlparser.schema.Column;
 
 /*
  * This class takes expressions from GlobalProjExpr,
@@ -49,8 +49,9 @@ public class ProjSchemaCreator {
 
 	private static final IntegerConversion _ic = new IntegerConversion();
 
-	public ProjSchemaCreator(ProjGlobalCollect globalProject, TupleSchema inputTupleSchema,
-			Component component, SQLVisitor pq, Schema schema) {
+	public ProjSchemaCreator(ProjGlobalCollect globalProject,
+			TupleSchema inputTupleSchema, Component component, SQLVisitor pq,
+			Schema schema) {
 
 		_globalProject = globalProject;
 		_inputTupleSchema = inputTupleSchema;
@@ -86,13 +87,15 @@ public class ProjSchemaCreator {
 			// added
 			else {
 				// all the columns used in expression expr
-				final List<Column> exprColumns = ParserUtil.getJSQLColumns(expr);
+				final List<Column> exprColumns = ParserUtil
+						.getJSQLColumns(expr);
 				boolean existsAlone = false; // does at least one column from
 				// expr already appears in
 				// aloneColumnNames?
 				for (final Column column : exprColumns) {
 					final String columnStr = ParserUtil.getStringExpr(column);
-					if (aloneColumnNames != null && aloneColumnNames.contains(columnStr)) {
+					if (aloneColumnNames != null
+							&& aloneColumnNames.contains(columnStr)) {
 						existsAlone = true;
 						break;
 					}
@@ -157,7 +160,8 @@ public class ProjSchemaCreator {
 
 		// copying all the synonims from inputTupleSchema
 		final TupleSchema result = new TupleSchema(cnts);
-		final Map<String, String> inputSynonims = _inputTupleSchema.getSynonims();
+		final Map<String, String> inputSynonims = _inputTupleSchema
+				.getSynonims();
 		if (inputSynonims != null)
 			result.setSynonims(inputSynonims);
 
@@ -221,7 +225,8 @@ public class ProjSchemaCreator {
 		// non special cases
 		final List<Column> columns = ParserUtil.getJSQLColumns(expr);
 		final Column column = columns.get(0);
-		return _schema.getType(ParserUtil.getFullSchemaColumnName(column, _tan));
+		return _schema
+				.getType(ParserUtil.getFullSchemaColumnName(column, _tan));
 	}
 
 	/*
@@ -229,7 +234,8 @@ public class ProjSchemaCreator {
 	 * SELECT clause), add the appropriate subexpressions to _exprList
 	 */
 	private void processGlobalExprs(List<Expression> exprList) {
-		final MaxSubExpressionsVisitor sev = new MaxSubExpressionsVisitor(_nt, _inputTupleSchema);
+		final MaxSubExpressionsVisitor sev = new MaxSubExpressionsVisitor(_nt,
+				_inputTupleSchema);
 		sev.visit(_globalProject.getExprList());
 		exprList.addAll(sev.getExprs());
 	}
@@ -244,8 +250,8 @@ public class ProjSchemaCreator {
 		final List<OrExpression> orList = _globalProject.getOrExprs();
 		if (orList != null)
 			for (final OrExpression orExpr : _globalProject.getOrExprs()) {
-				final MaxSubExpressionsVisitor sev = new MaxSubExpressionsVisitor(_nt,
-						_inputTupleSchema);
+				final MaxSubExpressionsVisitor sev = new MaxSubExpressionsVisitor(
+						_nt, _inputTupleSchema);
 				sev.visit(orExpr);
 				if (!sev.isAllSubsMine(orExpr)) {
 					// if all of them are available, SELECT operator is already
@@ -266,18 +272,22 @@ public class ProjSchemaCreator {
 	 * all other tables are collected
 	 */
 	private void processHashes(List<Expression> exprList) {
-		final List<String> ancestorNames = ParserUtil.getSourceNameList(_component);
+		final List<String> ancestorNames = ParserUtil
+				.getSourceNameList(_component);
 
 		// it has to be done like this, because queryPlan is not finished
 		// and does not contain all the tables yet
 		final List<String> allCompNames = _tan.getComponentNames();
-		final List<String> otherCompNames = ParserUtil.getDifference(allCompNames, ancestorNames);
+		final List<String> otherCompNames = ParserUtil.getDifference(
+				allCompNames, ancestorNames);
 
 		// now we find joinCondition between ancestorNames and otherCompNames
 		// joinExprs is a list of EqualsTo
-		final List<Expression> joinExprs = _jte.getExpressions(ancestorNames, otherCompNames);
+		final List<Expression> joinExprs = _jte.getExpressions(ancestorNames,
+				otherCompNames);
 
-		final MaxSubExpressionsVisitor sev = new MaxSubExpressionsVisitor(_nt, _inputTupleSchema);
+		final MaxSubExpressionsVisitor sev = new MaxSubExpressionsVisitor(_nt,
+				_inputTupleSchema);
 		sev.visit(joinExprs);
 		// we get all the subexpressions correlated to me
 		final List<Expression> mineSubExprs = sev.getExprs();

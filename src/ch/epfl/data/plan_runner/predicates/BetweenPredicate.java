@@ -21,7 +21,8 @@ public class BetweenPredicate<T extends Comparable<T>> implements Predicate {
 	private final Predicate _and;
 
 	public BetweenPredicate(ValueExpression<T> ve, boolean includeLower,
-			ValueExpression<T> veLower, boolean includeUpper, ValueExpression<T> veUpper) {
+			ValueExpression<T> veLower, boolean includeUpper,
+			ValueExpression<T> veUpper) {
 
 		// set up boundaries correctly
 		int opLower = ComparisonPredicate.GREATER_OP;
@@ -55,7 +56,8 @@ public class BetweenPredicate<T extends Comparable<T>> implements Predicate {
 	}
 
 	@Override
-	public boolean test(List<String> firstTupleValues, List<String> secondTupleValues) {
+	public boolean test(List<String> firstTupleValues,
+			List<String> secondTupleValues) {
 		return _and.test(firstTupleValues, secondTupleValues);
 	}
 

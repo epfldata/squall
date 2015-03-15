@@ -6,6 +6,13 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import backtype.storm.spout.SpoutOutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.base.BaseRichSpout;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
 import ch.epfl.data.plan_runner.ewh.operators.SampleAsideAndForwardOperator;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
@@ -14,16 +21,9 @@ import ch.epfl.data.plan_runner.operators.ChainOperator;
 import ch.epfl.data.plan_runner.operators.Operator;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
-import backtype.storm.spout.SpoutOutputCollector;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.topology.base.BaseRichSpout;
-import backtype.storm.tuple.Fields;
-import backtype.storm.tuple.Tuple;
-import backtype.storm.tuple.Values;
 
-public abstract class StormSpoutComponent extends BaseRichSpout implements StormComponent,
-		StormEmitter {
+public abstract class StormSpoutComponent extends BaseRichSpout implements
+		StormComponent, StormEmitter {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormSpoutComponent.class);
 
@@ -53,11 +53,13 @@ public abstract class StormSpoutComponent extends BaseRichSpout implements Storm
 	// counting negative values
 	protected long numNegatives = 0;
 	protected double maxNegative = 0;
-	
-	//EWH histogram
+
+	// EWH histogram
 	private boolean _isPartitioner;
 
-	public StormSpoutComponent(ComponentProperties cp, List<String> allCompNames, int hierarchyPosition, boolean isPartitioner, Map conf) {
+	public StormSpoutComponent(ComponentProperties cp,
+			List<String> allCompNames, int hierarchyPosition,
+			boolean isPartitioner, Map conf) {
 		_conf = conf;
 		_ID = cp.getName();
 		_componentIndex = String.valueOf(allCompNames.indexOf(_ID));
@@ -72,9 +74,10 @@ public abstract class StormSpoutComponent extends BaseRichSpout implements Storm
 
 	// ManualBatchMode
 	private void addToManualBatch(List<String> tuple, long timestamp) {
-		final String tupleHash = MyUtilities.createHashString(tuple, _hashIndexes,
-				_hashExpressions, _conf);
-		final int dstIndex = MyUtilities.chooseHashTargetIndex(tupleHash, _targetParallelism);
+		final String tupleHash = MyUtilities.createHashString(tuple,
+				_hashIndexes, _hashExpressions, _conf);
+		final int dstIndex = MyUtilities.chooseHashTargetIndex(tupleHash,
+				_targetParallelism);
 
 		// we put in queueTuple based on tupleHash
 		// the same hash is used in BatchStreamGrouping for deciding where a
@@ -87,14 +90,17 @@ public abstract class StormSpoutComponent extends BaseRichSpout implements Storm
 				// timestamp of the buffer
 				_targetTimestamps[dstIndex] = timestamp;
 		_targetBuffers[dstIndex].append(tupleHash)
-				.append(SystemParameters.MANUAL_BATCH_HASH_DELIMITER).append(tupleString)
+				.append(SystemParameters.MANUAL_BATCH_HASH_DELIMITER)
+				.append(tupleString)
 				.append(SystemParameters.MANUAL_BATCH_TUPLE_DELIMITER);
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		if (MyUtilities.isAckEveryTuple(_conf) || _hierarchyPosition == FINAL_COMPONENT)
-			declarer.declareStream(SystemParameters.EOF_STREAM, new Fields(SystemParameters.EOF));
+		if (MyUtilities.isAckEveryTuple(_conf)
+				|| _hierarchyPosition == FINAL_COMPONENT)
+			declarer.declareStream(SystemParameters.EOF_STREAM, new Fields(
+					SystemParameters.EOF));
 
 		final List<String> outputFields = new ArrayList<String>();
 		if (MyUtilities.isManualBatchingMode(_conf)) {
@@ -107,24 +113,27 @@ public abstract class StormSpoutComponent extends BaseRichSpout implements Storm
 		}
 		if (MyUtilities.isCustomTimestampMode(getConf()))
 			outputFields.add(StormComponent.TIMESTAMP);
-		declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(outputFields));
-		
-		if(_isPartitioner){
-			//	EQUI-WEIGHT HISTOGRAM
+		declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(
+				outputFields));
+
+		if (_isPartitioner) {
+			// EQUI-WEIGHT HISTOGRAM
 			final List<String> outputFieldsPart = new ArrayList<String>();
 			outputFieldsPart.add(StormComponent.COMP_INDEX);
 			outputFieldsPart.add(StormComponent.TUPLE); // list of string
 			outputFieldsPart.add(StormComponent.HASH);
-			declarer.declareStream(SystemParameters.PARTITIONER, new Fields(outputFieldsPart));
+			declarer.declareStream(SystemParameters.PARTITIONER, new Fields(
+					outputFieldsPart));
 		}
 	}
 
 	private void finalAckSend() {
 		final Values finalAck = MyUtilities.createUniversalFinalAckTuple(_conf);
 		_collector.emit(finalAck);
-		if(_isPartitioner){
+		if (_isPartitioner) {
 			// rel size
-			Values relSize = MyUtilities.createRelSizeTuple(_componentIndex, (int) getNumSentTuples());
+			Values relSize = MyUtilities.createRelSizeTuple(_componentIndex,
+					(int) getNumSentTuples());
 			_collector.emit(SystemParameters.PARTITIONER, relSize);
 
 			// final ack
@@ -173,7 +182,8 @@ public abstract class StormSpoutComponent extends BaseRichSpout implements Storm
 			if (!tupleString.isEmpty())
 				// some buffers might be empty
 				if (MyUtilities.isCustomTimestampMode(_conf))
-					_collector.emit(new Values(_componentIndex, tupleString, _targetTimestamps[i]));
+					_collector.emit(new Values(_componentIndex, tupleString,
+							_targetTimestamps[i]));
 				else
 					_collector.emit(new Values(_componentIndex, tupleString));
 		}
@@ -190,11 +200,12 @@ public abstract class StormSpoutComponent extends BaseRichSpout implements Storm
 		_targetTimestamps = new long[_targetParallelism];
 		for (int i = 0; i < _targetParallelism; i++)
 			_targetBuffers[i] = new StringBuilder("");
-		
-		//equi-weight histogram
-		if(_isPartitioner){
-			//extract sampleAside operator
-			SampleAsideAndForwardOperator saf = getChainOperator().getSampleAside();
+
+		// equi-weight histogram
+		if (_isPartitioner) {
+			// extract sampleAside operator
+			SampleAsideAndForwardOperator saf = getChainOperator()
+					.getSampleAside();
 			saf.setCollector(_collector);
 			saf.setComponentIndex(_componentIndex);
 		}
@@ -204,24 +215,30 @@ public abstract class StormSpoutComponent extends BaseRichSpout implements Storm
 	public void printContent() {
 		if (_printOut)
 			if ((getChainOperator() != null) && getChainOperator().isBlocking()) {
-				final Operator lastOperator = getChainOperator().getLastOperator();
+				final Operator lastOperator = getChainOperator()
+						.getLastOperator();
 				if (lastOperator instanceof AggregateOperator)
-					MyUtilities.printBlockingResult(_ID, (AggregateOperator) lastOperator,
+					MyUtilities.printBlockingResult(_ID,
+							(AggregateOperator) lastOperator,
 							_hierarchyPosition, _conf, LOG);
 				else
-					MyUtilities.printBlockingResult(_ID, lastOperator.getNumTuplesProcessed(),
-							lastOperator.printContent(), _hierarchyPosition, _conf, LOG);
+					MyUtilities.printBlockingResult(_ID,
+							lastOperator.getNumTuplesProcessed(),
+							lastOperator.printContent(), _hierarchyPosition,
+							_conf, LOG);
 			}
 	}
 
 	@Override
 	public void printTuple(List<String> tuple) {
 		if (_printOut)
-			if ((getChainOperator() == null) || !getChainOperator().isBlocking()) {
+			if ((getChainOperator() == null)
+					|| !getChainOperator().isBlocking()) {
 				final StringBuilder sb = new StringBuilder();
 				sb.append("\nComponent ").append(_ID);
 				sb.append("\nReceived tuples: ").append(getNumSentTuples());
-				sb.append(" Tuple: ").append(MyUtilities.tupleToString(tuple, _conf));
+				sb.append(" Tuple: ").append(
+						MyUtilities.tupleToString(tuple, _conf));
 				LOG.info(sb.toString());
 			}
 	}
@@ -230,9 +247,12 @@ public abstract class StormSpoutComponent extends BaseRichSpout implements Storm
 	// tupleSerialNum starts from 0
 	@Override
 	public void printTupleLatency(long tupleSerialNum, long timestamp) {
-		final int freqCompute = SystemParameters.getInt(_conf, "FREQ_TUPLE_LOG_COMPUTE");
-		final int freqWrite = SystemParameters.getInt(_conf, "FREQ_TUPLE_LOG_WRITE");
-		final int startupIgnoredTuples = SystemParameters.getInt(_conf, "INIT_IGNORED_TUPLES");
+		final int freqCompute = SystemParameters.getInt(_conf,
+				"FREQ_TUPLE_LOG_COMPUTE");
+		final int freqWrite = SystemParameters.getInt(_conf,
+				"FREQ_TUPLE_LOG_WRITE");
+		final int startupIgnoredTuples = SystemParameters.getInt(_conf,
+				"INIT_IGNORED_TUPLES");
 
 		if (tupleSerialNum >= startupIgnoredTuples) {
 			tupleSerialNum = tupleSerialNum - startupIgnoredTuples; // start
@@ -257,8 +277,8 @@ public abstract class StormSpoutComponent extends BaseRichSpout implements Storm
 					 */
 				}
 				if (_numberOfSamples < 0) {
-					LOG.info("Exception! Number of samples is " + _numberOfSamples
-							+ "! Ignoring a tuple!");
+					LOG.info("Exception! Number of samples is "
+							+ _numberOfSamples + "! Ignoring a tuple!");
 					return;
 				}
 				_totalLatencyMillis += latencyMillis;
@@ -266,10 +286,11 @@ public abstract class StormSpoutComponent extends BaseRichSpout implements Storm
 			}
 			if (tupleSerialNum % freqWrite == 0) {
 				LOG.info("Taking into account every " + freqCompute
-						+ "th tuple, and printing every " + freqWrite + "th one.");
+						+ "th tuple, and printing every " + freqWrite
+						+ "th one.");
 				LOG.info("LAST tuple latency is " + latencyMillis + "ms.");
-				LOG.info("AVERAGE tuple latency so far is " + _totalLatencyMillis
-						/ _numberOfSamples + "ms.");
+				LOG.info("AVERAGE tuple latency so far is "
+						+ _totalLatencyMillis / _numberOfSamples + "ms.");
 			}
 		}
 	}
@@ -277,13 +298,15 @@ public abstract class StormSpoutComponent extends BaseRichSpout implements Storm
 	// HELPER METHODS
 	// non-ManualBatchMode
 	private void regularTupleSend(List<String> tuple, long timestamp) {
-		final Values stormTupleSnd = MyUtilities.createTupleValues(tuple, timestamp,
-				_componentIndex, _hashIndexes, _hashExpressions, _conf);
+		final Values stormTupleSnd = MyUtilities.createTupleValues(tuple,
+				timestamp, _componentIndex, _hashIndexes, _hashExpressions,
+				_conf);
 		MyUtilities.sendTuple(stormTupleSnd, _collector, _conf);
 	}
 
 	@Override
-	public void tupleSend(List<String> tuple, Tuple stormTupleRcv, long timestamp) {
+	public void tupleSend(List<String> tuple, Tuple stormTupleRcv,
+			long timestamp) {
 		final boolean isLastAck = MyUtilities.isFinalAck(tuple, _conf);
 
 		if (!MyUtilities.isManualBatchingMode(_conf)) {

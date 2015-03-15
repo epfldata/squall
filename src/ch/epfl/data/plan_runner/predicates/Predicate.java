@@ -12,7 +12,8 @@ public interface Predicate extends Serializable {
 
 	public boolean test(List<String> tupleValues);
 
-	public boolean test(List<String> firstTupleValues, List<String> secondTupleValues);
+	public boolean test(List<String> firstTupleValues,
+			List<String> secondTupleValues);
 
 	@Override
 	public String toString();

@@ -44,11 +44,12 @@ public class HashStreamGrouping implements CustomStreamGrouping {
 			// send to everyone
 			return _targetTasks;
 		if (!isBalanced())
-			return Arrays.asList(_targetTasks.get(MyUtilities.chooseHashTargetIndex(tupleHash,
-					_numTargetTasks)));
+			return Arrays.asList(_targetTasks.get(MyUtilities
+					.chooseHashTargetIndex(tupleHash, _numTargetTasks)));
 		else
-			return Arrays.asList(_targetTasks.get(MyUtilities.chooseBalancedTargetIndex(tupleHash,
-					_fullHashList, _numTargetTasks)));
+			return Arrays.asList(_targetTasks.get(MyUtilities
+					.chooseBalancedTargetIndex(tupleHash, _fullHashList,
+							_numTargetTasks)));
 	}
 
 	private boolean isBalanced() {
@@ -56,7 +57,8 @@ public class HashStreamGrouping implements CustomStreamGrouping {
 	}
 
 	@Override
-	public void prepare(WorkerTopologyContext wtc, GlobalStreamId gsi, List<Integer> targetTasks) {
+	public void prepare(WorkerTopologyContext wtc, GlobalStreamId gsi,
+			List<Integer> targetTasks) {
 		_targetTasks = targetTasks;
 		_numTargetTasks = targetTasks.size();
 	}

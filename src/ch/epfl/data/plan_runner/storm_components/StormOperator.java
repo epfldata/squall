@@ -5,6 +5,10 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 
+import backtype.storm.Config;
+import backtype.storm.topology.InputDeclarer;
+import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.tuple.Tuple;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
 import ch.epfl.data.plan_runner.operators.AggregateOperator;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
@@ -13,10 +17,6 @@ import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
-import backtype.storm.Config;
-import backtype.storm.topology.InputDeclarer;
-import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.tuple.Tuple;
 
 public class StormOperator extends StormBoltComponent {
 	private static final long serialVersionUID = 1L;
@@ -36,8 +36,8 @@ public class StormOperator extends StormBoltComponent {
 	private final long _aggBatchOutputMillis;
 
 	public StormOperator(StormEmitter parentEmitter, ComponentProperties cp,
-			List<String> allCompNames, int hierarchyPosition, TopologyBuilder builder,
-			TopologyKiller killer, Config conf) {
+			List<String> allCompNames, int hierarchyPosition,
+			TopologyBuilder builder, TopologyKiller killer, Config conf) {
 		super(cp, allCompNames, hierarchyPosition, conf);
 
 		_aggBatchOutputMillis = cp.getBatchOutputMillis();
@@ -55,17 +55,19 @@ public class StormOperator extends StormBoltComponent {
 		_fullHashList = cp.getFullHashList();
 
 		if (MyUtilities.isManualBatchingMode(getConf()))
-			currentBolt = MyUtilities.attachEmitterBatch(conf, _fullHashList, currentBolt,
-					parentEmitter);
+			currentBolt = MyUtilities.attachEmitterBatch(conf, _fullHashList,
+					currentBolt, parentEmitter);
 		else
-			currentBolt = MyUtilities.attachEmitterHash(conf, _fullHashList, currentBolt,
-					parentEmitter);
+			currentBolt = MyUtilities.attachEmitterHash(conf, _fullHashList,
+					currentBolt, parentEmitter);
 
-		if (getHierarchyPosition() == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf)))
+		if (getHierarchyPosition() == FINAL_COMPONENT
+				&& (!MyUtilities.isAckEveryTuple(conf)))
 			killer.registerComponent(this, parallelism);
 
 		if (cp.getPrintOut() && _operatorChain.isBlocking())
-			currentBolt.allGrouping(killer.getID(), SystemParameters.DUMP_RESULTS_STREAM);
+			currentBolt.allGrouping(killer.getID(),
+					SystemParameters.DUMP_RESULTS_STREAM);
 	}
 
 	@Override
@@ -83,7 +85,8 @@ public class StormOperator extends StormBoltComponent {
 					final AggregateOperator agg = (AggregateOperator) lastOperator;
 					final List<String> tuples = agg.getContent();
 					for (final String tuple : tuples)
-						tupleSend(MyUtilities.stringToTuple(tuple, getConf()), null, 0);
+						tupleSend(MyUtilities.stringToTuple(tuple, getConf()),
+								null, 0);
 
 					// clearing
 					agg.clearStorage();
@@ -93,8 +96,8 @@ public class StormOperator extends StormBoltComponent {
 			}
 	}
 
-	protected void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> tuple,
-			boolean isLastInBatch) {
+	protected void applyOperatorsAndSend(Tuple stormTupleRcv,
+			List<String> tuple, boolean isLastInBatch) {
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			try {
 				_semAgg.acquire();
@@ -111,21 +114,26 @@ public class StormOperator extends StormBoltComponent {
 		_numSentTuples++;
 		printTuple(tuple);
 
-		if (MyUtilities.isSending(getHierarchyPosition(), _aggBatchOutputMillis) || MyUtilities.isWindowTimestampMode(getConf())) {
+		if (MyUtilities
+				.isSending(getHierarchyPosition(), _aggBatchOutputMillis)
+				|| MyUtilities.isWindowTimestampMode(getConf())) {
 			long timestamp = 0;
 			if (MyUtilities.isCustomTimestampMode(getConf()))
-				timestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
+				timestamp = stormTupleRcv
+						.getLongByField(StormComponent.TIMESTAMP);
 			tupleSend(tuple, stormTupleRcv, timestamp);
 		}
 		if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
 			long timestamp;
 			if (MyUtilities.isManualBatchingMode(getConf())) {
 				if (isLastInBatch) {
-					timestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP); // getLong(2);
+					timestamp = stormTupleRcv
+							.getLongByField(StormComponent.TIMESTAMP); // getLong(2);
 					printTupleLatency(_numSentTuples - 1, timestamp);
 				}
 			} else {
-				timestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP); // getLong(3);
+				timestamp = stormTupleRcv
+						.getLongByField(StormComponent.TIMESTAMP); // getLong(3);
 				printTupleLatency(_numSentTuples - 1, timestamp);
 			}
 		}
@@ -134,8 +142,10 @@ public class StormOperator extends StormBoltComponent {
 	// from IRichBolt
 	@Override
 	public void execute(Tuple stormTupleRcv) {
-		if (_firstTime && MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis)) {
-			_periodicAggBatch = new PeriodicAggBatchSend(_aggBatchOutputMillis, this);
+		if (_firstTime
+				&& MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis)) {
+			_periodicAggBatch = new PeriodicAggBatchSend(_aggBatchOutputMillis,
+					this);
 			_firstTime = false;
 		}
 
@@ -154,7 +164,8 @@ public class StormOperator extends StormBoltComponent {
 			applyOperatorsAndSend(stormTupleRcv, tuple, true);
 
 		} else {
-			final String inputBatch = stormTupleRcv.getStringByField(StormComponent.TUPLE); // getString(1);
+			final String inputBatch = stormTupleRcv
+					.getStringByField(StormComponent.TUPLE); // getString(1);
 
 			final String[] wholeTuples = inputBatch
 					.split(SystemParameters.MANUAL_BATCH_TUPLE_DELIMITER);
@@ -171,7 +182,8 @@ public class StormOperator extends StormBoltComponent {
 					inputTupleString = new String(parts[0]);
 				else
 					inputTupleString = new String(parts[1]);
-				final List<String> tuple = MyUtilities.stringToTuple(inputTupleString, getConf());
+				final List<String> tuple = MyUtilities.stringToTuple(
+						inputTupleString, getConf());
 
 				// final Ack check
 				if (processFinalAck(tuple, stormTupleRcv)) {
@@ -199,7 +211,8 @@ public class StormOperator extends StormBoltComponent {
 	// from StormComponent
 	@Override
 	public String getInfoID() {
-		final String str = "OperatorComponent " + getID() + " has ID: " + getID();
+		final String str = "OperatorComponent " + getID() + " has ID: "
+				+ getID();
 		return str;
 	}
 

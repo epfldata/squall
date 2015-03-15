@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import net.sf.jsqlparser.schema.Table;
 import ch.epfl.data.sql.schema.Schema;
 import ch.epfl.data.sql.util.ParserUtil;
 import ch.epfl.data.sql.util.TableAliasName;
-import net.sf.jsqlparser.schema.Table;
 
 public class TableSelector {
 	public class PairTableNameSize implements Comparable<PairTableNameSize> {
@@ -38,7 +38,8 @@ public class TableSelector {
 
 	private final TableAliasName _tan;
 
-	public TableSelector(List<Table> listTables, Schema schema, TableAliasName tan) {
+	public TableSelector(List<Table> listTables, Schema schema,
+			TableAliasName tan) {
 		_tan = tan;
 
 		// generateSubplan (table, size) list from tables from the query
@@ -47,13 +48,16 @@ public class TableSelector {
 		Collections.sort(_pairsTableNameSize);
 	}
 
-	private List<PairTableNameSize> createSizePairs(List<Table> listTables, Schema schema) {
+	private List<PairTableNameSize> createSizePairs(List<Table> listTables,
+			Schema schema) {
 		final List<PairTableNameSize> pairsTableSize = new ArrayList<PairTableNameSize>();
 		for (final Table table : listTables) {
-			final String schemaName = _tan.getSchemaName(ParserUtil.getComponentName(table));
+			final String schemaName = _tan.getSchemaName(ParserUtil
+					.getComponentName(table));
 			final long tableSize = schema.getTableSize(schemaName);
 
-			final PairTableNameSize pts = new PairTableNameSize(table, tableSize);
+			final PairTableNameSize pts = new PairTableNameSize(table,
+					tableSize);
 			pairsTableSize.add(pts);
 		}
 		return pairsTableSize;

@@ -35,15 +35,6 @@ import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
  */
 
 public class TPCH4Plan {
-	private static Logger LOG = Logger.getLogger(TPCH4Plan.class);
-
-	private static final TypeConversion<Date> _dc = new DateConversion();
-	private static final IntegerConversion _ic = new IntegerConversion();
-	private final QueryBuilder _queryBuilder = new QueryBuilder();
-
-	// query variables
-	private static Date _date1, _date2;
-
 	private static void computeDates() {
 		// date2= date1 + 3 months
 		final String date1Str = "1993-07-01";
@@ -61,47 +52,63 @@ public class TPCH4Plan {
 		// tuple is set to null since we are computing based on constants
 	}
 
+	private static Logger LOG = Logger.getLogger(TPCH4Plan.class);
+	private static final TypeConversion<Date> _dc = new DateConversion();
+	private static final IntegerConversion _ic = new IntegerConversion();
+
+	private final QueryBuilder _queryBuilder = new QueryBuilder();
+
+	// query variables
+	private static Date _date1, _date2;
+
 	public TPCH4Plan(String dataPath, String extension, Map conf) {
 		computeDates();
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashLineitem = Arrays.asList(0);
 
-		final SelectOperator selectionLineitem = new SelectOperator(new ComparisonPredicate(
-				ComparisonPredicate.LESS_OP, new ColumnReference(_dc, 11), new ColumnReference(_dc,
-						12)));
+		final SelectOperator selectionLineitem = new SelectOperator(
+				new ComparisonPredicate(ComparisonPredicate.LESS_OP,
+						new ColumnReference(_dc, 11), new ColumnReference(_dc,
+								12)));
 
-		final ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0 });
+		final ProjectOperator projectionLineitem = new ProjectOperator(
+				new int[] { 0 });
 
-		final DataSourceComponent relationLineitem = new DataSourceComponent("LINEITEM", dataPath
-				+ "lineitem" + extension).setOutputPartKey(hashLineitem)
-				.add(selectionLineitem).add(projectionLineitem);
+		final DataSourceComponent relationLineitem = new DataSourceComponent(
+				"LINEITEM", dataPath + "lineitem" + extension)
+				.setOutputPartKey(hashLineitem).add(selectionLineitem)
+				.add(projectionLineitem);
 		_queryBuilder.add(relationLineitem);
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashOrders = Arrays.asList(0);
 
-		final SelectOperator selectionOrders = new SelectOperator(new BetweenPredicate(
-				new ColumnReference(_dc, 4), true, new ValueSpecification(_dc, _date1), false,
-				new ValueSpecification(_dc, _date2)));
+		final SelectOperator selectionOrders = new SelectOperator(
+				new BetweenPredicate(new ColumnReference(_dc, 4), true,
+						new ValueSpecification(_dc, _date1), false,
+						new ValueSpecification(_dc, _date2)));
 
-		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0, 5 });
+		final ProjectOperator projectionOrders = new ProjectOperator(new int[] {
+				0, 5 });
 
-		final DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath
-				+ "orders" + extension).setOutputPartKey(hashOrders)
-				.add(selectionOrders).add(projectionOrders);
+		final DataSourceComponent relationOrders = new DataSourceComponent(
+				"ORDERS", dataPath + "orders" + extension)
+				.setOutputPartKey(hashOrders).add(selectionOrders)
+				.add(projectionOrders);
 		_queryBuilder.add(relationOrders);
 
 		// -------------------------------------------------------------------------------------
-		final EquiJoinComponent O_Ljoin = new EquiJoinComponent(relationOrders, relationLineitem)
-				.setOutputPartKey(Arrays.asList(1));
+		final EquiJoinComponent O_Ljoin = new EquiJoinComponent(relationOrders,
+				relationLineitem).setOutputPartKey(Arrays.asList(1));
 		_queryBuilder.add(O_Ljoin);
 
 		// -------------------------------------------------------------------------------------
 		// set up aggregation function on a separate StormComponent(Bolt)
-		final DistinctOperator distinctOp = new DistinctOperator(conf, new int[] { 0 });
-		final AggregateOperator aggOp = new AggregateCountOperator(conf).setGroupByColumns(
-				Arrays.asList(1)).setDistinct(distinctOp);
+		final DistinctOperator distinctOp = new DistinctOperator(conf,
+				new int[] { 0 });
+		final AggregateOperator aggOp = new AggregateCountOperator(conf)
+				.setGroupByColumns(Arrays.asList(1)).setDistinct(distinctOp);
 		OperatorComponent oc = new OperatorComponent(O_Ljoin, "FINAL_RESULT")
 				.add(aggOp);
 		_queryBuilder.add(oc);

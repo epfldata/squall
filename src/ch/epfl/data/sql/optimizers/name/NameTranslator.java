@@ -19,7 +19,8 @@ import ch.epfl.data.sql.util.TupleSchema;
 public class NameTranslator {
 	private static Logger LOG = Logger.getLogger(NameTranslator.class);
 
-	private final String _compName; // the name of the component which created it,
+	private final String _compName; // the name of the component which created
+									// it,
 
 	// used only for printing error messages
 
@@ -49,7 +50,8 @@ public class NameTranslator {
 		final int index = indexOf(tupleSchema, column);
 		if (index == ParserUtil.NOT_FOUND) {
 			final String colStr = ParserUtil.getStringExpr(column);
-			LOG.error("Column " + colStr + " cannot be found in " + _compName + " !");
+			LOG.error("Column " + colStr + " cannot be found in " + _compName
+					+ " !");
 		}
 		return index;
 	}
@@ -63,15 +65,15 @@ public class NameTranslator {
 		final int index = indexOf(tupleSchema, expr);
 		if (index == ParserUtil.NOT_FOUND) {
 			final String exprStr = ParserUtil.getStringExpr(expr);
-			throw new RuntimeException("No column " + exprStr + " in tupleSchema!");
+			throw new RuntimeException("No column " + exprStr
+					+ " in tupleSchema!");
 		}
 		return tupleSchema.getSchema().get(index).getType();
 	}
 
 	/*
-	 * ORIGINAL private methods
-	 * For a field N1.NATIONNAME, columnName is N1.NATIONNAME
-	 * List<ColumnNameType> is a user schema with full names
+	 * ORIGINAL private methods For a field N1.NATIONNAME, columnName is
+	 * N1.NATIONNAME List<ColumnNameType> is a user schema with full names
 	 * (TableAlias.ColumnName)
 	 */
 	private int indexOf(List<ColumnNameType> tupleSchema, String columnName) {
@@ -85,7 +87,8 @@ public class NameTranslator {
 	 * 
 	 */
 	public int indexOf(TupleSchema tupleSchema, Expression expr) {
-		final int index = indexOf(tupleSchema.getSchema(), ParserUtil.getStringExpr(expr));
+		final int index = indexOf(tupleSchema.getSchema(),
+				ParserUtil.getStringExpr(expr));
 		if (index != ParserUtil.NOT_FOUND)
 			// worked out without using synonims
 			return index;
@@ -97,11 +100,10 @@ public class NameTranslator {
 	}
 
 	/*
-	 * TRANSLATOR methods
-	 * all the synonim columns are exchanged with our columns Done in place, in
-	 * order to 1)ProjSchemaCreator.chooseProjections does not work with
-	 * synonims, which simplifies the function 2)avoid doing it multiple times
-	 * (getType and getStringExpr usually follow indexOf)
+	 * TRANSLATOR methods all the synonim columns are exchanged with our columns
+	 * Done in place, in order to 1)ProjSchemaCreator.chooseProjections does not
+	 * work with synonims, which simplifies the function 2)avoid doing it
+	 * multiple times (getType and getStringExpr usually follow indexOf)
 	 */
 	private void translateExpr(TupleSchema tupleSchema, Expression expr) {
 		final List<Column> columns = ParserUtil.getJSQLColumns(expr);

@@ -2,8 +2,6 @@ package ch.epfl.data.sql.visitors.jsql;
 
 import java.util.Iterator;
 
-import ch.epfl.data.sql.util.JoinTablesExprs;
-import ch.epfl.data.sql.util.ParserUtil;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
 import net.sf.jsqlparser.expression.AnyComparisonExpression;
 import net.sf.jsqlparser.expression.BinaryExpression;
@@ -49,6 +47,8 @@ import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.SubSelect;
+import ch.epfl.data.sql.util.JoinTablesExprs;
+import ch.epfl.data.sql.util.ParserUtil;
 
 /*
  * This class contains information regarding all the possible joins between any two tables.
@@ -72,7 +72,8 @@ import net.sf.jsqlparser.statement.select.SubSelect;
  *
  * TODO ERROR MESSAGE: OR in join condition is not yet supported.
  */
-public class JoinTablesExprsVisitor implements ExpressionVisitor, ItemsListVisitor {
+public class JoinTablesExprsVisitor implements ExpressionVisitor,
+		ItemsListVisitor {
 	private Table _sideTable;
 	private final JoinTablesExprs _joinTablesExp = new JoinTablesExprs();
 
@@ -169,7 +170,8 @@ public class JoinTablesExprsVisitor implements ExpressionVisitor, ItemsListVisit
 
 	@Override
 	public void visit(ExpressionList el) {
-		for (final Iterator iter = el.getExpressions().iterator(); iter.hasNext();) {
+		for (final Iterator iter = el.getExpressions().iterator(); iter
+				.hasNext();) {
 			final Expression expression = (Expression) iter.next();
 			expression.accept(this);
 		}
@@ -305,11 +307,13 @@ public class JoinTablesExprsVisitor implements ExpressionVisitor, ItemsListVisit
 		_sideTable = null;
 		ex.accept(this);
 		if (_sideTable == null)
-			throw new RuntimeException("At least one table must appear in Join condition!");
+			throw new RuntimeException(
+					"At least one table must appear in Join condition!");
 		return _sideTable;
 	}
 
 	private void visitUnsupportedOp() {
-		throw new RuntimeException("Only EQUALS operator can appear in join condition!");
+		throw new RuntimeException(
+				"Only EQUALS operator can appear in join condition!");
 	}
 }

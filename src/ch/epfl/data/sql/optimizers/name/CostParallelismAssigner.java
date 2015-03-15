@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.jsqlparser.schema.Table;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
 import ch.epfl.data.plan_runner.components.EquiJoinComponent;
@@ -16,7 +17,6 @@ import ch.epfl.data.sql.util.ImproperParallelismException;
 import ch.epfl.data.sql.util.ParserUtil;
 import ch.epfl.data.sql.util.TableAliasName;
 import ch.epfl.data.sql.visitors.jsql.SQLVisitor;
-import net.sf.jsqlparser.schema.Table;
 
 public class CostParallelismAssigner {
 	/*
@@ -41,7 +41,8 @@ public class CostParallelismAssigner {
 		public int compareTo(OrderedCostParams t) {
 			final long myCardinality = getCardinality();
 			final long otherCardinality = t.getCardinality();
-			return (new Long(myCardinality)).compareTo(new Long(otherCardinality));
+			return (new Long(myCardinality)).compareTo(new Long(
+					otherCardinality));
 		}
 
 		public String getComponentName() {
@@ -87,10 +88,11 @@ public class CostParallelismAssigner {
 		final List<OrderedCostParams> sourceCostParams = new ArrayList<OrderedCostParams>();
 		long totalCardinality = 0;
 		for (final Table table : tableList) {
-			final DataSourceComponent source = sourceCG.generateDataSource(ParserUtil
-					.getComponentName(table));
+			final DataSourceComponent source = sourceCG
+					.generateDataSource(ParserUtil.getComponentName(table));
 			final String compName = source.getName();
-			final long cardinality = sourceCG.getCostParameters(compName).getCardinality();
+			final long cardinality = sourceCG.getCostParameters(compName)
+					.getCardinality();
 			totalCardinality += cardinality;
 			sourceCostParams.add(new OrderedCostParams(compName, cardinality));
 		}
@@ -123,7 +125,8 @@ public class CostParallelismAssigner {
 				if (nodeParallelism > 1)
 					nodeParallelism--;
 			if (remainingPhysicalNodes == 0 || nodeParallelism == 0)
-				throw new RuntimeException("Not enough nodes, should not be here!");
+				throw new RuntimeException(
+						"Not enough nodes, should not be here!");
 
 			remainingLogicalNodes--;
 			remainingPhysicalNodes -= nodeParallelism;
@@ -153,7 +156,8 @@ public class CostParallelismAssigner {
 	 * occur when the join key is not primary key for one of the joined
 	 * relations, for example when the relationship is n:m and both n,m>0.
 	 */
-	private int estimateDistinctHashes(CostParams leftParentParams, CostParams rightParentParams) {
+	private int estimateDistinctHashes(CostParams leftParentParams,
+			CostParams rightParentParams) {
 		/*
 		 * TODO: to implement this properly, we need to: - find all the parent
 		 * column appearing in joinCondition - column are found by using
@@ -178,12 +182,15 @@ public class CostParallelismAssigner {
 
 	}
 
-	private int estimateMinParallelism(CostParams leftParentParams, CostParams rightParentParams) {
-		final int providedMemory = SystemParameters.getInt(_map, "STORAGE_MEMORY_SIZE_MB");
+	private int estimateMinParallelism(CostParams leftParentParams,
+			CostParams rightParentParams) {
+		final int providedMemory = SystemParameters.getInt(_map,
+				"STORAGE_MEMORY_SIZE_MB");
 		// inputCardinality tuples need to be stored in memory
 		final long inputCardinality = leftParentParams.getCardinality()
 				+ rightParentParams.getCardinality();
-		final long predictedTotalMemory = (inputCardinality * SystemParameters.TUPLE_SIZE_BYTES * SystemParameters.JAVA_OVERHEAD)
+		final long predictedTotalMemory = (inputCardinality
+				* SystemParameters.TUPLE_SIZE_BYTES * SystemParameters.JAVA_OVERHEAD)
 				/ SystemParameters.BYTES_IN_MB;
 		return (int) (predictedTotalMemory / providedMemory);
 	}
@@ -197,7 +204,8 @@ public class CostParallelismAssigner {
 		return sortedCompNames;
 	}
 
-	private Map<String, Integer> extractNamesPar(List<OrderedCostParams> sourceCostParams) {
+	private Map<String, Integer> extractNamesPar(
+			List<OrderedCostParams> sourceCostParams) {
 		final Map<String, Integer> compParallelism = new HashMap<String, Integer>();
 		for (final OrderedCostParams cnc : sourceCostParams) {
 			final String compName = cnc.getComponentName();
@@ -221,9 +229,13 @@ public class CostParallelismAssigner {
 		// TODO: this formula does not take into account when joinComponent
 		// sends tuples further down
 		final double dblParallelism = leftParentParams.getSelectivity()
-				* leftParentParams.getParallelism() + rightParentParams.getSelectivity()
-				* rightParentParams.getParallelism() + 1.0 / 8
-				* (leftParentParams.getParallelism() + rightParentParams.getParallelism());
+				* leftParentParams.getParallelism()
+				+ rightParentParams.getSelectivity()
+				* rightParentParams.getParallelism()
+				+ 1.0
+				/ 8
+				* (leftParentParams.getParallelism() + rightParentParams
+						.getParallelism());
 		int parallelism = (int) dblParallelism;
 		if (parallelism != dblParallelism)
 			// parallelism is ceil of dblParallelism
@@ -231,19 +243,23 @@ public class CostParallelismAssigner {
 		return parallelism;
 	}
 
-	protected void setBatchSize(DataSourceComponent source, Map<String, CostParams> compCost) {
+	protected void setBatchSize(DataSourceComponent source,
+			Map<String, CostParams> compCost) {
 		// nothing to do
 	}
 
-	protected void setBatchSize(EquiJoinComponent joinComponent, Map<String, CostParams> compCost) {
+	protected void setBatchSize(EquiJoinComponent joinComponent,
+			Map<String, CostParams> compCost) {
 		// nothing to do
 	}
 
-	protected void setBatchSize(OperatorComponent operator, Map<String, CostParams> compCost) {
+	protected void setBatchSize(OperatorComponent operator,
+			Map<String, CostParams> compCost) {
 		// nothing to do
 	}
 
-	public void setParallelism(DataSourceComponent source, Map<String, CostParams> compCost) {
+	public void setParallelism(DataSourceComponent source,
+			Map<String, CostParams> compCost) {
 		if (_sourcePars == null)
 			// if we are here, it was invoked from fake sourceCG, so just return
 			return;
@@ -256,7 +272,8 @@ public class CostParallelismAssigner {
 	/*
 	 * cost-function also idempotent, no changes to `this` changes only compCost
 	 */
-	public void setParallelism(EquiJoinComponent joinComponent, Map<String, CostParams> compCost) {
+	public void setParallelism(EquiJoinComponent joinComponent,
+			Map<String, CostParams> compCost) {
 		final String leftParent = joinComponent.getParents()[0].getName();
 		final String rightParent = joinComponent.getParents()[1].getName();
 
@@ -270,17 +287,20 @@ public class CostParallelismAssigner {
 		final int rightParallelism = rightParentParams.getParallelism();
 
 		// compute
-		int parallelism = parallelismFormula(currentCompName, params, leftParentParams,
-				rightParentParams);
+		int parallelism = parallelismFormula(currentCompName, params,
+				leftParentParams, rightParentParams);
 
 		// lower bound
-		final int minParallelism = estimateMinParallelism(leftParentParams, rightParentParams);
+		final int minParallelism = estimateMinParallelism(leftParentParams,
+				rightParentParams);
 		if (minParallelism > parallelism)
-			throw new ImproperParallelismException("Component " + currentCompName
-					+ " cannot have parallelism LESS than " + minParallelism);
+			throw new ImproperParallelismException("Component "
+					+ currentCompName + " cannot have parallelism LESS than "
+					+ minParallelism);
 
 		// upper bound
-		final int maxParallelism = estimateDistinctHashes(leftParentParams, rightParentParams);
+		final int maxParallelism = estimateDistinctHashes(leftParentParams,
+				rightParentParams);
 		if (parallelism > maxParallelism)
 			if (leftParallelism == 1 && rightParallelism == 1)
 				// if parallelism of both parents is 1, then we should not raise
@@ -288,8 +308,10 @@ public class CostParallelismAssigner {
 				// exception serves to force smaller parallelism at sources
 				parallelism = maxParallelism;
 			else
-				throw new ImproperParallelismException("Component " + currentCompName
-						+ " cannot have parallelism MORE than " + maxParallelism);
+				throw new ImproperParallelismException("Component "
+						+ currentCompName
+						+ " cannot have parallelism MORE than "
+						+ maxParallelism);
 
 		// setting
 		params.setParallelism(parallelism);
@@ -310,7 +332,8 @@ public class CostParallelismAssigner {
 	 * values c) the same as previous level We decided to -if groupBy is a
 	 * single column, take min(b, c) -otherwise take c
 	 */
-	public void setParallelism(OperatorComponent opComp, Map<String, CostParams> compCost) {
+	public void setParallelism(OperatorComponent opComp,
+			Map<String, CostParams> compCost) {
 		final Component parent = opComp.getParents()[0];
 		final String parentName = parent.getName();
 		final int parentPar = compCost.get(parentName).getParallelism();
@@ -320,13 +343,14 @@ public class CostParallelismAssigner {
 		final List<Integer> hashIndexes = parent.getHashIndexes();
 		if ((hashIndexes) != null && (hashIndexes.size() == 1)) {
 			final int index = hashIndexes.get(0);
-			final String aliasedColumnName = compCost.get(parentName).getSchema().getSchema()
-					.get(index).getName();
-			final String fullSchemaColumnName = ParserUtil.getFullSchemaColumnName(
-					aliasedColumnName, _tan);
+			final String aliasedColumnName = compCost.get(parentName)
+					.getSchema().getSchema().get(index).getName();
+			final String fullSchemaColumnName = ParserUtil
+					.getFullSchemaColumnName(aliasedColumnName, _tan);
 
 			try {
-				final long distinctValues = _schema.getNumDistinctValues(fullSchemaColumnName);
+				final long distinctValues = _schema
+						.getNumDistinctValues(fullSchemaColumnName);
 				if (distinctValues < parallelism)
 					parallelism = (int) distinctValues;
 			} catch (final RuntimeException ex) {

@@ -22,7 +22,8 @@ public abstract class BasicStore<R> implements Serializable {
 
 	public BasicStore(int storesizemb) {
 		_uniqIdCounter++;
-		this._uniqId = BasicStore._uniqIdPrefix + Integer.toString(BasicStore._uniqIdCounter);
+		this._uniqId = BasicStore._uniqIdPrefix
+				+ Integer.toString(BasicStore._uniqIdCounter);
 		LOG.info("SquallStorage: Initializing store of size " + storesizemb
 				+ " MB with UniqStoreId: " + _uniqId);
 	}

@@ -17,30 +17,6 @@ public class QueryBuilder implements Serializable {
 	public void add(Component component) {
 		_plan.add(component);
 	}
-	
-	public DataSourceComponent createDataSource(String componentName, String inputPath){
-		DataSourceComponent dsc = new DataSourceComponent(componentName, inputPath);
-		add(dsc);
-		return dsc;
-	}
-
-	public DataSourceComponent createDataSource(String tableName, Map conf){
-		String dataPath = SystemParameters.getString(conf, "DIP_DATA_PATH") + "/";
-		String extension = SystemParameters.getString(conf, "DIP_EXTENSION");
-		return createDataSource(tableName.toUpperCase(), dataPath + tableName + extension);
-	}
-	
-	public EquiJoinComponent createEquiJoin(Component firstParent, Component secondParent){
-		EquiJoinComponent ejc = new EquiJoinComponent(firstParent, secondParent);
-		add(ejc);
-		return ejc;
-	}
-	
-	public EquiJoinComponent createEquiJoin(Component firstParent, Component secondParent, boolean isRemoveIndex){
-		EquiJoinComponent ejc = new EquiJoinComponent(firstParent, secondParent, isRemoveIndex);
-		add(ejc);
-		return ejc;
-	}
 
 	// Component names are unique - alias is used for tables
 	public boolean contains(String name) {
@@ -48,6 +24,37 @@ public class QueryBuilder implements Serializable {
 			if (component.getName().equals(name))
 				return true;
 		return false;
+	}
+
+	public DataSourceComponent createDataSource(String tableName, Map conf) {
+		String dataPath = SystemParameters.getString(conf, "DIP_DATA_PATH")
+				+ "/";
+		String extension = SystemParameters.getString(conf, "DIP_EXTENSION");
+		return createDataSource(tableName.toUpperCase(), dataPath + tableName
+				+ extension);
+	}
+
+	public DataSourceComponent createDataSource(String componentName,
+			String inputPath) {
+		DataSourceComponent dsc = new DataSourceComponent(componentName,
+				inputPath);
+		add(dsc);
+		return dsc;
+	}
+
+	public EquiJoinComponent createEquiJoin(Component firstParent,
+			Component secondParent) {
+		EquiJoinComponent ejc = new EquiJoinComponent(firstParent, secondParent);
+		add(ejc);
+		return ejc;
+	}
+
+	public EquiJoinComponent createEquiJoin(Component firstParent,
+			Component secondParent, boolean isRemoveIndex) {
+		EquiJoinComponent ejc = new EquiJoinComponent(firstParent,
+				secondParent, isRemoveIndex);
+		add(ejc);
+		return ejc;
 	}
 
 	public Component getComponent(String name) {

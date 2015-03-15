@@ -8,59 +8,47 @@ import java.util.Random;
 
 import org.apache.log4j.Logger;
 
-import ch.epfl.data.plan_runner.operators.Operator;
-import ch.epfl.data.plan_runner.predicates.Predicate;
-import ch.epfl.data.plan_runner.utilities.MyUtilities;
-import ch.epfl.data.plan_runner.utilities.SystemParameters;
-import ch.epfl.data.plan_runner.visitors.OperatorVisitor;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.tuple.Values;
+import ch.epfl.data.plan_runner.operators.Operator;
+import ch.epfl.data.plan_runner.utilities.MyUtilities;
+import ch.epfl.data.plan_runner.utilities.SystemParameters;
+import ch.epfl.data.plan_runner.visitors.OperatorVisitor;
 
 public class SampleAsideAndForwardOperator implements Operator {
-	private static Logger LOG = Logger.getLogger(SampleAsideAndForwardOperator.class);
+	private static Logger LOG = Logger
+			.getLogger(SampleAsideAndForwardOperator.class);
 	private static final long serialVersionUID = 1L;
-	
+
 	private double _sampleRate = 0;
 	private int _numTuplesProcessed = 0;
 	private Random _rnd = new Random();
 
 	private String _componentIndex;
-	private List<Integer> _hashIndexes = new ArrayList<Integer>(Arrays.asList(0)); // we receive one-column tuples
+	private List<Integer> _hashIndexes = new ArrayList<Integer>(
+			Arrays.asList(0)); // we receive one-column tuples
 	private Map _conf;
-	
-	// it's not clear design to put _collector in here, but we opted for it in order to allow the operator to be anywhere in the chain
+
+	// it's not clear design to put _collector in here, but we opted for it in
+	// order to allow the operator to be anywhere in the chain
 	private SpoutOutputCollector _spoutCollector;
 	private OutputCollector _boltCollector;
 	private String _streamId;
-	
-	public SampleAsideAndForwardOperator(int relationSize, int numOfBuckets, String streamId, Map conf) {
+
+	public SampleAsideAndForwardOperator(int relationSize, int numOfBuckets,
+			String streamId, Map conf) {
 		_conf = conf;
-		
+
 		_streamId = streamId;
-		
-		_sampleRate = ((double) (numOfBuckets * SystemParameters.TUPLES_PER_BUCKET)) / relationSize;
-		if(_sampleRate >= 1){
+
+		_sampleRate = ((double) (numOfBuckets * SystemParameters.TUPLES_PER_BUCKET))
+				/ relationSize;
+		if (_sampleRate >= 1) {
 			_sampleRate = 1;
 		}
-		LOG.info("Sample rate of SampleAsideAndForwardOperator is " + _sampleRate);
-	}
-	
-	// invoked from open methods of StormBoltComponent (not known beforehand)
-	public void setCollector(OutputCollector collector) {
-		_boltCollector = collector;
-	}
-	
-	public void setCollector(SpoutOutputCollector collector) {
-		_spoutCollector = collector;
-	}
-	
-	public void setComponentIndex(String hostComponentIndex){
-		_componentIndex = hostComponentIndex;
-	}
-	
-	private boolean isAttachedToSpout(){
-		return _spoutCollector != null;
+		LOG.info("Sample rate of SampleAsideAndForwardOperator is "
+				+ _sampleRate);
 	}
 
 	@Override
@@ -70,16 +58,21 @@ public class SampleAsideAndForwardOperator implements Operator {
 
 	@Override
 	public List<String> getContent() {
-		throw new RuntimeException("getContent for SampleAsideAndForwardOperator should never be invoked!");
+		throw new RuntimeException(
+				"getContent for SampleAsideAndForwardOperator should never be invoked!");
 	}
 
 	@Override
 	public int getNumTuplesProcessed() {
 		return _numTuplesProcessed;
 	}
-	
-	public double getSampleRate(){
+
+	public double getSampleRate() {
 		return _sampleRate;
+	}
+
+	private boolean isAttachedToSpout() {
+		return _spoutCollector != null;
 	}
 
 	@Override
@@ -89,25 +82,40 @@ public class SampleAsideAndForwardOperator implements Operator {
 
 	@Override
 	public String printContent() {
-		throw new RuntimeException("printContent for SampleAsideAndForwardOperator should never be invoked!");
+		throw new RuntimeException(
+				"printContent for SampleAsideAndForwardOperator should never be invoked!");
 	}
 
 	@Override
 	public List<String> process(List<String> tuple) {
 		_numTuplesProcessed++;
-		
-		//sending to this extra streamId
-		if(_rnd.nextDouble() < _sampleRate){
-			Values stormTupleSnd = MyUtilities.createTupleValues(tuple, 0, _componentIndex, _hashIndexes, null, _conf);
-			if(isAttachedToSpout()){
+
+		// sending to this extra streamId
+		if (_rnd.nextDouble() < _sampleRate) {
+			Values stormTupleSnd = MyUtilities.createTupleValues(tuple, 0,
+					_componentIndex, _hashIndexes, null, _conf);
+			if (isAttachedToSpout()) {
 				_spoutCollector.emit(_streamId, stormTupleSnd);
-			}else{
+			} else {
 				_boltCollector.emit(_streamId, stormTupleSnd);
 			}
-		}		
-		
-		//normal forwarding
+		}
+
+		// normal forwarding
 		return tuple;
+	}
+
+	// invoked from open methods of StormBoltComponent (not known beforehand)
+	public void setCollector(OutputCollector collector) {
+		_boltCollector = collector;
+	}
+
+	public void setCollector(SpoutOutputCollector collector) {
+		_spoutCollector = collector;
+	}
+
+	public void setComponentIndex(String hostComponentIndex) {
+		_componentIndex = hostComponentIndex;
 	}
 
 	@Override

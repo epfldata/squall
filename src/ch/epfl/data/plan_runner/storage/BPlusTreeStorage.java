@@ -5,10 +5,7 @@ import java.util.List;
 /*
  * Key, Tuple(s)
  */
-public interface BPlusTreeStore<KeyType> {
-
-	
-	public String getStatistics();
+public interface BPlusTreeStorage<KeyType> {
 
 	/**
 	 * Give it the operator type as defined in "ComparisonPredicate class" e.g.
@@ -24,6 +21,15 @@ public interface BPlusTreeStore<KeyType> {
 	// "TIntArrayList getValues(int operator, KeyType key)" in BPLUSTREEINDEX
 	// class
 	public List<String> get(int operator, KeyType key, int diff);
+
+	public String getStatistics();
+
+	/**
+	 * Purge stale state
+	 * 
+	 * @return
+	 */
+	public void purgeState(long tillTimeStamp);
 
 	/**
 	 * Give it key of type KeyType and string value and putinto BerkeleyDB
@@ -41,14 +47,5 @@ public interface BPlusTreeStore<KeyType> {
 	 * @return
 	 */
 	public int size();
-	
-	
-	/**
-	 * Return the size of the storage (the number of tuples stored inside)
-	 * 
-	 * @return
-	 */
-	public void purgeState(long tillTimeStamp);
-	
 
 }

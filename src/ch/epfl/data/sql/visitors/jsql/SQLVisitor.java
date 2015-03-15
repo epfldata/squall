@@ -64,8 +64,8 @@ import org.apache.log4j.Logger;
 import ch.epfl.data.sql.util.JoinTablesExprs;
 import ch.epfl.data.sql.util.TableAliasName;
 
-public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVisitor,
-		ItemsListVisitor, Serializable {
+public class SQLVisitor implements SelectVisitor, FromItemVisitor,
+		ExpressionVisitor, ItemsListVisitor, Serializable {
 	private static Logger LOG = Logger.getLogger(SQLVisitor.class);
 	private static final long serialVersionUID = 1L;
 
@@ -160,6 +160,7 @@ public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVis
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see
 	 * net.sf.jsqlparser.expression.ExpressionVisitor#visit(net.sf.jsqlparser
 	 * .expression.CaseExpression)
@@ -204,7 +205,8 @@ public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVis
 	@Override
 	public void visit(ExpressionList expressionList) {
 		LOG.info("ExprList!");
-		for (final Iterator iter = expressionList.getExpressions().iterator(); iter.hasNext();) {
+		for (final Iterator iter = expressionList.getExpressions().iterator(); iter
+				.hasNext();) {
 			final Expression expression = (Expression) iter.next();
 			expression.accept(this);
 		}
@@ -304,7 +306,8 @@ public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVis
 		_selectItems.addAll(plainSelect.getSelectItems());
 
 		if (plainSelect.getJoins() != null)
-			for (final Iterator joinsIt = plainSelect.getJoins().iterator(); joinsIt.hasNext();) {
+			for (final Iterator joinsIt = plainSelect.getJoins().iterator(); joinsIt
+					.hasNext();) {
 				final Join join = (Join) joinsIt.next();
 				visit(join);
 				join.getRightItem().accept(this);
@@ -360,7 +363,8 @@ public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVis
 
 	@Override
 	public void visit(Union union) {
-		for (final Iterator iter = union.getPlainSelects().iterator(); iter.hasNext();) {
+		for (final Iterator iter = union.getPlainSelects().iterator(); iter
+				.hasNext();) {
 			final PlainSelect plainSelect = (PlainSelect) iter.next();
 			visit(plainSelect);
 		}
@@ -368,6 +372,7 @@ public class SQLVisitor implements SelectVisitor, FromItemVisitor, ExpressionVis
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see
 	 * net.sf.jsqlparser.expression.ExpressionVisitor#visit(net.sf.jsqlparser
 	 * .expression.WhenClause)

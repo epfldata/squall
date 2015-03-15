@@ -17,14 +17,15 @@ public interface OperatorVisitor {
 
 	public void visit(DistinctOperator distinct);
 
+	public void visit(PrintOperator printOperator);
+
 	public void visit(ProjectOperator projection);
 
-	public void visit(SelectOperator selection);
-
-	public void visit(PrintOperator printOperator);
+	public void visit(
+			SampleAsideAndForwardOperator sampleAsideAndForwardOperator);
 
 	public void visit(SampleOperator sampleOperator);
 
-	public void visit(SampleAsideAndForwardOperator sampleAsideAndForwardOperator);
+	public void visit(SelectOperator selection);
 
 }

@@ -12,23 +12,6 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 
-import ch.epfl.data.plan_runner.components.ComponentProperties;
-import ch.epfl.data.plan_runner.expressions.ValueExpression;
-import ch.epfl.data.plan_runner.operators.AggregateOperator;
-import ch.epfl.data.plan_runner.operators.ChainOperator;
-import ch.epfl.data.plan_runner.operators.Operator;
-import ch.epfl.data.plan_runner.predicates.Predicate;
-import ch.epfl.data.plan_runner.storage.BPlusTreeStore;
-import ch.epfl.data.plan_runner.storage.BerkeleyDBStore;
-import ch.epfl.data.plan_runner.storage.BerkeleyDBStoreSkewed;
-import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
-import ch.epfl.data.plan_runner.thetajoin.matrix_mapping.EquiMatrixAssignment;
-import ch.epfl.data.plan_runner.utilities.MyUtilities;
-import ch.epfl.data.plan_runner.utilities.PeriodicAggBatchSend;
-import ch.epfl.data.plan_runner.utilities.SystemParameters;
-import ch.epfl.data.plan_runner.utilities.statistics.StatisticsUtilities;
-import ch.epfl.data.plan_runner.visitors.PredicateCreateIndexesVisitor;
-import ch.epfl.data.plan_runner.visitors.PredicateUpdateIndexesVisitor;
 import backtype.storm.Config;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -39,18 +22,37 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+import ch.epfl.data.plan_runner.components.ComponentProperties;
+import ch.epfl.data.plan_runner.expressions.ValueExpression;
+import ch.epfl.data.plan_runner.operators.AggregateOperator;
+import ch.epfl.data.plan_runner.operators.ChainOperator;
+import ch.epfl.data.plan_runner.operators.Operator;
+import ch.epfl.data.plan_runner.predicates.Predicate;
+import ch.epfl.data.plan_runner.storage.BPlusTreeStorage;
+import ch.epfl.data.plan_runner.storage.BerkeleyDBStore;
+import ch.epfl.data.plan_runner.storage.BerkeleyDBStoreSkewed;
+import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.plan_runner.thetajoin.matrix_mapping.EquiMatrixAssignment;
+import ch.epfl.data.plan_runner.utilities.MyUtilities;
+import ch.epfl.data.plan_runner.utilities.PeriodicAggBatchSend;
+import ch.epfl.data.plan_runner.utilities.SystemParameters;
+import ch.epfl.data.plan_runner.utilities.statistics.StatisticsUtilities;
+import ch.epfl.data.plan_runner.visitors.PredicateCreateIndexesVisitor;
+import ch.epfl.data.plan_runner.visitors.PredicateUpdateIndexesVisitor;
 
 @Deprecated
 // derived from StormDstTupleStorageJoin
-public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComponent {
+public class StormDstBDB extends BaseRichBolt implements StormEmitter,
+		StormComponent {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormDstBDB.class);
 
 	private int _hierarchyPosition = INTERMEDIATE;
 
-	protected SimpleDateFormat _format = new SimpleDateFormat("EEE MMM d HH:mm:ss zzz yyyy");
+	protected SimpleDateFormat _format = new SimpleDateFormat(
+			"EEE MMM d HH:mm:ss zzz yyyy");
 	private final StormEmitter _firstEmitter, _secondEmitter;
-	private BPlusTreeStore _firstRelationStorage, _secondRelationStorage;
+	private BPlusTreeStorage _firstRelationStorage, _secondRelationStorage;
 
 	private final String _ID;
 	private final String _componentIndex; // a unique index in a list of all the
@@ -94,15 +96,17 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 
 	private Calendar _cal;
 	private final DateFormat _dateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
-	SimpleDateFormat format = new SimpleDateFormat("EEE MMM d HH:mm:ss zzz yyyy");
+	SimpleDateFormat format = new SimpleDateFormat(
+			"EEE MMM d HH:mm:ss zzz yyyy");
 
 	private final InterchangingComponent _inter = null;
 
 	private final StatisticsUtilities _statsUtils;
 
 	public StormDstBDB(StormEmitter firstEmitter, StormEmitter secondEmitter,
-			ComponentProperties cp, List<String> allCompNames, Predicate joinPredicate,
-			int hierarchyPosition, TopologyBuilder builder, TopologyKiller killer, Config conf) {
+			ComponentProperties cp, List<String> allCompNames,
+			Predicate joinPredicate, int hierarchyPosition,
+			TopologyBuilder builder, TopologyKiller killer, Config conf) {
 
 		_conf = conf;
 		_firstEmitter = firstEmitter;
@@ -111,15 +115,17 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 		_componentIndex = String.valueOf(allCompNames.indexOf(_ID));
 		_batchOutputMillis = cp.getBatchOutputMillis();
 
-		_firstEmitterIndex = String.valueOf(allCompNames.indexOf(_firstEmitter.getName()));
-		_secondEmitterIndex = String.valueOf(allCompNames.indexOf(_secondEmitter.getName()));
+		_firstEmitterIndex = String.valueOf(allCompNames.indexOf(_firstEmitter
+				.getName()));
+		_secondEmitterIndex = String.valueOf(allCompNames
+				.indexOf(_secondEmitter.getName()));
 
 		_statsUtils = new StatisticsUtilities(_conf, LOG);
 
-		final int firstCardinality = SystemParameters
-				.getInt(conf, firstEmitter.getName() + "_CARD");
-		final int secondCardinality = SystemParameters.getInt(conf, secondEmitter.getName()
-				+ "_CARD");
+		final int firstCardinality = SystemParameters.getInt(conf,
+				firstEmitter.getName() + "_CARD");
+		final int secondCardinality = SystemParameters.getInt(conf,
+				secondEmitter.getName() + "_CARD");
 
 		final int parallelism = SystemParameters.getInt(conf, _ID + "_PAR");
 
@@ -138,15 +144,17 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 		final String dim = _currentMappingAssignment.getMappingDimensions();
 		LOG.info(_ID + " Initial Dimensions is: " + dim);
 
-		currentBolt = MyUtilities.attachEmitterHash(conf, null, currentBolt, firstEmitter,
-				secondEmitter);
+		currentBolt = MyUtilities.attachEmitterHash(conf, null, currentBolt,
+				firstEmitter, secondEmitter);
 
-		if (_hierarchyPosition == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf)))
+		if (_hierarchyPosition == FINAL_COMPONENT
+				&& (!MyUtilities.isAckEveryTuple(conf)))
 			killer.registerComponent(this, parallelism);
 
 		_printOut = cp.getPrintOut();
 		if (_printOut && _operatorChain.isBlocking())
-			currentBolt.allGrouping(killer.getID(), SystemParameters.DUMP_RESULTS_STREAM);
+			currentBolt.allGrouping(killer.getID(),
+					SystemParameters.DUMP_RESULTS_STREAM);
 
 		if (_joinPredicate != null)
 			_existIndexes = true;
@@ -169,7 +177,8 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 					final AggregateOperator agg = (AggregateOperator) lastOperator;
 					final List<String> tuples = agg.getContent();
 					for (final String tuple : tuples)
-						tupleSend(MyUtilities.stringToTuple(tuple, _conf), null, 0);
+						tupleSend(MyUtilities.stringToTuple(tuple, _conf),
+								null, 0);
 					// clearing
 					agg.clearStorage();
 					_semAgg.release();
@@ -193,14 +202,18 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 		printTuple(tuple);
 
 		// TODO
-		if (_statsUtils.isTestMode() && _numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
+		if (_statsUtils.isTestMode()
+				&& _numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
 			if (_hierarchyPosition == StormComponent.FINAL_COMPONENT) {
 				_cal = Calendar.getInstance();
 				LOG.info("," + "RESULT," + _thisTaskID + "," + "TimeStamp:,"
-						+ _dateFormat.format(_cal.getTime()) + ",Sent Tuples," + _numSentTuples);
-				LOG.info("First Storage: " + _firstRelationStorage.getStatistics()
+						+ _dateFormat.format(_cal.getTime()) + ",Sent Tuples,"
+						+ _numSentTuples);
+				LOG.info("First Storage: "
+						+ _firstRelationStorage.getStatistics()
 						+ "\nEnd of First Storage");
-				LOG.info("Second Storage: " + _secondRelationStorage.getStatistics()
+				LOG.info("Second Storage: "
+						+ _secondRelationStorage.getStatistics()
 						+ "\nEnd of Second Storage");
 			}
 
@@ -217,52 +230,71 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 	private void createStorage() {
 		final PredicateCreateIndexesVisitor visitor = new PredicateCreateIndexesVisitor();
 		_joinPredicate.accept(visitor);
-		_operatorForIndexes = new ArrayList<Integer>(visitor._operatorForIndexes);
+		_operatorForIndexes = new ArrayList<Integer>(
+				visitor._operatorForIndexes);
 		_typeOfValueIndexed = new ArrayList<Object>(visitor._typeOfValueIndexed);
 		String storagePath = null;
 		if (SystemParameters.getBoolean(getConf(), "DIP_DISTRIBUTED"))
-			storagePath = SystemParameters.getString(getConf(), "STORAGE_CLUSTER_DIR");
+			storagePath = SystemParameters.getString(getConf(),
+					"STORAGE_CLUSTER_DIR");
 		else
-			storagePath = SystemParameters.getString(getConf(), "STORAGE_LOCAL_DIR");
+			storagePath = SystemParameters.getString(getConf(),
+					"STORAGE_LOCAL_DIR");
 
 		// TODO This assumes that there is only one index !!
-		
-		if(MyUtilities.isBDBUniform(getConf())){
+
+		if (MyUtilities.isBDBUniform(getConf())) {
 			if (_typeOfValueIndexed.get(0) instanceof Integer) {
-				_firstRelationStorage = new BerkeleyDBStore(Integer.class, storagePath + "/first");
-				_secondRelationStorage = new BerkeleyDBStore(Integer.class, storagePath + "/second");
+				_firstRelationStorage = new BerkeleyDBStore(Integer.class,
+						storagePath + "/first");
+				_secondRelationStorage = new BerkeleyDBStore(Integer.class,
+						storagePath + "/second");
 			} else if (_typeOfValueIndexed.get(0) instanceof Double) {
-				_firstRelationStorage = new BerkeleyDBStore(Double.class, storagePath + "/first");
-				_secondRelationStorage = new BerkeleyDBStore(Double.class, storagePath + "/second");
+				_firstRelationStorage = new BerkeleyDBStore(Double.class,
+						storagePath + "/first");
+				_secondRelationStorage = new BerkeleyDBStore(Double.class,
+						storagePath + "/second");
 			} else if (_typeOfValueIndexed.get(0) instanceof Date) {
-				_firstRelationStorage = new BerkeleyDBStore(Date.class, storagePath + "/first");
-				_secondRelationStorage = new BerkeleyDBStore(Date.class, storagePath + "/second");
+				_firstRelationStorage = new BerkeleyDBStore(Date.class,
+						storagePath + "/first");
+				_secondRelationStorage = new BerkeleyDBStore(Date.class,
+						storagePath + "/second");
 			} else if (_typeOfValueIndexed.get(0) instanceof String) {
-				_firstRelationStorage = new BerkeleyDBStore(String.class, storagePath + "/first");
-				_secondRelationStorage = new BerkeleyDBStore(String.class, storagePath + "/second");
+				_firstRelationStorage = new BerkeleyDBStore(String.class,
+						storagePath + "/first");
+				_secondRelationStorage = new BerkeleyDBStore(String.class,
+						storagePath + "/second");
 			} else
 				throw new RuntimeException("non supported type");
-			LOG.info("Storage with Uniform BDB!");			
-		}else if(MyUtilities.isBDBSkewed(getConf())){
+			LOG.info("Storage with Uniform BDB!");
+		} else if (MyUtilities.isBDBSkewed(getConf())) {
 			if (_typeOfValueIndexed.get(0) instanceof Integer) {
-				_firstRelationStorage = new BerkeleyDBStoreSkewed(Integer.class, storagePath + "/first", getConf());
-				_secondRelationStorage = new BerkeleyDBStoreSkewed(Integer.class, storagePath + "/second", getConf());
+				_firstRelationStorage = new BerkeleyDBStoreSkewed(
+						Integer.class, storagePath + "/first", getConf());
+				_secondRelationStorage = new BerkeleyDBStoreSkewed(
+						Integer.class, storagePath + "/second", getConf());
 			} else if (_typeOfValueIndexed.get(0) instanceof Double) {
-				_firstRelationStorage = new BerkeleyDBStoreSkewed(Double.class, storagePath + "/first", getConf());
-				_secondRelationStorage = new BerkeleyDBStoreSkewed(Double.class, storagePath + "/second", getConf());
+				_firstRelationStorage = new BerkeleyDBStoreSkewed(Double.class,
+						storagePath + "/first", getConf());
+				_secondRelationStorage = new BerkeleyDBStoreSkewed(
+						Double.class, storagePath + "/second", getConf());
 			} else if (_typeOfValueIndexed.get(0) instanceof Date) {
-				_firstRelationStorage = new BerkeleyDBStoreSkewed(Date.class, storagePath + "/first", getConf());
-				_secondRelationStorage = new BerkeleyDBStoreSkewed(Date.class, storagePath + "/second", getConf());
+				_firstRelationStorage = new BerkeleyDBStoreSkewed(Date.class,
+						storagePath + "/first", getConf());
+				_secondRelationStorage = new BerkeleyDBStoreSkewed(Date.class,
+						storagePath + "/second", getConf());
 			} else if (_typeOfValueIndexed.get(0) instanceof String) {
-				_firstRelationStorage = new BerkeleyDBStoreSkewed(String.class, storagePath + "/first", getConf());
-				_secondRelationStorage = new BerkeleyDBStoreSkewed(String.class, storagePath + "/second", getConf());
+				_firstRelationStorage = new BerkeleyDBStoreSkewed(String.class,
+						storagePath + "/first", getConf());
+				_secondRelationStorage = new BerkeleyDBStoreSkewed(
+						String.class, storagePath + "/second", getConf());
 			} else
-				throw new RuntimeException("non supported type");		
+				throw new RuntimeException("non supported type");
 			LOG.info("Storage with Skewed BDB!");
-		}else{
+		} else {
 			throw new RuntimeException("Unsupported BDB type!");
 		}
-		
+
 		if (_joinPredicate != null)
 			_existIndexes = true;
 		else
@@ -276,7 +308,8 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 			// one
 			declarer.declare(new Fields("CompIndex", "Tuple", "Hash"));
 		else if (!MyUtilities.isAckEveryTuple(_conf))
-			declarer.declareStream(SystemParameters.EOF_STREAM, new Fields(SystemParameters.EOF));
+			declarer.declareStream(SystemParameters.EOF_STREAM, new Fields(
+					SystemParameters.EOF));
 	}
 
 	@Override
@@ -303,35 +336,51 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 				if (_statsUtils.isTestMode())
 					if (_hierarchyPosition == StormComponent.FINAL_COMPONENT) {
 						final Runtime runtime = Runtime.getRuntime();
-						final long memory = runtime.totalMemory() - runtime.freeMemory();
+						final long memory = runtime.totalMemory()
+								- runtime.freeMemory();
 						_cal = Calendar.getInstance();
-						LOG.info("," + "MEMORY," + _thisTaskID + "," + " TimeStamp:,"
-								+ _dateFormat.format(_cal.getTime()) + ", FirstStorage:,"
-								+ (_firstRelationStorage.size()) + ", SecondStorage:,"
-								+ (_secondRelationStorage.size()) + ", Total:,"
-								+ (_firstRelationStorage.size() + _secondRelationStorage.size())
-								+ ", Memory used: ," + StatisticsUtilities.bytesToMegabytes(memory)
-								+ "," + StatisticsUtilities.bytesToMegabytes(runtime.totalMemory()));
-						LOG.info("," + "RESULT," + _thisTaskID + "," + "TimeStamp:,"
-								+ _dateFormat.format(_cal.getTime()) + ",Sent Tuples,"
-								+ _numSentTuples);
-						LOG.info("First Storage: " + _firstRelationStorage.getStatistics()
+						LOG.info(","
+								+ "MEMORY,"
+								+ _thisTaskID
+								+ ","
+								+ " TimeStamp:,"
+								+ _dateFormat.format(_cal.getTime())
+								+ ", FirstStorage:,"
+								+ (_firstRelationStorage.size())
+								+ ", SecondStorage:,"
+								+ (_secondRelationStorage.size())
+								+ ", Total:,"
+								+ (_firstRelationStorage.size() + _secondRelationStorage
+										.size())
+								+ ", Memory used: ,"
+								+ StatisticsUtilities.bytesToMegabytes(memory)
+								+ ","
+								+ StatisticsUtilities.bytesToMegabytes(runtime
+										.totalMemory()));
+						LOG.info("," + "RESULT," + _thisTaskID + ","
+								+ "TimeStamp:,"
+								+ _dateFormat.format(_cal.getTime())
+								+ ",Sent Tuples," + _numSentTuples);
+						LOG.info("First Storage: "
+								+ _firstRelationStorage.getStatistics()
 								+ "\nEnd of First Storage");
-						LOG.info("Second Storage: " + _secondRelationStorage.getStatistics()
+						LOG.info("Second Storage: "
+								+ _secondRelationStorage.getStatistics()
 								+ "\nEnd of Second Storage");
 						// TODO should be placed somewhere else
 						_firstRelationStorage.shutdown();
 						_secondRelationStorage.shutdown();
 					}
 
-			MyUtilities.processFinalAck(_numRemainingParents, _hierarchyPosition, _conf,
-					stormTupleRcv, _collector, _periodicBatch);
+			MyUtilities.processFinalAck(_numRemainingParents,
+					_hierarchyPosition, _conf, stormTupleRcv, _collector,
+					_periodicBatch);
 			return;
 		}
 
 		boolean isFromFirstEmitter = false;
 
-		BPlusTreeStore affectedStorage, oppositeStorage;
+		BPlusTreeStorage affectedStorage, oppositeStorage;
 		if (_firstEmitterIndex.equals(inputComponentIndex)) {
 			// R update
 			isFromFirstEmitter = true;
@@ -343,39 +392,55 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 			affectedStorage = _secondRelationStorage;
 			oppositeStorage = _firstRelationStorage;
 		} else
-			throw new RuntimeException("InputComponentName " + inputComponentIndex
-					+ " doesn't match neither " + _firstEmitterIndex + " nor "
-					+ _secondEmitterIndex + ".");
+			throw new RuntimeException("InputComponentName "
+					+ inputComponentIndex + " doesn't match neither "
+					+ _firstEmitterIndex + " nor " + _secondEmitterIndex + ".");
 
 		// add the stormTuple to the specific storage
 
 		final PredicateUpdateIndexesVisitor visitor = new PredicateUpdateIndexesVisitor(
 				isFromFirstEmitter, tuple);
 		_joinPredicate.accept(visitor);
-		final String keyValue = new ArrayList<String>(visitor._valuesToIndex).get(0);
+		final String keyValue = new ArrayList<String>(visitor._valuesToIndex)
+				.get(0);
 		// add the stormTuple to the specific storage
 		insertIntoBDBStorage(affectedStorage, keyValue, inputTupleString);
 
-		performJoin(stormTupleRcv, tuple, isFromFirstEmitter, keyValue, oppositeStorage);
+		performJoin(stormTupleRcv, tuple, isFromFirstEmitter, keyValue,
+				oppositeStorage);
 
 		// TODO
 		if (_statsUtils.isTestMode())
 			if ((_hierarchyPosition == StormComponent.FINAL_COMPONENT)
-					&& ((_firstRelationStorage.size() + _secondRelationStorage.size()) % _statsUtils
-							.getDipInputFreqPrint()) == 0) {
+					&& ((_firstRelationStorage.size() + _secondRelationStorage
+							.size()) % _statsUtils.getDipInputFreqPrint()) == 0) {
 				final Runtime runtime = Runtime.getRuntime();
-				final long memory = runtime.totalMemory() - runtime.freeMemory();
+				final long memory = runtime.totalMemory()
+						- runtime.freeMemory();
 				_cal = Calendar.getInstance();
-				LOG.info("," + "MEMORY," + _thisTaskID + ",:" + " TimeStamp:,"
-						+ _dateFormat.format(_cal.getTime()) + ", FirstStorage:,"
-						+ (_firstRelationStorage.size()) + ", SecondStorage:,"
-						+ (_secondRelationStorage.size()) + ", Total:,"
-						+ (_firstRelationStorage.size() + _secondRelationStorage.size())
-						+ ", Memory used: ," + StatisticsUtilities.bytesToMegabytes(memory) + ","
-						+ StatisticsUtilities.bytesToMegabytes(runtime.totalMemory()));
-				LOG.info("First Storage: " + _firstRelationStorage.getStatistics()
+				LOG.info(","
+						+ "MEMORY,"
+						+ _thisTaskID
+						+ ",:"
+						+ " TimeStamp:,"
+						+ _dateFormat.format(_cal.getTime())
+						+ ", FirstStorage:,"
+						+ (_firstRelationStorage.size())
+						+ ", SecondStorage:,"
+						+ (_secondRelationStorage.size())
+						+ ", Total:,"
+						+ (_firstRelationStorage.size() + _secondRelationStorage
+								.size())
+						+ ", Memory used: ,"
+						+ StatisticsUtilities.bytesToMegabytes(memory)
+						+ ","
+						+ StatisticsUtilities.bytesToMegabytes(runtime
+								.totalMemory()));
+				LOG.info("First Storage: "
+						+ _firstRelationStorage.getStatistics()
 						+ "\nEnd of First Storage");
-				LOG.info("Second Storage: " + _secondRelationStorage.getStatistics()
+				LOG.info("Second Storage: "
+						+ _secondRelationStorage.getStatistics()
 						+ "\nEnd of Second Storage");
 			}
 
@@ -414,8 +479,8 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 		return _ID;
 	}
 
-	private void insertIntoBDBStorage(BPlusTreeStore affectedStorage, String key,
-			String inputTupleString) {
+	private void insertIntoBDBStorage(BPlusTreeStorage affectedStorage,
+			String key, String inputTupleString) {
 
 		if (_typeOfValueIndexed.get(0) instanceof Integer)
 			affectedStorage.put(Integer.parseInt(key), inputTupleString);
@@ -433,8 +498,8 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 			throw new RuntimeException("non supported type");
 	}
 
-	private void join(Tuple stormTuple, List<String> tuple, boolean isFromFirstEmitter,
-			List<String> oppositeStorage) {
+	private void join(Tuple stormTuple, List<String> tuple,
+			boolean isFromFirstEmitter, List<String> oppositeStorage) {
 
 		if (oppositeStorage == null || oppositeStorage.size() == 0)
 			return;
@@ -442,8 +507,8 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 		for (int i = 0; i < oppositeStorage.size(); i++) {
 			final String oppositeTupleString = oppositeStorage.get(i);
 
-			final List<String> oppositeTuple = MyUtilities.stringToTuple(oppositeTupleString,
-					getComponentConfiguration());
+			final List<String> oppositeTuple = MyUtilities.stringToTuple(
+					oppositeTupleString, getComponentConfiguration());
 			List<String> firstTuple, secondTuple;
 			if (isFromFirstEmitter) {
 				firstTuple = tuple;
@@ -469,16 +534,18 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 				List<String> outputTuple = null;
 
 				// Cartesian product - Outputs all attributes
-				outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);
+				outputTuple = MyUtilities.createOutputTuple(firstTuple,
+						secondTuple);
 				applyOperatorsAndSend(stormTuple, outputTuple);
 			}
 		}
 	}
 
-	protected void performJoin(Tuple stormTupleRcv, List<String> tuple, boolean isFromFirstEmitter,
-			String keyValue, BPlusTreeStore oppositeStorage) {
-		final List<String> tuplesToJoin = selectTupleToJoin(oppositeStorage, isFromFirstEmitter,
-				keyValue);
+	protected void performJoin(Tuple stormTupleRcv, List<String> tuple,
+			boolean isFromFirstEmitter, String keyValue,
+			BPlusTreeStorage oppositeStorage) {
+		final List<String> tuplesToJoin = selectTupleToJoin(oppositeStorage,
+				isFromFirstEmitter, keyValue);
 		join(stormTupleRcv, tuple, isFromFirstEmitter, tuplesToJoin);
 	}
 
@@ -487,7 +554,8 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 		_collector = collector;
 		createStorage();
 		if (_inter == null)
-			_numRemainingParents = MyUtilities.getNumParentTasks(tc, _firstEmitter, _secondEmitter);
+			_numRemainingParents = MyUtilities.getNumParentTasks(tc,
+					_firstEmitter, _secondEmitter);
 		else
 			_numRemainingParents = MyUtilities.getNumParentTasks(tc, _inter);
 
@@ -496,12 +564,20 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 		final Runtime runtime = Runtime.getRuntime();
 		final long memory = runtime.totalMemory() - runtime.freeMemory();
 		_cal = Calendar.getInstance();
-		LOG.info("," + "INITIAL," + _thisTaskID + ",:" + " TimeStamp:,"
-				+ _dateFormat.format(_cal.getTime()) + ", FirstStorage:,"
-				+ (_firstRelationStorage.size()) + ", SecondStorage:,"
-				+ (_secondRelationStorage.size()) + ", Total:,"
+		LOG.info(","
+				+ "INITIAL,"
+				+ _thisTaskID
+				+ ",:"
+				+ " TimeStamp:,"
+				+ _dateFormat.format(_cal.getTime())
+				+ ", FirstStorage:,"
+				+ (_firstRelationStorage.size())
+				+ ", SecondStorage:,"
+				+ (_secondRelationStorage.size())
+				+ ", Total:,"
 				+ (_firstRelationStorage.size() + _secondRelationStorage.size())
-				+ ", Memory used: ," + StatisticsUtilities.bytesToMegabytes(memory) + ","
+				+ ", Memory used: ,"
+				+ StatisticsUtilities.bytesToMegabytes(memory) + ","
 				+ StatisticsUtilities.bytesToMegabytes(runtime.totalMemory()));
 		LOG.info("First Storage: " + _firstRelationStorage.getStatistics()
 				+ "\nEnd of First Storage");
@@ -515,11 +591,14 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 			if ((_operatorChain != null) && _operatorChain.isBlocking()) {
 				final Operator lastOperator = _operatorChain.getLastOperator();
 				if (lastOperator instanceof AggregateOperator)
-					MyUtilities.printBlockingResult(_ID, (AggregateOperator) lastOperator,
+					MyUtilities.printBlockingResult(_ID,
+							(AggregateOperator) lastOperator,
 							_hierarchyPosition, _conf, LOG);
 				else
-					MyUtilities.printBlockingResult(_ID, lastOperator.getNumTuplesProcessed(),
-							lastOperator.printContent(), _hierarchyPosition, _conf, LOG);
+					MyUtilities.printBlockingResult(_ID,
+							lastOperator.getNumTuplesProcessed(),
+							lastOperator.printContent(), _hierarchyPosition,
+							_conf, LOG);
 			}
 	}
 
@@ -530,7 +609,8 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 				final StringBuilder sb = new StringBuilder();
 				sb.append("\nComponent ").append(_ID);
 				sb.append("\nReceived tuples: ").append(_numSentTuples);
-				sb.append(" Tuple: ").append(MyUtilities.tupleToString(tuple, _conf));
+				sb.append(" Tuple: ").append(
+						MyUtilities.tupleToString(tuple, _conf));
 				LOG.info(sb.toString());
 			}
 	}
@@ -540,11 +620,11 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 	}
 
 	private boolean receivedDumpSignal(Tuple stormTuple) {
-		return stormTuple.getSourceStreamId()
-				.equalsIgnoreCase(SystemParameters.DUMP_RESULTS_STREAM);
+		return stormTuple.getSourceStreamId().equalsIgnoreCase(
+				SystemParameters.DUMP_RESULTS_STREAM);
 	}
 
-	private List<String> selectTupleToJoin(BPlusTreeStore oppositeStorage,
+	private List<String> selectTupleToJoin(BPlusTreeStorage oppositeStorage,
 			boolean isFromFirstEmitter, String keyValue) {
 
 		// If there is atleast one index (so we have single join conditions with
@@ -565,12 +645,15 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 		// Even if valueIndexed is at first time an integer with
 		// precomputation a*col +b, it become a double
 		else if (_typeOfValueIndexed.get(0) instanceof Double)
-			return oppositeStorage.get(currentOperator, Double.parseDouble(keyValue), diff);
+			return oppositeStorage.get(currentOperator,
+					Double.parseDouble(keyValue), diff);
 		else if (_typeOfValueIndexed.get(0) instanceof Integer)
-			return oppositeStorage.get(currentOperator, Integer.parseInt(keyValue), diff);
+			return oppositeStorage.get(currentOperator,
+					Integer.parseInt(keyValue), diff);
 		else if (_typeOfValueIndexed.get(0) instanceof Date)
 			try {
-				return oppositeStorage.get(currentOperator, _format.parse(keyValue), diff);
+				return oppositeStorage.get(currentOperator,
+						_format.parse(keyValue), diff);
 			} catch (final ParseException e) {
 				e.printStackTrace();
 				return null;
@@ -581,9 +664,11 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter, StormComp
 	}
 
 	@Override
-	public void tupleSend(List<String> tuple, Tuple stormTupleRcv, long timestamp) {
-		final Values stormTupleSnd = MyUtilities.createTupleValues(tuple, timestamp,
-				_componentIndex, _hashIndexes, _hashExpressions, _conf);
+	public void tupleSend(List<String> tuple, Tuple stormTupleRcv,
+			long timestamp) {
+		final Values stormTupleSnd = MyUtilities.createTupleValues(tuple,
+				timestamp, _componentIndex, _hashIndexes, _hashExpressions,
+				_conf);
 		MyUtilities.sendTuple(stormTupleSnd, stormTupleRcv, _collector, _conf);
 	}
 

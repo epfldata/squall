@@ -23,17 +23,20 @@ import ch.epfl.data.plan_runner.visitors.ValueExpressionVisitor;
  *
  * The formula applied on value expressions is: VE1 - VE2 - VE3 - ...
  */
-public class Subtraction<T extends Number & Comparable<T>> implements ValueExpression<T> {
+public class Subtraction<T extends Number & Comparable<T>> implements
+		ValueExpression<T> {
 	private static final long serialVersionUID = 1L;
 
 	private final List<ValueExpression> _veList = new ArrayList<ValueExpression>();
 	private final NumericConversion<T> _wrapper;
 
-	public Subtraction(ValueExpression ve1, ValueExpression ve2, ValueExpression... veArray) {
+	public Subtraction(ValueExpression ve1, ValueExpression ve2,
+			ValueExpression... veArray) {
 		_veList.add(ve1);
 		_veList.add(ve2);
 		_veList.addAll(Arrays.asList(veArray));
-		_wrapper = (NumericConversion<T>) MyUtilities.getDominantNumericType(_veList);
+		_wrapper = (NumericConversion<T>) MyUtilities
+				.getDominantNumericType(_veList);
 	}
 
 	@Override
@@ -51,13 +54,15 @@ public class Subtraction<T extends Number & Comparable<T>> implements ValueExpre
 	public T eval(List<String> tuple) {
 		final ValueExpression firstVE = _veList.get(0);
 		final Object firstObj = firstVE.eval(tuple);
-		final NumericConversion firstType = (NumericConversion) firstVE.getType();
+		final NumericConversion firstType = (NumericConversion) firstVE
+				.getType();
 		double result = firstType.toDouble(firstObj);
 
 		for (int i = 1; i < _veList.size(); i++) {
 			final ValueExpression currentVE = _veList.get(i);
 			final Object currentObj = currentVE.eval(tuple);
-			final NumericConversion currentType = (NumericConversion) currentVE.getType();
+			final NumericConversion currentType = (NumericConversion) currentVE
+					.getType();
 			result -= currentType.toDouble(currentObj);
 		}
 		return _wrapper.fromDouble(result);

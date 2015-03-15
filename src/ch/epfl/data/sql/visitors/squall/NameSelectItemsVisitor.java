@@ -4,14 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import ch.epfl.data.plan_runner.components.Component;
-import ch.epfl.data.plan_runner.conversion.StringConversion;
-import ch.epfl.data.plan_runner.conversion.TypeConversion;
-import ch.epfl.data.plan_runner.expressions.ColumnReference;
-import ch.epfl.data.plan_runner.expressions.ValueExpression;
-import ch.epfl.data.sql.optimizers.name.NameTranslator;
-import ch.epfl.data.sql.util.ParserUtil;
-import ch.epfl.data.sql.util.TupleSchema;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.expression.Parenthesis;
@@ -21,6 +13,14 @@ import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
 import net.sf.jsqlparser.expression.operators.arithmetic.Subtraction;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.schema.Column;
+import ch.epfl.data.plan_runner.components.Component;
+import ch.epfl.data.plan_runner.conversion.StringConversion;
+import ch.epfl.data.plan_runner.conversion.TypeConversion;
+import ch.epfl.data.plan_runner.expressions.ColumnReference;
+import ch.epfl.data.plan_runner.expressions.ValueExpression;
+import ch.epfl.data.sql.optimizers.name.NameTranslator;
+import ch.epfl.data.sql.util.ParserUtil;
+import ch.epfl.data.sql.util.TupleSchema;
 
 public class NameSelectItemsVisitor extends IndexSelectItemsVisitor {
 	private final NameTranslator _nt;
@@ -29,7 +29,8 @@ public class NameSelectItemsVisitor extends IndexSelectItemsVisitor {
 
 	private final static StringConversion _sc = new StringConversion();
 
-	public NameSelectItemsVisitor(TupleSchema tupleSchema, Map map, Component affectedComponent) {
+	public NameSelectItemsVisitor(TupleSchema tupleSchema, Map map,
+			Component affectedComponent) {
 		super(map);
 
 		_tupleSchema = tupleSchema;

@@ -23,7 +23,8 @@ public class SelectOperator implements Operator {
 
 	@Override
 	public List<String> getContent() {
-		throw new RuntimeException("getContent for SelectionOperator should never be invoked!");
+		throw new RuntimeException(
+				"getContent for SelectionOperator should never be invoked!");
 	}
 
 	@Override
@@ -42,7 +43,8 @@ public class SelectOperator implements Operator {
 
 	@Override
 	public String printContent() {
-		throw new RuntimeException("printContent for SelectionOperator should never be invoked!");
+		throw new RuntimeException(
+				"printContent for SelectionOperator should never be invoked!");
 	}
 
 	@Override

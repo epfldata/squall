@@ -7,8 +7,9 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
+import backtype.storm.Config;
+import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
-import ch.epfl.data.plan_runner.ewh.components.CreateHistogramComponent;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
 import ch.epfl.data.plan_runner.operators.Operator;
@@ -19,8 +20,6 @@ import ch.epfl.data.plan_runner.storm_components.StormDataSource;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
-import backtype.storm.Config;
-import backtype.storm.topology.TopologyBuilder;
 
 public class DataSourceComponent implements Component {
 	private static final long serialVersionUID = 1L;
@@ -42,8 +41,8 @@ public class DataSourceComponent implements Component {
 	private boolean _printOutSet; // whether printOut condition is already set
 
 	private Component _child;
-	
-	//equi-weight histogram
+
+	// equi-weight histogram
 	private boolean _isPartitioner;
 
 	public DataSourceComponent(String componentName, String inputPath) {
@@ -95,7 +94,8 @@ public class DataSourceComponent implements Component {
 
 	@Override
 	public List<String> getFullHashList() {
-		throw new RuntimeException("This method should not be invoked for DataSourceComponent!");
+		throw new RuntimeException(
+				"This method should not be invoked for DataSourceComponent!");
 	}
 
 	@Override
@@ -131,7 +131,8 @@ public class DataSourceComponent implements Component {
 	@Override
 	public int hashCode() {
 		int hash = 3;
-		hash = 59 * hash + (_componentName != null ? _componentName.hashCode() : 0);
+		hash = 59 * hash
+				+ (_componentName != null ? _componentName.hashCode() : 0);
 		return hash;
 	}
 
@@ -141,25 +142,29 @@ public class DataSourceComponent implements Component {
 
 		// by default print out for the last component
 		// for other conditions, can be set via setPrintOut
-		if (hierarchyPosition == StormComponent.FINAL_COMPONENT && !_printOutSet)
+		if (hierarchyPosition == StormComponent.FINAL_COMPONENT
+				&& !_printOutSet)
 			setPrintOut(true);
 
-		final int parallelism = SystemParameters.getInt(conf, _componentName + "_PAR");
+		final int parallelism = SystemParameters.getInt(conf, _componentName
+				+ "_PAR");
 		if (parallelism > 1 && _chain.getDistinct() != null)
 			throw new RuntimeException(
 					_componentName
 							+ ": Distinct operator cannot be specified for multiple spouts for one input file!");
 
-		MyUtilities.checkBatchOutput(_batchOutputMillis, _chain.getAggregation(), conf);
+		MyUtilities.checkBatchOutput(_batchOutputMillis,
+				_chain.getAggregation(), conf);
 
-		_dataSource = new StormDataSource(this, allCompNames, _inputPath, hierarchyPosition,
-				parallelism, _isPartitioner, 
-				builder, killer, conf);
+		_dataSource = new StormDataSource(this, allCompNames, _inputPath,
+				hierarchyPosition, parallelism, _isPartitioner, builder,
+				killer, conf);
 	}
 
 	@Override
 	public DataSourceComponent setBatchOutputMillis(long millis) {
-		throw new RuntimeException("Setting batch mode is not allowed for DataSourceComponents!");
+		throw new RuntimeException(
+				"Setting batch mode is not allowed for DataSourceComponents!");
 		// _batchOutputMillis = millis;
 		// return this;
 	}
@@ -170,14 +175,39 @@ public class DataSourceComponent implements Component {
 	}
 
 	@Override
-	public DataSourceComponent setFullHashList(List<String> fullHashList) {
-		throw new RuntimeException("This method should not be invoked for DataSourceComponent!");
+	public DataSourceComponent setContentSensitiveThetaJoinWrapper(
+			TypeConversion wrapper) {
+		return this;
 	}
 
 	@Override
-	public DataSourceComponent setHashExpressions(List<ValueExpression> hashExpressions) {
+	public DataSourceComponent setFullHashList(List<String> fullHashList) {
+		throw new RuntimeException(
+				"This method should not be invoked for DataSourceComponent!");
+	}
+
+	@Override
+	public DataSourceComponent setHashExpressions(
+			List<ValueExpression> hashExpressions) {
 		_hashExpressions = hashExpressions;
 		return this;
+	}
+
+	@Override
+	public DataSourceComponent setInterComp(InterchangingComponent inter) {
+		throw new RuntimeException(
+				"Datasource component does not support setInterComp");
+	}
+
+	@Override
+	public DataSourceComponent setJoinPredicate(Predicate joinPredicate) {
+		throw new RuntimeException(
+				"Datasource component does not support Join Predicates");
+	}
+
+	@Override
+	public DataSourceComponent setOutputPartKey(int... hashIndexes) {
+		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
 	}
 
 	@Override
@@ -185,36 +215,16 @@ public class DataSourceComponent implements Component {
 		_hashIndexes = hashIndexes;
 		return this;
 	}
-	
-	@Override
-	public DataSourceComponent setOutputPartKey(int... hashIndexes) {
-		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
+
+	public DataSourceComponent setPartitioner(boolean isPartitioner) {
+		_isPartitioner = isPartitioner;
+		return this;
 	}
 
 	@Override
 	public DataSourceComponent setPrintOut(boolean printOut) {
 		_printOutSet = true;
 		_printOut = printOut;
-		return this;
-	}
-	
-	public DataSourceComponent setPartitioner(boolean isPartitioner){
-		_isPartitioner = isPartitioner;
-		return this;
-	}
-
-	@Override
-	public DataSourceComponent setInterComp(InterchangingComponent inter) {
-		throw new RuntimeException("Datasource component does not support setInterComp");
-	}
-
-	@Override
-	public DataSourceComponent setJoinPredicate(Predicate joinPredicate) {
-		throw new RuntimeException("Datasource component does not support Join Predicates");
-	}
-
-	@Override
-	public DataSourceComponent setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
 		return this;
 	}
 

@@ -7,6 +7,8 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
+import backtype.storm.Config;
+import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
@@ -14,7 +16,6 @@ import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
 import ch.epfl.data.plan_runner.operators.Operator;
 import ch.epfl.data.plan_runner.predicates.Predicate;
-import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
 import ch.epfl.data.plan_runner.storm_components.InterchangingComponent;
 import ch.epfl.data.plan_runner.storm_components.StormBoltComponent;
 import ch.epfl.data.plan_runner.storm_components.StormComponent;
@@ -22,12 +23,11 @@ import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.plan_runner.storm_components.theta.StormThetaJoin;
 import ch.epfl.data.plan_runner.storm_components.theta.StormThetaJoinBDB;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
-import backtype.storm.Config;
-import backtype.storm.topology.TopologyBuilder;
 
 public class ThetaJoinStaticComponent implements Component {
 	private static final long serialVersionUID = 1L;
-	private static Logger LOG = Logger.getLogger(ThetaJoinStaticComponent.class);
+	private static Logger LOG = Logger
+			.getLogger(ThetaJoinStaticComponent.class);
 	private final Component _firstParent;
 	private final Component _secondParent;
 	private Component _child;
@@ -42,18 +42,19 @@ public class ThetaJoinStaticComponent implements Component {
 	private boolean _isContentSensitive;
 	private Predicate _joinPredicate;
 	private InterchangingComponent _interComp = null;
-	private TypeConversion _contentSensitiveThetaJoinWrapper=null; 
+	private TypeConversion _contentSensitiveThetaJoinWrapper = null;
 
-	//equi-weight histogram
-	private boolean _isPartitioner; 
-	
-	public ThetaJoinStaticComponent(Component firstParent, Component secondParent, boolean isContentSensitive) {
+	// equi-weight histogram
+	private boolean _isPartitioner;
+
+	public ThetaJoinStaticComponent(Component firstParent,
+			Component secondParent, boolean isContentSensitive) {
 		_firstParent = firstParent;
 		_firstParent.setChild(this);
 		_secondParent = secondParent;
 		_secondParent.setChild(this);
 		_componentName = firstParent.getName() + "_" + secondParent.getName();
-		_isContentSensitive=isContentSensitive;
+		_isContentSensitive = isContentSensitive;
 	}
 
 	@Override
@@ -101,7 +102,8 @@ public class ThetaJoinStaticComponent implements Component {
 
 	@Override
 	public List<String> getFullHashList() {
-		throw new RuntimeException("Load balancing for Theta join is done inherently!");
+		throw new RuntimeException(
+				"Load balancing for Theta join is done inherently!");
 	}
 
 	@Override
@@ -141,7 +143,8 @@ public class ThetaJoinStaticComponent implements Component {
 	@Override
 	public int hashCode() {
 		int hash = 7;
-		hash = 37 * hash + (_componentName != null ? _componentName.hashCode() : 0);
+		hash = 37 * hash
+				+ (_componentName != null ? _componentName.hashCode() : 0);
 		return hash;
 	}
 
@@ -151,23 +154,28 @@ public class ThetaJoinStaticComponent implements Component {
 
 		// by default print out for the last component
 		// for other conditions, can be set via setPrintOut
-		if (hierarchyPosition == StormComponent.FINAL_COMPONENT && !_printOutSet)
+		if (hierarchyPosition == StormComponent.FINAL_COMPONENT
+				&& !_printOutSet)
 			setPrintOut(true);
 
-		MyUtilities.checkBatchOutput(_batchOutputMillis, _chain.getAggregation(), conf);
+		MyUtilities.checkBatchOutput(_batchOutputMillis,
+				_chain.getAggregation(), conf);
 
 		boolean isBDB = MyUtilities.isBDB(conf);
-		if(isBDB && _joinPredicate == null){
-			throw new RuntimeException("Please provide _joinPredicate if you want to run BDB!");
+		if (isBDB && _joinPredicate == null) {
+			throw new RuntimeException(
+					"Please provide _joinPredicate if you want to run BDB!");
 		}
-		
-		if(isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)){
-			_joiner = new StormThetaJoinBDB(_firstParent, _secondParent, this, allCompNames,
-					_joinPredicate, hierarchyPosition, builder, killer, conf, _interComp);
-		}else{
-			_joiner = new StormThetaJoin(_firstParent, _secondParent, this, allCompNames,
-					_joinPredicate, _isPartitioner, hierarchyPosition, builder, killer, conf, 
-					_interComp, _isContentSensitive,_contentSensitiveThetaJoinWrapper);
+
+		if (isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)) {
+			_joiner = new StormThetaJoinBDB(_firstParent, _secondParent, this,
+					allCompNames, _joinPredicate, hierarchyPosition, builder,
+					killer, conf, _interComp);
+		} else {
+			_joiner = new StormThetaJoin(_firstParent, _secondParent, this,
+					allCompNames, _joinPredicate, _isPartitioner,
+					hierarchyPosition, builder, killer, conf, _interComp,
+					_isContentSensitive, _contentSensitiveThetaJoinWrapper);
 		}
 	}
 
@@ -182,28 +190,26 @@ public class ThetaJoinStaticComponent implements Component {
 		_child = child;
 	}
 
+	@Override
+	public ThetaJoinStaticComponent setContentSensitiveThetaJoinWrapper(
+			TypeConversion wrapper) {
+		_contentSensitiveThetaJoinWrapper = wrapper;
+		return this;
+	}
+
 	// list of distinct keys, used for direct stream grouping and load-balancing
 	// ()
 	@Override
 	public ThetaJoinStaticComponent setFullHashList(List<String> fullHashList) {
-		throw new RuntimeException("Load balancing for Theta join is done inherently!");
+		throw new RuntimeException(
+				"Load balancing for Theta join is done inherently!");
 	}
 
 	@Override
-	public ThetaJoinStaticComponent setHashExpressions(List<ValueExpression> hashExpressions) {
+	public ThetaJoinStaticComponent setHashExpressions(
+			List<ValueExpression> hashExpressions) {
 		_hashExpressions = hashExpressions;
 		return this;
-	}
-
-	@Override
-	public ThetaJoinStaticComponent setOutputPartKey(List<Integer> hashIndexes) {
-		_hashIndexes = hashIndexes;
-		return this;
-	}
-	
-	@Override
-	public ThetaJoinStaticComponent setOutputPartKey(int... hashIndexes) {
-		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
 	}
 
 	@Override
@@ -219,21 +225,26 @@ public class ThetaJoinStaticComponent implements Component {
 	}
 
 	@Override
+	public ThetaJoinStaticComponent setOutputPartKey(int... hashIndexes) {
+		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
+	}
+
+	@Override
+	public ThetaJoinStaticComponent setOutputPartKey(List<Integer> hashIndexes) {
+		_hashIndexes = hashIndexes;
+		return this;
+	}
+
+	public ThetaJoinStaticComponent setPartitioner(boolean isPartitioner) {
+		_isPartitioner = isPartitioner;
+		return this;
+	}
+
+	@Override
 	public ThetaJoinStaticComponent setPrintOut(boolean printOut) {
 		_printOutSet = true;
 		_printOut = printOut;
 		return this;
 	}
-
-	@Override
-	public ThetaJoinStaticComponent setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
-		_contentSensitiveThetaJoinWrapper=wrapper;
-		return this;
-	}
-	
-	public ThetaJoinStaticComponent setPartitioner(boolean isPartitioner){
-		_isPartitioner = isPartitioner;
-		return this;
-	}	
 
 }

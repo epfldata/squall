@@ -2,7 +2,6 @@ package ch.epfl.data.sql.visitors.jsql;
 
 import java.util.Iterator;
 
-import ch.epfl.data.sql.util.ParserUtil;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
 import net.sf.jsqlparser.expression.AnyComparisonExpression;
 import net.sf.jsqlparser.expression.BinaryExpression;
@@ -47,6 +46,7 @@ import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
+import ch.epfl.data.sql.util.ParserUtil;
 
 /*
  * PrintUser is the conventional way to comparing expressions in tuple schemas
@@ -143,7 +143,8 @@ public class PrintVisitor implements ExpressionVisitor, ItemsListVisitor {
 
 	@Override
 	public void visit(ExpressionList expressionList) {
-		for (final Iterator iter = expressionList.getExpressions().iterator(); iter.hasNext();) {
+		for (final Iterator iter = expressionList.getExpressions().iterator(); iter
+				.hasNext();) {
 			final Expression expression = (Expression) iter.next();
 			expression.accept(this);
 			if (iter.hasNext())
@@ -280,7 +281,8 @@ public class PrintVisitor implements ExpressionVisitor, ItemsListVisitor {
 	}
 
 	// private visitor methods
-	private void visitBinaryExpression(BinaryExpression binaryExpression, String operator) {
+	private void visitBinaryExpression(BinaryExpression binaryExpression,
+			String operator) {
 		binaryExpression.getLeftExpression().accept(this);
 		_sb.append(operator);
 		binaryExpression.getRightExpression().accept(this);

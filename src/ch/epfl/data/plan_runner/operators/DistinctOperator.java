@@ -48,7 +48,8 @@ public class DistinctOperator implements Operator {
 
 	@Override
 	public List<String> getContent() {
-		throw new RuntimeException("getContent for DistinctOperator should never be invoked!");
+		throw new RuntimeException(
+				"getContent for DistinctOperator should never be invoked!");
 	}
 
 	@Override
@@ -67,7 +68,8 @@ public class DistinctOperator implements Operator {
 
 	@Override
 	public String printContent() {
-		throw new RuntimeException("printContent for DistinctOperator should never be invoked!");
+		throw new RuntimeException(
+				"printContent for DistinctOperator should never be invoked!");
 	}
 
 	/*
@@ -78,7 +80,8 @@ public class DistinctOperator implements Operator {
 	public List<String> process(List<String> tuple) {
 		_numTuplesProcessed++;
 		final List<String> projectedTuple = _projection.process(tuple);
-		final String projectedTupleString = MyUtilities.tupleToString(projectedTuple, _conf);
+		final String projectedTupleString = MyUtilities.tupleToString(
+				projectedTuple, _conf);
 		if (_storage.contains(projectedTupleString) == true)
 			return null;
 		else {

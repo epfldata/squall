@@ -38,6 +38,7 @@ public interface StormComponent {
 
 	public void printTupleLatency(long numSentTuples, long timestamp);
 
-	public void tupleSend(List<String> tuple, Tuple stormTupleRcv, long timestamp);
+	public void tupleSend(List<String> tuple, Tuple stormTupleRcv,
+			long timestamp);
 
 }

@@ -14,8 +14,8 @@ public class StringConcatenate implements ValueExpression<String> {
 
 	private final List<ValueExpression<String>> _strList = new ArrayList<ValueExpression<String>>();
 
-	public StringConcatenate(ValueExpression<String> str1, ValueExpression<String> str2,
-			ValueExpression<String>... strArray) {
+	public StringConcatenate(ValueExpression<String> str1,
+			ValueExpression<String> str2, ValueExpression<String>... strArray) {
 		_strList.add(str1);
 		_strList.add(str2);
 		_strList.addAll(Arrays.asList(strArray));

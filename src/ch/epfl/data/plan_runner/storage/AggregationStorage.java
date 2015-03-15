@@ -25,9 +25,10 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 
 	// private static final int FINAL_AGGREGATION_TIMEOUT = 10000; /* msecs */
 
-	public AggregationStorage(AggregateOperator outerAggOp, TypeConversion wrapper, Map map,
-			boolean singleEntry) {
-		super(singleEntry ? 1 : SystemParameters.getInt(map, "STORAGE_MEMORY_SIZE_MB"), map);
+	public AggregationStorage(AggregateOperator outerAggOp,
+			TypeConversion wrapper, Map map, boolean singleEntry) {
+		super(singleEntry ? 1 : SystemParameters.getInt(map,
+				"STORAGE_MEMORY_SIZE_MB"), map);
 		_wrapper = wrapper;
 		_outerAggOp = outerAggOp;
 		_singleEntry = singleEntry;
@@ -38,7 +39,8 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 
 	@Override
 	public ArrayList<V> access(Object... data) {
-		return _singleEntry ? super.__access(false, SINGLE_ENTRY_KEY) : super.__access(false, data);
+		return _singleEntry ? super.__access(false, SINGLE_ENTRY_KEY) : super
+				.__access(false, data);
 	}
 
 	public void addContent(AggregationStorage storage) {
@@ -60,7 +62,8 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 				super.onInsert(key, newValue);
 			else {
 				final V oldValue = list.get(0);
-				newValue = (V) _outerAggOp.runAggregateFunction(oldValue, newValue);
+				newValue = (V) _outerAggOp.runAggregateFunction(oldValue,
+						newValue);
 				super.update(key, oldValue, newValue);
 			}
 		}
@@ -68,12 +71,17 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 
 	@Override
 	public boolean contains(Object... data) {
-		return _singleEntry ? super.contains(SINGLE_ENTRY_KEY) : super.contains(data);
+		return _singleEntry ? super.contains(SINGLE_ENTRY_KEY) : super
+				.contains(data);
 	}
 
 	@Override
 	public boolean equals(BasicStore store) {
 		return super.equals(store);
+	}
+
+	public V getInitialValue() {
+		return (V) _wrapper.getInitialValue();
 	}
 
 	@Override
@@ -103,11 +111,6 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 	public void setSingleEntry(boolean singleEntry) {
 		this._singleEntry = singleEntry;
 	}
-	
-	
-	public V getInitialValue(){
-		return (V)_wrapper.getInitialValue();
-	}
 
 	@Override
 	public V update(Object... data) {
@@ -116,12 +119,13 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 		V value, newValue;
 		final ArrayList<V> list = super.__access(false, key);
 		if (list == null) {
-			value = getInitialValue(); 
+			value = getInitialValue();
 			super.onInsert(key, value);
 		} else
 			value = list.get(0);
 		if (obj instanceof List)
-			newValue = (V) _outerAggOp.runAggregateFunction(value, (List<String>) obj);
+			newValue = (V) _outerAggOp.runAggregateFunction(value,
+					(List<String>) obj);
 		else
 			newValue = (V) _outerAggOp.runAggregateFunction(value, obj);
 		super.__update(false, key, value, newValue);

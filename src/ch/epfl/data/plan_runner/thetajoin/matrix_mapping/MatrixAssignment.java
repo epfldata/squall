@@ -17,7 +17,7 @@ public interface MatrixAssignment<KeyType> {
 	 * @return a list of index of reducers.
 	 */
 	public ArrayList<Integer> getRegionIDs(Dimension RowOrColumn);
-	
+
 	/**
 	 * This method is used to get a list of reducers to which a given tuple must
 	 * be sent to given a key.
@@ -27,6 +27,5 @@ public interface MatrixAssignment<KeyType> {
 	 * @return a list of index of reducers.
 	 */
 	public ArrayList<Integer> getRegionIDs(Dimension RowOrColumn, KeyType key);
-	
-	
+
 }

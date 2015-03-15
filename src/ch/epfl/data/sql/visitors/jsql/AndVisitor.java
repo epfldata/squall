@@ -268,7 +268,8 @@ public class AndVisitor implements ExpressionVisitor {
 	}
 
 	private void visitAndSide(Expression sideExpr) {
-		if (sideExpr instanceof AndExpression || sideExpr instanceof OrExpression
+		if (sideExpr instanceof AndExpression
+				|| sideExpr instanceof OrExpression
 				|| sideExpr instanceof Parenthesis)
 			sideExpr.accept(this);
 		else

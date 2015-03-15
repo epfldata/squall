@@ -47,26 +47,20 @@ import ch.epfl.data.sql.visitors.jsql.SQLVisitor;
 import ch.epfl.data.sql.visitors.squall.ColumnRefCollectVisitor;
 
 public class ParserUtil {
-	private static Logger LOG = Logger.getLogger(ParserUtil.class);
-
-	public static final int NOT_FOUND = -1;
-	private final static String SQL_EXTENSION = ".sql";
-
-	private static HashMap<String, Integer> _uniqueNumbers = new HashMap<String, Integer>();
-
 	/*
 	 * append each expr to the corresponding componentName. componentName is the
 	 * key for collocatedExprs.
 	 */
-	public static void addAndExprsToComps(Map<String, Expression> collocatedExprs,
-			List<Expression> exprs) {
+	public static void addAndExprsToComps(
+			Map<String, Expression> collocatedExprs, List<Expression> exprs) {
 
 		for (final Expression expr : exprs) {
 			// first we determine which component it belongs to
 			// In "R.A = S.A AND T.A = 4", "R.A = S.A" is not WHERE clause, it's
 			// a join condition
 			final List<Column> columns = getJSQLColumns(expr);
-			final String componentName = getComponentName(columns.get(0).getTable());
+			final String componentName = getComponentName(columns.get(0)
+					.getTable());
 
 			addAndExprToComp(collocatedExprs, expr, componentName);
 		}
@@ -77,7 +71,8 @@ public class ParserUtil {
 	 * append expr to the corresponding component Used outside this class,
 	 * that's why compName is not extracted from expr
 	 */
-	public static void addAndExprToComp(Map<String, Expression> collocatedExprs, Expression expr,
+	public static void addAndExprToComp(
+			Map<String, Expression> collocatedExprs, Expression expr,
 			String compName) {
 
 		if (collocatedExprs.containsKey(compName)) {
@@ -94,16 +89,18 @@ public class ParserUtil {
 	 * that collocatedExprs is a different type we need to keep all the ancestor
 	 * DataSources which correspond to appropriate orExpr
 	 */
-	public static void addOrExprsToComps(Map<Set<String>, Expression> collocatedExprs,
+	public static void addOrExprsToComps(
+			Map<Set<String>, Expression> collocatedExprs,
 			List<OrExpression> orExprs) {
 		for (final OrExpression orExpr : orExprs)
 			addOrExprToComp(collocatedExprs, orExpr);
 	}
 
-	public static void addOrExprToComp(Map<Set<String>, Expression> collocatedExprs,
-			OrExpression expr) {
+	public static void addOrExprToComp(
+			Map<Set<String>, Expression> collocatedExprs, OrExpression expr) {
 		final List<Column> columns = getJSQLColumns(expr);
-		final Set<String> compNameSet = new HashSet<String>(getCompNamesFromColumns(columns));
+		final Set<String> compNameSet = new HashSet<String>(
+				getCompNamesFromColumns(columns));
 
 		if (collocatedExprs.containsKey(compNameSet)) {
 			final Expression oldExpr = collocatedExprs.get(compNameSet);
@@ -113,7 +110,8 @@ public class ParserUtil {
 			collocatedExprs.put(compNameSet, expr);
 	}
 
-	public static <K, V> void addToCollection(K key, V singleValue, Map<K, List<V>> collection) {
+	public static <K, V> void addToCollection(K key, V singleValue,
+			Map<K, List<V>> collection) {
 		List<V> valueList;
 		if (collection.containsKey(key))
 			valueList = collection.get(key);
@@ -149,8 +147,8 @@ public class ParserUtil {
 	 * From a list of <NATIONNAME, StringConversion> it creates a list of
 	 * <N1.NATIONNAME, StringConversion>
 	 */
-	public static TupleSchema createAliasedSchema(List<ColumnNameType> originalSchema,
-			String tableCompName) {
+	public static TupleSchema createAliasedSchema(
+			List<ColumnNameType> originalSchema, String tableCompName) {
 		final List<ColumnNameType> cnts = new ArrayList<ColumnNameType>();
 
 		for (final ColumnNameType cnt : originalSchema) {
@@ -179,7 +177,8 @@ public class ParserUtil {
 			return false;
 	}
 
-	public static List<Integer> extractColumnIndexes(List<ValueExpression> veList) {
+	public static List<Integer> extractColumnIndexes(
+			List<ValueExpression> veList) {
 		final List<Integer> indexes = new ArrayList<Integer>();
 		for (final ValueExpression ve : veList)
 			if (ve instanceof ColumnReference) {
@@ -192,7 +191,8 @@ public class ParserUtil {
 				// iyfd.getInnerExpressions().get(0);
 				// indexes.add(veDate.getColumnIndex());
 			} else
-				throw new RuntimeException("Should check with isAllColumnReferences before use!");
+				throw new RuntimeException(
+						"Should check with isAllColumnReferences before use!");
 		return indexes;
 	}
 
@@ -207,7 +207,8 @@ public class ParserUtil {
 		}
 	}
 
-	public static List<ColumnReference> getColumnRefFromVEs(List<ValueExpression> veList) {
+	public static List<ColumnReference> getColumnRefFromVEs(
+			List<ValueExpression> veList) {
 		final List<ColumnReference> crList = new ArrayList<ColumnReference>();
 		for (final ValueExpression ve : veList) {
 			final ColumnRefCollectVisitor colVisitor = new ColumnRefCollectVisitor();
@@ -265,7 +266,8 @@ public class ParserUtil {
 	/*
 	 * Find a list of components in a query with a given list of names
 	 */
-	public static List<Component> getComponents(List<String> compNameList, CompGen cg) {
+	public static List<Component> getComponents(List<String> compNameList,
+			CompGen cg) {
 		final List<Component> compList = new ArrayList<Component>();
 		for (final String compName : compNameList)
 			compList.add(getComponent(compName, cg));
@@ -291,14 +293,16 @@ public class ParserUtil {
 		return tableCompName + "." + columnName;
 	}
 
-	public static String getFullSchemaColumnName(Column column, TableAliasName tan) {
+	public static String getFullSchemaColumnName(Column column,
+			TableAliasName tan) {
 		final String tableCompName = getComponentName(column);
 		final String tableSchemaName = tan.getSchemaName(tableCompName);
 		final String columnName = column.getColumnName();
 		return getFullName(tableSchemaName, columnName);
 	}
 
-	public static String getFullSchemaColumnName(String fullAliasedName, TableAliasName tan) {
+	public static String getFullSchemaColumnName(String fullAliasedName,
+			TableAliasName tan) {
 		final String[] parts = fullAliasedName.split("\\.");
 		final String tableCompName = parts[0];
 		final String columnName = parts[1];
@@ -316,7 +320,8 @@ public class ParserUtil {
 		return result;
 	}
 
-	public static List<Expression> getJoinCondition(SQLVisitor pq, Component left, Component right) {
+	public static List<Expression> getJoinCondition(SQLVisitor pq,
+			Component left, Component right) {
 		final List<String> leftAncestors = getSourceNameList(left);
 		final List<String> rightAncestors = getSourceNameList(right);
 		return pq.getJte().getExpressions(leftAncestors, rightAncestors);
@@ -348,15 +353,18 @@ public class ParserUtil {
 		return numBefore;
 	}
 
-	public static int getPreOpsOutputSize(Component component, Schema schema, TableAliasName tan) {
+	public static int getPreOpsOutputSize(Component component, Schema schema,
+			TableAliasName tan) {
 		if (component instanceof ThetaJoinStaticComponent)
-			throw new RuntimeException("SQL generator with Theta does not work for now!");
+			throw new RuntimeException(
+					"SQL generator with Theta does not work for now!");
 		// TODO similar to Equijoin, but not subtracting joinColumnsLength
 
 		final Component[] parents = component.getParents();
 		if (parents == null)
 			// this is a DataSourceComponent
-			return getPreOpsOutputSize((DataSourceComponent) component, schema, tan);
+			return getPreOpsOutputSize((DataSourceComponent) component, schema,
+					tan);
 		else if (parents.length == 1)
 			return getPreOpsOutputSize(parents[0], schema, tan);
 		else if (parents.length == 2) {
@@ -364,23 +372,25 @@ public class ParserUtil {
 			final Component secondParent = parents[1];
 			final int joinColumnsLength = firstParent.getHashIndexes().size();
 			return getPreOpsOutputSize(firstParent, schema, tan)
-					+ getPreOpsOutputSize(secondParent, schema, tan) - joinColumnsLength;
+					+ getPreOpsOutputSize(secondParent, schema, tan)
+					- joinColumnsLength;
 		}
-		throw new RuntimeException("More than two parents for a component " + component);
+		throw new RuntimeException("More than two parents for a component "
+				+ component);
 	}
 
 	/*
 	 * Used in Simple and Rule optimizer Used when index of a column has to be
 	 * obtained before EarlyProjection is performed.
 	 */
-	public static int getPreOpsOutputSize(DataSourceComponent source, Schema schema,
-			TableAliasName tan) {
+	public static int getPreOpsOutputSize(DataSourceComponent source,
+			Schema schema, TableAliasName tan) {
 		final String tableSchemaName = tan.getSchemaName(source.getName());
 		return schema.getTableSchema(tableSchemaName).size();
 	}
 
-	public static List<ColumnNameType> getProjectedSchema(List<ColumnNameType> schema,
-			List<Integer> hashIndexes) {
+	public static List<ColumnNameType> getProjectedSchema(
+			List<ColumnNameType> schema, List<Integer> hashIndexes) {
 		final List<ColumnNameType> result = new ArrayList<ColumnNameType>();
 		for (final Integer hashIndex : hashIndexes)
 			// the order is improtant
@@ -389,7 +399,8 @@ public class ParserUtil {
 	}
 
 	public static List<String> getSourceNameList(Component component) {
-		final List<DataSourceComponent> sources = component.getAncestorDataSources();
+		final List<DataSourceComponent> sources = component
+				.getAncestorDataSources();
 		final List<String> compNames = new ArrayList<String>();
 		for (final DataSourceComponent source : sources)
 			compNames.add(source.getName());
@@ -397,7 +408,8 @@ public class ParserUtil {
 	}
 
 	public static Set<String> getSourceNameSet(Component component) {
-		final List<DataSourceComponent> sources = component.getAncestorDataSources();
+		final List<DataSourceComponent> sources = component
+				.getAncestorDataSources();
 		final Set<String> compNames = new HashSet<String>();
 		for (final DataSourceComponent source : sources)
 			compNames.add(source.getName());
@@ -453,17 +465,20 @@ public class ParserUtil {
 	public static int getTotalParallelism(NameCompGen ncg) {
 		int totalParallelism = 0;
 		final Map<String, CostParams> compCost = ncg.getCompCost();
-		for (final Map.Entry<String, CostParams> compNameCost : compCost.entrySet())
+		for (final Map.Entry<String, CostParams> compNameCost : compCost
+				.entrySet())
 			totalParallelism += compNameCost.getValue().getParallelism();
 		return totalParallelism;
 	}
 
 	// can be used *after* parallelismToMap method is invoked
-	public static int getTotalParallelism(QueryBuilder plan, Map<String, String> map) {
+	public static int getTotalParallelism(QueryBuilder plan,
+			Map<String, String> map) {
 		int totalParallelism = 0;
 
 		for (final String compName : plan.getComponentNames()) {
-			final String parallelismStr = SystemParameters.getString(map, compName + "_PAR");
+			final String parallelismStr = SystemParameters.getString(map,
+					compName + "_PAR");
 			totalParallelism += Integer.valueOf(parallelismStr);
 		}
 
@@ -482,23 +497,30 @@ public class ParserUtil {
 	 * more joins to perform
 	 */
 	public static boolean isFinalComponent(Component comp, SQLVisitor pq) {
-		final Set<String> allSources = new HashSet<String>(pq.getTan().getComponentNames());
+		final Set<String> allSources = new HashSet<String>(pq.getTan()
+				.getComponentNames());
 		final Set<String> actuallPlanSources = getSourceNameSet(comp);
 		return allSources.equals(actuallPlanSources);
 	}
 
-	public static boolean isSameSchema(TupleSchema listSchema1, TupleSchema listSchema2) {
-		final Set<ColumnNameType> setSchema1 = new HashSet<ColumnNameType>(listSchema1.getSchema());
-		final Set<ColumnNameType> setSchema2 = new HashSet<ColumnNameType>(listSchema2.getSchema());
+	public static boolean isSameSchema(TupleSchema listSchema1,
+			TupleSchema listSchema2) {
+		final Set<ColumnNameType> setSchema1 = new HashSet<ColumnNameType>(
+				listSchema1.getSchema());
+		final Set<ColumnNameType> setSchema2 = new HashSet<ColumnNameType>(
+				listSchema2.getSchema());
 		return setSchema1.equals(setSchema2);
 	}
 
 	// throw away join hash indexes from the right parent
-	public static TupleSchema joinSchema(Component[] parents, Map<String, CostParams> compCost) {
+	public static TupleSchema joinSchema(Component[] parents,
+			Map<String, CostParams> compCost) {
 		final Component leftParent = parents[0];
 		final Component rightParent = parents[1];
-		final TupleSchema leftSchema = compCost.get(leftParent.getName()).getSchema();
-		final TupleSchema rightSchema = compCost.get(rightParent.getName()).getSchema();
+		final TupleSchema leftSchema = compCost.get(leftParent.getName())
+				.getSchema();
+		final TupleSchema rightSchema = compCost.get(rightParent.getName())
+				.getSchema();
 		final List<ColumnNameType> leftCnts = leftSchema.getSchema();
 		final List<ColumnNameType> rightCnts = rightSchema.getSchema();
 
@@ -611,16 +633,20 @@ public class ParserUtil {
 		}
 	}
 
-	public static int parallelismToMap(Map<String, Integer> compNamePars, Map map) {
+	public static int parallelismToMap(Map<String, Integer> compNamePars,
+			Map map) {
 		int totalParallelism = 0;
-		for (final Map.Entry<String, Integer> compNamePar : compNamePars.entrySet()) {
+		for (final Map.Entry<String, Integer> compNamePar : compNamePars
+				.entrySet()) {
 			final String compName = compNamePar.getKey();
 			final int parallelism = compNamePar.getValue();
 
 			if (parallelism == 0)
-				throw new RuntimeException("Unset parallelism for component " + compName + " !");
+				throw new RuntimeException("Unset parallelism for component "
+						+ compName + " !");
 			else if (parallelism < 0)
-				throw new RuntimeException("Negative parallelism for component " + compName + " !");
+				throw new RuntimeException(
+						"Negative parallelism for component " + compName + " !");
 
 			totalParallelism += parallelism;
 			SystemParameters.putInMap(map, compName + "_PAR", parallelism);
@@ -632,7 +658,8 @@ public class ParserUtil {
 		final Map<String, Integer> compNamePars = new HashMap<String, Integer>();
 		for (final Component comp : cg.getQueryBuilder().getPlan()) {
 			final String compName = comp.getName();
-			final int parallelism = cg.getCostParameters(compName).getParallelism();
+			final int parallelism = cg.getCostParameters(compName)
+					.getParallelism();
 			compNamePars.put(compName, parallelism);
 		}
 		return parallelismToMap(compNamePars, map);
@@ -651,7 +678,8 @@ public class ParserUtil {
 
 		if (statement instanceof Select) {
 			final Select selectStatement = (Select) statement;
-			final String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
+			final String queryName = SystemParameters.getString(map,
+					"DIP_QUERY_NAME");
 			final SQLVisitor parsedQuery = new SQLVisitor(queryName);
 
 			// visit whole SELECT statement
@@ -669,15 +697,18 @@ public class ParserUtil {
 
 		final StringBuilder sb = new StringBuilder("\n\nPARALLELISM:\n");
 		for (final String compName : plan.getComponentNames()) {
-			final String parallelismStr = SystemParameters.getString(map, compName + "_PAR");
-			sb.append(compName).append(" = ").append(parallelismStr).append("\n");
+			final String parallelismStr = SystemParameters.getString(map,
+					compName + "_PAR");
+			sb.append(compName).append(" = ").append(parallelismStr)
+					.append("\n");
 
 			final int parallelism = Integer.valueOf(parallelismStr);
 			totalParallelism += parallelism;
 		}
 		sb.append("END OF PARALLELISM\n");
 
-		sb.append("Total parallelism is ").append(totalParallelism).append("\n\n");
+		sb.append("Total parallelism is ").append(totalParallelism)
+				.append("\n\n");
 		return sb.toString();
 	}
 
@@ -692,16 +723,18 @@ public class ParserUtil {
 	}
 
 	private static String readSQL(Map map) {
-		final String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
-		final String sqlPath = SystemParameters.getString(map, "DIP_SQL_ROOT") + queryName
-				+ SQL_EXTENSION;
+		final String queryName = SystemParameters.getString(map,
+				"DIP_QUERY_NAME");
+		final String sqlPath = SystemParameters.getString(map, "DIP_SQL_ROOT")
+				+ queryName + SQL_EXTENSION;
 		return MyUtilities.readFileSkipEmptyAndComments(sqlPath);
 	}
 
 	public static String toString(Join join) {
 		final StringBuilder joinSB = new StringBuilder();
 
-		joinSB.append("Join: my right table is ").append(join.getRightItem()).append(".");
+		joinSB.append("Join: my right table is ").append(join.getRightItem())
+				.append(".");
 
 		String type = "";
 		if (join.isFull())
@@ -719,7 +752,8 @@ public class ParserUtil {
 		if (join.isSimple())
 			type += " Simple";
 		joinSB.append("\nThe join type(s): ").append(type).append(".");
-		joinSB.append("\nThe join condition(s): ").append(join.getOnExpression()).append(".\n");
+		joinSB.append("\nThe join condition(s): ")
+				.append(join.getOnExpression()).append(".\n");
 
 		final String joinStr = joinSB.toString();
 		return joinStr;
@@ -737,10 +771,14 @@ public class ParserUtil {
 			if (!chain.isEmpty())
 				sb.append("\n").append(chain);
 
-			if (comp.getHashIndexes() != null && !comp.getHashIndexes().isEmpty())
-				sb.append("\n HashIndexes: ").append(listToStr(comp.getHashIndexes()));
-			if (comp.getHashExpressions() != null && !comp.getHashExpressions().isEmpty())
-				sb.append("\n HashExpressions: ").append(listToStr(comp.getHashExpressions()));
+			if (comp.getHashIndexes() != null
+					&& !comp.getHashIndexes().isEmpty())
+				sb.append("\n HashIndexes: ").append(
+						listToStr(comp.getHashIndexes()));
+			if (comp.getHashExpressions() != null
+					&& !comp.getHashExpressions().isEmpty())
+				sb.append("\n HashExpressions: ").append(
+						listToStr(comp.getHashExpressions()));
 		}
 		sb.append("\n\nEND of QUERY PLAN");
 		return sb.toString();
@@ -749,5 +787,13 @@ public class ParserUtil {
 	public static String toString(Table table) {
 		return table.getWholeTableName();
 	}
+
+	private static Logger LOG = Logger.getLogger(ParserUtil.class);
+
+	public static final int NOT_FOUND = -1;
+
+	private final static String SQL_EXTENSION = ".sql";
+
+	private static HashMap<String, Integer> _uniqueNumbers = new HashMap<String, Integer>();
 
 }

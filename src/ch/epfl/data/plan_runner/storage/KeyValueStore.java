@@ -62,16 +62,19 @@ public class KeyValueStore<K, V> extends BasicStore {
 	}
 
 	public KeyValueStore(int hash_indices, Map conf) {
-		this(SystemParameters.getInt(conf, "STORAGE_MEMORY_SIZE_MB"), hash_indices, conf);
+		this(SystemParameters.getInt(conf, "STORAGE_MEMORY_SIZE_MB"),
+				hash_indices, conf);
 	}
 
 	/* Constructors */
 	public KeyValueStore(Map conf) {
-		this(SystemParameters.getInt(conf, "STORAGE_MEMORY_SIZE_MB"), DEFAULT_HASH_INDICES, conf);
+		this(SystemParameters.getInt(conf, "STORAGE_MEMORY_SIZE_MB"),
+				DEFAULT_HASH_INDICES, conf);
 	}
 
 	public KeyValueStore(TypeConversion tc, Map conf) {
-		this(SystemParameters.getInt(conf, "STORAGE_MEMORY_SIZE_MB"), DEFAULT_HASH_INDICES, conf);
+		this(SystemParameters.getInt(conf, "STORAGE_MEMORY_SIZE_MB"),
+				DEFAULT_HASH_INDICES, conf);
 		this._tc = tc;
 	}
 
@@ -93,7 +96,8 @@ public class KeyValueStore<K, V> extends BasicStore {
 		else { // inmem && inDisk
 			final ArrayList<V> resList = new ArrayList<V>();
 			resList.addAll(entry.getValues());
-			final ArrayList<V> storageElems = _storageManager.read(key.toString());
+			final ArrayList<V> storageElems = _storageManager.read(key
+					.toString());
 			resList.addAll(storageElems);
 			return resList;
 		}
@@ -175,7 +179,8 @@ public class KeyValueStore<K, V> extends BasicStore {
 			final List<V> thisValues = this.access(key);
 			final List<V> storeValues = store.access(key);
 			if (storeValues == null) {
-				LOG.info("File does not contain values for key = " + key + ".\n");
+				LOG.info("File does not contain values for key = " + key
+						+ ".\n");
 				return false;
 			}
 			Collections.sort((List) thisValues);
@@ -191,13 +196,18 @@ public class KeyValueStore<K, V> extends BasicStore {
 					if (value1 != value2)
 						if (Math.abs(((Number) value1).floatValue()
 								- ((Number) value2).floatValue()) > 0.0001) {
-							LOG.info("For key '" + key + "' computed value '" + value1
-									+ "' differs from the value from the file '" + value2 + "'.\n");
+							LOG.info("For key '"
+									+ key
+									+ "' computed value '"
+									+ value1
+									+ "' differs from the value from the file '"
+									+ value2 + "'.\n");
 							return false;
 						}
 				} else if (!value1.equals(value1)) {
 					LOG.info("For key '" + key + "' computed value '" + value1
-							+ "' differs from the value from the file '" + value2 + "'.\n");
+							+ "' differs from the value from the file '"
+							+ value2 + "'.\n");
 					return false;
 				}
 				index++;
@@ -277,40 +287,6 @@ public class KeyValueStore<K, V> extends BasicStore {
 		_objRemId = key.toString();
 		return value;
 	}
-	
-	
-	//TODO HACKED BIG TIME .. NEEDS TO BE CLEANED UP AT A DIFFERNT LEVEL
-	public void purgeState(long tillTimeStamp){
-		ArrayList<V> values;
-		final Set<K> keys = this.keySet();
-		for (final Iterator<K> it = keys.iterator(); it.hasNext();) {
-			final K key = it.next();
-			// Check memory
-			final Object obj = this._memstore.get(key);
-			if (obj != null) {
-				final HashEntry<K, V> entry = _replAlg.get(obj);				
-				values = entry.getValues();
-				String value;
-
-				for (Iterator iterator = values.iterator(); iterator.hasNext();) {
-					V v = (V) iterator.next();
-					if (this._tc != null)
-						value= _tc.toString(v);
-					else
-						value= v.toString();
-					
-					final String parts[] = value.split("\\@");
-					final long storedTimestamp = Long.valueOf(new String(parts[0]));
-					final String tupleString = parts[1];
-					if(storedTimestamp< tillTimeStamp)
-						iterator.remove();
-				}
-				
-			}
-			// Check storage
-			//removed !!!! use DST_TUPLE_STORAGE
-		}
-	}
 
 	@Override
 	public void printStore(PrintStream stream, boolean printStorage) {
@@ -344,6 +320,40 @@ public class KeyValueStore<K, V> extends BasicStore {
 						stream.print(v.toString());
 				stream.println("");
 			}
+		}
+	}
+
+	// TODO HACKED BIG TIME .. NEEDS TO BE CLEANED UP AT A DIFFERNT LEVEL
+	public void purgeState(long tillTimeStamp) {
+		ArrayList<V> values;
+		final Set<K> keys = this.keySet();
+		for (final Iterator<K> it = keys.iterator(); it.hasNext();) {
+			final K key = it.next();
+			// Check memory
+			final Object obj = this._memstore.get(key);
+			if (obj != null) {
+				final HashEntry<K, V> entry = _replAlg.get(obj);
+				values = entry.getValues();
+				String value;
+
+				for (Iterator iterator = values.iterator(); iterator.hasNext();) {
+					V v = (V) iterator.next();
+					if (this._tc != null)
+						value = _tc.toString(v);
+					else
+						value = v.toString();
+
+					final String parts[] = value.split("\\@");
+					final long storedTimestamp = Long.valueOf(new String(
+							parts[0]));
+					final String tupleString = parts[1];
+					if (storedTimestamp < tillTimeStamp)
+						iterator.remove();
+				}
+
+			}
+			// Check storage
+			// removed !!!! use DST_TUPLE_STORAGE
 		}
 	}
 

@@ -6,18 +6,16 @@ import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
 
+import backtype.storm.Config;
+import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
-import ch.epfl.data.plan_runner.components.theta.ThetaJoinStaticComponent;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
 import ch.epfl.data.plan_runner.operators.Operator;
 import ch.epfl.data.plan_runner.predicates.Predicate;
-import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
-import backtype.storm.Config;
-import backtype.storm.topology.TopologyBuilder;
 
 public class InterchangingComponent implements Component {
 	private static final long serialVersionUID = 1L;
@@ -33,13 +31,14 @@ public class InterchangingComponent implements Component {
 	private boolean _printOut;
 	private final int _multFactor;
 
-	public InterchangingComponent(Component firstParent, Component secondParent,
-			int multfactor) {
+	public InterchangingComponent(Component firstParent,
+			Component secondParent, int multfactor) {
 		_firstParent = firstParent;
 		_firstParent.setChild(this);
 		_secondParent = secondParent;
 		_secondParent.setChild(this);
-		_componentName = firstParent.getName() + "_" + secondParent.getName() + "_INTER";
+		_componentName = firstParent.getName() + "_" + secondParent.getName()
+				+ "_INTER";
 		_multFactor = multfactor;
 	}
 
@@ -87,7 +86,8 @@ public class InterchangingComponent implements Component {
 
 	@Override
 	public List<String> getFullHashList() {
-		throw new RuntimeException("Load balancing for Dynamic Theta join is done inherently!");
+		throw new RuntimeException(
+				"Load balancing for Dynamic Theta join is done inherently!");
 	}
 
 	@Override
@@ -123,7 +123,8 @@ public class InterchangingComponent implements Component {
 	@Override
 	public int hashCode() {
 		int hash = 7;
-		hash = 37 * hash + (_componentName != null ? _componentName.hashCode() : 0);
+		hash = 37 * hash
+				+ (_componentName != null ? _componentName.hashCode() : 0);
 		return hash;
 	}
 
@@ -131,8 +132,8 @@ public class InterchangingComponent implements Component {
 	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
 			List<String> allCompNames, Config conf, int hierarchyPosition) {
 
-		_interBolt = new InterchangingBolt(_firstParent, _secondParent, this, allCompNames,
-				builder, killer, conf, _multFactor);
+		_interBolt = new InterchangingBolt(_firstParent, _secondParent, this,
+				allCompNames, builder, killer, conf, _multFactor);
 
 	}
 
@@ -148,8 +149,14 @@ public class InterchangingComponent implements Component {
 	}
 
 	@Override
+	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
+		return this;
+	}
+
+	@Override
 	public Component setFullHashList(List<String> fullHashList) {
-		throw new RuntimeException("Load balancing for Dynamic Theta join is done inherently!");
+		throw new RuntimeException(
+				"Load balancing for Dynamic Theta join is done inherently!");
 	}
 
 	@Override
@@ -159,34 +166,31 @@ public class InterchangingComponent implements Component {
 	}
 
 	@Override
-	public Component setOutputPartKey(List<Integer> hashIndexes) {
-		_hashIndexes = hashIndexes;
-		return this;
+	public Component setInterComp(InterchangingComponent inter) {
+		throw new RuntimeException(
+				"Interchanging component does not support InterComp");
 	}
-	
+
+	@Override
+	public Component setJoinPredicate(Predicate joinPredicate) {
+		throw new RuntimeException(
+				"Interchanging component does not support Join Predicates");
+	}
+
 	@Override
 	public Component setOutputPartKey(int... hashIndexes) {
 		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
 	}
 
 	@Override
-	public Component setPrintOut(boolean printOut) {
-		_printOut = printOut;
+	public Component setOutputPartKey(List<Integer> hashIndexes) {
+		_hashIndexes = hashIndexes;
 		return this;
 	}
 
 	@Override
-	public Component setInterComp(InterchangingComponent inter) {
-		throw new RuntimeException("Interchanging component does not support InterComp");
-	}
-
-	@Override
-	public Component setJoinPredicate(Predicate joinPredicate) {
-		throw new RuntimeException("Interchanging component does not support Join Predicates");
-	}
-
-	@Override
-	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
+	public Component setPrintOut(boolean printOut) {
+		_printOut = printOut;
 		return this;
 	}
 }

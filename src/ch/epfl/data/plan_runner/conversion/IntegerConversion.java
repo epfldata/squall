@@ -17,40 +17,40 @@ public class IntegerConversion implements NumericConversion<Integer> {
 	public double getDistance(Integer bigger, Integer smaller) {
 		return bigger.doubleValue() - smaller.doubleValue();
 	}
-	
-	@Override
-	public Integer getOffset(Object base, double delta) {
-		return (Integer)base + (int) delta;
-	}	
 
 	@Override
 	public Integer getInitialValue() {
 		return 0;
 	}
-	
-	@Override
-	public Integer minIncrement(Object obj){
-		return (Integer)obj + getMinPositiveValue();
-	}
-	
-	@Override
-	public Integer minDecrement(Object obj){
-		return (Integer)obj - getMinPositiveValue();
-	}
-	
-	@Override
-	public Integer getMinValue() {
-		return Integer.MIN_VALUE;
-	}
-	
-	@Override
-	public Integer getMinPositiveValue() {
-		return 1;
-	}	
 
 	@Override
 	public Integer getMaxValue() {
 		return Integer.MAX_VALUE;
+	}
+
+	@Override
+	public Integer getMinPositiveValue() {
+		return 1;
+	}
+
+	@Override
+	public Integer getMinValue() {
+		return Integer.MIN_VALUE;
+	}
+
+	@Override
+	public Integer getOffset(Object base, double delta) {
+		return (Integer) base + (int) delta;
+	}
+
+	@Override
+	public Integer minDecrement(Object obj) {
+		return (Integer) obj - getMinPositiveValue();
+	}
+
+	@Override
+	public Integer minIncrement(Object obj) {
+		return (Integer) obj + getMinPositiveValue();
 	}
 
 	@Override

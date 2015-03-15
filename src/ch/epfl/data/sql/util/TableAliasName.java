@@ -38,8 +38,10 @@ public class TableAliasName {
 	 */
 	public List<String> getComponentNames() {
 		final List<String> result = new ArrayList<String>();
-		for (final Iterator iter = _nameSchemaList.entrySet().iterator(); iter.hasNext();) {
-			final Map.Entry<String, String> entry = (Map.Entry<String, String>) iter.next();
+		for (final Iterator iter = _nameSchemaList.entrySet().iterator(); iter
+				.hasNext();) {
+			final Map.Entry<String, String> entry = (Map.Entry<String, String>) iter
+					.next();
 			result.add(entry.getKey());
 		}
 		return result;
@@ -58,8 +60,8 @@ public class TableAliasName {
 	public String getSchemaName(String tableCompName) {
 		final String schemaName = _nameSchemaList.get(tableCompName);
 		if (schemaName == null)
-			throw new RuntimeException("Table with alias " + tableCompName + " does not exist in "
-					+ _queryName + " query!");
+			throw new RuntimeException("Table with alias " + tableCompName
+					+ " does not exist in " + _queryName + " query!");
 		return schemaName;
 	}
 

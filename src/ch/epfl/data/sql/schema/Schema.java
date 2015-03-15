@@ -37,8 +37,8 @@ public class Schema {
 	private Map<String, TableInfo> _schemaInfo;
 
 	public Schema(Map map) {
-		this(SystemParameters.getString(map, "DIP_SCHEMA_PATH"), SystemParameters.getDouble(map,
-				"DIP_DB_SIZE"));
+		this(SystemParameters.getString(map, "DIP_SCHEMA_PATH"),
+				SystemParameters.getDouble(map, "DIP_DB_SIZE"));
 	}
 
 	public Schema(String path, double scallingFactor) {
@@ -49,7 +49,8 @@ public class Schema {
 			_schemaInfo = SchemaParser.getSchemaInfo(_path, _scallingFactor);
 		} catch (final ParseException ex) {
 			final String err = MyUtilities.getStackTrace(ex);
-			throw new RuntimeException("Schema " + _path + " cannot be parsed!\n " + err);
+			throw new RuntimeException("Schema " + _path
+					+ " cannot be parsed!\n " + err);
 		}
 	}
 
@@ -119,8 +120,8 @@ public class Schema {
 	private TableInfo getTableInfo(String tableSchemaName) {
 		final TableInfo table = _schemaInfo.get(tableSchemaName);
 		if (table == null)
-			throw new RuntimeException("Table " + tableSchemaName + " does not exist in Schema \n "
-					+ _path + " !");
+			throw new RuntimeException("Table " + tableSchemaName
+					+ " does not exist in Schema \n " + _path + " !");
 		return table;
 	}
 
@@ -151,7 +152,8 @@ public class Schema {
 	public TypeConversion getType(String fullSchemaColumnName) {
 		final ColumnInfo column = getColumnInfo(fullSchemaColumnName);
 		if (column == null)
-			throw new RuntimeException("Column " + fullSchemaColumnName + " does not exist !");
+			throw new RuntimeException("Column " + fullSchemaColumnName
+					+ " does not exist !");
 		return column.getType();
 	}
 

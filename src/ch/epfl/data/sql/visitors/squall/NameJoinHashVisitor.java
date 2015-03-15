@@ -2,14 +2,6 @@ package ch.epfl.data.sql.visitors.squall;
 
 import java.util.List;
 
-import ch.epfl.data.plan_runner.components.Component;
-import ch.epfl.data.plan_runner.conversion.TypeConversion;
-import ch.epfl.data.plan_runner.expressions.ColumnReference;
-import ch.epfl.data.plan_runner.expressions.ValueExpression;
-import ch.epfl.data.sql.optimizers.name.NameTranslator;
-import ch.epfl.data.sql.util.NotFromMyBranchException;
-import ch.epfl.data.sql.util.ParserUtil;
-import ch.epfl.data.sql.util.TupleSchema;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.expression.Parenthesis;
@@ -18,6 +10,14 @@ import net.sf.jsqlparser.expression.operators.arithmetic.Division;
 import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
 import net.sf.jsqlparser.expression.operators.arithmetic.Subtraction;
 import net.sf.jsqlparser.schema.Column;
+import ch.epfl.data.plan_runner.components.Component;
+import ch.epfl.data.plan_runner.conversion.TypeConversion;
+import ch.epfl.data.plan_runner.expressions.ColumnReference;
+import ch.epfl.data.plan_runner.expressions.ValueExpression;
+import ch.epfl.data.sql.optimizers.name.NameTranslator;
+import ch.epfl.data.sql.util.NotFromMyBranchException;
+import ch.epfl.data.sql.util.ParserUtil;
+import ch.epfl.data.sql.util.TupleSchema;
 
 public class NameJoinHashVisitor extends IndexJoinHashVisitor {
 	private final NameTranslator _nt;
@@ -25,7 +25,8 @@ public class NameJoinHashVisitor extends IndexJoinHashVisitor {
 
 	private final TupleSchema _tupleSchema;
 
-	public NameJoinHashVisitor(TupleSchema tupleSchema, Component affectedComponent) {
+	public NameJoinHashVisitor(TupleSchema tupleSchema,
+			Component affectedComponent) {
 		_tupleSchema = tupleSchema;
 		_affectedComponent = affectedComponent;
 
@@ -63,7 +64,8 @@ public class NameJoinHashVisitor extends IndexJoinHashVisitor {
 	@Override
 	public void visit(Column column) {
 		final String tableCompName = ParserUtil.getComponentName(column);
-		final List<String> ancestorNames = ParserUtil.getSourceNameList(_affectedComponent);
+		final List<String> ancestorNames = ParserUtil
+				.getSourceNameList(_affectedComponent);
 
 		if (ancestorNames.contains(tableCompName)) {
 			// extract the position (index) of the required column

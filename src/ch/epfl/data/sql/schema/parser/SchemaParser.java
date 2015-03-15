@@ -83,7 +83,8 @@ public class SchemaParser implements SchemaParserConstants {
 			else if (type.equalsIgnoreCase("DATE"))
 				return _dtc;
 			else
-				throw new RuntimeException("Error setting type for column " + _name
+				throw new RuntimeException("Error setting type for column "
+						+ _name
 						+ ". Only LONG, DOUBLE, STRING or DATE are allowed.");
 		}
 
@@ -92,7 +93,8 @@ public class SchemaParser implements SchemaParserConstants {
 			final StringBuilder sb = new StringBuilder();
 			sb.append(_name).append(" of type ").append(_type);
 			sb.append(" Distinct Values = ").append(_distinctValues);
-			sb.append(" Range [").append(_minValue).append(", ").append(_maxValue).append("]");
+			sb.append(" Range [").append(_minValue).append(", ")
+					.append(_maxValue).append("]");
 			return sb.toString();
 		}
 	}
@@ -141,15 +143,12 @@ public class SchemaParser implements SchemaParserConstants {
 			sb.append("\u005cnTABLE NAME ").append(_name);
 			sb.append(", SIZE ").append(_tableSize);
 			sb.append("\u005cn  with COLUMNS:\u005cn");
-			for (final Map.Entry<String, ColumnInfo> entry : _columns.entrySet())
+			for (final Map.Entry<String, ColumnInfo> entry : _columns
+					.entrySet())
 				sb.append("    ").append(entry.getValue()).append("\u005cn");
 			return sb.toString();
 		}
 	}
-
-	private static Logger LOG = Logger.getLogger(SchemaParser.class);
-
-	public static long INVALID = -1;
 
 	public static InputStream getFileInputStream(String path) {
 		// create file object
@@ -160,7 +159,8 @@ public class SchemaParser implements SchemaParserConstants {
 		try {
 			fin = new FileInputStream(file);
 		} catch (final FileNotFoundException e) {
-			LOG.info("File " + file.getAbsolutePath() + " could not be found on filesystem");
+			LOG.info("File " + file.getAbsolutePath()
+					+ " could not be found on filesystem");
 		}
 
 		return fin;
@@ -174,19 +174,29 @@ public class SchemaParser implements SchemaParserConstants {
 		return sb.toString();
 	}
 
-	public static Map<String, TableInfo> getSchemaInfo(String path, double scallingFactor)
-			throws ParseException {
+	public static Map<String, TableInfo> getSchemaInfo(String path,
+			double scallingFactor) throws ParseException {
 		final SchemaParser parser = new SchemaParser(getFileInputStream(path));
 		return parser.Input(scallingFactor);
+	}
+
+	private static void jj_la1_init_0() {
+		jj_la1_0 = new int[] { 0x8000, 0x1000, 0x1c0000, 0x1000, 0x80, 0x400,
+				0x16000, 0x16000, };
 	}
 
 	/** Main entry point. */
 	public static void main(String args[]) throws ParseException {
 		final String path = args[0];
 		final double scallingFactor = Double.valueOf(args[1]);
-		final Map<String, TableInfo> tables = getSchemaInfo(path, scallingFactor);
+		final Map<String, TableInfo> tables = getSchemaInfo(path,
+				scallingFactor);
 		LOG.info(getParsedString(tables));
 	}
+
+	private static Logger LOG = Logger.getLogger(SchemaParser.class);
+
+	public static long INVALID = -1;
 
 	/** Generated Token Manager. */
 	public SchemaParserTokenManager token_source;
@@ -209,10 +219,6 @@ public class SchemaParser implements SchemaParserConstants {
 
 	static {
 		jj_la1_init_0();
-	}
-
-	private static void jj_la1_init_0() {
-		jj_la1_0 = new int[] { 0x8000, 0x1000, 0x1c0000, 0x1000, 0x80, 0x400, 0x16000, 0x16000, };
 	}
 
 	private final java.util.List<int[]> jj_expentries = new java.util.ArrayList<int[]>();
@@ -264,7 +270,8 @@ public class SchemaParser implements SchemaParserConstants {
 	final public void disable_tracing() {
 	}
 
-	final public void DistinctValues(ColumnInfo ci, double scallingFactor) throws ParseException {
+	final public void DistinctValues(ColumnInfo ci, double scallingFactor)
+			throws ParseException {
 		long numValue;
 		jj_consume_token(DISTINCTVAL);
 		jj_consume_token(EQ);
@@ -324,7 +331,8 @@ public class SchemaParser implements SchemaParserConstants {
 	}
 
 	/** Root production. */
-	final public Map<String, TableInfo> Input(double scallingFactor) throws ParseException {
+	final public Map<String, TableInfo> Input(double scallingFactor)
+			throws ParseException {
 		final Map<String, TableInfo> _tables = new HashMap<String, TableInfo>();
 		TableInfo ti;
 		label_1: while (true) {
@@ -371,7 +379,8 @@ public class SchemaParser implements SchemaParserConstants {
 	}
 
 	/** Column recognition */
-	final public ColumnInfo MatchedColumn(double scallingFactor) throws ParseException {
+	final public ColumnInfo MatchedColumn(double scallingFactor)
+			throws ParseException {
 		final ColumnInfo ci = new ColumnInfo();
 		Token token;
 		token = jj_consume_token(ID);
@@ -408,7 +417,8 @@ public class SchemaParser implements SchemaParserConstants {
 		throw new Error("Missing return statement in function");
 	}
 
-	final public Object MatchedObject(ColumnInfo ci, double scallingFactor) throws ParseException {
+	final public Object MatchedObject(ColumnInfo ci, double scallingFactor)
+			throws ParseException {
 		Token token;
 		Object value;
 		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
@@ -443,7 +453,8 @@ public class SchemaParser implements SchemaParserConstants {
 				value = (double) (dbc.toDouble(dvalue) * scallingFactor);
 			} else {
 				if (true)
-					throw new RuntimeException("Only Long and Double can be scalled out!");
+					throw new RuntimeException(
+							"Only Long and Double can be scalled out!");
 			}
 			break;
 		default:
@@ -458,7 +469,8 @@ public class SchemaParser implements SchemaParserConstants {
 	}
 
 	/** Table recognition */
-	final public TableInfo MatchedTable(double scallingFactor) throws ParseException {
+	final public TableInfo MatchedTable(double scallingFactor)
+			throws ParseException {
 		final TableInfo ti = new TableInfo();
 		ColumnInfo ci;
 		Token token;
@@ -502,7 +514,8 @@ public class SchemaParser implements SchemaParserConstants {
 		throw new Error("Missing return statement in function");
 	}
 
-	final public void MaxValue(ColumnInfo ci, double scallingFactor) throws ParseException {
+	final public void MaxValue(ColumnInfo ci, double scallingFactor)
+			throws ParseException {
 		Object obj;
 		jj_consume_token(MAXVAL);
 		jj_consume_token(EQ);
@@ -510,7 +523,8 @@ public class SchemaParser implements SchemaParserConstants {
 		ci.setMaxValue(obj);
 	}
 
-	final public void MinValue(ColumnInfo ci, double scallingFactor) throws ParseException {
+	final public void MinValue(ColumnInfo ci, double scallingFactor)
+			throws ParseException {
 		Object obj;
 		jj_consume_token(MINVAL);
 		jj_consume_token(EQ);
@@ -518,7 +532,8 @@ public class SchemaParser implements SchemaParserConstants {
 		ci.setMinValue(obj);
 	}
 
-	final public void OptionalColumn(ColumnInfo ci, double scallingFactor) throws ParseException {
+	final public void OptionalColumn(ColumnInfo ci, double scallingFactor)
+			throws ParseException {
 		label_3: while (true) {
 			switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
 			case MAXVAL:

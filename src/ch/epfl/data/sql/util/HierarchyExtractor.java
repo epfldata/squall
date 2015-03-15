@@ -10,7 +10,8 @@ import ch.epfl.data.plan_runner.components.Component;
  */
 public class HierarchyExtractor {
 
-	private static boolean contains(Set<String> biggerSet, Set<String> smallerSet) {
+	private static boolean contains(Set<String> biggerSet,
+			Set<String> smallerSet) {
 		if (biggerSet.size() < smallerSet.size())
 			return false;
 		for (final String smallerElem : smallerSet)
@@ -49,7 +50,8 @@ public class HierarchyExtractor {
 
 		for (int i = 0; i < parents.length; i++) {
 			final Component parent = parents[i];
-			final Set<String> parentAncestors = ParserUtil.getSourceNameSet(parent);
+			final Set<String> parentAncestors = ParserUtil
+					.getSourceNameSet(parent);
 			if (contains(parentAncestors, orCompNames))
 				// my parent is LCM (or its parent)
 				return false;
@@ -57,7 +59,8 @@ public class HierarchyExtractor {
 
 		// if I contain all the mentioned sources, and none of my parent does
 		// so, than I am LCM
-		final Set<String> compAncestors = ParserUtil.getSourceNameSet(component);
+		final Set<String> compAncestors = ParserUtil
+				.getSourceNameSet(component);
 		return contains(compAncestors, orCompNames);
 	}
 

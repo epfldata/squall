@@ -31,6 +31,11 @@ public class VECollectPredVisitor implements PredicateVisitor {
 	}
 
 	@Override
+	public void visit(booleanPrimitive bool) {
+
+	}
+
+	@Override
 	public void visit(ComparisonPredicate comparison) {
 		_veList.addAll(comparison.getExpressions());
 	}
@@ -48,11 +53,6 @@ public class VECollectPredVisitor implements PredicateVisitor {
 	@Override
 	public void visit(OrPredicate or) {
 		visit(or.getInnerPredicates());
-	}
-
-	@Override
-	public void visit(booleanPrimitive bool) {
-		
 	}
 
 }

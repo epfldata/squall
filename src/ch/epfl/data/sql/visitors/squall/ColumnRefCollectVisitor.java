@@ -34,14 +34,14 @@ public class ColumnRefCollectVisitor implements ValueExpressionVisitor {
 	}
 
 	@Override
+	public void visit(DateDiff dd) {
+		visit(dd.getInnerExpressions());
+	}
+
+	@Override
 	public void visit(DateSum ds) {
 		visit(ds.getInnerExpressions());
 	}
-	
-	@Override
-	public void visit(DateDiff dd) {
-		visit(dd.getInnerExpressions());
-	}	
 
 	@Override
 	public void visit(Division dvsn) {

@@ -22,7 +22,7 @@ public class ShuffleStreamGrouping implements CustomStreamGrouping {
 	private List<Integer> _targetTasks;
 
 	private final Map _map;
-	
+
 	private Random _rndGen = new Random();
 
 	/*
@@ -35,15 +35,17 @@ public class ShuffleStreamGrouping implements CustomStreamGrouping {
 	@Override
 	public List<Integer> chooseTasks(int taskId, List<Object> stormTuple) {
 		final List<String> tuple = (List<String>) stormTuple.get(1);
-		if (MyUtilities.isFinalAck(tuple, _map)){
+		if (MyUtilities.isFinalAck(tuple, _map)) {
 			// send to everyone
 			return _targetTasks;
-		}else
-			return Arrays.asList(_targetTasks.get(_rndGen.nextInt(_numTargetTasks)));
+		} else
+			return Arrays.asList(_targetTasks.get(_rndGen
+					.nextInt(_numTargetTasks)));
 	}
 
 	@Override
-	public void prepare(WorkerTopologyContext wtc, GlobalStreamId gsi, List<Integer> targetTasks) {
+	public void prepare(WorkerTopologyContext wtc, GlobalStreamId gsi,
+			List<Integer> targetTasks) {
 		_targetTasks = targetTasks;
 		_numTargetTasks = targetTasks.size();
 	}

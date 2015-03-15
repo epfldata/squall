@@ -45,8 +45,10 @@ public class VECollectVisitor implements OperatorVisitor {
 			if (distinct != null)
 				visitNested(aggregation.getDistinct());
 			if (aggregation.getGroupByProjection() != null) {
-				_afterProjection.addAll(aggregation.getGroupByProjection().getExpressions());
-				_veList.addAll(aggregation.getGroupByProjection().getExpressions());
+				_afterProjection.addAll(aggregation.getGroupByProjection()
+						.getExpressions());
+				_veList.addAll(aggregation.getGroupByProjection()
+						.getExpressions());
 			}
 			_afterProjection.addAll(aggregation.getExpressions());
 			_veList.addAll(aggregation.getExpressions());
@@ -60,13 +62,15 @@ public class VECollectVisitor implements OperatorVisitor {
 	}
 
 	public void visit(Component component) {
-		final List<ValueExpression> hashExpressions = component.getHashExpressions();
+		final List<ValueExpression> hashExpressions = component
+				.getHashExpressions();
 		if (hashExpressions != null) {
 			_afterProjection.addAll(hashExpressions);
 			_veList.addAll(hashExpressions);
 		}
 
-		final List<Operator> operators = component.getChainOperator().getOperators();
+		final List<Operator> operators = component.getChainOperator()
+				.getOperators();
 		for (final Operator op : operators)
 			op.accept(this);
 	}
@@ -78,11 +82,27 @@ public class VECollectVisitor implements OperatorVisitor {
 				"EarlyProjection cannon work if in bottom-up phase encounter Distinct!");
 	}
 
+	@Override
+	public void visit(PrintOperator printOperator) {
+		// nothing to visit or add
+	}
+
 	// unsupported
 	// because we assing by ourselves to projection
 	@Override
 	public void visit(ProjectOperator projection) {
 		// ignored because of topDown - makes no harm
+	}
+
+	@Override
+	public void visit(
+			SampleAsideAndForwardOperator sampleAsideAndForwardOperator) {
+		// nothing to visit or add
+	}
+
+	@Override
+	public void visit(SampleOperator sampleOperator) {
+		// nothing to visit or add
 	}
 
 	@Override
@@ -105,20 +125,5 @@ public class VECollectVisitor implements OperatorVisitor {
 			_afterProjection.addAll(projection.getExpressions());
 			_veList.addAll(projection.getExpressions());
 		}
-	}
-
-	@Override
-	public void visit(PrintOperator printOperator) {
-		// nothing to visit or add
-	}
-
-	@Override
-	public void visit(SampleOperator sampleOperator) {
-		// nothing to visit or add
-	}
-
-	@Override
-	public void visit(SampleAsideAndForwardOperator sampleAsideAndForwardOperator) {
-		// nothing to visit or add
 	}
 }

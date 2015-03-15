@@ -6,26 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
-import ch.epfl.data.plan_runner.components.Component;
-import ch.epfl.data.plan_runner.conversion.DateConversion;
-import ch.epfl.data.plan_runner.conversion.DoubleConversion;
-import ch.epfl.data.plan_runner.conversion.LongConversion;
-import ch.epfl.data.plan_runner.conversion.StringConversion;
-import ch.epfl.data.plan_runner.conversion.TypeConversion;
-import ch.epfl.data.plan_runner.expressions.ColumnReference;
-import ch.epfl.data.plan_runner.expressions.IntegerYearFromDate;
-import ch.epfl.data.plan_runner.expressions.ValueExpression;
-import ch.epfl.data.plan_runner.expressions.ValueSpecification;
-import ch.epfl.data.plan_runner.operators.SelectOperator;
-import ch.epfl.data.plan_runner.predicates.AndPredicate;
-import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
-import ch.epfl.data.plan_runner.predicates.LikePredicate;
-import ch.epfl.data.plan_runner.predicates.OrPredicate;
-import ch.epfl.data.plan_runner.predicates.Predicate;
-import ch.epfl.data.sql.optimizers.index.IndexTranslator;
-import ch.epfl.data.sql.schema.Schema;
-import ch.epfl.data.sql.util.ParserUtil;
-import ch.epfl.data.sql.util.TableAliasName;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
 import net.sf.jsqlparser.expression.AnyComparisonExpression;
 import net.sf.jsqlparser.expression.BinaryExpression;
@@ -70,6 +50,26 @@ import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
+import ch.epfl.data.plan_runner.components.Component;
+import ch.epfl.data.plan_runner.conversion.DateConversion;
+import ch.epfl.data.plan_runner.conversion.DoubleConversion;
+import ch.epfl.data.plan_runner.conversion.LongConversion;
+import ch.epfl.data.plan_runner.conversion.StringConversion;
+import ch.epfl.data.plan_runner.conversion.TypeConversion;
+import ch.epfl.data.plan_runner.expressions.ColumnReference;
+import ch.epfl.data.plan_runner.expressions.IntegerYearFromDate;
+import ch.epfl.data.plan_runner.expressions.ValueExpression;
+import ch.epfl.data.plan_runner.expressions.ValueSpecification;
+import ch.epfl.data.plan_runner.operators.SelectOperator;
+import ch.epfl.data.plan_runner.predicates.AndPredicate;
+import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
+import ch.epfl.data.plan_runner.predicates.LikePredicate;
+import ch.epfl.data.plan_runner.predicates.OrPredicate;
+import ch.epfl.data.plan_runner.predicates.Predicate;
+import ch.epfl.data.sql.optimizers.index.IndexTranslator;
+import ch.epfl.data.sql.schema.Schema;
+import ch.epfl.data.sql.util.ParserUtil;
+import ch.epfl.data.sql.util.TableAliasName;
 
 /*
  * Translates JSQL expressions to a SelectionOperator of a component.
@@ -101,7 +101,8 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 	protected IndexWhereVisitor() {
 	}
 
-	public IndexWhereVisitor(Component affectedComponent, Schema schema, TableAliasName tan) {
+	public IndexWhereVisitor(Component affectedComponent, Schema schema,
+			TableAliasName tan) {
 		_affectedComponent = affectedComponent;
 		_schema = schema;
 		_tan = tan;
@@ -132,7 +133,8 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 		final ValueExpression right = _exprStack.pop();
 		final ValueExpression left = _exprStack.pop();
 
-		final ValueExpression add = new ch.epfl.data.plan_runner.expressions.Addition(left, right);
+		final ValueExpression add = new ch.epfl.data.plan_runner.expressions.Addition(
+				left, right);
 		_exprStack.push(add);
 	}
 
@@ -185,7 +187,8 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 	@Override
 	public void visit(Column column) {
 		// extract type for the column
-		final TypeConversion tc = _schema.getType(ParserUtil.getFullSchemaColumnName(column, _tan));
+		final TypeConversion tc = _schema.getType(ParserUtil
+				.getFullSchemaColumnName(column, _tan));
 
 		// extract the position (index) of the required column
 		final int position = _it.getColumnIndex(column, _affectedComponent);
@@ -201,7 +204,8 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 
 	@Override
 	public void visit(DateValue dv) {
-		final ValueExpression ve = new ValueSpecification(_dateConv, dv.getValue());
+		final ValueExpression ve = new ValueSpecification(_dateConv,
+				dv.getValue());
 		_exprStack.push(ve);
 	}
 
@@ -212,13 +216,15 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 		final ValueExpression right = _exprStack.pop();
 		final ValueExpression left = _exprStack.pop();
 
-		final ValueExpression division = new ch.epfl.data.plan_runner.expressions.Division(left, right);
+		final ValueExpression division = new ch.epfl.data.plan_runner.expressions.Division(
+				left, right);
 		_exprStack.push(division);
 	}
 
 	@Override
 	public void visit(DoubleValue dv) {
-		final ValueExpression ve = new ValueSpecification(_dblConv, dv.getValue());
+		final ValueExpression ve = new ValueSpecification(_dblConv,
+				dv.getValue());
 		_exprStack.push(ve);
 	}
 
@@ -229,8 +235,8 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 		final ValueExpression right = _exprStack.pop();
 		final ValueExpression left = _exprStack.pop();
 
-		final ComparisonPredicate cp = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP, left,
-				right);
+		final ComparisonPredicate cp = new ComparisonPredicate(
+				ComparisonPredicate.EQUAL_OP, left, right);
 		_predStack.push(cp);
 	}
 
@@ -241,7 +247,8 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 
 	@Override
 	public void visit(ExpressionList el) {
-		for (final Iterator iter = el.getExpressions().iterator(); iter.hasNext();) {
+		for (final Iterator iter = el.getExpressions().iterator(); iter
+				.hasNext();) {
 			final Expression expression = (Expression) iter.next();
 			expression.accept(this);
 		}
@@ -273,7 +280,8 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 		final String fnName = function.getName();
 		if (fnName.equalsIgnoreCase("EXTRACT_YEAR")) {
 			if (numParams != 1)
-				throw new RuntimeException("EXTRACT_YEAR function has exactly one parameter!");
+				throw new RuntimeException(
+						"EXTRACT_YEAR function has exactly one parameter!");
 			final ValueExpression expr = expressions.get(0);
 			final ValueExpression ve = new IntegerYearFromDate(expr);
 			_exprStack.push(ve);
@@ -287,8 +295,8 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 		final ValueExpression right = _exprStack.pop();
 		final ValueExpression left = _exprStack.pop();
 
-		final ComparisonPredicate cp = new ComparisonPredicate(ComparisonPredicate.GREATER_OP,
-				left, right);
+		final ComparisonPredicate cp = new ComparisonPredicate(
+				ComparisonPredicate.GREATER_OP, left, right);
 		_predStack.push(cp);
 	}
 
@@ -299,8 +307,8 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 		final ValueExpression right = _exprStack.pop();
 		final ValueExpression left = _exprStack.pop();
 
-		final ComparisonPredicate cp = new ComparisonPredicate(ComparisonPredicate.NONLESS_OP,
-				left, right);
+		final ComparisonPredicate cp = new ComparisonPredicate(
+				ComparisonPredicate.NONLESS_OP, left, right);
 		_predStack.push(cp);
 	}
 
@@ -353,8 +361,8 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 		final ValueExpression right = _exprStack.pop();
 		final ValueExpression left = _exprStack.pop();
 
-		final ComparisonPredicate cp = new ComparisonPredicate(ComparisonPredicate.LESS_OP, left,
-				right);
+		final ComparisonPredicate cp = new ComparisonPredicate(
+				ComparisonPredicate.LESS_OP, left, right);
 		_predStack.push(cp);
 	}
 
@@ -365,8 +373,8 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 		final ValueExpression right = _exprStack.pop();
 		final ValueExpression left = _exprStack.pop();
 
-		final ComparisonPredicate cp = new ComparisonPredicate(ComparisonPredicate.NONGREATER_OP,
-				left, right);
+		final ComparisonPredicate cp = new ComparisonPredicate(
+				ComparisonPredicate.NONGREATER_OP, left, right);
 		_predStack.push(cp);
 	}
 
@@ -377,7 +385,8 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 		final ValueExpression right = _exprStack.pop();
 		final ValueExpression left = _exprStack.pop();
 
-		final ValueExpression mult = new ch.epfl.data.plan_runner.expressions.Multiplication(left, right);
+		final ValueExpression mult = new ch.epfl.data.plan_runner.expressions.Multiplication(
+				left, right);
 		_exprStack.push(mult);
 	}
 
@@ -388,8 +397,8 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 		final ValueExpression right = _exprStack.pop();
 		final ValueExpression left = _exprStack.pop();
 
-		final ComparisonPredicate cp = new ComparisonPredicate(ComparisonPredicate.NONEQUAL_OP,
-				left, right);
+		final ComparisonPredicate cp = new ComparisonPredicate(
+				ComparisonPredicate.NONEQUAL_OP, left, right);
 		_predStack.push(cp);
 	}
 
@@ -433,7 +442,8 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 		final ValueExpression right = _exprStack.pop();
 		final ValueExpression left = _exprStack.pop();
 
-		final ValueExpression sub = new ch.epfl.data.plan_runner.expressions.Subtraction(left, right);
+		final ValueExpression sub = new ch.epfl.data.plan_runner.expressions.Subtraction(
+				left, right);
 		_exprStack.push(sub);
 	}
 

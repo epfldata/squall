@@ -5,14 +5,15 @@ import java.util.Map;
 public class ThetaQueryPlansParameters {
 
 	/**
-	 * (ThetaJoinType = 0 = STATIC PARTITIONING) 
-	 * (ThetaJoinType = 1 = DYNAMIC PARTITIONING ADVISED NON-BLOCKING EPOCHS)
-	 * (ThetaJoinType = 2 = STATIC PARTITIONING MBUCKET) 
-	 * (ThetaJoinType = 3 = DYNAMIC PARTITIONING ADVISED NON-BLOCKING EPOCHS MBUCKET)
+	 * (ThetaJoinType = 0 = STATIC PARTITIONING) (ThetaJoinType = 1 = DYNAMIC
+	 * PARTITIONING ADVISED NON-BLOCKING EPOCHS) (ThetaJoinType = 2 = STATIC
+	 * PARTITIONING MBUCKET) (ThetaJoinType = 3 = DYNAMIC PARTITIONING ADVISED
+	 * NON-BLOCKING EPOCHS MBUCKET)
 	 */
 
 	public static long getThetaDynamicRefreshRate(Map conf) {
-		final String refreshRate = (String) conf.get("DIP_THETA_CLOCK_REFRESH_RATE_MILLISECONDS");
+		final String refreshRate = (String) conf
+				.get("DIP_THETA_CLOCK_REFRESH_RATE_MILLISECONDS");
 		return Long.valueOf(refreshRate);
 	}
 

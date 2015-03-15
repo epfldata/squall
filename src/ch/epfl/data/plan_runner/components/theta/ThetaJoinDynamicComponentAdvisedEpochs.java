@@ -16,6 +16,8 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
+import backtype.storm.Config;
+import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
@@ -23,7 +25,6 @@ import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
 import ch.epfl.data.plan_runner.operators.Operator;
 import ch.epfl.data.plan_runner.predicates.Predicate;
-import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
 import ch.epfl.data.plan_runner.storm_components.InterchangingComponent;
 import ch.epfl.data.plan_runner.storm_components.StormComponent;
 import ch.epfl.data.plan_runner.storm_components.StormEmitter;
@@ -35,12 +36,11 @@ import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 import ch.epfl.data.plan_runner.utilities.thetajoin_dynamic.ThetaDataMigrationJoinerToReshufflerMapping;
 import ch.epfl.data.plan_runner.utilities.thetajoin_dynamic.ThetaJoinDynamicMapping;
-import backtype.storm.Config;
-import backtype.storm.topology.TopologyBuilder;
 
 public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 	private static final long serialVersionUID = 1L;
-	private static Logger LOG = Logger.getLogger(ThetaJoinDynamicComponentAdvisedEpochs.class);
+	private static Logger LOG = Logger
+			.getLogger(ThetaJoinDynamicComponentAdvisedEpochs.class);
 	private final Component _firstParent;
 	private final Component _secondParent;
 	private Component _child;
@@ -57,16 +57,18 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 	private int _joinerParallelism;
 	private InterchangingComponent _interComp = null;
 
-	public ThetaJoinDynamicComponentAdvisedEpochs(Component firstParent, Component secondParent) {
+	public ThetaJoinDynamicComponentAdvisedEpochs(Component firstParent,
+			Component secondParent) {
 		_firstParent = firstParent;
 		_firstParent.setChild(this);
 		_secondParent = secondParent;
 		if (_secondParent != null) {
 			_secondParent.setChild(this);
-			_componentName = firstParent.getName() + "_" + secondParent.getName();
+			_componentName = firstParent.getName() + "_"
+					+ secondParent.getName();
 		} else
-			_componentName = new String(firstParent.getName().split("-")[0]) + "_"
-					+ new String(firstParent.getName().split("-")[1]);
+			_componentName = new String(firstParent.getName().split("-")[0])
+					+ "_" + new String(firstParent.getName().split("-")[1]);
 	}
 
 	@Override
@@ -114,7 +116,8 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 
 	@Override
 	public List<String> getFullHashList() {
-		throw new RuntimeException("Load balancing for Dynamic Theta join is done inherently!");
+		throw new RuntimeException(
+				"Load balancing for Dynamic Theta join is done inherently!");
 	}
 
 	@Override
@@ -158,7 +161,8 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 	@Override
 	public int hashCode() {
 		int hash = 7;
-		hash = 37 * hash + (_componentName != null ? _componentName.hashCode() : 0);
+		hash = 37 * hash
+				+ (_componentName != null ? _componentName.hashCode() : 0);
 		return hash;
 	}
 
@@ -168,21 +172,26 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 
 		// by default print out for the last component
 		// for other conditions, can be set via setPrintOut
-		if (hierarchyPosition == StormComponent.FINAL_COMPONENT && !_printOutSet)
+		if (hierarchyPosition == StormComponent.FINAL_COMPONENT
+				&& !_printOutSet)
 			setPrintOut(true);
-		_joinerParallelism = SystemParameters.getInt(conf, _componentName + "_PAR");
-		MyUtilities.checkBatchOutput(_batchOutputMillis, _chain.getAggregation(), conf);
+		_joinerParallelism = SystemParameters.getInt(conf, _componentName
+				+ "_PAR");
+		MyUtilities.checkBatchOutput(_batchOutputMillis,
+				_chain.getAggregation(), conf);
 
 		int firstCardinality, secondCardinality;
 		if (_secondParent == null) { // then first has to be of type
 			// Interchanging Emitter
-			firstCardinality = SystemParameters.getInt(conf, new String(_firstParent.getName().split("-")[0]
-					+ "_CARD"));
-			secondCardinality = SystemParameters.getInt(conf, new String(_firstParent.getName().split("-")[1]
-					+ "_CARD"));
+			firstCardinality = SystemParameters.getInt(conf, new String(
+					_firstParent.getName().split("-")[0] + "_CARD"));
+			secondCardinality = SystemParameters.getInt(conf, new String(
+					_firstParent.getName().split("-")[1] + "_CARD"));
 		} else {
-			firstCardinality = SystemParameters.getInt(conf, _firstParent.getName() + "_CARD");
-			secondCardinality = SystemParameters.getInt(conf, _secondParent.getName() + "_CARD");
+			firstCardinality = SystemParameters.getInt(conf,
+					_firstParent.getName() + "_CARD");
+			secondCardinality = SystemParameters.getInt(conf,
+					_secondParent.getName() + "_CARD");
 		}
 
 		final EquiMatrixAssignment _currentMappingAssignment = new EquiMatrixAssignment(
@@ -195,16 +204,17 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 		// create the bolts ..
 
 		// Create the reshuffler.
-		_reshuffler = new ThetaReshufflerAdvisedEpochs(_firstParent, _secondParent,
-				allCompNames, _joinerParallelism, hierarchyPosition, conf, builder, dim);
+		_reshuffler = new ThetaReshufflerAdvisedEpochs(_firstParent,
+				_secondParent, allCompNames, _joinerParallelism,
+				hierarchyPosition, conf, builder, dim);
 
 		if (_interComp != null)
 			_reshuffler.set_interComp(_interComp);
 
 		// Create the Join Bolt.
-		_joiner = new ThetaJoinerDynamicAdvisedEpochs(_firstParent, _secondParent, this,
-				allCompNames, _joinPredicate, hierarchyPosition, builder, killer, conf,
-				_reshuffler, dim);
+		_joiner = new ThetaJoinerDynamicAdvisedEpochs(_firstParent,
+				_secondParent, this, allCompNames, _joinPredicate,
+				hierarchyPosition, builder, killer, conf, _reshuffler, dim);
 		_reshuffler.setJoinerID(_joiner.getID());
 
 		/*
@@ -216,7 +226,8 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 
 		// 2) Hook up the previous emitters to the reshuffler
 
-		final ThetaJoinDynamicMapping dMap = new ThetaJoinDynamicMapping(conf, -1);
+		final ThetaJoinDynamicMapping dMap = new ThetaJoinDynamicMapping(conf,
+				-1);
 		final ArrayList<StormEmitter> emittersList = new ArrayList<StormEmitter>();
 		if (_interComp == null) {
 			emittersList.add(_firstParent);
@@ -254,7 +265,8 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 	}
 
 	@Override
-	public ThetaJoinDynamicComponentAdvisedEpochs setBatchOutputMillis(long millis) {
+	public ThetaJoinDynamicComponentAdvisedEpochs setBatchOutputMillis(
+			long millis) {
 		_batchOutputMillis = millis;
 		return this;
 	}
@@ -264,11 +276,18 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 		_child = child;
 	}
 
+	// TODO IMPLEMENT ME
+	@Override
+	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
+		return this;
+	}
+
 	// list of distinct keys, used for direct stream grouping and load-balancing
 	// ()
 	@Override
 	public ThetaJoinStaticComponent setFullHashList(List<String> fullHashList) {
-		throw new RuntimeException("Load balancing for Dynamic Theta join is done inherently!");
+		throw new RuntimeException(
+				"Load balancing for Dynamic Theta join is done inherently!");
 	}
 
 	@Override
@@ -279,23 +298,28 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 	}
 
 	@Override
-	public ThetaJoinDynamicComponentAdvisedEpochs setOutputPartKey(List<Integer> hashIndexes) {
-		_hashIndexes = hashIndexes;
-		return this;
-	}
-	
-	@Override
-	public ThetaJoinDynamicComponentAdvisedEpochs setOutputPartKey(int... hashIndexes) {
-		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
-	}
-
-	public ThetaJoinDynamicComponentAdvisedEpochs setInterComp(InterchangingComponent _interComp) {
+	public ThetaJoinDynamicComponentAdvisedEpochs setInterComp(
+			InterchangingComponent _interComp) {
 		this._interComp = _interComp;
 		return this;
 	}
 
+	@Override
 	public Component setJoinPredicate(Predicate joinPredicate) {
 		_joinPredicate = joinPredicate;
+		return this;
+	}
+
+	@Override
+	public ThetaJoinDynamicComponentAdvisedEpochs setOutputPartKey(
+			int... hashIndexes) {
+		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
+	}
+
+	@Override
+	public ThetaJoinDynamicComponentAdvisedEpochs setOutputPartKey(
+			List<Integer> hashIndexes) {
+		_hashIndexes = hashIndexes;
 		return this;
 	}
 
@@ -303,13 +327,6 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 	public ThetaJoinDynamicComponentAdvisedEpochs setPrintOut(boolean printOut) {
 		_printOutSet = true;
 		_printOut = printOut;
-		return this;
-	}
-
-	
-	//TODO IMPLEMENT ME
-	@Override
-	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
 		return this;
 	}
 

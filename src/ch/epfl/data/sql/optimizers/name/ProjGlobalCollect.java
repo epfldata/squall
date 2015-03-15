@@ -3,13 +3,13 @@ package ch.epfl.data.sql.optimizers.name;
 import java.util.ArrayList;
 import java.util.List;
 
-import ch.epfl.data.sql.visitors.jsql.AndVisitor;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 import net.sf.jsqlparser.statement.select.SelectItem;
+import ch.epfl.data.sql.visitors.jsql.AndVisitor;
 
 /*
  * This is executed once before the dynamic Selinger approach has started.
@@ -65,7 +65,8 @@ public class ProjGlobalCollect {
 	private void processSelectClause(List<SelectItem> selectItems) {
 		for (final SelectItem si : selectItems)
 			if (si instanceof SelectExpressionItem) {
-				final Expression selectExpr = ((SelectExpressionItem) si).getExpression();
+				final Expression selectExpr = ((SelectExpressionItem) si)
+						.getExpression();
 				if (!(selectExpr instanceof Function))
 					_exprList.add(selectExpr);
 				else {

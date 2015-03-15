@@ -20,8 +20,8 @@ import ch.epfl.data.plan_runner.thetajoin.indexes.Index;
 
 public class PredicateCreateIndexesVisitor implements PredicateVisitor {
 
-	public static class typeComparator<T extends Comparable<T>> implements Comparator<T>,
-			Serializable {
+	public static class typeComparator<T extends Comparable<T>> implements
+			Comparator<T>, Serializable {
 
 		/**
 		 * 
@@ -55,6 +55,11 @@ public class PredicateCreateIndexesVisitor implements PredicateVisitor {
 	}
 
 	@Override
+	public void visit(booleanPrimitive bool) {
+
+	}
+
+	@Override
 	public void visit(ComparisonPredicate comparison) {
 		_operatorForIndexes.add(comparison.getOperation());
 		_typeOfValueIndexed.add(comparison.getType());
@@ -81,37 +86,57 @@ public class PredicateCreateIndexesVisitor implements PredicateVisitor {
 			if (comparison.getIndexType() == ComparisonPredicate.BALANCEDBINARYTREE) {
 				if (comparison.getType() instanceof Integer) {
 					_firstRelationIndexes
-							.add(new BalancedBinaryTreeIndex<Integer>().setDiff(_diff));
-					_secondRelationIndexes.add(new BalancedBinaryTreeIndex<Integer>()
-							.setDiff(_diff));
+							.add(new BalancedBinaryTreeIndex<Integer>()
+									.setDiff(_diff));
+					_secondRelationIndexes
+							.add(new BalancedBinaryTreeIndex<Integer>()
+									.setDiff(_diff));
 				} else if (comparison.getType() instanceof Double) {
-					_firstRelationIndexes.add(new BalancedBinaryTreeIndex<Double>().setDiff(_diff));
+					_firstRelationIndexes
+							.add(new BalancedBinaryTreeIndex<Double>()
+									.setDiff(_diff));
 					_secondRelationIndexes
-							.add(new BalancedBinaryTreeIndex<Double>().setDiff(_diff));
+							.add(new BalancedBinaryTreeIndex<Double>()
+									.setDiff(_diff));
 				} else if (comparison.getType() instanceof String) {
-					_firstRelationIndexes.add(new BalancedBinaryTreeIndex<String>().setDiff(_diff));
+					_firstRelationIndexes
+							.add(new BalancedBinaryTreeIndex<String>()
+									.setDiff(_diff));
 					_secondRelationIndexes
-							.add(new BalancedBinaryTreeIndex<String>().setDiff(_diff));
+							.add(new BalancedBinaryTreeIndex<String>()
+									.setDiff(_diff));
 				} else if (comparison.getType() instanceof Date) {
-					_firstRelationIndexes.add(new BalancedBinaryTreeIndex<Date>().setDiff(_diff));
-					_secondRelationIndexes.add(new BalancedBinaryTreeIndex<Date>().setDiff(_diff));
+					_firstRelationIndexes
+							.add(new BalancedBinaryTreeIndex<Date>()
+									.setDiff(_diff));
+					_secondRelationIndexes
+							.add(new BalancedBinaryTreeIndex<Date>()
+									.setDiff(_diff));
 				} else
 					throw new RuntimeException("non supported type");
 			} else if (comparison.getIndexType() == ComparisonPredicate.BPLUSTREE)
 				// TREE
 				if (comparison.getType() instanceof Integer) {
-					_firstRelationIndexes.add(new BplusTreeIndex<Integer>(100, 100).setDiff(_diff));
-					_secondRelationIndexes
-							.add(new BplusTreeIndex<Integer>(100, 100).setDiff(_diff));
+					_firstRelationIndexes.add(new BplusTreeIndex<Integer>(100,
+							100).setDiff(_diff));
+					_secondRelationIndexes.add(new BplusTreeIndex<Integer>(100,
+							100).setDiff(_diff));
 				} else if (comparison.getType() instanceof Double) {
-					_firstRelationIndexes.add(new BplusTreeIndex<Double>(100, 100).setDiff(_diff));
-					_secondRelationIndexes.add(new BplusTreeIndex<Double>(100, 100).setDiff(_diff));
+					_firstRelationIndexes.add(new BplusTreeIndex<Double>(100,
+							100).setDiff(_diff));
+					_secondRelationIndexes.add(new BplusTreeIndex<Double>(100,
+							100).setDiff(_diff));
 				} else if (comparison.getType() instanceof String) {
-					_firstRelationIndexes.add(new BplusTreeIndex<String>(100, 100));
-					_secondRelationIndexes.add(new BplusTreeIndex<String>(100, 100));
+					_firstRelationIndexes.add(new BplusTreeIndex<String>(100,
+							100));
+					_secondRelationIndexes.add(new BplusTreeIndex<String>(100,
+							100));
 				} else if (comparison.getType() instanceof Date) {
-					_firstRelationIndexes.add(new BplusTreeIndex<Date>(100, 100).setDiff(_diff));
-					_secondRelationIndexes.add(new BplusTreeIndex<Date>(100, 100).setDiff(_diff));
+					_firstRelationIndexes
+							.add(new BplusTreeIndex<Date>(100, 100)
+									.setDiff(_diff));
+					_secondRelationIndexes.add(new BplusTreeIndex<Date>(100,
+							100).setDiff(_diff));
 				} else
 					throw new RuntimeException("non supported type");
 		}
@@ -130,10 +155,5 @@ public class PredicateCreateIndexesVisitor implements PredicateVisitor {
 
 	public void visit(Predicate pred) {
 		pred.accept(this);
-	}
-
-	@Override
-	public void visit(booleanPrimitive bool) {
-		
 	}
 }

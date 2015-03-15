@@ -12,7 +12,8 @@ import ch.epfl.data.plan_runner.visitors.ValueExpressionVisitor;
  *   does not result in exception in the constructor,
  *   but rather in evalString method.
  */
-public class ValueSpecification<T extends Comparable<T>> implements ValueExpression<T> {
+public class ValueSpecification<T extends Comparable<T>> implements
+		ValueExpression<T> {
 	private static final long serialVersionUID = 1L;
 
 	private T _constant;

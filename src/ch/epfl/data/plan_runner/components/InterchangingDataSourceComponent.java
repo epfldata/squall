@@ -6,22 +6,22 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
+import backtype.storm.Config;
+import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
 import ch.epfl.data.plan_runner.operators.Operator;
 import ch.epfl.data.plan_runner.predicates.Predicate;
-import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
 import ch.epfl.data.plan_runner.storm_components.InterchangingComponent;
 import ch.epfl.data.plan_runner.storm_components.StormComponent;
 import ch.epfl.data.plan_runner.storm_components.StormInterchangingDataSource;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
-import backtype.storm.Config;
-import backtype.storm.topology.TopologyBuilder;
 
 public class InterchangingDataSourceComponent implements Component {
 	private static final long serialVersionUID = 1L;
-	private static Logger LOG = Logger.getLogger(InterchangingDataSourceComponent.class);
+	private static Logger LOG = Logger
+			.getLogger(InterchangingDataSourceComponent.class);
 
 	private final String _componentName;
 	private final String _inputPathRel1, _inputPathRel2;
@@ -43,8 +43,8 @@ public class InterchangingDataSourceComponent implements Component {
 
 	private final int _multFactor;
 
-	public InterchangingDataSourceComponent(String componentName, String inputPath1,
-			String inputPath2, int multfactor) {
+	public InterchangingDataSourceComponent(String componentName,
+			String inputPath1, String inputPath2, int multfactor) {
 		_componentName = componentName;
 		_inputPathRel1 = inputPath1;
 		_inputPathRel2 = inputPath2;
@@ -115,7 +115,8 @@ public class InterchangingDataSourceComponent implements Component {
 
 	@Override
 	public List<String> getFullHashList() {
-		throw new RuntimeException("This method should not be invoked for DataSourceComponent!");
+		throw new RuntimeException(
+				"This method should not be invoked for DataSourceComponent!");
 	}
 
 	@Override
@@ -151,7 +152,8 @@ public class InterchangingDataSourceComponent implements Component {
 	@Override
 	public int hashCode() {
 		int hash = 3;
-		hash = 59 * hash + (_componentName != null ? _componentName.hashCode() : 0);
+		hash = 59 * hash
+				+ (_componentName != null ? _componentName.hashCode() : 0);
 		return hash;
 	}
 
@@ -161,16 +163,19 @@ public class InterchangingDataSourceComponent implements Component {
 
 		// by default print out for the last component
 		// for other conditions, can be set via setPrintOut
-		if (hierarchyPosition == StormComponent.FINAL_COMPONENT && !_printOutSet)
+		if (hierarchyPosition == StormComponent.FINAL_COMPONENT
+				&& !_printOutSet)
 			setPrintOut(true);
 
-		_dataSource = new StormInterchangingDataSource(this, allCompNames, _multFactor,
-				_inputPathRel1, _inputPathRel2, hierarchyPosition, builder, killer, conf);
+		_dataSource = new StormInterchangingDataSource(this, allCompNames,
+				_multFactor, _inputPathRel1, _inputPathRel2, hierarchyPosition,
+				builder, killer, conf);
 	}
 
 	@Override
 	public InterchangingDataSourceComponent setBatchOutputMillis(long millis) {
-		throw new RuntimeException("Setting batch mode is not allowed for DataSourceComponents!");
+		throw new RuntimeException(
+				"Setting batch mode is not allowed for DataSourceComponents!");
 		// _batchOutputMillis = millis;
 		// return this;
 	}
@@ -181,46 +186,52 @@ public class InterchangingDataSourceComponent implements Component {
 	}
 
 	@Override
-	public InterchangingDataSourceComponent setFullHashList(List<String> fullHashList) {
-		throw new RuntimeException("This method should not be invoked for DataSourceComponent!");
+	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
+		return this;
 	}
 
 	@Override
-	public InterchangingDataSourceComponent setHashExpressions(List<ValueExpression> hashExpressions) {
+	public InterchangingDataSourceComponent setFullHashList(
+			List<String> fullHashList) {
+		throw new RuntimeException(
+				"This method should not be invoked for DataSourceComponent!");
+	}
+
+	@Override
+	public InterchangingDataSourceComponent setHashExpressions(
+			List<ValueExpression> hashExpressions) {
 		_hashExpressions = hashExpressions;
 		return this;
 	}
 
 	@Override
-	public InterchangingDataSourceComponent setOutputPartKey(List<Integer> hashIndexes) {
-		_hashIndexes = hashIndexes;
-		return this;
+	public Component setInterComp(InterchangingComponent inter) {
+		throw new RuntimeException(
+				"InterchangingDatasource component does not support setInterComp");
 	}
-	
+
+	@Override
+	public Component setJoinPredicate(Predicate joinPredicate) {
+		throw new RuntimeException(
+				"InterchangingDatasource component does not support Join Predicates");
+	}
+
 	@Override
 	public InterchangingDataSourceComponent setOutputPartKey(int... hashIndexes) {
 		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
 	}
 
 	@Override
+	public InterchangingDataSourceComponent setOutputPartKey(
+			List<Integer> hashIndexes) {
+		_hashIndexes = hashIndexes;
+		return this;
+	}
+
+	@Override
 	public InterchangingDataSourceComponent setPrintOut(boolean printOut) {
 		_printOutSet = true;
 		_printOut = printOut;
-		return this;
-	}
-	
-	@Override
-	public Component setInterComp(InterchangingComponent inter) {
-		throw new RuntimeException("InterchangingDatasource component does not support setInterComp");
-	}
-
-	@Override
-	public Component setJoinPredicate(Predicate joinPredicate) {
-		throw new RuntimeException("InterchangingDatasource component does not support Join Predicates");
-	}
-
-	@Override
-	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
 		return this;
 	}
 

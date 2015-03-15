@@ -47,8 +47,9 @@ public interface SchemaParserConstants {
 	int DEFAULT = 0;
 
 	/** Literal token values. */
-	String[] tokenImage = { "<EOF>", "\" \"", "\"\\t\"", "\"\\n\"", "\"\\r\"", "\"(\"", "\")\"",
-			"\"[\"", "\"]\"", "\";\"", "\",\"", "\"=\"", "\":S\"", "\"MAX\"", "\"MIN\"",
-			"\"TABLE\"", "\"DISTINCT\"", "<TYPE>", "<LONG_NUM>", "<ID>", "<STR>", };
+	String[] tokenImage = { "<EOF>", "\" \"", "\"\\t\"", "\"\\n\"", "\"\\r\"",
+			"\"(\"", "\")\"", "\"[\"", "\"]\"", "\";\"", "\",\"", "\"=\"",
+			"\":S\"", "\"MAX\"", "\"MIN\"", "\"TABLE\"", "\"DISTINCT\"",
+			"<TYPE>", "<LONG_NUM>", "<ID>", "<STR>", };
 
 }

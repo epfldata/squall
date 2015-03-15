@@ -11,7 +11,8 @@ public class OrPredicate implements Predicate {
 
 	private final List<Predicate> _predicateList = new ArrayList<Predicate>();
 
-	public OrPredicate(Predicate pred1, Predicate pred2, Predicate... predicateArray) {
+	public OrPredicate(Predicate pred1, Predicate pred2,
+			Predicate... predicateArray) {
 		_predicateList.add(pred1);
 		_predicateList.add(pred2);
 		_predicateList.addAll(Arrays.asList(predicateArray));
@@ -36,7 +37,8 @@ public class OrPredicate implements Predicate {
 	}
 
 	@Override
-	public boolean test(List<String> firstTupleValues, List<String> secondTupleValues) {
+	public boolean test(List<String> firstTupleValues,
+			List<String> secondTupleValues) {
 		for (final Predicate pred : _predicateList)
 			if (pred.test(firstTupleValues, secondTupleValues) == true)
 				return true;

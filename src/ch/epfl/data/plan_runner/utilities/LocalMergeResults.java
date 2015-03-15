@@ -17,18 +17,6 @@ import ch.epfl.data.plan_runner.storage.AggregationStorage;
 import ch.epfl.data.plan_runner.storm_components.StormComponent;
 
 public class LocalMergeResults {
-	private static Logger LOG = Logger.getLogger(LocalMergeResults.class);
-
-	// for writing the full final result in Local Mode
-	private static int _collectedLastComponents = 0;
-	private static int _numTuplesProcessed = 0;
-	// the number of tuples the componentTask is reponsible for (!! not how many
-	// tuples are in storage!!)
-
-	private static AggregateOperator _computedAgg;
-	private static AggregateOperator _fileAgg;
-	private static Semaphore _semFullResult = new Semaphore(1, true);
-
 	private static void addMoreResults(AggregateOperator lastAgg, Map map) {
 		if (_computedAgg == null) {
 			// first task of the last component asked to be added
@@ -38,11 +26,12 @@ public class LocalMergeResults {
 			_fileAgg = (AggregateOperator) DeepCopy.copy(_computedAgg);
 			fillAggFromResultFile(map);
 		}
-		((AggregationStorage) _computedAgg.getStorage()).addContent((AggregationStorage) (lastAgg
-				.getStorage()));
+		((AggregationStorage) _computedAgg.getStorage())
+				.addContent((AggregationStorage) (lastAgg.getStorage()));
 	}
 
-	private static AggregateOperator createOverallAgg(AggregateOperator lastAgg, Map map) {
+	private static AggregateOperator createOverallAgg(
+			AggregateOperator lastAgg, Map map) {
 		final TypeConversion wrapper = lastAgg.getType();
 		AggregateOperator overallAgg;
 
@@ -103,8 +92,10 @@ public class LocalMergeResults {
 		final String rootDir = getResultDir(map);
 		final String schemaName = getSchemaName(map);
 		final String dataSize = getDataSizeInfo(map);
-		final String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
-		return rootDir + "/" + schemaName + "/" + dataSize + "/" + queryName + ".result";
+		final String queryName = SystemParameters.getString(map,
+				"DIP_QUERY_NAME");
+		return rootDir + "/" + schemaName + "/" + dataSize + "/" + queryName
+				+ ".result";
 	}
 
 	/*
@@ -119,8 +110,8 @@ public class LocalMergeResults {
 	// comparing the results in Local Mode
 	// called on the component task level, when all Spouts fully propagated
 	// their tuples
-	public static void localCollectFinalResult(AggregateOperator lastAgg, int hierarchyPosition,
-			Map map, Logger log) {
+	public static void localCollectFinalResult(AggregateOperator lastAgg,
+			int hierarchyPosition, Map map, Logger log) {
 		if ((!SystemParameters.getBoolean(map, "DIP_DISTRIBUTED"))
 				&& hierarchyPosition == StormComponent.FINAL_COMPONENT)
 			try {
@@ -133,14 +124,15 @@ public class LocalMergeResults {
 
 				_semFullResult.release();
 			} catch (final InterruptedException ex) {
-				throw new RuntimeException("InterruptedException unexpectedly occured!");
+				throw new RuntimeException(
+						"InterruptedException unexpectedly occured!");
 			}
 	}
 
 	private static void localCompare(Map map) {
 		if (_fileAgg == null) {
-			LOG.info("\nCannot validate the result, result file " + getResultFilePath(map)
-					+ " does not exist."
+			LOG.info("\nCannot validate the result, result file "
+					+ getResultFilePath(map) + " does not exist."
 					+ "\n  Make sure you specified correct DIP_RESULT_ROOT and"
 					+ "\n  created result file with correct name.");
 			return;
@@ -153,7 +145,8 @@ public class LocalMergeResults {
 			sb.append("\nPROBLEM: Not expected result achieved for ").append(
 					SystemParameters.getString(map, "DIP_TOPOLOGY_NAME"));
 			sb.append("\nCOMPUTED: \n").append(_computedAgg.printContent());
-			sb.append("\nFROM THE RESULT FILE: \n").append(_fileAgg.printContent());
+			sb.append("\nFROM THE RESULT FILE: \n").append(
+					_fileAgg.printContent());
 			LOG.info(sb.toString());
 		}
 	}
@@ -161,7 +154,8 @@ public class LocalMergeResults {
 	private static void localPrint(String finalResult, Map map) {
 		final StringBuilder sb = new StringBuilder();
 		sb.append("\nThe full result for topology ");
-		sb.append(SystemParameters.getString(map, "DIP_TOPOLOGY_NAME")).append(".");
+		sb.append(SystemParameters.getString(map, "DIP_TOPOLOGY_NAME")).append(
+				".");
 		sb.append("\nCollected from ").append(_collectedLastComponents)
 				.append(" component tasks of the last component.");
 		sb.append("\nAll the tasks of the last component in total received ")
@@ -179,4 +173,19 @@ public class LocalMergeResults {
 		localPrint(_computedAgg.printContent(), map);
 		localCompare(map);
 	}
+
+	private static Logger LOG = Logger.getLogger(LocalMergeResults.class);
+
+	// for writing the full final result in Local Mode
+	private static int _collectedLastComponents = 0;
+
+	private static int _numTuplesProcessed = 0;
+	// the number of tuples the componentTask is reponsible for (!! not how many
+	// tuples are in storage!!)
+
+	private static AggregateOperator _computedAgg;
+
+	private static AggregateOperator _fileAgg;
+
+	private static Semaphore _semFullResult = new Semaphore(1, true);
 }

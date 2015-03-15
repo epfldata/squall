@@ -6,7 +6,8 @@ public class BufferedTuple {
 	private final String _tupleString;
 	private final String _tupleHash;
 
-	public BufferedTuple(String componentName, String tupleString, String tupleHash) {
+	public BufferedTuple(String componentName, String tupleString,
+			String tupleHash) {
 		_componentName = componentName;
 		_tupleString = tupleString;
 		_tupleHash = tupleHash;

@@ -6,12 +6,12 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import ch.epfl.data.plan_runner.thetajoin.matrix_mapping.MatrixAssignment;
-import ch.epfl.data.plan_runner.thetajoin.matrix_mapping.MatrixAssignment.Dimension;
-import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import backtype.storm.generated.GlobalStreamId;
 import backtype.storm.grouping.CustomStreamGrouping;
 import backtype.storm.task.WorkerTopologyContext;
+import ch.epfl.data.plan_runner.thetajoin.matrix_mapping.MatrixAssignment;
+import ch.epfl.data.plan_runner.thetajoin.matrix_mapping.MatrixAssignment.Dimension;
+import ch.epfl.data.plan_runner.utilities.MyUtilities;
 
 public class ThetaJoinStaticMapping implements CustomStreamGrouping {
 	private static final long serialVersionUID = 1L;
@@ -56,7 +56,8 @@ public class ThetaJoinStaticMapping implements CustomStreamGrouping {
 		if (tableName.equals(_firstEmitterIndex))
 			tasks = translateIdsToTasks(_assignment.getRegionIDs(Dimension.ROW));
 		else if (tableName.equals(_secondEmitterIndex))
-			tasks = translateIdsToTasks(_assignment.getRegionIDs(Dimension.COLUMN));
+			tasks = translateIdsToTasks(_assignment
+					.getRegionIDs(Dimension.COLUMN));
 		else {
 			LOG.info("First Name: " + _firstEmitterIndex);
 			LOG.info("Second Name: " + _secondEmitterIndex);
@@ -67,7 +68,8 @@ public class ThetaJoinStaticMapping implements CustomStreamGrouping {
 	}
 
 	@Override
-	public void prepare(WorkerTopologyContext wtc, GlobalStreamId gsi, List<Integer> targetTasks) {
+	public void prepare(WorkerTopologyContext wtc, GlobalStreamId gsi,
+			List<Integer> targetTasks) {
 		// LOG.info("Number of tasks is : "+numTasks);
 		_targetTasks = targetTasks;
 	}

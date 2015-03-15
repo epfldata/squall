@@ -5,10 +5,10 @@ import java.util.Random;
 
 import org.apache.log4j.Logger;
 
-import ch.epfl.data.plan_runner.components.ComponentProperties;
-import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
+import ch.epfl.data.plan_runner.components.ComponentProperties;
+import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 
 /*
  * This class works only for Hyracks query.
@@ -28,10 +28,12 @@ public class StormRandomDataSource extends StormDataSource {
 	private final int _customerProduced;
 	private final int _ordersProduced;
 
-	public StormRandomDataSource(ComponentProperties cp, List<String> allCompNames,
-			String inputPath, int hierarchyPosition, int parallelism, TopologyBuilder builder,
-			TopologyKiller killer, Config conf) {
-		super(cp, allCompNames, inputPath, hierarchyPosition, parallelism, false, builder, killer, conf);
+	public StormRandomDataSource(ComponentProperties cp,
+			List<String> allCompNames, String inputPath, int hierarchyPosition,
+			int parallelism, TopologyBuilder builder, TopologyKiller killer,
+			Config conf) {
+		super(cp, allCompNames, inputPath, hierarchyPosition, parallelism,
+				false, builder, killer, conf);
 
 		_customerProduced = _customerTotal / parallelism;
 		_ordersProduced = _ordersTotal / parallelism;

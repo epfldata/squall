@@ -12,11 +12,11 @@ import ch.epfl.data.plan_runner.storm_components.StormComponent;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 
 public class StatisticsUtilities implements Serializable {
-	private static final long serialVersionUID = 1L;
-
 	public static double bytesToMegabytes(long bytes) {
 		return bytes / 1024;
 	}
+
+	private static final long serialVersionUID = 1L;
 
 	private final int STATS_TEST = 1; // 1-> memoryTest & output Test anything
 	// Else->time Test
@@ -31,11 +31,13 @@ public class StatisticsUtilities implements Serializable {
 
 	public StatisticsUtilities(Map conf, Logger LOG) {
 		if (SystemParameters.isExisting(conf, "DIP_INPUT_FREQ_PRINT")) {
-			dipInputFreqPrint = SystemParameters.getInt(conf, "DIP_INPUT_FREQ_PRINT");
+			dipInputFreqPrint = SystemParameters.getInt(conf,
+					"DIP_INPUT_FREQ_PRINT");
 			LOG.info("Setting MemoryTestNumTuples to " + dipInputFreqPrint);
 		}
 		if (SystemParameters.isExisting(conf, "DIP_OUTPUT_FREQ_PRINT")) {
-			dipOutputFreqPrint = SystemParameters.getInt(conf, "DIP_OUTPUT_FREQ_PRINT");
+			dipOutputFreqPrint = SystemParameters.getInt(conf,
+					"DIP_OUTPUT_FREQ_PRINT");
 			LOG.info("Setting OutputTestNumTuples to " + dipOutputFreqPrint);
 		}
 	}
@@ -52,8 +54,9 @@ public class StatisticsUtilities implements Serializable {
 		return STATS_TEST == isTest;
 	}
 
-	public void printInitialStats(Logger LOG, int thisTaskID, int firstRelationSize,
-			int firstTaggedRelationSize, int secondRelationSize, int secondTaggedRelationSize) {
+	public void printInitialStats(Logger LOG, int thisTaskID,
+			int firstRelationSize, int firstTaggedRelationSize,
+			int secondRelationSize, int secondTaggedRelationSize) {
 		final Runtime runtime = Runtime.getRuntime();
 		final long memory = runtime.totalMemory() - runtime.freeMemory();
 		LOG.info(","
@@ -67,35 +70,49 @@ public class StatisticsUtilities implements Serializable {
 				+ ", SecondStorage:,"
 				+ (secondRelationSize + secondTaggedRelationSize)
 				+ ", Total:,"
-				+ (firstRelationSize + secondRelationSize + firstTaggedRelationSize + secondTaggedRelationSize)
+				+ (firstRelationSize + secondRelationSize
+						+ firstTaggedRelationSize + secondTaggedRelationSize)
 				+ ", Memory used: ," + bytesToMegabytes(memory) + ","
 				+ bytesToMegabytes(runtime.totalMemory()));
 	}
 
-	public void printMemoryStats(int heirarchyPosition, Logger LOG, int thisTaskID,
-			long numberOfTuplesMemory, int firstRelationSize, int firstTaggedRelationSize,
-			int secondRelationSize, int secondTaggedRelationSize) {
+	public void printMemoryStats(int heirarchyPosition, Logger LOG,
+			int thisTaskID, long numberOfTuplesMemory, int firstRelationSize,
+			int firstTaggedRelationSize, int secondRelationSize,
+			int secondTaggedRelationSize) {
 		if (STATS_TEST == isTest)
 			if (heirarchyPosition == StormComponent.FINAL_COMPONENT) {
 				final Runtime runtime = Runtime.getRuntime();
-				final long memory = runtime.totalMemory() - runtime.freeMemory();
-				LOG.info("," + "MEMORY," + thisTaskID + ",:" + "TimeStamp:,"
-						+ dateFormat.format(Calendar.getInstance().getTime()) + ", FirstStorage:,"
-						+ (firstRelationSize + firstTaggedRelationSize) + ", SecondStorage:,"
-						+ (secondRelationSize + secondTaggedRelationSize) + ", Total:,"
-						+ (numberOfTuplesMemory) + ", Memory used: ,"
-						+ StatisticsUtilities.bytesToMegabytes(memory) + ","
-						+ StatisticsUtilities.bytesToMegabytes(runtime.totalMemory()));
+				final long memory = runtime.totalMemory()
+						- runtime.freeMemory();
+				LOG.info(","
+						+ "MEMORY,"
+						+ thisTaskID
+						+ ",:"
+						+ "TimeStamp:,"
+						+ dateFormat.format(Calendar.getInstance().getTime())
+						+ ", FirstStorage:,"
+						+ (firstRelationSize + firstTaggedRelationSize)
+						+ ", SecondStorage:,"
+						+ (secondRelationSize + secondTaggedRelationSize)
+						+ ", Total:,"
+						+ (numberOfTuplesMemory)
+						+ ", Memory used: ,"
+						+ StatisticsUtilities.bytesToMegabytes(memory)
+						+ ","
+						+ StatisticsUtilities.bytesToMegabytes(runtime
+								.totalMemory()));
 			}
 	}
 
-	public void printResultStats(int heirarchyPosition, Logger LOG, long numTuplesOutputted,
-			int thisTaskID, boolean isPrintAnyway) {
-		if (STATS_TEST == isTest && (numTuplesOutputted % dipOutputFreqPrint == 0 || isPrintAnyway))
+	public void printResultStats(int heirarchyPosition, Logger LOG,
+			long numTuplesOutputted, int thisTaskID, boolean isPrintAnyway) {
+		if (STATS_TEST == isTest
+				&& (numTuplesOutputted % dipOutputFreqPrint == 0 || isPrintAnyway))
 			if (heirarchyPosition == StormComponent.FINAL_COMPONENT)
 				LOG.info("," + "RESULT," + thisTaskID + "," + "TimeStamp:,"
-						+ dateFormat.format(Calendar.getInstance().getTime()) + ",Sent Tuples,"
-						+ numTuplesOutputted);
+						+ dateFormat.format(Calendar.getInstance().getTime())
+						+ ",Sent Tuples," + numTuplesOutputted);
 	}
 
 }

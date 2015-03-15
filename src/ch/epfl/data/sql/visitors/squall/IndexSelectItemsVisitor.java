@@ -7,25 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import ch.epfl.data.plan_runner.components.Component;
-import ch.epfl.data.plan_runner.conversion.DateConversion;
-import ch.epfl.data.plan_runner.conversion.DoubleConversion;
-import ch.epfl.data.plan_runner.conversion.LongConversion;
-import ch.epfl.data.plan_runner.conversion.StringConversion;
-import ch.epfl.data.plan_runner.conversion.TypeConversion;
-import ch.epfl.data.plan_runner.expressions.ColumnReference;
-import ch.epfl.data.plan_runner.expressions.IntegerYearFromDate;
-import ch.epfl.data.plan_runner.expressions.ValueExpression;
-import ch.epfl.data.plan_runner.expressions.ValueSpecification;
-import ch.epfl.data.plan_runner.operators.AggregateCountOperator;
-import ch.epfl.data.plan_runner.operators.AggregateOperator;
-import ch.epfl.data.plan_runner.operators.AggregateSumOperator;
-import ch.epfl.data.plan_runner.operators.DistinctOperator;
-import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
-import ch.epfl.data.sql.optimizers.index.IndexTranslator;
-import ch.epfl.data.sql.schema.Schema;
-import ch.epfl.data.sql.util.ParserUtil;
-import ch.epfl.data.sql.util.TableAliasName;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
 import net.sf.jsqlparser.expression.AnyComparisonExpression;
 import net.sf.jsqlparser.expression.BinaryExpression;
@@ -74,13 +55,32 @@ import net.sf.jsqlparser.statement.select.AllTableColumns;
 import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 import net.sf.jsqlparser.statement.select.SelectItemVisitor;
 import net.sf.jsqlparser.statement.select.SubSelect;
+import ch.epfl.data.plan_runner.components.Component;
+import ch.epfl.data.plan_runner.conversion.DateConversion;
+import ch.epfl.data.plan_runner.conversion.DoubleConversion;
+import ch.epfl.data.plan_runner.conversion.LongConversion;
+import ch.epfl.data.plan_runner.conversion.StringConversion;
+import ch.epfl.data.plan_runner.conversion.TypeConversion;
+import ch.epfl.data.plan_runner.expressions.ColumnReference;
+import ch.epfl.data.plan_runner.expressions.IntegerYearFromDate;
+import ch.epfl.data.plan_runner.expressions.ValueExpression;
+import ch.epfl.data.plan_runner.expressions.ValueSpecification;
+import ch.epfl.data.plan_runner.operators.AggregateCountOperator;
+import ch.epfl.data.plan_runner.operators.AggregateOperator;
+import ch.epfl.data.plan_runner.operators.AggregateSumOperator;
+import ch.epfl.data.plan_runner.operators.DistinctOperator;
+import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
+import ch.epfl.data.sql.optimizers.index.IndexTranslator;
+import ch.epfl.data.sql.schema.Schema;
+import ch.epfl.data.sql.util.ParserUtil;
+import ch.epfl.data.sql.util.TableAliasName;
 
 /*
  * Generates Aggregations and its groupBy projections.
  *   If there is no aggregation, these groupBy projections becomes simple projections
  */
-public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVisitor,
-		ItemsListVisitor {
+public class IndexSelectItemsVisitor implements SelectItemVisitor,
+		ExpressionVisitor, ItemsListVisitor {
 	// all of these needed only for visit(Column) method
 	private Schema _schema;
 	private Component _affectedComponent;
@@ -115,7 +115,8 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
 		_map = map;
 	}
 
-	public IndexSelectItemsVisitor(QueryBuilder queryPlan, Schema schema, TableAliasName tan, Map map) {
+	public IndexSelectItemsVisitor(QueryBuilder queryPlan, Schema schema,
+			TableAliasName tan, Map map) {
 		_schema = schema;
 		_tan = tan;
 		_map = map;
@@ -188,7 +189,8 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
 		final ValueExpression right = _exprStack.pop();
 		final ValueExpression left = _exprStack.pop();
 
-		final ValueExpression ve = new ch.epfl.data.plan_runner.expressions.Addition(left, right);
+		final ValueExpression ve = new ch.epfl.data.plan_runner.expressions.Addition(
+				left, right);
 		_exprStack.push(ve);
 	}
 
@@ -251,7 +253,8 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
 	@Override
 	public void visit(Column column) {
 		// extract type for the column
-		final TypeConversion tc = _schema.getType(ParserUtil.getFullSchemaColumnName(column, _tan));
+		final TypeConversion tc = _schema.getType(ParserUtil
+				.getFullSchemaColumnName(column, _tan));
 
 		// extract the position (index) of the required column
 		final int position = _it.getColumnIndex(column, _affectedComponent);
@@ -267,7 +270,8 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
 
 	@Override
 	public void visit(DateValue dv) {
-		final ValueExpression ve = new ValueSpecification(_dateConv, dv.getValue());
+		final ValueExpression ve = new ValueSpecification(_dateConv,
+				dv.getValue());
 		_exprStack.push(ve);
 	}
 
@@ -278,13 +282,15 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
 		final ValueExpression right = _exprStack.pop();
 		final ValueExpression left = _exprStack.pop();
 
-		final ValueExpression ve = new ch.epfl.data.plan_runner.expressions.Division(left, right);
+		final ValueExpression ve = new ch.epfl.data.plan_runner.expressions.Division(
+				left, right);
 		_exprStack.push(ve);
 	}
 
 	@Override
 	public void visit(DoubleValue dv) {
-		final ValueExpression ve = new ValueSpecification(_dblConv, dv.getValue());
+		final ValueExpression ve = new ValueSpecification(_dblConv,
+				dv.getValue());
 		_exprStack.push(ve);
 	}
 
@@ -300,7 +306,8 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
 
 	@Override
 	public void visit(ExpressionList el) {
-		for (final Iterator iter = el.getExpressions().iterator(); iter.hasNext();) {
+		for (final Iterator iter = el.getExpressions().iterator(); iter
+				.hasNext();) {
 			final Expression expression = (Expression) iter.next();
 			expression.accept(this);
 		}
@@ -338,7 +345,8 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
 			createCount(expressions, function.isDistinct());
 		else if (fnName.equalsIgnoreCase("EXTRACT_YEAR")) {
 			if (numParams != 1)
-				throw new RuntimeException("EXTRACT_YEAR function has exactly one parameter!");
+				throw new RuntimeException(
+						"EXTRACT_YEAR function has exactly one parameter!");
 			final ValueExpression expr = expressions.get(0);
 			final ValueExpression ve = new IntegerYearFromDate(expr);
 			_exprStack.push(ve);
@@ -408,7 +416,8 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
 		final ValueExpression right = _exprStack.pop();
 		final ValueExpression left = _exprStack.pop();
 
-		final ValueExpression ve = new ch.epfl.data.plan_runner.expressions.Multiplication(left, right);
+		final ValueExpression ve = new ch.epfl.data.plan_runner.expressions.Multiplication(
+				left, right);
 		_exprStack.push(ve);
 	}
 
@@ -460,7 +469,8 @@ public class IndexSelectItemsVisitor implements SelectItemVisitor, ExpressionVis
 		final ValueExpression right = _exprStack.pop();
 		final ValueExpression left = _exprStack.pop();
 
-		final ValueExpression ve = new ch.epfl.data.plan_runner.expressions.Subtraction(left, right);
+		final ValueExpression ve = new ch.epfl.data.plan_runner.expressions.Subtraction(
+				left, right);
 		_exprStack.push(ve);
 
 	}

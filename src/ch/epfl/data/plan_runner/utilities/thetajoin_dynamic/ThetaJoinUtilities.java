@@ -8,11 +8,8 @@ import org.apache.log4j.Logger;
 import backtype.storm.tuple.Tuple;
 
 public class ThetaJoinUtilities {
-	private static Logger LOG = Logger.getLogger(ThetaJoinUtilities.class);
-
-	private static final long MEGABYTE = 1024L * 1024L;
-
-	public static boolean assertDimensions(String inputDim, String originalDim, Tuple tuple) // 1
+	public static boolean assertDimensions(String inputDim, String originalDim,
+			Tuple tuple) // 1
 	// normal
 	// 2
 	// datamigration
@@ -20,8 +17,8 @@ public class ThetaJoinUtilities {
 		if (inputDim.equals(originalDim))
 			return true;
 		else
-			LOG.info("Error in dimensions inputDim:" + inputDim + " originalDim:" + originalDim
-					+ " Tuple: " + tuple);
+			LOG.info("Error in dimensions inputDim:" + inputDim
+					+ " originalDim:" + originalDim + " Tuple: " + tuple);
 		return false;
 	}
 
@@ -81,11 +78,13 @@ public class ThetaJoinUtilities {
 
 	public static int[] getDimensions(String Dim) {
 		final String[] dimString = Dim.split("-");
-		return new int[] { Integer.parseInt(new String(dimString[0])), Integer.parseInt(new String(dimString[1])) };
+		return new int[] { Integer.parseInt(new String(dimString[0])),
+				Integer.parseInt(new String(dimString[1])) };
 
 	}
 
-	public static List<String> getJoinKeyValues(List<String> tuple, List<Integer> joinKeyIndices) {
+	public static List<String> getJoinKeyValues(List<String> tuple,
+			List<Integer> joinKeyIndices) {
 		final ArrayList<String> values = new ArrayList<String>();
 		for (final int ind : joinKeyIndices) {
 			final String val = tuple.get(ind);
@@ -104,5 +103,9 @@ public class ThetaJoinUtilities {
 		LOG.info("Used memory is bytes: " + memory);
 		LOG.info("Used memory is megabytes: " + bytesToMegabytes(memory));
 	}
+
+	private static Logger LOG = Logger.getLogger(ThetaJoinUtilities.class);
+
+	private static final long MEGABYTE = 1024L * 1024L;
 
 }

@@ -7,19 +7,18 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
+import backtype.storm.Config;
+import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
 import ch.epfl.data.plan_runner.operators.Operator;
 import ch.epfl.data.plan_runner.predicates.Predicate;
-import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
 import ch.epfl.data.plan_runner.storm_components.InterchangingComponent;
 import ch.epfl.data.plan_runner.storm_components.StormComponent;
 import ch.epfl.data.plan_runner.storm_components.StormOperator;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
-import backtype.storm.Config;
-import backtype.storm.topology.TopologyBuilder;
 
 /*
  * To change this template, choose Tools | Templates
@@ -136,7 +135,8 @@ public class OperatorComponent implements Component {
 	@Override
 	public int hashCode() {
 		int hash = 5;
-		hash = 47 * hash + (_componentName != null ? _componentName.hashCode() : 0);
+		hash = 47 * hash
+				+ (_componentName != null ? _componentName.hashCode() : 0);
 		return hash;
 	}
 
@@ -146,13 +146,15 @@ public class OperatorComponent implements Component {
 
 		// by default print out for the last component
 		// for other conditions, can be set via setPrintOut
-		if (hierarchyPosition == StormComponent.FINAL_COMPONENT && !_printOutSet)
+		if (hierarchyPosition == StormComponent.FINAL_COMPONENT
+				&& !_printOutSet)
 			setPrintOut(true);
 
-		MyUtilities.checkBatchOutput(_batchOutputMillis, _chain.getAggregation(), conf);
+		MyUtilities.checkBatchOutput(_batchOutputMillis,
+				_chain.getAggregation(), conf);
 
-		_stormOperator = new StormOperator(_parent, this, allCompNames, hierarchyPosition, builder,
-				killer, conf);
+		_stormOperator = new StormOperator(_parent, this, allCompNames,
+				hierarchyPosition, builder, killer, conf);
 	}
 
 	@Override
@@ -167,15 +169,38 @@ public class OperatorComponent implements Component {
 	}
 
 	@Override
+	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
+		return this;
+	}
+
+	@Override
 	public OperatorComponent setFullHashList(List<String> fullHashList) {
 		_fullHashList = fullHashList;
 		return this;
 	}
 
 	@Override
-	public OperatorComponent setHashExpressions(List<ValueExpression> hashExpressions) {
+	public OperatorComponent setHashExpressions(
+			List<ValueExpression> hashExpressions) {
 		_hashExpressions = hashExpressions;
 		return this;
+	}
+
+	@Override
+	public Component setInterComp(InterchangingComponent inter) {
+		throw new RuntimeException(
+				"Operator component does not support setInterComp");
+	}
+
+	@Override
+	public Component setJoinPredicate(Predicate joinPredicate) {
+		throw new RuntimeException(
+				"Operator component does not support Join Predicates");
+	}
+
+	@Override
+	public OperatorComponent setOutputPartKey(int... hashIndexes) {
+		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
 	}
 
 	@Override
@@ -183,31 +208,11 @@ public class OperatorComponent implements Component {
 		_hashIndexes = hashIndexes;
 		return this;
 	}
-	
-	@Override
-	public OperatorComponent setOutputPartKey(int... hashIndexes) {
-		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
-	}
 
 	@Override
 	public OperatorComponent setPrintOut(boolean printOut) {
 		_printOutSet = true;
 		_printOut = printOut;
-		return this;
-	}
-	
-	@Override
-	public Component setInterComp(InterchangingComponent inter) {
-		throw new RuntimeException("Operator component does not support setInterComp");
-	}
-
-	@Override
-	public Component setJoinPredicate(Predicate joinPredicate) {
-		throw new RuntimeException("Operator component does not support Join Predicates");
-	}
-
-	@Override
-	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
 		return this;
 	}
 

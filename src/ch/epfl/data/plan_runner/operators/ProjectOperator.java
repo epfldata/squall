@@ -18,8 +18,8 @@ public class ProjectOperator implements Operator {
 
 	public ProjectOperator(int... projectIndexes) {
 		for (final int columnNumber : projectIndexes) {
-			final ColumnReference columnReference = new ColumnReference(new StringConversion(),
-					columnNumber);
+			final ColumnReference columnReference = new ColumnReference(
+					new StringConversion(), columnNumber);
 			_veList.add(columnReference);
 		}
 	}
@@ -39,7 +39,8 @@ public class ProjectOperator implements Operator {
 
 	@Override
 	public List<String> getContent() {
-		throw new RuntimeException("getContent for ProjectionOperator should never be invoked!");
+		throw new RuntimeException(
+				"getContent for ProjectionOperator should never be invoked!");
 	}
 
 	public List<ValueExpression> getExpressions() {
@@ -58,7 +59,8 @@ public class ProjectOperator implements Operator {
 
 	@Override
 	public String printContent() {
-		throw new RuntimeException("printContent for ProjectionOperator should never be invoked!");
+		throw new RuntimeException(
+				"printContent for ProjectionOperator should never be invoked!");
 	}
 
 	@Override

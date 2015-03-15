@@ -4,11 +4,9 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
 
-import ch.epfl.data.plan_runner.predicates.Predicate;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 import ch.epfl.data.plan_runner.visitors.OperatorVisitor;
@@ -20,18 +18,17 @@ public class PrintOperator implements Operator {
 	private Map _map;
 	private String _printPath;
 	private PrintWriter _writer = null;
-	
-	// TODO 
+
+	// TODO
 	/*
-	_writer.close
-	} catch (IOException e) {
-		    //exception handling left as an exercise for the reader
-		}
-		*/
-	
+	 * _writer.close } catch (IOException e) { //exception handling left as an
+	 * exercise for the reader }
+	 */
+
 	public PrintOperator(String filename, Map map) {
 		_map = map;
-		_printPath = SystemParameters.getString(map, "DIP_DATA_PATH") + "/" + filename;
+		_printPath = SystemParameters.getString(map, "DIP_DATA_PATH") + "/"
+				+ filename;
 	}
 
 	@Override
@@ -39,9 +36,16 @@ public class PrintOperator implements Operator {
 		ov.visit(this);
 	}
 
+	public void finalizeProcessing() {
+		if (_writer != null) {
+			_writer.close();
+		}
+	}
+
 	@Override
 	public List<String> getContent() {
-		throw new RuntimeException("getContent for PrintOperator should never be invoked!");
+		throw new RuntimeException(
+				"getContent for PrintOperator should never be invoked!");
 	}
 
 	@Override
@@ -56,24 +60,27 @@ public class PrintOperator implements Operator {
 
 	@Override
 	public String printContent() {
-		throw new RuntimeException("printContent for PrintOperator should never be invoked!");
+		throw new RuntimeException(
+				"printContent for PrintOperator should never be invoked!");
 	}
 
 	@Override
 	public List<String> process(List<String> tuple) {
-		if(_writer == null){
+		if (_writer == null) {
 			try {
-				//if(SystemParameters.getBoolean(_map, "DIP_DISTRIBUTED")){
-				//	_printPath += "." + InetAddress.getLocalHost().getHostName();
-				//}
-				
-				//initialize file to empty
-				_writer = new PrintWriter(new BufferedWriter(new FileWriter(_printPath, false)));
+				// if(SystemParameters.getBoolean(_map, "DIP_DISTRIBUTED")){
+				// _printPath += "." + InetAddress.getLocalHost().getHostName();
+				// }
+
+				// initialize file to empty
+				_writer = new PrintWriter(new BufferedWriter(new FileWriter(
+						_printPath, false)));
 				_writer.close();
-				
-				//open file for writing with append = true
-				_writer = new PrintWriter(new BufferedWriter(new FileWriter(_printPath, true)));
-			}catch (IOException e){
+
+				// open file for writing with append = true
+				_writer = new PrintWriter(new BufferedWriter(new FileWriter(
+						_printPath, true)));
+			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 		}
@@ -88,11 +95,5 @@ public class PrintOperator implements Operator {
 		final StringBuilder sb = new StringBuilder();
 		sb.append("PrintOperator ");
 		return sb.toString();
-	}
-
-	public void finalizeProcessing() {
-		if(_writer != null){
-			_writer.close();
-		}
 	}
 }

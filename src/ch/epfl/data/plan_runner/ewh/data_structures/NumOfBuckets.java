@@ -1,18 +1,18 @@
 package ch.epfl.data.plan_runner.ewh.data_structures;
 
-public class NumOfBuckets{
+public class NumOfBuckets {
 	private int _xNumOfBuckets, _yNumOfBuckets;
-	
-	public NumOfBuckets(int xNumOfBuckets, int yNumOfBuckets){
+
+	public NumOfBuckets(int xNumOfBuckets, int yNumOfBuckets) {
 		_xNumOfBuckets = xNumOfBuckets;
 		_yNumOfBuckets = yNumOfBuckets;
 	}
-	
-	public int getXNumOfBuckets(){
+
+	public int getXNumOfBuckets() {
 		return _xNumOfBuckets;
 	}
-	
-	public int getYNumOfBuckets(){
+
+	public int getYNumOfBuckets() {
 		return _yNumOfBuckets;
 	}
 }

@@ -6,17 +6,11 @@ package ch.epfl.data.sql.schema.parser;
 /**
  * This exception is thrown when parse errors are encountered. You can
  * explicitly create objects of this exception type by calling the method
- * generateParseException in the generated parser.
- * You can modify this class to customize your error reporting mechanisms so
- * long as you retain the public fields.
+ * generateParseException in the generated parser. You can modify this class to
+ * customize your error reporting mechanisms so long as you retain the public
+ * fields.
  */
 public class ParseException extends Exception {
-
-	/**
-	 * The version identifier for this Serializable class. Increment only if the
-	 * <i>serialized</i> form of the class changes.
-	 */
-	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Used to convert raw characters to their escaped version when these raw
@@ -56,7 +50,8 @@ public class ParseException extends Exception {
 			default:
 				if ((ch = str.charAt(i)) < 0x20 || ch > 0x7e) {
 					final String s = "0000" + Integer.toString(ch, 16);
-					retval.append("\\u" + s.substring(s.length() - 4, s.length()));
+					retval.append("\\u"
+							+ s.substring(s.length() - 4, s.length()));
 				} else
 					retval.append(ch);
 				continue;
@@ -70,8 +65,8 @@ public class ParseException extends Exception {
 	 * parse error, and you do not catch it (it gets thrown from the parser) the
 	 * correct error message gets displayed.
 	 */
-	private static String initialise(Token currentToken, int[][] expectedTokenSequences,
-			String[] tokenImage) {
+	private static String initialise(Token currentToken,
+			int[][] expectedTokenSequences, String[] tokenImage) {
 		final String eol = System.getProperty("line.separator", "\n");
 		final StringBuilder expected = new StringBuilder();
 		int maxSize = 0;
@@ -79,7 +74,8 @@ public class ParseException extends Exception {
 			if (maxSize < expectedTokenSequences[i].length)
 				maxSize = expectedTokenSequences[i].length;
 			for (int j = 0; j < expectedTokenSequences[i].length; j++)
-				expected.append(tokenImage[expectedTokenSequences[i][j]]).append(' ');
+				expected.append(tokenImage[expectedTokenSequences[i][j]])
+						.append(' ');
 			if (expectedTokenSequences[i][expectedTokenSequences[i].length - 1] != 0)
 				expected.append("...");
 			expected.append(eol).append("    ");
@@ -109,6 +105,12 @@ public class ParseException extends Exception {
 		retval += expected.toString();
 		return retval;
 	}
+
+	/**
+	 * The version identifier for this Serializable class. Increment only if the
+	 * <i>serialized</i> form of the class changes.
+	 */
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * This is the last token that has been consumed successfully. If this
@@ -160,9 +162,10 @@ public class ParseException extends Exception {
 	 * type with the fields "currentToken", "expectedTokenSequences", and
 	 * "tokenImage" set.
 	 */
-	public ParseException(Token currentTokenVal, int[][] expectedTokenSequencesVal,
-			String[] tokenImageVal) {
-		super(initialise(currentTokenVal, expectedTokenSequencesVal, tokenImageVal));
+	public ParseException(Token currentTokenVal,
+			int[][] expectedTokenSequencesVal, String[] tokenImageVal) {
+		super(initialise(currentTokenVal, expectedTokenSequencesVal,
+				tokenImageVal));
 		currentToken = currentTokenVal;
 		expectedTokenSequences = expectedTokenSequencesVal;
 		tokenImage = tokenImageVal;

@@ -7,13 +7,14 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
+import backtype.storm.Config;
+import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
 import ch.epfl.data.plan_runner.operators.Operator;
 import ch.epfl.data.plan_runner.operators.ProjectOperator;
 import ch.epfl.data.plan_runner.predicates.Predicate;
-import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
 import ch.epfl.data.plan_runner.storage.AggregationStorage;
 import ch.epfl.data.plan_runner.storage.BasicStore;
 import ch.epfl.data.plan_runner.storage.KeyValueStore;
@@ -25,8 +26,6 @@ import ch.epfl.data.plan_runner.storm_components.StormDstTupleStorageJoin;
 import ch.epfl.data.plan_runner.storm_components.StormEmitter;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
-import backtype.storm.Config;
-import backtype.storm.topology.TopologyBuilder;
 
 public class EquiJoinComponent implements Component {
 	private static final long serialVersionUID = 1L;
@@ -60,8 +59,8 @@ public class EquiJoinComponent implements Component {
 
 	private List<String> _fullHashList;
 	private Predicate _joinPredicate;
-	
-	private boolean _isRemoveIndex;
+
+	private boolean _isRemoveIndex = true;
 
 	public EquiJoinComponent(Component firstParent, Component secondParent) {
 		_firstParent = firstParent;
@@ -71,14 +70,15 @@ public class EquiJoinComponent implements Component {
 
 		_componentName = firstParent.getName() + "_" + secondParent.getName();
 	}
-	
-	public EquiJoinComponent(Component firstParent, Component secondParent, boolean isRemoveIndex) {
+
+	public EquiJoinComponent(Component firstParent, Component secondParent,
+			boolean isRemoveIndex) {
 		_firstParent = firstParent;
 		_firstParent.setChild(this);
 		_secondParent = secondParent;
 		_secondParent.setChild(this);
 		_componentName = firstParent.getName() + "_" + secondParent.getName();
-		_isRemoveIndex=isRemoveIndex;
+		_isRemoveIndex = isRemoveIndex;
 	}
 
 	@Override
@@ -162,7 +162,8 @@ public class EquiJoinComponent implements Component {
 	@Override
 	public int hashCode() {
 		int hash = 7;
-		hash = 37 * hash + (_componentName != null ? _componentName.hashCode() : 0);
+		hash = 37 * hash
+				+ (_componentName != null ? _componentName.hashCode() : 0);
 		return hash;
 	}
 
@@ -172,10 +173,12 @@ public class EquiJoinComponent implements Component {
 
 		// by default print out for the last component
 		// for other conditions, can be set via setPrintOut
-		if (hierarchyPosition == StormComponent.FINAL_COMPONENT && !_printOutSet)
+		if (hierarchyPosition == StormComponent.FINAL_COMPONENT
+				&& !_printOutSet)
 			setPrintOut(true);
 
-		MyUtilities.checkBatchOutput(_batchOutputMillis, _chain.getAggregation(), conf);
+		MyUtilities.checkBatchOutput(_batchOutputMillis,
+				_chain.getAggregation(), conf);
 
 		// If not set in Preaggregation, we set normal storages
 		if (_firstStorage == null)
@@ -184,22 +187,26 @@ public class EquiJoinComponent implements Component {
 			_secondStorage = new KeyValueStore<String, String>(conf);
 
 		boolean isBDB = MyUtilities.isBDB(conf);
-		if(isBDB && _joinPredicate == null){
-			throw new RuntimeException("Please provide _joinPredicate if you want to run BDB!");
+		if (isBDB && _joinPredicate == null) {
+			throw new RuntimeException(
+					"Please provide _joinPredicate if you want to run BDB!");
 		}
-		
-		//TODO: what is with the if condition
-		if(isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)){
-			_joiner = new StormDstTupleStorageBDB(_firstParent, _secondParent, this, allCompNames,
-					_joinPredicate, hierarchyPosition, builder, killer, conf);
+
+		// TODO: what is with the if condition
+		if (isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)) {
+			_joiner = new StormDstTupleStorageBDB(_firstParent, _secondParent,
+					this, allCompNames, _joinPredicate, hierarchyPosition,
+					builder, killer, conf);
 		} else if (_joinPredicate != null) {
-				_joiner = new StormDstTupleStorageJoin(_firstParent, _secondParent, this,
-						allCompNames, _joinPredicate, hierarchyPosition, builder, killer, conf);
-		} else{
+			_joiner = new StormDstTupleStorageJoin(_firstParent, _secondParent,
+					this, allCompNames, _joinPredicate, hierarchyPosition,
+					builder, killer, conf);
+		} else {
 			// should issue a warning
-			_joiner = new StormDstJoin(_firstParent, _secondParent, this, allCompNames,
-					_firstStorage, _secondStorage, _firstPreAggProj, _secondPreAggProj,
-					hierarchyPosition, builder, killer, conf,_isRemoveIndex);
+			_joiner = new StormDstJoin(_firstParent, _secondParent, this,
+					allCompNames, _firstStorage, _secondStorage,
+					_firstPreAggProj, _secondPreAggProj, hierarchyPosition,
+					builder, killer, conf, _isRemoveIndex);
 		}
 	}
 
@@ -214,6 +221,11 @@ public class EquiJoinComponent implements Component {
 		_child = child;
 	}
 
+	@Override
+	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
+		return this;
+	}
+
 	// Out of the first storage (join of S tuple with R relation)
 	public EquiJoinComponent setFirstPreAggProj(ProjectOperator firstPreAggProj) {
 		_firstPreAggProj = firstPreAggProj;
@@ -221,7 +233,8 @@ public class EquiJoinComponent implements Component {
 	}
 
 	// next four methods are for Preaggregation
-	public EquiJoinComponent setFirstPreAggStorage(AggregationStorage firstPreAggStorage) {
+	public EquiJoinComponent setFirstPreAggStorage(
+			AggregationStorage firstPreAggStorage) {
 		_firstStorage = firstPreAggStorage;
 		return this;
 	}
@@ -235,20 +248,33 @@ public class EquiJoinComponent implements Component {
 	}
 
 	@Override
-	public EquiJoinComponent setHashExpressions(List<ValueExpression> hashExpressions) {
+	public EquiJoinComponent setHashExpressions(
+			List<ValueExpression> hashExpressions) {
 		_hashExpressions = hashExpressions;
 		return this;
 	}
 
 	@Override
-	public EquiJoinComponent setOutputPartKey(List<Integer> hashIndexes) {
-		_hashIndexes = hashIndexes;
+	public Component setInterComp(InterchangingComponent inter) {
+		throw new RuntimeException(
+				"EquiJoin component does not support setInterComp");
+	}
+
+	@Override
+	public EquiJoinComponent setJoinPredicate(Predicate predicate) {
+		_joinPredicate = predicate;
 		return this;
 	}
 
 	@Override
 	public EquiJoinComponent setOutputPartKey(int... hashIndexes) {
 		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
+	}
+
+	@Override
+	public EquiJoinComponent setOutputPartKey(List<Integer> hashIndexes) {
+		_hashIndexes = hashIndexes;
+		return this;
 	}
 
 	@Override
@@ -259,31 +285,16 @@ public class EquiJoinComponent implements Component {
 	}
 
 	// Out of the second storage (join of R tuple with S relation)
-	public EquiJoinComponent setSecondPreAggProj(ProjectOperator secondPreAggProj) {
+	public EquiJoinComponent setSecondPreAggProj(
+			ProjectOperator secondPreAggProj) {
 		_secondPreAggProj = secondPreAggProj;
 		return this;
 	}
 
-	public EquiJoinComponent setSecondPreAggStorage(AggregationStorage secondPreAggStorage) {
+	public EquiJoinComponent setSecondPreAggStorage(
+			AggregationStorage secondPreAggStorage) {
 		_secondStorage = secondPreAggStorage;
 		return this;
 	}
-	
-	@Override
-	public Component setInterComp(InterchangingComponent inter) {
-		throw new RuntimeException("EquiJoin component does not support setInterComp");
-	}
-	
-	@Override
-	public EquiJoinComponent setJoinPredicate(Predicate predicate) {
-		_joinPredicate = predicate;
-		return this;
-	}
-
-	@Override
-	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
-		return this;
-	}
-
 
 }

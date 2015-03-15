@@ -1,7 +1,6 @@
 package ch.epfl.data.plan_runner.expressions;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -34,12 +33,12 @@ public class DateDiff implements ValueExpression<Integer> {
 	}
 
 	@Override
-	public Integer eval(List<String> tuple) {		
+	public Integer eval(List<String> tuple) {
 		Date dateObj1 = _ve1.eval(tuple);
 		Date dateObj2 = _ve2.eval(tuple);
-		
+
 		long diff = dateObj2.getTime() - dateObj1.getTime();
-		int diffDays =  (int) (diff / (24* 1000 * 60 * 60));
+		int diffDays = (int) (diff / (24 * 1000 * 60 * 60));
 
 		return diffDays;
 	}
@@ -78,7 +77,7 @@ public class DateDiff implements ValueExpression<Integer> {
 		final StringBuilder sb = new StringBuilder();
 		sb.append("DateDiff ");
 		sb.append("First Exp: ").append(_ve1.toString()).append("\n");
-		sb.append("Second Exp: ").append(_ve2.toString()).append("\n");		
+		sb.append("Second Exp: ").append(_ve2.toString()).append("\n");
 		return sb.toString();
 	}
 }

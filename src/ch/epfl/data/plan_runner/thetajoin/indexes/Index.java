@@ -16,6 +16,6 @@ public interface Index<KeyType> extends Serializable {
 	public TIntArrayList getValuesWithOutOperator(KeyType key, KeyType... keys);
 
 	public void put(Integer row_id, KeyType key);
-	
+
 	public void remove(Integer row_id, KeyType key);
 }

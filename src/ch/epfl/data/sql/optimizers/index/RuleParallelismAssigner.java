@@ -20,7 +20,8 @@ public class RuleParallelismAssigner {
 	private final Schema _schema;
 	private final Map _map;
 
-	public RuleParallelismAssigner(QueryBuilder plan, TableAliasName tan, Schema schema, Map map) {
+	public RuleParallelismAssigner(QueryBuilder plan, TableAliasName tan,
+			Schema schema, Map map) {
 		_plan = plan;
 		_tan = tan;
 		_schema = schema;
@@ -29,7 +30,8 @@ public class RuleParallelismAssigner {
 	}
 
 	public void assignPar() {
-		final LevelAssigner topDown = new LevelAssigner(_plan.getLastComponent());
+		final LevelAssigner topDown = new LevelAssigner(
+				_plan.getLastComponent());
 		final List<DataSourceComponent> dsList = topDown.getSources();
 		final List<CompLevel> clList = topDown.getNonSourceComponents();
 

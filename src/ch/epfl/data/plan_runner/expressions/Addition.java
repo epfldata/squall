@@ -21,18 +21,21 @@ import ch.epfl.data.plan_runner.visitors.ValueExpressionVisitor;
  *   does not result in exception in the constructor,
  *   but rather in eval method.
  */
-public class Addition<T extends Number & Comparable<T>> implements ValueExpression<T> {
+public class Addition<T extends Number & Comparable<T>> implements
+		ValueExpression<T> {
 
 	private static final long serialVersionUID = 1L;
 
 	private final List<ValueExpression> _veList = new ArrayList<ValueExpression>();
 	private final NumericConversion<T> _wrapper;
 
-	public Addition(ValueExpression ve1, ValueExpression ve2, ValueExpression... veArray) {
+	public Addition(ValueExpression ve1, ValueExpression ve2,
+			ValueExpression... veArray) {
 		_veList.add(ve1);
 		_veList.add(ve2);
 		_veList.addAll(Arrays.asList(veArray));
-		_wrapper = (NumericConversion<T>) MyUtilities.getDominantNumericType(_veList);
+		_wrapper = (NumericConversion<T>) MyUtilities
+				.getDominantNumericType(_veList);
 	}
 
 	@Override
@@ -51,7 +54,8 @@ public class Addition<T extends Number & Comparable<T>> implements ValueExpressi
 		double result = 0;
 		for (final ValueExpression factor : _veList) {
 			final Object currentVal = factor.eval(tuple);
-			final NumericConversion currentType = (NumericConversion) (factor.getType());
+			final NumericConversion currentType = (NumericConversion) (factor
+					.getType());
 			result += currentType.toDouble(currentVal);
 		}
 		return _wrapper.fromDouble(result);

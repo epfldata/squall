@@ -12,18 +12,8 @@ import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 
-public class BalancedBinaryTreeIndex<KeyType extends Comparable<KeyType>> implements Index<KeyType> {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	/**
-	 * This is a Red-Black tree implementation of a balanced binary tree;
-	 * 
-	 * @author SaSa
-	 */
-	private static Logger LOG = Logger.getLogger(BalancedBinaryTreeIndex.class);
-
+public class BalancedBinaryTreeIndex<KeyType extends Comparable<KeyType>>
+		implements Index<KeyType> {
 	// TEST
 	public static void main(String[] args) {
 		final BalancedBinaryTreeIndex<Integer> bbt = new BalancedBinaryTreeIndex<Integer>();
@@ -35,11 +25,24 @@ public class BalancedBinaryTreeIndex<KeyType extends Comparable<KeyType>> implem
 		bbt.put(5, 5);
 		bbt.put(9, 1);
 
-		final TIntArrayList list = bbt.getValues(ComparisonPredicate.NONLESS_OP, 5);
+		final TIntArrayList list = bbt.getValues(
+				ComparisonPredicate.NONLESS_OP, 5);
 		for (int i = 0; i < list.size(); i++)
 			LOG.info(list.get(i));
 
 	}
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 * This is a Red-Black tree implementation of a balanced binary tree;
+	 * 
+	 * @author SaSa
+	 */
+	private static Logger LOG = Logger.getLogger(BalancedBinaryTreeIndex.class);
 
 	private final TreeMap<KeyType, TIntArrayList> _index;
 
@@ -66,25 +69,27 @@ public class BalancedBinaryTreeIndex<KeyType extends Comparable<KeyType>> implem
 			// are more than the
 			// specified key
 			if (_diff != null)
-				return flatten(_index.subMap(key, false, performOperation(key, _diff, true), false)
-						.values());
+				return flatten(_index.subMap(key, false,
+						performOperation(key, _diff, true), false).values());
 			return flatten(_index.headMap(key).values());
 		} else if (operator == ComparisonPredicate.NONLESS_OP) {
 			if (_diff != null)
-				return flatten(_index.subMap(key, true, performOperation(key, _diff, true), true)
-						.values());
+				return flatten(_index.subMap(key, true,
+						performOperation(key, _diff, true), true).values());
 			return flatten(_index.headMap(key, true).values());
 		} else if (operator == ComparisonPredicate.LESS_OP) { // find all x
 			// which are
 			// less than the
 			// specified key
 			if (_diff != null)
-				return flatten(_index
-						.subMap(performOperation(key, _diff, false), false, key, false).values());
+				return flatten(_index.subMap(
+						performOperation(key, _diff, false), false, key, false)
+						.values());
 			return flatten(_index.tailMap(key).values());
 		} else if (operator == ComparisonPredicate.NONGREATER_OP) {
 			if (_diff != null)
-				return flatten(_index.subMap(performOperation(key, _diff, false), true, key, true)
+				return flatten(_index.subMap(
+						performOperation(key, _diff, false), true, key, true)
 						.values());
 			return flatten(_index.tailMap(key, true).values());
 		} else
@@ -103,7 +108,7 @@ public class BalancedBinaryTreeIndex<KeyType extends Comparable<KeyType>> implem
 		Comparable<?> tmpK = k;
 		Comparable<?> tmpDiff = diff;
 		Comparable<?> result = null;
-		
+
 		if (tmpK instanceof Double) {
 			final Double kd = (Double) tmpK;
 			Double diffd = (Double) tmpDiff;
@@ -130,7 +135,7 @@ public class BalancedBinaryTreeIndex<KeyType extends Comparable<KeyType>> implem
 		} else
 			LOG.info("Operation in BalancedBinaryTree not supported for underlying datatype");
 
-		return (KeyType)result;
+		return (KeyType) result;
 	}
 
 	@Override
@@ -146,15 +151,15 @@ public class BalancedBinaryTreeIndex<KeyType extends Comparable<KeyType>> implem
 
 	}
 
+	@Override
+	public void remove(Integer row_id, KeyType key) {
+		throw new RuntimeException("Not implemented yet");
+	}
+
 	public BalancedBinaryTreeIndex setDiff(Object diff) {
 		if (diff != null)
 			_diff = (KeyType) diff;
 		return this;
-	}
-
-	@Override
-	public void remove(Integer row_id, KeyType key) {
-		throw new RuntimeException("Not implemented yet");
 	}
 
 }

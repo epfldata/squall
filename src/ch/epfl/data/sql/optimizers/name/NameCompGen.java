@@ -5,6 +5,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.sf.jsqlparser.expression.BinaryExpression;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.Parenthesis;
+import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
+import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
+import net.sf.jsqlparser.statement.select.SelectItem;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
 import ch.epfl.data.plan_runner.components.EquiJoinComponent;
@@ -26,12 +32,6 @@ import ch.epfl.data.sql.visitors.jsql.SQLVisitor;
 import ch.epfl.data.sql.visitors.squall.NameJoinHashVisitor;
 import ch.epfl.data.sql.visitors.squall.NameSelectItemsVisitor;
 import ch.epfl.data.sql.visitors.squall.NameWhereVisitor;
-import net.sf.jsqlparser.expression.BinaryExpression;
-import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.Parenthesis;
-import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
-import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
-import net.sf.jsqlparser.statement.select.SelectItem;
 
 /*
  * It is necessary that this class operates with Tables,
@@ -89,7 +89,8 @@ public class NameCompGen implements CompGen {
 	// }
 
 	// CPA initialized in NameCompGenFactory
-	public NameCompGen(Schema schema, Map map, CostParallelismAssigner parAssigner) {
+	public NameCompGen(Schema schema, Map map,
+			CostParallelismAssigner parAssigner) {
 
 		_schema = schema;
 		_map = map;
@@ -101,17 +102,20 @@ public class NameCompGen implements CompGen {
 
 		if (parAssigner != null) {
 			_parAssigner = parAssigner;
-			_costEst = new CostEstimator(_queryName, schema, _pq, _compCost, parAssigner);
+			_costEst = new CostEstimator(_queryName, schema, _pq, _compCost,
+					parAssigner);
 		}
 
 		// initializes _compNamesAndExprs and _compNamesOrExprs
 		initWhereClause(_pq.getWhereExpr());
 
-		_globalCollect = new ProjGlobalCollect(_pq.getSelectItems(), _pq.getWhereExpr());
+		_globalCollect = new ProjGlobalCollect(_pq.getSelectItems(),
+				_pq.getWhereExpr());
 		_globalCollect.process();
 	}
 
-	private void addHash(Component component, List<ValueExpression> hashExpressions) {
+	private void addHash(Component component,
+			List<ValueExpression> hashExpressions) {
 		// if joinCondition is a R.A + 5 = S.A, and inputTupleSchema is
 		// "R.A + 5", HashExpression is a ColumnReference(0)
 		if (ParserUtil.isAllColumnRefs(hashExpressions)) {
@@ -121,7 +125,8 @@ public class NameCompGen implements CompGen {
 			// visited in the same order
 			// i.e R.A=S.A and R.B=S.B, the columns are (R.A, R.B), (S.A, S.B),
 			// respectively
-			final List<Integer> hashIndexes = ParserUtil.extractColumnIndexes(hashExpressions);
+			final List<Integer> hashIndexes = ParserUtil
+					.extractColumnIndexes(hashExpressions);
 
 			// hash indexes in join condition
 			component.setOutputPartKey(hashIndexes);
@@ -140,8 +145,10 @@ public class NameCompGen implements CompGen {
 	// We don't want to hash on something which will be used to join with same
 	// later component in the hierarchy.
 	private void addJoinHash(Component component, List<Expression> joinCondition) {
-		final TupleSchema tupleSchema = _compCost.get(component.getName()).getSchema();
-		final NameJoinHashVisitor joinOn = new NameJoinHashVisitor(tupleSchema, component);
+		final TupleSchema tupleSchema = _compCost.get(component.getName())
+				.getSchema();
+		final NameJoinHashVisitor joinOn = new NameJoinHashVisitor(tupleSchema,
+				component);
 		for (final Expression exp : joinCondition)
 			exp.accept(joinOn);
 		final List<ValueExpression> hashExpressions = joinOn.getExpressions();
@@ -154,9 +161,10 @@ public class NameCompGen implements CompGen {
 	 *************************************************************************************/
 	private void addProjectOperator(Component component) {
 		final String compName = component.getName();
-		final TupleSchema inputTupleSchema = _compCost.get(compName).getSchema();
-		final ProjSchemaCreator psc = new ProjSchemaCreator(_globalCollect, inputTupleSchema,
-				component, _pq, _schema);
+		final TupleSchema inputTupleSchema = _compCost.get(compName)
+				.getSchema();
+		final ProjSchemaCreator psc = new ProjSchemaCreator(_globalCollect,
+				inputTupleSchema, component, _pq, _schema);
 		psc.create();
 
 		final TupleSchema outputTupleSchema = psc.getOutputSchema();
@@ -201,7 +209,8 @@ public class NameCompGen implements CompGen {
 		return fullExpr;
 	}
 
-	private void attachProjectOperator(Component component, ProjectOperator project) {
+	private void attachProjectOperator(Component component,
+			ProjectOperator project) {
 		component.add(project);
 	}
 
@@ -209,7 +218,8 @@ public class NameCompGen implements CompGen {
 			NameSelectItemsVisitor selectVisitor) {
 		final List<AggregateOperator> aggOps = selectVisitor.getAggOps();
 		ProjectOperator project = null;
-		if (!(selectVisitor.getGroupByVEs() == null || selectVisitor.getGroupByVEs().isEmpty()))
+		if (!(selectVisitor.getGroupByVEs() == null || selectVisitor
+				.getGroupByVEs().isEmpty()))
 			project = new ProjectOperator(selectVisitor.getGroupByVEs());
 
 		if (aggOps.isEmpty()) {
@@ -239,25 +249,30 @@ public class NameCompGen implements CompGen {
 				// fits in what FinalAggregation wants
 				addHash(lastComponent, selectVisitor.getGroupByVEs());
 		} else
-			throw new RuntimeException("For now only one aggregate function supported!");
+			throw new RuntimeException(
+					"For now only one aggregate function supported!");
 	}
 
-	private void attachWhereClause(Component affectedComponent, SelectOperator select) {
+	private void attachWhereClause(Component affectedComponent,
+			SelectOperator select) {
 		affectedComponent.add(select);
 	}
 
 	private DataSourceComponent createAddDataSource(String tableCompName) {
-		final String tableSchemaName = _pq.getTan().getSchemaName(tableCompName);
+		final String tableSchemaName = _pq.getTan()
+				.getSchemaName(tableCompName);
 		final String sourceFile = tableSchemaName.toLowerCase();
 
-		final DataSourceComponent relation = new DataSourceComponent(tableCompName, _dataPath
-				+ sourceFile + _extension);
+		final DataSourceComponent relation = new DataSourceComponent(
+				tableCompName, _dataPath + sourceFile + _extension);
 		_queryBuilder.add(relation);
 		return relation;
 	}
 
-	private EquiJoinComponent createAndAddEquiJoin(Component left, Component right) {
-		final EquiJoinComponent joinComponent = new EquiJoinComponent(left, right);
+	private EquiJoinComponent createAndAddEquiJoin(Component left,
+			Component right) {
+		final EquiJoinComponent joinComponent = new EquiJoinComponent(left,
+				right);
 		_queryBuilder.add(joinComponent);
 
 		return joinComponent;
@@ -280,8 +295,8 @@ public class NameCompGen implements CompGen {
 		final CostParams costParams = new CostParams();
 
 		// schema is consisted of TableAlias.columnName
-		costParams.setSchema(ParserUtil.createAliasedSchema(_schema.getTableSchema(schemaName),
-				compName));
+		costParams.setSchema(ParserUtil.createAliasedSchema(
+				_schema.getTableSchema(schemaName), compName));
 
 		_compCost.put(compName, costParams);
 	}
@@ -302,7 +317,8 @@ public class NameCompGen implements CompGen {
 		final CostParams costParams = new CostParams();
 
 		// *********set schema
-		final TupleSchema schema = ParserUtil.joinSchema(joinComponent.getParents(), _compCost);
+		final TupleSchema schema = ParserUtil.joinSchema(
+				joinComponent.getParents(), _compCost);
 		costParams.setSchema(schema);
 
 		_compCost.put(compName, costParams);
@@ -313,7 +329,8 @@ public class NameCompGen implements CompGen {
 		final CostParams costParams = new CostParams();
 
 		// *********set schema
-		final TupleSchema schema = _compCost.get(opComp.getParents()[0].getName()).getSchema();
+		final TupleSchema schema = _compCost.get(
+				opComp.getParents()[0].getName()).getSchema();
 		costParams.setSchema(schema);
 
 		_compCost.put(compName, costParams);
@@ -325,7 +342,8 @@ public class NameCompGen implements CompGen {
 	private Expression createWhereForComponent(Component component) {
 		Expression expr = _compNamesAndExprs.get(component.getName());
 
-		for (final Map.Entry<Set<String>, Expression> orEntry : _compNamesOrExprs.entrySet()) {
+		for (final Map.Entry<Set<String>, Expression> orEntry : _compNamesOrExprs
+				.entrySet()) {
 			final Set<String> orCompNames = orEntry.getKey();
 
 			// TODO-PRIO: the full solution would be that OrExpressions are
@@ -369,8 +387,8 @@ public class NameCompGen implements CompGen {
 		copy._compCost = (Map<String, CostParams>) DeepCopy.copy(_compCost);
 
 		// _compCost from Estimator and from NCG has to be the same reference
-		copy._costEst = new CostEstimator(_queryName, copy._schema, copy._pq, copy._compCost,
-				copy._parAssigner);
+		copy._costEst = new CostEstimator(_queryName, copy._schema, copy._pq,
+				copy._compCost, copy._parAssigner);
 
 		copy._queryBuilder = (QueryBuilder) DeepCopy.copy(_queryBuilder);
 		return copy;
@@ -416,13 +434,16 @@ public class NameCompGen implements CompGen {
 	 */
 	@Override
 	public EquiJoinComponent generateEquiJoin(Component left, Component right) {
-		final EquiJoinComponent joinComponent = createAndAddEquiJoin(left, right);
+		final EquiJoinComponent joinComponent = createAndAddEquiJoin(left,
+				right);
 
 		// compute join condition
-		final List<Expression> joinCondition = ParserUtil.getJoinCondition(_pq, left, right);
+		final List<Expression> joinCondition = ParserUtil.getJoinCondition(_pq,
+				left, right);
 		if (joinCondition == null)
-			throw new RuntimeException("There is no join conditition between components "
-					+ left.getName() + " and " + right.getName());
+			throw new RuntimeException(
+					"There is no join conditition between components "
+							+ left.getName() + " and " + right.getName());
 
 		// set hashes for two parents, has to be before createCompCost
 		addJoinHash(left, joinCondition);
@@ -507,9 +528,10 @@ public class NameCompGen implements CompGen {
 	 * SELECT clause - Final aggregation
 	 *************************************************************************************/
 	private NameSelectItemsVisitor getFinalSelectVisitor(Component lastComponent) {
-		final TupleSchema tupleSchema = _compCost.get(lastComponent.getName()).getSchema();
-		final NameSelectItemsVisitor selectVisitor = new NameSelectItemsVisitor(tupleSchema, _map,
-				lastComponent);
+		final TupleSchema tupleSchema = _compCost.get(lastComponent.getName())
+				.getSchema();
+		final NameSelectItemsVisitor selectVisitor = new NameSelectItemsVisitor(
+				tupleSchema, _map, lastComponent);
 		for (final SelectItem elem : _pq.getSelectItems())
 			elem.accept(selectVisitor);
 		return selectVisitor;
@@ -522,8 +544,8 @@ public class NameCompGen implements CompGen {
 	 * GERMANY
 	 */
 	public Expression getMineSubset(DataSourceComponent source, Expression expr) {
-		final List<String> compNames = ParserUtil.getCompNamesFromColumns(ParserUtil
-				.getJSQLColumns(expr));
+		final List<String> compNames = ParserUtil
+				.getCompNamesFromColumns(ParserUtil.getJSQLColumns(expr));
 
 		boolean mine = true;
 		for (final String compName : compNames)
@@ -538,8 +560,10 @@ public class NameCompGen implements CompGen {
 		Expression result = null;
 		if (expr instanceof OrExpression || expr instanceof AndExpression) {
 			final BinaryExpression be = (BinaryExpression) expr;
-			result = appendOr(result, getMineSubset(source, be.getLeftExpression()));
-			result = appendOr(result, getMineSubset(source, be.getRightExpression()));
+			result = appendOr(result,
+					getMineSubset(source, be.getLeftExpression()));
+			result = appendOr(result,
+					getMineSubset(source, be.getRightExpression()));
 		} else if (expr instanceof Parenthesis) {
 			final Parenthesis prnth = (Parenthesis) expr;
 			result = getMineSubset(source, prnth.getExpression());
@@ -572,16 +596,16 @@ public class NameCompGen implements CompGen {
 		/*
 		 * we have to group atomicExpr (conjunctive terms) by ComponentName
 		 * there might be multiple columns from a single DataSourceComponent,
-		 * and we want to group them
-		 * conditions such as R.A + R.B = 10 are possible not possible to have
-		 * ColumnReference from multiple tables, because than it would be join
-		 * condition
+		 * and we want to group them conditions such as R.A + R.B = 10 are
+		 * possible not possible to have ColumnReference from multiple tables,
+		 * because than it would be join condition
 		 */
 		ParserUtil.addAndExprsToComps(_compNamesAndExprs, atomicAndExprs);
 		ParserUtil.addOrExprsToComps(_compNamesOrExprs, orExprs);
 	}
 
-	private void processProjectCost(Component component, TupleSchema outputTupleSchema) {
+	private void processProjectCost(Component component,
+			TupleSchema outputTupleSchema) {
 		// only schema is changed
 		final String compName = component.getName();
 		_compCost.get(compName).setSchema(outputTupleSchema);
@@ -590,19 +614,22 @@ public class NameCompGen implements CompGen {
 	/*
 	 * whereCompExpression is the part of WHERE clause which refers to
 	 * affectedComponent This is the only method in this class where
-	 * IndexWhereVisitor is actually instantiated and invoked
-	 * SelectOperator is able to deal with ValueExpressions (and not only with
-	 * ColumnReferences), but here we recognize JSQL expressions here which can
-	 * be built of inputTupleSchema (constants included)
+	 * IndexWhereVisitor is actually instantiated and invoked SelectOperator is
+	 * able to deal with ValueExpressions (and not only with ColumnReferences),
+	 * but here we recognize JSQL expressions here which can be built of
+	 * inputTupleSchema (constants included)
 	 */
-	private void processWhereForComponent(Component affectedComponent, Expression whereCompExpr) {
+	private void processWhereForComponent(Component affectedComponent,
+			Expression whereCompExpr) {
 		if (whereCompExpr != null) {
 			// first get the current schema of the component
-			final TupleSchema tupleSchema = _compCost.get(affectedComponent.getName()).getSchema();
-			final NameWhereVisitor whereVisitor = new NameWhereVisitor(tupleSchema,
-					affectedComponent);
+			final TupleSchema tupleSchema = _compCost.get(
+					affectedComponent.getName()).getSchema();
+			final NameWhereVisitor whereVisitor = new NameWhereVisitor(
+					tupleSchema, affectedComponent);
 			whereCompExpr.accept(whereVisitor);
-			attachWhereClause(affectedComponent, whereVisitor.getSelectOperator());
+			attachWhereClause(affectedComponent,
+					whereVisitor.getSelectOperator());
 		}
 	}
 

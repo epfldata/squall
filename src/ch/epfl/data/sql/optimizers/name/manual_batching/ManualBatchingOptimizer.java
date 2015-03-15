@@ -30,8 +30,8 @@ public class ManualBatchingOptimizer implements Optimizer {
 		_pq = ParserUtil.parseQuery(map);
 	}
 
-	private void addEquiJoinNotSuboptimal(Component firstComp, Component secondComp,
-			NameCompGen ncg, List<NameCompGen> listNcg) {
+	private void addEquiJoinNotSuboptimal(Component firstComp,
+			Component secondComp, NameCompGen ncg, List<NameCompGen> listNcg) {
 
 		boolean isExc = false;
 		try {
@@ -68,10 +68,12 @@ public class ManualBatchingOptimizer implements Optimizer {
 
 	@Override
 	public QueryBuilder generate() {
-		final int totalSourcePar = SystemParameters.getInt(_map, "DIP_TOTAL_SRC_PAR");
-		final ManualBatchingCompGenFactory factory = new ManualBatchingCompGenFactory(_map,
-				_pq.getTan(), totalSourcePar);
-		final List<String> sourceNames = factory.getParAssigner().getSortedSourceNames();
+		final int totalSourcePar = SystemParameters.getInt(_map,
+				"DIP_TOTAL_SRC_PAR");
+		final ManualBatchingCompGenFactory factory = new ManualBatchingCompGenFactory(
+				_map, _pq.getTan(), totalSourcePar);
+		final List<String> sourceNames = factory.getParAssigner()
+				.getSortedSourceNames();
 		final int numSources = sourceNames.size();
 		NameCompGen optimal = null;
 
@@ -85,12 +87,15 @@ public class ManualBatchingOptimizer implements Optimizer {
 		List<NameCompGen> ncgListFirst = new ArrayList<NameCompGen>();
 		for (int i = 0; i < numSources; i++) {
 			final String firstCompName = sourceNames.get(i);
-			final List<String> joinedWith = _pq.getJte().getJoinedWithSingleDir(firstCompName);
+			final List<String> joinedWith = _pq.getJte()
+					.getJoinedWithSingleDir(firstCompName);
 			if (joinedWith != null)
 				for (final String secondCompName : joinedWith) {
 					final NameCompGen ncg = factory.create();
-					final Component first = ncg.generateDataSource(firstCompName);
-					final Component second = ncg.generateDataSource(secondCompName);
+					final Component first = ncg
+							.generateDataSource(firstCompName);
+					final Component second = ncg
+							.generateDataSource(secondCompName);
 					addEquiJoinNotSuboptimal(first, second, ncg, ncgListFirst);
 				}
 		}
@@ -103,8 +108,10 @@ public class ManualBatchingOptimizer implements Optimizer {
 			for (int i = 0; i < ncgListFirst.size(); i++) {
 				final NameCompGen ncg = ncgListFirst.get(i);
 				Component firstComp = ncg.getQueryBuilder().getLastComponent();
-				final List<String> ancestors = ParserUtil.getSourceNameList(firstComp);
-				final List<String> joinedWith = _pq.getJte().getJoinedWith(ancestors);
+				final List<String> ancestors = ParserUtil
+						.getSourceNameList(firstComp);
+				final List<String> joinedWith = _pq.getJte().getJoinedWith(
+						ancestors);
 				for (final String compName : joinedWith) {
 					NameCompGen newNcg = ncg;
 					if (joinedWith.size() > 1) {
@@ -114,8 +121,10 @@ public class ManualBatchingOptimizer implements Optimizer {
 						firstComp = newNcg.getQueryBuilder().getLastComponent();
 					}
 
-					final Component secondComp = newNcg.generateDataSource(compName);
-					addEquiJoinNotSuboptimal(firstComp, secondComp, newNcg, ncgListSecond);
+					final Component secondComp = newNcg
+							.generateDataSource(compName);
+					addEquiJoinNotSuboptimal(firstComp, secondComp, newNcg,
+							ncgListSecond);
 				}
 			}
 
@@ -156,7 +165,8 @@ public class ManualBatchingOptimizer implements Optimizer {
 	// we could also do some pruning
 	private double getTotalLatency(NameCompGen ncg) {
 		final Map<String, CostParams> allParams = ncg.getCompCost();
-		final Component lastComponent = ncg.getQueryBuilder().getLastComponent();
+		final Component lastComponent = ncg.getQueryBuilder()
+				.getLastComponent();
 		final CostParams lastParams = allParams.get(lastComponent.getName());
 		return lastParams.getTotalAvgLatency(); // it's computed as query plan
 		// is built on

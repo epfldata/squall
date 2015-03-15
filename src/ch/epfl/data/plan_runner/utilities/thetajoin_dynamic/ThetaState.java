@@ -9,13 +9,6 @@ public class ThetaState implements Serializable {
 		NORMAL, FLUSHING, DATAMIGRATING
 	}
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-
-	private static Logger LOG = Logger.getLogger(ThetaState.class);;
-
 	public static void printState(String component, state st) {
 		switch (st) {
 		case NORMAL:
@@ -32,4 +25,11 @@ public class ThetaState implements Serializable {
 			break;
 		}
 	}
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;;
+
+	private static Logger LOG = Logger.getLogger(ThetaState.class);
 }

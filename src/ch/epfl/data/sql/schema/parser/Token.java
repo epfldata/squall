@@ -9,12 +9,6 @@ package ch.epfl.data.sql.schema.parser;
 
 public class Token implements java.io.Serializable {
 
-	/**
-	 * The version identifier for this Serializable class. Increment only if the
-	 * <i>serialized</i> form of the class changes.
-	 */
-	private static final long serialVersionUID = 1L;
-
 	public static Token newToken(int ofKind) {
 		return newToken(ofKind, null);
 	}
@@ -24,10 +18,10 @@ public class Token implements java.io.Serializable {
 	 * create and return subclass objects based on the value of ofKind. Simply
 	 * add the cases to the switch for all those special cases. For example, if
 	 * you have a subclass of Token called IDToken that you want to create if
-	 * ofKind is ID, simply add something like :
-	 * case MyParserConstants.ID : return new IDToken(ofKind, image);
-	 * to the following switch statement. Then you can cast matchedToken
-	 * variable to the appropriate type and use sit in your lexical actions.
+	 * ofKind is ID, simply add something like : case MyParserConstants.ID :
+	 * return new IDToken(ofKind, image); to the following switch statement.
+	 * Then you can cast matchedToken variable to the appropriate type and use
+	 * sit in your lexical actions.
 	 */
 	public static Token newToken(int ofKind, String image) {
 		switch (ofKind) {
@@ -35,6 +29,12 @@ public class Token implements java.io.Serializable {
 			return new Token(ofKind, image);
 		}
 	}
+
+	/**
+	 * The version identifier for this Serializable class. Increment only if the
+	 * <i>serialized</i> form of the class changes.
+	 */
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * An integer that describes the kind of this token. This numbering system

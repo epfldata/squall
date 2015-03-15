@@ -7,11 +7,11 @@ import net.sf.jsqlparser.schema.Column;
 
 public class HardCodedSelectivities {
 
-	private static final double INVALID_SELECTIVITY = -1;
-
 	private static String createErrorMessage(String queryName, Expression expr) {
-		return "The optimizer cannot compute the selectivity of Expression " + expr.toString()
-				+ " in query " + queryName
+		return "The optimizer cannot compute the selectivity of Expression "
+				+ expr.toString()
+				+ " in query "
+				+ queryName
 				+ ". Try to manually add these information to class HardCodedSelectivities.";
 	}
 
@@ -46,15 +46,20 @@ public class HardCodedSelectivities {
 		if (leftExp instanceof Column && rightExp instanceof Column) {
 			final String rightname = ((Column) rightExp).getColumnName();
 			final String leftname = ((Column) leftExp).getColumnName();
-			if (queryName.equalsIgnoreCase("TPCH4") || queryName.equalsIgnoreCase("TPCH12"))
-				if (rightname.equals("RECEIPTDATE") && leftname.equals("COMMITDATE"))
+			if (queryName.equalsIgnoreCase("TPCH4")
+					|| queryName.equalsIgnoreCase("TPCH12"))
+				if (rightname.equals("RECEIPTDATE")
+						&& leftname.equals("COMMITDATE"))
 					return 0.62;
 			if (queryName.equalsIgnoreCase("TPCH12"))
-				if (rightname.equals("COMMITDATE") && leftname.equals("SHIPDATE"))
+				if (rightname.equals("COMMITDATE")
+						&& leftname.equals("SHIPDATE"))
 					return 0.50;
 		}
 
 		// any other case is not yet supported
 		return INVALID_SELECTIVITY;
 	}
+
+	private static final double INVALID_SELECTIVITY = -1;
 }

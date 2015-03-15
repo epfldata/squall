@@ -21,17 +21,22 @@ public class HyracksL1Plan {
 	public HyracksL1Plan(String dataPath, String extension, Map conf) {
 		// -------------------------------------------------------------------------------------
 		// start of query plan filling
-		final ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 0, 6 });
+		final ProjectOperator projectionCustomer = new ProjectOperator(
+				new int[] { 0, 6 });
 		final List<Integer> hashCustomer = Arrays.asList(0);
-		DataSourceComponent relationCustomer = new DataSourceComponent("CUSTOMER", dataPath + "customer" + extension)
-				.add(projectionCustomer).setOutputPartKey(hashCustomer).setPrintOut(false);
+		DataSourceComponent relationCustomer = new DataSourceComponent(
+				"CUSTOMER", dataPath + "customer" + extension)
+				.add(projectionCustomer).setOutputPartKey(hashCustomer)
+				.setPrintOut(false);
 		_queryBuilder.add(relationCustomer);
 
 		// -------------------------------------------------------------------------------------
-		final ProjectOperator projectionOrders = new ProjectOperator(new int[] { 1 });
+		final ProjectOperator projectionOrders = new ProjectOperator(
+				new int[] { 1 });
 		final List<Integer> hashOrders = Arrays.asList(0);
-		DataSourceComponent relationOrders = new DataSourceComponent("ORDERS", dataPath + "orders" + extension)
-				.add(projectionOrders).setOutputPartKey(hashOrders).setPrintOut(false);
+		DataSourceComponent relationOrders = new DataSourceComponent("ORDERS",
+				dataPath + "orders" + extension).add(projectionOrders)
+				.setOutputPartKey(hashOrders).setPrintOut(false);
 		_queryBuilder.add(relationOrders);
 
 	}

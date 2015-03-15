@@ -8,7 +8,6 @@ import java.util.Map;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
-import ch.epfl.data.plan_runner.components.DataSourceComponent;
 import ch.epfl.data.plan_runner.conversion.NumericConversion;
 import ch.epfl.data.plan_runner.conversion.SumCount;
 import ch.epfl.data.plan_runner.conversion.SumCountConversion;
@@ -145,7 +144,8 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 			tupleHash = MyUtilities.createHashString(tuple, _groupByColumns,
 					_groupByProjection.getExpressions(), _map);
 		else
-			tupleHash = MyUtilities.createHashString(tuple, _groupByColumns, _map);
+			tupleHash = MyUtilities.createHashString(tuple, _groupByColumns,
+					_map);
 		final SumCount sumCount = _storage.update(tuple, tupleHash);
 		final String strValue = _wrapper.toString(sumCount);
 
@@ -195,6 +195,12 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 		return this;
 	}
 
+	@Override
+	public AggregateAvgOperator setGroupByColumns(int... hashIndexes) {
+		return setGroupByColumns(Arrays
+				.asList(ArrayUtils.toObject(hashIndexes)));
+	}
+
 	// from AgregateOperator
 	@Override
 	public AggregateAvgOperator setGroupByColumns(List<Integer> groupByColumns) {
@@ -206,14 +212,10 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 		} else
 			throw new RuntimeException("Aggragation already has groupBy set!");
 	}
-	
-	@Override
-	public AggregateAvgOperator setGroupByColumns(int... hashIndexes) {
-		return setGroupByColumns(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
-	}
 
 	@Override
-	public AggregateAvgOperator setGroupByProjection(ProjectOperator groupByProjection) {
+	public AggregateAvgOperator setGroupByProjection(
+			ProjectOperator groupByProjection) {
 		if (!alreadySetOther(GB_PROJECTION)) {
 			_groupByType = GB_PROJECTION;
 			_groupByProjection = groupByProjection;
@@ -231,10 +233,11 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 		if (_groupByColumns.isEmpty() && _groupByProjection == null)
 			sb.append("\n  No groupBy!");
 		else if (!_groupByColumns.isEmpty())
-			sb.append("\n  GroupByColumns are ").append(getGroupByStr()).append(".");
-		else if (_groupByProjection != null)
-			sb.append("\n  GroupByProjection is ").append(_groupByProjection.toString())
+			sb.append("\n  GroupByColumns are ").append(getGroupByStr())
 					.append(".");
+		else if (_groupByProjection != null)
+			sb.append("\n  GroupByProjection is ")
+					.append(_groupByProjection.toString()).append(".");
 		if (_distinct != null)
 			sb.append("\n  It also has distinct ").append(_distinct.toString());
 		return sb.toString();

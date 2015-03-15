@@ -1,12 +1,8 @@
 package ch.epfl.data.plan_runner.expressions;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import ch.epfl.data.plan_runner.conversion.IntegerConversion;
-import ch.epfl.data.plan_runner.conversion.LongConversion;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.visitors.ValueExpressionVisitor;
 
@@ -19,12 +15,24 @@ public class ConcatIntString implements ValueExpression<Integer> {
 
 	private int _intIndex;
 	private int _strIndex;
-	
+
 	public ConcatIntString(int intIndex, int strIndex) {
 		_intIndex = intIndex;
 		_strIndex = strIndex;
 	}
-	
+
+	@Override
+	public void accept(ValueExpressionVisitor vev) {
+		throw new RuntimeException("Not implemented for a moment!");
+		// vev.visit(this);
+	}
+
+	// unused
+	@Override
+	public void changeValues(int i, ValueExpression<Integer> newExpr) {
+		// nothing
+	}
+
 	@Override
 	public Integer eval(List<String> tuple) {
 		int intValue1 = Integer.parseInt(tuple.get(_intIndex));
@@ -49,19 +57,6 @@ public class ConcatIntString implements ValueExpression<Integer> {
 	}
 
 	@Override
-	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append("ConcatIntString ").append(_intIndex).append(", ").append(_strIndex);
-		return sb.toString();
-	}
-	
-	// unused
-	@Override
-	public void changeValues(int i, ValueExpression<Integer> newExpr) {
-		// nothing
-	}
-	
-	@Override
 	public void inverseNumber() {
 		// nothing
 
@@ -70,11 +65,13 @@ public class ConcatIntString implements ValueExpression<Integer> {
 	@Override
 	public boolean isNegative() {
 		return false;
-	}	
+	}
 
 	@Override
-	public void accept(ValueExpressionVisitor vev) {
-		throw new RuntimeException("Not implemented for a moment!");
-		//vev.visit(this);
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append("ConcatIntString ").append(_intIndex).append(", ")
+				.append(_strIndex);
+		return sb.toString();
 	}
 }

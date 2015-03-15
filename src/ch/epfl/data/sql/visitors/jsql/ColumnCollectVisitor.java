@@ -49,7 +49,8 @@ import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 
-public class ColumnCollectVisitor implements ExpressionVisitor, ItemsListVisitor {
+public class ColumnCollectVisitor implements ExpressionVisitor,
+		ItemsListVisitor {
 
 	private final List<Column> _listColumns = new ArrayList<Column>();
 
@@ -139,7 +140,8 @@ public class ColumnCollectVisitor implements ExpressionVisitor, ItemsListVisitor
 
 	@Override
 	public void visit(ExpressionList el) {
-		for (final Iterator iter = el.getExpressions().iterator(); iter.hasNext();) {
+		for (final Iterator iter = el.getExpressions().iterator(); iter
+				.hasNext();) {
 			final Expression expression = (Expression) iter.next();
 			expression.accept(this);
 		}

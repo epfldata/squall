@@ -10,6 +10,12 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 
+import backtype.storm.Config;
+import backtype.storm.spout.SpoutOutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.tuple.Values;
+import backtype.storm.utils.Utils;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
 import ch.epfl.data.plan_runner.operators.AggregateOperator;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
@@ -20,12 +26,6 @@ import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.plan_runner.utilities.SerializableFileInputStream;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
-import backtype.storm.Config;
-import backtype.storm.spout.SpoutOutputCollector;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.tuple.Values;
-import backtype.storm.utils.Utils;
 
 public class StormDataSource extends StormSpoutComponent {
 	private static final long serialVersionUID = 1L;
@@ -45,27 +45,29 @@ public class StormDataSource extends StormSpoutComponent {
 	private int _numSentTuples = 0;
 
 	private final ChainOperator _operatorChain;
-	
+
 	// for aggregate batch sending
 	private final Semaphore _semAgg = new Semaphore(1, true);
 	private boolean _firstTime = true;
 	private PeriodicAggBatchSend _periodicAggBatch;
 	private final long _aggBatchOutputMillis;
-	
+
 	private String _name;
 
-	public StormDataSource(ComponentProperties cp, List<String> allCompNames, String inputPath,
-			int hierarchyPosition, int parallelism, boolean isPartitioner,
-			TopologyBuilder builder, TopologyKiller killer, Config conf) {
+	public StormDataSource(ComponentProperties cp, List<String> allCompNames,
+			String inputPath, int hierarchyPosition, int parallelism,
+			boolean isPartitioner, TopologyBuilder builder,
+			TopologyKiller killer, Config conf) {
 
 		super(cp, allCompNames, hierarchyPosition, isPartitioner, conf);
 		_operatorChain = cp.getChainOperator();
-		_name=cp.getName();
+		_name = cp.getName();
 		_aggBatchOutputMillis = cp.getBatchOutputMillis();
 		_inputPath = inputPath;
 		_fileParts = parallelism;
 
-		if (getHierarchyPosition() == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf)))
+		if (getHierarchyPosition() == FINAL_COMPONENT
+				&& (!MyUtilities.isAckEveryTuple(conf)))
 			killer.registerComponent(this, parallelism);
 
 		builder.setSpout(getID(), this, parallelism);
@@ -94,7 +96,8 @@ public class StormDataSource extends StormSpoutComponent {
 					final AggregateOperator agg = (AggregateOperator) lastOperator;
 					final List<String> tuples = agg.getContent();
 					for (final String tuple : tuples)
-						tupleSend(MyUtilities.stringToTuple(tuple, getConf()), null, 0);
+						tupleSend(MyUtilities.stringToTuple(tuple, getConf()),
+								null, 0);
 					// clearing
 					agg.clearStorage();
 					_semAgg.release();
@@ -110,7 +113,7 @@ public class StormDataSource extends StormSpoutComponent {
 			} catch (final InterruptedException ex) {
 			}
 		tuple = _operatorChain.process(tuple);
-		
+
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			_semAgg.release();
 
@@ -121,7 +124,8 @@ public class StormDataSource extends StormSpoutComponent {
 		_pendingTuples++;
 		printTuple(tuple);
 
-		if (MyUtilities.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
+		if (MyUtilities
+				.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
 			long timestamp = 0;
 			if (MyUtilities.isCustomTimestampMode(getConf()))
 				if (getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
@@ -163,13 +167,14 @@ public class StormDataSource extends StormSpoutComponent {
 							new Values(SystemParameters.EOF));
 				}
 			} else if (!_hasSentLastAck) {
-				LOG.info(getID() + ":Has sent last_ack, tuples sent:" + _numSentTuples);
+				LOG.info(getID() + ":Has sent last_ack, tuples sent:"
+						+ _numSentTuples);
 				_hasSentLastAck = true;
 				final List<String> lastTuple = new ArrayList<String>(
 						Arrays.asList(SystemParameters.LAST_ACK));
 				tupleSend(lastTuple, null, 0);
 			}
-		if(_operatorChain != null){
+		if (_operatorChain != null) {
 			_operatorChain.finalizeProcessing();
 		}
 	}
@@ -204,26 +209,31 @@ public class StormDataSource extends StormSpoutComponent {
 	// from IRichSpout interface
 	@Override
 	public void nextTuple() {
-		if (_firstTime && MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis)) {
-			_periodicAggBatch = new PeriodicAggBatchSend(_aggBatchOutputMillis, this);
+		if (_firstTime
+				&& MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis)) {
+			_periodicAggBatch = new PeriodicAggBatchSend(_aggBatchOutputMillis,
+					this);
 			_firstTime = false;
 		}
 
 		if (SystemParameters.isExisting(getConf(), "TIMEOUT_1MS_EVERY_XTH")) {
 			// Obsolete - this is for compatibility with old configurations
 			final long timeout = 1;
-			final int freqWait = SystemParameters.getInt(getConf(), "TIMEOUT_1MS_EVERY_XTH");
+			final int freqWait = SystemParameters.getInt(getConf(),
+					"TIMEOUT_1MS_EVERY_XTH");
 			if (_numSentTuples > 0 && _numSentTuples % freqWait == 0)
 				Utils.sleep(timeout);
 		}
-		
-		if (SystemParameters.isExisting(getConf(), "TIMEOUT_EVERY_X_TUPLE") && SystemParameters.isExisting(getConf(), "TIMEOUT_X_MS")) {
-			final int freqWait = SystemParameters.getInt(getConf(), "TIMEOUT_EVERY_X_TUPLE");			
-			final long timeout = SystemParameters.getInt(getConf(), "TIMEOUT_X_MS");
+
+		if (SystemParameters.isExisting(getConf(), "TIMEOUT_EVERY_X_TUPLE")
+				&& SystemParameters.isExisting(getConf(), "TIMEOUT_X_MS")) {
+			final int freqWait = SystemParameters.getInt(getConf(),
+					"TIMEOUT_EVERY_X_TUPLE");
+			final long timeout = SystemParameters.getInt(getConf(),
+					"TIMEOUT_X_MS");
 			if (_numSentTuples > 0 && _numSentTuples % freqWait == 0)
 				Utils.sleep(timeout);
 		}
-		
 
 		final String line = readLine();
 		if (line == null) {
@@ -246,11 +256,11 @@ public class StormDataSource extends StormSpoutComponent {
 	// BaseRichSpout
 	@Override
 	public void open(Map map, TopologyContext tc, SpoutOutputCollector collector) {
-		super.open(map, tc, collector);	
+		super.open(map, tc, collector);
 		try {
 			_fileSection = tc.getThisTaskIndex();
-			_reader = new SerializableFileInputStream(new File(_inputPath), 1 * 1024 * 1024,
-					_fileSection, _fileParts);
+			_reader = new SerializableFileInputStream(new File(_inputPath),
+					1 * 1024 * 1024, _fileSection, _fileParts);
 
 		} catch (final Exception e) {
 			final String error = MyUtilities.getStackTrace(e);

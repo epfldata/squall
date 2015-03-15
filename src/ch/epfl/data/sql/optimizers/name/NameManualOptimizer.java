@@ -35,9 +35,10 @@ public class NameManualOptimizer implements Optimizer {
 
 	@Override
 	public QueryBuilder generate() {
-		final int totalParallelism = SystemParameters.getInt(_map, "DIP_TOTAL_SRC_PAR");
-		final NameCompGenFactory factory = new NameCompGenFactory(_map, _pq.getTan(),
-				totalParallelism);
+		final int totalParallelism = SystemParameters.getInt(_map,
+				"DIP_TOTAL_SRC_PAR");
+		final NameCompGenFactory factory = new NameCompGenFactory(_map,
+				_pq.getTan(), totalParallelism);
 		final NameCompGen ncg = factory.create();
 
 		Component first = ncg.generateDataSource(_compNames.get(0));

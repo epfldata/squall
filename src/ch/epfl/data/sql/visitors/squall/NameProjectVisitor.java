@@ -6,19 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
-import ch.epfl.data.plan_runner.components.Component;
-import ch.epfl.data.plan_runner.conversion.DateConversion;
-import ch.epfl.data.plan_runner.conversion.DoubleConversion;
-import ch.epfl.data.plan_runner.conversion.LongConversion;
-import ch.epfl.data.plan_runner.conversion.StringConversion;
-import ch.epfl.data.plan_runner.conversion.TypeConversion;
-import ch.epfl.data.plan_runner.expressions.ColumnReference;
-import ch.epfl.data.plan_runner.expressions.IntegerYearFromDate;
-import ch.epfl.data.plan_runner.expressions.ValueExpression;
-import ch.epfl.data.plan_runner.expressions.ValueSpecification;
-import ch.epfl.data.sql.optimizers.name.NameTranslator;
-import ch.epfl.data.sql.util.ParserUtil;
-import ch.epfl.data.sql.util.TupleSchema;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
 import net.sf.jsqlparser.expression.AnyComparisonExpression;
 import net.sf.jsqlparser.expression.BinaryExpression;
@@ -63,6 +50,19 @@ import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
+import ch.epfl.data.plan_runner.components.Component;
+import ch.epfl.data.plan_runner.conversion.DateConversion;
+import ch.epfl.data.plan_runner.conversion.DoubleConversion;
+import ch.epfl.data.plan_runner.conversion.LongConversion;
+import ch.epfl.data.plan_runner.conversion.StringConversion;
+import ch.epfl.data.plan_runner.conversion.TypeConversion;
+import ch.epfl.data.plan_runner.expressions.ColumnReference;
+import ch.epfl.data.plan_runner.expressions.IntegerYearFromDate;
+import ch.epfl.data.plan_runner.expressions.ValueExpression;
+import ch.epfl.data.plan_runner.expressions.ValueSpecification;
+import ch.epfl.data.sql.optimizers.name.NameTranslator;
+import ch.epfl.data.sql.util.ParserUtil;
+import ch.epfl.data.sql.util.TupleSchema;
 
 /*
  * Used for Cost-optimizer(nameTranslator)
@@ -85,7 +85,8 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor {
 	private static DateConversion _dateConv = new DateConversion();
 	private static StringConversion _sc = new StringConversion();
 
-	public NameProjectVisitor(TupleSchema inputTupleSchema, Component affectedComponent) {
+	public NameProjectVisitor(TupleSchema inputTupleSchema,
+			Component affectedComponent) {
 		_inputTupleSchema = inputTupleSchema;
 
 		_nt = new NameTranslator(affectedComponent.getName());
@@ -130,7 +131,8 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor {
 			final ValueExpression right = _exprStack.pop();
 			final ValueExpression left = _exprStack.pop();
 
-			final ValueExpression add = new ch.epfl.data.plan_runner.expressions.Addition(left, right);
+			final ValueExpression add = new ch.epfl.data.plan_runner.expressions.Addition(
+					left, right);
 			_exprStack.push(add);
 		}
 	}
@@ -196,7 +198,8 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor {
 
 	@Override
 	public void visit(DateValue dv) {
-		final ValueExpression ve = new ValueSpecification(_dateConv, dv.getValue());
+		final ValueExpression ve = new ValueSpecification(_dateConv,
+				dv.getValue());
 		_exprStack.push(ve);
 	}
 
@@ -209,14 +212,16 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor {
 			final ValueExpression right = _exprStack.pop();
 			final ValueExpression left = _exprStack.pop();
 
-			final ValueExpression add = new ch.epfl.data.plan_runner.expressions.Division(left, right);
+			final ValueExpression add = new ch.epfl.data.plan_runner.expressions.Division(
+					left, right);
 			_exprStack.push(add);
 		}
 	}
 
 	@Override
 	public void visit(DoubleValue dv) {
-		final ValueExpression ve = new ValueSpecification(_dblConv, dv.getValue());
+		final ValueExpression ve = new ValueSpecification(_dblConv,
+				dv.getValue());
 		_exprStack.push(ve);
 	}
 
@@ -232,7 +237,8 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor {
 
 	@Override
 	public void visit(ExpressionList el) {
-		for (final Iterator iter = el.getExpressions().iterator(); iter.hasNext();) {
+		for (final Iterator iter = el.getExpressions().iterator(); iter
+				.hasNext();) {
 			final Expression expression = (Expression) iter.next();
 			expression.accept(this);
 		}
@@ -268,7 +274,8 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor {
 			final String fnName = function.getName();
 			if (fnName.equalsIgnoreCase("EXTRACT_YEAR")) {
 				if (numParams != 1)
-					throw new RuntimeException("EXTRACT_YEAR function has exactly one parameter!");
+					throw new RuntimeException(
+							"EXTRACT_YEAR function has exactly one parameter!");
 				final ValueExpression expr = expressions.get(0);
 				final ValueExpression ve = new IntegerYearFromDate(expr);
 				_exprStack.push(ve);
@@ -346,7 +353,8 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor {
 			final ValueExpression right = _exprStack.pop();
 			final ValueExpression left = _exprStack.pop();
 
-			final ValueExpression add = new ch.epfl.data.plan_runner.expressions.Multiplication(left, right);
+			final ValueExpression add = new ch.epfl.data.plan_runner.expressions.Multiplication(
+					left, right);
 			_exprStack.push(add);
 		}
 	}
@@ -395,7 +403,8 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor {
 			final ValueExpression right = _exprStack.pop();
 			final ValueExpression left = _exprStack.pop();
 
-			final ValueExpression add = new ch.epfl.data.plan_runner.expressions.Subtraction(left, right);
+			final ValueExpression add = new ch.epfl.data.plan_runner.expressions.Subtraction(
+					left, right);
 			_exprStack.push(add);
 		}
 	}

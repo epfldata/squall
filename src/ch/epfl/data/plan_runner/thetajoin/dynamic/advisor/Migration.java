@@ -4,8 +4,8 @@ import java.io.Serializable;
 
 /**
  * This class represents a migration action. This happens when the splitting
- * phase is over.
- * For information about the interface check the documentation at {@link Action} .
+ * phase is over. For information about the interface check the documentation at
+ * {@link Action} .
  */
 public class Migration extends Action implements Serializable {
 
@@ -26,8 +26,8 @@ public class Migration extends Action implements Serializable {
 	private int[][] rowExchanges;
 	private int[][] columnExchanges;
 
-	public Migration(int reducerCount, int previousRows, int previousColumns, int newRows,
-			int newColumns) {
+	public Migration(int reducerCount, int previousRows, int previousColumns,
+			int newRows, int newColumns) {
 		super(reducerCount, previousRows, previousColumns, newRows, newColumns);
 	}
 
@@ -114,17 +114,20 @@ public class Migration extends Action implements Serializable {
 
 		if (newRows < previousRows)
 			for (int k = 0; k < reducerCount; ++k) {
-				final int temp1 = k / previousColumns / newRows * previousColumns + k
-						% previousColumns;
+				final int temp1 = k / previousColumns / newRows
+						* previousColumns + k % previousColumns;
 				final int temp2 = k / previousColumns % newRows;
 				newIds[k] = temp2 * newColumns + temp1;
 				oldIds[newIds[k]] = k;
 			}
 		else
 			for (int k = 0; k < reducerCount; ++k) {
-				final int temp1 = k % newColumns + k / previousColumns * previousColumns;
-				final int temp2 = temp1 / previousColumns * newColumns + temp1 % previousColumns;
-				newIds[k] = newColumns * previousRows * (k % previousColumns / newColumns) + temp2;
+				final int temp1 = k % newColumns + k / previousColumns
+						* previousColumns;
+				final int temp2 = temp1 / previousColumns * newColumns + temp1
+						% previousColumns;
+				newIds[k] = newColumns * previousRows
+						* (k % previousColumns / newColumns) + temp2;
 				oldIds[newIds[k]] = k;
 			}
 	}
@@ -159,8 +162,8 @@ public class Migration extends Action implements Serializable {
 
 	@Override
 	public String toString() {
-		return MIGRATION + " " + reducerCount + " " + previousRows + " " + previousColumns + " "
-				+ newRows + " " + newColumns;
+		return MIGRATION + " " + reducerCount + " " + previousRows + " "
+				+ previousColumns + " " + newRows + " " + newColumns;
 	}
 
 }

@@ -2,12 +2,6 @@ package ch.epfl.data.sql.estimators;
 
 import java.util.List;
 
-import ch.epfl.data.plan_runner.conversion.DoubleConversion;
-import ch.epfl.data.plan_runner.conversion.LongConversion;
-import ch.epfl.data.plan_runner.conversion.TypeConversion;
-import ch.epfl.data.sql.schema.Schema;
-import ch.epfl.data.sql.util.ParserUtil;
-import ch.epfl.data.sql.util.TableAliasName;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.Parenthesis;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
@@ -19,6 +13,12 @@ import net.sf.jsqlparser.expression.operators.relational.MinorThan;
 import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
+import ch.epfl.data.plan_runner.conversion.DoubleConversion;
+import ch.epfl.data.plan_runner.conversion.LongConversion;
+import ch.epfl.data.plan_runner.conversion.TypeConversion;
+import ch.epfl.data.sql.schema.Schema;
+import ch.epfl.data.sql.util.ParserUtil;
+import ch.epfl.data.sql.util.TableAliasName;
 
 /* TODO high prio:
  * no matter on which component we do invoke, the only important is to know previous projections
@@ -35,7 +35,8 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator {
 	private final Schema _schema;
 	private final TableAliasName _tan;
 
-	public SelingerSelectivityEstimator(String queryName, Schema schema, TableAliasName tan) {
+	public SelingerSelectivityEstimator(String queryName, Schema schema,
+			TableAliasName tan) {
 		_queryName = queryName;
 		_schema = schema;
 		_tan = tan;
@@ -44,7 +45,8 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator {
 	private Long doubleToLong(Double doubleValue) {
 		final Long result = doubleValue.longValue();
 		if (result.doubleValue() != doubleValue)
-			throw new RuntimeException("Rounding error! Check your schema file.");
+			throw new RuntimeException(
+					"Rounding error! Check your schema file.");
 		return result;
 	}
 
@@ -64,7 +66,8 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator {
 			return 1 - (1 - estimate(and.getLeftExpression()))
 					- (1 - estimate(and.getRightExpression()));
 		else
-			return estimate(and.getLeftExpression()) * estimate(and.getRightExpression());
+			return estimate(and.getLeftExpression())
+					* estimate(and.getRightExpression());
 
 	}
 
@@ -72,9 +75,11 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator {
 		final List<Column> columns = ParserUtil.getJSQLColumns(equals);
 
 		final Column column = columns.get(0);
-		final String fullSchemaColumnName = _tan.getFullSchemaColumnName(column);
+		final String fullSchemaColumnName = _tan
+				.getFullSchemaColumnName(column);
 
-		final long distinctValues = _schema.getNumDistinctValues(fullSchemaColumnName);
+		final long distinctValues = _schema
+				.getNumDistinctValues(fullSchemaColumnName);
 		return 1.0 / distinctValues;
 	}
 
@@ -142,10 +147,12 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator {
 	public double estimate(MinorThan mt) {
 		final List<Column> columns = ParserUtil.getJSQLColumns(mt);
 		final Column column = columns.get(0);
-		final TypeConversion tc = _schema.getType(ParserUtil.getFullSchemaColumnName(column, _tan));
+		final TypeConversion tc = _schema.getType(ParserUtil
+				.getFullSchemaColumnName(column, _tan));
 
 		// TODO: assume uniform distribution
-		final String fullSchemaColumnName = _tan.getFullSchemaColumnName(column);
+		final String fullSchemaColumnName = _tan
+				.getFullSchemaColumnName(column);
 		Object minValue = _schema.getRange(fullSchemaColumnName).getMin();
 		Object maxValue = _schema.getRange(fullSchemaColumnName).getMax();
 
@@ -215,7 +222,8 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator {
 	 * And, Or expressions
 	 */
 	public double estimate(OrExpression or) {
-		return estimate(or.getLeftExpression()) + estimate(or.getRightExpression());
+		return estimate(or.getLeftExpression())
+				+ estimate(or.getRightExpression());
 	}
 
 	/*

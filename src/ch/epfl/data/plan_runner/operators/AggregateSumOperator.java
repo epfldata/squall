@@ -18,7 +18,8 @@ import ch.epfl.data.plan_runner.storage.BasicStore;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.visitors.OperatorVisitor;
 
-public class AggregateSumOperator<T extends Number & Comparable<T>> implements AggregateOperator<T> {
+public class AggregateSumOperator<T extends Number & Comparable<T>> implements
+		AggregateOperator<T> {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(AggregateSumOperator.class);
 
@@ -148,7 +149,8 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
 			tupleHash = MyUtilities.createHashString(tuple, _groupByColumns,
 					_groupByProjection.getExpressions(), _map);
 		else
-			tupleHash = MyUtilities.createHashString(tuple, _groupByColumns, _map);
+			tupleHash = MyUtilities.createHashString(tuple, _groupByColumns,
+					_map);
 		final T value = _storage.update(tuple, tupleHash);
 		final String strValue = _wrapper.toString(value);
 
@@ -163,15 +165,18 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
 	// actual operator implementation
 	@Override
 	public T runAggregateFunction(T value, List<String> tuple) {
-		final ValueExpression<T> base = new ValueSpecification<T>(_wrapper, value);
+		final ValueExpression<T> base = new ValueSpecification<T>(_wrapper,
+				value);
 		final Addition<T> result = new Addition<T>(base, _ve);
 		return result.eval(tuple);
 	}
 
 	@Override
 	public T runAggregateFunction(T value1, T value2) {
-		final ValueExpression<T> ve1 = new ValueSpecification<T>(_wrapper, value1);
-		final ValueExpression<T> ve2 = new ValueSpecification<T>(_wrapper, value2);
+		final ValueExpression<T> ve1 = new ValueSpecification<T>(_wrapper,
+				value1);
+		final ValueExpression<T> ve2 = new ValueSpecification<T>(_wrapper,
+				value2);
 		final Addition<T> result = new Addition<T>(ve1, ve2);
 		return result.eval(null);
 	}
@@ -182,9 +187,16 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
 		return this;
 	}
 
+	@Override
+	public AggregateSumOperator<T> setGroupByColumns(int... hashIndexes) {
+		return setGroupByColumns(Arrays
+				.asList(ArrayUtils.toObject(hashIndexes)));
+	}
+
 	// from AgregateOperator
 	@Override
-	public AggregateSumOperator<T> setGroupByColumns(List<Integer> groupByColumns) {
+	public AggregateSumOperator<T> setGroupByColumns(
+			List<Integer> groupByColumns) {
 		if (!alreadySetOther(GB_COLUMNS)) {
 			_groupByType = GB_COLUMNS;
 			_groupByColumns = groupByColumns;
@@ -193,14 +205,10 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
 		} else
 			throw new RuntimeException("Aggragation already has groupBy set!");
 	}
-	
-	@Override
-	public AggregateSumOperator<T> setGroupByColumns(int... hashIndexes) {
-		return setGroupByColumns(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
-	}
 
 	@Override
-	public AggregateSumOperator setGroupByProjection(ProjectOperator groupByProjection) {
+	public AggregateSumOperator setGroupByProjection(
+			ProjectOperator groupByProjection) {
 		if (!alreadySetOther(GB_PROJECTION)) {
 			_groupByType = GB_PROJECTION;
 			_groupByProjection = groupByProjection;
@@ -218,10 +226,11 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements A
 		if (_groupByColumns.isEmpty() && _groupByProjection == null)
 			sb.append("\n  No groupBy!");
 		else if (!_groupByColumns.isEmpty())
-			sb.append("\n  GroupByColumns are ").append(getGroupByStr()).append(".");
-		else if (_groupByProjection != null)
-			sb.append("\n  GroupByProjection is ").append(_groupByProjection.toString())
+			sb.append("\n  GroupByColumns are ").append(getGroupByStr())
 					.append(".");
+		else if (_groupByProjection != null)
+			sb.append("\n  GroupByProjection is ")
+					.append(_groupByProjection.toString()).append(".");
 		if (_distinct != null)
 			sb.append("\n  It also has distinct ").append(_distinct.toString());
 		return sb.toString();

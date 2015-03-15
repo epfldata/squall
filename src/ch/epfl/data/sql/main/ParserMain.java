@@ -18,8 +18,6 @@ import ch.epfl.data.sql.optimizers.name.manual_batching.ManualBatchingOptimizer;
 import ch.epfl.data.sql.util.ParserUtil;
 
 public class ParserMain {
-	private static Logger LOG = Logger.getLogger(ParserMain.class);
-
 	public static void main(String[] args) {
 		final String parserConfPath = args[0];
 		final ParserMain pm = new ParserMain();
@@ -37,12 +35,16 @@ public class ParserMain {
 		new Main(plan, map, parserConfPath);
 	}
 
+	private static Logger LOG = Logger.getLogger(ParserMain.class);
+
 	// String[] sizes: {"1G", "2G", "4G", ...}
 	public Map createConfig(String parserConfPath) {
 		final Map map = SystemParameters.fileToMap(parserConfPath);
 
-		final String dbSize = SystemParameters.getString(map, "DIP_DB_SIZE") + "G";
-		final String dataRoot = SystemParameters.getString(map, "DIP_DATA_ROOT");
+		final String dbSize = SystemParameters.getString(map, "DIP_DB_SIZE")
+				+ "G";
+		final String dataRoot = SystemParameters
+				.getString(map, "DIP_DATA_ROOT");
 		final String dataPath = dataRoot + "/" + dbSize + "/";
 
 		SystemParameters.putInMap(map, "DIP_DATA_PATH", dataPath);
@@ -56,7 +58,8 @@ public class ParserMain {
 	}
 
 	private Optimizer pickOptimizer(Map map) {
-		final String optStr = SystemParameters.getString(map, "DIP_OPTIMIZER_TYPE");
+		final String optStr = SystemParameters.getString(map,
+				"DIP_OPTIMIZER_TYPE");
 		LOG.info("Selected optimizer: " + optStr);
 		if ("INDEX_SIMPLE".equalsIgnoreCase(optStr))
 			// Simple optimizer provides lefty plans
@@ -97,9 +100,10 @@ public class ParserMain {
 		if (SystemParameters.getBoolean(map, "DIP_DISTRIBUTED")) {
 			SystemParameters.putInMap(map, "DIP_NUM_ACKERS", clusterAckers);
 			if (numWorkers + clusterAckers > SystemParameters.CLUSTER_SIZE)
-				throw new RuntimeException("The cluster has only " + SystemParameters.CLUSTER_SIZE
-						+ " nodes, but the query plan requires " + numWorkers + " workers "
-						+ clusterAckers + " ackers.");
+				throw new RuntimeException("The cluster has only "
+						+ SystemParameters.CLUSTER_SIZE
+						+ " nodes, but the query plan requires " + numWorkers
+						+ " workers " + clusterAckers + " ackers.");
 		} else
 			SystemParameters.putInMap(map, "DIP_NUM_ACKERS", localAckers);
 

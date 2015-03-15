@@ -6,14 +6,15 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import backtype.storm.Config;
+import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.operators.ProjectOperator;
 import ch.epfl.data.plan_runner.storage.BasicStore;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
-import backtype.storm.Config;
-import backtype.storm.topology.TopologyBuilder;
+
 @Deprecated
 public class StormSrcJoin implements StormEmitter, Serializable {
 	private static final long serialVersionUID = 1L;
@@ -30,8 +31,9 @@ public class StormSrcJoin implements StormEmitter, Serializable {
 	public StormSrcJoin(StormEmitter firstEmitter, StormEmitter secondEmitter,
 			ComponentProperties cp, List<String> allCompNames,
 			BasicStore<ArrayList<String>> firstPreAggStorage,
-			BasicStore<ArrayList<String>> secondPreAggStorage, ProjectOperator firstPreAggProj,
-			ProjectOperator secondPreAggProj, int hierarchyPosition, TopologyBuilder builder,
+			BasicStore<ArrayList<String>> secondPreAggStorage,
+			ProjectOperator firstPreAggProj, ProjectOperator secondPreAggProj,
+			int hierarchyPosition, TopologyBuilder builder,
 			TopologyKiller killer, Config conf) {
 
 		_componentName = cp.getName();
@@ -39,15 +41,15 @@ public class StormSrcJoin implements StormEmitter, Serializable {
 		_hashExpressions = cp.getHashExpressions();
 
 		// set the harmonizer
-		_harmonizer = new StormSrcHarmonizer(_componentName, firstEmitter, secondEmitter, builder,
-				killer, conf);
+		_harmonizer = new StormSrcHarmonizer(_componentName, firstEmitter,
+				secondEmitter, builder, killer, conf);
 
-		_firstStorage = new StormSrcStorage(firstEmitter, secondEmitter, cp, allCompNames,
-				_harmonizer, true, firstPreAggStorage, firstPreAggProj, hierarchyPosition, builder,
-				killer, conf);
-		_secondStorage = new StormSrcStorage(firstEmitter, secondEmitter, cp, allCompNames,
-				_harmonizer, false, secondPreAggStorage, secondPreAggProj, hierarchyPosition,
-				builder, killer, conf);
+		_firstStorage = new StormSrcStorage(firstEmitter, secondEmitter, cp,
+				allCompNames, _harmonizer, true, firstPreAggStorage,
+				firstPreAggProj, hierarchyPosition, builder, killer, conf);
+		_secondStorage = new StormSrcStorage(firstEmitter, secondEmitter, cp,
+				allCompNames, _harmonizer, false, secondPreAggStorage,
+				secondPreAggProj, hierarchyPosition, builder, killer, conf);
 
 		if (!MyUtilities.isAckEveryTuple(conf))
 			throw new RuntimeException(

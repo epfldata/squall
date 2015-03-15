@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import ch.epfl.data.plan_runner.conversion.DoubleConversion;
 import ch.epfl.data.plan_runner.conversion.IntegerConversion;
 import ch.epfl.data.plan_runner.conversion.NumericConversion;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
@@ -29,7 +28,8 @@ public class Division implements ValueExpression<Integer> {
 	private final List<ValueExpression> _veList = new ArrayList<ValueExpression>();
 	private final NumericConversion<Integer> _wrapper = new IntegerConversion();
 
-	public Division(ValueExpression ve1, ValueExpression ve2, ValueExpression... veArray) {
+	public Division(ValueExpression ve1, ValueExpression ve2,
+			ValueExpression... veArray) {
 		_veList.add(ve1);
 		_veList.add(ve2);
 		_veList.addAll(Arrays.asList(veArray));
@@ -49,13 +49,15 @@ public class Division implements ValueExpression<Integer> {
 	public Integer eval(List<String> tuple) {
 		final ValueExpression firstVE = _veList.get(0);
 		final Object firstObj = firstVE.eval(tuple);
-		final NumericConversion firstType = (NumericConversion) firstVE.getType();
+		final NumericConversion firstType = (NumericConversion) firstVE
+				.getType();
 		double result = firstType.toDouble(firstObj);
 
 		for (int i = 1; i < _veList.size(); i++) {
 			final ValueExpression currentVE = _veList.get(i);
 			final Object currentObj = currentVE.eval(tuple);
-			final NumericConversion currentType = (NumericConversion) currentVE.getType();
+			final NumericConversion currentType = (NumericConversion) currentVE
+					.getType();
 			result /= currentType.toDouble(currentObj);
 		}
 		return _wrapper.fromDouble(result);

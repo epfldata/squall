@@ -40,7 +40,8 @@ public class JoinTablesExprs {
 	private void addToJoinMap(String tblName1, String tblName2, Expression exp,
 			Map<String, Map<String, List<Expression>>> collection) {
 		if (collection.containsKey(tblName1)) {
-			final Map<String, List<Expression>> inner = collection.get(tblName1);
+			final Map<String, List<Expression>> inner = collection
+					.get(tblName1);
 			if (inner.containsKey(tblName2)) {
 				final List<Expression> expList = inner.get(tblName2);
 				expList.add(exp);
@@ -62,7 +63,8 @@ public class JoinTablesExprs {
 	 * Get a list of join condition expressions. For EquiJoin, it's in form of
 	 * EqualsTo. We support only conjunctive join conditions.
 	 */
-	public List<Expression> getExpressions(List<String> tables1, List<String> tables2) {
+	public List<Expression> getExpressions(List<String> tables1,
+			List<String> tables2) {
 		final List<Expression> result = new ArrayList<Expression>();
 		for (final String table1 : tables1) {
 			final List<Expression> delta = getExpressions(table1, tables2);
@@ -89,7 +91,8 @@ public class JoinTablesExprs {
 	}
 
 	public List<Expression> getExpressions(String tableName1, String tableName2) {
-		final Map<String, List<Expression>> inner = _tablesJoinExp.get(tableName1);
+		final Map<String, List<Expression>> inner = _tablesJoinExp
+				.get(tableName1);
 		return inner.get(tableName2);
 	}
 
@@ -113,14 +116,17 @@ public class JoinTablesExprs {
 		return ParserUtil.getDifference(resultList, ancestors);
 	}
 
-	private List<String> getJoinedWith(Map<String, Map<String, List<Expression>>> collection,
+	private List<String> getJoinedWith(
+			Map<String, Map<String, List<Expression>>> collection,
 			String tblCompName) {
 		if (!collection.containsKey(tblCompName))
 			return null;
 
 		final List<String> joinedWith = new ArrayList<String>();
-		final Map<String, List<Expression>> innerMap = collection.get(tblCompName);
-		for (final Map.Entry<String, List<Expression>> entry : innerMap.entrySet())
+		final Map<String, List<Expression>> innerMap = collection
+				.get(tblCompName);
+		for (final Map.Entry<String, List<Expression>> entry : innerMap
+				.entrySet())
 			joinedWith.add(entry.getKey());
 		return joinedWith;
 	}
@@ -131,7 +137,8 @@ public class JoinTablesExprs {
 	public List<String> getJoinedWith(String tblCompName) {
 		final List<String> result = getJoinedWith(_tablesJoinExp, tblCompName);
 		if (result == null)
-			throw new RuntimeException("Table doesn't exist in JoinTablesExp: " + tblCompName);
+			throw new RuntimeException("Table doesn't exist in JoinTablesExp: "
+					+ tblCompName);
 		return result;
 	}
 
@@ -140,16 +147,19 @@ public class JoinTablesExprs {
 		return getJoinedWith(_singleDirTablesJoinExp, tblCompName);
 	}
 
-	public boolean joinExistsBetween(List<String> firstAncestors, List<String> secondAncestors) {
+	public boolean joinExistsBetween(List<String> firstAncestors,
+			List<String> secondAncestors) {
 		for (final String firstSource : firstAncestors)
 			if (joinExistsBetween(firstSource, secondAncestors))
 				return true;
 		return false;
 	}
 
-	public boolean joinExistsBetween(String firstSource, List<String> secondAncestors) {
+	public boolean joinExistsBetween(String firstSource,
+			List<String> secondAncestors) {
 		final List<String> joinedWith = getJoinedWith(firstSource);
-		final List<String> intersection = ParserUtil.getIntersection(joinedWith, secondAncestors);
+		final List<String> intersection = ParserUtil.getIntersection(
+				joinedWith, secondAncestors);
 		return !intersection.isEmpty();
 	}
 

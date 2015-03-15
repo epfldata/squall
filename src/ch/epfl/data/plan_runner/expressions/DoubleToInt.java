@@ -1,12 +1,8 @@
 package ch.epfl.data.plan_runner.expressions;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import ch.epfl.data.plan_runner.conversion.IntegerConversion;
-import ch.epfl.data.plan_runner.conversion.LongConversion;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.visitors.ValueExpressionVisitor;
 
@@ -17,11 +13,23 @@ public class DoubleToInt implements ValueExpression<Integer> {
 	private final TypeConversion<Integer> _wrapper = new IntegerConversion();
 
 	private int _columnIndex;
-	
+
 	public DoubleToInt(int columnIndex) {
 		_columnIndex = columnIndex;
 	}
-	
+
+	@Override
+	public void accept(ValueExpressionVisitor vev) {
+		throw new RuntimeException("Not implemented for a moment!");
+		// vev.visit(this);
+	}
+
+	// unused
+	@Override
+	public void changeValues(int i, ValueExpression<Integer> newExpr) {
+		// nothing
+	}
+
 	@Override
 	public Integer eval(List<String> tuple) {
 		String value = tuple.get(_columnIndex);
@@ -46,19 +54,6 @@ public class DoubleToInt implements ValueExpression<Integer> {
 	}
 
 	@Override
-	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append("DoubleToInt ").append(_columnIndex);
-		return sb.toString();
-	}
-	
-	// unused
-	@Override
-	public void changeValues(int i, ValueExpression<Integer> newExpr) {
-		// nothing
-	}
-	
-	@Override
 	public void inverseNumber() {
 		// nothing
 
@@ -67,11 +62,12 @@ public class DoubleToInt implements ValueExpression<Integer> {
 	@Override
 	public boolean isNegative() {
 		return false;
-	}	
+	}
 
 	@Override
-	public void accept(ValueExpressionVisitor vev) {
-		throw new RuntimeException("Not implemented for a moment!");
-		//vev.visit(this);
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append("DoubleToInt ").append(_columnIndex);
+		return sb.toString();
 	}
 }

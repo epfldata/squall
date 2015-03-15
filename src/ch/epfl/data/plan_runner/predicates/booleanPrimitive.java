@@ -4,17 +4,18 @@ import java.util.List;
 
 import ch.epfl.data.plan_runner.visitors.PredicateVisitor;
 
-public class booleanPrimitive implements Predicate{
-	
+public class booleanPrimitive implements Predicate {
+
 	private boolean _bool;
+
 	public booleanPrimitive(boolean bool) {
-		_bool=bool;
+		_bool = bool;
 	}
 
 	@Override
 	public void accept(PredicateVisitor pv) {
 		pv.visit(this);
-		
+
 	}
 
 	@Override

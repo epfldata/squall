@@ -38,8 +38,16 @@ public class ChainOperator implements Operator {
 	 * Add an operator to the tail
 	 */
 	public void addOperator(Operator operator) {
-		if(operator != null){
+		if (operator != null) {
 			_operators.add(operator);
+		}
+	}
+
+	// closing the files of the printOperator
+	public void finalizeProcessing() {
+		PrintOperator printOperator = getPrint();
+		if (printOperator != null) {
+			printOperator.finalizeProcessing();
 		}
 	}
 
@@ -54,6 +62,8 @@ public class ChainOperator implements Operator {
 		return null;
 	}
 
+	// ******************************************************
+
 	@Override
 	public List<String> getContent() {
 		List<String> result = null;
@@ -61,8 +71,6 @@ public class ChainOperator implements Operator {
 			result = getLastOperator().getContent();
 		return result;
 	}
-
-	// ******************************************************
 
 	/*
 	 * return first appearance of DistinctOperator used when ordering operators
@@ -91,11 +99,18 @@ public class ChainOperator implements Operator {
 					"tuplesProcessed for non-blocking last operator should never be invoked!");
 	}
 
+	// ******************************************************
+
 	public List<Operator> getOperators() {
 		return _operators;
 	}
 
-	// ******************************************************
+	public PrintOperator getPrint() {
+		for (final Operator op : _operators)
+			if (op instanceof PrintOperator)
+				return (PrintOperator) op;
+		return null;
+	}
 
 	/*
 	 * return first appearance of ProjectOperator used when ordering operators
@@ -108,6 +123,13 @@ public class ChainOperator implements Operator {
 		return null;
 	}
 
+	public SampleAsideAndForwardOperator getSampleAside() {
+		for (final Operator op : _operators)
+			if (op instanceof SampleAsideAndForwardOperator)
+				return (SampleAsideAndForwardOperator) op;
+		return null;
+	}
+
 	/*
 	 * return first appearance of SelectOperator used when ordering operators in
 	 * Simple and rule-based optimizer
@@ -117,28 +139,6 @@ public class ChainOperator implements Operator {
 			if (op instanceof SelectOperator)
 				return (SelectOperator) op;
 		return null;
-	}
-
-	public PrintOperator getPrint() {
-		for (final Operator op : _operators)
-			if (op instanceof PrintOperator)
-				return (PrintOperator) op;
-		return null;
-	}
-
-	public SampleAsideAndForwardOperator getSampleAside() {
-		for (final Operator op : _operators)
-			if (op instanceof SampleAsideAndForwardOperator)
-				return (SampleAsideAndForwardOperator) op;
-		return null;
-	}
-	
-	// closing the files of the printOperator
-	public void finalizeProcessing() {
-		PrintOperator printOperator = getPrint();
-		if(printOperator != null){
-			printOperator.finalizeProcessing();
-		}
 	}
 
 	@Override

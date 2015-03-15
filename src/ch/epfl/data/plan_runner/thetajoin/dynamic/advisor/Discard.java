@@ -10,21 +10,14 @@ import ch.epfl.data.plan_runner.storage.BitVector;
 public class Discard implements Serializable {
 
 	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-
-	/**
 	 * This method divides the array into k parts and returns the ith part of
-	 * the sorted array.
-	 * The method operates in place and returns two indices (start and end, both
-	 * inclusive). The array is not sorted after the method is called, but the
-	 * range [start, end] contains the same elements as [start, end] in the
-	 * sorted array.
-	 * This method operates in expected linear time. Worst case time is
-	 * quadratic if the array is close to sorted (or reverse sorted). Works best
-	 * if the input array is in random order.
-	 * The size of a single part is ceil(arr.length / parts). The last few parts
+	 * the sorted array. The method operates in place and returns two indices
+	 * (start and end, both inclusive). The array is not sorted after the method
+	 * is called, but the range [start, end] contains the same elements as
+	 * [start, end] in the sorted array. This method operates in expected linear
+	 * time. Worst case time is quadratic if the array is close to sorted (or
+	 * reverse sorted). Works best if the input array is in random order. The
+	 * size of a single part is ceil(arr.length / parts). The last few parts
 	 * might be empty.
 	 * 
 	 * @param arr
@@ -34,11 +27,11 @@ public class Discard implements Serializable {
 	 * @param index
 	 *            The index of the required part, should be in [0, parts)
 	 * @return An array containing two indices (start and end), both are
-	 *         inclusive.
-	 *         If the required part is empty, the method will return
+	 *         inclusive. If the required part is empty, the method will return
 	 *         {arr.length, arr.length - 1}.
 	 */
-	public static int[] keep(int[] arr, int[] addresses, BitVector isTagged, int parts, int index) {
+	public static int[] keep(int[] arr, int[] addresses, BitVector isTagged,
+			int parts, int index) {
 		final int size = (arr.length + parts - 1) / parts;
 		final int from = index * size;
 		final int to = Math.min((index + 1) * size - 1, arr.length - 1);
@@ -47,25 +40,31 @@ public class Discard implements Serializable {
 		return keepFrom(arr, addresses, isTagged, from, to, 0, arr.length - 1);
 	}
 
-	protected static int[] keepFrom(int[] arr, int[] addresses, BitVector isTagged, int from,
-			int to, int i, int j) {
+	protected static int[] keepFrom(int[] arr, int[] addresses,
+			BitVector isTagged, int from, int to, int i, int j) {
 		while (true) {
 			final int p = pivot(arr, addresses, isTagged, i, i, j);
 
 			if (from == i)
-				return new int[] { i, keepUntil(arr, addresses, isTagged, to, i, arr.length - 1) };
+				return new int[] {
+						i,
+						keepUntil(arr, addresses, isTagged, to, i,
+								arr.length - 1) };
 
 			if (p < from)
 				i = p + 1;
 			else if (p == from)
-				return new int[] { p, keepUntil(arr, addresses, isTagged, to, i, arr.length - 1) };
+				return new int[] {
+						p,
+						keepUntil(arr, addresses, isTagged, to, i,
+								arr.length - 1) };
 			else
 				j = p - 1;
 		}
 	}
 
-	protected static int keepUntil(int[] arr, int[] addresses, BitVector isTagged, int to, int i,
-			int j) {
+	protected static int keepUntil(int[] arr, int[] addresses,
+			BitVector isTagged, int to, int i, int j) {
 		while (true) {
 			final int p = pivot(arr, addresses, isTagged, i, i, j);
 
@@ -78,7 +77,8 @@ public class Discard implements Serializable {
 		}
 	}
 
-	protected static int pivot(int[] arr, int[] addresses, BitVector isTagged, int p, int i, int j) {
+	protected static int pivot(int[] arr, int[] addresses, BitVector isTagged,
+			int p, int i, int j) {
 		final int pV = arr[p];
 		final boolean pVB = isTagged.get(p);
 		final int pA = addresses[p];
@@ -125,4 +125,9 @@ public class Discard implements Serializable {
 
 		return ind;
 	}
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 }

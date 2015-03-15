@@ -5,9 +5,6 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
-import ch.epfl.data.plan_runner.utilities.MyUtilities;
-import ch.epfl.data.plan_runner.utilities.SystemParameters;
 import backtype.storm.Config;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -18,6 +15,10 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.plan_runner.utilities.MyUtilities;
+import ch.epfl.data.plan_runner.utilities.SystemParameters;
+
 @Deprecated
 public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 	private static final long serialVersionUID = 1L;
@@ -33,7 +34,8 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 	private int _numRemainingParents;
 
 	public StormSrcHarmonizer(String componentName, StormEmitter firstEmitter,
-			StormEmitter secondEmitter, TopologyBuilder builder, TopologyKiller killer, Config conf) {
+			StormEmitter secondEmitter, TopologyBuilder builder,
+			TopologyKiller killer, Config conf) {
 		_conf = conf;
 		_componentName = componentName;
 
@@ -42,10 +44,11 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 
 		_ID = componentName + "_HARM";
 
-		final int parallelism = SystemParameters.getInt(conf, _componentName + "_PAR");
+		final int parallelism = SystemParameters.getInt(conf, _componentName
+				+ "_PAR");
 		InputDeclarer currentBolt = builder.setBolt(_ID, this, parallelism);
-		currentBolt = MyUtilities.attachEmitterHash(_conf, null, currentBolt, _firstEmitter,
-				_secondEmitter);
+		currentBolt = MyUtilities.attachEmitterHash(_conf, null, currentBolt,
+				_firstEmitter, _secondEmitter);
 	}
 
 	@Override
@@ -72,12 +75,14 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 
 		if (MyUtilities.isFinalAck(tuple, _conf)) {
 			_numRemainingParents--;
-			MyUtilities.processFinalAck(_numRemainingParents, StormComponent.INTERMEDIATE, _conf,
-					stormRcvTuple, _collector);
+			MyUtilities.processFinalAck(_numRemainingParents,
+					StormComponent.INTERMEDIATE, _conf, stormRcvTuple,
+					_collector);
 			return;
 		}
 
-		_collector.emit(stormRcvTuple, new Values(inputComponentIndex, tuple, inputTupleHash));
+		_collector.emit(stormRcvTuple, new Values(inputComponentIndex, tuple,
+				inputTupleHash));
 		_collector.ack(stormRcvTuple);
 	}
 
@@ -96,7 +101,8 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 	@Override
 	public void prepare(Map conf, TopologyContext tc, OutputCollector collector) {
 		_collector = collector;
-		_numRemainingParents = MyUtilities.getNumParentTasks(tc, _firstEmitter, _secondEmitter);
+		_numRemainingParents = MyUtilities.getNumParentTasks(tc, _firstEmitter,
+				_secondEmitter);
 	}
 
 	@Override
@@ -115,7 +121,8 @@ public class StormSrcHarmonizer extends BaseRichBolt implements StormComponent {
 	}
 
 	@Override
-	public void tupleSend(List<String> tuple, Tuple stormTupleRcv, long timestamp) {
+	public void tupleSend(List<String> tuple, Tuple stormTupleRcv,
+			long timestamp) {
 		throw new RuntimeException("Should not be here!");
 	}
 

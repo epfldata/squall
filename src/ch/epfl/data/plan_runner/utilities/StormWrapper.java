@@ -28,11 +28,6 @@ import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.utils.NimbusClient;
 
 public class StormWrapper {
-	private static Logger LOG = Logger.getLogger(StormWrapper.class);
-	private static long startTime;
-
-	// both local and clustered execution
-
 	private static void clusterKillTopology(Map conf, String topologyName) {
 		final Client client = getNimbusStub(conf);
 		try {
@@ -51,17 +46,21 @@ public class StormWrapper {
 
 	// all below are only for cluster execution
 	private static Client getNimbusStub(Map conf) {
-		final boolean distributed = SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED");
+		final boolean distributed = SystemParameters.getBoolean(conf,
+				"DIP_DISTRIBUTED");
 
-		final String nimbusHost = SystemParameters.getString(conf, Config.NIMBUS_HOST);
+		final String nimbusHost = SystemParameters.getString(conf,
+				Config.NIMBUS_HOST);
 		final int nimbusThriftPort = SystemParameters.NIMBUS_THRIFT_PORT;
 
 		if (distributed) {
 			NimbusClient nimbus = null;
 			try {
 				Map<String, String> securityMap = new HashMap<String, String>();
-				securityMap.put("storm.thrift.transport", "backtype.storm.security.auth.SimpleTransportPlugin");
-				nimbus = new NimbusClient(securityMap, nimbusHost, nimbusThriftPort);
+				securityMap.put("storm.thrift.transport",
+						"backtype.storm.security.auth.SimpleTransportPlugin");
+				nimbus = new NimbusClient(securityMap, nimbusHost,
+						nimbusThriftPort);
 			} catch (TTransportException e) {
 				LOG.info(MyUtilities.getStackTrace(e));
 				System.exit(1);
@@ -69,11 +68,15 @@ public class StormWrapper {
 			final Client client = nimbus.getClient();
 			return client;
 		} else
-			throw new RuntimeException("Call getNimbusStub only in cluster mode.");
+			throw new RuntimeException(
+					"Call getNimbusStub only in cluster mode.");
 	}
 
+	// both local and clustered execution
+
 	private static boolean isEmptyMap(Map<String, List<ErrorInfo>> map) {
-		for (final Map.Entry<String, List<ErrorInfo>> outerEntry : map.entrySet()) {
+		for (final Map.Entry<String, List<ErrorInfo>> outerEntry : map
+				.entrySet()) {
 			final List<ErrorInfo> errors = outerEntry.getValue();
 			if (errors != null && !errors.isEmpty())
 				return false;
@@ -82,8 +85,10 @@ public class StormWrapper {
 	}
 
 	private static <T> boolean isEmptyMapMap(Map<String, Map<T, Long>> mapMap) {
-		for (final Map.Entry<String, Map<T, Long>> outerEntry : mapMap.entrySet())
-			for (final Map.Entry<T, Long> innerEntry : outerEntry.getValue().entrySet()) {
+		for (final Map.Entry<String, Map<T, Long>> outerEntry : mapMap
+				.entrySet())
+			for (final Map.Entry<T, Long> innerEntry : outerEntry.getValue()
+					.entrySet()) {
 				final long value = innerEntry.getValue();
 				if (value != 0)
 					return false;
@@ -92,8 +97,10 @@ public class StormWrapper {
 	}
 
 	public static void killExecution(Map conf) {
-		final boolean distributed = SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED");
-		final String topologyName = SystemParameters.getString(conf, "DIP_TOPOLOGY_NAME");
+		final boolean distributed = SystemParameters.getBoolean(conf,
+				"DIP_DISTRIBUTED");
+		final String topologyName = SystemParameters.getString(conf,
+				"DIP_TOPOLOGY_NAME");
 		if (!distributed)
 			localKillCluster(conf, topologyName);
 		else
@@ -114,8 +121,10 @@ public class StormWrapper {
 
 	public static void submitTopology(Config conf, TopologyBuilder builder) {
 		// transform mine parameters into theirs
-		final boolean distributed = SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED");
-		final String topologyName = SystemParameters.getString(conf, "DIP_TOPOLOGY_NAME");
+		final boolean distributed = SystemParameters.getBoolean(conf,
+				"DIP_DISTRIBUTED");
+		final String topologyName = SystemParameters.getString(conf,
+				"DIP_TOPOLOGY_NAME");
 
 		// conf.setDebug(false);
 		if (MyUtilities.isAckEveryTuple(conf))
@@ -129,17 +138,20 @@ public class StormWrapper {
 			if (SystemParameters.isExisting(conf, "DIP_NUM_WORKERS")) {
 				// by default we use existing value from storm.yaml
 				// still, a user can specify other total number of workers
-				final int numParallelism = SystemParameters.getInt(conf, "DIP_NUM_WORKERS");
+				final int numParallelism = SystemParameters.getInt(conf,
+						"DIP_NUM_WORKERS");
 				conf.setNumWorkers(numParallelism);
 			}
 			if (SystemParameters.isExisting(conf, "DIP_NUM_ACKERS")) {
 				// if not set, it's by default the value from storm.yaml
-				final int numAckers = SystemParameters.getInt(conf, "DIP_NUM_ACKERS");
+				final int numAckers = SystemParameters.getInt(conf,
+						"DIP_NUM_ACKERS");
 				conf.setNumAckers(numAckers);
 			}
 
 			try {
-				StormSubmitter.submitTopology(topologyName, conf, builder.createTopology());
+				StormSubmitter.submitTopology(topologyName, conf,
+						builder.createTopology());
 			} catch (final AlreadyAliveException aae) {
 				final String error = MyUtilities.getStackTrace(aae);
 				LOG.info(error);
@@ -149,7 +161,8 @@ public class StormWrapper {
 			}
 		} else {
 			// number of ackers has to be specified in Local Mode
-			final int numAckers = SystemParameters.getInt(conf, "DIP_NUM_ACKERS");
+			final int numAckers = SystemParameters.getInt(conf,
+					"DIP_NUM_ACKERS");
 			conf.setNumAckers(numAckers);
 
 			conf.setFallBackOnJavaSerialization(false);
@@ -167,9 +180,11 @@ public class StormWrapper {
 		try {
 			final ClusterSummary clusterInfo = client.getClusterInfo();
 			final int numOfTopologies = clusterInfo.get_topologies_size();
-			sb.append("In total there is ").append(numOfTopologies).append(" topologies.\n");
+			sb.append("In total there is ").append(numOfTopologies)
+					.append(" topologies.\n");
 
-			final Iterator<TopologySummary> topologyIter = clusterInfo.get_topologies_iterator();
+			final Iterator<TopologySummary> topologyIter = clusterInfo
+					.get_topologies_iterator();
 			while (topologyIter.hasNext()) {
 				final TopologySummary topologySummary = topologyIter.next();
 
@@ -189,20 +204,24 @@ public class StormWrapper {
 				sb.append(topologyConf);
 				sb.append("\n");
 
-				final TopologyInfo topologyInfo = client.getTopologyInfo(topologyID);
+				final TopologyInfo topologyInfo = client
+						.getTopologyInfo(topologyID);
 
 				// print more about each task
-				final Iterator<ExecutorSummary> execIter = topologyInfo.get_executors_iterator();
+				final Iterator<ExecutorSummary> execIter = topologyInfo
+						.get_executors_iterator();
 				boolean globalFailed = false;
 				while (execIter.hasNext()) {
 					final ExecutorSummary execSummary = execIter.next();
 					final String componentId = execSummary.get_component_id();
 					sb.append("component_id:").append(componentId).append(", ");
-					final ExecutorInfo execInfo = execSummary.get_executor_info();
+					final ExecutorInfo execInfo = execSummary
+							.get_executor_info();
 					final int taskStart = execInfo.get_task_start();
 					final int taskEnd = execInfo.get_task_end();
-					sb.append("task_id(s) for this executor:").append(taskStart).append("-")
-							.append(taskEnd).append(", ");
+					sb.append("task_id(s) for this executor:")
+							.append(taskStart).append("-").append(taskEnd)
+							.append(", ");
 					final String host = execSummary.get_host();
 					sb.append("host:").append(host).append(", ");
 					final int port = execSummary.get_port();
@@ -220,19 +239,19 @@ public class StormWrapper {
 						boolean isEmpty;
 						Object objFailed;
 						if (stats.is_set_spout()) {
-							final Map<String, Map<String, Long>> failed = stats.get_spout()
-									.get_failed();
+							final Map<String, Map<String, Long>> failed = stats
+									.get_spout().get_failed();
 							objFailed = failed;
 							isEmpty = isEmptyMapMap(failed);
 						} else {
-							final Map<String, Map<GlobalStreamId, Long>> failed = stats.get_bolt()
-									.get_failed();
+							final Map<String, Map<GlobalStreamId, Long>> failed = stats
+									.get_bolt().get_failed();
 							objFailed = failed;
 							isEmpty = isEmptyMapMap(failed);
 						}
 						if (!isEmpty) {
-							sb.append("ERROR: There are some failed tuples: ").append(objFailed)
-									.append("\n");
+							sb.append("ERROR: There are some failed tuples: ")
+									.append(objFailed).append("\n");
 							globalFailed = true;
 						}
 					}
@@ -245,10 +264,11 @@ public class StormWrapper {
 					sb.append("ERROR: Some tuples failed!\n");
 
 				// print topology errors
-				final Map<String, List<ErrorInfo>> errors = topologyInfo.get_errors();
+				final Map<String, List<ErrorInfo>> errors = topologyInfo
+						.get_errors();
 				if (!isEmptyMap(errors))
-					sb.append("ERROR: There are some errors in topology: ").append(errors)
-							.append("\n");
+					sb.append("ERROR: There are some errors in topology: ")
+							.append(errors).append("\n");
 				else
 					sb.append("OK: No errors in the topology.\n");
 
@@ -263,4 +283,8 @@ public class StormWrapper {
 			LOG.info(MyUtilities.getStackTrace(ex));
 		}
 	}
+
+	private static Logger LOG = Logger.getLogger(StormWrapper.class);
+
+	private static long startTime;
 }

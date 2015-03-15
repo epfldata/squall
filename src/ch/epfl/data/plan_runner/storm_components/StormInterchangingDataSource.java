@@ -10,15 +10,6 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 
-import ch.epfl.data.plan_runner.components.InterchangingDataSourceComponent;
-import ch.epfl.data.plan_runner.expressions.ValueExpression;
-import ch.epfl.data.plan_runner.operators.ChainOperator;
-import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
-import ch.epfl.data.plan_runner.utilities.CustomReader;
-import ch.epfl.data.plan_runner.utilities.MyUtilities;
-import ch.epfl.data.plan_runner.utilities.PeriodicAggBatchSend;
-import ch.epfl.data.plan_runner.utilities.SerializableFileInputStream;
-import ch.epfl.data.plan_runner.utilities.SystemParameters;
 import backtype.storm.Config;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -29,15 +20,25 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
+import ch.epfl.data.plan_runner.components.InterchangingDataSourceComponent;
+import ch.epfl.data.plan_runner.expressions.ValueExpression;
+import ch.epfl.data.plan_runner.operators.ChainOperator;
+import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.plan_runner.utilities.CustomReader;
+import ch.epfl.data.plan_runner.utilities.MyUtilities;
+import ch.epfl.data.plan_runner.utilities.PeriodicAggBatchSend;
+import ch.epfl.data.plan_runner.utilities.SerializableFileInputStream;
+import ch.epfl.data.plan_runner.utilities.SystemParameters;
 
 /**
  * This class is for interchanging the roles of the data sources. its
  * parallelism is only ONE.
  */
-public class StormInterchangingDataSource extends BaseRichSpout implements StormEmitter,
-		StormComponent {
+public class StormInterchangingDataSource extends BaseRichSpout implements
+		StormEmitter, StormComponent {
 	private static final long serialVersionUID = 1L;
-	private static Logger LOG = Logger.getLogger(StormInterchangingDataSource.class);
+	private static Logger LOG = Logger
+			.getLogger(StormInterchangingDataSource.class);
 
 	private final String _inputPath1;
 	private final String _inputPath2;
@@ -54,7 +55,8 @@ public class StormInterchangingDataSource extends BaseRichSpout implements Storm
 
 	private boolean _hasSentLastAck = false; // AckLastTuple mode
 	private long _pendingTuples = 0;
-	private final String _componentIndexRel1, _componentIndexRel2; // a unique index
+	private final String _componentIndexRel1, _componentIndexRel2; // a unique
+																	// index
 	// in a list of
 	// all the
 	// components
@@ -90,8 +92,9 @@ public class StormInterchangingDataSource extends BaseRichSpout implements Storm
 	private int _tuplesSleep; // after how many _invocations we sleep 1ms
 
 	public StormInterchangingDataSource(InterchangingDataSourceComponent cp,
-			List<String> allCompNames, int multFactor, String inputPath1, String inputPath2,
-			int hierarchyPosition, TopologyBuilder builder, TopologyKiller killer, Config conf) {
+			List<String> allCompNames, int multFactor, String inputPath1,
+			String inputPath2, int hierarchyPosition, TopologyBuilder builder,
+			TopologyKiller killer, Config conf) {
 		_multFactor = multFactor;
 		_conf = conf;
 		_operatorChainRel1 = cp.getChainOperatorRel1();
@@ -101,8 +104,10 @@ public class StormInterchangingDataSource extends BaseRichSpout implements Storm
 
 		_ID = cp.getName();
 
-		_componentIndexRel1 = String.valueOf(allCompNames.indexOf(new String(_ID.split("-")[0])));
-		_componentIndexRel2 = String.valueOf(allCompNames.indexOf(new String(_ID.split("-")[1])));
+		_componentIndexRel1 = String.valueOf(allCompNames.indexOf(new String(
+				_ID.split("-")[0])));
+		_componentIndexRel2 = String.valueOf(allCompNames.indexOf(new String(
+				_ID.split("-")[1])));
 
 		_inputPath1 = inputPath1;
 		_inputPath2 = inputPath2;
@@ -114,7 +119,8 @@ public class StormInterchangingDataSource extends BaseRichSpout implements Storm
 		_hashIndexes = cp.getHashIndexes();
 		_hashExpressions = cp.getHashExpressions();
 		_printOut = cp.getPrintOut();
-		if (_hierarchyPosition == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf)))
+		if (_hierarchyPosition == FINAL_COMPONENT
+				&& (!MyUtilities.isAckEveryTuple(conf)))
 			killer.registerComponent(this, 1);
 		builder.setSpout(_ID, this, 1);
 		if (MyUtilities.isAckEveryTuple(conf))
@@ -170,10 +176,12 @@ public class StormInterchangingDataSource extends BaseRichSpout implements Storm
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		if (MyUtilities.isAckEveryTuple(_conf) || _hierarchyPosition == FINAL_COMPONENT)
-			declarer.declareStream(SystemParameters.EOF_STREAM, new Fields(SystemParameters.EOF));
-		declarer.declareStream(SystemParameters.DATA_STREAM, new Fields("CompIndex", "Tuple",
-				"Hash"));
+		if (MyUtilities.isAckEveryTuple(_conf)
+				|| _hierarchyPosition == FINAL_COMPONENT)
+			declarer.declareStream(SystemParameters.EOF_STREAM, new Fields(
+					SystemParameters.EOF));
+		declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(
+				"CompIndex", "Tuple", "Hash"));
 	}
 
 	/*
@@ -187,7 +195,8 @@ public class StormInterchangingDataSource extends BaseRichSpout implements Storm
 				if (!_hasSentEOF) {
 					_hasSentEOF = true; // to ensure we will not send multiple
 					// EOF per single spout
-					_collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
+					_collector.emit(SystemParameters.EOF_STREAM, new Values(
+							SystemParameters.EOF));
 				}
 			} else if (!_hasSentLastAck) {
 				_hasSentLastAck = true;
@@ -195,10 +204,10 @@ public class StormInterchangingDataSource extends BaseRichSpout implements Storm
 						Arrays.asList(SystemParameters.LAST_ACK));
 				_collector.emit(new Values("N/A", lastTuple, "N/A"));
 			}
-		if(_operatorChainRel1 != null){
+		if (_operatorChainRel1 != null) {
 			_operatorChainRel1.finalizeProcessing();
 		}
-		if(_operatorChainRel2 != null){
+		if (_operatorChainRel2 != null) {
 			_operatorChainRel2.finalizeProcessing();
 		}
 	}
@@ -261,7 +270,8 @@ public class StormInterchangingDataSource extends BaseRichSpout implements Storm
 			if (line == null)
 				_hasReachedEOF2 = true;
 			else {
-				final List<String> tuple = MyUtilities.fileLineToTuple(line, _conf);
+				final List<String> tuple = MyUtilities.fileLineToTuple(line,
+						_conf);
 				applyOperatorsAndSend(tuple, 2);
 				_numSentRel1++;
 			}
@@ -271,7 +281,8 @@ public class StormInterchangingDataSource extends BaseRichSpout implements Storm
 			if (line == null)
 				_hasReachedEOF1 = true;
 			else {
-				final List<String> tuple = MyUtilities.fileLineToTuple(line, _conf);
+				final List<String> tuple = MyUtilities.fileLineToTuple(line,
+						_conf);
 				applyOperatorsAndSend(tuple, 1);
 				_numSentRel2++;
 			}
@@ -283,7 +294,8 @@ public class StormInterchangingDataSource extends BaseRichSpout implements Storm
 				_hasReachedEOF2 = true;
 				return;
 			} else {
-				final List<String> tuple = MyUtilities.fileLineToTuple(line, _conf);
+				final List<String> tuple = MyUtilities.fileLineToTuple(line,
+						_conf);
 				isSent = applyOperatorsAndSend(tuple, 2);
 			}
 			if (isSent) {
@@ -304,7 +316,8 @@ public class StormInterchangingDataSource extends BaseRichSpout implements Storm
 				_hasReachedEOF1 = true;
 				return;
 			} else {
-				final List<String> tuple = MyUtilities.fileLineToTuple(line, _conf);
+				final List<String> tuple = MyUtilities.fileLineToTuple(line,
+						_conf);
 				isSent = applyOperatorsAndSend(tuple, 1);
 			}
 
@@ -334,10 +347,10 @@ public class StormInterchangingDataSource extends BaseRichSpout implements Storm
 		_collector = collector;
 
 		try {
-			_readerRel1 = new SerializableFileInputStream(new File(_inputPath1), 1 * 1024 * 1024,
-					0, 1);
-			_readerRel2 = new SerializableFileInputStream(new File(_inputPath2), 1 * 1024 * 1024,
-					0, 1);
+			_readerRel1 = new SerializableFileInputStream(
+					new File(_inputPath1), 1 * 1024 * 1024, 0, 1);
+			_readerRel2 = new SerializableFileInputStream(
+					new File(_inputPath2), 1 * 1024 * 1024, 0, 1);
 
 		} catch (final Exception e) {
 			final String error = MyUtilities.getStackTrace(e);
@@ -382,7 +395,8 @@ public class StormInterchangingDataSource extends BaseRichSpout implements Storm
 			if (_pendingTuples == 0)
 				if (!_hasSentEOF) {
 					_hasSentEOF = true;
-					_collector.emit(SystemParameters.EOF_STREAM, new Values(SystemParameters.EOF));
+					_collector.emit(SystemParameters.EOF_STREAM, new Values(
+							SystemParameters.EOF));
 				}
 	}
 
@@ -394,14 +408,15 @@ public class StormInterchangingDataSource extends BaseRichSpout implements Storm
 		else
 			index = _componentIndexRel2;
 
-		final Values stormTupleSnd = MyUtilities.createTupleValues(tuple, 0, index, _hashIndexes,
-				_hashExpressions, _conf);
+		final Values stormTupleSnd = MyUtilities.createTupleValues(tuple, 0,
+				index, _hashIndexes, _hashExpressions, _conf);
 		MyUtilities.sendTuple(stormTupleSnd, _collector, _conf);
 	}
 
 	// IGNORED
 	@Override
-	public void tupleSend(List<String> tuple, Tuple stormTupleRcv, long timestamp) {
+	public void tupleSend(List<String> tuple, Tuple stormTupleRcv,
+			long timestamp) {
 
 	}
 }

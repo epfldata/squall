@@ -39,13 +39,15 @@ public class NameManualParOptimizer implements Optimizer {
 		try {
 			parse();
 		} catch (final ArrayIndexOutOfBoundsException a) {
-			throw new RuntimeException("Invalid DIP_PLAN setting in config file!");
+			throw new RuntimeException(
+					"Invalid DIP_PLAN setting in config file!");
 		}
 	}
 
 	@Override
 	public QueryBuilder generate() {
-		final NameCompGenFactory factory = new NameCompGenFactory(_map, _pq.getTan());
+		final NameCompGenFactory factory = new NameCompGenFactory(_map,
+				_pq.getTan());
 		final NameCompGen ncg = factory.create();
 
 		Component first = ncg.generateDataSource(_compNames.get(0));

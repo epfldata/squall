@@ -36,15 +36,17 @@ public class BatchStreamGrouping implements CustomStreamGrouping {
 			// send to everyone
 			return _targetTasks;
 
-		final int endIndex = tupleBatch.indexOf(SystemParameters.MANUAL_BATCH_HASH_DELIMITER);
+		final int endIndex = tupleBatch
+				.indexOf(SystemParameters.MANUAL_BATCH_HASH_DELIMITER);
 		final String aHash = tupleBatch.substring(0, endIndex);
 
 		if (!isBalanced())
-			return Arrays.asList(_targetTasks.get(MyUtilities.chooseHashTargetIndex(aHash,
-					_numTargetTasks)));
+			return Arrays.asList(_targetTasks.get(MyUtilities
+					.chooseHashTargetIndex(aHash, _numTargetTasks)));
 		else
-			return Arrays.asList(_targetTasks.get(MyUtilities.chooseBalancedTargetIndex(aHash,
-					_fullHashList, _numTargetTasks)));
+			return Arrays.asList(_targetTasks.get(MyUtilities
+					.chooseBalancedTargetIndex(aHash, _fullHashList,
+							_numTargetTasks)));
 	}
 
 	private boolean isBalanced() {
@@ -52,7 +54,8 @@ public class BatchStreamGrouping implements CustomStreamGrouping {
 	}
 
 	@Override
-	public void prepare(WorkerTopologyContext wtc, GlobalStreamId gsi, List<Integer> targetTasks) {
+	public void prepare(WorkerTopologyContext wtc, GlobalStreamId gsi,
+			List<Integer> targetTasks) {
 		_targetTasks = targetTasks;
 		_numTargetTasks = targetTasks.size();
 	}

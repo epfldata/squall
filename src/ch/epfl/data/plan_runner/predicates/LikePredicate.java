@@ -20,7 +20,8 @@ public class LikePredicate implements Predicate {
 	private final ValueExpression<String> _ve1;
 	private ValueExpression<String> _ve2;
 
-	public LikePredicate(ValueExpression<String> ve1, ValueExpression<String> ve2) {
+	public LikePredicate(ValueExpression<String> ve1,
+			ValueExpression<String> ve2) {
 		_ve1 = ve1;
 		_ve2 = ve2;
 		// WORKS ONLY for pattern '%value%'
@@ -56,7 +57,8 @@ public class LikePredicate implements Predicate {
 	}
 
 	@Override
-	public boolean test(List<String> firstTupleValues, List<String> secondTupleValues) {
+	public boolean test(List<String> firstTupleValues,
+			List<String> secondTupleValues) {
 		final String val1 = _ve1.eval(firstTupleValues);
 		final String val2 = _ve2.eval(firstTupleValues);
 		return val1.contains(val2);

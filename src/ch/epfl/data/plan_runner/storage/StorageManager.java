@@ -22,7 +22,8 @@ import ch.epfl.data.plan_runner.utilities.SystemParameters;
  * if you are using multiple types. */
 public class StorageManager<R> implements Serializable {
 	class AppendableObjectOutputStream extends ObjectOutputStream {
-		public AppendableObjectOutputStream(OutputStream out) throws java.io.IOException {
+		public AppendableObjectOutputStream(OutputStream out)
+				throws java.io.IOException {
 			super(out);
 		}
 
@@ -56,10 +57,13 @@ public class StorageManager<R> implements Serializable {
 	public StorageManager(BasicStore store, Map conf) {
 		this.store = store;
 		if (SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED"))
-			this.rootDir = SystemParameters.getString(conf, "STORAGE_CLUSTER_DIR");
+			this.rootDir = SystemParameters.getString(conf,
+					"STORAGE_CLUSTER_DIR");
 		else
-			this.rootDir = SystemParameters.getString(conf, "STORAGE_LOCAL_DIR");
-		this.coldStart = SystemParameters.getBoolean(conf, "STORAGE_COLD_START");
+			this.rootDir = SystemParameters
+					.getString(conf, "STORAGE_LOCAL_DIR");
+		this.coldStart = SystemParameters
+				.getBoolean(conf, "STORAGE_COLD_START");
 	}
 
 	private void checkRootDir() {
@@ -94,7 +98,8 @@ public class StorageManager<R> implements Serializable {
 			fos = null;
 			oos = null;
 		} catch (final java.io.IOException ioe) {
-			LOG.info("Squall StorageManager: IO Exception encountered:" + ioe.getMessage());
+			LOG.info("Squall StorageManager: IO Exception encountered:"
+					+ ioe.getMessage());
 			System.exit(-1);
 		}
 	}
@@ -143,10 +148,11 @@ public class StorageManager<R> implements Serializable {
 			if (this.coldStart)
 				this.deleteAllFilesRootDir();
 		}
-		return rootDir + this.hostname + ":" + this.store.getUniqId() + ":_groupId#" + groupId
-				+ ".ssf"; /*
-						 * Squall storage file extension :)
-						 */
+		return rootDir + this.hostname + ":" + this.store.getUniqId()
+				+ ":_groupId#" + groupId + ".ssf"; /*
+													 * Squall storage file
+													 * extension :)
+													 */
 	}
 
 	public String[] getGroupIds() {
@@ -171,7 +177,8 @@ public class StorageManager<R> implements Serializable {
 		try {
 			return InetAddress.getLocalHost().getHostName();
 		} catch (final java.net.UnknownHostException uhe) {
-			LOG.info("Squall StorageManager UnknownHostException encountered: " + uhe.getMessage());
+			LOG.info("Squall StorageManager UnknownHostException encountered: "
+					+ uhe.getMessage());
 			System.exit(-1);
 		}
 		return null;
@@ -197,7 +204,8 @@ public class StorageManager<R> implements Serializable {
 					+ fnfe.getMessage());
 			System.exit(-1);
 		} catch (final java.io.IOException ioe) {
-			LOG.info("Squall StorageManager: IO Exception encountered:" + ioe.getMessage());
+			LOG.info("Squall StorageManager: IO Exception encountered:"
+					+ ioe.getMessage());
 			System.exit(-1);
 		}
 	}
@@ -226,7 +234,8 @@ public class StorageManager<R> implements Serializable {
 						+ fnfe.getMessage());
 				System.exit(-1);
 			} catch (final java.io.IOException ioe) {
-				LOG.info("Squall StorageManager: IOException encountered:" + ioe.getMessage());
+				LOG.info("Squall StorageManager: IOException encountered:"
+						+ ioe.getMessage());
 				System.exit(-1);
 			}
 		return storageElems;
@@ -270,7 +279,8 @@ public class StorageManager<R> implements Serializable {
 			}
 			this.closeFile();
 		} catch (final java.io.IOException ioe) {
-			LOG.info("Squall StorageManager: IO Exception encountered:" + ioe.getMessage());
+			LOG.info("Squall StorageManager: IO Exception encountered:"
+					+ ioe.getMessage());
 			System.exit(-1);
 		}
 	}

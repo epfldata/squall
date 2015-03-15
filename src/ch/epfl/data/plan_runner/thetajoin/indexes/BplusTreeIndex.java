@@ -22,11 +22,8 @@ import cherri.bheaven.bplustree.memory.MemoryNodeFactory;
  * @param <KeyType>
  *            Type of key
  */
-public class BplusTreeIndex<KeyType extends Comparable<KeyType>> implements Index<KeyType> {
-	private static Logger LOG = Logger.getLogger(BplusTreeIndex.class);
-
-	private static final long serialVersionUID = 1L;
-
+public class BplusTreeIndex<KeyType extends Comparable<KeyType>> implements
+		Index<KeyType> {
 	public static void main(String[] args) {
 
 		/*
@@ -73,7 +70,8 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>> implements Inde
 		index.put(11, 11.0);
 		index.put(8, 8.0);
 
-		final TIntArrayList list = index.getValues(ComparisonPredicate.LESS_OP, 10.0);
+		final TIntArrayList list = index.getValues(ComparisonPredicate.LESS_OP,
+				10.0);
 		// TIntArrayList list= index.getValues(ComparisonPredicate.GREATER_OP,
 		// 7.0);
 
@@ -81,6 +79,10 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>> implements Inde
 			LOG.info(list.get(i));
 
 	}
+
+	private static Logger LOG = Logger.getLogger(BplusTreeIndex.class);
+
+	private static final long serialVersionUID = 1L;
 
 	private final BPlusTree<KeyType, TIntArrayList> _index;
 
@@ -184,7 +186,8 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>> implements Inde
 			for (int s = keyIndex; s < numSlots; s++)
 				if (keepGoing || ln.getKey(s).compareTo(key) > 0
 						|| (ln.getKey(s).compareTo(key) == 0 && includeEqual)) {
-					if ((_diff != null && key.compareTo(performOperation(ln.getKey(s), _diff)) < 0))// second
+					if ((_diff != null && key.compareTo(performOperation(
+							ln.getKey(s), _diff)) < 0))// second
 					// part
 					// for
 					// ranges
@@ -247,7 +250,8 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>> implements Inde
 				// Go down to left most node
 				nd = root.getChild(0);
 				while (nd != null && nd instanceof MemoryInnerNode)
-					nd = ((MemoryInnerNode<KeyType, TIntArrayList>) nd).getChild(0);
+					nd = ((MemoryInnerNode<KeyType, TIntArrayList>) nd)
+							.getChild(0);
 
 				if (nd == null)
 					return null;
@@ -270,7 +274,8 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>> implements Inde
 				// While the key is less or equal (if needed), continue
 				if (ln.getKey(s).compareTo(key) < 0
 						|| (ln.getKey(s).compareTo(key) == 0 && includeEqual)) {
-					if ((_diff != null && ln.getKey(s).compareTo(performOperation(key, _diff)) < 0))
+					if ((_diff != null && ln.getKey(s).compareTo(
+							performOperation(key, _diff)) < 0))
 						// break;
 						continue;
 					// Get the corresponding list with values and append its
@@ -292,32 +297,34 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>> implements Inde
 		return values;
 	}
 
-	private KeyType performOperation(KeyType k, KeyType diff){
+	private KeyType performOperation(KeyType k, KeyType diff) {
 		// workaround for some compilers
 		Comparable<?> tmpK = k;
 		Comparable<?> tmpDiff = diff;
 		Comparable<?> result = null;
 
-		if(tmpK instanceof Double ){
-			Double kd=(Double)tmpK; Double diffd=(Double)tmpDiff;
-			Double resultd=kd+diffd;
-			result= resultd;
-		}else if(tmpK instanceof Integer ){
-			Integer kd=(Integer)tmpK; Integer diffd=(Integer)tmpDiff;
-			Integer resultd=kd+diffd;
-			result= resultd;
-		}else if(tmpK instanceof Date ){
-			Date kd=(Date)tmpK; Integer diffd=(Integer)tmpDiff;
+		if (tmpK instanceof Double) {
+			Double kd = (Double) tmpK;
+			Double diffd = (Double) tmpDiff;
+			Double resultd = kd + diffd;
+			result = resultd;
+		} else if (tmpK instanceof Integer) {
+			Integer kd = (Integer) tmpK;
+			Integer diffd = (Integer) tmpDiff;
+			Integer resultd = kd + diffd;
+			result = resultd;
+		} else if (tmpK instanceof Date) {
+			Date kd = (Date) tmpK;
+			Integer diffd = (Integer) tmpDiff;
 			Calendar c = Calendar.getInstance();
 			c.setTime(kd);
 			c.add(Calendar.DAY_OF_MONTH, diffd);
-			result= c.getTime();
-		}
-		else{
+			result = c.getTime();
+		} else {
 			LOG.info("Operation in B+Tree not supported for underlying datatype");
 		}
 
-		return (KeyType)result;
+		return (KeyType) result;
 	}
 
 	@Override
@@ -334,15 +341,15 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>> implements Inde
 		idsList.add(row_id);
 	}
 
+	@Override
+	public void remove(Integer row_id, KeyType key) {
+		throw new RuntimeException("Not implemented yet");
+	}
+
 	public BplusTreeIndex setDiff(Object diff) {
 		if (diff != null)
 			_diff = (KeyType) diff;
 		return this;
-	}
-
-	@Override
-	public void remove(Integer row_id, KeyType key) {
-		throw new RuntimeException("Not implemented yet");
 	}
 
 }

@@ -42,7 +42,8 @@ public class EarlyProjection {
 			final Component[] parents = component.getParents();
 			if (parents != null) {
 				final Component leftParent = parents[0];
-				_leftParentOutputSize = ParserUtil.getPreOpsOutputSize(leftParent, _schema, _tan);
+				_leftParentOutputSize = ParserUtil.getPreOpsOutputSize(
+						leftParent, _schema, _tan);
 			}
 		}
 
@@ -111,7 +112,8 @@ public class EarlyProjection {
 			List<Integer> rightIndexes = extractProjIndexesAfterBottomUp(rightParent);
 
 			// take into account neglected hash from rhs
-			rightIndexes = filterHash(rightIndexes, rightParent.getHashIndexes());
+			rightIndexes = filterHash(rightIndexes,
+					rightParent.getHashIndexes());
 
 			// fromParents contains leftParent, that's why we use its size as an
 			// offset
@@ -121,7 +123,8 @@ public class EarlyProjection {
 		return fromParents;
 	}
 
-	private void bottomUp(Component component, List<Integer> inheritedUsed, int level) {
+	private void bottomUp(Component component, List<Integer> inheritedUsed,
+			int level) {
 		addToLevelCollection(component, level);
 
 		final List<Integer> directlyUsedIndexes = new ArrayList<Integer>();
@@ -133,15 +136,17 @@ public class EarlyProjection {
 		List<Integer> allUsedIndexes = new ArrayList<Integer>();
 		allUsedIndexes.addAll(inheritedUsed);
 		allUsedIndexes.addAll(directlyUsedIndexes);
-		allUsedIndexes
-				.addAll(ParserUtil.getColumnRefIndexes(ParserUtil.getColumnRefFromVEs(allVE)));
+		allUsedIndexes.addAll(ParserUtil.getColumnRefIndexes(ParserUtil
+				.getColumnRefFromVEs(allVE)));
 		allUsedIndexes = sortElimDuplicates(allUsedIndexes);
 
 		List<Integer> afterProjIndexes = new ArrayList<Integer>();
 		afterProjIndexes.addAll(inheritedUsed);
 		afterProjIndexes.addAll(directlyUsedIndexes);
-		final List<ColumnReference> afterProjColRefs = ParserUtil.getColumnRefFromVEs(afterProjVE);
-		afterProjIndexes.addAll(ParserUtil.getColumnRefIndexes(afterProjColRefs));
+		final List<ColumnReference> afterProjColRefs = ParserUtil
+				.getColumnRefFromVEs(afterProjVE);
+		afterProjIndexes.addAll(ParserUtil
+				.getColumnRefIndexes(afterProjColRefs));
 		afterProjIndexes = sortElimDuplicates(afterProjIndexes);
 
 		// set projection as if parent do not change
@@ -158,17 +163,19 @@ public class EarlyProjection {
 		if (parents != null) {
 			// left
 			final Component leftParent = parents[0];
-			final int leftParentSize = ParserUtil.getPreOpsOutputSize(leftParent, _schema, _tan);
-			final List<Integer> leftSentUsedIndexes = filterLess(allUsedIndexes, leftParentSize);
+			final int leftParentSize = ParserUtil.getPreOpsOutputSize(
+					leftParent, _schema, _tan);
+			final List<Integer> leftSentUsedIndexes = filterLess(
+					allUsedIndexes, leftParentSize);
 			bottomUp(leftParent, leftSentUsedIndexes, level + 1);
 
 			// right
 			if (parents.length == 2) {
 				final Component rightParent = parents[1];
-				final List<Integer> rightUsedIndexes = filterEqualBigger(allUsedIndexes,
-						leftParentSize);
-				final List<Integer> rightSentUsedIndexes = createRightSendIndexes(rightUsedIndexes,
-						rightParent, leftParentSize);
+				final List<Integer> rightUsedIndexes = filterEqualBigger(
+						allUsedIndexes, leftParentSize);
+				final List<Integer> rightSentUsedIndexes = createRightSendIndexes(
+						rightUsedIndexes, rightParent, leftParentSize);
 				bottomUp(rightParent, rightSentUsedIndexes, level + 1);
 			}
 		}
@@ -179,14 +186,16 @@ public class EarlyProjection {
 		bottomUp(queryPlan.getLastComponent(), inheritedUsed, 0);
 	}
 
-	private List<Integer> createRightSendIndexes(List<Integer> rightUsedIndexes,
-			Component rightParent, int leftParentSize) {
+	private List<Integer> createRightSendIndexes(
+			List<Integer> rightUsedIndexes, Component rightParent,
+			int leftParentSize) {
 		final List<Integer> result = new ArrayList<Integer>();
 
 		for (final Integer i : rightUsedIndexes) {
 			// first step is to normalize right indexes starting with 0
 			final int normalized = i - leftParentSize;
-			final int sent = positionListIngoreHash(normalized, rightParent.getHashIndexes());
+			final int sent = positionListIngoreHash(normalized,
+					rightParent.getHashIndexes());
 			result.add(sent);
 		}
 
@@ -196,12 +205,14 @@ public class EarlyProjection {
 	// elem must belong to intList
 	private int elemsBefore(int elem, List<Integer> intList) {
 		if (!intList.contains(elem))
-			throw new RuntimeException("Developer error. elemsBefore: no element.");
+			throw new RuntimeException(
+					"Developer error. elemsBefore: no element.");
 		return intList.indexOf(elem);
 	}
 
 	// update indexes so that they represent position in filteredIndexList.
-	private List<Integer> elemsBefore(List<Integer> old, List<Integer> filteredIndexList) {
+	private List<Integer> elemsBefore(List<Integer> old,
+			List<Integer> filteredIndexList) {
 		final List<Integer> result = new ArrayList<Integer>();
 		for (final int i : old)
 			result.add(elemsBefore(i, filteredIndexList));
@@ -210,8 +221,8 @@ public class EarlyProjection {
 
 	private List<Integer> extractProjIndexesAfterBottomUp(Component comp) {
 		if (comp.getParents() == null)
-			return ParserUtil.extractColumnIndexes(comp.getChainOperator().getProjection()
-					.getExpressions());
+			return ParserUtil.extractColumnIndexes(comp.getChainOperator()
+					.getProjection().getExpressions());
 		else
 			return _compOldProj.get(comp);
 	}
@@ -274,7 +285,8 @@ public class EarlyProjection {
 		final List<Integer> hashIndexes = component.getHashIndexes();
 		if (hashIndexes != null)
 			result.addAll(hashIndexes);
-		final AggregateOperator agg = component.getChainOperator().getAggregation();
+		final AggregateOperator agg = component.getChainOperator()
+				.getAggregation();
 		if (agg != null) {
 			final List<Integer> groupBy = agg.getGroupByColumns();
 			if (groupBy != null)
@@ -346,22 +358,25 @@ public class EarlyProjection {
 			updateColumnRefs(beforeProjColRefs, fromParents);
 
 			// update Projection indexes
-			final List<ValueExpression> projVE = comp.getChainOperator().getProjection()
-					.getExpressions();
-			final List<ColumnReference> projColRefs = ParserUtil.getColumnRefFromVEs(projVE);
+			final List<ValueExpression> projVE = comp.getChainOperator()
+					.getProjection().getExpressions();
+			final List<ColumnReference> projColRefs = ParserUtil
+					.getColumnRefFromVEs(projVE);
 
 			// after bottom-up: projection will be set, so it will contain all
 			// the necessary fields,
 			// but later it might be moved because of up projections (total
 			// number of projections does not change)
-			final List<Integer> oldProjIndexes = ParserUtil.getColumnRefIndexes(projColRefs);
+			final List<Integer> oldProjIndexes = ParserUtil
+					.getColumnRefIndexes(projColRefs);
 			_compOldProj.put(comp, oldProjIndexes);
 			updateColumnRefs(projColRefs, fromParents);
 
 		}
 	}
 
-	private void updateColumnRefs(List<ColumnReference> crList, List<Integer> filteredIndexList) {
+	private void updateColumnRefs(List<ColumnReference> crList,
+			List<Integer> filteredIndexList) {
 		for (final ColumnReference cr : crList) {
 			final int oldIndex = cr.getColumnIndex();
 			final int newIndex = elemsBefore(oldIndex, filteredIndexList);
@@ -370,17 +385,21 @@ public class EarlyProjection {
 	}
 
 	// the same as in directlyIndexes: agg.groupBy and hashIndexes
-	private void updateIndexes(Component component, List<Integer> filteredIndexList) {
+	private void updateIndexes(Component component,
+			List<Integer> filteredIndexList) {
 		final List<Integer> oldHashIndexes = component.getHashIndexes();
 		if (oldHashIndexes != null) {
-			final List<Integer> newHashIndexes = elemsBefore(oldHashIndexes, filteredIndexList);
+			final List<Integer> newHashIndexes = elemsBefore(oldHashIndexes,
+					filteredIndexList);
 			component.setOutputPartKey(newHashIndexes);
 		}
-		final AggregateOperator agg = component.getChainOperator().getAggregation();
+		final AggregateOperator agg = component.getChainOperator()
+				.getAggregation();
 		if (agg != null) {
 			final List<Integer> oldGroupBy = agg.getGroupByColumns();
 			if (oldGroupBy != null && !oldGroupBy.isEmpty()) {
-				final List<Integer> newGroupBy = elemsBefore(oldGroupBy, filteredIndexList);
+				final List<Integer> newGroupBy = elemsBefore(oldGroupBy,
+						filteredIndexList);
 				agg.setGroupByColumns(newGroupBy);
 			}
 		}

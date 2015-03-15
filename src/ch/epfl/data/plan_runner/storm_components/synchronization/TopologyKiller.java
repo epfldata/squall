@@ -5,9 +5,6 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import ch.epfl.data.plan_runner.storm_components.StormComponent;
-import ch.epfl.data.plan_runner.utilities.StormWrapper;
-import ch.epfl.data.plan_runner.utilities.SystemParameters;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.InputDeclarer;
@@ -18,6 +15,9 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
+import ch.epfl.data.plan_runner.storm_components.StormComponent;
+import ch.epfl.data.plan_runner.utilities.StormWrapper;
+import ch.epfl.data.plan_runner.utilities.SystemParameters;
 
 /*
  * If NoAck is set up, we receive EOF from the last component
@@ -56,14 +56,15 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declareStream(SystemParameters.DUMP_RESULTS_STREAM, new Fields(
-				SystemParameters.DUMP_RESULTS));
+		declarer.declareStream(SystemParameters.DUMP_RESULTS_STREAM,
+				new Fields(SystemParameters.DUMP_RESULTS));
 	}
 
 	@Override
 	public void execute(Tuple tuple) {
 		LOG.info("TopologyKiller: Received EOF message from componentId: "
-				+ tuple.getSourceComponent() + ", taskId: " + tuple.getSourceTask());
+				+ tuple.getSourceComponent() + ", taskId: "
+				+ tuple.getSourceTask());
 		_numberRegisteredTasks--;
 		LOG.info("TopologyKiller: " + _numberRegisteredTasks + " remaining");
 		if (_numberRegisteredTasks == 0) {
@@ -133,21 +134,25 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
 				"These methods are not ment to be invoked for synchronizationStormComponents");
 	}
 
-	// Helper methods
-	public void registerComponent(StormComponent component, int parallelism) {
-		LOG.info("registering new component");
-		_numberRegisteredTasks += parallelism;
-		_inputDeclarer.allGrouping(component.getID(), SystemParameters.EOF_STREAM);
-	}
-	
-	public void registerComponent(BaseRichBolt component, String componentName, int parallelism) {
-		LOG.info("registering new component " + componentName + " with parallelism " + parallelism);
+	public void registerComponent(BaseRichBolt component, String componentName,
+			int parallelism) {
+		LOG.info("registering new component " + componentName
+				+ " with parallelism " + parallelism);
 		_numberRegisteredTasks += parallelism;
 		_inputDeclarer.allGrouping(componentName, SystemParameters.EOF_STREAM);
 	}
 
+	// Helper methods
+	public void registerComponent(StormComponent component, int parallelism) {
+		LOG.info("registering new component");
+		_numberRegisteredTasks += parallelism;
+		_inputDeclarer.allGrouping(component.getID(),
+				SystemParameters.EOF_STREAM);
+	}
+
 	@Override
-	public void tupleSend(List<String> tuple, Tuple stormTupleRcv, long timestamp) {
+	public void tupleSend(List<String> tuple, Tuple stormTupleRcv,
+			long timestamp) {
 		throw new UnsupportedOperationException(
 				"These methods are not ment to be invoked for synchronizationStormComponents");
 	}

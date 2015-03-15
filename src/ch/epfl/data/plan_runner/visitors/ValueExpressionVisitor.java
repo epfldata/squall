@@ -16,9 +16,9 @@ public interface ValueExpressionVisitor {
 
 	public void visit(ColumnReference cr);
 
-	public void visit(DateSum ds);
+	public void visit(DateDiff dd);
 
-	public void visit(DateDiff dd);	
+	public void visit(DateSum ds);
 
 	public void visit(Division dvsn);
 

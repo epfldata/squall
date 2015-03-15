@@ -6,21 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
-import ch.epfl.data.plan_runner.components.Component;
-import ch.epfl.data.plan_runner.conversion.DateConversion;
-import ch.epfl.data.plan_runner.conversion.DoubleConversion;
-import ch.epfl.data.plan_runner.conversion.LongConversion;
-import ch.epfl.data.plan_runner.conversion.StringConversion;
-import ch.epfl.data.plan_runner.conversion.TypeConversion;
-import ch.epfl.data.plan_runner.expressions.ColumnReference;
-import ch.epfl.data.plan_runner.expressions.IntegerYearFromDate;
-import ch.epfl.data.plan_runner.expressions.ValueExpression;
-import ch.epfl.data.plan_runner.expressions.ValueSpecification;
-import ch.epfl.data.sql.optimizers.index.IndexTranslator;
-import ch.epfl.data.sql.schema.Schema;
-import ch.epfl.data.sql.util.NotFromMyBranchException;
-import ch.epfl.data.sql.util.ParserUtil;
-import ch.epfl.data.sql.util.TableAliasName;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
 import net.sf.jsqlparser.expression.AnyComparisonExpression;
 import net.sf.jsqlparser.expression.BinaryExpression;
@@ -65,6 +50,21 @@ import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
+import ch.epfl.data.plan_runner.components.Component;
+import ch.epfl.data.plan_runner.conversion.DateConversion;
+import ch.epfl.data.plan_runner.conversion.DoubleConversion;
+import ch.epfl.data.plan_runner.conversion.LongConversion;
+import ch.epfl.data.plan_runner.conversion.StringConversion;
+import ch.epfl.data.plan_runner.conversion.TypeConversion;
+import ch.epfl.data.plan_runner.expressions.ColumnReference;
+import ch.epfl.data.plan_runner.expressions.IntegerYearFromDate;
+import ch.epfl.data.plan_runner.expressions.ValueExpression;
+import ch.epfl.data.plan_runner.expressions.ValueSpecification;
+import ch.epfl.data.sql.optimizers.index.IndexTranslator;
+import ch.epfl.data.sql.schema.Schema;
+import ch.epfl.data.sql.util.NotFromMyBranchException;
+import ch.epfl.data.sql.util.ParserUtil;
+import ch.epfl.data.sql.util.TableAliasName;
 
 /*
  * Returns a list of hashExpressions for a given component in a given query plan.
@@ -76,7 +76,8 @@ import net.sf.jsqlparser.statement.select.SubSelect;
  *    a) R is not a DataSourceComponent)
  *    b) many operators down the path
  */
-public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor {
+public class IndexJoinHashVisitor implements ExpressionVisitor,
+		ItemsListVisitor {
 	// these are only used within visit(Column) method
 	private Schema _schema;
 	private Component _affectedComponent;
@@ -104,7 +105,8 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
 	/*
 	 * affectedComponent is one of the parents of the join component
 	 */
-	public IndexJoinHashVisitor(Schema schema, Component affectedComponent, TableAliasName tan) {
+	public IndexJoinHashVisitor(Schema schema, Component affectedComponent,
+			TableAliasName tan) {
 		_schema = schema;
 		_affectedComponent = affectedComponent;
 		_tan = tan;
@@ -131,7 +133,8 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
 		final ValueExpression right = _exprStack.pop();
 		final ValueExpression left = _exprStack.pop();
 
-		final ValueExpression add = new ch.epfl.data.plan_runner.expressions.Addition(left, right);
+		final ValueExpression add = new ch.epfl.data.plan_runner.expressions.Addition(
+				left, right);
 		_exprStack.push(add);
 	}
 
@@ -178,12 +181,13 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
 	@Override
 	public void visit(Column column) {
 		final String tableCompName = ParserUtil.getComponentName(column);
-		final List<String> ancestorNames = ParserUtil.getSourceNameList(_affectedComponent);
+		final List<String> ancestorNames = ParserUtil
+				.getSourceNameList(_affectedComponent);
 
 		if (ancestorNames.contains(tableCompName)) {
 			// extract type for the column
-			final TypeConversion tc = _schema.getType(ParserUtil.getFullSchemaColumnName(column,
-					_tan));
+			final TypeConversion tc = _schema.getType(ParserUtil
+					.getFullSchemaColumnName(column, _tan));
 
 			// extract the position (index) of the required column
 			final int position = _it.getColumnIndex(column, _affectedComponent);
@@ -201,7 +205,8 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
 
 	@Override
 	public void visit(DateValue dv) {
-		final ValueExpression ve = new ValueSpecification(_dateConv, dv.getValue());
+		final ValueExpression ve = new ValueSpecification(_dateConv,
+				dv.getValue());
 		_exprStack.push(ve);
 	}
 
@@ -212,7 +217,8 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
 		final ValueExpression right = _exprStack.pop();
 		final ValueExpression left = _exprStack.pop();
 
-		final ValueExpression division = new ch.epfl.data.plan_runner.expressions.Division(left, right);
+		final ValueExpression division = new ch.epfl.data.plan_runner.expressions.Division(
+				left, right);
 		_exprStack.push(division);
 	}
 
@@ -220,7 +226,8 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
 	// in join conditions
 	@Override
 	public void visit(DoubleValue dv) {
-		final ValueExpression ve = new ValueSpecification(_dblConv, dv.getValue());
+		final ValueExpression ve = new ValueSpecification(_dblConv,
+				dv.getValue());
 		_exprStack.push(ve);
 	}
 
@@ -237,7 +244,8 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
 
 	@Override
 	public void visit(ExpressionList el) {
-		for (final Iterator iter = el.getExpressions().iterator(); iter.hasNext();) {
+		for (final Iterator iter = el.getExpressions().iterator(); iter
+				.hasNext();) {
 			final Expression expression = (Expression) iter.next();
 			expression.accept(this);
 		}
@@ -267,7 +275,8 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
 		final String fnName = function.getName();
 		if (fnName.equalsIgnoreCase("EXTRACT_YEAR")) {
 			if (numParams != 1)
-				throw new RuntimeException("EXTRACT_YEAR function has exactly one parameter!");
+				throw new RuntimeException(
+						"EXTRACT_YEAR function has exactly one parameter!");
 			final ValueExpression expr = expressions.get(0);
 			final ValueExpression ve = new IntegerYearFromDate(expr);
 			_exprStack.push(ve);
@@ -337,7 +346,8 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
 		final ValueExpression right = _exprStack.pop();
 		final ValueExpression left = _exprStack.pop();
 
-		final ValueExpression mult = new ch.epfl.data.plan_runner.expressions.Multiplication(left, right);
+		final ValueExpression mult = new ch.epfl.data.plan_runner.expressions.Multiplication(
+				left, right);
 		_exprStack.push(mult);
 	}
 
@@ -381,7 +391,8 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
 		final ValueExpression right = _exprStack.pop();
 		final ValueExpression left = _exprStack.pop();
 
-		final ValueExpression sub = new ch.epfl.data.plan_runner.expressions.Subtraction(left, right);
+		final ValueExpression sub = new ch.epfl.data.plan_runner.expressions.Subtraction(
+				left, right);
 		_exprStack.push(sub);
 	}
 
@@ -417,6 +428,7 @@ public class IndexJoinHashVisitor implements ExpressionVisitor, ItemsListVisitor
 	}
 
 	private void visitUnsupportedOp() {
-		throw new RuntimeException("Only EQUALS operator can appear in join condition!");
+		throw new RuntimeException(
+				"Only EQUALS operator can appear in join condition!");
 	}
 }

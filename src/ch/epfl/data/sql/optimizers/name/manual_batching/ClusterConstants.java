@@ -32,8 +32,9 @@ public class ClusterConstants {
 		else if (batchSize <= 131072)
 			return 21.00;
 		else
-			throw new RuntimeException("Missing measurements results for serialization for bs = "
-					+ batchSize + ".");
+			throw new RuntimeException(
+					"Missing measurements results for serialization for bs = "
+							+ batchSize + ".");
 	}
 
 	public static double getJoinTime() {
@@ -86,8 +87,9 @@ public class ClusterConstants {
 		else if (batchSize <= 131072)
 			return 2.20;
 		else
-			throw new RuntimeException("Missing measurements results for deserialization for bs = "
-					+ batchSize + ".");
+			throw new RuntimeException(
+					"Missing measurements results for deserialization for bs = "
+							+ batchSize + ".");
 	}
 
 }

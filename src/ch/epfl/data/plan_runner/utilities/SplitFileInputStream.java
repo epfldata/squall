@@ -33,15 +33,13 @@ import org.apache.log4j.Logger;
  */
 
 public class SplitFileInputStream implements Serializable, CustomReader {
-	private static final long serialVersionUID = 1L;
-	private static Logger LOG = Logger.getLogger(SplitFileInputStream.class);
-
 	public static void main(String[] args) {
 
 		final String path = args[0];
 		final int section = Integer.parseInt(args[1]);
 		final int parts = Integer.parseInt(args[2]);
-		final SplitFileInputStream reader = new SplitFileInputStream(path, section, parts);
+		final SplitFileInputStream reader = new SplitFileInputStream(path,
+				section, parts);
 
 		try {
 			String line;
@@ -51,6 +49,10 @@ public class SplitFileInputStream implements Serializable, CustomReader {
 			LOG.info(MyUtilities.getStackTrace(ex));
 		}
 	}
+
+	private static final long serialVersionUID = 1L;
+
+	private static Logger LOG = Logger.getLogger(SplitFileInputStream.class);
 
 	private DataInputStream _in;
 
@@ -86,7 +88,8 @@ public class SplitFileInputStream implements Serializable, CustomReader {
 			_in = new DataInputStream(fstream);
 			_reader = new BufferedReader(new InputStreamReader(_in));
 			if (fileBeginning > 0)
-				for (long i = 0; i < fileBeginning; i += _reader.skip(fileBeginning - i)) {
+				for (long i = 0; i < fileBeginning; i += _reader
+						.skip(fileBeginning - i)) {
 				}
 		} catch (final IOException ex) {
 			final String msg = MyUtilities.getStackTrace(ex);
@@ -115,7 +118,8 @@ public class SplitFileInputStream implements Serializable, CustomReader {
 
 	private void setParameters(String path, int section, int parts) {
 		if (section >= parts)
-			throw new RuntimeException("The section can take value from 0 to " + (parts - 1));
+			throw new RuntimeException("The section can take value from 0 to "
+					+ (parts - 1));
 
 		final File file = new File(path); // no close method for this class
 		final long fileSize = file.length();

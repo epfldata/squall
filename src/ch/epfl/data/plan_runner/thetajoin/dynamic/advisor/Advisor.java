@@ -8,16 +8,47 @@ import java.util.Random;
  */
 public abstract class Advisor implements Serializable {
 
+	public static int[] getAssignedReducers(boolean isRow, int reducerCount,
+			int currentRows, int currentColumns) {
+		int[] result;
+		int k = 0;
+		final int reducersPerGroup = reducerCount / currentRows
+				/ currentColumns;
+		if (isRow) {
+			final int row = gen.nextInt(currentRows);
+			result = new int[currentColumns * reducersPerGroup];
+			for (int g = row * currentColumns; g < (row + 1) * currentColumns; ++g)
+				for (int i = 0; i < reducersPerGroup; ++i)
+					result[k++] = g * reducersPerGroup + i;
+		} else {
+			final int column = gen.nextInt(currentColumns);
+			result = new int[currentRows * reducersPerGroup];
+			for (int g = column; g < currentRows * currentColumns; g += currentColumns)
+				for (int i = 0; i < reducersPerGroup; ++i)
+					result[k++] = g * reducersPerGroup + i;
+		}
+		return result;
+	}
+
+	public static boolean isLeader(int reducerCount, int currentRows,
+			int currentColumns, int id) {
+		final int machinesPerGroup = reducerCount / currentColumns
+				/ currentRows;
+		return id % machinesPerGroup == 0;
+	}
+
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	// Total number of reducers.
-	protected int reducerCount;
-	// Current dimensions of the reducer assignment matrix.
-	protected int currentRows, currentColumns;
 
 	/* Counters */
+
+	// Total number of reducers.
+	protected int reducerCount;
+
+	// Current dimensions of the reducer assignment matrix.
+	protected int currentRows, currentColumns;
 
 	// Total number of tuples along the row and the column.
 	public long totalRowTuples, totalColumnTuples;
@@ -40,32 +71,6 @@ public abstract class Advisor implements Serializable {
 	 * @return Ids of the reducers that should receive the tuples.
 	 */
 	private static Random gen = new Random();
-
-	public static int[] getAssignedReducers(boolean isRow, int reducerCount, int currentRows,
-			int currentColumns) {
-		int[] result;
-		int k = 0;
-		final int reducersPerGroup = reducerCount / currentRows / currentColumns;
-		if (isRow) {
-			final int row = gen.nextInt(currentRows);
-			result = new int[currentColumns * reducersPerGroup];
-			for (int g = row * currentColumns; g < (row + 1) * currentColumns; ++g)
-				for (int i = 0; i < reducersPerGroup; ++i)
-					result[k++] = g * reducersPerGroup + i;
-		} else {
-			final int column = gen.nextInt(currentColumns);
-			result = new int[currentRows * reducersPerGroup];
-			for (int g = column; g < currentRows * currentColumns; g += currentColumns)
-				for (int i = 0; i < reducersPerGroup; ++i)
-					result[k++] = g * reducersPerGroup + i;
-		}
-		return result;
-	}
-
-	public static boolean isLeader(int reducerCount, int currentRows, int currentColumns, int id) {
-		final int machinesPerGroup = reducerCount / currentColumns / currentRows;
-		return id % machinesPerGroup == 0;
-	}
 
 	/**
 	 * Use this constructor to start with the default initial assignment.

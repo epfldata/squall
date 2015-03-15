@@ -5,12 +5,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import ch.epfl.data.plan_runner.utilities.SystemParameters;
 import backtype.storm.generated.GlobalStreamId;
 import backtype.storm.grouping.CustomStreamGrouping;
 import backtype.storm.task.WorkerTopologyContext;
+import ch.epfl.data.plan_runner.utilities.SystemParameters;
 
-public class ThetaDataMigrationJoinerToReshufflerMapping implements CustomStreamGrouping {
+public class ThetaDataMigrationJoinerToReshufflerMapping implements
+		CustomStreamGrouping {
 
 	/**
 	 * This class is only responsible for the mapping for
@@ -32,10 +33,12 @@ public class ThetaDataMigrationJoinerToReshufflerMapping implements CustomStream
 	public List<Integer> chooseTasks(int taskId, List<Object> values) {
 
 		final List<String> tupleList = (List<String>) values.get(1);
-		if (tupleList.get(0).equals(SystemParameters.ThetaJoinerDataMigrationEOF))
+		if (tupleList.get(0).equals(
+				SystemParameters.ThetaJoinerDataMigrationEOF))
 			return _targetTasks;
 		// else uniformly choose an element from the tasks (Shuffling grouping)
-		return Arrays.asList(_targetTasks.get(rnd.nextInt(_targetTasks.size())));
+		return Arrays
+				.asList(_targetTasks.get(rnd.nextInt(_targetTasks.size())));
 	}
 
 	@Override
@@ -47,8 +50,10 @@ public class ThetaDataMigrationJoinerToReshufflerMapping implements CustomStream
 	/*
 	 * Uncomment for storm version 0.7
 	 * **********************************************
+	 * 
 	 * @Override public void prepare(Fields outFields, int numTasks) { _numTasks
 	 * = numTasks;//number of reshufflers }
+	 * 
 	 * @Override public List<Integer> taskIndices(List<Object> values) {
 	 * ////////////////////// String tupleString = (String) values.get(1);
 	 * if(tupleString.equals(SystemParameters.ThetaJoinerDataMigrationEOF)){

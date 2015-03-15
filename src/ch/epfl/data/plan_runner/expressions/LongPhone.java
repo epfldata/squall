@@ -1,11 +1,7 @@
 package ch.epfl.data.plan_runner.expressions;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
-import ch.epfl.data.plan_runner.conversion.IntegerConversion;
 import ch.epfl.data.plan_runner.conversion.LongConversion;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.visitors.ValueExpressionVisitor;
@@ -18,7 +14,7 @@ public class LongPhone implements ValueExpression<Long> {
 
 	private int _columnIndex;
 	private int _firstDigits = -1;
-	
+
 	public LongPhone(int columnIndex) {
 		_columnIndex = columnIndex;
 	}
@@ -27,12 +23,24 @@ public class LongPhone implements ValueExpression<Long> {
 		this(columnIndex);
 		_firstDigits = firstDigits;
 	}
-	
+
+	@Override
+	public void accept(ValueExpressionVisitor vev) {
+		throw new RuntimeException("Not implemented for a moment!");
+		// vev.visit(this);
+	}
+
+	// unused
+	@Override
+	public void changeValues(int i, ValueExpression<Long> newExpr) {
+		// nothing
+	}
+
 	@Override
 	public Long eval(List<String> tuple) {
 		String value = tuple.get(_columnIndex);
 		value = value.replace("-", "");
-		if(_firstDigits != -1){
+		if (_firstDigits != -1) {
 			value = value.substring(0, _firstDigits);
 		}
 		return _wrapper.fromString(value);
@@ -55,19 +63,6 @@ public class LongPhone implements ValueExpression<Long> {
 	}
 
 	@Override
-	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append("LongPhone ").append(_columnIndex);
-		return sb.toString();
-	}
-	
-	// unused
-	@Override
-	public void changeValues(int i, ValueExpression<Long> newExpr) {
-		// nothing
-	}
-	
-	@Override
 	public void inverseNumber() {
 		// nothing
 
@@ -76,11 +71,12 @@ public class LongPhone implements ValueExpression<Long> {
 	@Override
 	public boolean isNegative() {
 		return false;
-	}	
+	}
 
 	@Override
-	public void accept(ValueExpressionVisitor vev) {
-		throw new RuntimeException("Not implemented for a moment!");
-		//vev.visit(this);
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append("LongPhone ").append(_columnIndex);
+		return sb.toString();
 	}
 }

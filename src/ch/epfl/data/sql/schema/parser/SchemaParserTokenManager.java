@@ -11,9 +11,9 @@ public class SchemaParserTokenManager implements SchemaParserConstants {
 	static final int[] jjnextStates = { 18, 20, };
 
 	/** Token literal values. */
-	public static final String[] jjstrLiteralImages = { "", null, null, null, null, "\50", "\51",
-			"\133", "\135", "\73", "\54", "\75", null, null, null, null, null, null, null, null,
-			null, };
+	public static final String[] jjstrLiteralImages = { "", null, null, null,
+			null, "\50", "\51", "\133", "\135", "\73", "\54", "\75", null,
+			null, null, null, null, null, null, null, null, };
 
 	/** Lexer state names. */
 	public static final String[] lexStateNames = { "DEFAULT", };
@@ -109,8 +109,9 @@ public class SchemaParserTokenManager implements SchemaParserConstants {
 				input_stream.backup(1);
 				error_after = curPos <= 1 ? "" : input_stream.GetImage();
 			}
-			throw new TokenMgrError(EOFSeen, curLexState, error_line, error_column, error_after,
-					curChar, TokenMgrError.LEXICAL_ERROR);
+			throw new TokenMgrError(EOFSeen, curLexState, error_line,
+					error_column, error_after, curChar,
+					TokenMgrError.LEXICAL_ERROR);
 		}
 	}
 
@@ -681,8 +682,9 @@ public class SchemaParserTokenManager implements SchemaParserConstants {
 	/** Switch to specified lex state. */
 	public void SwitchTo(int lexState) {
 		if (lexState >= 1 || lexState < 0)
-			throw new TokenMgrError("Error: Ignoring invalid lexical state : " + lexState
-					+ ". State unchanged.", TokenMgrError.INVALID_LEXICAL_STATE);
+			throw new TokenMgrError("Error: Ignoring invalid lexical state : "
+					+ lexState + ". State unchanged.",
+					TokenMgrError.INVALID_LEXICAL_STATE);
 		else
 			curLexState = lexState;
 	}

@@ -24,10 +24,11 @@ public class NameRuleOptimizer implements Optimizer {
 
 	/*
 	 * Take last component(LC) from ncg, and remove the Source with the smallest
-	 * cardinality which can be joined with LC.
-	 * This method has side effects: removing from sourceNames collection
+	 * cardinality which can be joined with LC. This method has side effects:
+	 * removing from sourceNames collection
 	 */
-	private String chooseSmallestSource(Component lastComp, List<String> sourceNames) {
+	private String chooseSmallestSource(Component lastComp,
+			List<String> sourceNames) {
 		for (int i = 0; i < sourceNames.size(); i++) {
 			final String candidateComp = sourceNames.get(i);
 			if (_pq.getJte().joinExistsBetween(candidateComp,
@@ -36,17 +37,20 @@ public class NameRuleOptimizer implements Optimizer {
 				return candidateComp;
 			}
 		}
-		throw new RuntimeException("Should not be here! No components to join with!");
+		throw new RuntimeException(
+				"Should not be here! No components to join with!");
 	}
 
 	@Override
 	public QueryBuilder generate() {
-		final int totalParallelism = SystemParameters.getInt(_map, "DIP_TOTAL_SRC_PAR");
-		final NameCompGenFactory factory = new NameCompGenFactory(_map, _pq.getTan(),
-				totalParallelism);
+		final int totalParallelism = SystemParameters.getInt(_map,
+				"DIP_TOTAL_SRC_PAR");
+		final NameCompGenFactory factory = new NameCompGenFactory(_map,
+				_pq.getTan(), totalParallelism);
 
 		// sorted by increasing cardinalities
-		final List<String> sourceNames = factory.getParAssigner().getSortedSourceNames();
+		final List<String> sourceNames = factory.getParAssigner()
+				.getSortedSourceNames();
 
 		final NameCompGen ncg = factory.create();
 

@@ -35,10 +35,11 @@ public interface AggregateOperator<T> extends Operator {
 	// there must be single ValueExpression.
 	public AggregateOperator setDistinct(DistinctOperator distinct);
 
+	public AggregateOperator setGroupByColumns(int... groupByColumns);
+
 	// GROUP BY ValueExpression is not part of the SQL standard, only columns
 	// can be set.
 	public AggregateOperator setGroupByColumns(List<Integer> groupByColumns);
-	public AggregateOperator setGroupByColumns(int... groupByColumns);
 
 	public AggregateOperator setGroupByProjection(ProjectOperator projection);
 

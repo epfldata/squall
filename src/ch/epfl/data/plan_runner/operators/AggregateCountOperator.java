@@ -143,7 +143,8 @@ public class AggregateCountOperator implements AggregateOperator<Long> {
 			tupleHash = MyUtilities.createHashString(tuple, _groupByColumns,
 					_groupByProjection.getExpressions(), _map);
 		else
-			tupleHash = MyUtilities.createHashString(tuple, _groupByColumns, _map);
+			tupleHash = MyUtilities.createHashString(tuple, _groupByColumns,
+					_map);
 		final Long value = _storage.update(tuple, tupleHash);
 		final String strValue = _wrapper.toString(value);
 
@@ -172,6 +173,12 @@ public class AggregateCountOperator implements AggregateOperator<Long> {
 		return this;
 	}
 
+	@Override
+	public AggregateCountOperator setGroupByColumns(int... hashIndexes) {
+		return setGroupByColumns(Arrays
+				.asList(ArrayUtils.toObject(hashIndexes)));
+	}
+
 	// from AgregateOperator
 	@Override
 	public AggregateCountOperator setGroupByColumns(List<Integer> groupByColumns) {
@@ -183,14 +190,10 @@ public class AggregateCountOperator implements AggregateOperator<Long> {
 		} else
 			throw new RuntimeException("Aggragation already has groupBy set!");
 	}
-	
-	@Override
-	public AggregateCountOperator setGroupByColumns(int... hashIndexes) {
-		return setGroupByColumns(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
-	}
 
 	@Override
-	public AggregateCountOperator setGroupByProjection(ProjectOperator groupByProjection) {
+	public AggregateCountOperator setGroupByProjection(
+			ProjectOperator groupByProjection) {
 		if (!alreadySetOther(GB_PROJECTION)) {
 			_groupByType = GB_PROJECTION;
 			_groupByProjection = groupByProjection;
@@ -207,10 +210,11 @@ public class AggregateCountOperator implements AggregateOperator<Long> {
 		if (_groupByColumns.isEmpty() && _groupByProjection == null)
 			sb.append("\n  No groupBy!");
 		else if (!_groupByColumns.isEmpty())
-			sb.append("\n  GroupByColumns are ").append(getGroupByStr()).append(".");
-		else if (_groupByProjection != null)
-			sb.append("\n  GroupByProjection is ").append(_groupByProjection.toString())
+			sb.append("\n  GroupByColumns are ").append(getGroupByStr())
 					.append(".");
+		else if (_groupByProjection != null)
+			sb.append("\n  GroupByProjection is ")
+					.append(_groupByProjection.toString()).append(".");
 		if (_distinct != null)
 			sb.append("\n  It also has distinct ").append(_distinct.toString());
 		return sb.toString();

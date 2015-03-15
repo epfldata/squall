@@ -16,15 +16,10 @@ import org.apache.log4j.Logger;
  *         !! We are not following the same procedure of the Theta-join paper,
  *         for fallacies.
  */
-public class EquiMatrixAssignment<KeyType> implements Serializable, MatrixAssignment {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-
-	private static Logger LOG = Logger.getLogger(EquiMatrixAssignment.class);
-
-	public static boolean isDataMigrator(int row, int col, Dimension RowOrColumn, int taskID) {
+public class EquiMatrixAssignment<KeyType> implements Serializable,
+		MatrixAssignment {
+	public static boolean isDataMigrator(int row, int col,
+			Dimension RowOrColumn, int taskID) {
 
 		final int[][] regionsMatrix = new int[row][col];
 		for (int i = 0; i < row; i++) {
@@ -53,9 +48,17 @@ public class EquiMatrixAssignment<KeyType> implements Serializable, MatrixAssign
 			LOG.info("Value: " + indices.get(i));
 	}
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	private static Logger LOG = Logger.getLogger(EquiMatrixAssignment.class);
+
 	private long _sizeS, _sizeT; // dimensions of data.. row, column
 	// respectively.
-	private final int _r; // practically speaking usually a relatively small value!
+	private final int _r; // practically speaking usually a relatively small
+							// value!
 	public int _r_S = -1, _r_T = -1; // dimensions of reducers.. row, column
 
 	// respectively.
@@ -126,7 +129,8 @@ public class EquiMatrixAssignment<KeyType> implements Serializable, MatrixAssign
 					LOG.info("errrrrrrrrrrrrrrrrrrrrrrrr");
 				rt = _r / rs;
 				// always assign more reducers to the bigger data
-				if ((_sizeS > _sizeT && rs < rt) || (_sizeS < _sizeT && rs > rt))
+				if ((_sizeS > _sizeT && rs < rt)
+						|| (_sizeS < _sizeT && rs > rt))
 					continue;
 				if (_r_S == -1) {
 					_r_S = rs;
@@ -158,7 +162,8 @@ public class EquiMatrixAssignment<KeyType> implements Serializable, MatrixAssign
 		final double ratio_rs_rt = (double) rs / (double) rt;
 		final double currentBestRatio_rs_rt = (double) _r_S / (double) _r_T;
 		final double diff_rs_rt = Math.abs(ratio_S_T - ratio_rs_rt);
-		final double diff_CurrentBest_rs_rt = Math.abs(ratio_S_T - currentBestRatio_rs_rt);
+		final double diff_CurrentBest_rs_rt = Math.abs(ratio_S_T
+				- currentBestRatio_rs_rt);
 
 		if (diff_rs_rt < diff_CurrentBest_rs_rt) {
 			_r_S = rs;
@@ -207,6 +212,11 @@ public class EquiMatrixAssignment<KeyType> implements Serializable, MatrixAssign
 		return regions;
 	}
 
+	@Override
+	public ArrayList getRegionIDs(Dimension RowOrColumn, Object key) {
+		throw new RuntimeException("This method is content-insenstive");
+	}
+
 	/**
 	 * decides whether this taskID will emit data for data migration.
 	 * 
@@ -231,11 +241,5 @@ public class EquiMatrixAssignment<KeyType> implements Serializable, MatrixAssign
 	public String toString() {
 		return getMappingDimensions();
 	}
-
-	@Override
-	public ArrayList getRegionIDs(Dimension RowOrColumn, Object key) {
-		throw new RuntimeException("This method is content-insenstive");
-	}
-
 
 }

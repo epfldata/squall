@@ -7,6 +7,13 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 
+import backtype.storm.Config;
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.InputDeclarer;
+import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
 import ch.epfl.data.plan_runner.operators.AggregateOperator;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
@@ -17,13 +24,7 @@ import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
-import backtype.storm.Config;
-import backtype.storm.task.OutputCollector;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.InputDeclarer;
-import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.tuple.Fields;
-import backtype.storm.tuple.Tuple;
+
 @Deprecated
 public class StormSrcStorage extends StormBoltComponent {
 	private static Logger LOG = Logger.getLogger(StormSrcStorage.class);
@@ -37,7 +38,8 @@ public class StormSrcStorage extends StormBoltComponent {
 	private final List<Integer> _rightHashIndexes; // hashIndexes from the right
 	// parent
 
-	private final String _full_ID; // Contains the name of the component and tableName
+	private final String _full_ID; // Contains the name of the component and
+									// tableName
 
 	private final ChainOperator _operatorChain;
 
@@ -53,17 +55,22 @@ public class StormSrcStorage extends StormBoltComponent {
 	private PeriodicAggBatchSend _periodicAggBatch;
 	private final long _batchOutputMillis;
 
-	public StormSrcStorage(StormEmitter firstEmitter, StormEmitter secondEmitter,
-			ComponentProperties cp, List<String> allCompNames, StormSrcHarmonizer harmonizer,
-			boolean isFromFirstEmitter, BasicStore<ArrayList<String>> preAggStorage,
-			ProjectOperator preAggProj, int hierarchyPosition, TopologyBuilder builder,
-			TopologyKiller killer, Config conf) {
+	public StormSrcStorage(StormEmitter firstEmitter,
+			StormEmitter secondEmitter, ComponentProperties cp,
+			List<String> allCompNames, StormSrcHarmonizer harmonizer,
+			boolean isFromFirstEmitter,
+			BasicStore<ArrayList<String>> preAggStorage,
+			ProjectOperator preAggProj, int hierarchyPosition,
+			TopologyBuilder builder, TopologyKiller killer, Config conf) {
 		super(cp, allCompNames, hierarchyPosition, conf);
 
-		_firstEmitterIndex = String.valueOf(allCompNames.indexOf(firstEmitter.getName()));
-		_secondEmitterIndex = String.valueOf(allCompNames.indexOf(secondEmitter.getName()));
+		_firstEmitterIndex = String.valueOf(allCompNames.indexOf(firstEmitter
+				.getName()));
+		_secondEmitterIndex = String.valueOf(allCompNames.indexOf(secondEmitter
+				.getName()));
 
-		_tableName = (isFromFirstEmitter ? firstEmitter.getName() : secondEmitter.getName());
+		_tableName = (isFromFirstEmitter ? firstEmitter.getName()
+				: secondEmitter.getName());
 		_isFromFirstEmitter = isFromFirstEmitter;
 		_harmonizer = harmonizer;
 		_batchOutputMillis = cp.getBatchOutputMillis();
@@ -73,14 +80,17 @@ public class StormSrcStorage extends StormBoltComponent {
 
 		final int parallelism = SystemParameters.getInt(conf, getID() + "_PAR");
 		_full_ID = getID() + "_" + _tableName;
-		final InputDeclarer currentBolt = builder.setBolt(_full_ID, this, parallelism);
+		final InputDeclarer currentBolt = builder.setBolt(_full_ID, this,
+				parallelism);
 		currentBolt.fieldsGrouping(_harmonizer.getID(), new Fields("Hash"));
 
-		if (getHierarchyPosition() == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf)))
+		if (getHierarchyPosition() == FINAL_COMPONENT
+				&& (!MyUtilities.isAckEveryTuple(conf)))
 			killer.registerComponent(this, parallelism);
 
 		if (cp.getPrintOut() && _operatorChain.isBlocking())
-			currentBolt.allGrouping(killer.getID(), SystemParameters.DUMP_RESULTS_STREAM);
+			currentBolt.allGrouping(killer.getID(),
+					SystemParameters.DUMP_RESULTS_STREAM);
 
 		_joinStorage = preAggStorage;
 		_preAggProj = preAggProj;
@@ -101,7 +111,8 @@ public class StormSrcStorage extends StormBoltComponent {
 					final AggregateOperator agg = (AggregateOperator) lastOperator;
 					final List<String> tuples = agg.getContent();
 					for (final String tuple : tuples)
-						tupleSend(MyUtilities.stringToTuple(tuple, getConf()), null, 0);
+						tupleSend(MyUtilities.stringToTuple(tuple, getConf()),
+								null, 0);
 					// clearing
 					agg.clearStorage();
 					_semAgg.release();
@@ -137,7 +148,8 @@ public class StormSrcStorage extends StormBoltComponent {
 	@Override
 	public void execute(Tuple stormTupleRcv) {
 		if (_firstTime && MyUtilities.isAggBatchOutputMode(_batchOutputMillis)) {
-			_periodicAggBatch = new PeriodicAggBatchSend(_batchOutputMillis, this);
+			_periodicAggBatch = new PeriodicAggBatchSend(_batchOutputMillis,
+					this);
 			_firstTime = false;
 		}
 
@@ -150,14 +162,17 @@ public class StormSrcStorage extends StormBoltComponent {
 		// inputComponentIndex
 		final String inputComponentIndex = stormTupleRcv.getString(0);
 		final List<String> tuple = (List<String>) stormTupleRcv.getValue(1);
-		final String inputTupleString = MyUtilities.tupleToString(tuple, getConf());
+		final String inputTupleString = MyUtilities.tupleToString(tuple,
+				getConf());
 		final String inputTupleHash = stormTupleRcv.getString(2);
 
 		if (processFinalAck(tuple, stormTupleRcv))
 			return;
 
-		if ((_isFromFirstEmitter && (inputComponentIndex.equals(_firstEmitterIndex)))
-				|| (!_isFromFirstEmitter && (inputComponentIndex.equals(_secondEmitterIndex))))
+		if ((_isFromFirstEmitter && (inputComponentIndex
+				.equals(_firstEmitterIndex)))
+				|| (!_isFromFirstEmitter && (inputComponentIndex
+						.equals(_secondEmitterIndex))))
 			// the
 			// tuple
 			// into
@@ -165,14 +180,16 @@ public class StormSrcStorage extends StormBoltComponent {
 			// datastructure!!
 			_joinStorage.insert(inputTupleHash, inputTupleString);
 		else {// JOIN
-			final List<String> oppositeTupleStringList = _joinStorage.access(inputTupleHash);
+			final List<String> oppositeTupleStringList = _joinStorage
+					.access(inputTupleHash);
 
 			// do stuff
 			if (oppositeTupleStringList != null)
 				for (int i = 0; i < oppositeTupleStringList.size(); i++) {
-					final String oppositeTupleString = oppositeTupleStringList.get(i);
-					final List<String> oppositeTuple = MyUtilities.stringToTuple(
-							oppositeTupleString, getConf());
+					final String oppositeTupleString = oppositeTupleStringList
+							.get(i);
+					final List<String> oppositeTuple = MyUtilities
+							.stringToTuple(oppositeTupleString, getConf());
 
 					List<String> firstTuple, secondTuple;
 					if (_isFromFirstEmitter) {
@@ -187,10 +204,11 @@ public class StormSrcStorage extends StormBoltComponent {
 
 					List<String> outputTuple;
 					if (_joinStorage instanceof BasicStore)
-						outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple,
-								_rightHashIndexes);
+						outputTuple = MyUtilities.createOutputTuple(firstTuple,
+								secondTuple, _rightHashIndexes);
 					else
-						outputTuple = MyUtilities.createOutputTuple(firstTuple, secondTuple);
+						outputTuple = MyUtilities.createOutputTuple(firstTuple,
+								secondTuple);
 
 					if (_preAggProj != null)
 						outputTuple = _preAggProj.process(outputTuple);
@@ -237,7 +255,8 @@ public class StormSrcStorage extends StormBoltComponent {
 	@Override
 	public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
 		super.prepare(map, tc, collector);
-		super.setNumRemainingParents(MyUtilities.getNumParentTasks(tc, _harmonizer));
+		super.setNumRemainingParents(MyUtilities.getNumParentTasks(tc,
+				_harmonizer));
 	}
 
 	@Override
@@ -247,7 +266,8 @@ public class StormSrcStorage extends StormBoltComponent {
 
 	@Override
 	public void purgeStaleStateFromWindow() {
-			throw new RuntimeException("Window semantics is not implemented for this operator.");
-		
+		throw new RuntimeException(
+				"Window semantics is not implemented for this operator.");
+
 	}
 }

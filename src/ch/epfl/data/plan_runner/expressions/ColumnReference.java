@@ -6,7 +6,8 @@ import java.util.List;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.visitors.ValueExpressionVisitor;
 
-public class ColumnReference<T extends Comparable<T>> implements ValueExpression<T> {
+public class ColumnReference<T extends Comparable<T>> implements
+		ValueExpression<T> {
 	private static final long serialVersionUID = 1L;
 
 	private int _columnIndex;
@@ -21,7 +22,8 @@ public class ColumnReference<T extends Comparable<T>> implements ValueExpression
 	/*
 	 * columnStr is optional, used only in toString method
 	 */
-	public ColumnReference(TypeConversion<T> wrapper, int columnIndex, String columnStr) {
+	public ColumnReference(TypeConversion<T> wrapper, int columnIndex,
+			String columnStr) {
 		this(wrapper, columnIndex);
 		_columnStr = columnStr;
 	}

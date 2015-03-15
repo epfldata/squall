@@ -3,6 +3,9 @@ package ch.epfl.data.sql.optimizers.index;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.schema.Table;
+import net.sf.jsqlparser.statement.select.SelectItem;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
 import ch.epfl.data.plan_runner.components.OperatorComponent;
@@ -18,9 +21,6 @@ import ch.epfl.data.sql.util.ParserUtil;
 import ch.epfl.data.sql.visitors.jsql.SQLVisitor;
 import ch.epfl.data.sql.visitors.squall.IndexSelectItemsVisitor;
 import ch.epfl.data.sql.visitors.squall.IndexWhereVisitor;
-import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.select.SelectItem;
 
 /*
  * Generate a query plan as it was parsed from the SQL.
@@ -53,17 +53,20 @@ public class IndexSimpleOptimizer implements Optimizer {
 
 			if (ParserUtil.isAllColumnRefs(groupByVEs)) {
 				// plain fields in select
-				final List<Integer> groupByColumns = ParserUtil.extractColumnIndexes(groupByVEs);
+				final List<Integer> groupByColumns = ParserUtil
+						.extractColumnIndexes(groupByVEs);
 				firstAgg.setGroupByColumns(groupByColumns);
 
 				// Setting new level of components is necessary for correctness
 				// only for distinct in aggregates
 				// but it's certainly pleasant to have the final result grouped
 				// on nodes by group by columns.
-				final boolean newLevel = !(_it.isHashedBy(affectedComponent, groupByColumns));
+				final boolean newLevel = !(_it.isHashedBy(affectedComponent,
+						groupByColumns));
 				if (newLevel) {
 					affectedComponent.setOutputPartKey(groupByColumns);
-					OperatorComponent oc = new OperatorComponent(affectedComponent,
+					OperatorComponent oc = new OperatorComponent(
+							affectedComponent,
 							ParserUtil.generateUniqueName("OPERATOR"))
 							.add(firstAgg);
 					_cg.getQueryBuilder().add(oc);
@@ -83,24 +86,28 @@ public class IndexSimpleOptimizer implements Optimizer {
 				// we do deep copy
 				final ProjectOperator groupByProj = new ProjectOperator(
 						(List<ValueExpression>) DeepCopy.copy(groupByVEs));
-				if (!(groupByProj.getExpressions() == null || groupByProj.getExpressions()
-						.isEmpty()))
+				if (!(groupByProj.getExpressions() == null || groupByProj
+						.getExpressions().isEmpty()))
 					firstAgg.setGroupByProjection(groupByProj);
 
 				// current component
-				affectedComponent.setHashExpressions((List<ValueExpression>) DeepCopy
-						.copy(groupByVEs));
+				affectedComponent
+						.setHashExpressions((List<ValueExpression>) DeepCopy
+								.copy(groupByVEs));
 
-				OperatorComponent oc = new OperatorComponent(affectedComponent, 
-						ParserUtil.generateUniqueName("OPERATOR")).add(firstAgg);
+				OperatorComponent oc = new OperatorComponent(affectedComponent,
+						ParserUtil.generateUniqueName("OPERATOR"))
+						.add(firstAgg);
 				_cg.getQueryBuilder().add(oc);
 
 			}
 		} else
-			throw new RuntimeException("For now only one aggregate function supported!");
+			throw new RuntimeException(
+					"For now only one aggregate function supported!");
 	}
 
-	private void attachWhereClause(SelectOperator select, Component affectedComponent) {
+	private void attachWhereClause(SelectOperator select,
+			Component affectedComponent) {
 		affectedComponent.add(select);
 	}
 
@@ -114,8 +121,8 @@ public class IndexSimpleOptimizer implements Optimizer {
 
 		ParserUtil.orderOperators(_cg.getQueryBuilder());
 
-		final RuleParallelismAssigner parAssign = new RuleParallelismAssigner(_cg.getQueryBuilder(),
-				_pq.getTan(), _schema, _map);
+		final RuleParallelismAssigner parAssign = new RuleParallelismAssigner(
+				_cg.getQueryBuilder(), _pq.getTan(), _schema, _map);
 		parAssign.assignPar();
 
 		return _cg.getQueryBuilder();
@@ -125,8 +132,8 @@ public class IndexSimpleOptimizer implements Optimizer {
 		final List<Table> tableList = _pq.getTableList();
 
 		final IndexCompGen cg = new IndexCompGen(_schema, _pq, _map);
-		Component firstParent = cg
-				.generateDataSource(ParserUtil.getComponentName(tableList.get(0)));
+		Component firstParent = cg.generateDataSource(ParserUtil
+				.getComponentName(tableList.get(0)));
 
 		// a special case
 		if (tableList.size() == 1)
@@ -134,8 +141,9 @@ public class IndexSimpleOptimizer implements Optimizer {
 
 		// This generates a lefty query plan.
 		for (int i = 0; i < tableList.size() - 1; i++) {
-			final DataSourceComponent secondParent = cg.generateDataSource(ParserUtil
-					.getComponentName(tableList.get(i + 1)));
+			final DataSourceComponent secondParent = cg
+					.generateDataSource(ParserUtil.getComponentName(tableList
+							.get(i + 1)));
 			firstParent = cg.generateEquiJoin(firstParent, secondParent);
 		}
 		return cg;
@@ -149,19 +157,23 @@ public class IndexSimpleOptimizer implements Optimizer {
 		final List<AggregateOperator> aggOps = selectVisitor.getAggOps();
 		final List<ValueExpression> groupByVEs = selectVisitor.getGroupByVEs();
 
-		final Component affectedComponent = _cg.getQueryBuilder().getLastComponent();
+		final Component affectedComponent = _cg.getQueryBuilder()
+				.getLastComponent();
 		attachSelectClause(aggOps, groupByVEs, affectedComponent);
-		return (aggOps.isEmpty() ? IndexSelectItemsVisitor.NON_AGG : IndexSelectItemsVisitor.AGG);
+		return (aggOps.isEmpty() ? IndexSelectItemsVisitor.NON_AGG
+				: IndexSelectItemsVisitor.AGG);
 	}
 
 	private void processWhereClause(Expression whereExpr) {
 		// all the selection are performed on the last component
-		final Component affectedComponent = _cg.getQueryBuilder().getLastComponent();
-		final IndexWhereVisitor whereVisitor = new IndexWhereVisitor(affectedComponent, _schema,
-				_pq.getTan());
+		final Component affectedComponent = _cg.getQueryBuilder()
+				.getLastComponent();
+		final IndexWhereVisitor whereVisitor = new IndexWhereVisitor(
+				affectedComponent, _schema, _pq.getTan());
 		if (whereExpr != null) {
 			whereExpr.accept(whereVisitor);
-			attachWhereClause(whereVisitor.getSelectOperator(), affectedComponent);
+			attachWhereClause(whereVisitor.getSelectOperator(),
+					affectedComponent);
 		}
 	}
 

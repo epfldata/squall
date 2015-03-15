@@ -31,7 +31,8 @@ public class ManualBatchingCompGenFactory {
 	/*
 	 * generating plan + parallelism
 	 */
-	public ManualBatchingCompGenFactory(Map map, TableAliasName tan, int totalSourcePar) {
+	public ManualBatchingCompGenFactory(Map map, TableAliasName tan,
+			int totalSourcePar) {
 		this(map, tan);
 		setParAssignerMode(totalSourcePar);
 	}
@@ -47,7 +48,8 @@ public class ManualBatchingCompGenFactory {
 	public final void setParAssignerMode(int totalSourcePar) {
 		// in general there might be many NameComponentGenerators,
 		// that's why CPA is computed before of NCG
-		_parAssigner = new ManualBatchingParallelismAssigner(_schema, _tan, _map);
+		_parAssigner = new ManualBatchingParallelismAssigner(_schema, _tan,
+				_map);
 
 		// for the same _parAssigner, we might try with different totalSourcePar
 		_parAssigner.computeSourcePar(totalSourcePar);

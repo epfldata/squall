@@ -21,7 +21,8 @@ public class PredicateUpdateIndexesVisitor implements PredicateVisitor {
 	public ArrayList<String> _valuesToIndex;
 	public ArrayList<Object> _typesOfValuesToIndex;
 
-	public PredicateUpdateIndexesVisitor(boolean comeFromFirstEmitter, List<String> tuple) {
+	public PredicateUpdateIndexesVisitor(boolean comeFromFirstEmitter,
+			List<String> tuple) {
 		_comeFromFirstEmitter = comeFromFirstEmitter;
 		_tuple = tuple;
 
@@ -40,6 +41,11 @@ public class PredicateUpdateIndexesVisitor implements PredicateVisitor {
 		// In between there is only an and predicate
 		final Predicate p = (Predicate) between.getInnerPredicates().get(0);
 		visit(p);
+	}
+
+	@Override
+	public void visit(booleanPrimitive bool) {
+
 	}
 
 	@Override
@@ -68,11 +74,6 @@ public class PredicateUpdateIndexesVisitor implements PredicateVisitor {
 
 	public void visit(Predicate pred) {
 		pred.accept(this);
-	}
-
-	@Override
-	public void visit(booleanPrimitive bool) {
-		
 	}
 
 }
