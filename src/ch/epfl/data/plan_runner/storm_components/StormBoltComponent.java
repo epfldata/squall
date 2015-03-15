@@ -81,20 +81,17 @@ public abstract class StormBoltComponent extends BaseRichBolt implements
 	// //////////////////////////////
 	public long _windowSize = -1; // Width in terms of millis, Default is -1
 									// which is full history
-
 	public long _latestTimeStamp = -1;
-
 	protected long _GC_PeriodicTickSec = -1;
 	// protected static int WINDOW_SIZE_MULTIPLE_CONSTANT=3;
-
 	// For tumbling semantics
 	public long _tumblingWindowSize;
 
 	public StormBoltComponent(ComponentProperties cp,
 			List<String> allCompNames, int hierarchyPosition,
-			boolean _isEWHPartitioner, Map conf) {
+			boolean isEWHPartitioner, Map conf) {
 		this(cp, allCompNames, hierarchyPosition, conf);
-		_isEWHPartitioner = _isEWHPartitioner;
+		_isEWHPartitioner = isEWHPartitioner;
 	}
 
 	public StormBoltComponent(ComponentProperties cp,

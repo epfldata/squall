@@ -111,7 +111,8 @@ public abstract class StormSpoutComponent extends BaseRichSpout implements
 			outputFields.add(StormComponent.TUPLE); // list of string
 			outputFields.add(StormComponent.HASH);
 		}
-		if (MyUtilities.isCustomTimestampMode(getConf()))
+		if (MyUtilities.isCustomTimestampMode(getConf())
+				|| MyUtilities.isWindowTimestampMode(getConf()))
 			outputFields.add(StormComponent.TIMESTAMP);
 		declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(
 				outputFields));
