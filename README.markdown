@@ -26,7 +26,7 @@ SELECT C_MKTSEGMENT, COUNT(O_ORDERKEY)
 FROM CUSTOMER join ORDERS on C_CUSTKEY = O_CUSTKEY
 GROUP BY C_MKTSEGMENT
 ```
-Through the Squall API, the online distributed query plan ([full code](https://github.com/epfldata/squall/blob/master/src/plan_runner/query_plans/HyracksPlan.java)) can be simply formulated as follows:
+Through the Squall API, the online distributed query plan ([full code](https://github.com/epfldata/squall/blob/master/src/plan_runner/query_plans/HyracksPlan.java)) can be formulated as follows:
 
 ```java
 Component relationCustomer = _queryBuilder.createDataSource("customer", conf)
@@ -39,6 +39,32 @@ _queryBuilder.createEquiJoin(relationCustomer, relationOrders)
                                           .add(new AggregateCountOperator(conf)
                                           .setGroupByColumns(1));
 ```
+
+
+Queries are mapped to operator trees in the spirit of the query plans
+of relational database systems.
+These are are in turn mapped to Storm workers. (There is a parallel
+implementation of each operator, so in general an operator is processed
+by multiple workers).
+Some operations of relational algebra, such as selections and projections,
+are quite simple, and assigning them to separate workers is inefficient.
+Rather than requiring the predecessor operator to send its output over the
+network to the workers implementing these simple operations,
+the simple operations can be integrated into the predecessor operators
+and postprocess the output there. This is typically also done in
+classical relational database systems, but in a distributed environment,
+the benefits are even greater.
+In the Squall API, query plans are built bottom-up from 
+operators (called components or super-operators)
+such as data source scans and joins; 
+these components can then be extended by postprocessing operators such as
+projections.
+
+
+
+
+
+
 
 ### Documentation
 Detailed documentation can be found on the [Squall wiki](http://github.com/epfldata/squall/wiki).
