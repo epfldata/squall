@@ -93,12 +93,6 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 	}
 
 	@Override
-	public Object onRemove() {
-		/* Deletions are not supported for aggregations yet */
-		throw new java.lang.UnsupportedOperationException();
-	}
-
-	@Override
 	public void printStore(PrintStream stream, boolean printStorage) {
 		super.printStore(stream, printStorage);
 	}

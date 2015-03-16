@@ -48,17 +48,13 @@ public class KeyValueStore<K, V> extends BasicStore {
 
 	private static Logger LOG = Logger.getLogger(KeyValueStore.class);
 	private TypeConversion _tc = null;
-	private HashMap<K, Object> _memstore;
+	private HashMap<K, HashEntry<K, V>> _memstore;
 	protected static final int DEFAULT_HASH_INDICES = 256;
 
-	protected ReplacementAlgorithm<HashEntry<K, V>> _replAlg;
 
 	public KeyValueStore(int storesizemb, int hash_indices, Map conf) {
 		super(storesizemb);
-		_storageManager = new StorageManager<V>(this, conf);
-		_memoryManager = new MemoryManager(storesizemb);
-		this._replAlg = new LRUList<HashEntry<K, V>>();
-		this._memstore = new HashMap<K, Object>(hash_indices);
+		this._memstore = new HashMap<K, HashEntry<K, V>>(hash_indices);
 	}
 
 	public KeyValueStore(int hash_indices, Map conf) {
@@ -80,27 +76,14 @@ public class KeyValueStore<K, V> extends BasicStore {
 
 	protected ArrayList<V> __access(boolean checkStorage, Object... data) {
 		final K key = (K) data[0];
-		final Object obj = this._memstore.get(key);
-		final HashEntry<K, V> entry = _replAlg.get(obj);
+		final HashEntry<K, V> entry = this._memstore.get(key);
 		final boolean inMem = (entry != null);
-		// boolean inDisk = checkStorage ?
-		// (_storageManager.existsInStorage(key.toString())) : false;
 		final boolean inDisk = false;
-
 		if (!inMem && !inDisk)
 			return null;
-		else if (inMem && !inDisk)
-			return entry.getValues();
-		else if (!inMem && inDisk)
-			return _storageManager.read(key.toString());
-		else { // inmem && inDisk
-			final ArrayList<V> resList = new ArrayList<V>();
-			resList.addAll(entry.getValues());
-			final ArrayList<V> storageElems = _storageManager.read(key
-					.toString());
-			resList.addAll(storageElems);
-			return resList;
-		}
+		
+		return entry.getValues();
+		
 	}
 
 	protected V __update(boolean checkStorage, Object... data) {
@@ -109,38 +92,20 @@ public class KeyValueStore<K, V> extends BasicStore {
 		final V newValue = (V) data[2];
 
 		ArrayList<V> values;
-		final String groupId = key.toString();
 		final boolean inMem = (this._memstore.containsKey(key) == true);
-		// boolean inDisk = checkStorage ?
-		// (_storageManager.existsInStorage(groupId) == true) : false;
-		final boolean inDisk = false;
-
-		// If element is not in disk and not in mem, treat this as an insert
-		// instead
-		if (!inMem && !inDisk) {
-			data[1] = newValue;
-			this.onInsert(data);
-			return newValue;
-		}
 
 		// First update memory if necessary
 		if (inMem) {
-			final Object obj = this._memstore.get(key);
-			final HashEntry<K, V> entry = _replAlg.get(obj);
+			final HashEntry<K, V> entry = this._memstore.get(key);
+			//final HashEntry<K, V> entry = _replAlg.get(obj);
 			values = entry.getValues();
 			// Get the index of the old value (if it exists)
 			final int index = values.indexOf(oldValue);
 			if (index != -1)
 				values.set(index, newValue);
 			else
-				// LOG.info("KeyValueStore: BUG: No element for key " + key +
-				// " found in store, but store's metadata register elements.");
 				System.exit(0);
 		}
-
-		// Now update storage if necessary
-		if (inDisk)
-			_storageManager.update(groupId, oldValue, newValue);
 		return newValue;
 	}
 
@@ -154,7 +119,6 @@ public class KeyValueStore<K, V> extends BasicStore {
 		final K key = (K) data[0];
 		if (_memstore.containsKey(key) == true)
 			return true;
-		// return _storageManager.existsInStorage(key.toString());
 		return false;
 	}
 
@@ -219,11 +183,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 	protected Set<K> keySet() {
 		final Set<K> memKeys = this._memstore.keySet();
 		// YANNIS: TODO
-		// String[] storageGroupIds = this._storageManager.getGroupIds();
-		// Set<String> storageKeys = new
-		// HashSet<String>(Arrays.asList(storageGroupIds));
 		final Set finalSet = new HashSet(memKeys);
-		// finalSet.addAll(storageKeys);
 		return finalSet;
 	}
 
@@ -234,7 +194,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 		ArrayList<V> values;
 
 		/* First, register this new value in the memoryManager */
-		_memoryManager.allocateMemory(_memoryManager.getSize(value));
+		//_memoryManager.allocateMemory(_memoryManager.getSize(value));
 
 		/* Do we have an entry for this key? */
 		if (this._memstore.containsKey(key) == false) {
@@ -244,8 +204,6 @@ public class KeyValueStore<K, V> extends BasicStore {
 			 * save the key we provide. Thus, we need to take its space into
 			 * account.
 			 */
-			_memoryManager.allocateMemory(_memoryManager.getSize(key));
-
 			/*
 			 * No entry for this key--> create a new entry (key, values list
 			 * pair)
@@ -254,40 +212,14 @@ public class KeyValueStore<K, V> extends BasicStore {
 			values.add(value);
 			// Create the new hash entry
 			final HashEntry<K, V> entry = new HashEntry<K, V>(key, values);
-
 			// Create a new lrunode and add to it the hashentry
-			final Object lrunode = _replAlg.add(entry);
-			this._memstore.put(key, lrunode);
+			this._memstore.put(key, entry);
 		} else {
-			final Object obj = this._memstore.get(key);
-			final HashEntry<K, V> entry = _replAlg.get(obj);
+			final HashEntry<K, V> entry = this._memstore.get(key);
 			entry.getValues().add(value);
-			((LRUList) _replAlg).moveToFront(obj);
 		}
 	}
-
-	@Override
-	public Object onRemove() {
-		final HashEntry<K, V> entry = _replAlg.getLast();
-		final K key = entry.getKey();
-		final ArrayList<V> values = entry.getValues();
-		// Remove an entry from the list and free its memory
-		final V value = values.remove(0);
-		_memoryManager.releaseMemory(value);
-
-		// Written whole list to storage
-		if (values.size() == 0) {
-			_memstore.remove(key);
-			_replAlg.remove();
-			// Release memory for key and for values
-			_memoryManager.releaseMemory(entry.getKey());
-		}
-
-		// Set the file to write
-		_objRemId = key.toString();
-		return value;
-	}
-
+	
 	@Override
 	public void printStore(PrintStream stream, boolean printStorage) {
 		ArrayList<V> values;
@@ -295,9 +227,8 @@ public class KeyValueStore<K, V> extends BasicStore {
 		for (final Iterator<K> it = keys.iterator(); it.hasNext();) {
 			final K key = it.next();
 			// Check memory
-			final Object obj = this._memstore.get(key);
-			if (obj != null) {
-				final HashEntry<K, V> entry = _replAlg.get(obj);
+			final HashEntry<K, V> entry = this._memstore.get(key);
+			if (entry != null) {
 				stream.print(entry.getKey());
 				stream.print(" = ");
 				values = entry.getValues();
@@ -308,34 +239,20 @@ public class KeyValueStore<K, V> extends BasicStore {
 						stream.print(v.toString());
 				stream.println("");
 			}
-			// Check storage
-			values = _storageManager.read(key.toString());
-			if (values != null) {
-				stream.print(key.toString());
-				stream.print(" = ");
-				for (final V v : values)
-					if (this._tc != null)
-						stream.print(_tc.toString(v));
-					else
-						stream.print(v.toString());
-				stream.println("");
-			}
 		}
 	}
 
-	// TODO HACKED BIG TIME .. NEEDS TO BE CLEANED UP AT A DIFFERNT LEVEL
+	// TODO Specific to Window Semantics: Currently Linear, needs to 
 	public void purgeState(long tillTimeStamp) {
 		ArrayList<V> values;
 		final Set<K> keys = this.keySet();
 		for (final Iterator<K> it = keys.iterator(); it.hasNext();) {
 			final K key = it.next();
 			// Check memory
-			final Object obj = this._memstore.get(key);
-			if (obj != null) {
-				final HashEntry<K, V> entry = _replAlg.get(obj);
+			final  HashEntry<K, V> entry = this._memstore.get(key);
+			if (entry != null) {
 				values = entry.getValues();
 				String value;
-
 				for (Iterator iterator = values.iterator(); iterator.hasNext();) {
 					V v = (V) iterator.next();
 					if (this._tc != null)
@@ -350,9 +267,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 					if (storedTimestamp < tillTimeStamp)
 						iterator.remove();
 				}
-
 			}
-			// Check storage
 			// removed !!!! use DST_TUPLE_STORAGE
 		}
 	}
@@ -360,8 +275,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 	@Override
 	public void reset() {
 		this._memstore.clear();
-		this._replAlg.reset();
-		_storageManager.deleteAllFilesRootDir();
+		//_storageManager.deleteAllFilesRootDir();
 	}
 
 	public void setTypeConversion(TypeConversion tc) {
@@ -372,7 +286,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 		int size = 0;
 		final Object[] x = _memstore.values().toArray();
 		for (int i = 0; i < x.length; i++) {
-			final HashEntry<K, V> entry = _replAlg.get(x[i]);
+			final HashEntry<K, V> entry = (HashEntry<K, V>) x[i];
 			size += entry.getValues().size();
 		}
 		return size;
