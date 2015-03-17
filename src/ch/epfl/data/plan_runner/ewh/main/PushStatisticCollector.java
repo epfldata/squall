@@ -45,7 +45,7 @@ public class PushStatisticCollector {
     private static java.util.logging.Logger _fileLogger;
     private long SLEEP_MILLIS_END = 10000;
 
-    private QueryPlan _queryPlan = null;
+    private PLCQueryPlan _queryPlan = null;
     private static Map _map;
 
     private List<TilingAlgorithm> _algorithms;
@@ -508,7 +508,7 @@ public class PushStatisticCollector {
 	}
     }
 
-    private static interface QueryPlan {
+    private static interface PLCQueryPlan {
 	public void processTuple(List<String> tuple, int relationNumber);
 
 	public JoinMatrix generateMatrix();
@@ -516,7 +516,7 @@ public class PushStatisticCollector {
 	public NumericConversion getWrapper();
     }
 
-    private static class Hyracks implements QueryPlan {
+    private static class Hyracks implements PLCQueryPlan {
 	private IntegerConversion _ic = new IntegerConversion();
 
 	private Map _map;
@@ -567,7 +567,7 @@ public class PushStatisticCollector {
 	}
     }
 
-    private static class ThetaLineitemSelfJoin implements QueryPlan {
+    private static class ThetaLineitemSelfJoin implements PLCQueryPlan {
 	private DateIntegerConversion _dateIntConv = new DateIntegerConversion();
 
 	private Map _map;
@@ -620,7 +620,7 @@ public class PushStatisticCollector {
     }
 
     private static class ThetaLineitemSelfJoinInputDominated implements
-	    QueryPlan {
+	    PLCQueryPlan {
 	private IntegerConversion _ic = new IntegerConversion();
 
 	private Map _map;
@@ -671,7 +671,7 @@ public class PushStatisticCollector {
 	}
     }
 
-    private static class ThetaTPCH5_R_N_S_L implements QueryPlan {
+    private static class ThetaTPCH5_R_N_S_L implements PLCQueryPlan {
 	private IntegerConversion _ic = new IntegerConversion();
 
 	private Map _map;
@@ -722,7 +722,7 @@ public class PushStatisticCollector {
 	}
     }
 
-    private static class ThetaTPCH7_L_S_N1 implements QueryPlan {
+    private static class ThetaTPCH7_L_S_N1 implements PLCQueryPlan {
 	private IntegerConversion _ic = new IntegerConversion();
 
 	private Map _map;

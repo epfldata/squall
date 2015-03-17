@@ -69,6 +69,12 @@ public class EquiJoinComponent implements Component {
 
 	_componentName = firstParent.getName() + "_" + secondParent.getName();
     }
+    
+    public EquiJoinComponent(Component firstParent, int firstJoinIndex, Component secondParent, int secondJoinIndex) {
+    	this(firstParent, secondParent);
+    	firstParent.setOutputPartKey(firstJoinIndex);
+    	secondParent.setOutputPartKey(secondJoinIndex);
+    }
 
     @Override
     public EquiJoinComponent add(Operator operator) {
