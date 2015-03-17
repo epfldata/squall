@@ -26,18 +26,20 @@ SELECT C_MKTSEGMENT, COUNT(O_ORDERKEY)
 FROM CUSTOMER join ORDERS on C_CUSTKEY = O_CUSTKEY
 GROUP BY C_MKTSEGMENT
 ```
-Through the Squall API, the online distributed query plan ([full code](https://github.com/epfldata/squall/blob/master/src/plan_runner/query_plans/HyracksPlan.java)) can be formulated as follows:
+
+We provide several way of running queries:
+
+1. The declarative interface of Squall (which is equipped with a cost-based optimizer) supports SQL directly
+
+2. The imperative interface of Squall supports the online distributed query plan ([full code](https://github.com/epfldata/squall/blob/master/src/plan_runner/query_plans/HyracksPlan.java)) as follows:
 
 ```java
-Component relationCustomer = _queryBuilder.createDataSource("customer", conf)
-                                          .add(new ProjectOperator(0, 6))
-                                          .setOutputPartKey(0);
-Component relationOrders  = _queryBuilder.createDataSource("orders", conf)
-                                          .add(new ProjectOperator(1))
-                                          .setOutputPartKey(0);
-_queryBuilder.createEquiJoin(relationCustomer, relationOrders)
-                                          .add(new AggregateCountOperator(conf)
-                                          .setGroupByColumns(1));
+Component customer = new DataSourceComponent("customer", conf)
+                            .add(new ProjectOperator(0, 6));
+Component orders = new DataSourceComponent("orders", conf)
+                            .add(new ProjectOperator(1));
+Component custOrders = new EquiJoinComponent(customer, 0, orders, 0)
+                            .add(new AggregateCountOperator(conf).setGroupByColumns(1));
 ```
 
 
