@@ -16,31 +16,7 @@ import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 
 public class KeyValueStore<K, V> extends BasicStore {
-	/* Private class to store LRUNode along with key */
-	private class HashEntry<K, V> {
-		K _key;
-		ArrayList<V> _list;
-
-		public HashEntry(K key, ArrayList<V> list) {
-			this._key = key;
-			this._list = list;
-		}
-
-		public K getKey() {
-			return this._key;
-		}
-
-		public ArrayList<V> getValues() {
-			return this._list;
-		}
-
-		@Override
-		public String toString() {
-			return this._key.toString();
-		}
-
-	}
-
+	
 	/**
 	 * 
 	 */
@@ -48,13 +24,13 @@ public class KeyValueStore<K, V> extends BasicStore {
 
 	private static Logger LOG = Logger.getLogger(KeyValueStore.class);
 	private TypeConversion _tc = null;
-	private HashMap<K, HashEntry<K, V>> _memstore;
+	private HashMap<K, ArrayList<V>> _memstore;
 	protected static final int DEFAULT_HASH_INDICES = 256;
 
 
 	public KeyValueStore(int storesizemb, int hash_indices, Map conf) {
 		super(storesizemb);
-		this._memstore = new HashMap<K, HashEntry<K, V>>(hash_indices);
+		this._memstore = new HashMap<K, ArrayList<V>>(hash_indices);
 	}
 
 	public KeyValueStore(int hash_indices, Map conf) {
@@ -76,13 +52,11 @@ public class KeyValueStore<K, V> extends BasicStore {
 
 	protected ArrayList<V> __access(boolean checkStorage, Object... data) {
 		final K key = (K) data[0];
-		final HashEntry<K, V> entry = this._memstore.get(key);
-		final boolean inMem = (entry != null);
-		final boolean inDisk = false;
-		if (!inMem && !inDisk)
+		ArrayList<V> values= this._memstore.get(key);
+		final boolean inMem = (values != null);
+		if (!inMem)
 			return null;
-		
-		return entry.getValues();
+		return values;
 		
 	}
 
@@ -96,9 +70,8 @@ public class KeyValueStore<K, V> extends BasicStore {
 
 		// First update memory if necessary
 		if (inMem) {
-			final HashEntry<K, V> entry = this._memstore.get(key);
+			values = this._memstore.get(key);
 			//final HashEntry<K, V> entry = _replAlg.get(obj);
-			values = entry.getValues();
 			// Get the index of the old value (if it exists)
 			final int index = values.indexOf(oldValue);
 			if (index != -1)
@@ -210,13 +183,11 @@ public class KeyValueStore<K, V> extends BasicStore {
 			 */
 			values = new ArrayList<V>();
 			values.add(value);
-			// Create the new hash entry
-			final HashEntry<K, V> entry = new HashEntry<K, V>(key, values);
 			// Create a new lrunode and add to it the hashentry
-			this._memstore.put(key, entry);
+			this._memstore.put(key, values);
 		} else {
-			final HashEntry<K, V> entry = this._memstore.get(key);
-			entry.getValues().add(value);
+			values = this._memstore.get(key);
+			values.add(value);
 		}
 	}
 	
@@ -227,11 +198,10 @@ public class KeyValueStore<K, V> extends BasicStore {
 		for (final Iterator<K> it = keys.iterator(); it.hasNext();) {
 			final K key = it.next();
 			// Check memory
-			final HashEntry<K, V> entry = this._memstore.get(key);
-			if (entry != null) {
-				stream.print(entry.getKey());
+			values = this._memstore.get(key);
+			if (values != null) {
+				stream.print(key);
 				stream.print(" = ");
-				values = entry.getValues();
 				for (final V v : values)
 					if (this._tc != null)
 						stream.print(_tc.toString(v));
@@ -242,16 +212,15 @@ public class KeyValueStore<K, V> extends BasicStore {
 		}
 	}
 
-	// TODO Specific to Window Semantics: Currently Linear, needs to 
+	// TODO Specific to Window Semantics: Currently Linear in state size, needs to be more efficient
 	public void purgeState(long tillTimeStamp) {
 		ArrayList<V> values;
 		final Set<K> keys = this.keySet();
 		for (final Iterator<K> it = keys.iterator(); it.hasNext();) {
 			final K key = it.next();
 			// Check memory
-			final  HashEntry<K, V> entry = this._memstore.get(key);
-			if (entry != null) {
-				values = entry.getValues();
+			values = this._memstore.get(key);
+			if (values != null) {
 				String value;
 				for (Iterator iterator = values.iterator(); iterator.hasNext();) {
 					V v = (V) iterator.next();
@@ -259,7 +228,6 @@ public class KeyValueStore<K, V> extends BasicStore {
 						value = _tc.toString(v);
 					else
 						value = v.toString();
-
 					final String parts[] = value.split("\\@");
 					final long storedTimestamp = Long.valueOf(new String(
 							parts[0]));
@@ -275,7 +243,6 @@ public class KeyValueStore<K, V> extends BasicStore {
 	@Override
 	public void reset() {
 		this._memstore.clear();
-		//_storageManager.deleteAllFilesRootDir();
 	}
 
 	public void setTypeConversion(TypeConversion tc) {
@@ -286,8 +253,8 @@ public class KeyValueStore<K, V> extends BasicStore {
 		int size = 0;
 		final Object[] x = _memstore.values().toArray();
 		for (int i = 0; i < x.length; i++) {
-			final HashEntry<K, V> entry = (HashEntry<K, V>) x[i];
-			size += entry.getValues().size();
+			final ArrayList<V> entry = (ArrayList<V>) x[i];
+			size += entry.size();
 		}
 		return size;
 	}
