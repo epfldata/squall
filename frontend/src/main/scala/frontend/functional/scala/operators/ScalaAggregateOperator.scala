@@ -13,7 +13,7 @@ import org.apache.log4j.Logger
 import java.util.Arrays.ArrayList
 import ch.epfl.data.plan_runner.conversion.NumericConversion
 import ch.epfl.data.plan_runner.storage.AggregationStorage
-import frontend.functional.scala.Types.SquallType
+import frontend.functional.scala.SquallType
 import java.util.Arrays
 import org.apache.commons.lang.ArrayUtils
 import Numeric.Implicits._

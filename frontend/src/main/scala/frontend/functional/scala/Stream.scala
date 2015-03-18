@@ -1,7 +1,7 @@
 package frontend.functional.scala
 import backtype.storm.tuple._
 import scala.reflect.runtime.universe._
-import frontend.functional.scala.Types._
+import frontend.functional.scala.SquallType._
 import frontend.functional.scala.operators.ScalaAggregateOperator
 import frontend.functional.scala.operators.ScalaAggregateOperator
 import frontend.functional.scala.operators.ScalaMapOperator

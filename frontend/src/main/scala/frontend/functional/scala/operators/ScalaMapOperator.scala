@@ -2,7 +2,7 @@ package frontend.functional.scala.operators
 
 import ch.epfl.data.plan_runner.operators.Operator
 import ch.epfl.data.plan_runner.visitors.OperatorVisitor
-import frontend.functional.scala.Types.SquallType
+import frontend.functional.scala.SquallType
 import scala.collection.JavaConverters._
 
 /**
