@@ -17,6 +17,7 @@ import ch.epfl.data.plan_runner.storage.BasicStore;
 import ch.epfl.data.plan_runner.storage.WindowAggregationStorage;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.visitors.OperatorVisitor;
+import ch.epfl.data.plan_runner.window_semantics.WindowSemanticsManager;
 
 public class AggregateCountOperator implements AggregateOperator<Long> {
 	private static final long serialVersionUID = 1L;
@@ -227,6 +228,7 @@ public class AggregateCountOperator implements AggregateOperator<Long> {
 	@Override
 	public AggregateOperator<Long> SetWindowSemantics(int windowRangeInSeconds,
 			int windowSlideInSeconds) {
+		WindowSemanticsManager._IS_WINDOW_SEMANTICS=true;
 		isWindowSemantics = true;
 		_windowRangeSecs = windowRangeInSeconds;
 		_slideRangeSecs = windowSlideInSeconds;

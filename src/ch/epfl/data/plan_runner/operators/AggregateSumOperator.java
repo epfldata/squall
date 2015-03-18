@@ -8,6 +8,7 @@ import java.util.Map;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
+import ch.epfl.data.plan_runner.components.JoinerComponent;
 import ch.epfl.data.plan_runner.conversion.NumericConversion;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.expressions.Addition;
@@ -18,6 +19,7 @@ import ch.epfl.data.plan_runner.storage.BasicStore;
 import ch.epfl.data.plan_runner.storage.WindowAggregationStorage;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.visitors.OperatorVisitor;
+import ch.epfl.data.plan_runner.window_semantics.WindowSemanticsManager;
 
 public class AggregateSumOperator<T extends Number & Comparable<T>> implements
 		AggregateOperator<T> {
@@ -244,6 +246,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements
 	@Override
 	public AggregateOperator<T> SetWindowSemantics(int windowRangeInSeconds,
 			int windowSlideInSeconds) {
+		WindowSemanticsManager._IS_WINDOW_SEMANTICS=true;
 		isWindowSemantics = true;
 		_windowRangeSecs = windowRangeInSeconds;
 		_slideRangeSecs = windowSlideInSeconds;
