@@ -32,7 +32,7 @@ class ScalaMapOperator[T: SquallType, U: SquallType](fn: T => U) extends Operato
     throw new RuntimeException("printContent for SelectionOperator should never be invoked!");
   }
 
-  def process(tuple: java.util.List[String]): java.util.List[String] = {
+  def process(tuple: java.util.List[String], lineageTimestamp:Long): java.util.List[String] = {
     _numTuplesProcessed += 1;
     val squalTypeInput: SquallType[T] = implicitly[SquallType[T]]
     val squalTypeOutput: SquallType[U] = implicitly[SquallType[U]]

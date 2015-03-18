@@ -1,4 +1,4 @@
-package ch.epfl.data.plan_runner.query_plans.theta;
+ package ch.epfl.data.plan_runner.query_plans.theta;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -229,7 +229,7 @@ public class ThetaTPCH7Plan {
 		final AggregateOperator agg = new AggregateSumOperator(
 				new ColumnReference(_doubleConv, 4), conf)
 				.setGroupByColumns(new ArrayList<Integer>(Arrays
-						.asList(2, 0, 3)));
+						.asList(2, 0, 3))).SetWindowSemantics(10);
 
 		final ColumnReference colN_C_O = new ColumnReference(_ic, 1);
 		final ColumnReference colL_S_N = new ColumnReference(_ic, 3);

@@ -192,7 +192,7 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter,
 				_semAgg.acquire();
 			} catch (final InterruptedException ex) {
 			}
-		tuple = _operatorChain.process(tuple);
+		tuple = _operatorChain.process(tuple,0);
 		if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
 			_semAgg.release();
 

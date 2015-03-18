@@ -64,7 +64,7 @@ public class ProjectOperator implements Operator {
 	}
 
 	@Override
-	public List<String> process(List<String> tuple) {
+	public List<String> process(List<String> tuple, long lineageTimestamp) {
 		_numTuplesProcessed++;
 		final List<String> projection = new ArrayList<String>();
 		for (final ValueExpression ve : _veList) {

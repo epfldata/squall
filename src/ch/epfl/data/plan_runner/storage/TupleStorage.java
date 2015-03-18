@@ -203,7 +203,7 @@ public class TupleStorage implements Serializable {
 	 * Purge stale state
 	 */
 	public void purgeState(long tillTimeStamp, List<Index> indexes,
-			Predicate joinPredicate, Map conf) {
+			Predicate joinPredicate, Map conf, boolean isFirstRelations) {
 		// TODO This is linear now, needs to be optimized by indexing
 		DateFormat convDateFormat = new SimpleDateFormat(
 				"EEE MMM d HH:mm:ss zzz yyyy");
@@ -232,7 +232,7 @@ public class TupleStorage implements Serializable {
 				it.remove();
 				// Cleaning up indexes
 				final PredicateUpdateIndexesVisitor visitor = new PredicateUpdateIndexesVisitor(
-						true, MyUtilities.stringToTuple(tupleString, conf));
+						isFirstRelations, MyUtilities.stringToTuple(tupleString, conf));
 				joinPredicate.accept(visitor);
 				final List<String> valuesToIndex = new ArrayList<String>(
 						visitor._valuesToIndex);

@@ -236,7 +236,7 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 				_semAgg.acquire();
 			} catch (final InterruptedException ex) {
 			}
-		tuple = _operatorChain.process(tuple);
+		tuple = _operatorChain.process(tuple,lineageTimestamp);
 		if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
 			_semAgg.release();
 		if (tuple == null)

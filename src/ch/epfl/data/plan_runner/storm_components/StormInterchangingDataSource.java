@@ -145,9 +145,9 @@ public class StormInterchangingDataSource extends BaseRichSpout implements
 			} catch (final InterruptedException ex) {
 			}
 		if (RelIndex == 1)
-			tuple = _operatorChainRel1.process(tuple);
+			tuple = _operatorChainRel1.process(tuple,0);
 		else
-			tuple = _operatorChainRel2.process(tuple);
+			tuple = _operatorChainRel2.process(tuple,0);
 
 		if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
 			_semAgg.release();

@@ -61,6 +61,7 @@ public abstract class BasicStore<R> implements Serializable {
 		//	_storageManager.write(_objRemId, remObj);
 		//}
 	}
+	
 
 	/* Functions to be implemented by all stores */
 	public abstract void onInsert(Object... data);
@@ -73,4 +74,7 @@ public abstract class BasicStore<R> implements Serializable {
 	public abstract void reset();
 
 	public abstract R update(Object... data);
+	
+	public abstract void setSingleEntry(boolean singleEntry) ;
+	
 }

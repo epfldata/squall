@@ -57,7 +57,7 @@ public class SampleOperator implements Operator {
 	}
 
 	@Override
-	public List<String> process(List<String> tuple) {
+	public List<String> process(List<String> tuple, long lineageTimestamp) {
 		_numTuplesProcessed++;
 		if (_rnd.nextDouble() < _sampleRate) {
 			return tuple;

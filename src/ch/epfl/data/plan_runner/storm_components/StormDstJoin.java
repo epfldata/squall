@@ -162,7 +162,7 @@ public class StormDstJoin extends StormBoltComponent {
 			} catch (final InterruptedException ex) {
 			}
 
-		tuple = _operatorChain.process(tuple);
+		tuple = _operatorChain.process(tuple,0);
 
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			_semAgg.release();
@@ -376,7 +376,7 @@ public class StormDstJoin extends StormBoltComponent {
 
 				if (projPreAgg != null)
 					// preaggregation
-					outputTuple = projPreAgg.process(outputTuple);
+					outputTuple = projPreAgg.process(outputTuple,0);
 				applyOperatorsAndSend(stormTupleRcv, outputTuple,
 						lineageTimestamp, isLastInBatch);
 			}

@@ -15,6 +15,7 @@ import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.expressions.ValueSpecification;
 import ch.epfl.data.plan_runner.storage.AggregationStorage;
 import ch.epfl.data.plan_runner.storage.BasicStore;
+import ch.epfl.data.plan_runner.storage.WindowAggregationStorage;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.visitors.OperatorVisitor;
 
@@ -36,9 +37,15 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements
 
 	private final NumericConversion _wrapper;
 	private final ValueExpression<T> _ve;
-	private final AggregationStorage<T> _storage;
+	private BasicStore<T> _storage;
 
 	private final Map _map;
+	
+	private boolean isWindowSemantics;
+	private int _windowRangeSecs=-1; 
+	private int _slideRangeSecs=-1;
+	
+	
 
 	public AggregateSumOperator(ValueExpression<T> ve, Map map) {
 		_wrapper = (NumericConversion) ve.getType();
@@ -46,6 +53,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements
 		_map = map;
 		_storage = new AggregationStorage<T>(this, _wrapper, _map, true);
 	}
+		
 
 	@Override
 	public void accept(OperatorVisitor ov) {
@@ -137,10 +145,10 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements
 
 	// from Operator
 	@Override
-	public List<String> process(List<String> tuple) {
+	public List<String> process(List<String> tuple, long lineageTimestamp) {
 		_numTuplesProcessed++;
 		if (_distinct != null) {
-			tuple = _distinct.process(tuple);
+			tuple = _distinct.process(tuple,lineageTimestamp);
 			if (tuple == null)
 				return null;
 		}
@@ -151,13 +159,13 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements
 		else
 			tupleHash = MyUtilities.createHashString(tuple, _groupByColumns,
 					_map);
-		final T value = _storage.update(tuple, tupleHash);
-		final String strValue = _wrapper.toString(value);
+		final T value = _storage.update(tuple, tupleHash,lineageTimestamp);
+		//final String strValue = _wrapper.toString(value);
 
 		// propagate further the affected tupleHash-tupleValue pair
 		final List<String> affectedTuple = new ArrayList<String>();
-		affectedTuple.add(tupleHash);
-		affectedTuple.add(strValue);
+		//affectedTuple.add(tupleHash);
+		//affectedTuple.add(strValue);
 
 		return affectedTuple;
 	}
@@ -235,5 +243,33 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements
 			sb.append("\n  It also has distinct ").append(_distinct.toString());
 		return sb.toString();
 	}
+
+
+	@Override
+	public AggregateOperator<T> SetWindowSemantics(int windowRangeInSeconds,
+			int windowSlideInSeconds) {
+		isWindowSemantics=true;
+		_windowRangeSecs=windowRangeInSeconds; 
+		_slideRangeSecs=windowSlideInSeconds;
+		_storage = new WindowAggregationStorage<>(this, _wrapper, _map, true, _windowRangeSecs, _slideRangeSecs);
+		if(_groupByColumns!=null || _groupByProjection!=null)
+			_storage.setSingleEntry(false);
+		return this;
+	}
+	
+	@Override
+	public AggregateOperator<T> SetWindowSemantics(int windowRangeInSeconds) {
+		return SetWindowSemantics(windowRangeInSeconds, windowRangeInSeconds);
+	}
+
+	@Override
+	public int[] getWindowSemanticsInfo() {
+		int[] res= new int[2];
+		res[0]=_windowRangeSecs; res[1]=_slideRangeSecs;
+		return res;
+	}
+
+
+	
 
 }

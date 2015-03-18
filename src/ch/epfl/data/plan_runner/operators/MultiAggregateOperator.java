@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 
+import com.sleepycat.je.utilint.Pair;
+
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.storage.BasicStore;
 import ch.epfl.data.plan_runner.visitors.OperatorVisitor;
@@ -120,13 +122,13 @@ public class MultiAggregateOperator implements AggregateOperator {
 	}
 
 	@Override
-	public List<String> process(List<String> tuple) {
+	public List<String> process(List<String> tuple, long lineageTimestamp) {
 		// this will work only if they have the same groupBy
 		// otherwise the result of process is not important at all
 		final List<String> result = new ArrayList<String>();
 		int i = 0;
 		for (final AggregateOperator agg : _opList) {
-			final List<String> current = agg.process(tuple);
+			final List<String> current = agg.process(tuple, lineageTimestamp);
 			if (i == 0)
 				result.addAll(current);
 			else {
@@ -177,5 +179,21 @@ public class MultiAggregateOperator implements AggregateOperator {
 	public AggregateOperator setGroupByProjection(ProjectOperator projection) {
 		throw new UnsupportedOperationException(
 				"You are not supposed to call this method from MultiAggregateOperator.");
+	}
+
+	@Override
+	public AggregateOperator SetWindowSemantics(int windowRangeInSeconds,
+			int windowSlideInSeconds) {
+		throw new RuntimeException("Not implemented yet");
+	}
+
+	@Override
+	public int[] getWindowSemanticsInfo() {
+		throw new RuntimeException("Not implemented yet");
+	}
+
+	@Override
+	public AggregateOperator SetWindowSemantics(int windowRangeInSeconds) {
+		throw new RuntimeException("Not implemented yet");
 	}
 }

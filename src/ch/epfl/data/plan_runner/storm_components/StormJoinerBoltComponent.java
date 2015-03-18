@@ -115,12 +115,19 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 
 	protected void applyOperatorsAndSend(Tuple stormTupleRcv,
 			List<String> tuple, long lineageTimestamp, boolean isLastInBatch) {
+		//long timestamp = 0;
+		//if (MyUtilities.isWindowTimestampMode(getConf()))
+			//if (getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
+				// A tuple has a non-null timestamp only if the component is
+				// next to last
+				// because we measure the latency of the last operator
+			//	timestamp = System.currentTimeMillis();
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			try {
 				_semAgg.acquire();
 			} catch (final InterruptedException ex) {
 			}
-		tuple = _operatorChain.process(tuple);
+		tuple = _operatorChain.process(tuple,lineageTimestamp);
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			_semAgg.release();
 		if (tuple == null)
@@ -150,17 +157,11 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 		// account all the tuples in the batch
 		if (MyUtilities
 				.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
-			long timestamp = 0;
-			if (MyUtilities.isCustomTimestampMode(getConf()))
-				if (getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
-					// A tuple has a non-null timestamp only if the component is
-					// next to last
-					// because we measure the latency of the last operator
-					timestamp = System.currentTimeMillis();
+			
 			// TODO Window Semantics
 			if (!WindowSemanticsManager.sendTupleIfSlidingWindowSemantics(this,
 					tuple, stormTupleRcv, lineageTimestamp))
-				tupleSend(tuple, stormTupleRcv, timestamp);
+				tupleSend(tuple, stormTupleRcv, lineageTimestamp);
 		}
 		if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
 			printTupleLatency(_numSentTuples - 1, lineageTimestamp);

@@ -106,13 +106,15 @@ public class StormDataSource extends StormSpoutComponent {
 	}
 
 	protected void applyOperatorsAndSend(List<String> tuple) {
-		// do selection and projection
+		long timestamp = 0;
+		if (  (MyUtilities.isCustomTimestampMode(getConf()) && getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT) || MyUtilities.isWindowTimestampMode(getConf()) )
+				timestamp = System.currentTimeMillis();
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			try {
 				_semAgg.acquire();
 			} catch (final InterruptedException ex) {
 			}
-		tuple = _operatorChain.process(tuple);
+		tuple = _operatorChain.process(tuple,timestamp);
 
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			_semAgg.release();
@@ -126,18 +128,9 @@ public class StormDataSource extends StormSpoutComponent {
 
 		if (MyUtilities
 				.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
-			long timestamp = 0;
-			if (MyUtilities.isCustomTimestampMode(getConf()))
-				if (getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
-					// A tuple has a non-null timestamp only if the component is
-					// next to last
-					// because we measure the latency of the last operator
-					timestamp = System.currentTimeMillis();
 			tupleSend(tuple, null, timestamp);
 		}
 		if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
-			final long timestamp = System.currentTimeMillis();
-			// long timestamp = System.nanoTime();
 			printTupleLatency(_numSentTuples - 1, timestamp);
 		}
 	}

@@ -14,6 +14,7 @@ import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.storage.AggregationStorage;
 import ch.epfl.data.plan_runner.storage.BasicStore;
+import ch.epfl.data.plan_runner.storage.WindowAggregationStorage;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.visitors.OperatorVisitor;
 
@@ -33,16 +34,20 @@ public class AggregateCountOperator implements AggregateOperator<Long> {
 	private int _numTuplesProcessed = 0;
 
 	private final NumericConversion<Long> _wrapper = new LongConversion();
-	private final AggregationStorage<Long> _storage;
+	private BasicStore<Long> _storage;
 
 	private final Map _map;
+	
+	private boolean isWindowSemantics;
+	private int _windowRangeSecs=-1; 
+	private int _slideRangeSecs=-1;
+	
 
 	public AggregateCountOperator(Map map) {
 		_map = map;
-
 		_storage = new AggregationStorage<Long>(this, _wrapper, _map, true);
 	}
-
+	
 	@Override
 	public void accept(OperatorVisitor ov) {
 		ov.visit(this);
@@ -131,10 +136,10 @@ public class AggregateCountOperator implements AggregateOperator<Long> {
 
 	// from Operator
 	@Override
-	public List<String> process(List<String> tuple) {
+	public List<String> process(List<String> tuple, long lineageTimestamp) {
 		_numTuplesProcessed++;
 		if (_distinct != null) {
-			tuple = _distinct.process(tuple);
+			tuple = _distinct.process(tuple,lineageTimestamp);
 			if (tuple == null)
 				return null;
 		}
@@ -150,8 +155,8 @@ public class AggregateCountOperator implements AggregateOperator<Long> {
 
 		// propagate further the affected tupleHash-tupleValue pair
 		final List<String> affectedTuple = new ArrayList<String>();
-		affectedTuple.add(tupleHash);
-		affectedTuple.add(strValue);
+		//affectedTuple.add(tupleHash);
+		//affectedTuple.add(strValue);
 
 		return affectedTuple;
 	}
@@ -219,5 +224,31 @@ public class AggregateCountOperator implements AggregateOperator<Long> {
 			sb.append("\n  It also has distinct ").append(_distinct.toString());
 		return sb.toString();
 	}
+
+	@Override
+	public AggregateOperator<Long> SetWindowSemantics(int windowRangeInSeconds,
+			int windowSlideInSeconds) {
+		isWindowSemantics=true;
+		_windowRangeSecs=windowRangeInSeconds; 
+		_slideRangeSecs=windowSlideInSeconds;
+		_storage = new WindowAggregationStorage<>(this, _wrapper, _map, true, _windowRangeSecs, _slideRangeSecs);
+		if(_groupByColumns!=null || _groupByProjection!=null)
+			_storage.setSingleEntry(false);
+		return this;
+	}
+	
+	@Override
+	public AggregateOperator<Long> SetWindowSemantics(int windowRangeInSeconds) {
+		return SetWindowSemantics(windowRangeInSeconds, windowRangeInSeconds);
+	}
+	
+	@Override
+	public int[] getWindowSemanticsInfo() {
+		int[] res= new int[2];
+		res[0]=_windowRangeSecs; res[1]=_slideRangeSecs;
+		return res;
+	}
+
+	
 
 }

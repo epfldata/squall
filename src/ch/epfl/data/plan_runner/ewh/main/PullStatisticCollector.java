@@ -147,7 +147,7 @@ public class PullStatisticCollector {
 		List<String> tuple = null;
 		while (tuple == null && (line = readLine(reader)) != null) {
 			tuple = MyUtilities.fileLineToTuple(line, map);
-			tuple = operators.process(tuple);
+			tuple = operators.process(tuple,-1);
 		}
 		return tuple;
 	}

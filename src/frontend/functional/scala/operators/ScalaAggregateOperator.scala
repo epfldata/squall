@@ -22,6 +22,7 @@ import ch.epfl.data.plan_runner.utilities.MyUtilities
 import java.util.Arrays.ArrayList
 import java.util.ArrayList
 import java.util.Arrays.ArrayList
+import ch.epfl.data.plan_runner.storage._
 
 class ScalaAggregateOperator[T: SquallType, A: Numeric](_agg: T => A, _map: java.util.Map[_, _]) extends AggregateOperator[A] {
 
@@ -38,7 +39,12 @@ class ScalaAggregateOperator[T: SquallType, A: Numeric](_agg: T => A, _map: java
   var _groupByColumns = new java.util.ArrayList[Integer]()
   var _groupByProjection: ProjectOperator = null
   var _numTuplesProcessed = 0
-  val _storage: AggregationStorage[A] = new ScalaAggregationStorage[A](this, _map, true)
+  var _storage: ScalaAggregationStorage[A] = new ScalaAggregationStorage[A](this, _map, true)
+  
+  var _isWindowSemantics:Boolean=false;
+  var _windowRangeSecs = -1 
+  var _slideRangeSecs = -1
+  
 
   override def accept(ov: OperatorVisitor): Unit = {
     ov.visit(this)
@@ -111,11 +117,11 @@ class ScalaAggregateOperator[T: SquallType, A: Numeric](_agg: T => A, _map: java
     _storage.getContent();
   }
 
-  override def process(tupleList: java.util.List[String]): java.util.List[String] = {
+  override def process(tupleList: java.util.List[String], lineageTimestamp:Long): java.util.List[String] = {
     _numTuplesProcessed += 1;
     val refinedTuple =
       if (_distinct != null) {
-        val refinedTuple = _distinct.process(tupleList);
+        val refinedTuple = _distinct.process(tupleList, lineageTimestamp);
         if (refinedTuple == null)
           return null;
         refinedTuple
@@ -132,8 +138,8 @@ class ScalaAggregateOperator[T: SquallType, A: Numeric](_agg: T => A, _map: java
 
     // propagate further the affected tupleHash-tupleValue pair
     val affectedTuple: java.util.List[String] = new ArrayList[String]();
-    affectedTuple.add(tupleHash);
-    affectedTuple.add(strValue);
+    //affectedTuple.add(tupleHash);
+    //affectedTuple.add(strValue);
 
     return affectedTuple;
 
@@ -200,6 +206,28 @@ class ScalaAggregateOperator[T: SquallType, A: Numeric](_agg: T => A, _map: java
     if (_distinct != null)
       sb.append("\n  It also has distinct ").append(_distinct.toString());
     return sb.toString();
+  }
+  
+  def SetWindowSemantics(windowRangeInSeconds: Int, windowSlideInSeconds: Int): AggregateOperator[A] = {
+    _isWindowSemantics=true;
+    _windowRangeSecs=windowRangeInSeconds; 
+    _slideRangeSecs=windowSlideInSeconds;
+//    _storage = new WindowAggregationStorage[A](this, null, _map, true, _windowRangeSecs, _slideRangeSecs);
+    if(_groupByColumns!=null || _groupByProjection!=null)
+      _storage.setSingleEntry(false);
+    return this;
+  }
+  
+  @Override
+  def SetWindowSemantics(windowRangeInSeconds:Int):AggregateOperator[A] = {
+    SetWindowSemantics(windowRangeInSeconds, windowRangeInSeconds);
+  }
+
+ 
+  
+  def getWindowSemanticsInfo(): Array[Int] = {
+    val res= Array(_windowRangeSecs,_slideRangeSecs);
+    return res;
   }
 
 }

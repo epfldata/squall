@@ -98,12 +98,16 @@ public class StormOperator extends StormBoltComponent {
 
 	protected void applyOperatorsAndSend(Tuple stormTupleRcv,
 			List<String> tuple, boolean isLastInBatch) {
+		long timestamp = 0;
+		if (MyUtilities.isCustomTimestampMode(getConf()) || MyUtilities.isWindowTimestampMode(getConf()))
+			timestamp = stormTupleRcv
+					.getLongByField(StormComponent.TIMESTAMP);
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			try {
 				_semAgg.acquire();
 			} catch (final InterruptedException ex) {
 			}
-		tuple = _operatorChain.process(tuple);
+		tuple = _operatorChain.process(tuple,timestamp);
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			_semAgg.release();
 
@@ -117,14 +121,9 @@ public class StormOperator extends StormBoltComponent {
 		if (MyUtilities
 				.isSending(getHierarchyPosition(), _aggBatchOutputMillis)
 				|| MyUtilities.isWindowTimestampMode(getConf())) {
-			long timestamp = 0;
-			if (MyUtilities.isCustomTimestampMode(getConf()))
-				timestamp = stormTupleRcv
-						.getLongByField(StormComponent.TIMESTAMP);
 			tupleSend(tuple, stormTupleRcv, timestamp);
 		}
 		if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
-			long timestamp;
 			if (MyUtilities.isManualBatchingMode(getConf())) {
 				if (isLastInBatch) {
 					timestamp = stormTupleRcv

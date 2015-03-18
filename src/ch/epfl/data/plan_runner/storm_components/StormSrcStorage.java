@@ -126,7 +126,7 @@ public class StormSrcStorage extends StormBoltComponent {
 				_semAgg.acquire();
 			} catch (final InterruptedException ex) {
 			}
-		tuple = _operatorChain.process(tuple);
+		tuple = _operatorChain.process(tuple,0);
 		if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
 			_semAgg.release();
 
@@ -211,7 +211,7 @@ public class StormSrcStorage extends StormBoltComponent {
 								secondTuple);
 
 					if (_preAggProj != null)
-						outputTuple = _preAggProj.process(outputTuple);
+						outputTuple = _preAggProj.process(outputTuple,0);
 
 					applyOperatorsAndSend(stormTupleRcv, outputTuple);
 				}

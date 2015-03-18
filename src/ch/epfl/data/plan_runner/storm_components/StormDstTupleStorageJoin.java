@@ -159,10 +159,10 @@ public class StormDstTupleStorageJoin extends StormJoinerBoltComponent {
 	public void purgeStaleStateFromWindow() {
 		_firstRelationStorage.purgeState(
 				_latestTimeStamp - _GC_PeriodicTickSec, _firstRelationIndexes,
-				_joinPredicate, getConf());
+				_joinPredicate, getConf(), true);
 		_secondRelationStorage.purgeState(_latestTimeStamp
 				- _GC_PeriodicTickSec, _secondRelationIndexes, _joinPredicate,
-				getConf());
+				getConf(), false);
 		System.gc();
 	}
 }

@@ -264,4 +264,9 @@ public class KeyValueStore<K, V> extends BasicStore {
 		return __update(true, data);
 	}
 
+	@Override
+	public void setSingleEntry(boolean singleEntry) {
+		
+	}
+
 }
