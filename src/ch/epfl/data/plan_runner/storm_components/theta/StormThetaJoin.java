@@ -9,6 +9,7 @@ import backtype.storm.topology.InputDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Tuple;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
+import ch.epfl.data.plan_runner.components.JoinerComponent;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.predicates.Predicate;
 import ch.epfl.data.plan_runner.storage.TupleStorage;
@@ -179,10 +180,10 @@ public class StormThetaJoin extends StormJoinerBoltComponent {
 	@Override
 	public void purgeStaleStateFromWindow() {
 		_firstRelationStorage.purgeState(
-				_latestTimeStamp - _GC_PeriodicTickSec, _firstRelationIndexes,
+				_latestTimeStamp - WindowSemanticsManager._GC_PERIODIC_TICK, _firstRelationIndexes,
 				_joinPredicate, getConf(), true);
 		_secondRelationStorage.purgeState(_latestTimeStamp
-				- _GC_PeriodicTickSec, _secondRelationIndexes, _joinPredicate,
+				- WindowSemanticsManager._GC_PERIODIC_TICK, _secondRelationIndexes, _joinPredicate,
 				getConf(),false);
 		System.gc();
 	}

@@ -12,6 +12,7 @@ import backtype.storm.topology.InputDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Tuple;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
+import ch.epfl.data.plan_runner.components.JoinerComponent;
 import ch.epfl.data.plan_runner.predicates.Predicate;
 import ch.epfl.data.plan_runner.storage.BPlusTreeStorage;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
@@ -35,7 +36,7 @@ public class StormDstTupleStorageBDB extends StormJoinerBoltComponent {
 			TopologyKiller killer, Config conf) {
 		super(firstEmitter, secondEmitter, cp, allCompNames, joinPredicate,
 				hierarchyPosition, builder, killer, conf);
-		System.out.println("INITIAL TIME IS :" + INITIAL_TUMBLING_TIMESTAMP);
+		System.out.println("INITIAL TIME IS :" + WindowSemanticsManager.INITIAL_TUMBLING_TIMESTAMP);
 		_fullHashList = cp.getFullHashList();
 		_statsUtils = new StatisticsUtilities(getConf(), LOG);
 		final int parallelism = SystemParameters.getInt(getConf(), getID()
@@ -171,10 +172,10 @@ public class StormDstTupleStorageBDB extends StormJoinerBoltComponent {
 		// TODO WINDOW Semantics
 		long first = _firstRelationStorage.size();
 		_firstRelationStorage
-				.purgeState(_latestTimeStamp - _GC_PeriodicTickSec);
+				.purgeState(_latestTimeStamp - WindowSemanticsManager._GC_PERIODIC_TICK);
 		long firstafter = _firstRelationStorage.size();
 		_secondRelationStorage.purgeState(_latestTimeStamp
-				- _GC_PeriodicTickSec);
+				- WindowSemanticsManager._GC_PERIODIC_TICK);
 		LOG.info("Calling purge state t first size was: " + first
 				+ " then it is " + firstafter);
 		System.gc();

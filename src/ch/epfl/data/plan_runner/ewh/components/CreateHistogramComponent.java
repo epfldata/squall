@@ -218,4 +218,5 @@ public class CreateHistogramComponent implements Component {
 			AggregationStorage secondPreAggStorage) {
 		throw new RuntimeException("Should not be here!");
 	}
+
 }

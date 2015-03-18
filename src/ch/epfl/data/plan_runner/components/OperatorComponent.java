@@ -215,5 +215,4 @@ public class OperatorComponent implements Component {
 		_printOut = printOut;
 		return this;
 	}
-
 }

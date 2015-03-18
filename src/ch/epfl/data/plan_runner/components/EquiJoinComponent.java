@@ -26,8 +26,9 @@ import ch.epfl.data.plan_runner.storm_components.StormDstTupleStorageJoin;
 import ch.epfl.data.plan_runner.storm_components.StormEmitter;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
+import ch.epfl.data.plan_runner.window_semantics.WindowSemanticsManager;
 
-public class EquiJoinComponent implements Component {
+public class EquiJoinComponent extends JoinerComponent implements Component {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(EquiJoinComponent.class);
 
@@ -294,6 +295,20 @@ public class EquiJoinComponent implements Component {
 	public EquiJoinComponent setSecondPreAggStorage(
 			AggregationStorage secondPreAggStorage) {
 		_secondStorage = secondPreAggStorage;
+		return this;
+	}
+
+	@Override
+	public Component setSlidingWindow(int windowRange) {
+		WindowSemanticsManager._IS_WINDOW_SEMANTICS=true;
+		_windowSize = windowRange*1000; // Width in terms of millis, Default is -1 which is full history
+		return this;
+	}
+
+	@Override
+	public Component setTumblingWindow(int windowRange) {
+		WindowSemanticsManager._IS_WINDOW_SEMANTICS=true;
+		_tumblingWindowSize= windowRange*1000 ;//For tumbling semantics
 		return this;
 	}
 

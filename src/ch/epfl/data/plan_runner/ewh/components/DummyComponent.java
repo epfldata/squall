@@ -217,5 +217,4 @@ public class DummyComponent implements Component {
 		_printOut = printOut;
 		return this;
 	}
-
 }

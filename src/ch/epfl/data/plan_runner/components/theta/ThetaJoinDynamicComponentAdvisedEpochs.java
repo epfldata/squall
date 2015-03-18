@@ -20,6 +20,7 @@ import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
+import ch.epfl.data.plan_runner.components.JoinerComponent;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
@@ -36,8 +37,9 @@ import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 import ch.epfl.data.plan_runner.utilities.thetajoin_dynamic.ThetaDataMigrationJoinerToReshufflerMapping;
 import ch.epfl.data.plan_runner.utilities.thetajoin_dynamic.ThetaJoinDynamicMapping;
+import ch.epfl.data.plan_runner.window_semantics.WindowSemanticsManager;
 
-public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
+public class ThetaJoinDynamicComponentAdvisedEpochs extends JoinerComponent implements Component {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger
 			.getLogger(ThetaJoinDynamicComponentAdvisedEpochs.class);
@@ -328,6 +330,21 @@ public class ThetaJoinDynamicComponentAdvisedEpochs implements Component {
 		_printOutSet = true;
 		_printOut = printOut;
 		return this;
+	}
+
+	@Override
+	public Component setSlidingWindow(int windowRange) {
+		WindowSemanticsManager._IS_WINDOW_SEMANTICS=true;
+		_windowSize = windowRange*1000; // Width in terms of millis, Default is -1 which is full history
+		
+		return this;
+	}
+
+	@Override
+	public Component setTumblingWindow(int windowRange) {
+		WindowSemanticsManager._IS_WINDOW_SEMANTICS=true;
+		_tumblingWindowSize= windowRange*1000 ;//For tumbling semantics
+		return null;
 	}
 
 }

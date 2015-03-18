@@ -69,6 +69,7 @@ import ch.epfl.data.plan_runner.thetajoin.matrix_mapping.MatrixAssignment;
 import ch.epfl.data.plan_runner.utilities.SystemParameters.HistogramType;
 import ch.epfl.data.plan_runner.utilities.thetajoin_static.ContentSensitiveThetaJoinStaticMapping;
 import ch.epfl.data.plan_runner.utilities.thetajoin_static.ThetaJoinStaticMapping;
+import ch.epfl.data.plan_runner.window_semantics.WindowSemanticsManager;
 
 public class MyUtilities {
 	public static QueryBuilder addEWHSampler(Component firstParent,
@@ -1445,8 +1446,7 @@ public class MyUtilities {
 	}
 
 	public static boolean isWindowTimestampMode(Map map) {
-		return (SystemParameters.doesExist(map, "WINDOW_SIZE_SECS") || SystemParameters
-				.doesExist(map, "WINDOW_TUMBLING_SIZE_SECS"));
+		return (WindowSemanticsManager._IS_WINDOW_SEMANTICS);
 	}
 
 	public static List<String> listFilesForPath(String dir) {

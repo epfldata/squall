@@ -11,6 +11,7 @@ import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
+import ch.epfl.data.plan_runner.components.JoinerComponent;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
@@ -23,8 +24,9 @@ import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.plan_runner.storm_components.theta.StormThetaJoin;
 import ch.epfl.data.plan_runner.storm_components.theta.StormThetaJoinBDB;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
+import ch.epfl.data.plan_runner.window_semantics.WindowSemanticsManager;
 
-public class ThetaJoinStaticComponent implements Component {
+public class ThetaJoinStaticComponent extends JoinerComponent implements Component {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger
 			.getLogger(ThetaJoinStaticComponent.class);
@@ -171,12 +173,15 @@ public class ThetaJoinStaticComponent implements Component {
 			_joiner = new StormThetaJoinBDB(_firstParent, _secondParent, this,
 					allCompNames, _joinPredicate, hierarchyPosition, builder,
 					killer, conf, _interComp);
+			
 		} else {
 			_joiner = new StormThetaJoin(_firstParent, _secondParent, this,
 					allCompNames, _joinPredicate, _isPartitioner,
 					hierarchyPosition, builder, killer, conf, _interComp,
 					_isContentSensitive, _contentSensitiveThetaJoinWrapper);
 		}
+		if(_windowSize>0 || _tumblingWindowSize>0)
+			_joiner.setWindowSemantics(_windowSize, _tumblingWindowSize);
 	}
 
 	@Override
@@ -244,6 +249,21 @@ public class ThetaJoinStaticComponent implements Component {
 	public ThetaJoinStaticComponent setPrintOut(boolean printOut) {
 		_printOutSet = true;
 		_printOut = printOut;
+		return this;
+	}
+
+	@Override
+	public Component setSlidingWindow(int windowRange) {
+		WindowSemanticsManager._IS_WINDOW_SEMANTICS=true;
+		_windowSize = windowRange*1000; // Width in terms of millis, Default is -1 which is full history
+		
+		return this;
+	}
+
+	@Override
+	public Component setTumblingWindow(int windowRange) {
+		WindowSemanticsManager._IS_WINDOW_SEMANTICS=true;
+		_tumblingWindowSize= windowRange*1000 ;//For tumbling semantics
 		return this;
 	}
 

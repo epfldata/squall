@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
+import ch.epfl.data.plan_runner.components.JoinerComponent;
 import ch.epfl.data.plan_runner.components.theta.ThetaJoinComponentFactory;
 import ch.epfl.data.plan_runner.conversion.DateConversion;
 import ch.epfl.data.plan_runner.conversion.DoubleConversion;
@@ -93,7 +94,7 @@ public class ThetaTPCH7Plan {
 
 		Component N_Cjoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationNation2,
-						relationCustomer, _queryBuilder)
+						relationCustomer, _queryBuilder).setTumblingWindow(50)
 				.add(new ProjectOperator(new int[] { 0, 2 }))
 				.setJoinPredicate(N_C_comp);
 
@@ -118,7 +119,7 @@ public class ThetaTPCH7Plan {
 
 		Component N_C_Ojoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, N_Cjoin,
-						relationOrders, _queryBuilder)
+						relationOrders, _queryBuilder).setTumblingWindow(50)
 				.add(new ProjectOperator(new int[] { 0, 2 }))
 				.setJoinPredicate(N_C_O_comp);
 
@@ -157,6 +158,7 @@ public class ThetaTPCH7Plan {
 		Component S_Njoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationSupplier,
 						relationNation1, _queryBuilder)
+						.setTumblingWindow(50)
 				.add(new ProjectOperator(new int[] { 0, 2 }))
 				.setJoinPredicate(S_N_comp);
 
@@ -202,7 +204,7 @@ public class ThetaTPCH7Plan {
 
 		Component L_S_Njoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationLineitem,
-						S_Njoin, _queryBuilder)
+						S_Njoin, _queryBuilder).setTumblingWindow(50)
 				.add(new ProjectOperator(new int[] { 5, 0, 1, 3 }))
 				.setJoinPredicate(L_S_N_comp);
 
@@ -229,7 +231,7 @@ public class ThetaTPCH7Plan {
 		final AggregateOperator agg = new AggregateSumOperator(
 				new ColumnReference(_doubleConv, 4), conf)
 				.setGroupByColumns(new ArrayList<Integer>(Arrays
-						.asList(2, 0, 3))).SetWindowSemantics(10);
+						.asList(2, 0, 3))).SetWindowSemantics(5);
 
 		final ColumnReference colN_C_O = new ColumnReference(_ic, 1);
 		final ColumnReference colL_S_N = new ColumnReference(_ic, 3);
@@ -238,7 +240,7 @@ public class ThetaTPCH7Plan {
 
 		Component lastJoiner = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, N_C_Ojoin, L_S_Njoin,
-						_queryBuilder).add(so).add(agg)
+						_queryBuilder).setTumblingWindow(50).add(so).add(agg)
 				.setJoinPredicate(N_C_O_L_S_N_comp);
 		// lastJoiner.setPrintOut(false);
 	}
