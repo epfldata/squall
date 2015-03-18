@@ -6,11 +6,11 @@ import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.operators.AggregateCountOperator;
 import ch.epfl.data.plan_runner.operators.ProjectOperator;
 
-public class HyracksPlan {
+public class HyracksPlan implements QueryPlan {
 
 	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
-	public HyracksPlan(Map conf) {
+	public HyracksPlan(String dataPath, String extension, Map conf) {
 		// -------------------------------------------------------------------------------------
 		Component relationCustomer = _queryBuilder
 				.createDataSource("customer", conf)
@@ -27,7 +27,7 @@ public class HyracksPlan {
 		// -------------------------------------------------------------------------------------
 	}
 
-	public QueryBuilder getQueryBuilder() {
+	public QueryBuilder getQueryPlan() {
 		return _queryBuilder;
 	}
 }
