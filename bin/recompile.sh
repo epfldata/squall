@@ -1,8 +1,9 @@
 #!/bin/bash
 
-cd ../deploy
+cd ../
 
 #../bin/lein clean
 #../bin/lein deps
 
-../bin/lein uberjar
+# TODO: use https://github.com/sbt/sbt-onejar to generate a single jar file
+sbt clean package
