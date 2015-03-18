@@ -2,8 +2,6 @@ package ch.epfl.data.plan_runner.operators;
 
 import java.util.List;
 
-import com.sleepycat.je.utilint.Pair;
-
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.storage.BasicStore;
@@ -22,11 +20,12 @@ public interface AggregateOperator<T> extends Operator {
 
 	// internal storage class
 	public BasicStore getStorage();
-	
-	public AggregateOperator<T> SetWindowSemantics(int windowRangeInSeconds, int windowSlideInSeconds);
-	
+
+	public AggregateOperator<T> SetWindowSemantics(int windowRangeInSeconds,
+			int windowSlideInSeconds);
+
 	public AggregateOperator<T> SetWindowSemantics(int windowRangeInSeconds);
-	
+
 	public int[] getWindowSemanticsInfo();
 
 	public TypeConversion getType();

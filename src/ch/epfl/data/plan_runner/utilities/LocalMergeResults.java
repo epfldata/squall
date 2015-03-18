@@ -27,13 +27,15 @@ public class LocalMergeResults {
 			_fileAgg = (AggregateOperator) DeepCopy.copy(_computedAgg);
 			fillAggFromResultFile(map);
 		}
-		 
+
 		if (_computedAgg.getStorage() instanceof AggregationStorage) {
-			AggregationStorage stor = (AggregationStorage) _computedAgg.getStorage();
+			AggregationStorage stor = (AggregationStorage) _computedAgg
+					.getStorage();
 			stor.addContent((AggregationStorage) (lastAgg.getStorage()));
 		}
-		if(_computedAgg.getStorage() instanceof WindowAggregationStorage){
-			WindowAggregationStorage stor = (WindowAggregationStorage) _computedAgg.getStorage();
+		if (_computedAgg.getStorage() instanceof WindowAggregationStorage) {
+			WindowAggregationStorage stor = (WindowAggregationStorage) _computedAgg
+					.getStorage();
 			stor.addContent((WindowAggregationStorage) (lastAgg.getStorage()));
 		}
 	}
@@ -49,16 +51,15 @@ public class LocalMergeResults {
 		else
 			cr = new ColumnReference(wrapper, 0);
 
-		int[] wsMetaData= lastAgg.getWindowSemanticsInfo();
-		
-		if (lastAgg instanceof AggregateAvgOperator){
+		int[] wsMetaData = lastAgg.getWindowSemanticsInfo();
+
+		if (lastAgg instanceof AggregateAvgOperator) {
 			overallAgg = new AggregateAvgOperator(cr, map);
-			if(wsMetaData[0]>0) 
+			if (wsMetaData[0] > 0)
 				overallAgg.SetWindowSemantics(wsMetaData[0], wsMetaData[1]);
-		}
-		else{
+		} else {
 			overallAgg = new AggregateSumOperator(cr, map);
-			if(wsMetaData[0]>0) 
+			if (wsMetaData[0] > 0)
 				overallAgg.SetWindowSemantics(wsMetaData[0], wsMetaData[1]);
 		}
 
@@ -78,7 +79,7 @@ public class LocalMergeResults {
 				// we want to catch exactly one space between and after =.
 				// tuple might consist of spaces as well
 				final List<String> tuple = Arrays.asList(line.split(" = "));
-				_fileAgg.process(tuple,-1);
+				_fileAgg.process(tuple, -1);
 			}
 		} catch (final IOException ex) {
 			// problem with finding the result file

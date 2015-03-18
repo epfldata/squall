@@ -40,11 +40,10 @@ class ScalaAggregateOperator[T: SquallType, A: Numeric](_agg: T => A, _map: java
   var _groupByProjection: ProjectOperator = null
   var _numTuplesProcessed = 0
   var _storage: ScalaAggregationStorage[A] = new ScalaAggregationStorage[A](this, _map, true)
-  
-  var _isWindowSemantics:Boolean=false;
-  var _windowRangeSecs = -1 
+
+  var _isWindowSemantics: Boolean = false;
+  var _windowRangeSecs = -1
   var _slideRangeSecs = -1
-  
 
   override def accept(ov: OperatorVisitor): Unit = {
     ov.visit(this)
@@ -117,7 +116,7 @@ class ScalaAggregateOperator[T: SquallType, A: Numeric](_agg: T => A, _map: java
     _storage.getContent();
   }
 
-  override def process(tupleList: java.util.List[String], lineageTimestamp:Long): java.util.List[String] = {
+  override def process(tupleList: java.util.List[String], lineageTimestamp: Long): java.util.List[String] = {
     _numTuplesProcessed += 1;
     val refinedTuple =
       if (_distinct != null) {
@@ -207,26 +206,24 @@ class ScalaAggregateOperator[T: SquallType, A: Numeric](_agg: T => A, _map: java
       sb.append("\n  It also has distinct ").append(_distinct.toString());
     return sb.toString();
   }
-  
+
   def SetWindowSemantics(windowRangeInSeconds: Int, windowSlideInSeconds: Int): AggregateOperator[A] = {
-    _isWindowSemantics=true;
-    _windowRangeSecs=windowRangeInSeconds; 
-    _slideRangeSecs=windowSlideInSeconds;
-//    _storage = new WindowAggregationStorage[A](this, null, _map, true, _windowRangeSecs, _slideRangeSecs);
-    if(_groupByColumns!=null || _groupByProjection!=null)
+    _isWindowSemantics = true;
+    _windowRangeSecs = windowRangeInSeconds;
+    _slideRangeSecs = windowSlideInSeconds;
+    //    _storage = new WindowAggregationStorage[A](this, null, _map, true, _windowRangeSecs, _slideRangeSecs);
+    if (_groupByColumns != null || _groupByProjection != null)
       _storage.setSingleEntry(false);
     return this;
   }
-  
+
   @Override
-  def SetWindowSemantics(windowRangeInSeconds:Int):AggregateOperator[A] = {
+  def SetWindowSemantics(windowRangeInSeconds: Int): AggregateOperator[A] = {
     SetWindowSemantics(windowRangeInSeconds, windowRangeInSeconds);
   }
 
- 
-  
   def getWindowSemanticsInfo(): Array[Int] = {
-    val res= Array(_windowRangeSecs,_slideRangeSecs);
+    val res = Array(_windowRangeSecs, _slideRangeSecs);
     return res;
   }
 

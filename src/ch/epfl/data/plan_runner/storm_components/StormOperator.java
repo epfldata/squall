@@ -99,15 +99,15 @@ public class StormOperator extends StormBoltComponent {
 	protected void applyOperatorsAndSend(Tuple stormTupleRcv,
 			List<String> tuple, boolean isLastInBatch) {
 		long timestamp = 0;
-		if (MyUtilities.isCustomTimestampMode(getConf()) || MyUtilities.isWindowTimestampMode(getConf()))
-			timestamp = stormTupleRcv
-					.getLongByField(StormComponent.TIMESTAMP);
+		if (MyUtilities.isCustomTimestampMode(getConf())
+				|| MyUtilities.isWindowTimestampMode(getConf()))
+			timestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			try {
 				_semAgg.acquire();
 			} catch (final InterruptedException ex) {
 			}
-		tuple = _operatorChain.process(tuple,timestamp);
+		tuple = _operatorChain.process(tuple, timestamp);
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			_semAgg.release();
 

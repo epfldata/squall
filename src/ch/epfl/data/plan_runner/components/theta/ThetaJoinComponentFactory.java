@@ -5,7 +5,7 @@ import ch.epfl.data.plan_runner.components.JoinerComponent;
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 
-public class ThetaJoinComponentFactory{
+public class ThetaJoinComponentFactory {
 
 	public static JoinerComponent createThetaJoinOperator(int thetaJoinType,
 			Component firstParent, Component secondParent,

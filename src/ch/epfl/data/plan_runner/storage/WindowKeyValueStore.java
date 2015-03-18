@@ -3,7 +3,6 @@ package ch.epfl.data.plan_runner.storage;
 import java.io.PrintStream;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -17,7 +16,7 @@ import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 
 public class WindowKeyValueStore<K, V> extends BasicStore {
-	
+
 	/**
 	 * 
 	 */
@@ -25,72 +24,80 @@ public class WindowKeyValueStore<K, V> extends BasicStore {
 
 	private static Logger LOG = Logger.getLogger(WindowKeyValueStore.class);
 	private TypeConversion _tc = null;
-	
-	//Window Semantics Related
+
+	// Window Semantics Related
 	private long _startingTimeStamp;
 	private int _windowRange;
-	private int _slidelength; //in seconds
-	
-	public int[] getWindowIDs(long lineageTimeStamp){
-		
-		int start= (int)((lineageTimeStamp-_startingTimeStamp)/(_slidelength*1000))+1;
-		int end = (int)((lineageTimeStamp +(_windowRange*1000) -_startingTimeStamp)/(_slidelength*1000))+1;
-		int[] res = new int[end-start+1];
-		int value=start;
+	private int _slidelength; // in seconds
+
+	public int[] getWindowIDs(long lineageTimeStamp) {
+
+		int start = (int) ((lineageTimeStamp - _startingTimeStamp) / (_slidelength * 1000)) + 1;
+		int end = (int) ((lineageTimeStamp + (_windowRange * 1000) - _startingTimeStamp) / (_slidelength * 1000)) + 1;
+		int[] res = new int[end - start + 1];
+		int value = start;
 		for (int i = 0; i < res.length; i++) {
-			res[i]=value;
+			res[i] = value;
 			value++;
 		}
 		return res;
 	}
-	
-	public Timestamp[] getCorrespondingWindowTime(int wid){
-		Timestamp[] result= new Timestamp[2];
-		long from= (_startingTimeStamp) + (wid*_slidelength*1000);
-		long to = from+(_windowRange*1000);
-		result[0]=new Timestamp(from);
-		result[1]=new Timestamp(to);
+
+	public Timestamp[] getCorrespondingWindowTime(int wid) {
+		Timestamp[] result = new Timestamp[2];
+		long from = (_startingTimeStamp) + (wid * _slidelength * 1000);
+		long to = from + (_windowRange * 1000);
+		result[0] = new Timestamp(from);
+		result[1] = new Timestamp(to);
 		return result;
-		
+
 	}
-		
-	private HashMap<K, TreeMap<Integer, V>> _memstore; //treemap of window ids and Values for the same key
+
+	private HashMap<K, TreeMap<Integer, V>> _memstore; // treemap of window ids
+														// and Values for the
+														// same key
 	protected static final int DEFAULT_HASH_INDICES = 256;
 
-
-	public WindowKeyValueStore(int storesizemb, int hash_indices, Map conf, long startingTimeStamp, int windowRange, int slidelength) {
+	public WindowKeyValueStore(int storesizemb, int hash_indices, Map conf,
+			long startingTimeStamp, int windowRange, int slidelength) {
 		super(storesizemb);
 		this._memstore = new HashMap<K, TreeMap<Integer, V>>(hash_indices);
-		_startingTimeStamp= startingTimeStamp;
+		_startingTimeStamp = startingTimeStamp;
 		_windowRange = windowRange;
-		_slidelength=slidelength;
+		_slidelength = slidelength;
 	}
 
-	public WindowKeyValueStore(int hash_indices, Map conf, long startingTimeStamp, int windowedRange, int slidelength) {
+	public WindowKeyValueStore(int hash_indices, Map conf,
+			long startingTimeStamp, int windowedRange, int slidelength) {
 		this(SystemParameters.getInt(conf, "STORAGE_MEMORY_SIZE_MB"),
-				hash_indices, conf, startingTimeStamp,windowedRange, slidelength);
+				hash_indices, conf, startingTimeStamp, windowedRange,
+				slidelength);
 	}
 
 	/* Constructors */
-	public WindowKeyValueStore(Map conf, long startingTimeStamp, int windowedRange, int slidelength) {
+	public WindowKeyValueStore(Map conf, long startingTimeStamp,
+			int windowedRange, int slidelength) {
 		this(SystemParameters.getInt(conf, "STORAGE_MEMORY_SIZE_MB"),
-				DEFAULT_HASH_INDICES, conf, startingTimeStamp,windowedRange, slidelength);
+				DEFAULT_HASH_INDICES, conf, startingTimeStamp, windowedRange,
+				slidelength);
 	}
 
-	public WindowKeyValueStore(TypeConversion tc, Map conf, long startingTimeStamp, int windowedRange, int slidelength) {
+	public WindowKeyValueStore(TypeConversion tc, Map conf,
+			long startingTimeStamp, int windowedRange, int slidelength) {
 		this(SystemParameters.getInt(conf, "STORAGE_MEMORY_SIZE_MB"),
-				DEFAULT_HASH_INDICES, conf, startingTimeStamp,windowedRange, slidelength);
+				DEFAULT_HASH_INDICES, conf, startingTimeStamp, windowedRange,
+				slidelength);
 		this._tc = tc;
 	}
 
 	protected TreeMap<Integer, V> __access(boolean checkStorage, Object... data) {
 		final K key = (K) data[0];
-		TreeMap<Integer, V> values= this._memstore.get(key);
+		TreeMap<Integer, V> values = this._memstore.get(key);
 		final boolean inMem = (values != null);
 		if (!inMem)
 			return null;
 		return values;
-		
+
 	}
 
 	protected V __update(boolean checkStorage, Object... data) {
@@ -107,7 +114,8 @@ public class WindowKeyValueStore<K, V> extends BasicStore {
 
 	@Override
 	public ArrayList<V> access(Object... data) {
-		throw new RuntimeException("accessing windowStorage is not implemented yet");
+		throw new RuntimeException(
+				"accessing windowStorage is not implemented yet");
 	}
 
 	@Override
@@ -145,7 +153,7 @@ public class WindowKeyValueStore<K, V> extends BasicStore {
 			values.put(windowID, value);
 		}
 	}
-	
+
 	@Override
 	public void printStore(PrintStream stream, boolean printStorage) {
 		TreeMap<Integer, V> values;
@@ -155,25 +163,27 @@ public class WindowKeyValueStore<K, V> extends BasicStore {
 			// Check memory
 			values = this._memstore.get(key);
 			if (values != null)
-			for (final Iterator<Integer> it2 = values.keySet().iterator(); it2.hasNext();) {
-				int wid= it2.next();
-				Timestamp[] timestamp= getCorrespondingWindowTime(wid);
-				stream.print(key+", wid:"+wid+", Timestamp: ["+timestamp[0]+" , "+timestamp[1]+"]");
-				stream.print(" ");
-				stream.print(" = ");
-				V value= values.get(wid);
-				if (this._tc != null)
-					stream.print(_tc.toString(value));
-				else
-					stream.print(value.toString());
-				stream.println("");
-			}
+				for (final Iterator<Integer> it2 = values.keySet().iterator(); it2
+						.hasNext();) {
+					int wid = it2.next();
+					Timestamp[] timestamp = getCorrespondingWindowTime(wid);
+					stream.print(key + ", wid:" + wid + ", Timestamp: ["
+							+ timestamp[0] + " , " + timestamp[1] + "]");
+					stream.print(" ");
+					stream.print(" = ");
+					V value = values.get(wid);
+					if (this._tc != null)
+						stream.print(_tc.toString(value));
+					else
+						stream.print(value.toString());
+					stream.println("");
+				}
 		}
 	}
 
 	public void purgeState(long tillTimeStamp) {
-		
-		int endWindowID= getWindowIDs(tillTimeStamp)[0]-1;
+
+		int endWindowID = getWindowIDs(tillTimeStamp)[0] - 1;
 		TreeMap<Integer, V> values;
 		final Set<K> keys = this.keySet();
 		for (final Iterator<K> it = keys.iterator(); it.hasNext();) {
@@ -213,7 +223,7 @@ public class WindowKeyValueStore<K, V> extends BasicStore {
 
 	@Override
 	public void setSingleEntry(boolean singleEntry) {
-		
+
 	}
 
 }

@@ -41,7 +41,7 @@ public interface Component extends Serializable, ComponentProperties,
 	public Component setJoinPredicate(Predicate joinPredicate);
 
 	public Component setOutputPartKey(int... hashIndexes); // this is a shortcut
-	
+
 	// this needs to be separately kept, due to
 	// Parser.SelectItemsVisitor.ComplexCondition
 	// in short, whether the component uses indexes or expressions

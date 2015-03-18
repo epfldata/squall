@@ -39,11 +39,10 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 	private BasicStore<SumCount> _storage;
 
 	private final Map _map;
-	
+
 	private boolean isWindowSemantics;
-	private int _windowRangeSecs=-1; 
-	private int _slideRangeSecs=-1;
-	
+	private int _windowRangeSecs = -1;
+	private int _slideRangeSecs = -1;
 
 	public AggregateAvgOperator(ValueExpression ve, Map map) {
 		_ve = ve;
@@ -141,7 +140,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 	public List<String> process(List<String> tuple, long lineageTimestamp) {
 		_numTuplesProcessed++;
 		if (_distinct != null) {
-			tuple = _distinct.process(tuple,lineageTimestamp);
+			tuple = _distinct.process(tuple, lineageTimestamp);
 			if (tuple == null)
 				return null;
 		}
@@ -157,8 +156,8 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 
 		// propagate further the affected tupleHash-tupleValue pair
 		final List<String> affectedTuple = new ArrayList<String>();
-		//affectedTuple.add(tupleHash);
-		//affectedTuple.add(strValue);
+		// affectedTuple.add(tupleHash);
+		// affectedTuple.add(strValue);
 
 		return affectedTuple;
 	}
@@ -252,27 +251,29 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 	@Override
 	public AggregateOperator<SumCount> SetWindowSemantics(
 			int windowRangeInSeconds, int windowSlideInSeconds) {
-		isWindowSemantics=true;
-		_windowRangeSecs=windowRangeInSeconds; 
-		_slideRangeSecs=windowSlideInSeconds;
-		_storage = new WindowAggregationStorage<>(this, _wrapper, _map, true, _windowRangeSecs, _slideRangeSecs);
-		if(_groupByColumns!=null || _groupByProjection!=null)
+		isWindowSemantics = true;
+		_windowRangeSecs = windowRangeInSeconds;
+		_slideRangeSecs = windowSlideInSeconds;
+		_storage = new WindowAggregationStorage<>(this, _wrapper, _map, true,
+				_windowRangeSecs, _slideRangeSecs);
+		if (_groupByColumns != null || _groupByProjection != null)
 			_storage.setSingleEntry(false);
 		return this;
 	}
+
 	@Override
 	public AggregateOperator<SumCount> SetWindowSemantics(
 			int windowRangeInSeconds) {
 		return SetWindowSemantics(windowRangeInSeconds, windowRangeInSeconds);
-		
+
 	}
 
 	@Override
 	public int[] getWindowSemanticsInfo() {
-		int[] res= new int[2];
-		res[0]=_windowRangeSecs; res[1]=_slideRangeSecs;
+		int[] res = new int[2];
+		res[0] = _windowRangeSecs;
+		res[1] = _slideRangeSecs;
 		return res;
 	}
 
-	
 }

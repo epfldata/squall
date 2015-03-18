@@ -39,7 +39,8 @@ import ch.epfl.data.plan_runner.utilities.thetajoin_dynamic.ThetaDataMigrationJo
 import ch.epfl.data.plan_runner.utilities.thetajoin_dynamic.ThetaJoinDynamicMapping;
 import ch.epfl.data.plan_runner.window_semantics.WindowSemanticsManager;
 
-public class ThetaJoinDynamicComponentAdvisedEpochs extends JoinerComponent implements Component {
+public class ThetaJoinDynamicComponentAdvisedEpochs extends JoinerComponent
+		implements Component {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger
 			.getLogger(ThetaJoinDynamicComponentAdvisedEpochs.class);
@@ -334,16 +335,17 @@ public class ThetaJoinDynamicComponentAdvisedEpochs extends JoinerComponent impl
 
 	@Override
 	public Component setSlidingWindow(int windowRange) {
-		WindowSemanticsManager._IS_WINDOW_SEMANTICS=true;
-		_windowSize = windowRange*1000; // Width in terms of millis, Default is -1 which is full history
-		
+		WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
+		_windowSize = windowRange * 1000; // Width in terms of millis, Default
+											// is -1 which is full history
+
 		return this;
 	}
 
 	@Override
 	public Component setTumblingWindow(int windowRange) {
-		WindowSemanticsManager._IS_WINDOW_SEMANTICS=true;
-		_tumblingWindowSize= windowRange*1000 ;//For tumbling semantics
+		WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
+		_tumblingWindowSize = windowRange * 1000;// For tumbling semantics
 		return null;
 	}
 

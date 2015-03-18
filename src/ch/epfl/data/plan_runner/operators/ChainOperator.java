@@ -169,7 +169,7 @@ public class ChainOperator implements Operator {
 		List<String> result = tuple;
 
 		for (final Operator operator : _operators) {
-			result = operator.process(result,lineageTimestamp);
+			result = operator.process(result, lineageTimestamp);
 			if (result == null)
 				break;
 		}

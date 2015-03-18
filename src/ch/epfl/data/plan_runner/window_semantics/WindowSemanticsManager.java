@@ -3,17 +3,17 @@ package ch.epfl.data.plan_runner.window_semantics;
 import java.util.List;
 
 import backtype.storm.tuple.Tuple;
-import ch.epfl.data.plan_runner.components.JoinerComponent;
 import ch.epfl.data.plan_runner.storm_components.StormBoltComponent;
 import ch.epfl.data.plan_runner.storm_components.StormComponent;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 
 public class WindowSemanticsManager {
-	
-	public static boolean _IS_WINDOW_SEMANTICS =false;
+
+	public static boolean _IS_WINDOW_SEMANTICS = false;
 	public static long _GC_PERIODIC_TICK = -1;
-	public static final long INITIAL_TUMBLING_TIMESTAMP = System.currentTimeMillis();
+	public static final long INITIAL_TUMBLING_TIMESTAMP = System
+			.currentTimeMillis();
 
 	public static String AddTimeStampToStoredDataIfWindowSemantics(
 			StormBoltComponent sbc, String inputTupleString, Tuple stormTupleRcv) {
@@ -31,8 +31,8 @@ public class WindowSemanticsManager {
 
 	public static boolean evictStateIfSlidingWindowSemantics(
 			StormBoltComponent sbc, Tuple stormTupleRcv) {
-		if ((_GC_PERIODIC_TICK>0 | MyUtilities.isWindowTimestampMode(sbc.getConf()))
-				& MyUtilities.isTickTuple(stormTupleRcv)) {
+		if ((_GC_PERIODIC_TICK > 0 | MyUtilities.isWindowTimestampMode(sbc
+				.getConf())) & MyUtilities.isTickTuple(stormTupleRcv)) {
 			sbc.purgeStaleStateFromWindow();
 			sbc.getCollector().ack(stormTupleRcv);
 			return true;
@@ -52,8 +52,8 @@ public class WindowSemanticsManager {
 		long lineageTimestamp = 0;
 		final long receivedTupleTimestamp;
 		long storedTimestamp = 0;
-		if (WindowSemanticsManager._IS_WINDOW_SEMANTICS | MyUtilities.isCustomTimestampMode(sbc.getConf())
-				)
+		if (WindowSemanticsManager._IS_WINDOW_SEMANTICS
+				| MyUtilities.isCustomTimestampMode(sbc.getConf()))
 			lineageTimestamp = stormTuple
 					.getLongByField(StormComponent.TIMESTAMP);
 		receivedTupleTimestamp = lineageTimestamp;
@@ -81,8 +81,8 @@ public class WindowSemanticsManager {
 				return -1;
 		} else if (sbc._tumblingWindowSize > 0) {
 
-			long tumblingWindowStart = ((receivedTupleTimestamp - INITIAL_TUMBLING_TIMESTAMP)
-					/ sbc._tumblingWindowSize) * sbc._tumblingWindowSize;
+			long tumblingWindowStart = ((receivedTupleTimestamp - INITIAL_TUMBLING_TIMESTAMP) / sbc._tumblingWindowSize)
+					* sbc._tumblingWindowSize;
 			long tumblingWindowEnd = tumblingWindowStart
 					+ sbc._tumblingWindowSize;
 			long storedTimeStampNormalized = (storedTimestamp - INITIAL_TUMBLING_TIMESTAMP);

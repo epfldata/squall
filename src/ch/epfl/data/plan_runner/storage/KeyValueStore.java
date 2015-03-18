@@ -16,7 +16,7 @@ import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 
 public class KeyValueStore<K, V> extends BasicStore {
-	
+
 	/**
 	 * 
 	 */
@@ -26,7 +26,6 @@ public class KeyValueStore<K, V> extends BasicStore {
 	private TypeConversion _tc = null;
 	private HashMap<K, ArrayList<V>> _memstore;
 	protected static final int DEFAULT_HASH_INDICES = 256;
-
 
 	public KeyValueStore(int storesizemb, int hash_indices, Map conf) {
 		super(storesizemb);
@@ -52,12 +51,12 @@ public class KeyValueStore<K, V> extends BasicStore {
 
 	protected ArrayList<V> __access(boolean checkStorage, Object... data) {
 		final K key = (K) data[0];
-		ArrayList<V> values= this._memstore.get(key);
+		ArrayList<V> values = this._memstore.get(key);
 		final boolean inMem = (values != null);
 		if (!inMem)
 			return null;
 		return values;
-		
+
 	}
 
 	protected V __update(boolean checkStorage, Object... data) {
@@ -71,7 +70,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 		// First update memory if necessary
 		if (inMem) {
 			values = this._memstore.get(key);
-			//final HashEntry<K, V> entry = _replAlg.get(obj);
+			// final HashEntry<K, V> entry = _replAlg.get(obj);
 			// Get the index of the old value (if it exists)
 			final int index = values.indexOf(oldValue);
 			if (index != -1)
@@ -167,7 +166,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 		ArrayList<V> values;
 
 		/* First, register this new value in the memoryManager */
-		//_memoryManager.allocateMemory(_memoryManager.getSize(value));
+		// _memoryManager.allocateMemory(_memoryManager.getSize(value));
 
 		/* Do we have an entry for this key? */
 		if (this._memstore.containsKey(key) == false) {
@@ -190,7 +189,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 			values.add(value);
 		}
 	}
-	
+
 	@Override
 	public void printStore(PrintStream stream, boolean printStorage) {
 		ArrayList<V> values;
@@ -212,7 +211,8 @@ public class KeyValueStore<K, V> extends BasicStore {
 		}
 	}
 
-	// TODO Specific to Window Semantics: Currently Linear in state size, needs to be more efficient
+	// TODO Specific to Window Semantics: Currently Linear in state size, needs
+	// to be more efficient
 	public void purgeState(long tillTimeStamp) {
 		ArrayList<V> values;
 		final Set<K> keys = this.keySet();
@@ -266,7 +266,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 
 	@Override
 	public void setSingleEntry(boolean singleEntry) {
-		
+
 	}
 
 }

@@ -68,7 +68,9 @@ public class D2CombinerBolt<JAT extends Number & Comparable<JAT>> extends
 	private Random _rndGen = new Random();;
 	private STATE _state = STATE.PRODUCING_D2;
 
-	public D2CombinerBolt(StormEmitter d2Source, String s1ReservoirMergeName,
+	public D2CombinerBolt(
+			StormEmitter d2Source,
+			String s1ReservoirMergeName,
 			String componentName,
 			boolean isFirstD2,
 			NumericConversion<JAT> wrapper,

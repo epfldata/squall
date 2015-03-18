@@ -51,7 +51,7 @@ public class StormDataSource extends StormSpoutComponent {
 	private boolean _firstTime = true;
 	private PeriodicAggBatchSend _periodicAggBatch;
 	private final long _aggBatchOutputMillis;
-	
+
 	private boolean _isWindowMode;
 
 	private String _name;
@@ -76,9 +76,9 @@ public class StormDataSource extends StormSpoutComponent {
 		if (MyUtilities.isAckEveryTuple(conf))
 			killer.registerComponent(this, parallelism);
 	}
-	
-	public void setWindowMode(){
-		_isWindowMode=true;
+
+	public void setWindowMode() {
+		_isWindowMode = true;
 	}
 
 	// ack method on spout is called only if in AckEveryTuple mode (ACKERS > 0)
@@ -113,14 +113,16 @@ public class StormDataSource extends StormSpoutComponent {
 
 	protected void applyOperatorsAndSend(List<String> tuple) {
 		long timestamp = 0;
-		if ( _isWindowMode ||  (MyUtilities.isCustomTimestampMode(getConf()) && getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT) || MyUtilities.isWindowTimestampMode(getConf()) )
-				timestamp = System.currentTimeMillis();
+		if (_isWindowMode
+				|| (MyUtilities.isCustomTimestampMode(getConf()) && getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
+				|| MyUtilities.isWindowTimestampMode(getConf()))
+			timestamp = System.currentTimeMillis();
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			try {
 				_semAgg.acquire();
 			} catch (final InterruptedException ex) {
 			}
-		tuple = _operatorChain.process(tuple,timestamp);
+		tuple = _operatorChain.process(tuple, timestamp);
 
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			_semAgg.release();

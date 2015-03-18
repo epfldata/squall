@@ -7,8 +7,6 @@ import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 
-import com.sleepycat.je.utilint.Pair;
-
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.storage.BasicStore;
 import ch.epfl.data.plan_runner.visitors.OperatorVisitor;

@@ -1,4 +1,4 @@
- package ch.epfl.data.plan_runner.query_plans.theta;
+package ch.epfl.data.plan_runner.query_plans.theta;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,7 +9,6 @@ import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
-import ch.epfl.data.plan_runner.components.JoinerComponent;
 import ch.epfl.data.plan_runner.components.theta.ThetaJoinComponentFactory;
 import ch.epfl.data.plan_runner.conversion.DateConversion;
 import ch.epfl.data.plan_runner.conversion.DoubleConversion;
@@ -157,8 +156,7 @@ public class ThetaTPCH7Plan {
 
 		Component S_Njoin = ThetaJoinComponentFactory
 				.createThetaJoinOperator(Theta_JoinType, relationSupplier,
-						relationNation1, _queryBuilder)
-						.setTumblingWindow(50)
+						relationNation1, _queryBuilder).setTumblingWindow(50)
 				.add(new ProjectOperator(new int[] { 0, 2 }))
 				.setJoinPredicate(S_N_comp);
 
@@ -229,9 +227,9 @@ public class ThetaTPCH7Plan {
 										_firstCountryName)))));
 
 		final AggregateOperator agg = new AggregateSumOperator(
-				new ColumnReference(_doubleConv, 4), conf)
-				.setGroupByColumns(new ArrayList<Integer>(Arrays
-						.asList(2, 0, 3))).SetWindowSemantics(5);
+				new ColumnReference(_doubleConv, 4), conf).setGroupByColumns(
+				new ArrayList<Integer>(Arrays.asList(2, 0, 3)))
+				.SetWindowSemantics(5);
 
 		final ColumnReference colN_C_O = new ColumnReference(_ic, 1);
 		final ColumnReference colL_S_N = new ColumnReference(_ic, 3);

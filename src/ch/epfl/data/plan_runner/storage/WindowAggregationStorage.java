@@ -16,22 +16,24 @@ import ch.epfl.data.plan_runner.operators.AggregateOperator;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 
 public class WindowAggregationStorage<V> extends WindowKeyValueStore<Object, V> {
-	
+
 	private static final long serialVersionUID = 1L;
 
-	private static Logger LOG = Logger.getLogger(WindowAggregationStorage.class);
+	private static Logger LOG = Logger
+			.getLogger(WindowAggregationStorage.class);
 
 	private boolean _singleEntry;
 	private final TypeConversion _wrapper;
 	private final AggregateOperator _outerAggOp;
 	private static final String SINGLE_ENTRY_KEY = "SEK"; /* Single entry key */
-	private static long _startingTimeStamp= System.currentTimeMillis();
-
+	private static long _startingTimeStamp = System.currentTimeMillis();
 
 	public WindowAggregationStorage(AggregateOperator outerAggOp,
-			TypeConversion wrapper, Map map, boolean singleEntry, int windowedRange, int slidelength) {
+			TypeConversion wrapper, Map map, boolean singleEntry,
+			int windowedRange, int slidelength) {
 		super(singleEntry ? 1 : SystemParameters.getInt(map,
-				"STORAGE_MEMORY_SIZE_MB"), map, _startingTimeStamp,windowedRange, slidelength);
+				"STORAGE_MEMORY_SIZE_MB"), map, _startingTimeStamp,
+				windowedRange, slidelength);
 		_wrapper = wrapper;
 		_outerAggOp = outerAggOp;
 		_singleEntry = singleEntry;
@@ -45,29 +47,27 @@ public class WindowAggregationStorage<V> extends WindowKeyValueStore<Object, V> 
 		throw new RuntimeException("Not implemented yet!");
 	}
 
-	
 	public void addContent(WindowAggregationStorage storage) {
 		// Now aggregate
 		final Set keySet = storage.keySet();
 		for (final Iterator it = keySet.iterator(); it.hasNext();) {
 			final Object key = it.next();
-			TreeMap<Integer, V> maps= storage.__access(false, key);			
+			TreeMap<Integer, V> maps = storage.__access(false, key);
 			for (Entry<Integer, V> entry : maps.entrySet()) {
-				int wid= entry.getKey();
+				int wid = entry.getKey();
 				V newValue = entry.getValue();
 				final TreeMap<Integer, V> list = super.__access(false, key);
-				if (list == null || list.get(wid)==null)
-					super.onInsert(key, newValue,wid);
+				if (list == null || list.get(wid) == null)
+					super.onInsert(key, newValue, wid);
 				else {
 					final V oldValue = list.get(wid);
 					newValue = (V) _outerAggOp.runAggregateFunction(oldValue,
 							newValue);
-					super.update(key, newValue,wid);
-			}
+					super.update(key, newValue, wid);
+				}
 			}
 		}
 	}
-	
 
 	@Override
 	public boolean contains(Object... data) {
@@ -111,12 +111,12 @@ public class WindowAggregationStorage<V> extends WindowKeyValueStore<Object, V> 
 	public V update(Object... data) {
 		final Object obj = data[0];
 		final Object key = _singleEntry ? SINGLE_ENTRY_KEY : data[1];
-		final int[] wids = getWindowIDs((long)data[2]);
+		final int[] wids = getWindowIDs((long) data[2]);
 		V value, newValue = null;
 		for (int i = 0; i < wids.length; i++) {
-			int wid= wids[i];
+			int wid = wids[i];
 			final TreeMap<Integer, V> list = super.__access(false, key);
-			if (list == null || list.get(wid)==null) {
+			if (list == null || list.get(wid) == null) {
 				value = getInitialValue();
 				super.onInsert(key, value, wid);
 			} else
@@ -126,10 +126,10 @@ public class WindowAggregationStorage<V> extends WindowKeyValueStore<Object, V> 
 						(List<String>) obj);
 			else
 				newValue = (V) _outerAggOp.runAggregateFunction(value, obj);
-			super.__update(false, key, newValue,wid);
+			super.__update(false, key, newValue, wid);
 		}
 		return newValue;
-		
+
 	}
 
 }

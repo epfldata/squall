@@ -79,7 +79,8 @@ public class DistinctOperator implements Operator {
 	@Override
 	public List<String> process(List<String> tuple, long lineageTimestamp) {
 		_numTuplesProcessed++;
-		final List<String> projectedTuple = _projection.process(tuple,lineageTimestamp);
+		final List<String> projectedTuple = _projection.process(tuple,
+				lineageTimestamp);
 		final String projectedTupleString = MyUtilities.tupleToString(
 				projectedTuple, _conf);
 		if (_storage.contains(projectedTupleString) == true)

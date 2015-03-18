@@ -15,7 +15,6 @@ import backtype.storm.topology.InputDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Tuple;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
-import ch.epfl.data.plan_runner.components.JoinerComponent;
 import ch.epfl.data.plan_runner.operators.AggregateOperator;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
 import ch.epfl.data.plan_runner.operators.Operator;
@@ -163,7 +162,7 @@ public class StormDstJoin extends StormBoltComponent {
 			} catch (final InterruptedException ex) {
 			}
 
-		tuple = _operatorChain.process(tuple,0);
+		tuple = _operatorChain.process(tuple, 0);
 
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			_semAgg.release();
@@ -377,7 +376,7 @@ public class StormDstJoin extends StormBoltComponent {
 
 				if (projPreAgg != null)
 					// preaggregation
-					outputTuple = projPreAgg.process(outputTuple,0);
+					outputTuple = projPreAgg.process(outputTuple, 0);
 				applyOperatorsAndSend(stormTupleRcv, outputTuple,
 						lineageTimestamp, isLastInBatch);
 			}
@@ -552,9 +551,11 @@ public class StormDstJoin extends StormBoltComponent {
 		// TODO inefficient linear scan for now.
 		System.out.println("Cleaning up state");
 		((KeyValueStore<String, String>) _firstRelationStorage)
-				.purgeState(_latestTimeStamp - WindowSemanticsManager._GC_PERIODIC_TICK);
+				.purgeState(_latestTimeStamp
+						- WindowSemanticsManager._GC_PERIODIC_TICK);
 		((KeyValueStore<String, String>) _secondRelationStorage)
-				.purgeState(_latestTimeStamp - WindowSemanticsManager._GC_PERIODIC_TICK);
+				.purgeState(_latestTimeStamp
+						- WindowSemanticsManager._GC_PERIODIC_TICK);
 		System.gc();
 	}
 

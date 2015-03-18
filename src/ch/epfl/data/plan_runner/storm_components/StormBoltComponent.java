@@ -16,7 +16,6 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
-import ch.epfl.data.plan_runner.components.JoinerComponent;
 import ch.epfl.data.plan_runner.ewh.main.PushStatisticCollector;
 import ch.epfl.data.plan_runner.ewh.operators.SampleAsideAndForwardOperator;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
@@ -79,10 +78,11 @@ public abstract class StormBoltComponent extends BaseRichBolt implements
 	 */
 	// //////////////////////////////
 	// protected static int WINDOW_SIZE_MULTIPLE_CONSTANT=3;
-	public boolean _isLocalWindowSemantics =false;
-	public long _windowSize = -1; // Width in terms of millis, Default is -1 which is full history
+	public boolean _isLocalWindowSemantics = false;
+	public long _windowSize = -1; // Width in terms of millis, Default is -1
+									// which is full history
 	public long _latestTimeStamp = -1;
-	public long _tumblingWindowSize =-1;//For tumbling semantics
+	public long _tumblingWindowSize = -1;// For tumbling semantics
 
 	public StormBoltComponent(ComponentProperties cp,
 			List<String> allCompNames, int hierarchyPosition,
@@ -101,8 +101,8 @@ public abstract class StormBoltComponent extends BaseRichBolt implements
 		_parentEmitters = cp.getParents();
 		_hashIndexes = cp.getHashIndexes();
 		_hashExpressions = cp.getHashExpressions();
-		//setWindowSemantics(conf); // Set Window Semantics if Available in the
-									// configuration file
+		// setWindowSemantics(conf); // Set Window Semantics if Available in the
+		// configuration file
 	}
 
 	// ManualBatchMode
@@ -422,23 +422,24 @@ public abstract class StormBoltComponent extends BaseRichBolt implements
 
 	public void setWindowSemantics(long windowSize, long tumblingWindowSize) {
 		// Width in terms of millis, Default is -1 which is full history
-		_isLocalWindowSemantics=true;
+		_isLocalWindowSemantics = true;
 		_windowSize = windowSize;
-		_tumblingWindowSize = tumblingWindowSize;//For tumbling semantics
-		long max= _windowSize > _tumblingWindowSize? _windowSize: _tumblingWindowSize;
-		
-		if(_conf.get(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS)==null){
-			_conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, max*2);
-			WindowSemanticsManager._GC_PERIODIC_TICK=max*2;
+		_tumblingWindowSize = tumblingWindowSize;// For tumbling semantics
+		long max = _windowSize > _tumblingWindowSize ? _windowSize
+				: _tumblingWindowSize;
+
+		if (_conf.get(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS) == null) {
+			_conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, max * 2);
+			WindowSemanticsManager._GC_PERIODIC_TICK = max * 2;
 		}
-		
-		long value =(long) _conf.get(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS)/2;
-				
-		if (value > max){
-			_conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, value*2);
-			WindowSemanticsManager._GC_PERIODIC_TICK=value*2;
+
+		long value = (long) _conf.get(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS) / 2;
+
+		if (value > max) {
+			_conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, value * 2);
+			WindowSemanticsManager._GC_PERIODIC_TICK = value * 2;
 		}
-		
+
 	}
 
 	@Override

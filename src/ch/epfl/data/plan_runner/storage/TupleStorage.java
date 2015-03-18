@@ -232,7 +232,8 @@ public class TupleStorage implements Serializable {
 				it.remove();
 				// Cleaning up indexes
 				final PredicateUpdateIndexesVisitor visitor = new PredicateUpdateIndexesVisitor(
-						isFirstRelations, MyUtilities.stringToTuple(tupleString, conf));
+						isFirstRelations, MyUtilities.stringToTuple(
+								tupleString, conf));
 				joinPredicate.accept(visitor);
 				final List<String> valuesToIndex = new ArrayList<String>(
 						visitor._valuesToIndex);

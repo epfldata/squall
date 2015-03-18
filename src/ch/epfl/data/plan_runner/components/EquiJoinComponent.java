@@ -300,15 +300,16 @@ public class EquiJoinComponent extends JoinerComponent implements Component {
 
 	@Override
 	public Component setSlidingWindow(int windowRange) {
-		WindowSemanticsManager._IS_WINDOW_SEMANTICS=true;
-		_windowSize = windowRange*1000; // Width in terms of millis, Default is -1 which is full history
+		WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
+		_windowSize = windowRange * 1000; // Width in terms of millis, Default
+											// is -1 which is full history
 		return this;
 	}
 
 	@Override
 	public Component setTumblingWindow(int windowRange) {
-		WindowSemanticsManager._IS_WINDOW_SEMANTICS=true;
-		_tumblingWindowSize= windowRange*1000 ;//For tumbling semantics
+		WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
+		_tumblingWindowSize = windowRange * 1000;// For tumbling semantics
 		return this;
 	}
 
