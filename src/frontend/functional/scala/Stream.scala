@@ -4,7 +4,6 @@ import scala.reflect.runtime.universe._
 import frontend.functional.scala.Types._
 import frontend.functional.scala.operators.ScalaAggregateOperator
 import frontend.functional.scala.operators.ScalaMapOperator
-import frontend.functional.scala.operators.ScalaMapOperator
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder
 import ch.epfl.data.plan_runner.operators.Operator
 import ch.epfl.data.plan_runner.components.EquiJoinComponent
@@ -22,7 +21,6 @@ import ch.epfl.data.plan_runner.conversion.NumericConversion
 import ch.epfl.data.plan_runner.conversion.IntegerConversion
 import ch.epfl.data.plan_runner.predicates.booleanPrimitive
 import ch.epfl.data.plan_runner.predicates.AndPredicate
-//import scala.reflect._
 
 /**
  * @author mohamed
@@ -47,17 +45,18 @@ object Stream {
     def filter(fn: T => Boolean): Stream[T] = FilteredStream(this, fn)
     def map[U: SquallType](fn: T => U): Stream[U] = MappedStream[T, U](this, fn)
     def join[U: SquallType, L: SquallType](other: Stream[U], joinIndices1: T => L)(joinIndices2: U => L): Stream[Tuple2[T, U]] = JoinedStream[T, U, Tuple2[T, U], L](this, other, joinIndices1, joinIndices2)
-    def reduceByKey[N: Numeric, U: SquallType](agg: T => N, keyIndices: T => U): TailStream[T, U, N] = GroupedStream[T, U, N](this, agg, keyIndices)
+    def groupByKey[N: Numeric, U: SquallType](agg: T => N, keyIndices: T => U): TailStream[T, U, N] = GroupedStream[T, U, N](this, agg, keyIndices)
 
   }
 
   class TailStream[T: SquallType, U: SquallType, N: Numeric] {
+     
     def execute(map: java.util.Map[String, String]): QueryBuilder = {
       interprete[T, U, N](this, map)
     }
   }
 
-  private def interp[T: SquallType](str: Stream[T], qb: QueryBuilder, metaData: Tuple3[List[Operator], List[Int], List[Int]], confmap: java.util.Map[String, String]): Component = str match {
+  private def interprete[T: SquallType](str: Stream[T], qb: QueryBuilder, metaData: Tuple3[List[Operator], List[Int], List[Int]], confmap: java.util.Map[String, String]): Component = str match {
     case Source(name) => {
       println("Reached Source")
       var dataSourceComponent = qb.createDataSource(name, confmap)
@@ -76,13 +75,13 @@ object Stream {
       println("Reached Filtered Stream")
       val filterPredicate = new ScalaPredicate(fn)
       val filterOperator = new SelectOperator(filterPredicate)
-      interp(parent, qb, Tuple3(filterOperator :: metaData._1, metaData._2, metaData._3), confmap)
+      interprete(parent, qb, Tuple3(filterOperator :: metaData._1, metaData._2, metaData._3), confmap)
     }
     case MappedStream(parent, fn) => {
       println("Reached Mapped Stream")
       //interp(parent,qb)(parent.squalType)
       val mapOp = new ScalaMapOperator(fn)(parent.squalType, str.squalType)
-      interp(parent, qb, Tuple3(mapOp :: metaData._1, metaData._2, metaData._3), confmap)(parent.squalType)
+      interprete(parent, qb, Tuple3(mapOp :: metaData._1, metaData._2, metaData._3), confmap)(parent.squalType)
 
     }
     case j @ JoinedStream(parent1, parent2, ind1, ind2) => {
@@ -128,8 +127,8 @@ object Stream {
     val indicesL1 = typeL.convertIndexesOfTypeToListOfInt(resT)
     val indicesL2 = typeL.convertIndexesOfTypeToListOfInt(resU)
 
-    val firstComponent = interp(j.Str1, qb, Tuple3(List(), indicesL1, null), confmap)(j.Str1.squalType)
-    val secondComponent = interp(j.Str2, qb, Tuple3(List(), null, indicesL2), confmap)(j.Str2.squalType)
+    val firstComponent = interprete(j.Str1, qb, Tuple3(List(), indicesL1, null), confmap)(j.Str1.squalType)
+    val secondComponent = interprete(j.Str2, qb, Tuple3(List(), null, indicesL2), confmap)(j.Str2.squalType)
 
     var equijoinComponent = qb.createEquiJoin(firstComponent, secondComponent, false)
     equijoinComponent.setJoinPredicate(createPredicate(indicesL1, indicesL2))
@@ -164,7 +163,7 @@ object Stream {
 
       val aggOp = new ScalaAggregateOperator(agg, map).setGroupByColumns(toIntegerList(indices))//.SetWindowSemantics(10)
       val _queryBuilder = new QueryBuilder();
-      interp(parent, _queryBuilder, Tuple3(List(aggOp), null, null), map)
+      interprete(parent, _queryBuilder, Tuple3(List(aggOp), null, null), map)
 
       _queryBuilder
     }
