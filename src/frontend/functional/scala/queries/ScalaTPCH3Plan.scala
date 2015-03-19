@@ -29,7 +29,7 @@ object ScalaTPCH3Plan {
     val COjoin = customers.join(orders, x => x)(y => y._2).map(t => Tuple3(t._2._1, t._2._3, t._2._4))
     val lineitems = Source[lineitems]("LINEITEM").filter { t => t._11.compareTo(compDate) > 0 }.map { t => Tuple3(t._1, t._6, t._7) }
     val COLjoin = COjoin.join(lineitems, x => x._1)(y => y._1)
-    val agg = COLjoin.reduceByKey(t => (1 - t._2._3) * t._2._2, t => Tuple3(t._1._1, t._1._2, t._1._3)) //List(0,1,2)
+    val agg = COLjoin.groupByKey(t => (1 - t._2._3) * t._2._2, t => Tuple3(t._1._1, t._1._2, t._1._3)) //List(0,1,2)
 
     agg.execute(conf)
 
