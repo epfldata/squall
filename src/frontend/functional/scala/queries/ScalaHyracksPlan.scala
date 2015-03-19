@@ -19,7 +19,7 @@ object ScalaHyracksPlan {
 
     val customers = Source[customer]("customer").map { t => Tuple2(t._1, t._7) }
     val orders = Source[orders]("orders").map { t => t._2 }
-    val join = customers.join(orders, x => x._1)(x => x)
+    val join = customers.join(orders)(k1=> k1._1)(x => x)
     val agg = join.groupByKey(x => 1, x => x._1._2)
     agg.execute(conf)
   }
