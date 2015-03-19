@@ -180,7 +180,7 @@ public class KeyValueStore<K, V> extends BasicStore {
 			 * No entry for this key--> create a new entry (key, values list
 			 * pair)
 			 */
-			values = new ArrayList<V>();
+			values = new ArrayList<V>(1);
 			values.add(value);
 			// Create a new lrunode and add to it the hashentry
 			this._memstore.put(key, values);
