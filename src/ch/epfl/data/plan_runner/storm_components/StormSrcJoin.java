@@ -30,8 +30,8 @@ public class StormSrcJoin implements StormEmitter, Serializable {
 
 	public StormSrcJoin(StormEmitter firstEmitter, StormEmitter secondEmitter,
 			ComponentProperties cp, List<String> allCompNames,
-			BasicStore<ArrayList<String>> firstPreAggStorage,
-			BasicStore<ArrayList<String>> secondPreAggStorage,
+			BasicStore<String> firstPreAggStorage,
+			BasicStore<String> secondPreAggStorage,
 			ProjectOperator firstPreAggProj, ProjectOperator secondPreAggProj,
 			int hierarchyPosition, TopologyBuilder builder,
 			TopologyKiller killer, Config conf) {

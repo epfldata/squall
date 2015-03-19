@@ -50,7 +50,7 @@ object ScalaTPCH7Plan {
     val NCOLSNJoin = NCOjoin.join(LSNjoin, x => x._2)(x => x._4)
       .filter(t => (t._1._1.equals(_firstCountryName) && t._2._1.equals(_secondCountryName)) || (t._2._1.equals(_firstCountryName) && t._1._1.equals(_secondCountryName)))
 
-    val agg = NCOLSNJoin.reduceByKey(t => t._2._3, x => Tuple3(x._2._3, x._1._1, x._2._2)) //List(2,0,3)
+    val agg = NCOLSNJoin.reduceByKey(t => t._2._3, x => Tuple3(x._2._1, x._1._1, x._2._2)) //List(2,0,3)
 
     agg.execute(conf)
   }

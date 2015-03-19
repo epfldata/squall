@@ -37,7 +37,7 @@ public class StormDstJoin extends StormBoltComponent {
 
 	private final String _firstEmitterIndex, _secondEmitterIndex;
 
-	private final BasicStore<ArrayList<String>> _firstRelationStorage,
+	private final BasicStore<String> _firstRelationStorage,
 			_secondRelationStorage;
 	private final ProjectOperator _firstPreAggProj, _secondPreAggProj; // exists
 																		// only
@@ -70,8 +70,8 @@ public class StormDstJoin extends StormBoltComponent {
 
 	public StormDstJoin(StormEmitter firstEmitter, StormEmitter secondEmitter,
 			ComponentProperties cp, List<String> allCompNames,
-			BasicStore<ArrayList<String>> firstSquallStorage,
-			BasicStore<ArrayList<String>> secondSquallStorage,
+			BasicStore<String> firstSquallStorage,
+			BasicStore<String> secondSquallStorage,
 			ProjectOperator firstPreAggProj, ProjectOperator secondPreAggProj,
 			int hierarchyPosition, TopologyBuilder builder,
 			TopologyKiller killer, Config conf, boolean isRemoveIndex) {
@@ -327,7 +327,7 @@ public class StormDstJoin extends StormBoltComponent {
 
 	protected void performJoin(Tuple stormTupleRcv, List<String> tuple,
 			String inputTupleHash, boolean isFromFirstEmitter,
-			BasicStore<ArrayList<String>> oppositeStorage,
+			BasicStore<String> oppositeStorage,
 			ProjectOperator projPreAgg, boolean isLastInBatch) {
 
 		final List<String> oppositeStringTupleList = oppositeStorage
@@ -504,7 +504,7 @@ public class StormDstJoin extends StormBoltComponent {
 			boolean isLastInBatch) {
 
 		boolean isFromFirstEmitter = false;
-		BasicStore<ArrayList<String>> affectedStorage, oppositeStorage;
+		BasicStore<String> affectedStorage, oppositeStorage;
 		ProjectOperator projPreAgg;
 		if (_firstEmitterIndex.equals(inputComponentIndex)) {
 			// R update

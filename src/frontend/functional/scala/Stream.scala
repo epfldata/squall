@@ -3,7 +3,6 @@ import backtype.storm.tuple._
 import scala.reflect.runtime.universe._
 import frontend.functional.scala.Types._
 import frontend.functional.scala.operators.ScalaAggregateOperator
-import frontend.functional.scala.operators.ScalaAggregateOperator
 import frontend.functional.scala.operators.ScalaMapOperator
 import frontend.functional.scala.operators.ScalaMapOperator
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder
@@ -163,7 +162,7 @@ object Stream {
       val res = ind(image)
       val indices = st2.convertIndexesOfTypeToListOfInt(res)
 
-      val aggOp = new ScalaAggregateOperator(agg, map).setGroupByColumns(toIntegerList(indices))
+      val aggOp = new ScalaAggregateOperator(agg, map).setGroupByColumns(toIntegerList(indices))//.SetWindowSemantics(10)
       val _queryBuilder = new QueryBuilder();
       interp(parent, _queryBuilder, Tuple3(List(aggOp), null, null), map)
 

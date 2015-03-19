@@ -1,6 +1,5 @@
 package ch.epfl.data.plan_runner.operators;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -16,7 +15,7 @@ public class DistinctOperator implements Operator {
 	private int _numTuplesProcessed;
 	private final ProjectOperator _projection;
 	private static final long serialVersionUID = 1L;
-	private final BasicStore<ArrayList<String>> _storage;
+	private final BasicStore _storage;
 	/*
 	 * Dummy value to associate with a tuple in the backing Storage (Since the
 	 * backing storage provides a key-value interface)

@@ -51,7 +51,7 @@ public class EquiJoinComponent extends JoinerComponent implements Component {
 	// or AggregationStorage<Numeric> for pre-aggregation
 	// Access method returns a list of Strings (a list of Numerics for
 	// pre-aggregation)
-	private BasicStore<ArrayList<String>> _firstStorage, _secondStorage;
+	private BasicStore<String> _firstStorage, _secondStorage;
 	// preAggregation
 	private ProjectOperator _firstPreAggProj, _secondPreAggProj;
 

@@ -23,8 +23,9 @@ import java.util.Arrays.ArrayList
 import java.util.ArrayList
 import java.util.Arrays.ArrayList
 import ch.epfl.data.plan_runner.storage._
+import ch.epfl.data.plan_runner.window_semantics.WindowSemanticsManager
 
-class ScalaAggregateOperator[T: SquallType, A: Numeric](_agg: T => A, _map: java.util.Map[_, _]) extends AggregateOperator[A] {
+class ScalaAggregateOperator[T: SquallType, A: Numeric](val _agg: T => A, val _map: java.util.Map[_, _]) extends AggregateOperator[A] {
 
   private val serialVersionUID = 1L
   //private val log = Logger.getLogger(getClass.getName)
@@ -39,16 +40,24 @@ class ScalaAggregateOperator[T: SquallType, A: Numeric](_agg: T => A, _map: java
   var _groupByColumns = new java.util.ArrayList[Integer]()
   var _groupByProjection: ProjectOperator = null
   var _numTuplesProcessed = 0
-  var _storage: ScalaAggregationStorage[A] = new ScalaAggregationStorage[A](this, _map, true)
+  var _storage: BasicStore[A] = new ScalaAggregationStorage[A](this, _map, true)
 
-  var _isWindowSemantics: Boolean = false;
   var _windowRangeSecs = -1
   var _slideRangeSecs = -1
 
   override def accept(ov: OperatorVisitor): Unit = {
     ov.visit(this)
   }
-
+  
+  
+  def getNewInstance():ScalaAggregateOperator[T, A]  = {
+    
+    val clone= new ScalaAggregateOperator(_agg, _map)
+    if(_windowRangeSecs>0 || _slideRangeSecs>0)
+      clone.SetWindowSemantics(_windowRangeSecs, _slideRangeSecs)
+    clone
+  }
+  
   def alreadySetOther(GB_COLUMNS: Int): Boolean = {
     return (_groupByType != GB_COLUMNS && _groupByType != GB_UNSET);
   }
@@ -132,21 +141,18 @@ class ScalaAggregateOperator[T: SquallType, A: Numeric](_agg: T => A, _map: java
     else
       MyUtilities.createHashString(refinedTuple, _groupByColumns, _map)
 
-    val value: A = _storage.update(refinedTuple, tupleHash);
+    val value: A = _storage.update(refinedTuple, tupleHash, Long.box(lineageTimestamp));
     val strValue: String = value.toString();
 
     // propagate further the affected tupleHash-tupleValue pair
     val affectedTuple: java.util.List[String] = new ArrayList[String]();
     //affectedTuple.add(tupleHash);
     //affectedTuple.add(strValue);
-
     return affectedTuple;
 
   }
 
   override def runAggregateFunction(x$1: A, x$2: A): A = {
-    println(x$1)
-    println(x$2)
     x$1 + x$2
   }
 
@@ -208,10 +214,10 @@ class ScalaAggregateOperator[T: SquallType, A: Numeric](_agg: T => A, _map: java
   }
 
   def SetWindowSemantics(windowRangeInSeconds: Int, windowSlideInSeconds: Int): AggregateOperator[A] = {
-    _isWindowSemantics = true;
+    WindowSemanticsManager._IS_WINDOW_SEMANTICS=true;
     _windowRangeSecs = windowRangeInSeconds;
     _slideRangeSecs = windowSlideInSeconds;
-    //    _storage = new WindowAggregationStorage[A](this, null, _map, true, _windowRangeSecs, _slideRangeSecs);
+    _storage = new ScalaWindowAggregationStorage[A](this, _map, true, _windowRangeSecs, _slideRangeSecs);
     if (_groupByColumns != null || _groupByProjection != null)
       _storage.setSingleEntry(false);
     return this;

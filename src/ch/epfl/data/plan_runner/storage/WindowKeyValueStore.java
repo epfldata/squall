@@ -15,7 +15,7 @@ import org.apache.log4j.Logger;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 
-public class WindowKeyValueStore<K, V> extends BasicStore {
+public class WindowKeyValueStore<K, V> extends BasicStore<V> {
 
 	/**
 	 * 

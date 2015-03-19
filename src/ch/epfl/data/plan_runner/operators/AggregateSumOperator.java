@@ -43,7 +43,6 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements
 
 	private final Map _map;
 
-	private boolean isWindowSemantics;
 	private int _windowRangeSecs = -1;
 	private int _slideRangeSecs = -1;
 
@@ -247,7 +246,6 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements
 	public AggregateOperator<T> SetWindowSemantics(int windowRangeInSeconds,
 			int windowSlideInSeconds) {
 		WindowSemanticsManager._IS_WINDOW_SEMANTICS=true;
-		isWindowSemantics = true;
 		_windowRangeSecs = windowRangeInSeconds;
 		_slideRangeSecs = windowSlideInSeconds;
 		_storage = new WindowAggregationStorage<>(this, _wrapper, _map, true,

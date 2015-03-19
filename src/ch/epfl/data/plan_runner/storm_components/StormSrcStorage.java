@@ -43,7 +43,7 @@ public class StormSrcStorage extends StormBoltComponent {
 
 	private final ChainOperator _operatorChain;
 
-	private final BasicStore<ArrayList<String>> _joinStorage;
+	private final BasicStore<String> _joinStorage;
 	private final ProjectOperator _preAggProj;
 	private final StormSrcHarmonizer _harmonizer;
 
@@ -59,7 +59,7 @@ public class StormSrcStorage extends StormBoltComponent {
 			StormEmitter secondEmitter, ComponentProperties cp,
 			List<String> allCompNames, StormSrcHarmonizer harmonizer,
 			boolean isFromFirstEmitter,
-			BasicStore<ArrayList<String>> preAggStorage,
+			BasicStore<String> preAggStorage,
 			ProjectOperator preAggProj, int hierarchyPosition,
 			TopologyBuilder builder, TopologyKiller killer, Config conf) {
 		super(cp, allCompNames, hierarchyPosition, conf);

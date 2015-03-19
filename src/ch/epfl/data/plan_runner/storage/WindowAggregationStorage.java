@@ -14,6 +14,7 @@ import org.apache.log4j.Logger;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.operators.AggregateOperator;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
+import frontend.functional.scala.operators.ScalaWindowAggregationStorage;
 
 public class WindowAggregationStorage<V> extends WindowKeyValueStore<Object, V> {
 
@@ -81,7 +82,7 @@ public class WindowAggregationStorage<V> extends WindowKeyValueStore<Object, V> 
 	}
 
 	public V getInitialValue() {
-		return (V) _wrapper.getInitialValue();
+	   return (V) _wrapper.getInitialValue();
 	}
 
 	@Override

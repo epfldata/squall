@@ -3,6 +3,7 @@ package ch.epfl.data.plan_runner.storage;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
 
@@ -28,7 +29,8 @@ public abstract class BasicStore<R> implements Serializable {
 				+ " MB with UniqStoreId: " + _uniqId);
 	}
 
-	public abstract R access(Object... data);
+	public abstract ArrayList<R> access(Object... data);
+	public abstract R update(Object... data);
 
 	public abstract boolean contains(Object... data);
 
@@ -72,7 +74,6 @@ public abstract class BasicStore<R> implements Serializable {
 
 	public abstract void reset();
 
-	public abstract R update(Object... data);
 
 	public abstract void setSingleEntry(boolean singleEntry);
 
