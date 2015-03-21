@@ -1,9 +1,6 @@
 package frontend.functional.scala.operators
 
-import ch.epfl.data.plan_runner.storage.AggregationStorage
 import ch.epfl.data.plan_runner.operators.AggregateOperator
-import ch.epfl.data.plan_runner.conversion.TypeConversion
-import Numeric.Implicits._
 import ch.epfl.data.plan_runner.storage.WindowAggregationStorage
 
 /**

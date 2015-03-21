@@ -16,7 +16,7 @@ import ch.epfl.data.plan_runner.operators.AggregateSumOperator;
 import ch.epfl.data.plan_runner.storage.AggregationStorage;
 import ch.epfl.data.plan_runner.storage.WindowAggregationStorage;
 import ch.epfl.data.plan_runner.storm_components.StormComponent;
-import frontend.functional.scala.operators.ScalaAggregateOperator;
+//import frontend.functional.scala.operators.ScalaAggregateOperator;
 
 public class LocalMergeResults {
 	private static void addMoreResults(AggregateOperator lastAgg, Map map) {
@@ -34,11 +34,13 @@ public class LocalMergeResults {
 					.getStorage();
 			stor.addContent((AggregationStorage) (lastAgg.getStorage()));
 		}
+		/*
 		if (_computedAgg.getStorage() instanceof WindowAggregationStorage) {
 			WindowAggregationStorage stor = (WindowAggregationStorage) _computedAgg
 					.getStorage();
 			stor.addContent((WindowAggregationStorage) (lastAgg.getStorage()));
 		}
+		*/
 	}
 
 	private static AggregateOperator createOverallAgg(
@@ -59,9 +61,11 @@ public class LocalMergeResults {
 			if (wsMetaData[0] > 0)
 				overallAgg.SetWindowSemantics(wsMetaData[0], wsMetaData[1]);
 		}
+		/*
 		else if(lastAgg instanceof ScalaAggregateOperator ){
 		    overallAgg = ((ScalaAggregateOperator) lastAgg).getNewInstance();
 		}
+		*/
 		else {
 			overallAgg = new AggregateSumOperator(cr, map);
 			if (wsMetaData[0] > 0)

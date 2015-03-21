@@ -1,4 +1,4 @@
-package frontend.functional.scala
+package frontend.functional.scala.SquallType
 
 import java.util.Date
 import java.text.SimpleDateFormat
