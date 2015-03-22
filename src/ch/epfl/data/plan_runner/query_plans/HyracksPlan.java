@@ -8,10 +8,14 @@ import ch.epfl.data.plan_runner.components.EquiJoinComponent;
 import ch.epfl.data.plan_runner.operators.AggregateCountOperator;
 import ch.epfl.data.plan_runner.operators.ProjectOperator;
 
-public class HyracksPlan extends QueryPlan{
+public class HyracksPlan extends QueryPlan {
+
+	public HyracksPlan(Map conf) {
+		super(conf);
+	}
 
 	@Override
-	public Component createQueryPlan(Map conf){
+	public Component createQueryPlan(Map conf) {
 		// -------------------------------------------------------------------------------------
 		Component customer = new DataSourceComponent("customer", conf)
 				.add(new ProjectOperator(0, 6));
@@ -26,9 +30,5 @@ public class HyracksPlan extends QueryPlan{
 		return custOrders;
 		// -------------------------------------------------------------------------------------
 	}
-
-	public HyracksPlan(Map conf){
-		super(conf);
-	}	
 
 }

@@ -8,8 +8,8 @@ import ch.epfl.data.plan_runner.ewh.data_structures.UJMPAdapterIntMatrix;
  */
 public interface VisualizerInterface {
 
-    public void visualize(UJMPAdapterByteMatrix m);
+	public void visualize(UJMPAdapterByteMatrix m);
 
-    public void visualize(UJMPAdapterIntMatrix m);
+	public void visualize(UJMPAdapterIntMatrix m);
 
 }

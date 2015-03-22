@@ -1,9 +1,9 @@
 package ch.epfl.data.sql.estimators;
 
-import net.sf.jsqlparser.expression.Expression;
+import java.beans.Expression;
 
 public interface SelectivityEstimator {
 
-    public double estimate(Expression expr);
+	public double estimate(Expression expr);
 
 }

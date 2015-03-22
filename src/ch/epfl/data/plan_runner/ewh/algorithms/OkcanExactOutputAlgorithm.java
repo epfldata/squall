@@ -7,51 +7,51 @@ import ch.epfl.data.plan_runner.ewh.data_structures.JoinMatrix;
 import ch.epfl.data.plan_runner.ewh.data_structures.Region;
 
 public class OkcanExactOutputAlgorithm extends OkcanAlgorithm {
-    // that's how the optimality would be checked
-    private WeightFunction _wf;
+	// that's how the optimality would be checked
+	private WeightFunction _wf;
 
-    public OkcanExactOutputAlgorithm(int j, WeightFunction wf, int numXBuckets,
-	    int numYBuckets, Map map) {
-	super(j, numXBuckets, numYBuckets, map, new OkcanExactCoarsener());
-	_wf = wf;
-    }
+	public OkcanExactOutputAlgorithm(int j, WeightFunction wf, int numXBuckets,
+			int numYBuckets, Map map) {
+		super(j, numXBuckets, numYBuckets, map, new OkcanExactCoarsener());
+		_wf = wf;
+	}
 
-    // coarsened region
-    @Override
-    public double getWeight(Region coarsenedRegion) {
-	return coarsenedRegion.getFrequency();
-    }
+	@Override
+	public WeightPrecomputation getPrecomputation() {
+		return null;
+	}
 
-    @Override
-    protected int getWeightLowerBound(JoinMatrix coarsenedMatrix,
-	    int numOfRegions) {
-	return coarsenedMatrix.getTotalNumOutputs() / numOfRegions;
-    }
+	@Override
+	public String getShortName() {
+		return "oeo";
+	}
 
-    @Override
-    protected int getWeightUpperBound(JoinMatrix coarsenedMatrix,
-	    int numOfRegions) {
-	// each region should have at least one candidate cell
-	return coarsenedMatrix.getTotalNumOutputs() - (numOfRegions - 1);
-    }
+	// coarsened region
+	@Override
+	public double getWeight(Region coarsenedRegion) {
+		return coarsenedRegion.getFrequency();
+	}
 
-    @Override
-    public String toString() {
-	return "OkcanExactOutputAlgorithm" + "[" + super.toString() + "]";
-    }
+	@Override
+	public WeightFunction getWeightFunction() {
+		return _wf;
+	}
 
-    @Override
-    public WeightPrecomputation getPrecomputation() {
-	return null;
-    }
+	@Override
+	protected int getWeightLowerBound(JoinMatrix coarsenedMatrix,
+			int numOfRegions) {
+		return coarsenedMatrix.getTotalNumOutputs() / numOfRegions;
+	}
 
-    @Override
-    public WeightFunction getWeightFunction() {
-	return _wf;
-    }
+	@Override
+	protected int getWeightUpperBound(JoinMatrix coarsenedMatrix,
+			int numOfRegions) {
+		// each region should have at least one candidate cell
+		return coarsenedMatrix.getTotalNumOutputs() - (numOfRegions - 1);
+	}
 
-    @Override
-    public String getShortName() {
-	return "oeo";
-    }
+	@Override
+	public String toString() {
+		return "OkcanExactOutputAlgorithm" + "[" + super.toString() + "]";
+	}
 }

@@ -28,78 +28,78 @@ import java.io.Serializable;
  */
 public class DeepCopy {
 
-    /**
-     * Returns a copy of the object, or null if the object cannot be serialized.
-     */
-    public static Object copy(Object orig) {
-	Object obj = null;
-	try {
-	    // Write the object out to a byte array
-	    final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-	    final ObjectOutputStream out = new ObjectOutputStream(bos);
-	    out.writeObject(orig);
-	    out.flush();
-	    out.close();
+	/**
+	 * Returns a copy of the object, or null if the object cannot be serialized.
+	 */
+	public static Object copy(Object orig) {
+		Object obj = null;
+		try {
+			// Write the object out to a byte array
+			final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			final ObjectOutputStream out = new ObjectOutputStream(bos);
+			out.writeObject(orig);
+			out.flush();
+			out.close();
 
-	    // Make an input stream from the byte array and read
-	    // a copy of the object back in.
-	    final ObjectInputStream in = new ObjectInputStream(
-		    new ByteArrayInputStream(bos.toByteArray()));
-	    obj = in.readObject();
-	} catch (final IOException e) {
-	    e.printStackTrace();
-	} catch (final ClassNotFoundException cnfe) {
-	    cnfe.printStackTrace();
+			// Make an input stream from the byte array and read
+			// a copy of the object back in.
+			final ObjectInputStream in = new ObjectInputStream(
+					new ByteArrayInputStream(bos.toByteArray()));
+			obj = in.readObject();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		} catch (final ClassNotFoundException cnfe) {
+			cnfe.printStackTrace();
+		}
+		return obj;
 	}
-	return obj;
-    }
 
-    public static void serializeToFile(Object obj, String filename) {
-	try {
-	    OutputStream file = new FileOutputStream(filename);
-	    OutputStream buffer = new BufferedOutputStream(file);
-	    ObjectOutput output = new ObjectOutputStream(buffer);
-	    output.writeObject(obj);
-	    output.close();
-	} catch (IOException ex) {
-	    throw new RuntimeException("Error while serializing "
-		    + MyUtilities.getStackTrace(ex));
+	public static Object deserializeFromByteArray(byte[] bytes) {
+		try {
+			ByteArrayInputStream b = new ByteArrayInputStream(bytes);
+			ObjectInputStream o = new ObjectInputStream(b);
+			return o.readObject();
+		} catch (Exception exc) {
+			throw new RuntimeException("Problem with deserializing "
+					+ MyUtilities.getStackTrace(exc));
+		}
 	}
-    }
 
-    public static Serializable deserializeFromFile(String filename) {
-	try {
-	    InputStream file = new FileInputStream(filename);
-	    InputStream buffer = new BufferedInputStream(file);
-	    ObjectInput input = new ObjectInputStream(buffer);
-	    return (Serializable) input.readObject();
-	} catch (Exception ex) {
-	    throw new RuntimeException("Error while deserializing "
-		    + MyUtilities.getStackTrace(ex));
+	public static Serializable deserializeFromFile(String filename) {
+		try {
+			InputStream file = new FileInputStream(filename);
+			InputStream buffer = new BufferedInputStream(file);
+			ObjectInput input = new ObjectInputStream(buffer);
+			return (Serializable) input.readObject();
+		} catch (Exception ex) {
+			throw new RuntimeException("Error while deserializing "
+					+ MyUtilities.getStackTrace(ex));
+		}
 	}
-    }
 
-    public static byte[] serializeToByteArray(Object obj) {
-	try {
-	    ByteArrayOutputStream b = new ByteArrayOutputStream();
-	    ObjectOutputStream o = new ObjectOutputStream(b);
-	    o.writeObject(obj);
-	    return b.toByteArray();
-	} catch (Exception exc) {
-	    throw new RuntimeException("Problem with serializing "
-		    + MyUtilities.getStackTrace(exc));
+	public static byte[] serializeToByteArray(Object obj) {
+		try {
+			ByteArrayOutputStream b = new ByteArrayOutputStream();
+			ObjectOutputStream o = new ObjectOutputStream(b);
+			o.writeObject(obj);
+			return b.toByteArray();
+		} catch (Exception exc) {
+			throw new RuntimeException("Problem with serializing "
+					+ MyUtilities.getStackTrace(exc));
+		}
 	}
-    }
 
-    public static Object deserializeFromByteArray(byte[] bytes) {
-	try {
-	    ByteArrayInputStream b = new ByteArrayInputStream(bytes);
-	    ObjectInputStream o = new ObjectInputStream(b);
-	    return o.readObject();
-	} catch (Exception exc) {
-	    throw new RuntimeException("Problem with deserializing "
-		    + MyUtilities.getStackTrace(exc));
+	public static void serializeToFile(Object obj, String filename) {
+		try {
+			OutputStream file = new FileOutputStream(filename);
+			OutputStream buffer = new BufferedOutputStream(file);
+			ObjectOutput output = new ObjectOutputStream(buffer);
+			output.writeObject(obj);
+			output.close();
+		} catch (IOException ex) {
+			throw new RuntimeException("Error while serializing "
+					+ MyUtilities.getStackTrace(ex));
+		}
 	}
-    }
 
 }

@@ -7,8 +7,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
-
-import org.apache.log4j.Logger;
+import java.util.logging.Logger;
 
 /*
  * BufferedReader gives no information about number of lines read for readLine
@@ -33,111 +32,112 @@ import org.apache.log4j.Logger;
  */
 
 public class SplitFileInputStream implements Serializable, CustomReader {
-    private static final long serialVersionUID = 1L;
-    private static Logger LOG = Logger.getLogger(SplitFileInputStream.class);
+	public static void main(String[] args) {
 
-    public static void main(String[] args) {
+		final String path = args[0];
+		final int section = Integer.parseInt(args[1]);
+		final int parts = Integer.parseInt(args[2]);
+		final SplitFileInputStream reader = new SplitFileInputStream(path,
+				section, parts);
 
-	final String path = args[0];
-	final int section = Integer.parseInt(args[1]);
-	final int parts = Integer.parseInt(args[2]);
-	final SplitFileInputStream reader = new SplitFileInputStream(path,
-		section, parts);
-
-	try {
-	    String line;
-	    while ((line = reader.readLine()) != null)
-		LOG.info(line);
-	} catch (final IOException ex) {
-	    LOG.info(MyUtilities.getStackTrace(ex));
-	}
-    }
-
-    private DataInputStream _in;
-
-    private BufferedReader _reader;
-
-    private boolean _omitFirstLine;
-    private long _filePosition;
-
-    private long _fileEndPtr;
-
-    public SplitFileInputStream(String path, int section, int parts) {
-	setParameters(path, section, parts);
-    }
-
-    @Override
-    public void close() {
-	try {
-	    _in.close();
-	    _reader.close();
-	} catch (final IOException ex) {
-	    LOG.info(MyUtilities.getStackTrace(ex));
-	}
-    }
-
-    private boolean eof() {
-	return _filePosition > _fileEndPtr;
-    }
-
-    private void openFileSection(String path, long fileBeginning) {
-	FileInputStream fstream = null;
-	try {
-	    fstream = new FileInputStream(path);
-	    _in = new DataInputStream(fstream);
-	    _reader = new BufferedReader(new InputStreamReader(_in));
-	    if (fileBeginning > 0)
-		for (long i = 0; i < fileBeginning; i += _reader
-			.skip(fileBeginning - i)) {
+		try {
+			String line;
+			while ((line = reader.readLine()) != null)
+				LOG.info(line);
+		} catch (final IOException ex) {
+			LOG.info(MyUtilities.getStackTrace(ex));
 		}
-	} catch (final IOException ex) {
-	    final String msg = MyUtilities.getStackTrace(ex);
-	    LOG.info(msg);
-	    throw new RuntimeException(msg);
 	}
-    }
 
-    @Override
-    public String readLine() throws IOException {
-	if (eof())
-	    return null;
+	private static final long serialVersionUID = 1L;
 
-	final String line = _reader.readLine();
-	int length = 0;
-	if (line != null)
-	    length = line.length();
-	_filePosition += length + 1; // // + 1 for \n character
+	private static Logger LOG = Logger.getLogger(SplitFileInputStream.class);
 
-	if (_omitFirstLine) {
-	    _omitFirstLine = false;
-	    return readLine();
-	} else
-	    return line;
-    }
+	private DataInputStream _in;
 
-    private void setParameters(String path, int section, int parts) {
-	if (section >= parts)
-	    throw new RuntimeException("The section can take value from 0 to "
-		    + (parts - 1));
+	private BufferedReader _reader;
 
-	final File file = new File(path); // no close method for this class
-	final long fileSize = file.length();
-	final long sectionSize = fileSize / parts;
-	_filePosition = section * sectionSize;
-	openFileSection(path, _filePosition);
+	private boolean _omitFirstLine;
+	private long _filePosition;
 
-	// for all the sections except the last one, the end is sectionSize far
-	// from the beginning
-	if (section == parts - 1)
-	    _fileEndPtr = fileSize;
-	else
-	    _fileEndPtr = _filePosition + sectionSize;
+	private long _fileEndPtr;
 
-	// for all the sections except the first one, we discard the first read
-	// line
-	if (section == 0)
-	    _omitFirstLine = false;
-	else
-	    _omitFirstLine = true;
-    }
+	public SplitFileInputStream(String path, int section, int parts) {
+		setParameters(path, section, parts);
+	}
+
+	@Override
+	public void close() {
+		try {
+			_in.close();
+			_reader.close();
+		} catch (final IOException ex) {
+			LOG.info(MyUtilities.getStackTrace(ex));
+		}
+	}
+
+	private boolean eof() {
+		return _filePosition > _fileEndPtr;
+	}
+
+	private void openFileSection(String path, long fileBeginning) {
+		FileInputStream fstream = null;
+		try {
+			fstream = new FileInputStream(path);
+			_in = new DataInputStream(fstream);
+			_reader = new BufferedReader(new InputStreamReader(_in));
+			if (fileBeginning > 0)
+				for (long i = 0; i < fileBeginning; i += _reader
+						.skip(fileBeginning - i)) {
+				}
+		} catch (final IOException ex) {
+			final String msg = MyUtilities.getStackTrace(ex);
+			LOG.info(msg);
+			throw new RuntimeException(msg);
+		}
+	}
+
+	@Override
+	public String readLine() throws IOException {
+		if (eof())
+			return null;
+
+		final String line = _reader.readLine();
+		int length = 0;
+		if (line != null)
+			length = line.length();
+		_filePosition += length + 1; // // + 1 for \n character
+
+		if (_omitFirstLine) {
+			_omitFirstLine = false;
+			return readLine();
+		} else
+			return line;
+	}
+
+	private void setParameters(String path, int section, int parts) {
+		if (section >= parts)
+			throw new RuntimeException("The section can take value from 0 to "
+					+ (parts - 1));
+
+		final File file = new File(path); // no close method for this class
+		final long fileSize = file.length();
+		final long sectionSize = fileSize / parts;
+		_filePosition = section * sectionSize;
+		openFileSection(path, _filePosition);
+
+		// for all the sections except the last one, the end is sectionSize far
+		// from the beginning
+		if (section == parts - 1)
+			_fileEndPtr = fileSize;
+		else
+			_fileEndPtr = _filePosition + sectionSize;
+
+		// for all the sections except the first one, we discard the first read
+		// line
+		if (section == 0)
+			_omitFirstLine = false;
+		else
+			_omitFirstLine = true;
+	}
 }

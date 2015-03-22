@@ -8,7 +8,6 @@ import java.util.Map;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
 import ch.epfl.data.plan_runner.components.EquiJoinComponent;
-import ch.epfl.data.plan_runner.utilities.SystemParameters;
 
 public class QueryBuilder implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -16,6 +15,14 @@ public class QueryBuilder implements Serializable {
 
 	public void add(Component component) {
 		_plan.add(component);
+	}
+
+	// Component names are unique - alias is used for tables
+	public boolean contains(String name) {
+		for (final Component component : _plan)
+			if (component.getName().equals(name))
+				return true;
+		return false;
 	}
 
 	public DataSourceComponent createDataSource(String tableName, Map conf) {
@@ -29,14 +36,6 @@ public class QueryBuilder implements Serializable {
 		EquiJoinComponent ejc = new EquiJoinComponent(firstParent, secondParent);
 		add(ejc);
 		return ejc;
-	}
-
-	// Component names are unique - alias is used for tables
-	public boolean contains(String name) {
-		for (final Component component : _plan)
-			if (component.getName().equals(name))
-				return true;
-		return false;
 	}
 
 	public Component getComponent(String name) {

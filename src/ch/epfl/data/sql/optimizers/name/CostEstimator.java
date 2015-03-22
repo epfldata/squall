@@ -1,11 +1,10 @@
 package ch.epfl.data.sql.optimizers.name;
 
+import java.beans.Expression;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.schema.Column;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
 import ch.epfl.data.plan_runner.components.EquiJoinComponent;
@@ -20,207 +19,207 @@ import ch.epfl.data.sql.visitors.jsql.SQLVisitor;
  * Instantiates CostParallelismAssigner
  */
 public class CostEstimator {
-    private final String _queryName;
-    private final SQLVisitor _pq;
-    private final Schema _schema;
+	private final String _queryName;
+	private final SQLVisitor _pq;
+	private final Schema _schema;
 
-    // needed because NameCompGen sets parallelism for all the components
-    private final CostParallelismAssigner _parAssigner;
+	// needed because NameCompGen sets parallelism for all the components
+	private final CostParallelismAssigner _parAssigner;
 
-    private final Map<String, CostParams> _compCost;
-    private final SelingerSelectivityEstimator _selEstimator;
+	private final Map<String, CostParams> _compCost;
+	private final SelingerSelectivityEstimator _selEstimator;
 
-    public CostEstimator(String queryName, Schema schema, SQLVisitor pq,
-	    Map<String, CostParams> compCost,
-	    CostParallelismAssigner parAssigner) {
-	_queryName = queryName;
-	_pq = pq;
-	_schema = schema;
-	_compCost = compCost;
+	public CostEstimator(String queryName, Schema schema, SQLVisitor pq,
+			Map<String, CostParams> compCost,
+			CostParallelismAssigner parAssigner) {
+		_queryName = queryName;
+		_pq = pq;
+		_schema = schema;
+		_compCost = compCost;
 
-	_parAssigner = parAssigner;
-	_selEstimator = new SelingerSelectivityEstimator(_queryName, schema,
-		_pq.getTan());
-    }
-
-    private double computeHashSelectivity(String leftJoinTableSchemaName,
-	    String rightJoinTableSchemaName, long leftCardinality,
-	    long rightCardinality) {
-	final long inputCardinality = leftCardinality + rightCardinality;
-	double selectivity;
-
-	if (leftJoinTableSchemaName.equals(rightJoinTableSchemaName))
-	    // we treat this as a cross-product on which some selections are
-	    // performed
-	    // IMPORTANT: selectivity is the output/input rate in the case of
-	    // EquiJoin
-	    selectivity = (leftCardinality * rightCardinality)
-		    / inputCardinality;
-	else {
-	    double ratio = _schema.getRatio(leftJoinTableSchemaName,
-		    rightJoinTableSchemaName);
-	    if (ratio < 1)
-		// if we are joining bigger and smaller relation, the size of
-		// join does not decrease
-		// it has to be 1
-		ratio = 1;
-	    // in case of bushy plans it's proportion of sizes
-	    // for lefty plans it's enough to be selectivity of the right parent
-	    // component (from compCost)
-	    final double rightSelectivity = ((double) rightCardinality)
-		    / _schema.getTableSize(rightJoinTableSchemaName);
-	    selectivity = (leftCardinality * ratio * rightSelectivity)
-		    / inputCardinality;
-	}
-	return selectivity;
-    }
-
-    // ***********HELPER methods***********
-    private double computeJoinSelectivity(EquiJoinComponent joinComponent,
-	    List<Expression> joinCondition, long leftCardinality,
-	    long rightCardinality) {
-
-	final Component[] parents = joinComponent.getParents();
-	double selectivity = 1;
-
-	final List<Column> joinColumns = ParserUtil
-		.getJSQLColumns(joinCondition);
-	final List<String> joinCompNames = ParserUtil
-		.getCompNamesFromColumns(joinColumns);
-
-	final List<String> leftJoinTableSchemaNames = getJoinSchemaNames(
-		joinCompNames, parents[0]);
-	final List<String> rightJoinTableSchemaNames = getJoinSchemaNames(
-		joinCompNames, parents[1]);
-
-	if (rightJoinTableSchemaNames.size() > 1)
-	    throw new RuntimeException(
-		    "Currently, this support only lefty plans!");
-	final String rightJoinTableSchemaName = rightJoinTableSchemaNames
-		.get(0);
-
-	int i = 0;
-	for (final String leftJoinTableSchemaName : leftJoinTableSchemaNames) {
-	    double hashSelectivity = computeHashSelectivity(
-		    leftJoinTableSchemaName, rightJoinTableSchemaName,
-		    leftCardinality, rightCardinality);
-	    if (i > 0 && hashSelectivity > 1)
-		// having multiple hashSelectivities means that we have
-		// AndCondition between them,
-		// so they cannot amplify each other.
-		hashSelectivity = 1;
-	    selectivity *= hashSelectivity;
-	    i++;
+		_parAssigner = parAssigner;
+		_selEstimator = new SelingerSelectivityEstimator(_queryName, schema,
+				_pq.getTan());
 	}
 
-	return selectivity;
-    }
+	private double computeHashSelectivity(String leftJoinTableSchemaName,
+			String rightJoinTableSchemaName, long leftCardinality,
+			long rightCardinality) {
+		final long inputCardinality = leftCardinality + rightCardinality;
+		double selectivity;
 
-    /*
-     * @allJoinCompNames - all the component names from the join condition
-     * joinCompNames - all the component names from the join condition
-     * corresponding to parent
-     */
-    private List<String> getJoinSchemaNames(List<String> allJoinCompNames,
-	    Component parent) {
-	final List<String> ancestors = ParserUtil.getSourceNameList(parent);
-	final List<String> joinCompNames = ParserUtil.getIntersection(
-		ancestors, allJoinCompNames);
-
-	final List<String> joinSchemaNames = new ArrayList<String>();
-	for (final String joinCompName : joinCompNames)
-	    joinSchemaNames.add(_pq.getTan().getSchemaName(joinCompName));
-	return joinSchemaNames;
-    }
-
-    // ***********OPERATORS***********
-    public void processWhereCost(Component component, Expression whereCompExpr) {
-	if (whereCompExpr != null) {
-	    // this is going to change selectivity
-	    final String compName = component.getName();
-	    final CostParams costParams = _compCost.get(compName);
-	    final double previousSelectivity = costParams.getSelectivity();
-
-	    final double selectivity = previousSelectivity
-		    * _selEstimator.estimate(whereCompExpr);
-	    costParams.setSelectivity(selectivity);
+		if (leftJoinTableSchemaName.equals(rightJoinTableSchemaName))
+			// we treat this as a cross-product on which some selections are
+			// performed
+			// IMPORTANT: selectivity is the output/input rate in the case of
+			// EquiJoin
+			selectivity = (leftCardinality * rightCardinality)
+					/ inputCardinality;
+		else {
+			double ratio = _schema.getRatio(leftJoinTableSchemaName,
+					rightJoinTableSchemaName);
+			if (ratio < 1)
+				// if we are joining bigger and smaller relation, the size of
+				// join does not decrease
+				// it has to be 1
+				ratio = 1;
+			// in case of bushy plans it's proportion of sizes
+			// for lefty plans it's enough to be selectivity of the right parent
+			// component (from compCost)
+			final double rightSelectivity = ((double) rightCardinality)
+					/ _schema.getTableSize(rightJoinTableSchemaName);
+			selectivity = (leftCardinality * ratio * rightSelectivity)
+					/ inputCardinality;
+		}
+		return selectivity;
 	}
-    }
 
-    // ***********SOURCES***********
-    // for now only cardinalities
-    public void setInputParams(DataSourceComponent source) {
-	final String compName = source.getName();
-	final String schemaName = _pq.getTan().getSchemaName(compName);
+	// ***********HELPER methods***********
+	private double computeJoinSelectivity(EquiJoinComponent joinComponent,
+			List<Expression> joinCondition, long leftCardinality,
+			long rightCardinality) {
 
-	final CostParams costParams = _compCost.get(compName);
-	costParams.setCardinality(_schema.getTableSize(schemaName));
-    }
+		final Component[] parents = joinComponent.getParents();
+		double selectivity = 1;
 
-    // ***********EquiJoinComponent***********
-    public void setInputParams(EquiJoinComponent joinComponent,
-	    List<Expression> joinCondition) {
-	final CostParams costParams = _compCost.get(joinComponent.getName());
-	final Component[] parents = joinComponent.getParents();
+		final List<Column> joinColumns = ParserUtil
+				.getJSQLColumns(joinCondition);
+		final List<String> joinCompNames = ParserUtil
+				.getCompNamesFromColumns(joinColumns);
 
-	// ********* set initial (join) selectivity and initial cardinality
-	final long leftCardinality = _compCost.get(parents[0].getName())
-		.getCardinality();
-	final long rightCardinality = _compCost.get(parents[1].getName())
-		.getCardinality();
+		final List<String> leftJoinTableSchemaNames = getJoinSchemaNames(
+				joinCompNames, parents[0]);
+		final List<String> rightJoinTableSchemaNames = getJoinSchemaNames(
+				joinCompNames, parents[1]);
 
-	// compute
-	final long inputCardinality = leftCardinality + rightCardinality;
-	final double selectivity = computeJoinSelectivity(joinComponent,
-		joinCondition, leftCardinality, rightCardinality);
+		if (rightJoinTableSchemaNames.size() > 1)
+			throw new RuntimeException(
+					"Currently, this support only lefty plans!");
+		final String rightJoinTableSchemaName = rightJoinTableSchemaNames
+				.get(0);
 
-	// setting
-	costParams.setCardinality(inputCardinality);
-	costParams.setSelectivity(selectivity);
-	// *********
-    }
+		int i = 0;
+		for (final String leftJoinTableSchemaName : leftJoinTableSchemaNames) {
+			double hashSelectivity = computeHashSelectivity(
+					leftJoinTableSchemaName, rightJoinTableSchemaName,
+					leftCardinality, rightCardinality);
+			if (i > 0 && hashSelectivity > 1)
+				// having multiple hashSelectivities means that we have
+				// AndCondition between them,
+				// so they cannot amplify each other.
+				hashSelectivity = 1;
+			selectivity *= hashSelectivity;
+			i++;
+		}
 
-    // ***********OperatorComponent***********
-    public void setInputParams(OperatorComponent opComp) {
-	final CostParams costParams = _compCost.get(opComp.getName());
-	final String parentName = opComp.getParents()[0].getName();
+		return selectivity;
+	}
 
-	costParams.setCardinality(_compCost.get(parentName).getCardinality());
-	costParams.setSelectivity(1);
-    }
+	/*
+	 * @allJoinCompNames - all the component names from the join condition
+	 * joinCompNames - all the component names from the join condition
+	 * corresponding to parent
+	 */
+	private List<String> getJoinSchemaNames(List<String> allJoinCompNames,
+			Component parent) {
+		final List<String> ancestors = ParserUtil.getSourceNameList(parent);
+		final List<String> joinCompNames = ParserUtil.getIntersection(
+				ancestors, allJoinCompNames);
 
-    // ***********COMMON***********
-    // for now only cardinalities
-    private void setOutputParams(Component comp) {
-	final CostParams costParams = _compCost.get(comp.getName());
-	final long currentCardinality = costParams.getCardinality();
-	final double selectivity = costParams.getSelectivity();
-	final long cardinality = (long) (selectivity * currentCardinality);
-	costParams.setCardinality(cardinality);
-    }
+		final List<String> joinSchemaNames = new ArrayList<String>();
+		for (final String joinCompName : joinCompNames)
+			joinSchemaNames.add(_pq.getTan().getSchemaName(joinCompName));
+		return joinSchemaNames;
+	}
 
-    public void setOutputParamsAndPar(DataSourceComponent source) {
-	setOutputParams(source);
+	// ***********OPERATORS***********
+	public void processWhereCost(Component component, Expression whereCompExpr) {
+		if (whereCompExpr != null) {
+			// this is going to change selectivity
+			final String compName = component.getName();
+			final CostParams costParams = _compCost.get(compName);
+			final double previousSelectivity = costParams.getSelectivity();
 
-	_parAssigner.setParallelism(source, _compCost);
-	_parAssigner.setBatchSize(source, _compCost); // has to go after
-	// parallelism
-    }
+			final double selectivity = previousSelectivity
+					* _selEstimator.estimate(whereCompExpr);
+			costParams.setSelectivity(selectivity);
+		}
+	}
 
-    public void setOutputParamsAndPar(EquiJoinComponent joinComponent) {
-	setOutputParams(joinComponent);
+	// ***********SOURCES***********
+	// for now only cardinalities
+	public void setInputParams(DataSourceComponent source) {
+		final String compName = source.getName();
+		final String schemaName = _pq.getTan().getSchemaName(compName);
 
-	_parAssigner.setParallelism(joinComponent, _compCost);
-	_parAssigner.setBatchSize(joinComponent, _compCost); // has to go after
-	// setting
-	// parallelism
-    }
+		final CostParams costParams = _compCost.get(compName);
+		costParams.setCardinality(_schema.getTableSize(schemaName));
+	}
 
-    public void setOutputParamsAndPar(OperatorComponent opComp) {
-	setOutputParams(opComp);
+	// ***********EquiJoinComponent***********
+	public void setInputParams(EquiJoinComponent joinComponent,
+			List<Expression> joinCondition) {
+		final CostParams costParams = _compCost.get(joinComponent.getName());
+		final Component[] parents = joinComponent.getParents();
 
-	_parAssigner.setParallelism(opComp, _compCost);
-	_parAssigner.setBatchSize(opComp, _compCost);
-    }
+		// ********* set initial (join) selectivity and initial cardinality
+		final long leftCardinality = _compCost.get(parents[0].getName())
+				.getCardinality();
+		final long rightCardinality = _compCost.get(parents[1].getName())
+				.getCardinality();
+
+		// compute
+		final long inputCardinality = leftCardinality + rightCardinality;
+		final double selectivity = computeJoinSelectivity(joinComponent,
+				joinCondition, leftCardinality, rightCardinality);
+
+		// setting
+		costParams.setCardinality(inputCardinality);
+		costParams.setSelectivity(selectivity);
+		// *********
+	}
+
+	// ***********OperatorComponent***********
+	public void setInputParams(OperatorComponent opComp) {
+		final CostParams costParams = _compCost.get(opComp.getName());
+		final String parentName = opComp.getParents()[0].getName();
+
+		costParams.setCardinality(_compCost.get(parentName).getCardinality());
+		costParams.setSelectivity(1);
+	}
+
+	// ***********COMMON***********
+	// for now only cardinalities
+	private void setOutputParams(Component comp) {
+		final CostParams costParams = _compCost.get(comp.getName());
+		final long currentCardinality = costParams.getCardinality();
+		final double selectivity = costParams.getSelectivity();
+		final long cardinality = (long) (selectivity * currentCardinality);
+		costParams.setCardinality(cardinality);
+	}
+
+	public void setOutputParamsAndPar(DataSourceComponent source) {
+		setOutputParams(source);
+
+		_parAssigner.setParallelism(source, _compCost);
+		_parAssigner.setBatchSize(source, _compCost); // has to go after
+		// parallelism
+	}
+
+	public void setOutputParamsAndPar(EquiJoinComponent joinComponent) {
+		setOutputParams(joinComponent);
+
+		_parAssigner.setParallelism(joinComponent, _compCost);
+		_parAssigner.setBatchSize(joinComponent, _compCost); // has to go after
+		// setting
+		// parallelism
+	}
+
+	public void setOutputParamsAndPar(OperatorComponent opComp) {
+		setOutputParams(opComp);
+
+		_parAssigner.setParallelism(opComp, _compCost);
+		_parAssigner.setBatchSize(opComp, _compCost);
+	}
 
 }

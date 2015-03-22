@@ -2,20 +2,20 @@ package ch.epfl.data.plan_runner.conversion;
 
 public interface NumericConversion<T extends Number> extends TypeConversion<T> {
 
-    public T getMinValue();
+	public T fromDouble(double d);
 
-    public T getMinPositiveValue();
+	public T getMaxValue();
 
-    public T minIncrement(Object obj);
+	public T getMinPositiveValue();
 
-    public T minDecrement(Object obj);
+	public T getMinValue();
 
-    public T getMaxValue();
+	public T getOffset(Object base, double delta);
 
-    public T fromDouble(double d);
+	public T minDecrement(Object obj);
 
-    public double toDouble(Object obj);
+	public T minIncrement(Object obj);
 
-    public T getOffset(Object base, double delta);
+	public double toDouble(Object obj);
 
 }

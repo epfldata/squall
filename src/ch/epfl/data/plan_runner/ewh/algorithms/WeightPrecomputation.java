@@ -5,26 +5,26 @@ import ch.epfl.data.plan_runner.ewh.data_structures.Region;
 
 public interface WeightPrecomputation {
 
-    public WeightFunction getWeightFunction();
+	public int getFrequency(Region region);
 
-    // prefix sum dimension
-    public int getXSize();
+	public int getMinHalfPerimeterForWeight(double maxWeight);
 
-    public int getYSize();
+	public int getPrefixSum(int x, int y); // necessary for
+	// PWeightPrecomputation
 
-    public double getWeight(Region region);
+	public int getTotalFrequency();
 
-    public int getFrequency(Region region);
+	public double getWeight(Region region);
 
-    // according to the matrix, not on the join condition
-    // for join condition, look at Coarsener
-    public boolean isEmpty(Region region);
+	public WeightFunction getWeightFunction();
 
-    public int getTotalFrequency();
+	// prefix sum dimension
+	public int getXSize();
 
-    public int getMinHalfPerimeterForWeight(double maxWeight);
+	public int getYSize();
 
-    public int getPrefixSum(int x, int y); // necessary for
-					   // PWeightPrecomputation
+	// according to the matrix, not on the join condition
+	// for join condition, look at Coarsener
+	public boolean isEmpty(Region region);
 
 }

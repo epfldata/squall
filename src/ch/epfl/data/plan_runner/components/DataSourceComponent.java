@@ -4,12 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.log4j.Logger;
-
-import backtype.storm.Config;
-import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
@@ -23,220 +19,220 @@ import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 
 public class DataSourceComponent implements Component {
-    private static final long serialVersionUID = 1L;
-    private static Logger LOG = Logger.getLogger(DataSourceComponent.class);
+	private static final long serialVersionUID = 1L;
+	private static Logger LOG = Logger.getLogger(DataSourceComponent.class);
 
-    private final String _componentName;
-    private final String _inputPath;
+	private final String _componentName;
+	private final String _inputPath;
 
-    private long _batchOutputMillis;
+	private long _batchOutputMillis;
 
-    private List<Integer> _hashIndexes;
-    private List<ValueExpression> _hashExpressions;
+	private List<Integer> _hashIndexes;
+	private List<ValueExpression> _hashExpressions;
 
-    private StormDataSource _dataSource;
+	private StormDataSource _dataSource;
 
-    private final ChainOperator _chain = new ChainOperator();
+	private final ChainOperator _chain = new ChainOperator();
 
-    private boolean _printOut;
-    private boolean _printOutSet; // whether printOut condition is already set
+	private boolean _printOut;
+	private boolean _printOutSet; // whether printOut condition is already set
 
-    private Component _child;
+	private Component _child;
 
-    // equi-weight histogram
-    private boolean _isPartitioner;
+	// equi-weight histogram
+	private boolean _isPartitioner;
 
-    public DataSourceComponent(String componentName, String inputPath) {
-	_componentName = componentName;
-	_inputPath = inputPath;
-    }
-    
-    // invoked from the new Interface (QueryPlan not QueryBuilder)
-    public DataSourceComponent(String tableName, Map conf) {
-    	this(tableName.toUpperCase(),
-    			// dataPath + tableName + extension);				
-    			SystemParameters.getString(conf, "DIP_DATA_PATH") + "/" +
-    			tableName +                                                
-    			SystemParameters.getString(conf, "DIP_EXTENSION"));
-    }
+	// invoked from the new Interface (QueryPlan not QueryBuilder)
+	public DataSourceComponent(String tableName, Map conf) {
+		this(tableName.toUpperCase(),
+		// dataPath + tableName + extension);
+				SystemParameters.getString(conf, "DIP_DATA_PATH") + "/"
+						+ tableName
+						+ SystemParameters.getString(conf, "DIP_EXTENSION"));
+	}
 
-    @Override
-    public DataSourceComponent add(Operator operator) {
-	_chain.addOperator(operator);
-	return this;
-    }
+	public DataSourceComponent(String componentName, String inputPath) {
+		_componentName = componentName;
+		_inputPath = inputPath;
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-	if (obj instanceof Component)
-	    return _componentName.equals(((Component) obj).getName());
-	else
-	    return false;
-    }
+	@Override
+	public DataSourceComponent add(Operator operator) {
+		_chain.addOperator(operator);
+		return this;
+	}
 
-    @Override
-    public List<DataSourceComponent> getAncestorDataSources() {
-	final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
-	list.add(this);
-	return list;
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Component)
+			return _componentName.equals(((Component) obj).getName());
+		else
+			return false;
+	}
 
-    @Override
-    public long getBatchOutputMillis() {
-	return _batchOutputMillis;
-    }
+	@Override
+	public List<DataSourceComponent> getAncestorDataSources() {
+		final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
+		list.add(this);
+		return list;
+	}
 
-    @Override
-    public ChainOperator getChainOperator() {
-	return _chain;
-    }
+	@Override
+	public long getBatchOutputMillis() {
+		return _batchOutputMillis;
+	}
 
-    @Override
-    public Component getChild() {
-	return _child;
-    }
+	@Override
+	public ChainOperator getChainOperator() {
+		return _chain;
+	}
 
-    // from StormEmitter interface
-    @Override
-    public String[] getEmitterIDs() {
-	return _dataSource.getEmitterIDs();
-    }
+	@Override
+	public Component getChild() {
+		return _child;
+	}
 
-    @Override
-    public List<String> getFullHashList() {
-	throw new RuntimeException(
-		"This method should not be invoked for DataSourceComponent!");
-    }
+	// from StormEmitter interface
+	@Override
+	public String[] getEmitterIDs() {
+		return _dataSource.getEmitterIDs();
+	}
 
-    @Override
-    public List<ValueExpression> getHashExpressions() {
-	return _hashExpressions;
-    }
+	@Override
+	public List<String> getFullHashList() {
+		throw new RuntimeException(
+				"This method should not be invoked for DataSourceComponent!");
+	}
 
-    @Override
-    public List<Integer> getHashIndexes() {
-	return _hashIndexes;
-    }
+	@Override
+	public List<ValueExpression> getHashExpressions() {
+		return _hashExpressions;
+	}
 
-    @Override
-    public String getInfoID() {
-	return _dataSource.getInfoID() + "\n";
-    }
+	@Override
+	public List<Integer> getHashIndexes() {
+		return _hashIndexes;
+	}
 
-    @Override
-    public String getName() {
-	return _componentName;
-    }
+	@Override
+	public String getInfoID() {
+		return _dataSource.getInfoID() + "\n";
+	}
 
-    @Override
-    public Component[] getParents() {
-	return null;
-    }
+	@Override
+	public String getName() {
+		return _componentName;
+	}
 
-    @Override
-    public boolean getPrintOut() {
-	return _printOut;
-    }
+	@Override
+	public Component[] getParents() {
+		return null;
+	}
 
-    @Override
-    public int hashCode() {
-	int hash = 3;
-	hash = 59 * hash
-		+ (_componentName != null ? _componentName.hashCode() : 0);
-	return hash;
-    }
+	@Override
+	public boolean getPrintOut() {
+		return _printOut;
+	}
 
-    @Override
-    public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
-	    List<String> allCompNames, Config conf, int partitioningType,
-	    int hierarchyPosition) {
+	@Override
+	public int hashCode() {
+		int hash = 3;
+		hash = 59 * hash
+				+ (_componentName != null ? _componentName.hashCode() : 0);
+		return hash;
+	}
 
-	// by default print out for the last component
-	// for other conditions, can be set via setPrintOut
-	if (hierarchyPosition == StormComponent.FINAL_COMPONENT
-		&& !_printOutSet)
-	    setPrintOut(true);
+	@Override
+	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
+			List<String> allCompNames, Config conf, int partitioningType,
+			int hierarchyPosition) {
 
-	final int parallelism = SystemParameters.getInt(conf, _componentName
-		+ "_PAR");
-	if (parallelism > 1 && _chain.getDistinct() != null)
-	    throw new RuntimeException(
-		    _componentName
-			    + ": Distinct operator cannot be specified for multiple spouts for one input file!");
+		// by default print out for the last component
+		// for other conditions, can be set via setPrintOut
+		if (hierarchyPosition == StormComponent.FINAL_COMPONENT
+				&& !_printOutSet)
+			setPrintOut(true);
 
-	MyUtilities.checkBatchOutput(_batchOutputMillis,
-		_chain.getAggregation(), conf);
+		final int parallelism = SystemParameters.getInt(conf, _componentName
+				+ "_PAR");
+		if (parallelism > 1 && _chain.getDistinct() != null)
+			throw new RuntimeException(
+					_componentName
+							+ ": Distinct operator cannot be specified for multiple spouts for one input file!");
 
-	_dataSource = new StormDataSource(this, allCompNames, _inputPath,
-		hierarchyPosition, parallelism, _isPartitioner, builder,
-		killer, conf);
-    }
+		MyUtilities.checkBatchOutput(_batchOutputMillis,
+				_chain.getAggregation(), conf);
 
-    @Override
-    public DataSourceComponent setBatchOutputMillis(long millis) {
-	throw new RuntimeException(
-		"Setting batch mode is not allowed for DataSourceComponents!");
-	// _batchOutputMillis = millis;
-	// return this;
-    }
+		_dataSource = new StormDataSource(this, allCompNames, _inputPath,
+				hierarchyPosition, parallelism, _isPartitioner, builder,
+				killer, conf);
+	}
 
-    @Override
-    public void setChild(Component child) {
-	_child = child;
-    }
+	@Override
+	public DataSourceComponent setBatchOutputMillis(long millis) {
+		throw new RuntimeException(
+				"Setting batch mode is not allowed for DataSourceComponents!");
+		// _batchOutputMillis = millis;
+		// return this;
+	}
 
-    @Override
-    public DataSourceComponent setFullHashList(List<String> fullHashList) {
-	throw new RuntimeException(
-		"This method should not be invoked for DataSourceComponent!");
-    }
+	@Override
+	public void setChild(Component child) {
+		_child = child;
+	}
 
-    @Override
-    public DataSourceComponent setHashExpressions(
-	    List<ValueExpression> hashExpressions) {
-	_hashExpressions = hashExpressions;
-	return this;
-    }
+	@Override
+	public DataSourceComponent setContentSensitiveThetaJoinWrapper(
+			TypeConversion wrapper) {
+		return this;
+	}
 
-    @Override
-    public DataSourceComponent setOutputPartKey(List<Integer> hashIndexes) {
-	_hashIndexes = hashIndexes;
-	return this;
-    }
+	@Override
+	public DataSourceComponent setFullHashList(List<String> fullHashList) {
+		throw new RuntimeException(
+				"This method should not be invoked for DataSourceComponent!");
+	}
 
-    @Override
-    public DataSourceComponent setOutputPartKey(int... hashIndexes) {
-	return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
-    }
+	@Override
+	public DataSourceComponent setHashExpressions(
+			List<ValueExpression> hashExpressions) {
+		_hashExpressions = hashExpressions;
+		return this;
+	}
 
-    @Override
-    public DataSourceComponent setPrintOut(boolean printOut) {
-	_printOutSet = true;
-	_printOut = printOut;
-	return this;
-    }
+	@Override
+	public DataSourceComponent setInterComp(InterchangingComponent inter) {
+		throw new RuntimeException(
+				"Datasource component does not support setInterComp");
+	}
 
-    public DataSourceComponent setPartitioner(boolean isPartitioner) {
-	_isPartitioner = isPartitioner;
-	return this;
-    }
+	@Override
+	public DataSourceComponent setJoinPredicate(Predicate joinPredicate) {
+		throw new RuntimeException(
+				"Datasource component does not support Join Predicates");
+	}
 
-    @Override
-    public DataSourceComponent setInterComp(InterchangingComponent inter) {
-	throw new RuntimeException(
-		"Datasource component does not support setInterComp");
-    }
+	@Override
+	public DataSourceComponent setOutputPartKey(int... hashIndexes) {
+		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
+	}
 
-    @Override
-    public DataSourceComponent setJoinPredicate(Predicate joinPredicate) {
-	throw new RuntimeException(
-		"Datasource component does not support Join Predicates");
-    }
+	@Override
+	public DataSourceComponent setOutputPartKey(List<Integer> hashIndexes) {
+		_hashIndexes = hashIndexes;
+		return this;
+	}
 
-    @Override
-    public DataSourceComponent setContentSensitiveThetaJoinWrapper(
-	    TypeConversion wrapper) {
-	return this;
-    }
+	public DataSourceComponent setPartitioner(boolean isPartitioner) {
+		_isPartitioner = isPartitioner;
+		return this;
+	}
+
+	@Override
+	public DataSourceComponent setPrintOut(boolean printOut) {
+		_printOutSet = true;
+		_printOut = printOut;
+		return this;
+	}
 
 }

@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public interface CustomReader {
 
-    public void close();
+	public void close();
 
-    public String readLine() throws IOException;
+	public String readLine() throws IOException;
 }
