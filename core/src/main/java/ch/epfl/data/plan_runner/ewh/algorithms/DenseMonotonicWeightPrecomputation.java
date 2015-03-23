@@ -2,7 +2,8 @@ package ch.epfl.data.plan_runner.ewh.algorithms;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.ewh.algorithms.optimality.WeightFunction;
 import ch.epfl.data.plan_runner.ewh.data_structures.JoinMatrix;
@@ -28,7 +29,7 @@ public class DenseMonotonicWeightPrecomputation implements WeightPrecomputation 
 	private JoinMatrix _joinMatrix;
 
 	private SimpleMatrix _prefixSum; // dimension of the sample matrix n_s
-	// (called here _joinMatrix)
+										// (called here _joinMatrix)
 	private int _xSize, _ySize; // dimensions of the prefix sum
 
 	private ShallowCoarsener _sc;
@@ -74,9 +75,9 @@ public class DenseMonotonicWeightPrecomputation implements WeightPrecomputation 
 			// sc is InputShallowCoarsener, so the area is fixed
 			int roundedCellArea = (_xSize / _sc.getNumXCoarsenedPoints() + 1)
 					* (_ySize / _sc.getNumYCoarsenedPoints() + 1); // in terms
-			// of sample
-			// matrix
-			// cells
+																	// of sample
+																	// matrix
+																	// cells
 			if (_sc instanceof InputShallowCoarsener) {
 				// all the cell sizes are equal except the last one which can be
 				// bigger

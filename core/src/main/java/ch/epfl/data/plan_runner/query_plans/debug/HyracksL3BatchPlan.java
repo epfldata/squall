@@ -3,7 +3,8 @@ package ch.epfl.data.plan_runner.query_plans.debug;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
 import ch.epfl.data.plan_runner.components.EquiJoinComponent;

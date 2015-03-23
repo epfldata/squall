@@ -7,8 +7,8 @@ import ch.epfl.data.plan_runner.components.Component;
 public abstract class QueryPlan {
 	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
-	public QueryPlan(Map conf) {
-		build(createQueryPlan(conf));
+	public QueryPlan(String dataPath, String extension, Map conf) {
+          build(createQueryPlan(dataPath, extension, conf));
 	}
 
 	// _queryBuilder expects components in the parent->child order
@@ -27,10 +27,10 @@ public abstract class QueryPlan {
 
 	// This returns the last component: it assumes there is only one last
 	// component
-	public abstract Component createQueryPlan(Map conf);
+	public abstract Component createQueryPlan(String dataPath, String extension, Map conf);
 
 	// QueryBuilder is expected from the outside world
-	public QueryBuilder getQueryBuilder() {
+	public QueryBuilder getQueryPlan() {
 		return _queryBuilder;
 	}
 }

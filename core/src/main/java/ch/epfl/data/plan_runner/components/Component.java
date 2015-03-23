@@ -3,6 +3,8 @@ package ch.epfl.data.plan_runner.components;
 import java.io.Serializable;
 import java.util.List;
 
+import backtype.storm.Config;
+import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.operators.Operator;
@@ -18,8 +20,7 @@ public interface Component extends Serializable, ComponentProperties,
 	// ChainOperator
 
 	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
-			List<String> allCompNames, Config conf, int partitioningType,
-			int hierarchyPosition);
+			List<String> allCompNames, Config conf, int hierarchyPosition);
 
 	// sending the content of the component every 'millis' milliseconds
 	public Component setBatchOutputMillis(long millis);

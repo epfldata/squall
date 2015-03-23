@@ -9,8 +9,19 @@ import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.Random;
 import java.util.TreeMap;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.InputDeclarer;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.topology.base.BaseRichBolt;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 import ch.epfl.data.plan_runner.conversion.NumericConversion;
 import ch.epfl.data.plan_runner.ewh.data_structures.FixedSizePriorityQueue;
 import ch.epfl.data.plan_runner.ewh.data_structures.KeyPriorityProbability;
@@ -37,49 +48,56 @@ public class S1ReservoirGenerator<JAT extends Number & Comparable<JAT>> extends
 	private OutputCollector _collector;
 
 	private boolean _isEWHS1Histogram; // receives either d2 or d2equi from
-	// D2Combiner
+										// D2Combiner
 	private static final boolean _isSinglePassD2Equi = true; // Opt2: can be set
-	// to true only for
-	// _isEWHS1Histogram
-	// = true
-	// reduces number
-	// of accesses to
-	// d2 by computing
-	// d2 from d2_equi
-	// in a single pass
-	// if turned off,
-	// check
-	// "If Opt2 is not used"
+																// to true only
+																// for
+																// _isEWHS1Histogram
+																// = true
+																// reduces
+																// number of
+																// accesses to
+																// d2 by
+																// computing d2
+																// from d2_equi
+																// in a single
+																// pass
+																// if turned
+																// off, check
+																// "If Opt2 is not used"
 
 	private static final boolean _isSinglePassDebug = false; // can be set to
-	// true only if
-	// _isSinglePassD2Equi
-	// is true;
-	// checks whether
-	// the result is
-	// correct by using
-	// more space:
-	// don't use it in
-	// production (only
-	// for testing
-	// purposes)
+																// true only if
+																// _isSinglePassD2Equi
+																// is true;
+																// checks
+																// whether the
+																// result is
+																// correct by
+																// using more
+																// space: don't
+																// use it in
+																// production
+																// (only for
+																// testing
+																// purposes)
 	private Map<JAT, Integer> _d2OldDebug = new HashMap<JAT, Integer>(); // key,
-	// multiplicity:
-	// only
-	// if
-	// _isSinglePassDebug
-	// =
-	// true
+																			// multiplicity:
+																			// only
+																			// if
+																			// _isSinglePassDebug
+																			// =
+																			// true
 	// private TreeMap<JAT, Integer> _d2Equi = new TreeMap<JAT, Integer>(); //
 	// key, multiplicity: used only when _isSinglePassD2Equi is set
 	private TreeMap<JAT, Integer> _d2BeginEnd = new TreeMap<JAT, Integer>(); // key,
-	// multiplicity:
-	// used
-	// only
-	// when
-	// _isSinglePassD2Equi
-	// is
-	// set
+																				// multiplicity:
+																				// used
+																				// only
+																				// when
+																				// _isSinglePassD2Equi
+																				// is
+																				// set
 	private int _band;
 
 	private int _hierarchyPosition;
@@ -89,20 +107,22 @@ public class S1ReservoirGenerator<JAT extends Number & Comparable<JAT>> extends
 	private long _computedTotalOutputs;
 
 	private TreeMap<JAT, Integer> _d2 = new TreeMap<JAT, Integer>(); // Opt1 is
-	// JAT
-	// instead
-	// of
-	// String
-	// key
-	// (key,
-	// multiplicity).
-	// If Opt2
-	// is not
-	// used,
-	// use
-	// HashMap
+																		// JAT
+																		// instead
+																		// of
+																		// String
+																		// key
+																		// (key,
+																		// multiplicity).
+																		// If
+																		// Opt2
+																		// is
+																		// not
+																		// used,
+																		// use
+																		// HashMap
 	private Map<String, Integer> _r1 = new HashMap<String, Integer>(); // key,
-	// multiplicity
+																		// multiplicity
 	private PriorityQueue<KeyPriorityProbability> _reservoir;
 
 	private Random _rndGen = new Random();
@@ -113,7 +133,7 @@ public class S1ReservoirGenerator<JAT extends Number & Comparable<JAT>> extends
 			String componentName,
 			String partitionerName,
 			boolean isEWHS1Histogram, // receives either d2 or d2equi from
-			// D2Combiner
+										// D2Combiner
 			NumericConversion<JAT> wrapper, ComparisonPredicate comparison,
 			int firstNumOfBuckets, int secondNumOfBuckets,
 			List<String> allCompNames, int hierarchyPosition,
@@ -228,9 +248,9 @@ public class S1ReservoirGenerator<JAT extends Number & Comparable<JAT>> extends
 			// basically we are doing prefix sum
 			for (Map.Entry<JAT, Integer> entry : _d2BeginEnd.entrySet()) {
 				multInRange += entry.getValue(); // can be negative when exiting
-				// out of scope of a key
+													// out of scope of a key
 				entry.setValue(multInRange); // updating in place: we won't need
-				// previous values anymore
+												// previous values anymore
 			}
 			_d2 = _d2BeginEnd;
 
@@ -330,9 +350,10 @@ public class S1ReservoirGenerator<JAT extends Number & Comparable<JAT>> extends
 						KeyPriorityProbability keyPriority = new KeyPriorityProbability(
 								r1StrKey, priority, d2KeyProbability);
 						_reservoir.add(keyPriority); // add method is changed in
-						// the implementation such
-						// that we do not violate
-						// capacity constraints
+														// the implementation
+														// such that we do not
+														// violate capacity
+														// constraints
 					}
 
 					// totalOutputs update
@@ -533,8 +554,8 @@ public class S1ReservoirGenerator<JAT extends Number & Comparable<JAT>> extends
 
 			// sending output sample size information to S1Merge
 			List<Integer> hashIndexes = new ArrayList<Integer>(Arrays.asList(0)); // does
-			// not
-			// matter
+																					// not
+																					// matter
 			tupleSend(SystemParameters.RESERVOIR_TO_MERGE, tuple, hashIndexes);
 		} else {
 			throw new RuntimeException("In S1ReduceBolt, unrecognized source "

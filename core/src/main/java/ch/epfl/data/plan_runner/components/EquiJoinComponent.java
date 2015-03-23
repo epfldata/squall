@@ -3,8 +3,12 @@ package ch.epfl.data.plan_runner.components;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
@@ -19,12 +23,12 @@ import ch.epfl.data.plan_runner.storm_components.StormComponent;
 import ch.epfl.data.plan_runner.storm_components.StormDstJoin;
 import ch.epfl.data.plan_runner.storm_components.StormDstTupleStorageBDB;
 import ch.epfl.data.plan_runner.storm_components.StormDstTupleStorageJoin;
-import ch.epfl.data.plan_runner.storm_components.StormJoin;
-import ch.epfl.data.plan_runner.storm_components.StormSrcJoin;
+import ch.epfl.data.plan_runner.storm_components.StormEmitter;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
+import ch.epfl.data.plan_runner.window_semantics.WindowSemanticsManager;
 
-public class EquiJoinComponent implements Component {
+public class EquiJoinComponent extends JoinerComponent implements Component {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(EquiJoinComponent.class);
 
@@ -39,7 +43,7 @@ public class EquiJoinComponent implements Component {
 	private List<Integer> _hashIndexes;
 	private List<ValueExpression> _hashExpressions;
 
-	private StormJoin _joiner;
+	private StormEmitter _joiner;
 
 	private final ChainOperator _chain = new ChainOperator();
 
@@ -47,7 +51,7 @@ public class EquiJoinComponent implements Component {
 	// or AggregationStorage<Numeric> for pre-aggregation
 	// Access method returns a list of Strings (a list of Numerics for
 	// pre-aggregation)
-	private BasicStore<ArrayList<String>> _firstStorage, _secondStorage;
+	private BasicStore<String> _firstStorage, _secondStorage;
 	// preAggregation
 	private ProjectOperator _firstPreAggProj, _secondPreAggProj;
 
@@ -57,6 +61,8 @@ public class EquiJoinComponent implements Component {
 	private List<String> _fullHashList;
 	private Predicate _joinPredicate;
 
+	private boolean _isRemoveIndex = true;
+
 	public EquiJoinComponent(Component firstParent, Component secondParent) {
 		_firstParent = firstParent;
 		_firstParent.setChild(this);
@@ -64,6 +70,16 @@ public class EquiJoinComponent implements Component {
 		_secondParent.setChild(this);
 
 		_componentName = firstParent.getName() + "_" + secondParent.getName();
+	}
+
+	public EquiJoinComponent(Component firstParent, Component secondParent,
+			boolean isRemoveIndex) {
+		_firstParent = firstParent;
+		_firstParent.setChild(this);
+		_secondParent = secondParent;
+		_secondParent.setChild(this);
+		_componentName = firstParent.getName() + "_" + secondParent.getName();
+		_isRemoveIndex = isRemoveIndex;
 	}
 
 	public EquiJoinComponent(Component firstParent, int firstJoinIndex,
@@ -161,8 +177,7 @@ public class EquiJoinComponent implements Component {
 
 	@Override
 	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
-			List<String> allCompNames, Config conf, int partitioningType,
-			int hierarchyPosition) {
+			List<String> allCompNames, Config conf, int hierarchyPosition) {
 
 		// by default print out for the last component
 		// for other conditions, can be set via setPrintOut
@@ -185,6 +200,7 @@ public class EquiJoinComponent implements Component {
 					"Please provide _joinPredicate if you want to run BDB!");
 		}
 
+		// TODO: what is with the if condition
 		if (isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)) {
 			_joiner = new StormDstTupleStorageBDB(_firstParent, _secondParent,
 					this, allCompNames, _joinPredicate, hierarchyPosition,
@@ -193,27 +209,13 @@ public class EquiJoinComponent implements Component {
 			_joiner = new StormDstTupleStorageJoin(_firstParent, _secondParent,
 					this, allCompNames, _joinPredicate, hierarchyPosition,
 					builder, killer, conf);
-		} else if (partitioningType == StormJoin.DST_ORDERING) {
+		} else {
 			// should issue a warning
 			_joiner = new StormDstJoin(_firstParent, _secondParent, this,
 					allCompNames, _firstStorage, _secondStorage,
 					_firstPreAggProj, _secondPreAggProj, hierarchyPosition,
-					builder, killer, conf);
-		} else if (partitioningType == StormJoin.SRC_ORDERING) {
-			if (_chain.getDistinct() != null)
-				throw new RuntimeException(
-						"Cannot instantiate Distinct operator from StormSourceJoin! There are two Bolts processing operators!");
-
-			// since we don't know how data is scattered across StormSrcStorage,
-			// we cannot do customStreamGrouping from the previous level
-			_joiner = new StormSrcJoin(_firstParent, _secondParent, this,
-					allCompNames, _firstStorage, _secondStorage,
-					_firstPreAggProj, _secondPreAggProj, hierarchyPosition,
-					builder, killer, conf);
-
-		} else
-			throw new RuntimeException("Unsupported ordering "
-					+ partitioningType);
+					builder, killer, conf, _isRemoveIndex);
+		}
 	}
 
 	@Override
@@ -300,6 +302,21 @@ public class EquiJoinComponent implements Component {
 	public EquiJoinComponent setSecondPreAggStorage(
 			AggregationStorage secondPreAggStorage) {
 		_secondStorage = secondPreAggStorage;
+		return this;
+	}
+
+	@Override
+	public Component setSlidingWindow(int windowRange) {
+		WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
+		_windowSize = windowRange * 1000; // Width in terms of millis, Default
+											// is -1 which is full history
+		return this;
+	}
+
+	@Override
+	public Component setTumblingWindow(int windowRange) {
+		WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
+		_tumblingWindowSize = windowRange * 1000;// For tumbling semantics
 		return this;
 	}
 

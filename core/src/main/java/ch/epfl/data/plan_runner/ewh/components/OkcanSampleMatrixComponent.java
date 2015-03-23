@@ -2,8 +2,11 @@ package ch.epfl.data.plan_runner.ewh.components;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
 import ch.epfl.data.plan_runner.components.EquiJoinComponent;
@@ -138,8 +141,7 @@ public class OkcanSampleMatrixComponent implements Component {
 
 	@Override
 	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
-			List<String> allCompNames, Config conf, int partitioningType,
-			int hierarchyPosition) {
+			List<String> allCompNames, Config conf, int hierarchyPosition) {
 
 		new OkcanSampleMatrixBolt(_firstParent, _secondParent, _componentName,
 				_numOfLastJoiners, _wrapper, _comparison, _firstNumOfBuckets,

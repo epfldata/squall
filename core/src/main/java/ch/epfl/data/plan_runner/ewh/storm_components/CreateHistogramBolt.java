@@ -4,8 +4,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.InputDeclarer;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.topology.base.BaseRichBolt;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
 import ch.epfl.data.plan_runner.conversion.NumericConversion;
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.storm_components.StormComponent;
@@ -52,7 +62,7 @@ public class CreateHistogramBolt<JAT extends Number & Comparable<JAT>> extends
 					.getName()));
 		}
 		if (r1Source != null) { // is the data source one which feeds
-			// S1Reservoir directly
+								// S1Reservoir directly
 			_r1Emitter = r1Source;
 			_r1EmitterIndex = String.valueOf(allCompNames.indexOf(r1Source
 					.getName()));

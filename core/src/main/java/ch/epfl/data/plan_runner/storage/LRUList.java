@@ -1,7 +1,8 @@
 package ch.epfl.data.plan_runner.storage;
 
 import java.io.Serializable;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 public class LRUList<V> implements ReplacementAlgorithm<V>, Serializable {
 	public class LRUNode<V> {

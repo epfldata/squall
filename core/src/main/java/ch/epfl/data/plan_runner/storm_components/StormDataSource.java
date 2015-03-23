@@ -7,8 +7,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.spout.SpoutOutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.tuple.Values;
+import backtype.storm.utils.Utils;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
 import ch.epfl.data.plan_runner.operators.AggregateOperator;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
@@ -45,6 +52,10 @@ public class StormDataSource extends StormSpoutComponent {
 	private PeriodicAggBatchSend _periodicAggBatch;
 	private final long _aggBatchOutputMillis;
 
+	private boolean _isWindowMode;
+
+	private String _name;
+
 	public StormDataSource(ComponentProperties cp, List<String> allCompNames,
 			String inputPath, int hierarchyPosition, int parallelism,
 			boolean isPartitioner, TopologyBuilder builder,
@@ -52,7 +63,7 @@ public class StormDataSource extends StormSpoutComponent {
 
 		super(cp, allCompNames, hierarchyPosition, isPartitioner, conf);
 		_operatorChain = cp.getChainOperator();
-
+		_name = cp.getName();
 		_aggBatchOutputMillis = cp.getBatchOutputMillis();
 		_inputPath = inputPath;
 		_fileParts = parallelism;
@@ -64,6 +75,10 @@ public class StormDataSource extends StormSpoutComponent {
 		builder.setSpout(getID(), this, parallelism);
 		if (MyUtilities.isAckEveryTuple(conf))
 			killer.registerComponent(this, parallelism);
+	}
+
+	public void setWindowMode() {
+		_isWindowMode = true;
 	}
 
 	// ack method on spout is called only if in AckEveryTuple mode (ACKERS > 0)
@@ -97,13 +112,18 @@ public class StormDataSource extends StormSpoutComponent {
 	}
 
 	protected void applyOperatorsAndSend(List<String> tuple) {
-		// do selection and projection
+		long timestamp = 0;
+		if (_isWindowMode
+				|| (MyUtilities.isCustomTimestampMode(getConf()) && getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
+				|| MyUtilities.isWindowTimestampMode(getConf()))
+			timestamp = System.currentTimeMillis();
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			try {
 				_semAgg.acquire();
 			} catch (final InterruptedException ex) {
 			}
-		tuple = _operatorChain.process(tuple);
+		tuple = _operatorChain.process(tuple, timestamp);
+
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			_semAgg.release();
 
@@ -116,18 +136,9 @@ public class StormDataSource extends StormSpoutComponent {
 
 		if (MyUtilities
 				.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
-			long timestamp = 0;
-			if (MyUtilities.isCustomTimestampMode(getConf()))
-				if (getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
-					// A tuple has a non-null timestamp only if the component is
-					// next to last
-					// because we measure the latency of the last operator
-					timestamp = System.currentTimeMillis();
 			tupleSend(tuple, null, timestamp);
 		}
 		if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
-			final long timestamp = System.currentTimeMillis();
-			// long timestamp = System.nanoTime();
 			printTupleLatency(_numSentTuples - 1, timestamp);
 		}
 	}

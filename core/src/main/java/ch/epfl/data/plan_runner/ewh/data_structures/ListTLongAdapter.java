@@ -1,5 +1,7 @@
 package ch.epfl.data.plan_runner.ewh.data_structures;
 
+import gnu.trove.list.array.TLongArrayList;
+
 import java.io.Serializable;
 
 // T has to be Integer

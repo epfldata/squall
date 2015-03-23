@@ -165,11 +165,11 @@ public class ChainOperator implements Operator {
 	 * Return tuple if the tuple has to be sent further Otherwise return null.
 	 */
 	@Override
-	public List<String> process(List<String> tuple) {
+	public List<String> process(List<String> tuple, long lineageTimestamp) {
 		List<String> result = tuple;
 
 		for (final Operator operator : _operators) {
-			result = operator.process(result);
+			result = operator.process(result, lineageTimestamp);
 			if (result == null)
 				break;
 		}

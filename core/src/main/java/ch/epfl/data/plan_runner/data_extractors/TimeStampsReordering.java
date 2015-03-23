@@ -9,7 +9,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.utilities.SerializableFileInputStream;
 

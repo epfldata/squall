@@ -1,7 +1,8 @@
 package ch.epfl.data.sql.main;
 
 import java.util.Map;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.main.Main;
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder;

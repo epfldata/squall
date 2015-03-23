@@ -10,6 +10,7 @@ import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.predicates.LikePredicate;
 import ch.epfl.data.plan_runner.predicates.OrPredicate;
 import ch.epfl.data.plan_runner.predicates.Predicate;
+import ch.epfl.data.plan_runner.predicates.booleanPrimitive;
 import ch.epfl.data.plan_runner.visitors.PredicateVisitor;
 
 public class VECollectPredVisitor implements PredicateVisitor {
@@ -27,6 +28,11 @@ public class VECollectPredVisitor implements PredicateVisitor {
 	@Override
 	public void visit(BetweenPredicate between) {
 		visit(between.getInnerPredicates());
+	}
+
+	@Override
+	public void visit(booleanPrimitive bool) {
+
 	}
 
 	@Override

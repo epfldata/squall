@@ -3,8 +3,16 @@ package ch.epfl.data.plan_runner.storm_components;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.spout.SpoutOutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.base.BaseRichSpout;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
 import ch.epfl.data.plan_runner.ewh.operators.SampleAsideAndForwardOperator;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
@@ -103,7 +111,8 @@ public abstract class StormSpoutComponent extends BaseRichSpout implements
 			outputFields.add(StormComponent.TUPLE); // list of string
 			outputFields.add(StormComponent.HASH);
 		}
-		if (MyUtilities.isCustomTimestampMode(getConf()))
+		if (MyUtilities.isCustomTimestampMode(getConf())
+				|| MyUtilities.isWindowTimestampMode(getConf()))
 			outputFields.add(StormComponent.TIMESTAMP);
 		declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(
 				outputFields));

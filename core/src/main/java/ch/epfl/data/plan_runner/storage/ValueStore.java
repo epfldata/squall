@@ -54,11 +54,10 @@ public class ValueStore<V> extends KeyValueStore<V, Object> {
 		super.onInsert(data[0], dummyObj);
 	}
 
-	@Override
-	public Object onRemove() {
-		super.onRemove();
-		return _objRemId; /* We want to write the key */
-	}
+	/*
+	 * @Override public Object onRemove() { super.onRemove(); return _objRemId;
+	 * // We want to write the key }
+	 */
 
 	@Override
 	public void printStore(PrintStream stream, boolean printStorage) {

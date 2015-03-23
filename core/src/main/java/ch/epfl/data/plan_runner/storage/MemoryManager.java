@@ -4,7 +4,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 public class MemoryManager implements Serializable {
 	private static Logger LOG = Logger.getLogger(MemoryManager.class);

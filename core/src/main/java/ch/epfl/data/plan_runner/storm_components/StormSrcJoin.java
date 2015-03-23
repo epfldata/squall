@@ -3,8 +3,11 @@ package ch.epfl.data.plan_runner.storm_components;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.operators.ProjectOperator;
@@ -12,7 +15,8 @@ import ch.epfl.data.plan_runner.storage.BasicStore;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 
-public class StormSrcJoin implements StormJoin, Serializable {
+@Deprecated
+public class StormSrcJoin implements StormEmitter, Serializable {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormSrcJoin.class);
 
@@ -26,8 +30,8 @@ public class StormSrcJoin implements StormJoin, Serializable {
 
 	public StormSrcJoin(StormEmitter firstEmitter, StormEmitter secondEmitter,
 			ComponentProperties cp, List<String> allCompNames,
-			BasicStore<ArrayList<String>> firstPreAggStorage,
-			BasicStore<ArrayList<String>> secondPreAggStorage,
+			BasicStore<String> firstPreAggStorage,
+			BasicStore<String> secondPreAggStorage,
 			ProjectOperator firstPreAggProj, ProjectOperator secondPreAggProj,
 			int hierarchyPosition, TopologyBuilder builder,
 			TopologyKiller killer, Config conf) {

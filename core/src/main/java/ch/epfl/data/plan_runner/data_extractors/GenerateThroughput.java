@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
+import au.com.bytecode.opencsv.CSVReader;
+
 /**
  * 
  * This class reads the input "Results.csv" whose format is tuples, percentage
@@ -257,9 +259,9 @@ public class GenerateThroughput {
 	private String _inPath, _outPath, _outPathAvg;
 
 	private static final int SAMPLE_FREQ_SECS = 1; // check the code if you
+													// change the constant, it
+													// should be divided
 
-	// change the constant, it
-	// should be divided
 	private static final String RESULT_NAME = "Results.csv";
 
 	private static final String THROUGH_NAME = "Through.csv";
@@ -368,11 +370,11 @@ public class GenerateThroughput {
 			csvThroughputObject current = avgWithInSubinterval.get(i);
 			long throughput = current._numOutput - prev._numOutput;
 			double time = (prev._time + (current._time - prev._time) / 2); // at
-			// that
-			// time
+																			// that
+																			// time
 			double resultPercentage = (prev._resultPercentage + (current._resultPercentage - prev._resultPercentage) / 2); // at
-			// that
-			// %
+																															// that
+																															// %
 
 			out.write(time + "," + throughput + "," + resultPercentage + '\n');
 			System.out

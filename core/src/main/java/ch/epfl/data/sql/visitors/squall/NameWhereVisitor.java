@@ -1,14 +1,16 @@
 package ch.epfl.data.sql.visitors.squall;
 
-import java.beans.Expression;
-
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.Function;
+import net.sf.jsqlparser.expression.Parenthesis;
+import net.sf.jsqlparser.expression.operators.arithmetic.Addition;
+import net.sf.jsqlparser.expression.operators.arithmetic.Division;
+import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
+import net.sf.jsqlparser.expression.operators.arithmetic.Subtraction;
+import net.sf.jsqlparser.schema.Column;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
-import ch.epfl.data.plan_runner.expressions.Addition;
 import ch.epfl.data.plan_runner.expressions.ColumnReference;
-import ch.epfl.data.plan_runner.expressions.Division;
-import ch.epfl.data.plan_runner.expressions.Multiplication;
-import ch.epfl.data.plan_runner.expressions.Subtraction;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.sql.optimizers.name.NameTranslator;
 import ch.epfl.data.sql.util.ParserUtil;

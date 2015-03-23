@@ -5,7 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.expressions.ColumnReference;
@@ -13,7 +14,9 @@ import ch.epfl.data.plan_runner.operators.AggregateAvgOperator;
 import ch.epfl.data.plan_runner.operators.AggregateOperator;
 import ch.epfl.data.plan_runner.operators.AggregateSumOperator;
 import ch.epfl.data.plan_runner.storage.AggregationStorage;
+import ch.epfl.data.plan_runner.storage.WindowAggregationStorage;
 import ch.epfl.data.plan_runner.storm_components.StormComponent;
+//import frontend.functional.scala.operators.ScalaAggregateOperator;
 
 public class LocalMergeResults {
 	private static void addMoreResults(AggregateOperator lastAgg, Map map) {
@@ -25,8 +28,19 @@ public class LocalMergeResults {
 			_fileAgg = (AggregateOperator) DeepCopy.copy(_computedAgg);
 			fillAggFromResultFile(map);
 		}
-		((AggregationStorage) _computedAgg.getStorage())
-				.addContent((AggregationStorage) (lastAgg.getStorage()));
+
+		if (_computedAgg.getStorage() instanceof AggregationStorage) {
+			AggregationStorage stor = (AggregationStorage) _computedAgg
+					.getStorage();
+			stor.addContent((AggregationStorage) (lastAgg.getStorage()));
+		}
+		/*
+		if (_computedAgg.getStorage() instanceof WindowAggregationStorage) {
+			WindowAggregationStorage stor = (WindowAggregationStorage) _computedAgg
+					.getStorage();
+			stor.addContent((WindowAggregationStorage) (lastAgg.getStorage()));
+		}
+		*/
 	}
 
 	private static AggregateOperator createOverallAgg(
@@ -40,10 +54,23 @@ public class LocalMergeResults {
 		else
 			cr = new ColumnReference(wrapper, 0);
 
-		if (lastAgg instanceof AggregateAvgOperator)
+		int[] wsMetaData = lastAgg.getWindowSemanticsInfo();
+
+		if (lastAgg instanceof AggregateAvgOperator) {
 			overallAgg = new AggregateAvgOperator(cr, map);
-		else
+			if (wsMetaData[0] > 0)
+				overallAgg.SetWindowSemantics(wsMetaData[0], wsMetaData[1]);
+		}
+		/*
+		else if(lastAgg instanceof ScalaAggregateOperator ){
+		    overallAgg = ((ScalaAggregateOperator) lastAgg).getNewInstance();
+		}
+		*/
+		else {
 			overallAgg = new AggregateSumOperator(cr, map);
+			if (wsMetaData[0] > 0)
+				overallAgg.SetWindowSemantics(wsMetaData[0], wsMetaData[1]);
+		}
 
 		if (lastAgg.hasGroupBy())
 			overallAgg.setGroupByColumns(Arrays.asList(0));
@@ -61,7 +88,7 @@ public class LocalMergeResults {
 				// we want to catch exactly one space between and after =.
 				// tuple might consist of spaces as well
 				final List<String> tuple = Arrays.asList(line.split(" = "));
-				_fileAgg.process(tuple);
+				_fileAgg.process(tuple, -1);
 			}
 		} catch (final IOException ex) {
 			// problem with finding the result file

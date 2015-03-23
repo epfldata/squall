@@ -10,8 +10,8 @@ import ch.epfl.data.plan_runner.components.DataSourceComponent;
 public class LevelAssigner {
 	private final List<DataSourceComponent> _dsList = new ArrayList<DataSourceComponent>();
 	private final List<CompLevel> _clList = new ArrayList<CompLevel>(); // list
-	// of
-	// all
+																		// of
+																		// all
 	// Components
 	// which are
 	// not

@@ -1,5 +1,7 @@
 package ch.epfl.data.plan_runner.ewh.data_structures;
 
+import gnu.trove.list.array.TIntArrayList;
+
 import java.util.ArrayList;
 import java.util.Collections;
 

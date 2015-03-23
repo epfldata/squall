@@ -8,8 +8,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.InputDeclarer;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.topology.base.BaseRichBolt;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 import ch.epfl.data.plan_runner.conversion.NumericConversion;
 import ch.epfl.data.plan_runner.ewh.algorithms.BSPAlgorithm;
 import ch.epfl.data.plan_runner.ewh.algorithms.InputOutputShallowCoarsener;
@@ -335,11 +346,10 @@ public class EWHSampleMatrixBolt<JAT extends Number & Comparable<JAT>> extends
 	private int _s1ReservoirGeneratorPar = 0;
 
 	private int _outputSampleSize; // computed based on the join matrix and
-	// candidates
+									// candidates
 
 	// received from three parents
 	private List<JAT> _xJoinKeys = new ArrayList<JAT>();;
-
 	private List<JAT> _yJoinKeys = new ArrayList<JAT>();
 
 	private List<TwoString> _outputSample = new ArrayList<TwoString>();
@@ -803,7 +813,7 @@ public class EWHSampleMatrixBolt<JAT extends Number & Comparable<JAT>> extends
 		}
 
 		upperBound--;// because we will look one position right from the
-		// right-most allowed
+						// right-most allowed
 		while (lowerBound <= upperBound) {
 			int currentPosition = (lowerBound + upperBound) / 2;
 			JAT leftBoundary = boundaries.get(currentPosition);
@@ -1019,8 +1029,8 @@ public class EWHSampleMatrixBolt<JAT extends Number & Comparable<JAT>> extends
 		List<String> tupleSampleSize = new ArrayList<String>(Arrays.asList(
 				SystemParameters.OUTPUT_SAMPLE_SIZE, strOutputSampleSize));
 		List<Integer> hashIndexes = new ArrayList<Integer>(Arrays.asList(0)); // does
-		// not
-		// matter
+																				// not
+																				// matter
 		tupleSend(SystemParameters.FROM_PARTITIONER, tupleSampleSize,
 				hashIndexes);
 	}

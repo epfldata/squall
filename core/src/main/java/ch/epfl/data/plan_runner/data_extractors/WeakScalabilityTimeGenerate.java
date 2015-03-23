@@ -5,6 +5,8 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.OutputStreamWriter;
 
+import au.com.bytecode.opencsv.CSVReader;
+
 public class WeakScalabilityTimeGenerate {
 
 	public static void main(String[] args) {

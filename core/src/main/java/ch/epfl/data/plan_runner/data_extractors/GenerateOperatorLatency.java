@@ -142,7 +142,7 @@ public class GenerateOperatorLatency {
 	private static String working = "experiments/Dropbox/";
 	private static String resultPath = "VLDBPaperLatex/Results/csv/latency/squall_latency.csv";
 	private static final double TOP_RESULTS = 0.74; // the relative TOP latency
-	// files are analyzed
+													// files are analyzed
 
 	private static int STATIC_NAIVE = 0;
 	private static int STATIC_OPT = 1;

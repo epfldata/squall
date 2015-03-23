@@ -9,6 +9,8 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Random;
 
+import au.com.bytecode.opencsv.CSVReader;
+
 public class GenerateMemory {
 
 	public static void main(String[] args) {

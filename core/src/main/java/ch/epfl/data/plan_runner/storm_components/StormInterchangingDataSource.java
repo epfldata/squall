@@ -7,8 +7,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.spout.SpoutOutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.topology.base.BaseRichSpout;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
+import backtype.storm.utils.Utils;
 import ch.epfl.data.plan_runner.components.InterchangingDataSourceComponent;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
@@ -45,7 +56,7 @@ public class StormInterchangingDataSource extends BaseRichSpout implements
 	private boolean _hasSentLastAck = false; // AckLastTuple mode
 	private long _pendingTuples = 0;
 	private final String _componentIndexRel1, _componentIndexRel2; // a unique
-	// index
+																	// index
 	// in a list of
 	// all the
 	// components
@@ -134,9 +145,9 @@ public class StormInterchangingDataSource extends BaseRichSpout implements
 			} catch (final InterruptedException ex) {
 			}
 		if (RelIndex == 1)
-			tuple = _operatorChainRel1.process(tuple);
+			tuple = _operatorChainRel1.process(tuple, 0);
 		else
-			tuple = _operatorChainRel2.process(tuple);
+			tuple = _operatorChainRel2.process(tuple, 0);
 
 		if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
 			_semAgg.release();

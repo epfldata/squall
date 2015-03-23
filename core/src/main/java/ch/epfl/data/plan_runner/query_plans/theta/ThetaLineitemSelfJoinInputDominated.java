@@ -29,11 +29,25 @@ import ch.epfl.data.plan_runner.utilities.SystemParameters;
 //BNCI
 public class ThetaLineitemSelfJoinInputDominated {
 
+	/*
+	 * For 0.01G With comp2 = 34, seleOrders2 decommented Input = 2844 + 51465 =
+	 * 54309 Output = 26791
+	 * 
+	 * Also old: Input = 1214 + 45165 Output = 10880
+	 * 
+	 * New: Input = 873 + 30057, Output = 5194
+	 * 
+	 * New new: Input: 341 + 15010 Output = 1073
+	 */
+
 	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final String _date1Str = "1993-06-17";
 	private static final TypeConversion<Date> _dateConv = new DateConversion();
+	// private static final NumericConversion<Double> _doubleConv = new
+	// DoubleConversion();
 	private static final Date _date1 = _dateConv.fromString(_date1Str);
 	private static final TypeConversion<String> _stringConv = new StringConversion();
+
 	private static final TypeConversion<Integer> _dateIntConv = new DateIntegerConversion();
 	private static final IntegerConversion _ic = new IntegerConversion();
 	private static final DoubleConversion _dblConv = new DoubleConversion();

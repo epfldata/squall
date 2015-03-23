@@ -10,12 +10,12 @@ import ch.epfl.data.plan_runner.operators.ProjectOperator;
 
 public class HyracksPlan extends QueryPlan {
 
-	public HyracksPlan(Map conf) {
-		super(conf);
+	public HyracksPlan(String dataPath, String extension, Map conf) {
+          super(dataPath, extension, conf);
 	}
 
 	@Override
-	public Component createQueryPlan(Map conf) {
+	public Component createQueryPlan(String dataPath, String extension, Map conf) {
 		// -------------------------------------------------------------------------------------
 		Component customer = new DataSourceComponent("customer", conf)
 				.add(new ProjectOperator(0, 6));
@@ -30,5 +30,4 @@ public class HyracksPlan extends QueryPlan {
 		return custOrders;
 		// -------------------------------------------------------------------------------------
 	}
-
 }

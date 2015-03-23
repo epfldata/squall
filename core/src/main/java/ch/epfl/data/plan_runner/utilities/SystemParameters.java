@@ -5,19 +5,23 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.utils.Utils;
 
 public class SystemParameters {
 	// histogram types for building the partitioning scheme in our algorithm
 	public enum HistogramType {
 		D2_COMB_HIST("DIP_R2_HISTOGRAM", "DIP_EWH_R2_HIST", "D2"), // String
-		// R2->D2,
-		// but we
-		// kept like
-		// this not
-		// to change
-		// config
-		// files
+																	// R2->D2,
+																	// but we
+																	// kept like
+																	// this not
+																	// to change
+																	// config
+																	// files
 		S1_RES_HIST("DIP_S1_HISTOGRAM", "DIP_EWH_S1_HIST", "S1");
 
 		// this is for all histograms, not only for R2 (we keep the name for
@@ -232,17 +236,17 @@ public class SystemParameters {
 	public static final long BYTES_IN_MB = 1024 * 1024;
 	public static final String MANUAL_BATCH_HASH_DELIMITER = "~";
 	public static final String MANUAL_BATCH_TUPLE_DELIMITER = "`"; // these two
+																	// are the
+																	// same, but
+																	// it should
+																	// not be a
+																	// problem:
 
-	// are the
-	// same, but
-	// it should
-	// not be a
-	// problem:
 	public static final String BDB_TUPLE_DELIMITER = "`"; // the first is for
+															// network transfer,
+															// the second is for
+															// storing tuples
 
-	// network transfer,
-	// the second is for
-	// storing tuples
 	public static final String STORE_TIMESTAMP_DELIMITER = "@";
 	// TYPE OF THETA JOINERS
 	// Content Insensitive
@@ -326,10 +330,10 @@ public class SystemParameters {
 	// public static final String ThetaSignalDataMigrationEndedInitiated =
 	// "D-M-E-I"; //Initiate Data migration-End
 	public static final String ThetaSignalDataMigrationEnded = "D-M-E"; // End
+																		// -->
+																		// Data
+																		// migration
 
-	// -->
-	// Data
-	// migration
 	// ended
 	public static final String ThetaJoinerDataMigrationEOF = "D-M-E-E-O-F"; // End
 
@@ -370,9 +374,9 @@ public class SystemParameters {
 
 	// for content-sensitive
 	public static final int TUPLES_PER_BUCKET = 100; // sample size =
+														// TUPLES_PER_BUCKET *
+														// #_of_buckets
 
-	// TUPLES_PER_BUCKET *
-	// #_of_buckets
 	// for sparse matrices we need to specify size ahead of time
 	public static final int MATRIX_CAPACITY_MULTIPLIER = 10;
 

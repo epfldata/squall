@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.ewh.data_structures.BooleanRegions;
 import ch.epfl.data.plan_runner.ewh.data_structures.ExtremePositions;
@@ -108,8 +109,8 @@ public abstract class OkcanAlgorithm implements TilingAlgorithm {
 		}
 
 		result.setFrequency(r_freq + n_freq); // TODO for this to work, the
-		// regions have to be
-		// non-overlapping
+												// regions have to be
+												// non-overlapping
 
 		return result;
 	}
@@ -216,10 +217,10 @@ public abstract class OkcanAlgorithm implements TilingAlgorithm {
 		if (_isMonotonic) {
 			startYIndex = _rowExtremes.get(firstRow).getMostLeft();
 			endYIndex = _rowExtremes.get(lastRow).getMostRight() + 1; // +1
-			// because
-			// endIndex
-			// is
-			// non-inclusive
+																		// because
+																		// endIndex
+																		// is
+																		// non-inclusive
 		}
 
 		// my optimization: instead of going one by one, we could use convex
@@ -278,8 +279,8 @@ public abstract class OkcanAlgorithm implements TilingAlgorithm {
 
 		try {
 			for (int i = 0; i < maxWeight; i++) { // 0 as there could be only
-				// one row left in the matrix
-				// to be processed
+													// one row left in the
+													// matrix to be processed
 				// check if lastRow is out of scope
 				if (currentRow + i >= coarsenedMatrix.getXSize())
 					break;
@@ -519,7 +520,7 @@ public abstract class OkcanAlgorithm implements TilingAlgorithm {
 					} else {
 						ExtremePositions ep = _columnExtremes.get(j);
 						ep.setMostRight(i); // update the last position (i) with
-						// value j in place
+											// value j in place
 					}
 				}
 				if (!isFirstInColumn && !isCandidate) {
@@ -563,7 +564,7 @@ public abstract class OkcanAlgorithm implements TilingAlgorithm {
 					} else {
 						ExtremePositions ep = _rowExtremes.get(i);
 						ep.setMostRight(j); // update the last position (i) with
-						// value j in place
+											// value j in place
 					}
 				}
 				if (!isFirstInRow && !isCandidate) {

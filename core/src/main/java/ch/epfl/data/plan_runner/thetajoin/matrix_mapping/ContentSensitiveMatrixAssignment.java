@@ -6,7 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.ewh.data_structures.KeyRegion;
@@ -27,7 +28,7 @@ public class ContentSensitiveMatrixAssignment<KeyType extends Comparable<KeyType
 	private static Logger LOG = Logger
 			.getLogger(ContentSensitiveMatrixAssignment.class);
 	private long _sizeS, _sizeT; // dimensions of data.. row, column
-	// respectively.
+									// respectively.
 	private int _r; // practically speaking usually a relatively small value!
 	private int[][] regionsMatrix;
 	private List<KeyRegion> keyRegions = null;

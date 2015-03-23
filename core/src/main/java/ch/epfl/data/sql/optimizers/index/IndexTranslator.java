@@ -3,6 +3,7 @@ package ch.epfl.data.sql.optimizers.index;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.sf.jsqlparser.schema.Column;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
 import ch.epfl.data.sql.schema.ColumnNameType;

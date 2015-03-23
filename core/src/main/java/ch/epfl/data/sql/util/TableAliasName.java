@@ -6,6 +6,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.schema.Table;
+
 /*
  * This class is necessary because we cannot extract tableSchemaName from column.getTable()
  *   tableSchemaName is the name from TPCH_Schema (non-aliased tableName)

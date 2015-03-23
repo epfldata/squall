@@ -4,8 +4,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.base.BaseRichBolt;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
 import ch.epfl.data.plan_runner.ewh.main.PushStatisticCollector;
 import ch.epfl.data.plan_runner.ewh.operators.SampleAsideAndForwardOperator;
@@ -16,9 +25,11 @@ import ch.epfl.data.plan_runner.operators.Operator;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
+import ch.epfl.data.plan_runner.window_semantics.WindowSemanticsManager;
 
 public abstract class StormBoltComponent extends BaseRichBolt implements
-		StormJoin, StormComponent {
+		StormEmitter, StormComponent {
+
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormBoltComponent.class);
 
@@ -60,13 +71,24 @@ public abstract class StormBoltComponent extends BaseRichBolt implements
 	private PushStatisticCollector _sc;
 
 	// EWH histogram
-	private boolean _isPartitioner;
+	private boolean _isEWHPartitioner;
+
+	/*
+	 * //TODO For Window Semantics
+	 */
+	// //////////////////////////////
+	// protected static int WINDOW_SIZE_MULTIPLE_CONSTANT=3;
+	public boolean _isLocalWindowSemantics = false;
+	public long _windowSize = -1; // Width in terms of millis, Default is -1
+									// which is full history
+	public long _latestTimeStamp = -1;
+	public long _tumblingWindowSize = -1;// For tumbling semantics
 
 	public StormBoltComponent(ComponentProperties cp,
 			List<String> allCompNames, int hierarchyPosition,
-			boolean isPartitioner, Map conf) {
+			boolean isEWHPartitioner, Map conf) {
 		this(cp, allCompNames, hierarchyPosition, conf);
-		_isPartitioner = isPartitioner;
+		_isEWHPartitioner = isEWHPartitioner;
 	}
 
 	public StormBoltComponent(ComponentProperties cp,
@@ -76,11 +98,11 @@ public abstract class StormBoltComponent extends BaseRichBolt implements
 		_componentIndex = String.valueOf(allCompNames.indexOf(_ID));
 		_printOut = cp.getPrintOut();
 		_hierarchyPosition = hierarchyPosition;
-
 		_parentEmitters = cp.getParents();
-
 		_hashIndexes = cp.getHashIndexes();
 		_hashExpressions = cp.getHashExpressions();
+		// setWindowSemantics(conf); // Set Window Semantics if Available in the
+		// configuration file
 	}
 
 	// ManualBatchMode
@@ -128,12 +150,13 @@ public abstract class StormBoltComponent extends BaseRichBolt implements
 				outputFields.add(StormComponent.TUPLE); // list of string
 				outputFields.add(StormComponent.HASH);
 			}
-			if (MyUtilities.isCustomTimestampMode(_conf))
+			if (MyUtilities.isCustomTimestampMode(_conf)
+					|| MyUtilities.isWindowTimestampMode(_conf))
 				outputFields.add(StormComponent.TIMESTAMP);
 			declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(
 					outputFields));
 
-			if (_isPartitioner) {
+			if (_isEWHPartitioner) {
 				// EQUI-WEIGHT HISTOGRAM
 				final List<String> outputFieldsPart = new ArrayList<String>();
 				outputFieldsPart.add(StormComponent.COMP_INDEX);
@@ -157,11 +180,11 @@ public abstract class StormBoltComponent extends BaseRichBolt implements
 
 	public abstract ChainOperator getChainOperator();
 
-	protected OutputCollector getCollector() {
+	public OutputCollector getCollector() {
 		return _collector;
 	}
 
-	protected Map getConf() {
+	public Map getConf() {
 		return _conf;
 	}
 
@@ -171,7 +194,7 @@ public abstract class StormBoltComponent extends BaseRichBolt implements
 		return new String[] { _ID };
 	}
 
-	protected int getHierarchyPosition() {
+	public int getHierarchyPosition() {
 		return _hierarchyPosition;
 	}
 
@@ -199,7 +222,8 @@ public abstract class StormBoltComponent extends BaseRichBolt implements
 
 			if (!tupleString.isEmpty())
 				// some buffers might be empty
-				if (MyUtilities.isCustomTimestampMode(_conf))
+				if (MyUtilities.isCustomTimestampMode(_conf)
+						|| MyUtilities.isWindowTimestampMode(_conf))
 					_collector.emit(new Values(_componentIndex, tupleString,
 							_targetTimestamps[i]));
 				else
@@ -234,7 +258,7 @@ public abstract class StormBoltComponent extends BaseRichBolt implements
 		}
 
 		// equi-weight histogram
-		if (_isPartitioner) {
+		if (_isEWHPartitioner) {
 			// extract sampleAside operator
 			SampleAsideAndForwardOperator saf = getChainOperator()
 					.getSampleAside();
@@ -344,7 +368,7 @@ public abstract class StormBoltComponent extends BaseRichBolt implements
 			MyUtilities.processFinalAck(_numRemainingParents,
 					getHierarchyPosition(), getConf(), stormTupleRcv,
 					getCollector(), getPeriodicAggBatch());
-			if (_isPartitioner) {
+			if (_isEWHPartitioner) {
 				// rel size
 				Values relSize = MyUtilities.createRelSizeTuple(
 						_componentIndex, (int) getNumSentTuples());
@@ -360,6 +384,11 @@ public abstract class StormBoltComponent extends BaseRichBolt implements
 		}
 		return false;
 	}
+
+	public abstract void purgeStaleStateFromWindow();
+
+	// //////////////////////////////
+	// //////////////////////////////end
 
 	protected boolean receivedDumpSignal(Tuple stormTuple) {
 		return stormTuple.getSourceStreamId().equalsIgnoreCase(
@@ -389,6 +418,28 @@ public abstract class StormBoltComponent extends BaseRichBolt implements
 	// invoked from StormSrcStorage only
 	protected void setNumRemainingParents(int numParentTasks) {
 		_numRemainingParents = numParentTasks;
+	}
+
+	public void setWindowSemantics(long windowSize, long tumblingWindowSize) {
+		// Width in terms of millis, Default is -1 which is full history
+		_isLocalWindowSemantics = true;
+		_windowSize = windowSize;
+		_tumblingWindowSize = tumblingWindowSize;// For tumbling semantics
+		long max = _windowSize > _tumblingWindowSize ? _windowSize
+				: _tumblingWindowSize;
+
+		if (_conf.get(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS) == null) {
+			_conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, max * 2);
+			WindowSemanticsManager._GC_PERIODIC_TICK = max * 2;
+		}
+
+		long value = (long) _conf.get(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS) / 2;
+
+		if (value > max) {
+			_conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, value * 2);
+			WindowSemanticsManager._GC_PERIODIC_TICK = value * 2;
+		}
+
 	}
 
 	@Override

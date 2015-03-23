@@ -10,6 +10,7 @@ import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.predicates.LikePredicate;
 import ch.epfl.data.plan_runner.predicates.OrPredicate;
 import ch.epfl.data.plan_runner.predicates.Predicate;
+import ch.epfl.data.plan_runner.predicates.booleanPrimitive;
 
 public class PredicateUpdateIndexesVisitor implements PredicateVisitor {
 
@@ -40,6 +41,11 @@ public class PredicateUpdateIndexesVisitor implements PredicateVisitor {
 		// In between there is only an and predicate
 		final Predicate p = (Predicate) between.getInnerPredicates().get(0);
 		visit(p);
+	}
+
+	@Override
+	public void visit(booleanPrimitive bool) {
+
 	}
 
 	@Override

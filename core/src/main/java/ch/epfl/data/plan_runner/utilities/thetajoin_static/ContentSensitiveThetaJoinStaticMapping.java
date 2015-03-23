@@ -3,8 +3,12 @@ package ch.epfl.data.plan_runner.utilities.thetajoin_static;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.generated.GlobalStreamId;
+import backtype.storm.grouping.CustomStreamGrouping;
+import backtype.storm.task.WorkerTopologyContext;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.thetajoin.matrix_mapping.MatrixAssignment;
 import ch.epfl.data.plan_runner.thetajoin.matrix_mapping.MatrixAssignment.Dimension;

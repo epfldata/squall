@@ -2,6 +2,8 @@ package ch.epfl.data.plan_runner.storm_components;
 
 import java.util.List;
 
+import backtype.storm.tuple.Tuple;
+
 public interface StormComponent {
 
 	// Component which sends data further down

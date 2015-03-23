@@ -9,8 +9,9 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
+import org.apache.log4j.Logger;
 
+import backtype.storm.Config;
 import ch.epfl.data.plan_runner.conversion.IntegerConversion;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.ewh.data_structures.JoinMatrix;
@@ -145,7 +146,7 @@ public class PullStatisticCollector {
 		List<String> tuple = null;
 		while (tuple == null && (line = readLine(reader)) != null) {
 			tuple = MyUtilities.fileLineToTuple(line, map);
-			tuple = operators.process(tuple);
+			tuple = operators.process(tuple, -1);
 		}
 		return tuple;
 	}

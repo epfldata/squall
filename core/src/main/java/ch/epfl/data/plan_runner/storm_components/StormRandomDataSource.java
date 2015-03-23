@@ -2,8 +2,11 @@ package ch.epfl.data.plan_runner.storm_components;
 
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 

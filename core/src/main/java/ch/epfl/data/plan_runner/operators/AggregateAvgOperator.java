@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
+
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.conversion.NumericConversion;
 import ch.epfl.data.plan_runner.conversion.SumCount;
@@ -13,8 +15,10 @@ import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.storage.AggregationStorage;
 import ch.epfl.data.plan_runner.storage.BasicStore;
+import ch.epfl.data.plan_runner.storage.WindowAggregationStorage;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.visitors.OperatorVisitor;
+import ch.epfl.data.plan_runner.window_semantics.WindowSemanticsManager;
 
 public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 	private static final long serialVersionUID = 1L;
@@ -33,9 +37,13 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 
 	private final SumCountConversion _wrapper = new SumCountConversion();
 	private final ValueExpression _ve;
-	private final AggregationStorage<SumCount> _storage;
+	private BasicStore<SumCount> _storage;
 
 	private final Map _map;
+
+	private boolean isWindowSemantics;
+	private int _windowRangeSecs = -1;
+	private int _slideRangeSecs = -1;
 
 	public AggregateAvgOperator(ValueExpression ve, Map map) {
 		_ve = ve;
@@ -130,10 +138,10 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 
 	// from Operator
 	@Override
-	public List<String> process(List<String> tuple) {
+	public List<String> process(List<String> tuple, long lineageTimestamp) {
 		_numTuplesProcessed++;
 		if (_distinct != null) {
-			tuple = _distinct.process(tuple);
+			tuple = _distinct.process(tuple, lineageTimestamp);
 			if (tuple == null)
 				return null;
 		}
@@ -149,8 +157,8 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 
 		// propagate further the affected tupleHash-tupleValue pair
 		final List<String> affectedTuple = new ArrayList<String>();
-		affectedTuple.add(tupleHash);
-		affectedTuple.add(strValue);
+		// affectedTuple.add(tupleHash);
+		// affectedTuple.add(strValue);
 
 		return affectedTuple;
 	}
@@ -240,4 +248,34 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 			sb.append("\n  It also has distinct ").append(_distinct.toString());
 		return sb.toString();
 	}
+
+	@Override
+	public AggregateOperator<SumCount> SetWindowSemantics(
+			int windowRangeInSeconds, int windowSlideInSeconds) {
+		WindowSemanticsManager._IS_WINDOW_SEMANTICS=true;
+		isWindowSemantics = true;
+		_windowRangeSecs = windowRangeInSeconds;
+		_slideRangeSecs = windowSlideInSeconds;
+		_storage = new WindowAggregationStorage<>(this, _wrapper, _map, true,
+				_windowRangeSecs, _slideRangeSecs);
+		if (_groupByColumns != null || _groupByProjection != null)
+			_storage.setSingleEntry(false);
+		return this;
+	}
+
+	@Override
+	public AggregateOperator<SumCount> SetWindowSemantics(
+			int windowRangeInSeconds) {
+		return SetWindowSemantics(windowRangeInSeconds, windowRangeInSeconds);
+
+	}
+
+	@Override
+	public int[] getWindowSemanticsInfo() {
+		int[] res = new int[2];
+		res[0] = _windowRangeSecs;
+		res[1] = _slideRangeSecs;
+		return res;
+	}
+
 }

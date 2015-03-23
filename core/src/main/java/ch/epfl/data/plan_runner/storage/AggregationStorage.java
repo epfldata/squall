@@ -6,7 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.operators.AggregateOperator;
@@ -43,14 +44,6 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 	}
 
 	public void addContent(AggregationStorage storage) {
-		// Wait until all previous partial aggregation stores flush their
-		// contents
-		/*
-		 * try { Thread.sleep(FINAL_AGGREGATION_TIMEOUT); }
-		 * catch(java.lang.InterruptedException ie) { LOG.info(
-		 * "Squall Storage:: Failed while waiting for partial stores to flush aggregations. "
-		 * + ie.getMessage()); System.exit(0); }
-		 */
 		// Now aggregate
 		final Set keySet = storage.keySet();
 		for (final Iterator it = keySet.iterator(); it.hasNext();) {
@@ -79,18 +72,16 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 		return super.equals(store);
 	}
 
+	public V getInitialValue() {
+		return (V) _wrapper.getInitialValue();
+	}
+
 	@Override
 	public void onInsert(Object... data) {
 		if (_singleEntry)
 			super.onInsert(SINGLE_ENTRY_KEY, data);
 		else
 			super.onInsert(data);
-	}
-
-	@Override
-	public Object onRemove() {
-		/* Deletions are not supported for aggregations yet */
-		throw new java.lang.UnsupportedOperationException();
 	}
 
 	@Override
@@ -103,6 +94,7 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 		super.reset();
 	}
 
+	@Override
 	public void setSingleEntry(boolean singleEntry) {
 		this._singleEntry = singleEntry;
 	}
@@ -114,7 +106,7 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 		V value, newValue;
 		final ArrayList<V> list = super.__access(false, key);
 		if (list == null) {
-			value = (V) _wrapper.getInitialValue();
+			value = getInitialValue();
 			super.onInsert(key, value);
 		} else
 			value = list.get(0);

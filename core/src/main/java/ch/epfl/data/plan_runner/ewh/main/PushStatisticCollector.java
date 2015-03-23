@@ -8,8 +8,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.FileHandler;
-import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+
+import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.conversion.DateIntegerConversion;
 import ch.epfl.data.plan_runner.conversion.IntegerConversion;
@@ -307,7 +308,7 @@ public class PushStatisticCollector {
 
 	private static <T> void appendKeys(List<T> keys, ProjectOperator project,
 			List<String> tuple, TypeConversion<T> wrapper) {
-		String key = project.process(tuple).get(0);
+                String key = project.process(tuple, -1).get(0);
 		keys.add(wrapper.fromString(key));
 	}
 

@@ -2,8 +2,13 @@ package ch.epfl.data.plan_runner.storm_components;
 
 import java.util.List;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.topology.InputDeclarer;
+import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.tuple.Tuple;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
 import ch.epfl.data.plan_runner.operators.AggregateOperator;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
@@ -93,12 +98,16 @@ public class StormOperator extends StormBoltComponent {
 
 	protected void applyOperatorsAndSend(Tuple stormTupleRcv,
 			List<String> tuple, boolean isLastInBatch) {
+		long timestamp = 0;
+		if (MyUtilities.isCustomTimestampMode(getConf())
+				|| MyUtilities.isWindowTimestampMode(getConf()))
+			timestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			try {
 				_semAgg.acquire();
 			} catch (final InterruptedException ex) {
 			}
-		tuple = _operatorChain.process(tuple);
+		tuple = _operatorChain.process(tuple, timestamp);
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			_semAgg.release();
 
@@ -110,15 +119,11 @@ public class StormOperator extends StormBoltComponent {
 		printTuple(tuple);
 
 		if (MyUtilities
-				.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
-			long timestamp = 0;
-			if (MyUtilities.isCustomTimestampMode(getConf()))
-				timestamp = stormTupleRcv
-						.getLongByField(StormComponent.TIMESTAMP);
+				.isSending(getHierarchyPosition(), _aggBatchOutputMillis)
+				|| MyUtilities.isWindowTimestampMode(getConf())) {
 			tupleSend(tuple, stormTupleRcv, timestamp);
 		}
 		if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
-			long timestamp;
 			if (MyUtilities.isManualBatchingMode(getConf())) {
 				if (isLastInBatch) {
 					timestamp = stormTupleRcv
@@ -229,5 +234,10 @@ public class StormOperator extends StormBoltComponent {
 	@Override
 	protected void printStatistics(int type) {
 		// TODO
+	}
+
+	@Override
+	public void purgeStaleStateFromWindow() {
+		throw new RuntimeException("Window semantics is not valid here.");
 	}
 }

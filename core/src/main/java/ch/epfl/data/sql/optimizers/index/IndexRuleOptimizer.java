@@ -1,12 +1,17 @@
 package ch.epfl.data.sql.optimizers.index;
 
-import java.beans.Expression;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
+
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
+import net.sf.jsqlparser.schema.Table;
+import net.sf.jsqlparser.statement.select.SelectItem;
+
+import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;

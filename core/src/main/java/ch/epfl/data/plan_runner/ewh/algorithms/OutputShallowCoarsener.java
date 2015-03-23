@@ -7,7 +7,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.ewh.algorithms.optimality.WeightFunction;
 import ch.epfl.data.plan_runner.ewh.data_structures.JoinMatrix;
@@ -149,9 +150,9 @@ public class OutputShallowCoarsener extends ShallowCoarsener {
 
 	protected enum ITER_MODE {
 		MAX_WEIGHT, // stop after all the cells are beyond certain maximum (hard
-		// to know it ahead of time)
+					// to know it ahead of time)
 		MAX_ITER // BETTER: stop after certain number of iterations (given by
-		// algorithm authors)
+					// algorithm authors)
 		// Example:
 		// MAX_WEIGHT: maxW = 672, time = 0.55s, #iter = 1163, totalEnters =
 		// 14006
@@ -194,8 +195,8 @@ public class OutputShallowCoarsener extends ShallowCoarsener {
 		// UJMP bug: The matrix with regions does not show the output
 		if (toVisualize) {
 			JoinMatrix matrixCopy = joinMatrix.getDeepCopy(); // in order not to
-			// spoil the
-			// original
+																// spoil the
+																// original
 			List<Region> separators = coarsener.getSeparators();
 			matrixCopy.setRegions(separators);
 			String label = matrixName + " with regions";
@@ -215,13 +216,11 @@ public class OutputShallowCoarsener extends ShallowCoarsener {
 	private List<BucketBoundary> _bbListX, _bbListY;
 
 	private Map<Integer, Integer> _originalToCoarsenedX = new HashMap<Integer, Integer>();
-
 	private Map<Integer, Integer> _originalToCoarsenedY = new HashMap<Integer, Integer>();
 
 	private List<Double> _rowWeights, _columnWeights;
-
 	private double _rowWeightsSum, _columnWeightsSum; // updated from
-	// multiplyWeights
+														// multiplyWeights
 
 	// exists only for ITER_MODE.MAX_ITER (when looking for MAX_WEIGHT among all
 	// the rounded matrix cells)
@@ -234,8 +233,8 @@ public class OutputShallowCoarsener extends ShallowCoarsener {
 	private List<BucketBoundary> _bbBackupX, _bbBackupY;
 
 	private List<Double> _rowBackupWeights, _columnBackupWeights; // variable X
-	// from the
-	// algorithm
+																	// from the
+																	// algorithm
 	private int _backupRowLower, _backupRowUpper, _backupColumnLower,
 			_backupColumnUpper;
 
@@ -456,7 +455,7 @@ public class OutputShallowCoarsener extends ShallowCoarsener {
 							currentSumRowWeight - weights.get(i));
 					previousDivider = i;
 					i--; // go again through that element (to add to
-					// currentSumRowWeight)
+							// currentSumRowWeight)
 				}
 				bbList.add(bb);
 				currentSumRowWeight = 0;

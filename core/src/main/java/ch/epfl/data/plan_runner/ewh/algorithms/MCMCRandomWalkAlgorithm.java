@@ -314,8 +314,8 @@ public class MCMCRandomWalkAlgorithm implements TilingAlgorithm {
 		if (SystemParameters.MONOTONIC_PRECOMPUTATION) {
 			wp = new DenseMonotonicWeightPrecomputation(
 					new WeightFunction(1, 1), joinMatrix, _map); // TODO make
-			// them
-			// parameters
+																	// them
+																	// parameters
 		} else {
 			wp = new DenseWeightPrecomputation(new WeightFunction(1, 1),
 					joinMatrix); // TODO make them parameters

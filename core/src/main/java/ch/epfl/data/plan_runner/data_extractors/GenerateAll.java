@@ -5,9 +5,9 @@ public class GenerateAll {
 	public static void main(String[] args) throws Exception {
 		ResultsGenerator.main(args); // creates Results.csv and Memory.csv
 		GenerateThroughput.main(args); // both for non-scalability and
-		// scalability
+										// scalability
 		GenerateThroughputBars.main(args); // both for non-scalability and
-		// scalability
+											// scalability
 		GenerateMemory.main(args); // only for non-scalability
 		GenerateMemoryBars.main(args); // only for non-scalability
 

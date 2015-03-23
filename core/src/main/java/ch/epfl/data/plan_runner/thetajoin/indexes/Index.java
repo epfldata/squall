@@ -1,5 +1,7 @@
 package ch.epfl.data.plan_runner.thetajoin.indexes;
 
+import gnu.trove.list.array.TIntArrayList;
+
 import java.io.Serializable;
 
 /**
@@ -15,4 +17,5 @@ public interface Index<KeyType> extends Serializable {
 
 	public void put(Integer row_id, KeyType key);
 
+	public void remove(Integer row_id, KeyType key);
 }

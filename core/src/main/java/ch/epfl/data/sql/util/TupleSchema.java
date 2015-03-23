@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.jsqlparser.schema.Column;
 import ch.epfl.data.sql.schema.ColumnNameType;
 
 /*

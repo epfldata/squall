@@ -1,10 +1,10 @@
 package ch.epfl.data.sql.optimizers.index;
 
-import java.beans.Expression;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.jsqlparser.expression.Expression;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
 import ch.epfl.data.plan_runner.components.EquiJoinComponent;

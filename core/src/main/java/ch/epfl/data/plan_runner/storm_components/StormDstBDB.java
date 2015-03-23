@@ -9,15 +9,26 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.InputDeclarer;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.topology.base.BaseRichBolt;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.operators.AggregateOperator;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
 import ch.epfl.data.plan_runner.operators.Operator;
 import ch.epfl.data.plan_runner.predicates.Predicate;
-import ch.epfl.data.plan_runner.storage.BPlusTreeStore;
+import ch.epfl.data.plan_runner.storage.BPlusTreeStorage;
 import ch.epfl.data.plan_runner.storage.BerkeleyDBStore;
 import ch.epfl.data.plan_runner.storage.BerkeleyDBStoreSkewed;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
@@ -29,8 +40,9 @@ import ch.epfl.data.plan_runner.utilities.statistics.StatisticsUtilities;
 import ch.epfl.data.plan_runner.visitors.PredicateCreateIndexesVisitor;
 import ch.epfl.data.plan_runner.visitors.PredicateUpdateIndexesVisitor;
 
+@Deprecated
 // derived from StormDstTupleStorageJoin
-public class StormDstBDB extends BaseRichBolt implements StormJoin,
+public class StormDstBDB extends BaseRichBolt implements StormEmitter,
 		StormComponent {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormDstBDB.class);
@@ -40,7 +52,7 @@ public class StormDstBDB extends BaseRichBolt implements StormJoin,
 	protected SimpleDateFormat _format = new SimpleDateFormat(
 			"EEE MMM d HH:mm:ss zzz yyyy");
 	private final StormEmitter _firstEmitter, _secondEmitter;
-	private BPlusTreeStore _firstRelationStorage, _secondRelationStorage;
+	private BPlusTreeStorage _firstRelationStorage, _secondRelationStorage;
 
 	private final String _ID;
 	private final String _componentIndex; // a unique index in a list of all the
@@ -180,7 +192,7 @@ public class StormDstBDB extends BaseRichBolt implements StormJoin,
 				_semAgg.acquire();
 			} catch (final InterruptedException ex) {
 			}
-		tuple = _operatorChain.process(tuple);
+		tuple = _operatorChain.process(tuple, 0);
 		if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
 			_semAgg.release();
 
@@ -368,7 +380,7 @@ public class StormDstBDB extends BaseRichBolt implements StormJoin,
 
 		boolean isFromFirstEmitter = false;
 
-		BPlusTreeStore affectedStorage, oppositeStorage;
+		BPlusTreeStorage affectedStorage, oppositeStorage;
 		if (_firstEmitterIndex.equals(inputComponentIndex)) {
 			// R update
 			isFromFirstEmitter = true;
@@ -467,7 +479,7 @@ public class StormDstBDB extends BaseRichBolt implements StormJoin,
 		return _ID;
 	}
 
-	private void insertIntoBDBStorage(BPlusTreeStore affectedStorage,
+	private void insertIntoBDBStorage(BPlusTreeStorage affectedStorage,
 			String key, String inputTupleString) {
 
 		if (_typeOfValueIndexed.get(0) instanceof Integer)
@@ -531,7 +543,7 @@ public class StormDstBDB extends BaseRichBolt implements StormJoin,
 
 	protected void performJoin(Tuple stormTupleRcv, List<String> tuple,
 			boolean isFromFirstEmitter, String keyValue,
-			BPlusTreeStore oppositeStorage) {
+			BPlusTreeStorage oppositeStorage) {
 		final List<String> tuplesToJoin = selectTupleToJoin(oppositeStorage,
 				isFromFirstEmitter, keyValue);
 		join(stormTupleRcv, tuple, isFromFirstEmitter, tuplesToJoin);
@@ -612,7 +624,7 @@ public class StormDstBDB extends BaseRichBolt implements StormJoin,
 				SystemParameters.DUMP_RESULTS_STREAM);
 	}
 
-	private List<String> selectTupleToJoin(BPlusTreeStore oppositeStorage,
+	private List<String> selectTupleToJoin(BPlusTreeStorage oppositeStorage,
 			boolean isFromFirstEmitter, String keyValue) {
 
 		// If there is atleast one index (so we have single join conditions with

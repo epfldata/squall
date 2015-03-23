@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import net.sf.jsqlparser.schema.Table;
 import ch.epfl.data.sql.schema.Schema;
 import ch.epfl.data.sql.util.ParserUtil;
 import ch.epfl.data.sql.util.TableAliasName;

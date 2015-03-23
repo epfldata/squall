@@ -1,9 +1,14 @@
 package ch.epfl.data.sql.optimizers.name;
 
-import java.beans.Expression;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.Function;
+import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
+import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
+import net.sf.jsqlparser.statement.select.SelectExpressionItem;
+import net.sf.jsqlparser.statement.select.SelectItem;
 import ch.epfl.data.sql.visitors.jsql.AndVisitor;
 
 /*

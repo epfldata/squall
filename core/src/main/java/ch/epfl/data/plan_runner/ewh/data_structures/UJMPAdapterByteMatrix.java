@@ -4,7 +4,10 @@ import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
+import org.ujmp.core.bytematrix.impl.DefaultSparseByteMatrix;
+import org.ujmp.core.io.ImportMatrixSPARSECSV;
 
 import ch.epfl.data.plan_runner.conversion.NumericConversion;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;

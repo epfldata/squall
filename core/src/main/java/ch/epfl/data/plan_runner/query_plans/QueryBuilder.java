@@ -38,6 +38,14 @@ public class QueryBuilder implements Serializable {
 		return ejc;
 	}
 
+	public EquiJoinComponent createEquiJoin(Component firstParent,
+			Component secondParent, boolean isRemoveIndex) {
+		EquiJoinComponent ejc = new EquiJoinComponent(firstParent,
+				secondParent, isRemoveIndex);
+		add(ejc);
+		return ejc;
+	}
+
 	public Component getComponent(String name) {
 		for (final Component component : _plan)
 			if (component.getName().equals(name))

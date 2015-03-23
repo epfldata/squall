@@ -1,7 +1,22 @@
 package ch.epfl.data.plan_runner.storage;
 
+import gnu.trove.iterator.TIntObjectIterator;
+import gnu.trove.map.hash.TIntObjectHashMap;
+
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import ch.epfl.data.plan_runner.predicates.Predicate;
+import ch.epfl.data.plan_runner.thetajoin.indexes.Index;
+import ch.epfl.data.plan_runner.utilities.MyUtilities;
+import ch.epfl.data.plan_runner.visitors.PredicateUpdateIndexesVisitor;
 
 /**
  * Tuple storage. Provides ~O(1) random access and insertion
@@ -169,7 +184,7 @@ public class TupleStorage implements Serializable {
 		}
 	}
 
-	protected TIntObjectHashMap<byte[]> getStorage() {
+	public TIntObjectHashMap<byte[]> getStorage() {
 		return _storage;
 	}
 
@@ -184,6 +199,71 @@ public class TupleStorage implements Serializable {
 		return _lastId;
 	}
 
+	/**
+	 * Purge stale state
+	 */
+	public void purgeState(long tillTimeStamp, List<Index> indexes,
+			Predicate joinPredicate, Map conf, boolean isFirstRelations) {
+		// TODO This is linear now, needs to be optimized by indexing
+		DateFormat convDateFormat = new SimpleDateFormat(
+				"EEE MMM d HH:mm:ss zzz yyyy");
+		for (TIntObjectIterator<byte[]> it = this.getStorage().iterator(); it
+				.hasNext();) {
+			it.advance();
+
+			int row_id = it.key();
+			String tuple = "";
+			try {
+				tuple = new String(it.value(), "UTF-8");
+			} catch (Exception e1) {
+				// e1.printStackTrace();
+				// throw new RuntimeException(e1.toString());
+			}
+			if (tuple.equals(""))
+				return;
+			final String parts[] = tuple.split("\\@");
+			if (parts.length < 2)
+				System.out.println("UNEXPECTED TIMESTAMP SIZES: "
+						+ parts.length);
+			final long storedTimestamp = Long.valueOf(new String(parts[0]));
+			final String tupleString = parts[1];
+			if (storedTimestamp < (tillTimeStamp)) { // delete
+				// Cleaning up storage
+				it.remove();
+				// Cleaning up indexes
+				final PredicateUpdateIndexesVisitor visitor = new PredicateUpdateIndexesVisitor(
+						isFirstRelations, MyUtilities.stringToTuple(
+								tupleString, conf));
+				joinPredicate.accept(visitor);
+				final List<String> valuesToIndex = new ArrayList<String>(
+						visitor._valuesToIndex);
+				final List<Object> typesOfValuesToIndex = new ArrayList<Object>(
+						visitor._typesOfValuesToIndex);
+				for (int i = 0; i < indexes.size(); i++)
+					if (typesOfValuesToIndex.get(i) instanceof Integer)
+						indexes.get(i).remove(row_id,
+								Integer.parseInt(valuesToIndex.get(i)));
+					else if (typesOfValuesToIndex.get(i) instanceof Double)
+						indexes.get(i).remove(row_id,
+								Double.parseDouble(valuesToIndex.get(i)));
+					else if (typesOfValuesToIndex.get(i) instanceof Date)
+						try {
+							indexes.get(i).remove(row_id,
+									convDateFormat.parse(valuesToIndex.get(i)));
+						} catch (final ParseException e) {
+							throw new RuntimeException(
+									"Parsing problem in StormThetaJoin.removingIndexes "
+											+ e.getMessage());
+						}
+					else if (typesOfValuesToIndex.get(i) instanceof String)
+						indexes.get(i).remove(row_id, valuesToIndex.get(i));
+					else
+						throw new RuntimeException("non supported type");
+				// ended cleaning indexes
+			}
+		}
+	}
+
 	// Should be treated with care. Valid indexes From 0-->(_storage.size()-1)
 	public void remove(int beginIndex, int endIndex) {
 		for (int i = beginIndex; i <= endIndex; i++)
@@ -192,6 +272,17 @@ public class TupleStorage implements Serializable {
 
 	public int size() {
 		return _storage.size();
+	}
+
+	public List<String> toList() throws UnsupportedEncodingException {
+
+		ArrayList<byte[]> list = new ArrayList<byte[]>(
+				_storage.valueCollection());
+		ArrayList<String> transformed = new ArrayList<String>(list.size());
+		for (int i = 0; i < transformed.size(); i++) {
+			transformed.set(i, new String(list.get(i), "UTF-8"));
+		}
+		return transformed;
 	}
 
 	@Override

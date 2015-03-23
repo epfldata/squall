@@ -7,8 +7,13 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.topology.InputDeclarer;
+import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.tuple.Tuple;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
 import ch.epfl.data.plan_runner.operators.AggregateOperator;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
@@ -22,36 +27,41 @@ import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 import ch.epfl.data.plan_runner.utilities.statistics.StatisticsUtilities;
+import ch.epfl.data.plan_runner.window_semantics.WindowSemanticsManager;
 
+@Deprecated
 public class StormDstJoin extends StormBoltComponent {
+
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger.getLogger(StormDstJoin.class);
 
 	private final String _firstEmitterIndex, _secondEmitterIndex;
 
-	private final BasicStore<ArrayList<String>> _firstRelationStorage,
+	private final BasicStore<String> _firstRelationStorage,
 			_secondRelationStorage;
 	private final ProjectOperator _firstPreAggProj, _secondPreAggProj; // exists
-	// only
+																		// only
 	// for
 	// preaggregations
 	// performed on the output of the aggregationStorage
 
 	private final ChainOperator _operatorChain;
 	private final List<Integer> _rightHashIndexes; // hash indexes from the
-	// right
+													// right
 	// parent
 
 	private long _numSentTuples = 0;
 
 	// for load-balancing
 	private final List<String> _fullHashList;
+	private String _name;
 
 	// for batch sending
 	private final Semaphore _semAgg = new Semaphore(1, true);
 	private boolean _firstTime = true;
 	private PeriodicAggBatchSend _periodicAggBatch;
 	private final long _aggBatchOutputMillis;
+	private boolean _isRemoveIndex;
 
 	// for printing statistics for creating graphs
 	protected Calendar _cal = Calendar.getInstance();
@@ -60,11 +70,11 @@ public class StormDstJoin extends StormBoltComponent {
 
 	public StormDstJoin(StormEmitter firstEmitter, StormEmitter secondEmitter,
 			ComponentProperties cp, List<String> allCompNames,
-			BasicStore<ArrayList<String>> firstSquallStorage,
-			BasicStore<ArrayList<String>> secondSquallStorage,
+			BasicStore<String> firstSquallStorage,
+			BasicStore<String> secondSquallStorage,
 			ProjectOperator firstPreAggProj, ProjectOperator secondPreAggProj,
 			int hierarchyPosition, TopologyBuilder builder,
-			TopologyKiller killer, Config conf) {
+			TopologyKiller killer, Config conf, boolean isRemoveIndex) {
 		super(cp, allCompNames, hierarchyPosition, conf);
 
 		_firstEmitterIndex = String.valueOf(allCompNames.indexOf(firstEmitter
@@ -84,6 +94,10 @@ public class StormDstJoin extends StormBoltComponent {
 		_aggBatchOutputMillis = cp.getBatchOutputMillis();
 
 		_statsUtils = new StatisticsUtilities(getConf(), LOG);
+
+		_name = cp.getName();
+
+		_isRemoveIndex = isRemoveIndex;
 
 		final int parallelism = SystemParameters.getInt(getConf(), getID()
 				+ "_PAR");
@@ -140,13 +154,16 @@ public class StormDstJoin extends StormBoltComponent {
 	}
 
 	protected void applyOperatorsAndSend(Tuple stormTupleRcv,
-			List<String> tuple, boolean isLastInBatch) {
+			List<String> tuple, long lineageTimestamp, boolean isLastInBatch) {
+		// System.out.println("Seding Out tuple.....");
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			try {
 				_semAgg.acquire();
 			} catch (final InterruptedException ex) {
 			}
-		tuple = _operatorChain.process(tuple);
+
+		tuple = _operatorChain.process(tuple, 0);
+
 		if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 			_semAgg.release();
 
@@ -159,11 +176,14 @@ public class StormDstJoin extends StormBoltComponent {
 			printStatistics(SystemParameters.OUTPUT_PRINT);
 
 		if (MyUtilities
-				.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
+				.isSending(getHierarchyPosition(), _aggBatchOutputMillis)
+				|| MyUtilities.isWindowTimestampMode(getConf())) {
 			long timestamp = 0;
 			if (MyUtilities.isCustomTimestampMode(getConf()))
 				timestamp = stormTupleRcv
 						.getLongByField(StormComponent.TIMESTAMP);
+			if (MyUtilities.isWindowTimestampMode(getConf()))
+				timestamp = lineageTimestamp;
 			tupleSend(tuple, stormTupleRcv, timestamp);
 		}
 		if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
@@ -184,6 +204,13 @@ public class StormDstJoin extends StormBoltComponent {
 
 	@Override
 	public void execute(Tuple stormTupleRcv) {
+		// TODO
+		// short circuit that this is a window configuration
+		if (WindowSemanticsManager.evictStateIfSlidingWindowSemantics(this,
+				stormTupleRcv)) {
+			return;
+		}
+
 		if (_firstTime
 				&& MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis)) {
 			_periodicAggBatch = new PeriodicAggBatchSend(_aggBatchOutputMillis,
@@ -254,6 +281,10 @@ public class StormDstJoin extends StormBoltComponent {
 							inputTupleHash, stormTupleRcv, false);
 			}
 		}
+
+		// TODO
+		// Update LatestTimeStamp
+		WindowSemanticsManager.updateLatestTimeStamp(this, stormTupleRcv);
 		getCollector().ack(stormTupleRcv);
 	}
 
@@ -296,20 +327,31 @@ public class StormDstJoin extends StormBoltComponent {
 
 	protected void performJoin(Tuple stormTupleRcv, List<String> tuple,
 			String inputTupleHash, boolean isFromFirstEmitter,
-			BasicStore<ArrayList<String>> oppositeStorage,
+			BasicStore<String> oppositeStorage,
 			ProjectOperator projPreAgg, boolean isLastInBatch) {
 
 		final List<String> oppositeStringTupleList = oppositeStorage
 				.access(inputTupleHash);
 
+		long lineageTimestamp = 0;
+
 		if (oppositeStringTupleList != null)
 			for (int i = 0; i < oppositeStringTupleList.size(); i++) {
 				// ValueOf is because of preaggregations, and it does not hurt
 				// in normal case
-				final String oppositeStringTuple = String
-						.valueOf(oppositeStringTupleList.get(i));
+				// TODO
+				StringBuilder oppositeTupleString = new StringBuilder(
+						oppositeStringTupleList.get(i));
+				lineageTimestamp = WindowSemanticsManager
+						.joinPreProcessingIfSlidingWindowSemantics(this,
+								oppositeTupleString, stormTupleRcv);
+				if (lineageTimestamp < 0)
+					continue;
+				// end TODO
+
 				final List<String> oppositeTuple = MyUtilities.stringToTuple(
-						oppositeStringTuple, getComponentConfiguration());
+						oppositeTupleString.toString(),
+						getComponentConfiguration());
 
 				List<String> firstTuple, secondTuple;
 				if (isFromFirstEmitter) {
@@ -322,19 +364,21 @@ public class StormDstJoin extends StormBoltComponent {
 
 				List<String> outputTuple;
 				// Before fixing preaggregations, here was instanceof BasicStore
-				if (oppositeStorage instanceof AggregationStorage)
+				if (oppositeStorage instanceof AggregationStorage
+						|| !_isRemoveIndex) {
 					// preaggregation
 					outputTuple = MyUtilities.createOutputTuple(firstTuple,
 							secondTuple);
-				else
+				} else {
 					outputTuple = MyUtilities.createOutputTuple(firstTuple,
 							secondTuple, _rightHashIndexes);
+				}
 
 				if (projPreAgg != null)
 					// preaggregation
-					outputTuple = projPreAgg.process(outputTuple);
-
-				applyOperatorsAndSend(stormTupleRcv, outputTuple, isLastInBatch);
+					outputTuple = projPreAgg.process(outputTuple, 0);
+				applyOperatorsAndSend(stormTupleRcv, outputTuple,
+						lineageTimestamp, isLastInBatch);
 			}
 	}
 
@@ -460,7 +504,7 @@ public class StormDstJoin extends StormBoltComponent {
 			boolean isLastInBatch) {
 
 		boolean isFromFirstEmitter = false;
-		BasicStore<ArrayList<String>> affectedStorage, oppositeStorage;
+		BasicStore<String> affectedStorage, oppositeStorage;
 		ProjectOperator projPreAgg;
 		if (_firstEmitterIndex.equals(inputComponentIndex)) {
 			// R update
@@ -485,8 +529,13 @@ public class StormDstJoin extends StormBoltComponent {
 			// to it
 			affectedStorage.update(tuple, inputTupleHash);
 		else {
-			final String inputTupleString = MyUtilities.tupleToString(tuple,
+			String inputTupleString = MyUtilities.tupleToString(tuple,
 					getConf());
+			// TODO
+			// add the stormTuple to the specific storage
+			inputTupleString = WindowSemanticsManager
+					.AddTimeStampToStoredDataIfWindowSemantics(this,
+							inputTupleString, stormTupleRcv);
 			affectedStorage.insert(inputTupleHash, inputTupleString);
 		}
 		performJoin(stormTupleRcv, tuple, inputTupleHash, isFromFirstEmitter,
@@ -495,6 +544,19 @@ public class StormDstJoin extends StormBoltComponent {
 		if ((((KeyValueStore<String, String>) _firstRelationStorage).size() + ((KeyValueStore<String, String>) _secondRelationStorage)
 				.size()) % _statsUtils.getDipInputFreqPrint() == 0)
 			printStatistics(SystemParameters.INPUT_PRINT);
+	}
+
+	@Override
+	public void purgeStaleStateFromWindow() {
+		// TODO inefficient linear scan for now.
+		System.out.println("Cleaning up state");
+		((KeyValueStore<String, String>) _firstRelationStorage)
+				.purgeState(_latestTimeStamp
+						- WindowSemanticsManager._GC_PERIODIC_TICK);
+		((KeyValueStore<String, String>) _secondRelationStorage)
+				.purgeState(_latestTimeStamp
+						- WindowSemanticsManager._GC_PERIODIC_TICK);
+		System.gc();
 	}
 
 }

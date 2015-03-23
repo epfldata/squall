@@ -1,12 +1,14 @@
 package ch.epfl.data.sql.util;
 
-import java.beans.Expression;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.schema.Table;
 
 /*
  *  **Only conjunctive join conditions are supported!**

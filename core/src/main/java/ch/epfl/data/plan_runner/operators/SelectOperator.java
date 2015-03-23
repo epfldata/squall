@@ -48,7 +48,7 @@ public class SelectOperator implements Operator {
 	}
 
 	@Override
-	public List<String> process(List<String> tuple) {
+	public List<String> process(List<String> tuple, long lineageTimestamp) {
 		_numTuplesProcessed++;
 		if (_predicate.test(tuple))
 			return tuple;

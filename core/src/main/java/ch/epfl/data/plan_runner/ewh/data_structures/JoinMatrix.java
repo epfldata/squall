@@ -6,7 +6,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
+import org.ujmp.core.Matrix;
+import org.ujmp.core.enums.FileFormat;
+import org.ujmp.core.matrix.AbstractMatrix;
 
 import ch.epfl.data.plan_runner.conversion.NumericConversion;
 import ch.epfl.data.plan_runner.ewh.visualize.VisualizerInterface;
@@ -29,13 +33,13 @@ public abstract class JoinMatrix<JAT extends Comparable<JAT>> implements
 	protected ComparisonPredicate _cp; // for finding candidate regions
 
 	private int _totalNumOutputs = -1; // we did not want to add overhead to
-	// setElement method;
-	// that's why a user needs to set it
-	// (EWHSampleMatrixBolt.scaleOutput)
+										// setElement method;
+										// that's why a user needs to set it
+										// (EWHSampleMatrixBolt.scaleOutput)
 
 	protected Map<JAT, Integer> _freqX, _freqY; // key, frequency
 	protected Map<JAT, Integer> _keyXFirstPos, _keyYFirstPos; // key,
-	// firstPosition
+																// firstPosition
 	protected NumericConversion _wrapper;
 
 	protected String _matrixName, _matrixPath;
@@ -205,7 +209,7 @@ public abstract class JoinMatrix<JAT extends Comparable<JAT>> implements
 
 		int freq = 0;
 		int smallestKeyPosition = lowerPos; // true when starting from lower
-		// border
+											// border
 
 		// for lower border
 		while ((lowerPos <= upperPos)
@@ -246,7 +250,7 @@ public abstract class JoinMatrix<JAT extends Comparable<JAT>> implements
 
 		int freq = 0;
 		int smallestKeyPosition = lowerPos; // true when starting from lower
-		// border
+											// border
 
 		// for lower border
 		while ((lowerPos <= upperPos)
@@ -273,6 +277,8 @@ public abstract class JoinMatrix<JAT extends Comparable<JAT>> implements
 
 	@Override
 	public abstract void increase(int delta, int x, int y);
+
+	// ***********************************************************************
 
 	@Override
 	public abstract void increment(int x, int y);
@@ -303,8 +309,6 @@ public abstract class JoinMatrix<JAT extends Comparable<JAT>> implements
 	public void setJoinAttributeX(JAT key) {
 		_joinAttributeX.add(key);
 	}
-
-	// ***********************************************************************
 
 	public void setJoinAttributeY(JAT key) {
 		_joinAttributeY.add(key);

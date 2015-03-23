@@ -3,66 +3,19 @@ package ch.epfl.data.plan_runner.main;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
+import java.lang.reflect.InvocationTargetException;
+
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.plan_runner.components.Component;
+import ch.epfl.data.plan_runner.components.theta.ThetaJoinDynamicComponentAdvisedEpochs;
 import ch.epfl.data.plan_runner.ewh.components.DummyComponent;
-import ch.epfl.data.plan_runner.query_plans.HyracksPlan;
-import ch.epfl.data.plan_runner.query_plans.HyracksPreAggPlan;
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
-import ch.epfl.data.plan_runner.query_plans.RSTPlan;
-import ch.epfl.data.plan_runner.query_plans.TPCH10Plan;
-import ch.epfl.data.plan_runner.query_plans.TPCH3Plan;
-import ch.epfl.data.plan_runner.query_plans.TPCH4Plan;
-import ch.epfl.data.plan_runner.query_plans.TPCH5Plan;
-import ch.epfl.data.plan_runner.query_plans.TPCH7Plan;
-import ch.epfl.data.plan_runner.query_plans.TPCH8Plan;
-import ch.epfl.data.plan_runner.query_plans.TPCH9Plan;
-import ch.epfl.data.plan_runner.query_plans.debug.HyracksL1Plan;
-import ch.epfl.data.plan_runner.query_plans.debug.HyracksL3BatchPlan;
-import ch.epfl.data.plan_runner.query_plans.debug.HyracksL3Plan;
-import ch.epfl.data.plan_runner.query_plans.debug.TPCH3L1Plan;
-import ch.epfl.data.plan_runner.query_plans.debug.TPCH3L23Plan;
-import ch.epfl.data.plan_runner.query_plans.debug.TPCH3L2Plan;
-import ch.epfl.data.plan_runner.query_plans.debug.TPCH5PlanAvg;
-import ch.epfl.data.plan_runner.query_plans.debug.TPCH5_R_N_S_LPlan;
-import ch.epfl.data.plan_runner.query_plans.debug.TPCH7_L_S_N1Plan;
-import ch.epfl.data.plan_runner.query_plans.debug.TPCH8_9_P_LPlan;
-import ch.epfl.data.plan_runner.query_plans.debug.ThetaLineitemSelfJoinInputDominated2_32;
-import ch.epfl.data.plan_runner.query_plans.debug.ThetaLineitemSelfJoinInputDominated4_16;
-import ch.epfl.data.plan_runner.query_plans.debug.ThetaLineitemSelfJoinInputDominated8_8;
-import ch.epfl.data.plan_runner.query_plans.debug.ThetaOrdersLineFluctuationsPlanInterDataSource;
-import ch.epfl.data.plan_runner.query_plans.debug.ThetaTPCH5_R_N_S_LPlan;
-import ch.epfl.data.plan_runner.query_plans.debug.ThetaTPCH7_L_S_N1Plan;
-import ch.epfl.data.plan_runner.query_plans.debug.ThetaTPCH8_9_P_LPlan;
-import ch.epfl.data.plan_runner.query_plans.ewh.ThetaEWHBandJPS;
-import ch.epfl.data.plan_runner.query_plans.ewh.ThetaEWHBandLineitemSelfOrderkeyJoin;
-import ch.epfl.data.plan_runner.query_plans.ewh.ThetaEWHBandOrdersCustkeyCustkeyJoin;
-import ch.epfl.data.plan_runner.query_plans.ewh.ThetaEWHBandOrdersOrderkeyCustkeyJoin;
-import ch.epfl.data.plan_runner.query_plans.ewh.ThetaEWHBandPeer;
-import ch.epfl.data.plan_runner.query_plans.ewh.ThetaEWHCustomerJoin;
-import ch.epfl.data.plan_runner.query_plans.ewh.ThetaEWHEquiLineitemOrders;
-import ch.epfl.data.plan_runner.query_plans.ewh.ThetaEWHEquiOrdersCustkeyCustkeyJoin;
-import ch.epfl.data.plan_runner.query_plans.ewh.ThetaEWHLineitemSelfOutputDominatedJoin;
-import ch.epfl.data.plan_runner.query_plans.ewh.ThetaEWHOrdersScaleJoin;
-import ch.epfl.data.plan_runner.query_plans.ewh.ThetaEWHPartSuppJoin;
-import ch.epfl.data.plan_runner.query_plans.theta.ThetaHyracksPlan;
-import ch.epfl.data.plan_runner.query_plans.theta.ThetaInputDominatedPlan;
-import ch.epfl.data.plan_runner.query_plans.theta.ThetaLineitemPricesSelfJoin;
-import ch.epfl.data.plan_runner.query_plans.theta.ThetaLineitemSelfJoin;
-import ch.epfl.data.plan_runner.query_plans.theta.ThetaLineitemSelfJoinInputDominated;
-import ch.epfl.data.plan_runner.query_plans.theta.ThetaMultipleJoinPlan;
-import ch.epfl.data.plan_runner.query_plans.theta.ThetaOrdersSelfJoin;
-import ch.epfl.data.plan_runner.query_plans.theta.ThetaOutputDominatedPlan;
-import ch.epfl.data.plan_runner.query_plans.theta.ThetaTPCH10Plan;
-import ch.epfl.data.plan_runner.query_plans.theta.ThetaTPCH3Plan;
-import ch.epfl.data.plan_runner.query_plans.theta.ThetaTPCH4Plan;
-import ch.epfl.data.plan_runner.query_plans.theta.ThetaTPCH5Plan;
-import ch.epfl.data.plan_runner.query_plans.theta.ThetaTPCH7Plan;
-import ch.epfl.data.plan_runner.query_plans.theta.ThetaTPCH8Plan;
-import ch.epfl.data.plan_runner.query_plans.theta.ThetaTPCH9Plan;
+import ch.epfl.data.plan_runner.query_plans.QueryPlan;
 import ch.epfl.data.plan_runner.storm_components.StormComponent;
-import ch.epfl.data.plan_runner.storm_components.StormJoin;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.StormWrapper;
@@ -105,167 +58,27 @@ public class Main {
 		 * conf).getQueryPlan(); } else{
 		 */
 		// change between this and ...
-		if (queryName.equalsIgnoreCase("rst")) {
-			queryPlan = new RSTPlan(dataPath, extension, conf).getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("hyracks")) {
-			queryPlan = new HyracksPlan(conf).getQueryBuilder();
-		} else if (queryName.equalsIgnoreCase("hyracks_pre_agg")) {
-			queryPlan = new HyracksPreAggPlan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("hyracks_l1")) {
-			queryPlan = new HyracksL1Plan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("hyracks_l3")) {
-			queryPlan = new HyracksL3Plan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("hyracks_l3_batch")) {
-			queryPlan = new HyracksL3BatchPlan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("tpch3")) {
-			queryPlan = new TPCH3Plan(dataPath, extension, conf).getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("tcph3_l1")) {
-			queryPlan = new TPCH3L1Plan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("tpch3_l2")) {
-			queryPlan = new TPCH3L2Plan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("tpch3_l23")) {
-			queryPlan = new TPCH3L23Plan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("tpch4")) {
-			queryPlan = new TPCH4Plan(dataPath, extension, conf).getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("tpch5")) {
-			queryPlan = new TPCH5Plan(dataPath, extension, conf).getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("tpch5avg")) {
-			queryPlan = new TPCH5PlanAvg(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("tpch7")) {
-			queryPlan = new TPCH7Plan(dataPath, extension, conf).getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("tpch8")) {
-			queryPlan = new TPCH8Plan(dataPath, extension, conf).getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("tpch9")) {
-			queryPlan = new TPCH9Plan(dataPath, extension, conf).getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("tpch10")) {
-			queryPlan = new TPCH10Plan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("tpch5_R_N_S_L")) {
-			queryPlan = new TPCH5_R_N_S_LPlan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("tpch7_L_S_N1")) {
-			queryPlan = new TPCH7_L_S_N1Plan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("tpch8_9_P_L")) {
-			queryPlan = new TPCH8_9_P_LPlan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_input_dominated")) {
-			queryPlan = new ThetaInputDominatedPlan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_output_dominated")) {
-			queryPlan = new ThetaOutputDominatedPlan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_multiple_join")) {
-			queryPlan = new ThetaMultipleJoinPlan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_hyracks")) {
-			queryPlan = new ThetaHyracksPlan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_tpch3")) {
-			queryPlan = new ThetaTPCH3Plan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_tpch4")) {
-			queryPlan = new ThetaTPCH4Plan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_tpch5")) {
-			queryPlan = new ThetaTPCH5Plan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_tpch7")) {
-			queryPlan = new ThetaTPCH7Plan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_tpch8")) {
-			queryPlan = new ThetaTPCH8Plan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_tpch9")) {
-			queryPlan = new ThetaTPCH9Plan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_tpch10")) {
-			queryPlan = new ThetaTPCH10Plan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_tpch7_L_S_N1")) {
-			queryPlan = new ThetaTPCH7_L_S_N1Plan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_tpch5_R_N_S_L")) {
-			queryPlan = new ThetaTPCH5_R_N_S_LPlan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_tpch8_9_P_L")) {
-			queryPlan = new ThetaTPCH8_9_P_LPlan(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_orders_self_join")) {
-			queryPlan = new ThetaOrdersSelfJoin(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_lines_self_join")) {
-			queryPlan = new ThetaLineitemSelfJoin(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName
-				.equalsIgnoreCase("theta_lines_self_join_input_dominated")) {
-			queryPlan = new ThetaLineitemSelfJoinInputDominated(dataPath,
-					extension, conf).getQueryPlan();
-		} else if (queryName
-				.equalsIgnoreCase("theta_lines_self_join_input_dominated2_32")) {
-			queryPlan = new ThetaLineitemSelfJoinInputDominated2_32(dataPath,
-					extension, conf).getQueryPlan();
-		} else if (queryName
-				.equalsIgnoreCase("theta_lines_self_join_input_dominated4_16")) {
-			queryPlan = new ThetaLineitemSelfJoinInputDominated4_16(dataPath,
-					extension, conf).getQueryPlan();
-		} else if (queryName
-				.equalsIgnoreCase("theta_lines_self_join_input_dominated8_8")) {
-			queryPlan = new ThetaLineitemSelfJoinInputDominated8_8(dataPath,
-					extension, conf).getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_lines_self_join_prices")) {
-			queryPlan = new ThetaLineitemPricesSelfJoin(dataPath, extension,
-					conf).getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("orders_line_fluctuations_join")) {
-			queryPlan = new ThetaOrdersLineFluctuationsPlanInterDataSource(
-					dataPath, extension, conf).getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_lineitem_orders_join")) {
-			queryPlan = new ThetaEWHEquiLineitemOrders(dataPath, extension,
-					conf).getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_lines_self_ewh_join")) {
-			queryPlan = new ThetaEWHLineitemSelfOutputDominatedJoin(dataPath,
-					extension, conf).getQueryPlan();
-		} else if (queryName
-				.equalsIgnoreCase("theta_lines_self_input_dominated_ewh_join")) {
-			queryPlan = new ThetaEWHBandLineitemSelfOrderkeyJoin(dataPath,
-					extension, conf).getQueryPlan();
-		} else if (queryName
-				.equalsIgnoreCase("theta_ewh_orders_self_custkey_join")) {
-			queryPlan = new ThetaEWHEquiOrdersCustkeyCustkeyJoin(dataPath,
-					extension, conf).getQueryPlan();
-		} else if (queryName
-				.equalsIgnoreCase("theta_ewh_band_orders_self_custkey_join")) {
-			queryPlan = new ThetaEWHBandOrdersCustkeyCustkeyJoin(dataPath,
-					extension, conf).getQueryPlan();
-		} else if (queryName
-				.equalsIgnoreCase("theta_ewh_band_orderkey_custkey_join")) {
-			queryPlan = new ThetaEWHBandOrdersOrderkeyCustkeyJoin(dataPath,
-					extension, conf).getQueryPlan();
-		} else if (queryName
-				.equalsIgnoreCase("theta_ewh_band_peer_self_upload_download")) {
-			queryPlan = new ThetaEWHBandPeer(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_ewh_band_jps")) {
-			queryPlan = new ThetaEWHBandJPS(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_ewh_cust_phone")) {
-			queryPlan = new ThetaEWHCustomerJoin(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_ewh_partsupp_qty")) {
-			queryPlan = new ThetaEWHPartSuppJoin(dataPath, extension, conf)
-					.getQueryPlan();
-		} else if (queryName.equalsIgnoreCase("theta_ewh_orders_scale")) {
-			queryPlan = new ThetaEWHOrdersScaleJoin(dataPath, extension, conf)
-					.getQueryPlan();
-		}
+                String className = SystemParameters.getString(conf, "DIP_QUERY_PLAN");
+
+                if (className == null) {
+                  throw new RuntimeException("QueryPlan " + queryName + " failed to load: DIP_QUERY_PLAN was not defined.");
+                }
+                try {
+                  Class planClass = Class.forName(className);
+                  queryPlan = ((QueryPlan)(planClass.getConstructor(String.class,
+                                                                    String.class,
+                                                                    Map.class)).newInstance(dataPath, extension, conf)).getQueryPlan();
+                } catch (InstantiationException e) {
+                  LOG.info("Could not instantiate class" + className);
+                } catch (IllegalAccessException e) {
+                  LOG.info("Could not access class" + className);
+                } catch (ClassNotFoundException e) {
+                  LOG.info("Could not find class " + className);
+                } catch (NoSuchMethodException e) {
+                  LOG.info("Class " + className + " doesn't have an appropriate constructor");
+                } catch (InvocationTargetException e) {
+                  LOG.info("The constructor for " + className + " threw an exception");
+                }
 
 		// ... this line
 
@@ -280,9 +93,6 @@ public class Main {
 		TopologyBuilder builder = new TopologyBuilder();
 		TopologyKiller killer = new TopologyKiller(builder);
 
-		// DST_ORDERING is the optimized version, so it's used by default
-		int partitioningType = StormJoin.DST_ORDERING;
-
 		List<Component> queryPlan = qp.getPlan();
 		List<String> allCompNames = qp.getComponentNames();
 		Collections.sort(allCompNames);
@@ -293,13 +103,18 @@ public class Main {
 			if (child == null) {
 				// a last component (it might be multiple of them)
 				component.makeBolts(builder, killer, allCompNames, conf,
-						partitioningType, StormComponent.FINAL_COMPONENT);
+						StormComponent.FINAL_COMPONENT);
 			} else if (child instanceof DummyComponent) {
 				component.makeBolts(builder, killer, allCompNames, conf,
-						partitioningType, StormComponent.NEXT_TO_DUMMY);
+						StormComponent.NEXT_TO_DUMMY);
+			} else if (child.getChild() == null
+					&& !(child instanceof ThetaJoinDynamicComponentAdvisedEpochs)) {
+				// if the child is dynamic, then reshuffler is NEXT_TO_LAST
+				component.makeBolts(builder, killer, allCompNames, conf,
+						StormComponent.NEXT_TO_LAST_COMPONENT);
 			} else {
 				component.makeBolts(builder, killer, allCompNames, conf,
-						partitioningType, StormComponent.INTERMEDIATE);
+						StormComponent.INTERMEDIATE);
 			}
 		}
 

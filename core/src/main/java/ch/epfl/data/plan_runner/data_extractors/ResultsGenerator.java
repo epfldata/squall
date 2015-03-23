@@ -7,7 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.OutputStreamWriter;
-import java.nio.file.Files;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -18,7 +17,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
+
+import com.google.common.io.Files;
 
 /**
  * 
@@ -36,7 +38,7 @@ public class ResultsGenerator {
 
 		public CountToMemoryObject(long accCount, String memoryUsed,
 				double elapsedtime, int type) { // type 0 for memory and 1 for
-			// results
+												// results
 			_accCount = accCount;
 			_memoryUsed = memoryUsed;
 			_elapsedtime = elapsedtime;
@@ -1166,9 +1168,7 @@ public class ResultsGenerator {
 
 	long totalTuplesReceived = 0;
 	long totalTuplesResulted = 0;
-
 	Date _minInitialDate;;
-
 	private String _subfolder;;
 
 	private String _subSubFolder;
@@ -1338,9 +1338,9 @@ public class ResultsGenerator {
 			else if (new String(splits[1]).equals("RESULT"))
 				_sortedTuplesResults.add(createTimeStampObject(
 						_readTuples.get(i), idsResults, _minInitialDate)); // TODO
-			// change
-			// ids
-			// values
+																			// change
+																			// ids
+																			// values
 		}
 
 		Collections.sort(_sortedTuplesMemory, new TimeStampObjectComparator());

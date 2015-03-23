@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.ewh.algorithms.optimality.MaxAvgOptimality;
 import ch.epfl.data.plan_runner.ewh.algorithms.optimality.OptimalityMetricInterface;
@@ -49,7 +50,7 @@ public class BSPAlgorithm implements TilingAlgorithm {
 
 	public enum DIVISION_MODE {
 		LINEAR, // theoretically should be slower, but in practice it is faster;
-		// tested to a great extent
+				// tested to a great extent
 		LOG // it is also suspicious that it yields different regions than with
 			// LINEAR (theta_hyrack z0)
 	}
@@ -87,8 +88,7 @@ public class BSPAlgorithm implements TilingAlgorithm {
 		private String _bestFirstSubregionHash = null;
 		private String _bestSecondSubregionHash = null;
 		private int _numRectangles; // a rectangle is of maximum weight
-
-		// maxWeight
+									// maxWeight
 
 		// weight of a region less than maxWeight
 		public RegionPartitioning(Region region) {
@@ -114,7 +114,7 @@ public class BSPAlgorithm implements TilingAlgorithm {
 			int numRectangles = bsp.getNumJoinersCoarsened(regPart,
 					coarsenedRegion);
 			coarsenedRegion.minimizeToNotEmptyCoarsened(_wp, _coarsener); // in-place
-			// modification
+																			// modification
 
 			// we ignore regions with 0 rectangles; should not appear anyway
 			// (look at A1 assumption)
@@ -295,7 +295,6 @@ public class BSPAlgorithm implements TilingAlgorithm {
 	private ShallowCoarsener _coarsener;
 
 	private StringBuilder _sb;;
-
 	// smallest value for double
 	private final double DELTA = 0.01;
 
@@ -304,7 +303,6 @@ public class BSPAlgorithm implements TilingAlgorithm {
 	// maxRegionWeight)
 	// used in binary search
 	private final int EXACT_ENCOUNTERED_COUNTER_BREAK = 1;
-
 	// For large number of joiners, it may take too much time to reach exactly
 	// the required number of joiners
 	// If the obtained number of joiners is within CLOSE_PERCENTAGE of the
@@ -372,7 +370,7 @@ public class BSPAlgorithm implements TilingAlgorithm {
 			// Region coarsenedRegion =
 			// _coarsener.translateOriginalToCoarsenedRegion(originalRegion);
 			coarsenedRegion.minimizeToNotEmptyCoarsened(_wp, _coarsener); // in-place
-			// modification
+																			// modification
 			sccOriginal = _coarsener
 					.translateCoarsenedToOriginalRegion(coarsenedRegion);
 			if (!Region.equalPosition(region, sccOriginal)) {
@@ -441,7 +439,7 @@ public class BSPAlgorithm implements TilingAlgorithm {
 		// try horizontal partitioning
 		int lowerBound = cx1;
 		int upperBound = cx2 - 1; // such that the second region has at least
-		// one coarsened point to cover
+									// one coarsened point to cover
 		if (_dmode == DIVISION_MODE.LOG) {
 			while (lowerBound <= upperBound) {
 				if (bestNumRectangles == qtyMaxWeigh) {
@@ -517,7 +515,7 @@ public class BSPAlgorithm implements TilingAlgorithm {
 		// try vertical partitioning
 		lowerBound = cy1;
 		upperBound = cy2 - 1; // such that the second region has at least one
-		// coarsened point to cover
+								// coarsened point to cover
 		if (_dmode == DIVISION_MODE.LOG) {
 			while (lowerBound <= upperBound) {
 				if (bestNumRectangles == qtyMaxWeigh) {
@@ -658,10 +656,10 @@ public class BSPAlgorithm implements TilingAlgorithm {
 		int freq = _wp.getTotalFrequency();
 		double singleJoinerLowerBound = _wf.getWeight(
 				(int) (2 * Math.sqrt(freq / _j)), freq / _j); // we could use
-		// (double)freq,
-		// but it is a
-		// lower bound
-		// anyway
+																// (double)freq,
+																// but it is a
+																// lower bound
+																// anyway
 		double singleJoinerUpperBound = _wf.getWeight((xSize + ySize), freq);
 		if (_j == 1) {
 			// necessary to ensure bestRegion!=null when J = 1
@@ -676,8 +674,8 @@ public class BSPAlgorithm implements TilingAlgorithm {
 		boolean terminate = false;
 		int iterations = 0;
 		boolean isFirstEnter = true; // the number of iterations do not change
-		// if TooSmallMaxWeightException
-		// encountered
+										// if TooSmallMaxWeightException
+										// encountered
 		while ((singleJoinerLowerBound <= singleJoinerUpperBound)
 				&& (exactEncounteredCounter < EXACT_ENCOUNTERED_COUNTER_BREAK)
 				&& (!terminate)
@@ -703,7 +701,7 @@ public class BSPAlgorithm implements TilingAlgorithm {
 			 * to 5s)
 			 */
 			int multiplier = 5; // a number which works for low-selectivity
-			// joins (e.g. jps)
+								// joins (e.g. jps)
 			double currentAlgMaxWeight = (singleJoinerLowerBound + singleJoinerUpperBound) / 2;
 			if (isFirstEnter) {
 				isFirstEnter = false;
@@ -1131,6 +1129,8 @@ public class BSPAlgorithm implements TilingAlgorithm {
 		return regions;
 	}
 
+	// end of coarsener
+
 	// invoked once per binary search iteration
 	private int getNumJoiners(Map<String, RegionPartitioning> regPart,
 			JoinMatrix joinMatrix) {
@@ -1162,7 +1162,7 @@ public class BSPAlgorithm implements TilingAlgorithm {
 	private int getNumJoinersCoarsened(Map<String, RegionPartitioning> regPart,
 			Region regionCoarsened) {
 		regionCoarsened.minimizeToNotEmptyCoarsened(_wp, _coarsener); // in-place
-		// modification
+																		// modification
 
 		String regionCoarsenedHash = regionCoarsened.getHashString();
 		if (regPart.containsKey(regionCoarsenedHash)) {
@@ -1212,7 +1212,7 @@ public class BSPAlgorithm implements TilingAlgorithm {
 				joinMatrix);
 		Region coarsenedRegion = new Region(coarsenedMatrixHash);
 		coarsenedRegion.minimizeToNotEmptyCoarsened(_wp, _coarsener); // in-place
-		// modification
+																		// modification
 		String coarsenedHash = coarsenedRegion.getHashString();
 		if (regPart.containsKey(coarsenedHash)) {
 			return regPart.get(coarsenedHash).getRectangles(regPart, this);
@@ -1271,8 +1271,6 @@ public class BSPAlgorithm implements TilingAlgorithm {
 		}
 		return shortName;
 	}
-
-	// end of coarsener
 
 	// noone is calling it as it depends on the context whether the expected
 	// region is original or coarsened
@@ -1433,7 +1431,7 @@ public class BSPAlgorithm implements TilingAlgorithm {
 						// ep already exists
 						ExtremePositions ep = _segmentExtremes.get(segment);
 						ep.setMostRight(j); // update the last position (i) with
-						// value j in place
+											// value j in place
 					}
 				}
 			}
@@ -1452,7 +1450,7 @@ public class BSPAlgorithm implements TilingAlgorithm {
 				ExtremePositions ep1 = _segmentExtremes.get(s1);
 				if (ep1 == null) {
 					continue; // do not analyze this segment, as the topLine
-					// does not exist
+								// does not exist
 				}
 				ExtremePositions ep2 = _segmentExtremes.get(s2);
 				if (ep2 == null) {

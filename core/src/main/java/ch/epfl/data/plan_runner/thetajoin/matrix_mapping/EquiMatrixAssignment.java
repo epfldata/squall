@@ -4,7 +4,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 /**
  * @author ElSeidy This class performs region assignments to Matrix. i.e. Given
@@ -57,7 +58,7 @@ public class EquiMatrixAssignment<KeyType> implements Serializable,
 	private long _sizeS, _sizeT; // dimensions of data.. row, column
 	// respectively.
 	private final int _r; // practically speaking usually a relatively small
-	// value!
+							// value!
 	public int _r_S = -1, _r_T = -1; // dimensions of reducers.. row, column
 
 	// respectively.

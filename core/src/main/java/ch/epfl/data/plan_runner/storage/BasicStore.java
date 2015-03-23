@@ -3,7 +3,9 @@ package ch.epfl.data.plan_runner.storage;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
-import java.util.logging.Logger;
+import java.util.ArrayList;
+
+import org.apache.log4j.Logger;
 
 /* R denotes the type of objects you expect the store to return at a access or update call */
 public abstract class BasicStore<R> implements Serializable {
@@ -13,8 +15,8 @@ public abstract class BasicStore<R> implements Serializable {
 	private PrintStream _ps;
 	protected String _objRemId;
 	private static int _uniqIdCounter = 0;
-	protected MemoryManager _memoryManager;
-	protected StorageManager _storageManager;
+	// protected MemoryManager _memoryManager;
+	// protected StorageManager _storageManager;
 	private ByteArrayOutputStream _baos = null;
 	private static final long serialVersionUID = 1L;
 	private static final String _uniqIdPrefix = "Store#";
@@ -27,7 +29,8 @@ public abstract class BasicStore<R> implements Serializable {
 				+ " MB with UniqStoreId: " + _uniqId);
 	}
 
-	public abstract R access(Object... data);
+	public abstract ArrayList<R> access(Object... data);
+	public abstract R update(Object... data);
 
 	public abstract boolean contains(Object... data);
 
@@ -55,21 +58,23 @@ public abstract class BasicStore<R> implements Serializable {
 		 * Check if store has exceeded it's maximum space, and if yes, removes
 		 * some elements from it and writes them to stable storage.
 		 */
-		while (this._memoryManager.hasExceededMaxSpace() == true) {
-			final Object remObj = this.onRemove();
-			_storageManager.write(_objRemId, remObj);
-		}
+		// while (this._memoryManager.hasExceededMaxSpace() == true) {
+		// final Object remObj = this.onRemove();
+		// _storageManager.write(_objRemId, remObj);
+		// }
 	}
 
 	/* Functions to be implemented by all stores */
 	public abstract void onInsert(Object... data);
 
 	/* must set _objRemId */
-	public abstract Object onRemove();
+	// public abstract Object onRemove();
 
 	public abstract void printStore(PrintStream stream, boolean printStorage);
 
 	public abstract void reset();
 
-	public abstract R update(Object... data);
+
+	public abstract void setSingleEntry(boolean singleEntry);
+
 }

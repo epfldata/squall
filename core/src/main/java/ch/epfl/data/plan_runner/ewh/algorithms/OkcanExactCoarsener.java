@@ -1,7 +1,8 @@
 package ch.epfl.data.plan_runner.ewh.algorithms;
 
 import java.util.Map;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.ewh.data_structures.JoinMatrix;
 import ch.epfl.data.plan_runner.ewh.data_structures.Region;

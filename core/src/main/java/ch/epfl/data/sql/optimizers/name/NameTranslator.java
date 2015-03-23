@@ -1,8 +1,11 @@
 package ch.epfl.data.sql.optimizers.name;
 
-import java.beans.Expression;
 import java.util.List;
-import java.util.logging.Logger;
+
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.schema.Column;
+
+import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.sql.schema.ColumnNameType;
@@ -17,8 +20,7 @@ public class NameTranslator {
 	private static Logger LOG = Logger.getLogger(NameTranslator.class);
 
 	private final String _compName; // the name of the component which created
-
-	// it,
+									// it,
 
 	// used only for printing error messages
 

@@ -1,10 +1,20 @@
 package ch.epfl.data.plan_runner.thetajoin.indexes;
 
+import gnu.trove.list.array.TIntArrayList;
+
 import java.util.Calendar;
 import java.util.Date;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
+import cherri.bheaven.bplustree.BPlusTree;
+import cherri.bheaven.bplustree.LeafNode;
+import cherri.bheaven.bplustree.Node;
+import cherri.bheaven.bplustree.NodeFactory;
+import cherri.bheaven.bplustree.memory.MemoryInnerNode;
+import cherri.bheaven.bplustree.memory.MemoryLeafNode;
+import cherri.bheaven.bplustree.memory.MemoryNodeFactory;
 
 /**
  * @author Zervos B+ index. Used for inequalities. Provides O(logn) search and
@@ -329,6 +339,11 @@ public class BplusTreeIndex<KeyType extends Comparable<KeyType>> implements
 
 		}
 		idsList.add(row_id);
+	}
+
+	@Override
+	public void remove(Integer row_id, KeyType key) {
+		throw new RuntimeException("Not implemented yet");
 	}
 
 	public BplusTreeIndex setDiff(Object diff) {

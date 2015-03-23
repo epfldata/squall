@@ -1,6 +1,9 @@
 package ch.epfl.data.sql.estimators;
 
-import java.beans.Expression;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.operators.relational.LikeExpression;
+import net.sf.jsqlparser.expression.operators.relational.MinorThan;
+import net.sf.jsqlparser.schema.Column;
 
 public class HardCodedSelectivities {
 

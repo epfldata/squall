@@ -33,6 +33,6 @@ public interface Operator extends Serializable {
 	 */
 	public String printContent();
 
-	public List<String> process(List<String> tuple);
+	public List<String> process(List<String> tuple, long lineageTimestamp);
 
 }

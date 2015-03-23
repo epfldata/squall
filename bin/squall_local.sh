@@ -50,9 +50,9 @@ if ! [ -f $CONFIG_PATH ]; then
 fi
 
 # Now run
-cd ../deploy
+cd ..
 
-../bin/lein run -m $CLASS $CONFIG_PATH
+sbt "core/runMain $CLASS $CONFIG_PATH"
 
 #Old version implies specifying libraries explicitly
 #java -Xmx128m -cp ../deploy/squall-0.2.0-standalone.jar:../$STORMNAME/lib/*:../contrib/*:../$STORMNAME/$STORMNAME.jar ch.epfl.data.sql.main.ParserMain $CONFIG_PATH

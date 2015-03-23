@@ -5,6 +5,8 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.OutputStreamWriter;
 
+import au.com.bytecode.opencsv.CSVReader;
+
 /*
  * Requires MemoryMaxMono.csv per each query/algorithm/datasize
  * which is done by GenerateMemory.

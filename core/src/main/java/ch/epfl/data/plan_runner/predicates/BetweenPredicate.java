@@ -2,7 +2,8 @@ package ch.epfl.data.plan_runner.predicates;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.visitors.PredicateVisitor;

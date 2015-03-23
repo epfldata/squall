@@ -7,7 +7,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 /*
  * BufferedReader gives no information about number of lines read for readLine

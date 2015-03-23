@@ -2,7 +2,8 @@ package ch.epfl.data.plan_runner.operators;
 
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Logger;
+
+import org.apache.log4j.Logger;
 
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 import ch.epfl.data.plan_runner.visitors.OperatorVisitor;
@@ -56,7 +57,7 @@ public class SampleOperator implements Operator {
 	}
 
 	@Override
-	public List<String> process(List<String> tuple) {
+	public List<String> process(List<String> tuple, long lineageTimestamp) {
 		_numTuplesProcessed++;
 		if (_rnd.nextDouble() < _sampleRate) {
 			return tuple;

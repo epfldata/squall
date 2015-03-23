@@ -21,6 +21,13 @@ public interface AggregateOperator<T> extends Operator {
 	// internal storage class
 	public BasicStore getStorage();
 
+	public AggregateOperator<T> SetWindowSemantics(int windowRangeInSeconds,
+			int windowSlideInSeconds);
+
+	public AggregateOperator<T> SetWindowSemantics(int windowRangeInSeconds);
+
+	public int[] getWindowSemanticsInfo();
+
 	public TypeConversion getType();
 
 	public boolean hasGroupBy();

@@ -4,8 +4,19 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.InputDeclarer;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.topology.base.BaseRichBolt;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
 import ch.epfl.data.plan_runner.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
@@ -89,7 +100,7 @@ public class InterchangingBolt extends BaseRichBolt implements StormComponent {
 	@Override
 	public void execute(Tuple stormTupleRcv) {
 		final String inputComponentIndex = stormTupleRcv.getString(0); // Table
-		// name
+																		// name
 		String inputTupleString = "";
 		List<String> tupleList = null;
 		tupleList = (List<String>) stormTupleRcv.getValue(1);

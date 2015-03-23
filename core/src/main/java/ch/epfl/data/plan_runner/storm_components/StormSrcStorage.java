@@ -4,8 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.InputDeclarer;
+import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
 import ch.epfl.data.plan_runner.operators.AggregateOperator;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
@@ -17,6 +25,7 @@ import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 
+@Deprecated
 public class StormSrcStorage extends StormBoltComponent {
 	private static Logger LOG = Logger.getLogger(StormSrcStorage.class);
 	private static final long serialVersionUID = 1L;
@@ -30,11 +39,11 @@ public class StormSrcStorage extends StormBoltComponent {
 	// parent
 
 	private final String _full_ID; // Contains the name of the component and
-	// tableName
+									// tableName
 
 	private final ChainOperator _operatorChain;
 
-	private final BasicStore<ArrayList<String>> _joinStorage;
+	private final BasicStore<String> _joinStorage;
 	private final ProjectOperator _preAggProj;
 	private final StormSrcHarmonizer _harmonizer;
 
@@ -50,7 +59,7 @@ public class StormSrcStorage extends StormBoltComponent {
 			StormEmitter secondEmitter, ComponentProperties cp,
 			List<String> allCompNames, StormSrcHarmonizer harmonizer,
 			boolean isFromFirstEmitter,
-			BasicStore<ArrayList<String>> preAggStorage,
+			BasicStore<String> preAggStorage,
 			ProjectOperator preAggProj, int hierarchyPosition,
 			TopologyBuilder builder, TopologyKiller killer, Config conf) {
 		super(cp, allCompNames, hierarchyPosition, conf);
@@ -117,7 +126,7 @@ public class StormSrcStorage extends StormBoltComponent {
 				_semAgg.acquire();
 			} catch (final InterruptedException ex) {
 			}
-		tuple = _operatorChain.process(tuple);
+		tuple = _operatorChain.process(tuple, 0);
 		if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
 			_semAgg.release();
 
@@ -202,7 +211,7 @@ public class StormSrcStorage extends StormBoltComponent {
 								secondTuple);
 
 					if (_preAggProj != null)
-						outputTuple = _preAggProj.process(outputTuple);
+						outputTuple = _preAggProj.process(outputTuple, 0);
 
 					applyOperatorsAndSend(stormTupleRcv, outputTuple);
 				}
@@ -253,5 +262,12 @@ public class StormSrcStorage extends StormBoltComponent {
 	@Override
 	protected void printStatistics(int type) {
 		// TODO
+	}
+
+	@Override
+	public void purgeStaleStateFromWindow() {
+		throw new RuntimeException(
+				"Window semantics is not implemented for this operator.");
+
 	}
 }

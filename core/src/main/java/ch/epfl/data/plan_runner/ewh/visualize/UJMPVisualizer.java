@@ -2,6 +2,8 @@ package ch.epfl.data.plan_runner.ewh.visualize;
 
 import java.util.List;
 
+import org.ujmp.core.Matrix;
+
 import ch.epfl.data.plan_runner.ewh.data_structures.Region;
 import ch.epfl.data.plan_runner.ewh.data_structures.UJMPAdapterByteMatrix;
 import ch.epfl.data.plan_runner.ewh.data_structures.UJMPAdapterIntMatrix;

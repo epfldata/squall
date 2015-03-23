@@ -2,8 +2,12 @@ package ch.epfl.data.plan_runner.components;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.plan_runner.conversion.TypeConversion;
 import ch.epfl.data.plan_runner.expressions.ValueExpression;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
@@ -155,8 +159,7 @@ public class InterchangingDataSourceComponent implements Component {
 
 	@Override
 	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
-			List<String> allCompNames, Config conf, int partitioningType,
-			int hierarchyPosition) {
+			List<String> allCompNames, Config conf, int hierarchyPosition) {
 
 		// by default print out for the last component
 		// for other conditions, can be set via setPrintOut
@@ -231,5 +234,4 @@ public class InterchangingDataSourceComponent implements Component {
 		_printOut = printOut;
 		return this;
 	}
-
 }

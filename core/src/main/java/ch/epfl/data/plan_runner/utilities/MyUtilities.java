@@ -15,8 +15,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.Config;
+import backtype.storm.Constants;
+import backtype.storm.generated.Grouping;
+import backtype.storm.grouping.CustomStreamGrouping;
+import backtype.storm.spout.SpoutOutputCollector;
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.InputDeclarer;
+import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
 import ch.epfl.data.plan_runner.components.theta.ThetaJoinStaticComponent;
@@ -58,6 +69,7 @@ import ch.epfl.data.plan_runner.thetajoin.matrix_mapping.MatrixAssignment;
 import ch.epfl.data.plan_runner.utilities.SystemParameters.HistogramType;
 import ch.epfl.data.plan_runner.utilities.thetajoin_static.ContentSensitiveThetaJoinStaticMapping;
 import ch.epfl.data.plan_runner.utilities.thetajoin_static.ThetaJoinStaticMapping;
+import ch.epfl.data.plan_runner.window_semantics.WindowSemanticsManager;
 
 public class MyUtilities {
 	public static QueryBuilder addEWHSampler(Component firstParent,
@@ -188,7 +200,7 @@ public class MyUtilities {
 		int relSize1 = -1, relSize2 = -1;
 		int keyProject1 = -1, keyProject2 = -1;
 		Component r1 = null, r2 = null; // r2 feeds D2Combiner, r1 feeds
-		// S1Reservoir directly
+										// S1Reservoir directly
 
 		boolean isFirstD2 = SystemParameters.getBoolean(conf, "IS_FIRST_D2");
 		if (isFirstD2) {
@@ -643,8 +655,8 @@ public class MyUtilities {
 			int n_c_s = MyUtilities.getMax(firstNumOfBuckets,
 					secondNumOfBuckets);
 			return constant * n_c_s; // the actual output sample size is
-			// currently upper bounded by the size of
-			// the bigger relation
+										// currently upper bounded by the size
+										// of the bigger relation
 		} else if (mode.equalsIgnoreCase("EXACT")) {
 			return constant;
 		} else {
@@ -890,7 +902,7 @@ public class MyUtilities {
 				SystemParameters.REL_SIZE, String.valueOf(relSize)));
 		relSizeTuple.add(tuple);
 		relSizeTuple.add("O"); // does not matter as we send to a single
-		// Partitioner node
+								// Partitioner node
 		return relSizeTuple;
 	}
 
@@ -903,7 +915,7 @@ public class MyUtilities {
 				String.valueOf(totalOutputSize)));
 		totalOutputSizeTuple.add(tuple);
 		totalOutputSizeTuple.add("O"); // does not matter as we send to a single
-		// Partitioner node
+										// Partitioner node
 		return totalOutputSizeTuple;
 	}
 
@@ -1434,8 +1446,7 @@ public class MyUtilities {
 	}
 
 	public static boolean isWindowTimestampMode(Map map) {
-		return (SystemParameters.doesExist(map, "WINDOW_SIZE_SECS") || SystemParameters
-				.doesExist(map, "WINDOW_TUMBLING_SIZE_SECS"));
+		return (WindowSemanticsManager._IS_WINDOW_SEMANTICS);
 	}
 
 	public static List<String> listFilesForPath(String dir) {

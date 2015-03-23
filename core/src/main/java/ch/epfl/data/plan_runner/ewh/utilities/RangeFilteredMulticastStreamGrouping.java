@@ -4,8 +4,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.generated.GlobalStreamId;
+import backtype.storm.task.WorkerTopologyContext;
 import ch.epfl.data.plan_runner.conversion.NumericConversion;
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
@@ -23,13 +26,12 @@ public class RangeFilteredMulticastStreamGrouping extends
 
 	private String _parentCompName;
 	private Map<Integer, Integer> _parentTaskIdtoIndex = new HashMap<Integer, Integer>(); // Id
-
-	// is
-	// Storm-Dependent,
-	// Index
-	// =
-	// [0,
-	// parallelism)
+																							// is
+																							// Storm-Dependent,
+																							// Index
+																							// =
+																							// [0,
+																							// parallelism)
 
 	// with multicast
 	public RangeFilteredMulticastStreamGrouping(Map map,
@@ -51,8 +53,8 @@ public class RangeFilteredMulticastStreamGrouping extends
 		if (!MyUtilities.isFinalAck(tuple, _map)) {
 			// taskId is Storm-dependent sender Id
 			int taskIndex = _parentTaskIdtoIndex.get(taskId); // translation to
-			// [0,
-			// parallelism)
+																// [0,
+																// parallelism)
 			if (!isWithinBoundaries(taskIndex, tupleHash, _srcRangeBoundaries)) {
 				// LOG.info("FILTERED TUPLE key = " + tupleHash +
 				// " in taskIndex " + taskIndex + "!");

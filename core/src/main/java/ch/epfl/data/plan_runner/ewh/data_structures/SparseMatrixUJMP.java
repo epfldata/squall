@@ -1,5 +1,7 @@
 package ch.epfl.data.plan_runner.ewh.data_structures;
 
+import org.ujmp.core.intmatrix.impl.DefaultSparseIntMatrix;
+
 public class SparseMatrixUJMP implements SimpleMatrix {
 
 	private DefaultSparseIntMatrix _ujmpMatrix;

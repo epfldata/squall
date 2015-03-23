@@ -5,8 +5,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
+import org.apache.log4j.Logger;
+
+import backtype.storm.generated.GlobalStreamId;
+import backtype.storm.grouping.CustomStreamGrouping;
+import backtype.storm.task.WorkerTopologyContext;
 import ch.epfl.data.plan_runner.conversion.NumericConversion;
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.utilities.DeepCopy;
@@ -30,7 +34,7 @@ public class RangeMulticastStreamGrouping implements CustomStreamGrouping,
 	private int _numTargetTasks;
 	private List<Integer> _targetTasks;
 	private List _rangeBoundaries = new ArrayList(); // (numTargetTasks - 1) of
-	// them
+														// them
 
 	protected final Map _map;
 	protected NumericConversion _wrapper;
