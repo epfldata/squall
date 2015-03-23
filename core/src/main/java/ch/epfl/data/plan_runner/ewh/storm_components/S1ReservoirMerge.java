@@ -244,9 +244,9 @@ public class S1ReservoirMerge<JAT extends Number & Comparable<JAT>> extends
 			// _outputSampleSize
 			for (int i = 0; i < _outputSampleSize; i++) {
 				double random = rndGen.nextDouble() * totalProbability; // simulate
-																		// [0,
-																		// totalProbability)
-																		// range
+				// [0,
+				// totalProbability)
+				// range
 				int index = binarySearch(keyProbabilities, random,
 						totalProbability);
 				String key = keyProbabilities.get(index).getKey();

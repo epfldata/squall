@@ -10,7 +10,7 @@ import ch.epfl.data.plan_runner.ewh.data_structures.SimpleMatrix;
 public class PWeightPrecomputation implements WeightPrecomputation {
 	private WeightFunction _wf;
 	private ShallowCoarsener _coarsener; // p^2 is for last point in each 2D
-											// bucket from _sc (pxp matrix)
+	// bucket from _sc (pxp matrix)
 
 	private int[][] _prefixSum;
 	private int _xSize, _ySize; // dimensions of the prefixSum int[][]

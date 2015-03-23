@@ -99,6 +99,7 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStorage<KeyType> {
 
 	private String _storagePath;
 	private Environment _env;
+
 	private Database _db;
 	private SecondaryDatabase _timeStampDB;
 	private static final DateConversion _dc = new DateConversion();
@@ -348,6 +349,7 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStorage<KeyType> {
 		final KeyType rightBoundary = getKeyOffset(key, diff);
 		return getRange(leftBoundary, false, rightBoundary, false);
 	}
+
 
 	@Override
 	public String getStatistics() {

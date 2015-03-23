@@ -388,6 +388,8 @@ public class Region {
 	}
 
 	// ******************************************************************************************************
+
+	// ******************************************************************************************************
 	public void minimizeToNotEmptyCoarsened(WeightPrecomputation wp,
 			ShallowCoarsener coarsener) {
 		Region region = this;
@@ -473,7 +475,6 @@ public class Region {
 			return region;
 		}
 	}
-	// ******************************************************************************************************
 
 	/*
 	 * public void minimizeToNonEmpty(int cornerNum, DenseWeightPrecomputation

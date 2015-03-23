@@ -3,6 +3,7 @@ package ch.epfl.data.plan_runner.components;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
@@ -44,6 +45,15 @@ public class DataSourceComponent implements Component {
 
 	// equi-weight histogram
 	private boolean _isPartitioner;
+
+	// invoked from the new Interface (QueryPlan not QueryBuilder)
+	public DataSourceComponent(String tableName, Map conf) {
+		this(tableName.toUpperCase(),
+		// dataPath + tableName + extension);
+				SystemParameters.getString(conf, "DIP_DATA_PATH") + "/"
+						+ tableName
+						+ SystemParameters.getString(conf, "DIP_EXTENSION"));
+	}
 
 	public DataSourceComponent(String componentName, String inputPath) {
 		_componentName = componentName;

@@ -20,7 +20,7 @@ public class FixedSizePriorityQueue<T> extends PriorityQueue<T> {
 	public FixedSizePriorityQueue(final int maxSize,
 			final Comparator<? super T> comparator) {
 		super(maxSize, comparator); // initialCapacity is set to maxSize, as it
-									// will always reach this size
+		// will always reach this size
 		if (maxSize <= 0) {
 			throw new IllegalArgumentException("maxSize = " + maxSize
 					+ "; expected a positive integer.");

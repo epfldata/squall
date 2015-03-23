@@ -10,7 +10,7 @@ public interface WeightPrecomputation {
 	public int getMinHalfPerimeterForWeight(double maxWeight);
 
 	public int getPrefixSum(int x, int y); // necessary for
-											// PWeightPrecomputation
+	// PWeightPrecomputation
 
 	public int getTotalFrequency();
 
