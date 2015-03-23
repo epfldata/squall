@@ -318,7 +318,7 @@ public class ComparisonPredicate<T extends Comparable<T>> implements Predicate {
 			break;
 		case NONEQUAL_OP:
 			result = true; // everyone is a candidate cell (assuming that each
-							// range has more than one join attribute
+			// range has more than one join attribute
 			break;
 		case LESS_OP:
 			result = (comparedLowerUpper < 0);

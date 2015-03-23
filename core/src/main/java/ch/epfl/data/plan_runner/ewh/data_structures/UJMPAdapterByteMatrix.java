@@ -75,7 +75,7 @@ public class UJMPAdapterByteMatrix<JAT extends Comparable<JAT>> extends
 		_map = map;
 		_matrixPath = SystemParameters.getString(map, "DIP_MATRIX_ROOT") + "/";
 		_matrixName = MyUtilities.getQueryID(map); // SystemParameters.getString(map,
-													// "DIP_QUERY_NAME");
+		// "DIP_QUERY_NAME");
 	}
 
 	public UJMPAdapterByteMatrix(int xSize, int ySize, Map map,

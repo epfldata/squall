@@ -56,27 +56,27 @@ public class D2CombinerBolt<JAT extends Number & Comparable<JAT>> extends
 	private int _numOfLastJoiners; // input to tiling algorithm
 
 	private boolean _isEWHS1Histogram; // if true, only d2_equi is computed in
-										// D2CombinerBolt
+	// D2CombinerBolt
 	private Map<JAT, Integer> _d2 = new HashMap<JAT, Integer>(); // key,
-																	// multiplicity
 
+	// multiplicity
 	private Map<JAT, Integer> _d2equi = new HashMap<JAT, Integer>(); // key,
-																		// multiplicity
+	// multiplicity
 
 	private int _r2NumReceivedTuples;
 
 	private Random _rndGen = new Random();;
+
 	private STATE _state = STATE.PRODUCING_D2;
 
-	public D2CombinerBolt(
-			StormEmitter d2Source,
+	public D2CombinerBolt(StormEmitter d2Source,
 			String s1ReservoirMergeName,
 			String componentName,
 			boolean isFirstD2,
 			NumericConversion<JAT> wrapper,
 			ComparisonPredicate comparison,
 			boolean isEWHS1Histogram, // if true, only d2_equi is computed in
-										// D2CombinerBolt
+			// D2CombinerBolt
 			int firstNumOfBuckets, int secondNumOfBuckets,
 			List<String> allCompNames, int hierarchyPosition,
 			TopologyBuilder builder, TopologyKiller killer, Config conf) {
@@ -395,8 +395,8 @@ public class D2CombinerBolt<JAT extends Number & Comparable<JAT>> extends
 
 			// let's send it
 			List<Integer> hashIndexes = new ArrayList<Integer>(Arrays.asList(0)); // does
-																					// not
-																					// matter
+			// not
+			// matter
 			tupleSend(SystemParameters.PARTITIONER, outputSampleTuple,
 					hashIndexes);
 		} else {

@@ -150,7 +150,7 @@ public class MBucketIPartitioning {
 	private int[] coverSubmatrix(int row_s, int maxInput, int workers,
 			boolean[][] joinMatrix) {
 		int[] results = new int[2]; // first represents rows, and 2nd represents
-									// workers
+		// workers
 		long maxScore = -1;
 		int bestRow = -2, rUsed = 0;
 		ArrayList<Region> regions;

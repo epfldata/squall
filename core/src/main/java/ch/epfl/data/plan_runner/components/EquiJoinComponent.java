@@ -82,6 +82,13 @@ public class EquiJoinComponent extends JoinerComponent implements Component {
 		_isRemoveIndex = isRemoveIndex;
 	}
 
+	public EquiJoinComponent(Component firstParent, int firstJoinIndex,
+			Component secondParent, int secondJoinIndex) {
+		this(firstParent, secondParent);
+		firstParent.setOutputPartKey(firstJoinIndex);
+		secondParent.setOutputPartKey(secondJoinIndex);
+	}
+
 	@Override
 	public EquiJoinComponent add(Operator operator) {
 		_chain.addOperator(operator);

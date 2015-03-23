@@ -9,7 +9,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.log4j.Logger;
 
 import backtype.storm.Config;
@@ -29,7 +28,7 @@ import ch.epfl.data.plan_runner.utilities.SerializableFileInputStream;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 
 public class PullStatisticCollector {
-	private static class Hyracks implements QueryPlan {
+	private static class Hyracks implements PLCQueryPlan {
 		private IntegerConversion _ic = new IntegerConversion();
 
 		private Map _map;
@@ -69,7 +68,7 @@ public class PullStatisticCollector {
 		}
 	}
 
-	private static interface QueryPlan {
+	private static interface PLCQueryPlan {
 		public JoinMatrix generateMatrix();
 	}
 
@@ -182,9 +181,9 @@ public class PullStatisticCollector {
 	}
 
 	// change from here down
-	private QueryPlan chooseQueryPlan(Map map) {
+	private PLCQueryPlan chooseQueryPlan(Map map) {
 		String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
-		QueryPlan generator = null;
+		PLCQueryPlan generator = null;
 		if (queryName.equalsIgnoreCase("hyracks")) {
 			generator = new Hyracks(map);
 		} else {
@@ -199,7 +198,7 @@ public class PullStatisticCollector {
 		long startTime = System.currentTimeMillis();
 
 		// generate matrix
-		QueryPlan generator = chooseQueryPlan(map);
+		PLCQueryPlan generator = chooseQueryPlan(map);
 		JoinMatrix joinMatrix = generator.generateMatrix();
 		String queryName = SystemParameters.getString(map, "DIP_QUERY_NAME");
 

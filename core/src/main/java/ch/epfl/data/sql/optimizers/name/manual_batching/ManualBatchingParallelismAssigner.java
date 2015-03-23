@@ -99,7 +99,7 @@ public class ManualBatchingParallelismAssigner extends CostParallelismAssigner {
 	private double estimateSndTimeParents(int parallelism,
 			CostParams leftParentParams, CostParams rightParentParams) {
 		final long leftCardinality = leftParentParams.getCardinality();// after
-																		// all
+		// all
 		// the
 		// operators,
 		// including
@@ -223,7 +223,7 @@ public class ManualBatchingParallelismAssigner extends CostParallelismAssigner {
 
 		final double ratio = params.getSelectivity();
 		final int parallelism = params.getParallelism(); // batch size has to be
-															// set
+		// set
 		// after the parallelism
 		final int leftBatchSize = leftParams.getBatchSize();
 		final int leftBatchIn = leftBatchSize / parallelism;

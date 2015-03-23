@@ -8,7 +8,6 @@ import java.util.Map;
 import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.DataSourceComponent;
 import ch.epfl.data.plan_runner.components.EquiJoinComponent;
-import ch.epfl.data.plan_runner.utilities.SystemParameters;
 
 public class QueryBuilder implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -27,17 +26,7 @@ public class QueryBuilder implements Serializable {
 	}
 
 	public DataSourceComponent createDataSource(String tableName, Map conf) {
-		String dataPath = SystemParameters.getString(conf, "DIP_DATA_PATH")
-				+ "/";
-		String extension = SystemParameters.getString(conf, "DIP_EXTENSION");
-		return createDataSource(tableName.toUpperCase(), dataPath + tableName
-				+ extension);
-	}
-
-	public DataSourceComponent createDataSource(String componentName,
-			String inputPath) {
-		DataSourceComponent dsc = new DataSourceComponent(componentName,
-				inputPath);
+		DataSourceComponent dsc = new DataSourceComponent(tableName, conf);
 		add(dsc);
 		return dsc;
 	}

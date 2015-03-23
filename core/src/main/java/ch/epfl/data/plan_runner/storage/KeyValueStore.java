@@ -56,7 +56,6 @@ public class KeyValueStore<K, V> extends BasicStore<V>{
 		if (!inMem)
 			return null;
 		return values;
-
 	}
 
 	protected V __update(boolean checkStorage, Object... data) {

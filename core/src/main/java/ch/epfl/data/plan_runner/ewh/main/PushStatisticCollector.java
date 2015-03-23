@@ -41,7 +41,7 @@ import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
 
 public class PushStatisticCollector {
-	private static class Hyracks implements QueryPlan {
+	private static class Hyracks implements PLCQueryPlan {
 		private IntegerConversion _ic = new IntegerConversion();
 
 		private Map _map;
@@ -92,7 +92,7 @@ public class PushStatisticCollector {
 		}
 	}
 
-	private static interface QueryPlan {
+	private static interface PLCQueryPlan {
 		public JoinMatrix generateMatrix();
 
 		public NumericConversion getWrapper();
@@ -100,7 +100,7 @@ public class PushStatisticCollector {
 		public void processTuple(List<String> tuple, int relationNumber);
 	}
 
-	private static class ThetaLineitemSelfJoin implements QueryPlan {
+	private static class ThetaLineitemSelfJoin implements PLCQueryPlan {
 		private DateIntegerConversion _dateIntConv = new DateIntegerConversion();
 
 		private Map _map;
@@ -153,7 +153,7 @@ public class PushStatisticCollector {
 	}
 
 	private static class ThetaLineitemSelfJoinInputDominated implements
-			QueryPlan {
+			PLCQueryPlan {
 		private IntegerConversion _ic = new IntegerConversion();
 
 		private Map _map;
@@ -204,7 +204,7 @@ public class PushStatisticCollector {
 		}
 	}
 
-	private static class ThetaTPCH5_R_N_S_L implements QueryPlan {
+	private static class ThetaTPCH5_R_N_S_L implements PLCQueryPlan {
 		private IntegerConversion _ic = new IntegerConversion();
 
 		private Map _map;
@@ -255,7 +255,7 @@ public class PushStatisticCollector {
 		}
 	}
 
-	private static class ThetaTPCH7_L_S_N1 implements QueryPlan {
+	private static class ThetaTPCH7_L_S_N1 implements PLCQueryPlan {
 		private IntegerConversion _ic = new IntegerConversion();
 
 		private Map _map;
@@ -308,7 +308,7 @@ public class PushStatisticCollector {
 
 	private static <T> void appendKeys(List<T> keys, ProjectOperator project,
 			List<String> tuple, TypeConversion<T> wrapper) {
-		String key = project.process(tuple, -1).get(0);
+                String key = project.process(tuple, -1).get(0);
 		keys.add(wrapper.fromString(key));
 	}
 
@@ -543,7 +543,7 @@ public class PushStatisticCollector {
 	 * secondKeys.get(j))){ joinMatrix.setElement(1, i, j); } } } }
 	 */
 
-	private QueryPlan _queryPlan = null;
+	private PLCQueryPlan _queryPlan = null;
 
 	private static Map _map;
 
@@ -704,12 +704,12 @@ public class PushStatisticCollector {
 					if (toVisualize) {
 						// visualize with regions
 						JoinMatrix matrixCopy = joinMatrix.getDeepCopy(); // in
-																			// order
-																			// not
-																			// to
-																			// spoil
-																			// the
-																			// original
+						// order
+						// not
+						// to
+						// spoil
+						// the
+						// original
 						matrixCopy.setRegions(regions);
 						String label = queryName + " with regions";
 						VisualizerInterface visualizer = new UJMPVisualizer(

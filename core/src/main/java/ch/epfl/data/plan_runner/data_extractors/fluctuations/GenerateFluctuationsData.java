@@ -141,6 +141,7 @@ public class GenerateFluctuationsData {
 	private int _n, _m;
 
 	private long _ignore;
+
 	private double _percentageKeep;
 
 	private int _fillVal;
@@ -212,11 +213,11 @@ public class GenerateFluctuationsData {
 	}
 
 	private boolean isAlgoTriggeredChange(DataPoint dp1, DataPoint dp2) { // returns
-																			// negative
-																			// values
-																			// if
-																			// no
-																			// change
+		// negative
+		// values
+		// if
+		// no
+		// change
 		if (dp1.m != dp2.m)
 			return true;
 		else
@@ -372,7 +373,7 @@ public class GenerateFluctuationsData {
 							+ "," + (((double) rel1) / rel2);
 
 					if (optn != currentn) // is there any change between opt and
-											// algo?
+						// algo?
 						output += "," + _fillVal;
 					else
 						output += "," + (-1);
@@ -432,7 +433,7 @@ public class GenerateFluctuationsData {
 							+ optn + "," + optm + "," + ILFOpt + "," + ratio
 							+ "," + (((double) rel1) / rel2);
 					if (optn != currentn) // is there any change between opt and
-											// algo?
+						// algo?
 						output += "," + _fillVal;
 					else
 						output += "," + (-1);
