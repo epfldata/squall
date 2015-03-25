@@ -36,7 +36,7 @@ public class ProjGlobalCollectTest {
         LOG.info("test ProjGlobalCollect");
         
         //create object
-        String parserConfPath = "../test/squall/unit_tests/confs/0_1G_tpch7_ncl";
+        String parserConfPath = getClass().getResource("/squall/confs/0_1G_tpch7_ncl").getPath();
         ParserMain pm = new ParserMain();
         Map map = pm.createConfig(parserConfPath);
         SQLVisitor parsedQuery = ParserUtil.parseQuery(map);

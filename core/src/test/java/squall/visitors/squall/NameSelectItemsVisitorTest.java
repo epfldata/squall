@@ -47,7 +47,7 @@ public class NameSelectItemsVisitorTest {
     
     public NameSelectItemsVisitorTest() {
         //create object
-        String parserConfPath = "../test/squall/unit_tests/confs/0_1G_tpch7_ncl";
+        String parserConfPath = getClass().getResource("/squall/confs/0_1G_tpch7_ncl").getPath();
         ParserMain pm = new ParserMain();
         _map = pm.createConfig(parserConfPath);
         _pq = ParserUtil.parseQuery(_map);

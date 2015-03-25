@@ -34,7 +34,7 @@ public class CostParallelismAssignerTest {
     private HashMap<Set<String>, Expression> _compNamesOrExprs = new HashMap<Set<String>, Expression>();    
     
     public CostParallelismAssignerTest() {      
-        String parserConfPath = "../test/squall/unit_tests/confs/0_1G_tpch7_ncl";
+        String parserConfPath = getClass().getResource("/squall/confs/0_1G_tpch7_ncl").getPath();
         ParserMain pm = new ParserMain();
         Map map = pm.createConfig(parserConfPath);
         _parsedQuery = ParserUtil.parseQuery(map);

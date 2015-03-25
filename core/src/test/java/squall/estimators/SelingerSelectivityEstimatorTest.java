@@ -43,7 +43,7 @@ public class SelingerSelectivityEstimatorTest {
         mt.setLeftExpression(_columnOrderdate);
         mt.setRightExpression(new DateValue(" 1995-01-01 "));
         
-        String path = "../test/squall/schemas/tpch.txt";
+        String path = SelingerSelectivityEstimatorTest.class.getResource("/squall/schemas/tpch.txt").getPath();
         double scallingFactor = 1;
         _selEstimator = new SelingerSelectivityEstimator("TEST", new Schema(path, scallingFactor), new TableAliasName(tableList, "SelingerTest"));
     }

@@ -1,0 +1,14 @@
+TABLE R [10000] (
+ A LONG,
+ B LONG,
+);
+
+TABLE S [10000] (
+ B LONG,
+ C LONG,
+);
+
+TABLE T [10000] (
+ C LONG,
+ D LONG,
+);

@@ -1,0 +1,84 @@
+TABLE ORDERS [1500000:S] (
+ ORDERKEY      LONG    DISTINCT=1500000:S                               ,
+ CUSTKEY       LONG    DISTINCT=150000:S                                ,
+ ORDERSTATUS   STRING  DISTINCT=3                                       ,
+ TOTALPRICE    DOUBLE                                                   ,
+ ORDERDATE     DATE    DISTINCT=2397      MIN=1992-01-01 MAX=1998-08-02 ,
+ ORDERPRIORITY STRING  DISTINCT=5                                       ,
+ CLERK         STRING  DISTINCT=1000:S                                  ,
+ SHIPPRIORITY  LONG    DISTINCT=1                                       ,
+ COMMENT       STRING
+);
+
+TABLE LINEITEM [6000000:S] (
+ ORDERKEY      LONG   DISTINCT=1500000:S                               ,
+ PARTKEY       LONG   DISTINCT=200000:S                                , 
+ SUPPKEY       LONG   DISTINCT=10000:S                                 ,
+ LINENUMBER    LONG                                                    ,
+ QUANTITY      DOUBLE DISTINCT=50       MIN=1.00 MAX=50.0              ,
+ EXTENDEDPRICE DOUBLE                                                  ,
+ DISCOUNT      DOUBLE DISTINCT=11	MIN=0.00 MAX=0.10              ,
+ TAX           DOUBLE                                                  , 
+ RETURNFLAG    STRING DISTINCT=3                                       ,
+ LINESTATUS    STRING DISTINCT=2                                       ,
+ SHIPDATE      DATE   DISTINCT=2518      MIN=1992-01-01 MAX=1998-12-01 ,
+ COMMITDATE    DATE   DISTINCT=2578      MIN=1992-01-01 MAX=1998-10-31 ,
+ RECEIPTDATE   DATE   DISTINCT=2548      MIN=1992-01-01 MAX=1998-09-01 ,
+ SHIPINSTRUCT  STRING DISTINCT=4                                       ,
+ SHIPMODE      STRING DISTINCT=7                                       ,
+ COMMENT       STRING
+);
+
+TABLE CUSTOMER [150000:S] (
+ CUSTKEY    LONG   DISTINCT=150000:S ,
+ NAME       STRING DISTINCT=150000:S , 
+ ADDRESS    STRING                   , 
+ NATIONKEY  LONG   DISTINCT=25       , 
+ PHONE      STRING                   , 
+ ACCTBAL    STRING                   ,
+ MKTSEGMENT STRING DISTINCT=5        , 
+ COMMENT    STRING
+);
+
+TABLE NATION [25] (
+ NATIONKEY LONG   DISTINCT=25 ,
+ NAME      STRING DISTINCT=25 , 
+ REGIONKEY LONG   DISTINCT=5  ,
+ COMMENT   STRING
+);
+
+TABLE SUPPLIER [10000:S] (
+ SUPPKEY   LONG   DISTINCT=10000:S ,
+ NAME      STRING DISTINCT=10000:S ,
+ ADDRESS   STRING                  ,
+ NATIONKEY LONG   DISTINCT=25      ,
+ PHONE     STRING                  , 
+ ACCTBAL   DOUBLE                  , 
+ COMMENT   STRING
+);
+
+TABLE REGION [5] (
+ REGIONKEY LONG   DISTINCT=5 ,
+ NAME      STRING DISTINCT=5 ,
+ COMMENT   STRING
+);
+
+TABLE PART [200000:S] (
+ PARTKEY     LONG   DISTINCT=200000:S ,
+ NAME        STRING                   ,
+ MFGR        STRING DISTINCT=5        , 
+ BRAND       STRING DISTINCT=5        , 
+ TYPE        STRING DISTINCT=150      ,
+ SIZE        LONG DISTINCT=50         MIN=1 MAX=50 ,
+ CONTAINER   STRING DISTINCT=40       ,
+ RETAILPRICE DOUBLE                   ,
+ COMMENT     STRING
+);
+
+TABLE PARTSUPP [800000:S] (
+ PARTKEY    LONG DISTINCT=200000:S ,
+ SUPPKEY    LONG DISTINCT=10000:S  , 
+ AVAILQTY   LONG DISTINCT=10000    ,
+ SUPPLYCOST DOUBLE                 ,
+ COMMENT    STRING
+);

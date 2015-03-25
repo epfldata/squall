@@ -20,13 +20,15 @@ import ch.epfl.data.sql.visitors.jsql.SQLVisitor;
  * @author vitorovi
  */
 public class CostOptimizerTest {
-    private static final String CONF_PATH = "../test/squall/unit_tests/confs/";
-    private static final String PLAN_PATH = "../test/squall/unit_tests/printouts/query_plans/";
+    private static String CONF_PATH;
+    private static String PLAN_PATH;
     
     private Map _map;
     private SQLVisitor _pq;
     
     public CostOptimizerTest() {
+      CONF_PATH = getClass().getResource("/squall/confs/").getPath();
+      PLAN_PATH = getClass().getResource("/squall/printouts/query_plans/").getPath();
     }
     
     private NameCompGen createCG(String parserConfPath) {
