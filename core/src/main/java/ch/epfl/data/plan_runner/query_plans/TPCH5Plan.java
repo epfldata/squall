@@ -29,7 +29,7 @@ import ch.epfl.data.plan_runner.operators.SelectOperator;
 import ch.epfl.data.plan_runner.predicates.BetweenPredicate;
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 
-public class TPCH5Plan {
+public class TPCH5Plan extends QueryPlan {
 	private static void computeDates() {
 		// date2 = date1 + 1 year
 		final String date1Str = "1994-01-01";

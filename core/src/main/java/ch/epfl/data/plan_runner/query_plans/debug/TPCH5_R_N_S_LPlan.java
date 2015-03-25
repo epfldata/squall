@@ -24,8 +24,9 @@ import ch.epfl.data.plan_runner.operators.ProjectOperator;
 import ch.epfl.data.plan_runner.operators.SelectOperator;
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
+import ch.epfl.data.plan_runner.query_plans.QueryPlan;
 
-public class TPCH5_R_N_S_LPlan {
+public class TPCH5_R_N_S_LPlan extends QueryPlan {
 	private static void computeDates() {
 		// date2 = date1 + 1 year
 		String date1Str = "1994-01-01";

@@ -34,7 +34,7 @@ import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
  ORDER BY REVENUE DESC, O_ORDERDATE
  */
 
-public class TPCH3Plan {
+public class TPCH3Plan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(TPCH3Plan.class);
 
 	private static final String _customerMktSegment = "BUILDING";
@@ -48,7 +48,6 @@ public class TPCH3Plan {
 	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
 	public TPCH3Plan(String dataPath, String extension, Map conf) {
-
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashCustomer = Arrays.asList(0);
 

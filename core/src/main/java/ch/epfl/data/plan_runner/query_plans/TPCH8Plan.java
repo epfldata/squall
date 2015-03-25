@@ -27,7 +27,7 @@ import ch.epfl.data.plan_runner.operators.SelectOperator;
 import ch.epfl.data.plan_runner.predicates.BetweenPredicate;
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 
-public class TPCH8Plan {
+public class TPCH8Plan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(TPCH8Plan.class);
 
 	private final QueryBuilder _queryBuilder = new QueryBuilder();

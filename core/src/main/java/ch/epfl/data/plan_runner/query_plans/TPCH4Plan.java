@@ -34,7 +34,7 @@ import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
  ORDER BY O_ORDERPRIORITY
  */
 
-public class TPCH4Plan {
+public class TPCH4Plan extends QueryPlan {
 	private static void computeDates() {
 		// date2= date1 + 3 months
 		final String date1Str = "1993-07-01";

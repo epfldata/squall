@@ -30,8 +30,9 @@ import ch.epfl.data.plan_runner.predicates.AndPredicate;
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.predicates.LikePredicate;
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
+import ch.epfl.data.plan_runner.query_plans.QueryPlan;
 
-public class ThetaTPCH9Plan {
+public class ThetaTPCH9Plan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(ThetaTPCH9Plan.class);
 
 	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();

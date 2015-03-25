@@ -29,7 +29,7 @@ import ch.epfl.data.plan_runner.predicates.BetweenPredicate;
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.predicates.OrPredicate;
 
-public class TPCH7Plan {
+public class TPCH7Plan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(TPCH7Plan.class);
 
 	private final QueryBuilder _queryBuilder = new QueryBuilder();

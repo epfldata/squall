@@ -11,6 +11,8 @@ public abstract class QueryPlan {
           build(createQueryPlan(dataPath, extension, conf));
 	}
 
+	public QueryPlan() { }
+
 	// _queryBuilder expects components in the parent->child order
 	// root is the leaf child
 	protected void build(Component root) {
@@ -27,7 +29,11 @@ public abstract class QueryPlan {
 
 	// This returns the last component: it assumes there is only one last
 	// component
-	public abstract Component createQueryPlan(String dataPath, String extension, Map conf);
+	// TODO: put it back to abstract and update plans
+	//public abstract Component createQueryPlan(String dataPath, String extension, Map conf);
+	public Component createQueryPlan(String dataPath, String extension, Map conf) {
+		return null;
+	}
 
 	// QueryBuilder is expected from the outside world
 	public QueryBuilder getQueryPlan() {

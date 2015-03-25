@@ -29,8 +29,9 @@ import ch.epfl.data.plan_runner.operators.SelectOperator;
 import ch.epfl.data.plan_runner.predicates.BetweenPredicate;
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
+import ch.epfl.data.plan_runner.query_plans.QueryPlan;
 
-public class ThetaTPCH8Plan {
+public class ThetaTPCH8Plan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(ThetaTPCH8Plan.class);
 
 	private QueryBuilder _queryBuilder = new QueryBuilder();

@@ -19,8 +19,9 @@ import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
 import ch.epfl.data.plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 import ch.epfl.data.plan_runner.storm_components.InterchangingComponent;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
+import ch.epfl.data.plan_runner.query_plans.QueryPlan;
 
-public class ThetaOrdersLineFluctuationsPlan {
+public class ThetaOrdersLineFluctuationsPlan extends QueryPlan {
 
 	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final IntegerConversion _ic = new IntegerConversion();

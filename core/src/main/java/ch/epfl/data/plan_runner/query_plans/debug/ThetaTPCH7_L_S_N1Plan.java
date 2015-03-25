@@ -34,8 +34,9 @@ import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
 import ch.epfl.data.plan_runner.query_plans.theta.ThetaQueryPlansParameters;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
+import ch.epfl.data.plan_runner.query_plans.QueryPlan;
 
-public class ThetaTPCH7_L_S_N1Plan {
+public class ThetaTPCH7_L_S_N1Plan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(ThetaTPCH7_L_S_N1Plan.class);
 
 	private QueryBuilder _queryBuilder = new QueryBuilder();

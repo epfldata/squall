@@ -19,8 +19,9 @@ import ch.epfl.data.plan_runner.operators.ProjectOperator;
 import ch.epfl.data.plan_runner.operators.SelectOperator;
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
+import ch.epfl.data.plan_runner.query_plans.QueryPlan;
 
-public class TPCH3L1Plan {
+public class TPCH3L1Plan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(TPCH3L1Plan.class);
 
 	private static final String _customerMktSegment = "BUILDING";

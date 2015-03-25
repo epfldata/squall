@@ -19,7 +19,7 @@ import ch.epfl.data.plan_runner.operators.AggregateSumOperator;
 import ch.epfl.data.plan_runner.operators.ProjectOperator;
 import ch.epfl.data.plan_runner.storage.AggregationStorage;
 
-public class HyracksPreAggPlan {
+public class HyracksPreAggPlan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(HyracksPreAggPlan.class);
 
 	private final QueryBuilder _queryBuilder = new QueryBuilder();
