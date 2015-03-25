@@ -57,7 +57,7 @@ do
 	mkTempFile 
 	echo "Running test $i ($TEST) out of ${COUNT}..."
 	./squall_local.sh $MODE $CONFDIR/$TEST > $TMPFILE 
-	if [ "`cat $TMPFILE | tail -n 1 | cut -d' ' -f1`" != "OK:" ]; then
+	if [ $? -ne 0 ]; then
 		echo "Error: Test $TEST failed. Error log in $TMPFILE"
                 ALL_OK=false
 	else
