@@ -78,13 +78,13 @@ public class Main {
                   LOG.info("Class " + className + " doesn't have an appropriate constructor");
                 } catch (InvocationTargetException e) {
                   LOG.info("The constructor for " + className + " threw an exception");
+                  e.printStackTrace();
                 }
 
 		// ... this line
 
 		if (queryPlan == null) {
-			throw new RuntimeException("QueryPlan " + queryName
-					+ " doesn't exist in Main.java");
+			throw new RuntimeException("Failed to load QueryPlan " + queryName);
 		}
 		return queryPlan;
 	}
