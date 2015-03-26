@@ -32,8 +32,9 @@ import ch.epfl.data.plan_runner.predicates.AndPredicate;
 import ch.epfl.data.plan_runner.predicates.BetweenPredicate;
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
+import ch.epfl.data.plan_runner.query_plans.QueryPlan;
 
-public class ThetaTPCH5Plan {
+public class ThetaTPCH5Plan extends QueryPlan {
 	private static void computeDates() {
 		// date2 = date1 + 1 year
 		String date1Str = "1994-01-01";

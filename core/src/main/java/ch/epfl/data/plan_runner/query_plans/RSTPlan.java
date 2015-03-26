@@ -19,7 +19,7 @@ import ch.epfl.data.plan_runner.operators.AggregateSumOperator;
 import ch.epfl.data.plan_runner.operators.SelectOperator;
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 
-public class RSTPlan {
+public class RSTPlan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(RSTPlan.class);
 
 	private static final NumericConversion<Double> _dc = new DoubleConversion();

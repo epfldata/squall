@@ -19,6 +19,7 @@ import ch.epfl.data.plan_runner.expressions.ColumnReference;
 import ch.epfl.data.plan_runner.operators.ProjectOperator;
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
+import ch.epfl.data.plan_runner.query_plans.QueryPlan;
 
 public class TPCH8_9_P_LPlan {
 	private static Logger LOG = Logger.getLogger(TPCH8_9_P_LPlan.class);

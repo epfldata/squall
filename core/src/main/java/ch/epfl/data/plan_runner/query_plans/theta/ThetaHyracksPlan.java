@@ -15,8 +15,9 @@ import ch.epfl.data.plan_runner.operators.AggregateCountOperator;
 import ch.epfl.data.plan_runner.operators.ProjectOperator;
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
+import ch.epfl.data.plan_runner.query_plans.QueryPlan;
 
-public class ThetaHyracksPlan {
+public class ThetaHyracksPlan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(ThetaHyracksPlan.class);
 
 	private final QueryBuilder _queryBuilder = new QueryBuilder();

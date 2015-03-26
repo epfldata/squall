@@ -18,8 +18,9 @@ import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
 import ch.epfl.data.plan_runner.utilities.MyUtilities;
 import ch.epfl.data.plan_runner.utilities.SystemParameters;
+import ch.epfl.data.plan_runner.query_plans.QueryPlan;
 
-public class EWHSampleMatrixPlan {
+public class EWHSampleMatrixPlan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(EWHSampleMatrixPlan.class);
 	private QueryBuilder _queryBuilder = new QueryBuilder();
 

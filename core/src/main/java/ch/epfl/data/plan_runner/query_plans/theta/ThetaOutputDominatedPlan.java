@@ -16,8 +16,9 @@ import ch.epfl.data.plan_runner.operators.AggregateOperator;
 import ch.epfl.data.plan_runner.operators.AggregateSumOperator;
 import ch.epfl.data.plan_runner.operators.ProjectOperator;
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
+import ch.epfl.data.plan_runner.query_plans.QueryPlan;
 
-public class ThetaOutputDominatedPlan {
+public class ThetaOutputDominatedPlan extends QueryPlan {
 
 	private static Logger LOG = Logger
 			.getLogger(ThetaOutputDominatedPlan.class);

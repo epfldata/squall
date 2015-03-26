@@ -26,7 +26,7 @@ import ch.epfl.data.plan_runner.operators.ProjectOperator;
 import ch.epfl.data.plan_runner.operators.SelectOperator;
 import ch.epfl.data.plan_runner.predicates.LikePredicate;
 
-public class TPCH9Plan {
+public class TPCH9Plan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(TPCH9Plan.class);
 
 	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();

@@ -26,8 +26,9 @@ import ch.epfl.data.plan_runner.operators.ProjectOperator;
 import ch.epfl.data.plan_runner.operators.SelectOperator;
 import ch.epfl.data.plan_runner.predicates.LikePredicate;
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
+import ch.epfl.data.plan_runner.query_plans.QueryPlan;
 
-public class TPCH9_CustomPlan {
+public class TPCH9_CustomPlan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(TPCH9_CustomPlan.class);
 
 	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();

@@ -27,8 +27,9 @@ import ch.epfl.data.plan_runner.operators.ProjectOperator;
 import ch.epfl.data.plan_runner.operators.SelectOperator;
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
+import ch.epfl.data.plan_runner.query_plans.QueryPlan;
 
-public class ThetaTPCH3Plan {
+public class ThetaTPCH3Plan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(ThetaTPCH3Plan.class);
 
 	private static final IntegerConversion _ic = new IntegerConversion();

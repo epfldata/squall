@@ -24,8 +24,9 @@ import ch.epfl.data.plan_runner.operators.SelectOperator;
 import ch.epfl.data.plan_runner.predicates.AndPredicate;
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
+import ch.epfl.data.plan_runner.query_plans.QueryPlan;
 
-public class ThetaMultipleJoinPlan {
+public class ThetaMultipleJoinPlan extends QueryPlan {
 
 	private static Logger LOG = Logger.getLogger(ThetaMultipleJoinPlan.class);
 

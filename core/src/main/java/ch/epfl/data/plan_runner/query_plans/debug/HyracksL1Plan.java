@@ -10,8 +10,9 @@ import ch.epfl.data.plan_runner.components.DataSourceComponent;
 import ch.epfl.data.plan_runner.conversion.IntegerConversion;
 import ch.epfl.data.plan_runner.operators.ProjectOperator;
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
+import ch.epfl.data.plan_runner.query_plans.QueryPlan;
 
-public class HyracksL1Plan {
+public class HyracksL1Plan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(HyracksL1Plan.class);
 
 	private final QueryBuilder _queryBuilder = new QueryBuilder();

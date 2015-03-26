@@ -111,12 +111,12 @@ public class StormWrapper {
 	private static void localKillCluster(Map conf, String topologyName) {
 		final long endTime = System.currentTimeMillis();
 		LOG.info("Running time (sec):" + ((endTime - startTime) / 1000));
-		LocalMergeResults.localPrintAndCompare(conf);
+		int result = LocalMergeResults.localPrintAndCompare(conf);
 		// Should be killed with the following two lines
 		// cluster.killTopology(topologyName);
 		// cluster.shutdown();
 		// However, it will never stop, so we use:
-		System.exit(0);
+		System.exit(result);
 	}
 
 	public static void submitTopology(Config conf, TopologyBuilder builder) {

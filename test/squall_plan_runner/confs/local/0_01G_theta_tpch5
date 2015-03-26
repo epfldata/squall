@@ -1,5 +1,6 @@
 DIP_DISTRIBUTED false
 DIP_QUERY_NAME theta_tpch5
+DIP_QUERY_PLAN ch.epfl.data.plan_runner.query_plans.theta.ThetaTPCH5Plan
 DIP_TOPOLOGY_NAME_PREFIX username
 DIP_NUM_ACKERS 0
 

@@ -13,8 +13,9 @@ import ch.epfl.data.plan_runner.conversion.IntegerConversion;
 import ch.epfl.data.plan_runner.operators.AggregateCountOperator;
 import ch.epfl.data.plan_runner.operators.ProjectOperator;
 import ch.epfl.data.plan_runner.query_plans.QueryBuilder;
+import ch.epfl.data.plan_runner.query_plans.QueryPlan;
 
-public class HyracksL3Plan {
+public class HyracksL3Plan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(HyracksL3Plan.class);
 
 	private final QueryBuilder _queryBuilder = new QueryBuilder();
