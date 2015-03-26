@@ -28,6 +28,7 @@ import ch.epfl.data.plan_runner.predicates.AndPredicate;
 import ch.epfl.data.plan_runner.predicates.BetweenPredicate;
 import ch.epfl.data.plan_runner.predicates.ComparisonPredicate;
 import ch.epfl.data.plan_runner.predicates.OrPredicate;
+import ch.epfl.data.plan_runnner.connectors.hdfs.HDFSmaterializer;
 
 public class TPCH7Plan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(TPCH7Plan.class);
@@ -197,6 +198,10 @@ public class TPCH7Plan extends QueryPlan {
 		EquiJoinComponent finalComp = new EquiJoinComponent(N_C_Ojoin,
 				L_S_Njoin).add(so).add(agg);
 		_queryBuilder.add(finalComp);
+		
+//		HDFSmaterializer hd = new HDFSmaterializer(finalComp, "hdfsMat", "/Users/mohamed/Desktop/");
+//		_queryBuilder.add(hd);
+		
 
 	}
 
