@@ -76,13 +76,15 @@ Squall also provides out-of-the-box functionality for window semantics. That is 
 
 * Sliding Window Semantics:
 ```scala
-   Agg.onWindow(20, 5) //Range 20 secs and slide every 5 seconds
-   Join.onSlidingWindow(10) // Range 10 seconds and slide every 1 second
+    //Examples
+    Agg.onWindow(20, 5) //Range 20 secs and slide every 5 seconds
+    Join.onSlidingWindow(10) // Range 10 seconds and slide every 1 second
 ```
 
 * Tumbling Window Semantics:
 ```scala
-   Agg.onTumblingWindow(20) // Tumble aggregations every 20 seconds
+    //Examples
+    Agg.onTumblingWindow(20) // Tumble aggregations every 20 seconds
 ``` 
 
 * Landmark Window Semantics.
