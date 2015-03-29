@@ -99,3 +99,6 @@ Detailed documentation can be found on the [Squall wiki](http://github.com/epfld
 
 ### Contributing to Squall
 We'd love to have your help in making Squall better. If you're interested, please communicate with us your suggestions and get your name to the [Contributors](https://github.com/epfldata/squall/wiki/Contributors) list.
+
+### License
+Squall is licensed under [Apache License v2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
