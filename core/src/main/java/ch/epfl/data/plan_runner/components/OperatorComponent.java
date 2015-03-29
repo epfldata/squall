@@ -41,16 +41,26 @@ public class OperatorComponent implements Component {
 	private boolean _printOut;
 	private boolean _printOutSet;
 
-	private final Component _parent;
+	//private Component _parent;
 	private Component _child;
 	private StormOperator _stormOperator;
 
 	private List<String> _fullHashList;
+	
+	private ArrayList<Component> _parents;
 
 	public OperatorComponent(Component parent, String componentName) {
-
-		_parent = parent;
-		_parent.setChild(this);
+		_parents= new ArrayList<Component>(1);
+		parent.setChild(this);
+		_parents.add(parent);
+		_componentName = componentName;
+	}
+	
+	public OperatorComponent(ArrayList<Component> parents, String componentName) {
+		_parents=parents;
+		for (Component parent : parents) {
+			parent.setChild(this);
+		}
 
 		_componentName = componentName;
 	}
@@ -72,7 +82,10 @@ public class OperatorComponent implements Component {
 	@Override
 	public List<DataSourceComponent> getAncestorDataSources() {
 		final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
-		list.addAll(_parent.getAncestorDataSources());
+		for (Component parent : _parents) {
+			list.addAll(parent.getAncestorDataSources());
+		}
+		
 		return list;
 	}
 
@@ -124,7 +137,15 @@ public class OperatorComponent implements Component {
 
 	@Override
 	public Component[] getParents() {
-		return new Component[] { _parent };
+		//return new Component[] { _parent };
+		Component[] res = new Component[_parents.size()];
+		int index=0;
+		for (Component parent : _parents) {
+			res[index]=parent;
+			index++;
+		}
+		return res;
+		
 	}
 
 	@Override
@@ -153,7 +174,9 @@ public class OperatorComponent implements Component {
 		MyUtilities.checkBatchOutput(_batchOutputMillis,
 				_chain.getAggregation(), conf);
 
-		_stormOperator = new StormOperator(_parent, this, allCompNames,
+//		_stormOperator = new StormOperator(_parent, this, allCompNames,
+//				hierarchyPosition, builder, killer, conf);
+		_stormOperator = new StormOperator(_parents, this, allCompNames,
 				hierarchyPosition, builder, killer, conf);
 	}
 

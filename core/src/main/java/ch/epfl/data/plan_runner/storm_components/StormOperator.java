@@ -1,5 +1,7 @@
 package ch.epfl.data.plan_runner.storm_components;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
@@ -9,6 +11,7 @@ import backtype.storm.Config;
 import backtype.storm.topology.InputDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Tuple;
+import ch.epfl.data.plan_runner.components.Component;
 import ch.epfl.data.plan_runner.components.ComponentProperties;
 import ch.epfl.data.plan_runner.operators.AggregateOperator;
 import ch.epfl.data.plan_runner.operators.ChainOperator;
@@ -35,7 +38,7 @@ public class StormOperator extends StormBoltComponent {
 	private PeriodicAggBatchSend _periodicAggBatch;
 	private final long _aggBatchOutputMillis;
 
-	public StormOperator(StormEmitter parentEmitter, ComponentProperties cp,
+	public StormOperator(ArrayList<Component> parentEmitters, ComponentProperties cp,
 			List<String> allCompNames, int hierarchyPosition,
 			TopologyBuilder builder, TopologyKiller killer, Config conf) {
 		super(cp, allCompNames, hierarchyPosition, conf);
@@ -54,12 +57,16 @@ public class StormOperator extends StormBoltComponent {
 
 		_fullHashList = cp.getFullHashList();
 
-		if (MyUtilities.isManualBatchingMode(getConf()))
-			currentBolt = MyUtilities.attachEmitterBatch(conf, _fullHashList,
-					currentBolt, parentEmitter);
-		else
-			currentBolt = MyUtilities.attachEmitterHash(conf, _fullHashList,
-					currentBolt, parentEmitter);
+		for (StormEmitter parentEmitter : parentEmitters) {
+			if (MyUtilities.isManualBatchingMode(getConf()))
+				currentBolt = MyUtilities.attachEmitterBatch(conf, _fullHashList,
+						currentBolt, parentEmitter);
+			else
+				currentBolt = MyUtilities.attachEmitterHash(conf, _fullHashList,
+						currentBolt, parentEmitter);
+		}
+		
+		
 
 		if (getHierarchyPosition() == FINAL_COMPONENT
 				&& (!MyUtilities.isAckEveryTuple(conf)))
