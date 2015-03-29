@@ -36,8 +36,8 @@ A Functional Scala-interface that leverages the brevity, productivity, convenien
 ```scala
     val customers = Source[customer]("customer").map { t => Tuple2(t._1, t._7) }
     val orders = Source[orders]("orders").map { t => t._2 }
-    val join = customers.join(orders)(k1=> k1._1)(k2 => k2) 
-    val agg = join.groupByKey(x => 1, k => k._1._2)
+    val join = customers.join(orders)(k1=> k1._1)(k2 => k2) //key1=key2
+    val agg = join.groupByKey(x => 1, k => k._1._2) //count and groupby
     agg.execute(conf)
 ```
 #### Imperative
@@ -48,7 +48,7 @@ Component customer = new DataSourceComponent("customer", conf)
                             .add(new ProjectOperator(0, 6));
 Component orders = new DataSourceComponent("orders", conf)
                             .add(new ProjectOperator(1));
-Component custOrders = new EquiJoinComponent(customer, 0, orders, 0)
+Component custOrders = new EquiJoinComponent(customer, 0, orders, 0) //key1 (index 0) =key2 (index 0)
                             .add(new AggregateCountOperator(conf).setGroupByColumns(1));
 ```
 
