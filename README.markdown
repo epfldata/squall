@@ -9,7 +9,7 @@ Squall is an online query processing engine built on top of [Storm](https://stor
 
 - [x] SQL (Select-Project-Join) query processing over continuous streams of data.
 - [x] Full fledged & full-history stateful computation essential for approximate query processing, e.g. [Online Aggregation](http://en.wikipedia.org/wiki/Online_aggregation).
-- [ ] Time based Window Semantics for infinite data streams (currently in-progress).
+- [x] Time based Window Semantics for infinite data streams.
 - [x] Theta Joins: complex join predicates, including inequality, band, and arbitrary UDF join predicates. This gives a more comprehensive support and flexibility to data analytics. For example, [Hive plans](https://cwiki.apache.org/confluence/display/Hive/Theta+Join) to support theta joins in response to user requests.
 - [ ] Continuous load balance and adaptation to data skew.
 - [x] Usage: An API for arbitrary SQL query processing or a frontend query processor that parses SQL to a storm topology.
@@ -27,11 +27,21 @@ FROM CUSTOMER join ORDERS on C_CUSTKEY = O_CUSTKEY
 GROUP BY C_MKTSEGMENT
 ```
 
-We provide several way of running queries:
+We provide several interfaces for running this query:
 
-1. The declarative interface of Squall (which is equipped with a cost-based optimizer) supports SQL directly
+1. A **Declarative** interface that directly parses this SQL query and creates an efficient storm Topology. This module is implicitly equipped with a cost-based optimizer.
+2. A **Functional** Scala-interface that leverages the brevity, productivity, convenience, and syntactic sugar of functional programming. For example the previous query is represented ([full code](https://github.com/epfldata/squall/blob/master/frontend/src/main/scala/frontend/functional/scala/queries/ScalaHyracksPlan.scala)) as follows:
 
-2. The imperative interface of Squall supports the online distributed query plan ([full code](https://github.com/epfldata/squall/blob/master/src/plan_runner/query_plans/HyracksPlan.java)) as follows:
+```scala
+    val customers = Source[customer]("customer").map { t => Tuple2(t._1, t._7) }
+    val orders = Source[orders]("orders").map { t => t._2 }
+    val join = customers.join(orders)(k1=> k1._1)(k2 => k2) 
+    val agg = join.groupByKey(x => 1, k => k._1._2)
+    agg.execute(conf)
+```
+
+
+3. An **Imperative** Java-interface that facilitates design and construction of online distributed query plans. For example the previous query is represented ([full code](https://github.com/epfldata/squall/blob/master/core/src/main/java/ch/epfl/data/plan_runner/query_plans/HyracksPlan.java)) as follows:
 
 ```java
 Component customer = new DataSourceComponent("customer", conf)
@@ -61,10 +71,6 @@ operators (called components or super-operators)
 such as data source scans and joins; 
 these components can then be extended by postprocessing operators such as
 projections.
-
-
-
-
 
 
 
