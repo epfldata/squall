@@ -9,7 +9,7 @@ Squall is an online query processing engine built on top of [Storm](https://stor
 
 - [x] SQL (Select-Project-Join) query processing over continuous streams of data.
 - [x] Full fledged & full-history stateful computation essential for approximate query processing, e.g. [Online Aggregation](http://en.wikipedia.org/wiki/Online_aggregation).
-- [ ] Time based Window Semantics for infinite data streams (currently in-progress).
+- [x] Time based Window Semantics for infinite data streams.
 - [x] Theta Joins: complex join predicates, including inequality, band, and arbitrary UDF join predicates. This gives a more comprehensive support and flexibility to data analytics. For example, [Hive plans](https://cwiki.apache.org/confluence/display/Hive/Theta+Join) to support theta joins in response to user requests.
 - [ ] Continuous load balance and adaptation to data skew.
 - [x] Usage: An API for arbitrary SQL query processing or a frontend query processor that parses SQL to a storm topology.
@@ -27,21 +27,30 @@ FROM CUSTOMER join ORDERS on C_CUSTKEY = O_CUSTKEY
 GROUP BY C_MKTSEGMENT
 ```
 
-We provide several way of running queries:
+We provide several interfaces for running this query:
 
-1. The declarative interface of Squall (which is equipped with a cost-based optimizer) supports SQL directly
-
-2. The imperative interface of Squall supports the online distributed query plan ([full code](https://github.com/epfldata/squall/blob/master/src/plan_runner/query_plans/HyracksPlan.java)) as follows:
+#### Declarative
+A Declarative interface that directly parses this SQL query and creates an efficient storm Topology. This module is implicitly equipped with a cost-based optimizer.
+#### Functional
+A Functional Scala-interface that leverages the brevity, productivity, convenience, and syntactic sugar of functional programming. For example the previous query is represented ([full code](https://github.com/epfldata/squall/blob/master/frontend/src/main/scala/frontend/functional/scala/queries/ScalaHyracksPlan.scala)) as follows: 
+```scala
+    val customers = Source[customer]("customer").map { t => Tuple2(t._1, t._7) }
+    val orders = Source[orders]("orders").map { t => t._2 }
+    val join = customers.join(orders)(k1=> k1._1)(k2 => k2) //key1=key2
+    val agg = join.groupByKey(x => 1, k => k._1._2) //count and groupby
+    agg.execute(conf)
+```
+#### Imperative
+An Imperative Java-interface that facilitates design and construction of online distributed query plans. For example the previous query is represented ([full code](https://github.com/epfldata/squall/blob/master/core/src/main/java/ch/epfl/data/plan_runner/query_plans/HyracksPlan.java)) as follows:
 
 ```java
 Component customer = new DataSourceComponent("customer", conf)
                             .add(new ProjectOperator(0, 6));
 Component orders = new DataSourceComponent("orders", conf)
                             .add(new ProjectOperator(1));
-Component custOrders = new EquiJoinComponent(customer, 0, orders, 0)
+Component custOrders = new EquiJoinComponent(customer, 0, orders, 0) //key1 (index 0) =key2 (index 0)
                             .add(new AggregateCountOperator(conf).setGroupByColumns(1));
 ```
-
 
 Queries are mapped to operator trees in the spirit of the query plans
 of relational database systems.
@@ -62,8 +71,25 @@ such as data source scans and joins;
 these components can then be extended by postprocessing operators such as
 projections.
 
+#### Window Semantics Example
+Squall also provides out-of-the-box functionality for window semantics. That is the user does not have to be concerned with internal details of assignining timestamps, data distribution and state maintenance and finally result consistency and correctness. Final results and aggregations are stored in key-value stores that expose window-identifiers and the corresponding timestamp ranges. The interface exposes the following semantics:
 
+* Sliding Window Semantics:
+```scala
+    //Examples
+    Agg.onWindow(20, 5) //Range 20 secs and slide every 5 seconds
+    Join.onSlidingWindow(10) // Range 10 seconds and slide every 1 second
+```
 
+* Tumbling Window Semantics:
+```scala
+    //Examples
+    Agg.onTumblingWindow(20) // Tumble aggregations every 20 seconds
+``` 
+
+* Landmark Window Semantics.
+
+[Here](https://github.com/epfldata/squall/blob/master/frontend/src/main/scala/frontend/functional/scala/queries/ScalaTPCH7Plan.scalaz) is an example of a fully running query with window semantics.
 
 
 
