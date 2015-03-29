@@ -29,9 +29,8 @@ GROUP BY C_MKTSEGMENT
 
 We provide several interfaces for running this query:
 
-1. A **Declarative** interface that directly parses this SQL query and creates an efficient storm Topology. This module is implicitly equipped with a cost-based optimizer.
-2. A **Functional** Scala-interface that leverages the brevity, productivity, convenience, and syntactic sugar of functional programming. For example the previous query is represented ([full code](https://github.com/epfldata/squall/blob/master/frontend/src/main/scala/frontend/functional/scala/queries/ScalaHyracksPlan.scala)) as follows:
-
+* A **Declarative** interface that directly parses this SQL query and creates an efficient storm Topology. This module is implicitly equipped with a cost-based optimizer.
+* A **Functional** Scala-interface that leverages the brevity, productivity, convenience, and syntactic sugar of functional programming. For example the previous query is represented ([full code](https://github.com/epfldata/squall/blob/master/frontend/src/main/scala/frontend/functional/scala/queries/ScalaHyracksPlan.scala)) as follows: 
 ```scala
     val customers = Source[customer]("customer").map { t => Tuple2(t._1, t._7) }
     val orders = Source[orders]("orders").map { t => t._2 }
@@ -39,9 +38,7 @@ We provide several interfaces for running this query:
     val agg = join.groupByKey(x => 1, k => k._1._2)
     agg.execute(conf)
 ```
-
-
-3. An **Imperative** Java-interface that facilitates design and construction of online distributed query plans. For example the previous query is represented ([full code](https://github.com/epfldata/squall/blob/master/core/src/main/java/ch/epfl/data/plan_runner/query_plans/HyracksPlan.java)) as follows:
+* An **Imperative** Java-interface that facilitates design and construction of online distributed query plans. For example the previous query is represented ([full code](https://github.com/epfldata/squall/blob/master/core/src/main/java/ch/epfl/data/plan_runner/query_plans/HyracksPlan.java)) as follows:
 
 ```java
 Component customer = new DataSourceComponent("customer", conf)
