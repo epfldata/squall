@@ -9,15 +9,15 @@ Squall is an online query processing engine built on top of [Storm](https://stor
 
 - [x] SQL (Select-Project-Join) query processing over continuous streams of data.
 - [x] Full fledged & full-history stateful computation essential for approximate query processing, e.g. [Online Aggregation](http://en.wikipedia.org/wiki/Online_aggregation).
-- [x] Time based Window Semantics for infinite data streams.
-- [x] Theta Joins: complex join predicates, including inequality, band, and arbitrary UDF join predicates. This gives a more comprehensive support and flexibility to data analytics. For example, [Hive plans](https://cwiki.apache.org/confluence/display/Hive/Theta+Join) to support theta joins in response to user requests.
-- [ ] Continuous load balance and adaptation to data skew.
-- [x] Usage: An API for arbitrary SQL query processing or a frontend query processor that parses SQL to a storm topology.
-- [x] Throughput rates of upto Millions of tuples/second and latencies of milliseconds on a 16 machine cluster. Scalable to large cluster settings.
+- [x] Time based Window Semantics for infinite data streams, e.g., sliding window, tumbling window, and landmark window semantics.
+- [x] Theta Joins: arbitrary complex join predicates, including inequality, band, and arbitrary UDF join predicates. This gives a more comprehensive support and flexibility to data analytics. For example, [Hive plans](https://cwiki.apache.org/confluence/display/Hive/Theta+Join) to support theta joins in response to user requests.
+- [x] Convinence: Squall exposes three interfaces for programming. A **SQL** interface that directly translates a sql query to a running topology, a **functional** interface that leverages the syntactic sugar of Scala, and an **imperative** interface that exposes additional control on toplogy design.
 - [x] Out-of-Core Processing: Can operate efficiently under limited memory resources through efficient disk based datastructures and indexes.
+- [x] Throughput rates of upto Millions of tuples/second and latencies of milliseconds measured on a 16 machine cluster. Scalable to large cluster settings.
 - [x] Guarantees: At least-once or at most-once semantics. No support for exactly-once semantics yet, however it is planned for.
 - [ ] Elasticity: Scaling out according to the load.
 - [ ] DashBoard: Integrating support for real time visualizations.
+- [ ] Continuous load balance and adaptation to data skew.
 
 ### Example:
 Consider the following SQL query:
@@ -99,6 +99,3 @@ Detailed documentation can be found on the [Squall wiki](http://github.com/epfld
 
 ### Contributing to Squall
 We'd love to have your help in making Squall better. If you're interested, please communicate with us your suggestions and get your name to the [Contributors](https://github.com/epfldata/squall/wiki/Contributors) list.
-
-### License
-Squall is licensed under [Apache License v2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
