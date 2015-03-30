@@ -15,6 +15,7 @@ lazy val core = (project in file("squall-core")).
     javacOptions ++= Seq(
       "-target", "1.7",
       "-source", "1.7"),
+    unmanagedBase := baseDirectory.value / "../contrib",
     // We need to add Clojars as a resolver, as Storm depends on some
     // libraries from there.
     resolvers += "clojars" at "https://clojars.org/repo",
@@ -31,9 +32,6 @@ lazy val core = (project in file("squall-core")).
       // clojure: 1.5.1 -> ?
       // [This one doesn't seem to be required]
       //"org.clojure" % "clojure" % "1.5.1"
-      // guava: ? -> 13.0
-      // [This one had to be added to provide com.google.common.io]
-      "com.google.guava" % "guava" % "13.0",
       "junit" % "junit" % "4.12" % Test,
       "com.novocode" % "junit-interface" % "0.11" % Test,
       "org.apache.hadoop" % "hadoop-client" % "2.2.0" exclude("org.slf4j", "slf4j-log4j12"),
