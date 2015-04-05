@@ -14,5 +14,3 @@ cp ../contrib/leiningen-1.7.1-standalone.jar $HOME/.lein/self-installs/
 mkdir -p ~/.storm
 cp ../resources/storm.yaml ~/.storm/storm.yaml
 ./adjust_storm_yaml_locally.sh
-
-mkdir -p /tmp/ramdisk

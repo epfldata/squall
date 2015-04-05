@@ -5,7 +5,7 @@ MASTER=datalab@icdataportal3
 # This is the format that C3Tools expects
 BLADES=1-10
 
-STORM_INSTALL_DIR=/localhome/datalab/avitorovic/storm
+STORM_INSTALL_DIR=/data/lab/fromhome/avitorovic/storm
 STORMNAME=storm-0.9.2-incubating
 STORMPATH=$STORM_INSTALL_DIR/$STORMNAME
 
@@ -14,3 +14,15 @@ STORM_KILL_TMP_DIR=/data/lab/storm_tmp/temp
 STORM_LOGPATH=$STORM_TMP_DIR/logs
 STORM_DATA=$STORM_TMP_DIR/storm_data
 ZOOKEEPERPATH=$STORM_TMP_DIR/zookeeper_data
+
+# Used for storing .storm directory
+CLUSTER_HOME=/data/lab/
+
+# Gathering stuff from the cluster (first directory is always per blade, and the second is per master)
+CLUSTER_KEYPATH=$STORM_TMP_DIR/key_region
+CLUSTER_GATHER_KEYS=/data/lab/fromhome/avitorovic/gather_keys
+
+CLUSTER_R2HIST=$STORM_TMP_DIR/r2_hist
+CLUSTER_GATHER_HIST=/data/lab/fromhome/avitorovic/gather_hist
+
+CLUSTER_GATHER_DIR=/data/lab/fromhome/avitorovic/gather_logs

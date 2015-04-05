@@ -31,7 +31,7 @@ def process_topology(config_name, base_path, storm_data_path)
     stat_dump = [];
     topo_dump_files = `grep -r "#{topo_dump_str}" #{$STORM_DATA_DIR}`.
       split(/\n/).map do |l|
-        [$1, Time.parse($2)] if /^([^:]+):([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}) p.u.StormWrapper \[INFO\] In total there is/ =~ l; 
+        [$1, Time.parse($2)] if /^([^:]+):([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}) c.e.d.p.u.StormWrapper \[INFO\] In total there is/ =~ l; 
       end.
       compact.
       reduce { |f,times| times.max }.

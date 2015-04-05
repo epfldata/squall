@@ -1,6 +1,6 @@
 #!/bin/bash
 
-STORM_INSTALL_DIR=/localhome/datalab/avitorovic/storm
+STORM_INSTALL_DIR=/data/lab/fromhome/avitorovic/storm
 
 # Killing Storm on master
 $STORM_INSTALL_DIR/bin/kill_storm_local.sh

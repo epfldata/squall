@@ -1,8 +1,6 @@
 #!/bin/bash
 . ./storm_env.sh
 
-CLUSTER_HOME=/localhome/datalab/
-
 STORM_CONF_NAME=storm.yaml
 CLUSTER_INSTALL_STORM_CONF=$STORMPATH/conf/$STORM_CONF_NAME
 LOCAL_HOME_STORM_CONF=~/.storm/$STORM_CONF_NAME

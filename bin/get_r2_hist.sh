@@ -4,8 +4,6 @@
 # Local parameters
 LOCAL_R2HIST=../test/m_bucket/r2_hist
 LOCAL_R2HIST_TMP=$LOCAL_R2HIST/temp
-CLUSTER_R2HIST=$STORM_TMP_DIR/r2_hist
-CLUSTER_GATHER_HIST=/localhome/datalab/avitorovic/gather_hist
 
 # DOWNALOADING
 # gather to master

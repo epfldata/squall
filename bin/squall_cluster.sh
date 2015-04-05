@@ -29,6 +29,7 @@ if [ "$MODE" == "PLAN_RUNNER" ]; then
 	CONFIG_DIR=../test/squall/confs/cluster
 	CONFIG_PATH=$CONFIG_DIR/1G_hyracks
 	CLASS=ch.epfl.data.plan_runner.main.Main
+   #CLASS=ch.epfl.data.squall.main.Main
 else
 	CONFIG_DIR=../test/squall_plan_runner/confs/cluster
 	CONFIG_PATH=$CONFIG_DIR/1G_hyracks

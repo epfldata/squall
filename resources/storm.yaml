@@ -40,7 +40,7 @@ nimbus.task.launch.secs: 240
 supervisor.worker.start.timeout.secs: 240
 # supervisor.worker.timeout.secs: 240
 
-java.library.path: "/localhome/datalab/avitorovic/storm/deps/lib"
+java.library.path: "/data/lab/fromhome/avitorovic/storm/deps/lib"
 #java.library.path: "/usr/local/lib:/opt/local/lib:/usr/lib"
 
 # these are defaults, but can be changed from config files/from code directly

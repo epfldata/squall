@@ -4,8 +4,6 @@
 # Local parameters
 LOCAL_KEYPATH=../test/m_bucket/key_region
 LOCAL_KEYPATH_TMP=$LOCAL_KEYPATH/temp
-CLUSTER_KEYPATH=$STORM_TMP_DIR/key_region
-CLUSTER_GATHER_KEYS=/localhome/datalab/avitorovic/gather_keys
 
 # DOWNALOADING
 # gather to master

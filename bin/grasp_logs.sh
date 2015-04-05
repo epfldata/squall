@@ -26,7 +26,6 @@ removeIfEmpty(){
 # NOTE: For cget to work with directories, do not use / at the end of the path (although it still complains to an error)
 LOGS_LOCAL_PATH=$1
 REMOVE_FROM_CLUSTER=$2
-CLUSTER_GATHER_DIR=/localhome/datalab/avitorovic/gather_logs
 MASTER_LOG_DIR=$CLUSTER_GATHER_DIR/master
 ZOO_FILEPATH=$ZOOKEEPERPATH/consoleZoo.txt
 
