@@ -31,12 +31,12 @@ import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.theta.ThetaJoinComponentFactory;
 import ch.epfl.data.squall.conversion.IntegerConversion;
 import ch.epfl.data.squall.conversion.StringConversion;
-import ch.epfl.data.squall.examples.imperative.theta.ThetaQueryPlansParameters;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
+import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
 
 public class ThetaTPCH8_9_P_LPlan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(ThetaTPCH8_9_P_LPlan.class);

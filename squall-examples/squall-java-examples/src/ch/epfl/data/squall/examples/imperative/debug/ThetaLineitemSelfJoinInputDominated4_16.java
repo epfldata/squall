@@ -34,7 +34,6 @@ import ch.epfl.data.squall.conversion.DoubleConversion;
 import ch.epfl.data.squall.conversion.IntegerConversion;
 import ch.epfl.data.squall.conversion.StringConversion;
 import ch.epfl.data.squall.conversion.TypeConversion;
-import ch.epfl.data.squall.examples.imperative.theta.ThetaQueryPlansParameters;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.AggregateCountOperator;
@@ -44,6 +43,7 @@ import ch.epfl.data.squall.predicates.AndPredicate;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.predicates.OrPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
+import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
 
 public class ThetaLineitemSelfJoinInputDominated4_16 {
 

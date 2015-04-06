@@ -18,7 +18,7 @@
  */
 
 
-package ch.epfl.data.squall.examples.imperative.theta;
+package ch.epfl.data.squall.query_plans;
 
 import java.util.Map;
 

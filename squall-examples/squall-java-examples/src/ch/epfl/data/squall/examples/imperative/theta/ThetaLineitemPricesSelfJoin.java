@@ -40,6 +40,7 @@ import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SelectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
+import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
 
 public class ThetaLineitemPricesSelfJoin {
 

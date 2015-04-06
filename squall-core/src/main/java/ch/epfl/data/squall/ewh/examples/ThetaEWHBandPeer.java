@@ -33,7 +33,6 @@ import ch.epfl.data.squall.conversion.NumericConversion;
 import ch.epfl.data.squall.conversion.StringConversion;
 import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.ewh.components.DummyComponent;
-import ch.epfl.data.squall.examples.imperative.theta.ThetaQueryPlansParameters;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.PrintOperator;
@@ -41,6 +40,7 @@ import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SelectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
+import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 

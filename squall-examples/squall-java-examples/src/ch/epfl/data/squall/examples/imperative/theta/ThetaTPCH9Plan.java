@@ -51,6 +51,7 @@ import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.predicates.LikePredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
+import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
 
 public class ThetaTPCH9Plan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(ThetaTPCH9Plan.class);

@@ -29,7 +29,6 @@ import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.theta.ThetaJoinComponentFactory;
 import ch.epfl.data.squall.conversion.IntegerConversion;
 import ch.epfl.data.squall.conversion.StringConversion;
-import ch.epfl.data.squall.examples.imperative.theta.ThetaQueryPlansParameters;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.ProjectOperator;
@@ -38,6 +37,7 @@ import ch.epfl.data.squall.predicates.AndPredicate;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
+import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.utilities.SystemParameters;
 

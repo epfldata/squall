@@ -37,7 +37,6 @@ import ch.epfl.data.squall.conversion.IntegerConversion;
 import ch.epfl.data.squall.conversion.NumericConversion;
 import ch.epfl.data.squall.conversion.StringConversion;
 import ch.epfl.data.squall.conversion.TypeConversion;
-import ch.epfl.data.squall.examples.imperative.theta.ThetaQueryPlansParameters;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.IntegerYearFromDate;
 import ch.epfl.data.squall.expressions.Multiplication;
@@ -53,6 +52,7 @@ import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.predicates.OrPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
+import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 

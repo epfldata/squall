@@ -37,7 +37,6 @@ import ch.epfl.data.squall.conversion.IntegerConversion;
 import ch.epfl.data.squall.conversion.NumericConversion;
 import ch.epfl.data.squall.conversion.StringConversion;
 import ch.epfl.data.squall.conversion.TypeConversion;
-import ch.epfl.data.squall.examples.imperative.theta.ThetaQueryPlansParameters;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.DateSum;
 import ch.epfl.data.squall.expressions.ValueExpression;
@@ -48,6 +47,7 @@ import ch.epfl.data.squall.operators.SelectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
+import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
 
 public class ThetaTPCH5_R_N_S_LPlan extends QueryPlan {
 	private static void computeDates() {

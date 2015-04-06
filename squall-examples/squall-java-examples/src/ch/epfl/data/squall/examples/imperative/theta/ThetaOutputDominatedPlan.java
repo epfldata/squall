@@ -37,6 +37,7 @@ import ch.epfl.data.squall.operators.AggregateSumOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
+import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
 
 public class ThetaOutputDominatedPlan extends QueryPlan {
 
