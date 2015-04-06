@@ -10,8 +10,10 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.11.5",
   // Avoids having the scala version in the path to the jars
   crossPaths := false,
-  // Assembling a single jar
+  // Options for assembling a single jar
   test in assembly := {},
+  assemblyJarName in assembly := name.value + "-standalone-" + version.value + ".jar",
+  assemblyJarName in assemblyPackageDependency := name.value + "-dependencies-" + version.value + ".jar",
   // TODO: this is very wrong, I'm taking the default strategy, and instead of
   // using MergeStrategy.deduplicate, I'm using MergeStrategy.first to fix the
   // conflicts
