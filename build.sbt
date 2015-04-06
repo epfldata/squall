@@ -1,3 +1,5 @@
+import complete.DefaultParsers._
+
 lazy val runParser = inputKey[Unit]("Runs the SQL interface with the given configuration.")
 lazy val runPlanner = inputKey[Unit]("Runs the imperative interface with the given configuration.")
 
@@ -8,7 +10,7 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.11.5"
 )
 
-lazy val core = (project in file("squall-core")).
+lazy val squall = (project in file("squall-core")).
   // TODO: add java options
   settings(commonSettings: _*).
   settings(
@@ -40,30 +42,49 @@ lazy val core = (project in file("squall-core")).
     // http://www.scala-sbt.org/0.13/docs/Running-Project-Code.html
     // We need to fork the JVM, as storm uses multiple threads
     fork := true,
-    // TODO: extra jars should be specified through the command line somehow
-    unmanagedClasspath in Runtime += baseDirectory.value / "../squall-functional/target/scala-2.11/squall-frontend_2.11-0.2.0.jar",
-    unmanagedClasspath in Runtime += baseDirectory.value / "../squall-functional-macros/target/scala-2.11/squall-frontend-core_2.11-0.2.0.jar",
     runParser := {
-      val one = (runMain in Compile).partialInput(" sql.main.ParserMain").evaluated
+      val arguments: Seq[String] = spaceDelimited("<arg>").parsed
+      val classpath: Seq[File] = (
+        ((fullClasspath in Runtime).value map { _.data }) ++
+          (arguments.tail map { file(_) })
+      )
+      val options = ForkOptions(
+        bootJars = classpath,
+        workingDirectory = Some(file("./bin"))
+      )
+      val mainClass: String = "ch.epfl.data.squall.api.sql.main.ParserMain"
+      val exitCode: Int = Fork.java(options, mainClass +: arguments)
+      sys.exit(exitCode)
     },
     runPlanner := {
-      val one = (runMain in Compile).partialInput(" plan_runner.main.Main").evaluated
+      val arguments: Seq[String] = spaceDelimited("<arg>").parsed
+      val classpath: Seq[File] = (
+        ((fullClasspath in Runtime).value map { _.data }) ++
+          (arguments.tail map { file(_) })
+      )
+      val options = ForkOptions(
+        bootJars = classpath,
+        workingDirectory = Some(file("./bin"))
+      )
+      val mainClass: String = "ch.epfl.data.squall.main.Main"
+      val exitCode: Int = Fork.java(options, mainClass +: arguments)
+      sys.exit(exitCode)
     },
     // Testing
     libraryDependencies +=  "org.scalatest" % "scalatest_2.11" % "2.2.4" % Test
   )
 
 // For the macros
-lazy val frontend_core = (project in file("squall-functional-macros")).
-  dependsOn(core).
+lazy val functional_macros = (project in file("squall-functional-macros")).
+  dependsOn(squall).
   settings(commonSettings: _*).
   settings(
     name := "squall-frontend-core",
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _)
   )
 
-lazy val frontend = (project in file("squall-functional")).
-  dependsOn(core, frontend_core).
+lazy val functional = (project in file("squall-functional")).
+  dependsOn(squall, functional_macros).
   settings(commonSettings: _*).
   settings(
 //    fork := true,
