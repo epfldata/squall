@@ -1,5 +1,6 @@
 DIP_DISTRIBUTED true
 DIP_QUERY_NAME hyracks
+#DIP_QUERY_PLAN ch.epfl.data.squall.query_plans.HyracksPlan
 DIP_TOPOLOGY_NAME_PREFIX username
 
 # the following two are optional, by default they use topology.workers and topology.ackers from storm.yaml
