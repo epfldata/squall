@@ -64,7 +64,7 @@ object Stream {
   case class WindowStream[T: SquallType, U: SquallType, N: Numeric](Str: TailStream[T, U, N], rangeSize:Int, slideSize:Int) extends TailStream[T, U, N]
 
   //TODO change types to be generic
-  class Stream[T: SquallType] {
+  class Stream[T: SquallType] extends Serializable {
     val squalType: SquallType[T] = implicitly[SquallType[T]]
 
     def filter(fn: T => Boolean): Stream[T] = FilteredStream(this, fn)
