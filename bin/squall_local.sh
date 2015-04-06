@@ -25,7 +25,10 @@ fi
 
 CONFIG_PATH=$1
 shift
-EXTRA_JARS=$(realpath $@)
+if [ "$#" -ne "0" ]; then
+    EXTRA_JARS=$(realpath $@)
+fi
+
 
 # check if your configuration file exists
 if ! [ -f $CONFIG_PATH ]; then
