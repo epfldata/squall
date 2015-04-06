@@ -18,7 +18,7 @@
  */
 
 
-package ch.epfl.data.squall.examples.imperative.ewh;
+package ch.epfl.data.squall.ewh.examples;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,22 +39,31 @@ import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.PrintOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SelectOperator;
+import ch.epfl.data.squall.predicates.AndPredicate;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
-public class ThetaEWHBandPeer {
+public class ThetaEWHBandOrdersCustkeyCustkeyJoin {
 	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final TypeConversion<String> _stringConv = new StringConversion();
 	private static final IntegerConversion _ic = new IntegerConversion();
 	private DateIntegerConversion _dic = new DateIntegerConversion();
 
-	public ThetaEWHBandPeer(String dataPath, String extension, Map conf) {
+	public ThetaEWHBandOrdersCustkeyCustkeyJoin(String dataPath,
+			String extension, Map conf) {
+		// ORDERS * ORDERS on orderkey equi
+		// I = 2 * 15M = 30M; O =
+		// Variability is [0, 10] * skew
+		// baseline + z1 + select date (4 and < 19960101, 1): (1.7m, 3m, 5m): no
+		// output skew
+		// 1Bucket 107s, MBucket 43s, EWH 42s
+
 		// creates materialized relations
 		boolean printSelected = MyUtilities.isPrintFilteredLast(conf);
-		String matName1 = "peer1_1";
-		String matName2 = "peer1_2";
+		String matName1 = "bbosc_1";
+		String matName2 = "bbosc_2";
 		PrintOperator print1 = printSelected ? new PrintOperator(matName1
 				+ extension, conf) : null;
 		PrintOperator print2 = printSelected ? new PrintOperator(matName2
@@ -70,81 +79,73 @@ public class ThetaEWHBandPeer {
 				"DIP_EWH_SAMPLING")
 				&& SystemParameters.getBoolean(conf, "DIP_EWH_SAMPLING");
 
-		Component relationPeer1, relationPeer2;
-		// Full schema is
-		// <id,peer_id,torrent_snapshot_id,upload_speed,download_speed,payload_upload_speed,payload_download_speed,total_upload,total_download,fail_count,hashfail_count,progress,created
-		// total_upload is field 7, total_download is field 8
-
-		ColumnReference col1 = new ColumnReference(_ic, 0);
-		ColumnReference col2 = new ColumnReference(_ic, 2);
-		ColumnReference col3 = new ColumnReference(_ic, 7);
-		ColumnReference col4 = new ColumnReference(_ic, 8);
-
-		ProjectOperator projectionPeer1 = new ProjectOperator(col1, col2, col3,
-				col4);
-		ProjectOperator projectionPeer2 = new ProjectOperator(col1, col2, col3,
-				col4);
-		// total_upload is field 2, total_download is field 3 in projectionPeer1
-		// and projectionPeer2
-		final List<Integer> hashPeer1 = Arrays.asList(2);
-		final List<Integer> hashPeer2 = Arrays.asList(3);
+		Component relationOrders1, relationOrders2;
+		// Project on shipdate , receiptdate, commitdate, shipInstruct, quantity
+		ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0,
+				2, 3, 4, 5, 1 });
+		final List<Integer> hashLineitem = Arrays.asList(5);
 
 		if (!isMaterialized) {
-			// eliminate inactive users
-			// total_upload is field 7, total_download is field 8 in the base
-			// relation
+			// ORDERDATE NO: startdate - enddate - 151, but for z4 mostly are
+			// 1996-01-02
+			// STARTDATE = 1992-01-01 CURRENTDATE = 1995-06-17 ENDDATE =
+			// 1998-12-31
+			Integer dateBoundary = 19960101;
 			ComparisonPredicate sel11 = new ComparisonPredicate(
-					ComparisonPredicate.GREATER_OP,
-					new ColumnReference(_ic, 7), new ValueSpecification(_ic, 0));
-			SelectOperator selectionPeer1 = new SelectOperator(sel11);
-
+					ComparisonPredicate.EQUAL_OP, new ColumnReference(
+							_stringConv, 5), new ValueSpecification(
+							_stringConv, "4-NOT SPECIFIED"));
 			ComparisonPredicate sel12 = new ComparisonPredicate(
-					ComparisonPredicate.GREATER_OP,
-					new ColumnReference(_ic, 8), new ValueSpecification(_ic, 0));
-			SelectOperator selectionPeer2 = new SelectOperator(sel12);
+					ComparisonPredicate.LESS_OP, new ColumnReference(_dic, 4),
+					new ValueSpecification(_dic, dateBoundary));
+			AndPredicate andOrders1 = new AndPredicate(sel11, sel12);
+			SelectOperator selectionOrders1 = new SelectOperator(andOrders1);
 
-			// build relations
-			relationPeer1 = new DataSourceComponent("PEER1", dataPath
-					+ "peersnapshot-01" + extension).add(selectionPeer1)
-					.add(print1).add(projectionPeer1)
-					.setOutputPartKey(hashPeer1);
-			_queryBuilder.add(relationPeer1);
+			relationOrders1 = new DataSourceComponent("ORDERS1", dataPath
+					+ "orders" + extension).add(selectionOrders1).add(print1)
+					.add(projectionLineitem).setOutputPartKey(hashLineitem);
+			_queryBuilder.add(relationOrders1);
 
-			relationPeer2 = new DataSourceComponent("PEER2", dataPath
-					+ "peersnapshot-01" + extension).add(selectionPeer2)
-					.add(print2).add(projectionPeer2)
-					.setOutputPartKey(hashPeer2);
-			_queryBuilder.add(relationPeer2);
+			ComparisonPredicate sel21 = new ComparisonPredicate(
+					ComparisonPredicate.EQUAL_OP, new ColumnReference(
+							_stringConv, 5), new ValueSpecification(
+							_stringConv, "1-URGENT"));
+			SelectOperator selectionOrders2 = new SelectOperator(sel21);
+
+			relationOrders2 = new DataSourceComponent("ORDERS2", dataPath
+					+ "orders" + extension).add(selectionOrders2).add(print2)
+					.add(projectionLineitem).setOutputPartKey(hashLineitem);
+			_queryBuilder.add(relationOrders2);
 		} else {
-			relationPeer1 = new DataSourceComponent("PEER1", dataPath
-					+ matName1 + extension).add(projectionPeer1)
-					.setOutputPartKey(hashPeer1);
-			_queryBuilder.add(relationPeer1);
+			relationOrders1 = new DataSourceComponent("ORDERS1", dataPath
+					+ matName1 + extension).add(projectionLineitem)
+					.setOutputPartKey(hashLineitem);
+			_queryBuilder.add(relationOrders1);
 
-			relationPeer2 = new DataSourceComponent("PEER1", dataPath
-					+ matName2 + extension).add(projectionPeer2)
-					.setOutputPartKey(hashPeer2);
-			_queryBuilder.add(relationPeer2);
+			relationOrders2 = new DataSourceComponent("LINEITEM2", dataPath
+					+ matName2 + extension).add(projectionLineitem)
+					.setOutputPartKey(hashLineitem);
+			_queryBuilder.add(relationOrders2);
 		}
 
 		NumericConversion keyType = _ic;
-		int comparisonValue = 2;
+		int comparisonValue = 1;
 		ComparisonPredicate comparison = new ComparisonPredicate(
 				ComparisonPredicate.SYM_BAND_WITH_BOUNDS_OP, comparisonValue,
 				keyType);
-		int firstKeyProject = 2;
-		int secondKeyProject = 3;
+		int firstKeyProject = 5;
+		int secondKeyProject = 5;
 
 		if (printSelected) {
-			relationPeer1.setPrintOut(false);
-			relationPeer2.setPrintOut(false);
+			relationOrders1.setPrintOut(false);
+			relationOrders2.setPrintOut(false);
 		} else if (isOkcanSampling) {
-			_queryBuilder = MyUtilities.addOkcanSampler(relationPeer1,
-					relationPeer2, firstKeyProject, secondKeyProject,
+			_queryBuilder = MyUtilities.addOkcanSampler(relationOrders1,
+					relationOrders2, firstKeyProject, secondKeyProject,
 					_queryBuilder, keyType, comparison, conf);
 		} else if (isEWHSampling) {
-			_queryBuilder = MyUtilities.addEWHSampler(relationPeer1,
-					relationPeer2, firstKeyProject, secondKeyProject,
+			_queryBuilder = MyUtilities.addEWHSampler(relationOrders1,
+					relationOrders2, firstKeyProject, secondKeyProject,
 					_queryBuilder, keyType, comparison, conf);
 		} else {
 			final int Theta_JoinType = ThetaQueryPlansParameters
@@ -160,8 +161,8 @@ public class ThetaEWHBandPeer {
 
 			// AggregateCountOperator agg = new AggregateCountOperator(conf);
 			Component lastJoiner = ThetaJoinComponentFactory
-					.createThetaJoinOperator(Theta_JoinType, relationPeer1,
-							relationPeer2, _queryBuilder)
+					.createThetaJoinOperator(Theta_JoinType, relationOrders1,
+							relationOrders2, _queryBuilder)
 					.setJoinPredicate(pred5)
 					.setContentSensitiveThetaJoinWrapper(keyType);
 			// .addOperator(agg)

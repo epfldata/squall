@@ -18,7 +18,7 @@
  */
 
 
-package ch.epfl.data.squall.examples.imperative.ewh;
+package ch.epfl.data.squall.ewh.examples;
 
 import java.util.Arrays;
 import java.util.List;

@@ -18,7 +18,7 @@
  */
 
 
-package ch.epfl.data.squall.examples.imperative.ewh;
+package ch.epfl.data.squall.ewh.examples;
 
 import java.util.Arrays;
 import java.util.List;
@@ -27,15 +27,13 @@ import java.util.Map;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.theta.ThetaJoinComponentFactory;
-import ch.epfl.data.squall.conversion.LongConversion;
+import ch.epfl.data.squall.conversion.IntegerConversion;
 import ch.epfl.data.squall.conversion.NumericConversion;
 import ch.epfl.data.squall.conversion.StringConversion;
 import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.ewh.components.DummyComponent;
 import ch.epfl.data.squall.examples.imperative.theta.ThetaQueryPlansParameters;
 import ch.epfl.data.squall.expressions.ColumnReference;
-import ch.epfl.data.squall.expressions.LongPhone;
-import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.PrintOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
@@ -45,18 +43,18 @@ import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.SystemParameters.HistogramType;
 
 // a candidate for new Eocd for the new Linux cluster
-public class ThetaEWHCustomerJoin {
+public class ThetaEWHPartSuppJoin {
 
 	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final TypeConversion<String> _stringConv = new StringConversion();
-	private static final LongConversion _lc = new LongConversion();
+	private static final IntegerConversion _ic = new IntegerConversion();
 
-	// phone and acctbal
-	public ThetaEWHCustomerJoin(String dataPath, String extension, Map conf) {
+	// availqty
+	public ThetaEWHPartSuppJoin(String dataPath, String extension, Map conf) {
 		// creates materialized relations
 		boolean printSelected = MyUtilities.isPrintFilteredLast(conf);
-		String matName1 = "cphone_1";
-		String matName2 = "cphone_2";
+		String matName1 = "partsupp_qty_1";
+		String matName2 = "partsupp_qty_2";
 		PrintOperator print1 = printSelected ? new PrintOperator(matName1
 				+ extension, conf) : null;
 		PrintOperator print2 = printSelected ? new PrintOperator(matName2
@@ -77,104 +75,76 @@ public class ThetaEWHCustomerJoin {
 				HistogramType.S1_RES_HIST.genConfEntryName());
 		boolean isSrcHistogram = isEWHD2Histogram || isEWHS1Histogram;
 
-		Component relationCustomer1, relationCustomer2;
-		// Project on phone(key), custkey and name
+		Component relationPartSupp1, relationPartSupp2;
+		// Project on availqty(key), partkey and suppkey
+		ProjectOperator projectionCustomer = new ProjectOperator(new int[] { 2,
+				0, 1 });
 
-		// all this was with z1
-		// ValueExpression keyField = new LongPhone(4, 6); // MB works perfectly
-		// - not enough output skew
-		// ValueExpression keyField = new LongPhone(4, 5); // too large output +
-		// MB works perfectly - not enough output skew
-		// ValueExpression keyField = new DoubleToInt(5); // acctbal: too large
-		// output
-		// ValueExpression keyField = new DoubleToInt(5); // acctbal with
-		// selectivity 1 MKSEGMENT: too large output
-		// ComparisonPredicate comp1 = new
-		// ComparisonPredicate(ComparisonPredicate.EQUAL_OP,
-		// new ColumnReference(_stringConv, 6), new
-		// ValueSpecification(_stringConv, "BUILDING"));
-		// SelectOperator selectionCustomer1 = new SelectOperator(comp1);
-		// ComparisonPredicate comp2 = new
-		// ComparisonPredicate(ComparisonPredicate.EQUAL_OP,
-		// new ColumnReference(_stringConv, 6), new
-		// ValueSpecification(_stringConv, "MACHINERY"));
-		// SelectOperator selectionCustomer2 = new SelectOperator(comp2);
-
-		// all this is with z2
-		// ValueExpression keyField = new LongPhone(4, 7); // MBucket on 10G
-		// faster than 1Bucket - no output skew
-		// ValueExpression keyField = new LongPhone(4, 6); // MBucket on 80G
-		// slower only 50% than 1Bucket - too large output (7291M)
-		ValueExpression keyField = new LongPhone(4); // output = input
-
-		ValueExpression custKey = new ColumnReference(_stringConv, 0);
-		ValueExpression name = new ColumnReference(_stringConv, 1);
-		ProjectOperator projectionCustomer = new ProjectOperator(keyField,
-				custKey, name);
+		// with z2 too large output
 
 		final List<Integer> hashCustomer = Arrays.asList(0);
 
 		if (!isMaterialized) {
-			relationCustomer1 = new DataSourceComponent("CUSTOMER1", dataPath
-					+ "customer" + extension).add(print1)
+			relationPartSupp1 = new DataSourceComponent("PARTSUPP1", dataPath
+					+ "partsupp" + extension).add(print1)
 					.add(projectionCustomer).setOutputPartKey(hashCustomer);
-			_queryBuilder.add(relationCustomer1);
+			_queryBuilder.add(relationPartSupp1);
 
-			relationCustomer2 = new DataSourceComponent("CUSTOMER2", dataPath
-					+ "customer" + extension).add(print2)
+			relationPartSupp2 = new DataSourceComponent("PARTSUPP2", dataPath
+					+ "partsupp" + extension).add(print2)
 					.add(projectionCustomer).setOutputPartKey(hashCustomer);
-			_queryBuilder.add(relationCustomer2);
+			_queryBuilder.add(relationPartSupp2);
 		} else {
-			relationCustomer1 = new DataSourceComponent("CUSTOMER1", dataPath
+			relationPartSupp1 = new DataSourceComponent("PARTSUPP1", dataPath
 					+ matName1 + extension).add(projectionCustomer)
 					.setOutputPartKey(hashCustomer);
-			_queryBuilder.add(relationCustomer1);
+			_queryBuilder.add(relationPartSupp1);
 
-			relationCustomer2 = new DataSourceComponent("CUSTOMER2", dataPath
+			relationPartSupp2 = new DataSourceComponent("PARTSUPP2", dataPath
 					+ matName2 + extension).add(projectionCustomer)
 					.setOutputPartKey(hashCustomer);
-			_queryBuilder.add(relationCustomer2);
+			_queryBuilder.add(relationPartSupp2);
 		}
 
-		NumericConversion keyType = _lc;
+		NumericConversion keyType = _ic;
 		ComparisonPredicate comparison = new ComparisonPredicate(
 				ComparisonPredicate.EQUAL_OP);
 		int firstKeyProject = 0;
 		int secondKeyProject = 0;
 
 		if (printSelected) {
-			relationCustomer1.setPrintOut(false);
-			relationCustomer2.setPrintOut(false);
+			relationPartSupp1.setPrintOut(false);
+			relationPartSupp2.setPrintOut(false);
 		} else if (isSrcHistogram) {
-			_queryBuilder = MyUtilities.addSrcHistogram(relationCustomer1,
-					firstKeyProject, relationCustomer2, secondKeyProject,
+			_queryBuilder = MyUtilities.addSrcHistogram(relationPartSupp1,
+					firstKeyProject, relationPartSupp2, secondKeyProject,
 					keyType, comparison, isEWHD2Histogram, isEWHS1Histogram,
 					conf);
 		} else if (isOkcanSampling) {
-			_queryBuilder = MyUtilities.addOkcanSampler(relationCustomer1,
-					relationCustomer2, firstKeyProject, secondKeyProject,
+			_queryBuilder = MyUtilities.addOkcanSampler(relationPartSupp1,
+					relationPartSupp2, firstKeyProject, secondKeyProject,
 					_queryBuilder, keyType, comparison, conf);
 		} else if (isEWHSampling) {
-			_queryBuilder = MyUtilities.addEWHSampler(relationCustomer1,
-					relationCustomer2, firstKeyProject, secondKeyProject,
+			_queryBuilder = MyUtilities.addEWHSampler(relationPartSupp1,
+					relationPartSupp2, firstKeyProject, secondKeyProject,
 					_queryBuilder, keyType, comparison, conf);
 		} else {
 			final int Theta_JoinType = ThetaQueryPlansParameters
 					.getThetaJoinType(conf);
-			final ColumnReference colC1 = new ColumnReference(keyType,
+			final ColumnReference colPS1 = new ColumnReference(keyType,
 					firstKeyProject);
-			final ColumnReference colC2 = new ColumnReference(keyType,
+			final ColumnReference colPS2 = new ColumnReference(keyType,
 					secondKeyProject);
 			// Addition expr2 = new Addition(colO2, new ValueSpecification(_ic,
 			// keyOffset));
-			final ComparisonPredicate C1_C2_comp = new ComparisonPredicate(
-					ComparisonPredicate.EQUAL_OP, colC1, colC2);
+			final ComparisonPredicate PS1_PS2_comp = new ComparisonPredicate(
+					ComparisonPredicate.EQUAL_OP, colPS1, colPS2);
 
 			// AggregateCountOperator agg = new AggregateCountOperator(conf);
 			Component lastJoiner = ThetaJoinComponentFactory
-					.createThetaJoinOperator(Theta_JoinType, relationCustomer1,
-							relationCustomer2, _queryBuilder)
-					.setJoinPredicate(C1_C2_comp)
+					.createThetaJoinOperator(Theta_JoinType, relationPartSupp1,
+							relationPartSupp2, _queryBuilder)
+					.setJoinPredicate(PS1_PS2_comp)
 					.setContentSensitiveThetaJoinWrapper(keyType);
 			// .addOperator(agg)
 			// lastJoiner.setPrintOut(false);
