@@ -1,8 +1,0 @@
-PARSED result:
-TABLE NAME orderDifferent1, SIZE 10
-  with COLUMNS:
-    c11 of type LONG Distinct Values = 11 Range [1, 111]
-    C13 of type STRING Distinct Values = 13 Range [null, null]
-    c12 of type DOUBLE Distinct Values = 12 Range [1.2, 121.21]
-    c14 of type DATE Distinct Values = 144 Range [Thu Nov 28 00:00:00 CET 1985, Wed Dec 23 00:00:00 CET 2015]
-

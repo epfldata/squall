@@ -1,5 +1,6 @@
 DIP_DISTRIBUTED false
 DIP_QUERY_NAME hyracks_l3_batch
+DIP_QUERY_PLAN ch.epfl.data.plan_runner.query_plans.debug.HyracksL3BatchPlan
 DIP_TOPOLOGY_NAME_PREFIX username
 DIP_NUM_ACKERS 0
 
