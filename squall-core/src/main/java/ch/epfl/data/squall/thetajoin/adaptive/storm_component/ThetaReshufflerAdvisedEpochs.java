@@ -24,7 +24,7 @@
  * This Class is responsible for applying the various mappings i.e. reshuffling the input data
  * and doing some data migrations when necessary.
  */
-package ch.epfl.data.squall.thetajoin.dynamic.storm_component;
+package ch.epfl.data.squall.thetajoin.adaptive.storm_component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,10 +44,10 @@ import backtype.storm.tuple.Values;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
-import ch.epfl.data.squall.thetajoin.dynamic.advisor.Action;
-import ch.epfl.data.squall.thetajoin.dynamic.advisor.Advisor;
-import ch.epfl.data.squall.thetajoin.dynamic.advisor.Maybe;
-import ch.epfl.data.squall.thetajoin.dynamic.advisor.TheoreticalAdvisorNew;
+import ch.epfl.data.squall.thetajoin.adaptive.advisor.Action;
+import ch.epfl.data.squall.thetajoin.adaptive.advisor.Advisor;
+import ch.epfl.data.squall.thetajoin.adaptive.advisor.Maybe;
+import ch.epfl.data.squall.thetajoin.adaptive.advisor.TheoreticalAdvisorNew;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.thetajoin.dynamic.ThetaJoinUtilities;
@@ -484,7 +484,7 @@ public class ThetaReshufflerAdvisedEpochs extends BaseRichBolt {
 
 	private int identifyDim(int prev1, int prev2, int curr1, int curr2,
 			boolean isDiscarding) {
-		return ThetaJoinerDynamicAdvisedEpochs.identifyDim(prev1, prev2, curr1,
+		return ThetaJoinerAdaptiveAdvisedEpochs.identifyDim(prev1, prev2, curr1,
 				curr2, isDiscarding);
 	}
 

@@ -50,7 +50,7 @@ import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
-import ch.epfl.data.squall.components.theta.ThetaJoinStaticComponent;
+import ch.epfl.data.squall.components.theta.ThetaJoinComponent;
 import ch.epfl.data.squall.ewh.algorithms.DenseMonotonicWeightPrecomputation;
 import ch.epfl.data.squall.ewh.algorithms.PWeightPrecomputation;
 import ch.epfl.data.squall.ewh.algorithms.ShallowCoarsener;
@@ -1716,8 +1716,8 @@ public class MyUtilities {
 		if (component instanceof DataSourceComponent) {
 			DataSourceComponent dsComp = (DataSourceComponent) component;
 			dsComp.setPartitioner(true);
-		} else if (component instanceof ThetaJoinStaticComponent) {
-			ThetaJoinStaticComponent tComp = (ThetaJoinStaticComponent) component;
+		} else if (component instanceof ThetaJoinComponent) {
+			ThetaJoinComponent tComp = (ThetaJoinComponent) component;
 			tComp.setPartitioner(true);
 		} else {
 			throw new RuntimeException("Unsupported component type "

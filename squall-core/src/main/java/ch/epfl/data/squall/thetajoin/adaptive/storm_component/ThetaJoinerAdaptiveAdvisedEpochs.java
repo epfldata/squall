@@ -23,7 +23,7 @@
  * @author El Seidy
  * This Class is responsible for doing the actual Theta-Join.
  */
-package ch.epfl.data.squall.thetajoin.dynamic.storm_component;
+package ch.epfl.data.squall.thetajoin.adaptive.storm_component;
 
 import gnu.trove.list.array.TIntArrayList;
 
@@ -60,8 +60,8 @@ import ch.epfl.data.squall.storm_components.StormBoltComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
-import ch.epfl.data.squall.thetajoin.dynamic.advisor.Action;
-import ch.epfl.data.squall.thetajoin.dynamic.advisor.Discard;
+import ch.epfl.data.squall.thetajoin.adaptive.advisor.Action;
+import ch.epfl.data.squall.thetajoin.adaptive.advisor.Discard;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.squall.utilities.SystemParameters;
@@ -69,7 +69,7 @@ import ch.epfl.data.squall.utilities.statistics.StatisticsUtilities;
 import ch.epfl.data.squall.visitors.PredicateCreateIndexesVisitor;
 import ch.epfl.data.squall.visitors.PredicateUpdateIndexesVisitor;
 
-public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
+public class ThetaJoinerAdaptiveAdvisedEpochs extends StormBoltComponent {
 	// firstRelation=1 secondRelation=2
 	public static int identifyDim(int prevRow, int prevCol, int currRow,
 			int currCol, boolean isDiscarding) {
@@ -91,7 +91,7 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 	private long numberOfTuplesMemory = 0;
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger
-			.getLogger(ThetaJoinerDynamicAdvisedEpochs.class);
+			.getLogger(ThetaJoinerAdaptiveAdvisedEpochs.class);
 	private TupleStorage _firstRelationStorage, _secondRelationStorage,
 			_firstTaggedRelationStorage, _secondTaggedRelationStorage;
 	private List<Index> _firstRelationIndexes, _secondRelationIndexes,
@@ -146,7 +146,7 @@ public class ThetaJoinerDynamicAdvisedEpochs extends StormBoltComponent {
 
 	private final long _batchOutputMillis;
 
-	public ThetaJoinerDynamicAdvisedEpochs(StormEmitter firstEmitter,
+	public ThetaJoinerAdaptiveAdvisedEpochs(StormEmitter firstEmitter,
 			StormEmitter secondEmitter, ComponentProperties cp,
 			List<String> allCompNames, Predicate joinPredicate,
 			int hierarchyPosition, TopologyBuilder builder,

@@ -56,7 +56,7 @@ import ch.epfl.data.squall.api.sql.visitors.jsql.SQLVisitor;
 import ch.epfl.data.squall.api.sql.visitors.squall.ColumnRefCollectVisitor;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
-import ch.epfl.data.squall.components.theta.ThetaJoinStaticComponent;
+import ch.epfl.data.squall.components.theta.ThetaJoinComponent;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
@@ -375,7 +375,7 @@ public class ParserUtil {
 
 	public static int getPreOpsOutputSize(Component component, Schema schema,
 			TableAliasName tan) {
-		if (component instanceof ThetaJoinStaticComponent)
+		if (component instanceof ThetaJoinComponent)
 			throw new RuntimeException(
 					"SQL generator with Theta does not work for now!");
 		// TODO similar to Equijoin, but not subtracting joinColumnsLength

@@ -49,21 +49,21 @@ import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
-import ch.epfl.data.squall.thetajoin.dynamic.storm_component.ThetaJoinerDynamicAdvisedEpochs;
-import ch.epfl.data.squall.thetajoin.dynamic.storm_component.ThetaReshufflerAdvisedEpochs;
-import ch.epfl.data.squall.thetajoin.dynamic.storm_matrix_mapping.ThetaDataMigrationJoinerToReshufflerMapping;
-import ch.epfl.data.squall.thetajoin.dynamic.storm_matrix_mapping.ThetaJoinDynamicMapping;
+import ch.epfl.data.squall.thetajoin.adaptive.storm_component.ThetaJoinerAdaptiveAdvisedEpochs;
+import ch.epfl.data.squall.thetajoin.adaptive.storm_component.ThetaReshufflerAdvisedEpochs;
+import ch.epfl.data.squall.thetajoin.adaptive.storm_matrix_mapping.ThetaDataMigrationJoinerToReshufflerMapping;
+import ch.epfl.data.squall.thetajoin.adaptive.storm_matrix_mapping.ThetaJoinAdaptiveMapping;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.ContentInsensitiveMatrixAssignment;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
-public class ThetaJoinDynamicComponentAdvisedEpochs extends JoinerComponent
+public class AdaptiveThetaJoinComponent extends JoinerComponent
 		implements Component {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger
-			.getLogger(ThetaJoinDynamicComponentAdvisedEpochs.class);
+			.getLogger(AdaptiveThetaJoinComponent.class);
 	private final Component _firstParent;
 	private final Component _secondParent;
 	private Component _child;
@@ -71,7 +71,7 @@ public class ThetaJoinDynamicComponentAdvisedEpochs extends JoinerComponent
 	private long _batchOutputMillis;
 	private List<Integer> _hashIndexes;
 	private List<ValueExpression> _hashExpressions;
-	private ThetaJoinerDynamicAdvisedEpochs _joiner;
+	private ThetaJoinerAdaptiveAdvisedEpochs _joiner;
 	private ThetaReshufflerAdvisedEpochs _reshuffler;
 	private final ChainOperator _chain = new ChainOperator();
 	private boolean _printOut;
@@ -80,7 +80,7 @@ public class ThetaJoinDynamicComponentAdvisedEpochs extends JoinerComponent
 	private int _joinerParallelism;
 	private InterchangingComponent _interComp = null;
 
-	public ThetaJoinDynamicComponentAdvisedEpochs(Component firstParent,
+	public AdaptiveThetaJoinComponent(Component firstParent,
 			Component secondParent) {
 		_firstParent = firstParent;
 		_firstParent.setChild(this);
@@ -95,7 +95,7 @@ public class ThetaJoinDynamicComponentAdvisedEpochs extends JoinerComponent
 	}
 
 	@Override
-	public ThetaJoinDynamicComponentAdvisedEpochs add(Operator operator) {
+	public AdaptiveThetaJoinComponent add(Operator operator) {
 		_chain.addOperator(operator);
 		return this;
 	}
@@ -235,7 +235,7 @@ public class ThetaJoinDynamicComponentAdvisedEpochs extends JoinerComponent
 			_reshuffler.set_interComp(_interComp);
 
 		// Create the Join Bolt.
-		_joiner = new ThetaJoinerDynamicAdvisedEpochs(_firstParent,
+		_joiner = new ThetaJoinerAdaptiveAdvisedEpochs(_firstParent,
 				_secondParent, this, allCompNames, _joinPredicate,
 				hierarchyPosition, builder, killer, conf, _reshuffler, dim);
 		_reshuffler.setJoinerID(_joiner.getID());
@@ -249,7 +249,7 @@ public class ThetaJoinDynamicComponentAdvisedEpochs extends JoinerComponent
 
 		// 2) Hook up the previous emitters to the reshuffler
 
-		final ThetaJoinDynamicMapping dMap = new ThetaJoinDynamicMapping(conf,
+		final ThetaJoinAdaptiveMapping dMap = new ThetaJoinAdaptiveMapping(conf,
 				-1);
 		final ArrayList<StormEmitter> emittersList = new ArrayList<StormEmitter>();
 		if (_interComp == null) {
@@ -288,7 +288,7 @@ public class ThetaJoinDynamicComponentAdvisedEpochs extends JoinerComponent
 	}
 
 	@Override
-	public ThetaJoinDynamicComponentAdvisedEpochs setBatchOutputMillis(
+	public AdaptiveThetaJoinComponent setBatchOutputMillis(
 			long millis) {
 		_batchOutputMillis = millis;
 		return this;
@@ -308,20 +308,20 @@ public class ThetaJoinDynamicComponentAdvisedEpochs extends JoinerComponent
 	// list of distinct keys, used for direct stream grouping and load-balancing
 	// ()
 	@Override
-	public ThetaJoinStaticComponent setFullHashList(List<String> fullHashList) {
+	public ThetaJoinComponent setFullHashList(List<String> fullHashList) {
 		throw new RuntimeException(
 				"Load balancing for Dynamic Theta join is done inherently!");
 	}
 
 	@Override
-	public ThetaJoinDynamicComponentAdvisedEpochs setHashExpressions(
+	public AdaptiveThetaJoinComponent setHashExpressions(
 			List<ValueExpression> hashExpressions) {
 		_hashExpressions = hashExpressions;
 		return this;
 	}
 
 	@Override
-	public ThetaJoinDynamicComponentAdvisedEpochs setInterComp(
+	public AdaptiveThetaJoinComponent setInterComp(
 			InterchangingComponent _interComp) {
 		this._interComp = _interComp;
 		return this;
@@ -334,20 +334,20 @@ public class ThetaJoinDynamicComponentAdvisedEpochs extends JoinerComponent
 	}
 
 	@Override
-	public ThetaJoinDynamicComponentAdvisedEpochs setOutputPartKey(
+	public AdaptiveThetaJoinComponent setOutputPartKey(
 			int... hashIndexes) {
 		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
 	}
 
 	@Override
-	public ThetaJoinDynamicComponentAdvisedEpochs setOutputPartKey(
+	public AdaptiveThetaJoinComponent setOutputPartKey(
 			List<Integer> hashIndexes) {
 		_hashIndexes = hashIndexes;
 		return this;
 	}
 
 	@Override
-	public ThetaJoinDynamicComponentAdvisedEpochs setPrintOut(boolean printOut) {
+	public AdaptiveThetaJoinComponent setPrintOut(boolean printOut) {
 		_printOutSet = true;
 		_printOut = printOut;
 		return this;

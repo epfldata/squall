@@ -18,7 +18,7 @@
  */
 
 
-package ch.epfl.data.squall.thetajoin.dynamic.storm_matrix_mapping;
+package ch.epfl.data.squall.thetajoin.adaptive.storm_matrix_mapping;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,7 +30,7 @@ import backtype.storm.grouping.CustomStreamGrouping;
 import backtype.storm.task.WorkerTopologyContext;
 import ch.epfl.data.squall.utilities.MyUtilities;
 
-public class ThetaJoinDynamicMapping implements CustomStreamGrouping {
+public class ThetaJoinAdaptiveMapping implements CustomStreamGrouping {
 
 	/**
 	 * This class is only responsible for the mapping for DATA_STREAM and
@@ -42,7 +42,7 @@ public class ThetaJoinDynamicMapping implements CustomStreamGrouping {
 	private final Map _map;
 	private Random rnd;
 
-	public ThetaJoinDynamicMapping(Map map, int seed) {
+	public ThetaJoinAdaptiveMapping(Map map, int seed) {
 		_map = map;
 		if (seed >= 0)
 			rnd = new Random(seed);

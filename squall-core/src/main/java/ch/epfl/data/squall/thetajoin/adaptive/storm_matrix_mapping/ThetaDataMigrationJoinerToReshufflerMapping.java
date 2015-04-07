@@ -18,7 +18,7 @@
  */
 
 
-package ch.epfl.data.squall.thetajoin.dynamic.storm_matrix_mapping;
+package ch.epfl.data.squall.thetajoin.adaptive.storm_matrix_mapping;
 
 import java.util.Arrays;
 import java.util.List;

@@ -30,7 +30,7 @@ import org.apache.log4j.Logger;
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
-import ch.epfl.data.squall.components.theta.ThetaJoinDynamicComponentAdvisedEpochs;
+import ch.epfl.data.squall.components.theta.AdaptiveThetaJoinComponent;
 import ch.epfl.data.squall.ewh.components.DummyComponent;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
@@ -127,7 +127,7 @@ public class Main {
 				component.makeBolts(builder, killer, allCompNames, conf,
 						StormComponent.NEXT_TO_DUMMY);
 			} else if (child.getChild() == null
-					&& !(child instanceof ThetaJoinDynamicComponentAdvisedEpochs)) {
+					&& !(child instanceof AdaptiveThetaJoinComponent)) {
 				// if the child is dynamic, then reshuffler is NEXT_TO_LAST
 				component.makeBolts(builder, killer, allCompNames, conf,
 						StormComponent.NEXT_TO_LAST_COMPONENT);

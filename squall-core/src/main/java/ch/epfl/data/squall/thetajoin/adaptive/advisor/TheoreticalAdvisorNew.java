@@ -18,7 +18,7 @@
  */
 
 
-package ch.epfl.data.squall.thetajoin.dynamic.advisor;
+package ch.epfl.data.squall.thetajoin.adaptive.advisor;
 
 import java.util.Map;
 

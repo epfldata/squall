@@ -28,12 +28,11 @@ fi
 if [ "$MODE" == "PLAN_RUNNER" ]; then
 	CONFIG_DIR=../test/squall/confs/cluster
 	CONFIG_PATH=$CONFIG_DIR/1G_hyracks
-	CLASS=ch.epfl.data.plan_runner.main.Main
-   #CLASS=ch.epfl.data.squall.main.Main
+   CLASS=ch.epfl.data.squall.main.Main
 else
 	CONFIG_DIR=../test/squall_plan_runner/confs/cluster
 	CONFIG_PATH=$CONFIG_DIR/1G_hyracks
-	CLASS=ch.epfl.data.sql.main.ParserMain 
+	CLASS=ch.epfl.data.squall.api.sql.main.ParserMain 
 fi
 
 # But if user has specified a specific configuration file, run this
@@ -54,7 +53,8 @@ fi
 
 confname=${CONFIG_PATH##*/}
 
-../$STORMNAME/bin/storm jar ../deploy/squall-0.2.0-standalone.jar $CLASS $CONFIG_PATH
+../$STORMNAME/bin/storm jar ../squall-core/target/squall-0.2.0.jar $CLASS $CONFIG_PATH
+                                                             # -standalone
 # Time is counted from the moment topology started
 TIME_BEFORE="$(date +%s)"
 

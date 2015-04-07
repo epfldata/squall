@@ -32,16 +32,16 @@ public class ThetaJoinComponentFactory {
 			QueryBuilder queryBuilder) {
 		JoinerComponent result = null;
 		if (thetaJoinType == SystemParameters.STATIC_CIS) {
-			result = new ThetaJoinStaticComponent(firstParent, secondParent,
+			result = new ThetaJoinComponent(firstParent, secondParent,
 					false);
 		} else if (thetaJoinType == SystemParameters.EPOCHS_CIS) {
-			result = new ThetaJoinDynamicComponentAdvisedEpochs(firstParent,
+			result = new AdaptiveThetaJoinComponent(firstParent,
 					secondParent);
 		} else if (thetaJoinType == SystemParameters.STATIC_CS) {
-			result = new ThetaJoinStaticComponent(firstParent, secondParent,
+			result = new ThetaJoinComponent(firstParent, secondParent,
 					true);
 		} else if (thetaJoinType == SystemParameters.EPOCHS_CS) {
-			result = new ThetaJoinDynamicComponentAdvisedEpochs(firstParent,
+			result = new AdaptiveThetaJoinComponent(firstParent,
 					secondParent);
 		} else {
 			throw new RuntimeException("Unsupported Thtea Join Type");

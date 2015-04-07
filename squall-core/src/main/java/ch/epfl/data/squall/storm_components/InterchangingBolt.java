@@ -39,7 +39,7 @@ import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import ch.epfl.data.squall.components.ComponentProperties;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
-import ch.epfl.data.squall.thetajoin.dynamic.storm_matrix_mapping.ThetaJoinDynamicMapping;
+import ch.epfl.data.squall.thetajoin.adaptive.storm_matrix_mapping.ThetaJoinAdaptiveMapping;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.thetajoin.dynamic.BufferedTuple;
@@ -91,7 +91,7 @@ public class InterchangingBolt extends BaseRichBolt implements StormComponent {
 		_parallelism = SystemParameters.getInt(conf, _ID + "_PAR");
 		_currentBolt = builder.setBolt(_ID, this, _parallelism);
 
-		final ThetaJoinDynamicMapping dMap = new ThetaJoinDynamicMapping(conf,
+		final ThetaJoinAdaptiveMapping dMap = new ThetaJoinAdaptiveMapping(conf,
 				-1);
 
 		// [0] because StormSrcJoin is considered dead

@@ -46,11 +46,11 @@ import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
-public class ThetaJoinStaticComponent extends JoinerComponent implements
+public class ThetaJoinComponent extends JoinerComponent implements
 		Component {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger
-			.getLogger(ThetaJoinStaticComponent.class);
+			.getLogger(ThetaJoinComponent.class);
 	private final Component _firstParent;
 	private final Component _secondParent;
 	private Component _child;
@@ -70,7 +70,7 @@ public class ThetaJoinStaticComponent extends JoinerComponent implements
 	// equi-weight histogram
 	private boolean _isPartitioner;
 
-	public ThetaJoinStaticComponent(Component firstParent,
+	public ThetaJoinComponent(Component firstParent,
 			Component secondParent, boolean isContentSensitive) {
 		_firstParent = firstParent;
 		_firstParent.setChild(this);
@@ -81,7 +81,7 @@ public class ThetaJoinStaticComponent extends JoinerComponent implements
 	}
 
 	@Override
-	public ThetaJoinStaticComponent add(Operator operator) {
+	public ThetaJoinComponent add(Operator operator) {
 		_chain.addOperator(operator);
 		return this;
 	}
@@ -206,7 +206,7 @@ public class ThetaJoinStaticComponent extends JoinerComponent implements
 	}
 
 	@Override
-	public ThetaJoinStaticComponent setBatchOutputMillis(long millis) {
+	public ThetaJoinComponent setBatchOutputMillis(long millis) {
 		_batchOutputMillis = millis;
 		return this;
 	}
@@ -217,7 +217,7 @@ public class ThetaJoinStaticComponent extends JoinerComponent implements
 	}
 
 	@Override
-	public ThetaJoinStaticComponent setContentSensitiveThetaJoinWrapper(
+	public ThetaJoinComponent setContentSensitiveThetaJoinWrapper(
 			Type wrapper) {
 		_contentSensitiveThetaJoinWrapper = wrapper;
 		return this;
@@ -226,48 +226,48 @@ public class ThetaJoinStaticComponent extends JoinerComponent implements
 	// list of distinct keys, used for direct stream grouping and load-balancing
 	// ()
 	@Override
-	public ThetaJoinStaticComponent setFullHashList(List<String> fullHashList) {
+	public ThetaJoinComponent setFullHashList(List<String> fullHashList) {
 		throw new RuntimeException(
 				"Load balancing for Theta join is done inherently!");
 	}
 
 	@Override
-	public ThetaJoinStaticComponent setHashExpressions(
+	public ThetaJoinComponent setHashExpressions(
 			List<ValueExpression> hashExpressions) {
 		_hashExpressions = hashExpressions;
 		return this;
 	}
 
 	@Override
-	public ThetaJoinStaticComponent setInterComp(InterchangingComponent inter) {
+	public ThetaJoinComponent setInterComp(InterchangingComponent inter) {
 		_interComp = inter;
 		return this;
 	}
 
 	@Override
-	public ThetaJoinStaticComponent setJoinPredicate(Predicate joinPredicate) {
+	public ThetaJoinComponent setJoinPredicate(Predicate joinPredicate) {
 		_joinPredicate = joinPredicate;
 		return this;
 	}
 
 	@Override
-	public ThetaJoinStaticComponent setOutputPartKey(int... hashIndexes) {
+	public ThetaJoinComponent setOutputPartKey(int... hashIndexes) {
 		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
 	}
 
 	@Override
-	public ThetaJoinStaticComponent setOutputPartKey(List<Integer> hashIndexes) {
+	public ThetaJoinComponent setOutputPartKey(List<Integer> hashIndexes) {
 		_hashIndexes = hashIndexes;
 		return this;
 	}
 
-	public ThetaJoinStaticComponent setPartitioner(boolean isPartitioner) {
+	public ThetaJoinComponent setPartitioner(boolean isPartitioner) {
 		_isPartitioner = isPartitioner;
 		return this;
 	}
 
 	@Override
-	public ThetaJoinStaticComponent setPrintOut(boolean printOut) {
+	public ThetaJoinComponent setPrintOut(boolean printOut) {
 		_printOutSet = true;
 		_printOut = printOut;
 		return this;

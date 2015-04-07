@@ -18,33 +18,24 @@
  */
 
 
-package ch.epfl.data.squall.thetajoin.dynamic.advisor;
+package ch.epfl.data.squall.thetajoin.adaptive.storm_component;
 
-import java.io.Serializable;
+import java.util.List;
 
-/**
- * Class to represent a value of type T or null.
- */
-public class Maybe<T> implements Serializable {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	private final T data;
+import ch.epfl.data.squall.storage.TupleStorage;
+import ch.epfl.data.squall.storage.indexes.Index;
 
-	public Maybe() {
-		this.data = null;
+public class Quadruple {
+	public TupleStorage affectedStorage, oppositeStorage;
+	public List<Index> affectedIndexes, oppositeIndexes;
+
+	public Quadruple(TupleStorage affectedStorage,
+			TupleStorage oppositeStorage, List<Index> affectedIndexes,
+			List<Index> oppositeIndexes) {
+		this.affectedStorage = affectedStorage;
+		this.oppositeStorage = oppositeStorage;
+		this.affectedIndexes = affectedIndexes;
+		this.oppositeIndexes = oppositeIndexes;
 	}
 
-	public Maybe(T data) {
-		this.data = data;
-	}
-
-	public T get() {
-		return data;
-	}
-
-	public boolean isNone() {
-		return data == null;
-	}
 }
