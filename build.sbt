@@ -46,6 +46,8 @@ lazy val squall = (project in file("squall-core")).
     javacOptions ++= Seq(
       "-target", "1.7",
       "-source", "1.7"),
+    mainClass := Some("ch.epfl.data.squall.main.Main"),
+    unmanagedSourceDirectories in Compile += baseDirectory.value / "../squall-examples/squall-java-examples/src/",
     // Don't use scala as a dependency
     autoScalaLibrary := false,
     // Set the external library directories to ./contrib
@@ -53,7 +55,6 @@ lazy val squall = (project in file("squall-core")).
     // We need to add Clojars as a resolver, as Storm depends on some
     // libraries from there.
     resolvers += "clojars" at "https://clojars.org/repo",
-    mainClass := Some("ch.epfl.data.squall.main.Main"),
     libraryDependencies ++= Seq(
       // Versions that were changed when migrating from Lein to sbt are
       // commented just before the library
