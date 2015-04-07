@@ -44,13 +44,14 @@ import ch.epfl.data.squall.operators.SelectOperator;
 import ch.epfl.data.squall.predicates.BetweenPredicate;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
+import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.types.DateType;
 import ch.epfl.data.squall.types.DoubleType;
 import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.types.StringType;
 import ch.epfl.data.squall.types.Type;
 
-public class TPCH5PlanAvg {
+public class TPCH5PlanAvg extends QueryPlan {
 	private static void computeDates() {
 		// date2 = date1 + 1 year
 		final String date1Str = "1994-01-01";

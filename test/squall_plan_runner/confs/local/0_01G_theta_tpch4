@@ -1,6 +1,6 @@
 DIP_DISTRIBUTED false
 DIP_QUERY_NAME theta_tpch4
-DIP_QUERY_PLAN ch.epfl.data.plan_runner.query_plans.theta.ThetaTPCH4Plan
+DIP_QUERY_PLAN ch.epfl.data.squall.examples.imperative.theta.ThetaTPCH4Plan
 DIP_TOPOLOGY_NAME_PREFIX username
 DIP_NUM_ACKERS 0
 

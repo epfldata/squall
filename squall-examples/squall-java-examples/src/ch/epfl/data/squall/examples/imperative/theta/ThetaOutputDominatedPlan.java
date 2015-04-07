@@ -33,6 +33,7 @@ import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.AggregateSumOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
+import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
@@ -75,7 +76,7 @@ public class ThetaOutputDominatedPlan extends QueryPlan {
 				"NATION", dataPath + "nation" + extension)
 				.add(projectionNation).setOutputPartKey(hashNation);
 		_queryBuilder.add(relationNation);
-
+		
 		final AggregateOperator agg = new AggregateSumOperator(
 				new ColumnReference(_doubleConv, 0), conf);
 		// Empty parameters = Cartesian Product

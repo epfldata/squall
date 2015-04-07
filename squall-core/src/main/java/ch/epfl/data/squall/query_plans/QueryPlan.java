@@ -24,6 +24,10 @@ import java.util.Map;
 
 import ch.epfl.data.squall.components.Component;
 
+/*
+ * QueryPlan is for new imperative interface (such as HyracksPlan)
+ * Backward-compatible with old interface (which was using only QueryBuilder)
+ */
 public abstract class QueryPlan {
 	private final QueryBuilder _queryBuilder = new QueryBuilder();
 

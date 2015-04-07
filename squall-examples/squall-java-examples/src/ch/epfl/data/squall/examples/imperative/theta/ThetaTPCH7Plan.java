@@ -251,7 +251,7 @@ public class ThetaTPCH7Plan extends QueryPlan {
 		final AggregateOperator agg = new AggregateSumOperator(
 				new ColumnReference(_doubleConv, 4), conf).setGroupByColumns(
 				new ArrayList<Integer>(Arrays.asList(2, 0, 3)))
-				.SetWindowSemantics(5)
+				//.SetWindowSemantics(5)
 				;
 
 		final ColumnReference colN_C_O = new ColumnReference(_ic, 1);

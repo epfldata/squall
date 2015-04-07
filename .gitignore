@@ -29,5 +29,7 @@ test/data/tpch/50G
 test/results/tpch/10G
 test/results/tpch/50G
 
+contrib-eclipse-missing
+
 # sbt
 target/

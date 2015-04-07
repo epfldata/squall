@@ -1,5 +1,5 @@
 #!/bin/bash
-./recompile.sh
+#./recompile.sh
 rm /tmp/tmp*
 
 # Check command line of command line arguments 

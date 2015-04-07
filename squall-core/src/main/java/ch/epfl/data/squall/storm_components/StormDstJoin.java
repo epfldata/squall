@@ -361,7 +361,7 @@ public class StormDstJoin extends StormBoltComponent {
 				// in normal case
 				// TODO
 				StringBuilder oppositeTupleString = new StringBuilder(
-						oppositeStringTupleList.get(i));
+						String.valueOf(oppositeStringTupleList.get(i)));
 				lineageTimestamp = WindowSemanticsManager
 						.joinPreProcessingIfSlidingWindowSemantics(this,
 								oppositeTupleString, stormTupleRcv);
