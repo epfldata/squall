@@ -33,8 +33,6 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import backtype.storm.Config;
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.ewh.data_structures.JoinMatrix;
 import ch.epfl.data.squall.ewh.data_structures.Region;
 import ch.epfl.data.squall.ewh.data_structures.UJMPAdapterByteMatrix;
@@ -43,6 +41,8 @@ import ch.epfl.data.squall.ewh.visualize.VisualizerInterface;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.CustomReader;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SerializableFileInputStream;
@@ -50,7 +50,7 @@ import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class PullStatisticCollector {
 	private static class Hyracks implements PLCQueryPlan {
-		private IntegerConversion _ic = new IntegerConversion();
+		private IntegerType _ic = new IntegerType();
 
 		private Map _map;
 		private String _dataPath, _extension;
@@ -141,7 +141,7 @@ public class PullStatisticCollector {
 
 	private static <T extends Comparable<T>> List<T> readAllTupleJoinKeys(
 			CustomReader reader, ChainOperator operators,
-			TypeConversion<T> conv, Map map) {
+			Type<T> conv, Map map) {
 		List<T> tupleKeys = new ArrayList<T>();
 		T key = null;
 		while ((key = readTupleJoinKey(reader, operators, conv, map)) != null) {
@@ -174,7 +174,7 @@ public class PullStatisticCollector {
 
 	private static <T extends Comparable<T>> T readTupleJoinKey(
 			CustomReader reader, ChainOperator operators,
-			TypeConversion<T> conv, Map map) {
+			Type<T> conv, Map map) {
 		List<String> tuple = readTuple(reader, operators, map);
 		return tuple != null ? conv.fromString(tuple.get(0)) : null;
 	}

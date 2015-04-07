@@ -41,7 +41,6 @@ import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.JoinerComponent;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
@@ -52,11 +51,12 @@ import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.thetajoin.dynamic.storm_component.ThetaJoinerDynamicAdvisedEpochs;
 import ch.epfl.data.squall.thetajoin.dynamic.storm_component.ThetaReshufflerAdvisedEpochs;
-import ch.epfl.data.squall.thetajoin.matrix_mapping.EquiMatrixAssignment;
+import ch.epfl.data.squall.thetajoin.dynamic.storm_matrix_mapping.ThetaDataMigrationJoinerToReshufflerMapping;
+import ch.epfl.data.squall.thetajoin.dynamic.storm_matrix_mapping.ThetaJoinDynamicMapping;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ContentInsensitiveMatrixAssignment;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
-import ch.epfl.data.squall.utilities.thetajoin_dynamic.ThetaDataMigrationJoinerToReshufflerMapping;
-import ch.epfl.data.squall.utilities.thetajoin_dynamic.ThetaJoinDynamicMapping;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
 public class ThetaJoinDynamicComponentAdvisedEpochs extends JoinerComponent
@@ -217,7 +217,7 @@ public class ThetaJoinDynamicComponentAdvisedEpochs extends JoinerComponent
 					_secondParent.getName() + "_CARD");
 		}
 
-		final EquiMatrixAssignment _currentMappingAssignment = new EquiMatrixAssignment(
+		final ContentInsensitiveMatrixAssignment _currentMappingAssignment = new ContentInsensitiveMatrixAssignment(
 				firstCardinality, secondCardinality, _joinerParallelism, -1);
 
 		final String dim = _currentMappingAssignment.getMappingDimensions();
@@ -301,7 +301,7 @@ public class ThetaJoinDynamicComponentAdvisedEpochs extends JoinerComponent
 
 	// TODO IMPLEMENT ME
 	@Override
-	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
+	public Component setContentSensitiveThetaJoinWrapper(Type wrapper) {
 		return this;
 	}
 

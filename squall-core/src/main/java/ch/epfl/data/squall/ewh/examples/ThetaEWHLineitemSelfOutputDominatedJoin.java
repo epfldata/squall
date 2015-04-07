@@ -27,11 +27,6 @@ import java.util.Map;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.theta.ThetaJoinComponentFactory;
-import ch.epfl.data.squall.conversion.DateIntegerConversion;
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.StringConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.AggregateCountOperator;
@@ -42,6 +37,11 @@ import ch.epfl.data.squall.predicates.AndPredicate;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
+import ch.epfl.data.squall.types.DateIntegerType;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.StringType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
@@ -49,9 +49,9 @@ public class ThetaEWHLineitemSelfOutputDominatedJoin {
 	// never actually tried
 
 	private QueryBuilder _queryBuilder = new QueryBuilder();
-	private static final TypeConversion<String> _stringConv = new StringConversion();
-	private static final TypeConversion<Integer> _dateIntConv = new DateIntegerConversion();
-	private static final IntegerConversion _ic = new IntegerConversion();
+	private static final Type<String> _stringConv = new StringType();
+	private static final Type<Integer> _dateIntConv = new DateIntegerType();
+	private static final IntegerType _ic = new IntegerType();
 
 	public ThetaEWHLineitemSelfOutputDominatedJoin(String dataPath,
 			String extension, Map conf) {
@@ -120,7 +120,7 @@ public class ThetaEWHLineitemSelfOutputDominatedJoin {
 			_queryBuilder.add(relationLineitem2);
 		}
 
-		NumericConversion keyType = (NumericConversion) _dateIntConv;
+		NumericType keyType = (NumericType) _dateIntConv;
 		ComparisonPredicate comparison = new ComparisonPredicate(
 				ComparisonPredicate.SYM_BAND_WITH_BOUNDS_OP, 1, keyType);
 		int firstKeyProject = 0;

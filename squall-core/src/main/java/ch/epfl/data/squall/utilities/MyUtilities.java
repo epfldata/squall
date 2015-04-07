@@ -51,10 +51,6 @@ import backtype.storm.tuple.Values;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.theta.ThetaJoinStaticComponent;
-import ch.epfl.data.squall.conversion.DateIntegerConversion;
-import ch.epfl.data.squall.conversion.DoubleConversion;
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.ewh.algorithms.DenseMonotonicWeightPrecomputation;
 import ch.epfl.data.squall.ewh.algorithms.PWeightPrecomputation;
 import ch.epfl.data.squall.ewh.algorithms.ShallowCoarsener;
@@ -84,17 +80,24 @@ import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.StormSrcHarmonizer;
-import ch.epfl.data.squall.thetajoin.matrix_mapping.ContentSensitiveMatrixAssignment;
-import ch.epfl.data.squall.thetajoin.matrix_mapping.MatrixAssignment;
+import ch.epfl.data.squall.storm_components.stream_grouping.BatchStreamGrouping;
+import ch.epfl.data.squall.storm_components.stream_grouping.HashStreamGrouping;
+import ch.epfl.data.squall.storm_components.stream_grouping.ShuffleStreamGrouping;
+import ch.epfl.data.squall.storm_components.theta.stream_grouping.ContentInsensitiveThetaJoinGrouping;
+import ch.epfl.data.squall.storm_components.theta.stream_grouping.ContentSensitiveThetaJoinGrouping;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ContentSensitiveMatrixAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.MatrixAssignment;
+import ch.epfl.data.squall.types.DateIntegerType;
+import ch.epfl.data.squall.types.DoubleType;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.SystemParameters.HistogramType;
-import ch.epfl.data.squall.utilities.thetajoin_static.ContentSensitiveThetaJoinStaticMapping;
-import ch.epfl.data.squall.utilities.thetajoin_static.ThetaJoinStaticMapping;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
 public class MyUtilities {
 	public static QueryBuilder addEWHSampler(Component firstParent,
 			Component secondParent, int firstKeyProject, int secondKeyProject,
-			QueryBuilder queryPlan, NumericConversion keyType,
+			QueryBuilder queryPlan, NumericType keyType,
 			ComparisonPredicate comparison, Map conf) {
 		ProjectOperator project1 = new ProjectOperator(
 				new int[] { firstKeyProject });
@@ -107,7 +110,7 @@ public class MyUtilities {
 	public static QueryBuilder addEWHSampler(Component firstParent,
 			Component secondParent, ProjectOperator project1,
 			ProjectOperator project2, QueryBuilder queryBuilder,
-			NumericConversion keyType, ComparisonPredicate comparison, Map conf) {
+			NumericType keyType, ComparisonPredicate comparison, Map conf) {
 		int firstRelSize = SystemParameters.getInt(conf, "FIRST_REL_SIZE");
 		int secondRelSize = SystemParameters.getInt(conf, "SECOND_REL_SIZE");
 		int numLastJoiners = SystemParameters.getInt(conf, "PAR_LAST_JOINERS");
@@ -153,7 +156,7 @@ public class MyUtilities {
 
 	public static QueryBuilder addOkcanSampler(Component firstParent,
 			Component secondParent, int firstKeyProject, int secondKeyProject,
-			QueryBuilder queryPlan, NumericConversion keyType,
+			QueryBuilder queryPlan, NumericType keyType,
 			ComparisonPredicate comparison, Map conf) {
 		ProjectOperator project1 = new ProjectOperator(
 				new int[] { firstKeyProject });
@@ -167,7 +170,7 @@ public class MyUtilities {
 	public static QueryBuilder addOkcanSampler(Component firstParent,
 			Component secondParent, ProjectOperator project1,
 			ProjectOperator project2, QueryBuilder queryBuilder,
-			NumericConversion keyType, ComparisonPredicate comparison, Map conf) {
+			NumericType keyType, ComparisonPredicate comparison, Map conf) {
 		int firstRelSize = SystemParameters.getInt(conf, "FIRST_REL_SIZE");
 		int secondRelSize = SystemParameters.getInt(conf, "SECOND_REL_SIZE");
 		int firstNumOfBuckets = SystemParameters.getInt(conf,
@@ -214,7 +217,7 @@ public class MyUtilities {
 
 	public static QueryBuilder addSrcHistogram(Component relationJPS1,
 			int firstKeyProject, Component relationJPS2, int secondKeyProject,
-			NumericConversion keyType, ComparisonPredicate comparison,
+			NumericType keyType, ComparisonPredicate comparison,
 			boolean isEWHD2Histogram, boolean isEWHS1Histogram, Map conf) {
 		QueryBuilder queryBuilder = new QueryBuilder();
 		int relSize1 = -1, relSize2 = -1;
@@ -359,7 +362,7 @@ public class MyUtilities {
 
 	public static InputDeclarer attachEmitterFilteredRangeMulticast(
 			String streamId, Map map, ComparisonPredicate comparison,
-			NumericConversion wrapper, HistogramType dstHistType,
+			NumericType wrapper, HistogramType dstHistType,
 			HistogramType srcHistType, String parentCompName,
 			InputDeclarer currentBolt, StormEmitter emitter1,
 			StormEmitter... emittersArray) {
@@ -412,7 +415,7 @@ public class MyUtilities {
 
 	// TODO the following two methods can be shortened by invoking each other
 	public static InputDeclarer attachEmitterRange(Map map,
-			NumericConversion wrapper, HistogramType histType,
+			NumericType wrapper, HistogramType histType,
 			InputDeclarer currentBolt, StormEmitter emitter1,
 			StormEmitter... emittersArray) {
 		final List<StormEmitter> emittersList = new ArrayList<StormEmitter>();
@@ -431,7 +434,7 @@ public class MyUtilities {
 	}
 
 	public static InputDeclarer attachEmitterRange(Map map,
-			NumericConversion wrapper, HistogramType histType,
+			NumericType wrapper, HistogramType histType,
 			InputDeclarer currentBolt, String emitterId1,
 			String... emitterIdArray) {
 		final List<String> emittersIdsList = new ArrayList<String>();
@@ -446,7 +449,7 @@ public class MyUtilities {
 	}
 
 	public static InputDeclarer attachEmitterRangeMulticast(Map map,
-			ComparisonPredicate comparison, NumericConversion wrapper,
+			ComparisonPredicate comparison, NumericType wrapper,
 			HistogramType histType, InputDeclarer currentBolt,
 			StormEmitter emitter1, StormEmitter... emittersArray) {
 		final List<StormEmitter> emittersList = new ArrayList<StormEmitter>();
@@ -464,7 +467,7 @@ public class MyUtilities {
 	}
 
 	public static InputDeclarer attachEmitterRangeMulticast(String streamId,
-			Map map, ComparisonPredicate comparison, NumericConversion wrapper,
+			Map map, ComparisonPredicate comparison, NumericType wrapper,
 			HistogramType histType, InputDeclarer currentBolt,
 			StormEmitter emitter1, StormEmitter... emittersArray) {
 		final List<StormEmitter> emittersList = new ArrayList<StormEmitter>();
@@ -752,7 +755,7 @@ public class MyUtilities {
 		int xSize = sampleMatrix.getXSize();
 		int ySize = sampleMatrix.getYSize();
 		ComparisonPredicate cp = sampleMatrix.getComparisonPredicate();
-		NumericConversion wrapper = sampleMatrix.getWrapper();
+		NumericType wrapper = sampleMatrix.getWrapper();
 		Map conf = sampleMatrix.getConfiguration();
 
 		// create matrix and fill it with the joinAttributes (keys)
@@ -1032,11 +1035,11 @@ public class MyUtilities {
 		return SystemParameters.getInt(map, compName + "_BS");
 	}
 
-	public static TypeConversion getDominantNumericType(
+	public static Type getDominantNumericType(
 			List<ValueExpression> veList) {
-		TypeConversion wrapper = veList.get(0).getType();
+		Type wrapper = veList.get(0).getType();
 		for (int i = 1; i < veList.size(); i++) {
-			final TypeConversion currentType = veList.get(1).getType();
+			final Type currentType = veList.get(1).getType();
 			if (isDominant(currentType, wrapper))
 				wrapper = currentType;
 		}
@@ -1254,7 +1257,7 @@ public class MyUtilities {
 		if (isSample) {
 
 			// obtain keys from positions: both keys and positions are inclusive
-			NumericConversion wrapper = joinMatrix.getWrapper();
+			NumericType wrapper = joinMatrix.getWrapper();
 			if (x1 == 0) {
 				kx1 = (JAT) wrapper.getMinValue();
 			} else {
@@ -1309,10 +1312,10 @@ public class MyUtilities {
 	 * Does bigger dominates over smaller? For (bigger, smaller) = (double,
 	 * long) answer is yes.
 	 */
-	private static boolean isDominant(TypeConversion bigger,
-			TypeConversion smaller) {
+	private static boolean isDominant(Type bigger,
+			Type smaller) {
 		// for now we only have two numeric types: double and long
-		if (bigger instanceof DoubleConversion)
+		if (bigger instanceof DoubleType)
 			return true;
 		else
 			return false;
@@ -1733,7 +1736,7 @@ public class MyUtilities {
 	public static InputDeclarer thetaAttachEmitterComponents(
 			InputDeclarer currentBolt, StormEmitter emitter1,
 			StormEmitter emitter2, List<String> allCompNames,
-			MatrixAssignment assignment, Map map, TypeConversion wrapper) {
+			MatrixAssignment assignment, Map map, Type wrapper) {
 
 		// MatrixAssignment assignment = new MatrixAssignment(firstRelationSize,
 		// secondRelationSize, parallelism,-1);
@@ -1746,11 +1749,11 @@ public class MyUtilities {
 		CustomStreamGrouping mapping = null;
 
 		if (assignment instanceof ContentSensitiveMatrixAssignment) {
-			mapping = new ContentSensitiveThetaJoinStaticMapping(
+			mapping = new ContentSensitiveThetaJoinGrouping(
 					firstEmitterIndex, secondEmitterIndex, assignment, map,
 					wrapper);
 		} else
-			mapping = new ThetaJoinStaticMapping(firstEmitterIndex,
+			mapping = new ContentInsensitiveThetaJoinGrouping(firstEmitterIndex,
 					secondEmitterIndex, assignment, map);
 
 		final ArrayList<StormEmitter> emittersList = new ArrayList<StormEmitter>();
@@ -1778,7 +1781,7 @@ public class MyUtilities {
 		final String secondEmitterIndex = String.valueOf(allCompNames
 				.indexOf(emitter2.getName()));
 
-		final ThetaJoinStaticMapping mapping = new ThetaJoinStaticMapping(
+		final ContentInsensitiveThetaJoinGrouping mapping = new ContentInsensitiveThetaJoinGrouping(
 				firstEmitterIndex, secondEmitterIndex, assignment, map);
 
 		final ArrayList<StormEmitter> emittersList = new ArrayList<StormEmitter>();
@@ -1796,10 +1799,10 @@ public class MyUtilities {
 	// For DateIntegerConversion, we want 1992-02-01 instead of 19920201
 	// and there the default toString method returns 19920201
 	public static <JAT extends Comparable<JAT>> String toSpecialString(JAT key,
-			NumericConversion wrapper) {
+			NumericType wrapper) {
 		String strKey;
-		if (wrapper instanceof DateIntegerConversion) {
-			DateIntegerConversion dateIntConv = (DateIntegerConversion) wrapper;
+		if (wrapper instanceof DateIntegerType) {
+			DateIntegerType dateIntConv = (DateIntegerType) wrapper;
 			strKey = dateIntConv.toStringWithDashes((Integer) key);
 		} else {
 			strKey = wrapper.toString(key);

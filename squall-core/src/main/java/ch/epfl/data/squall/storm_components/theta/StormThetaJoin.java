@@ -29,7 +29,6 @@ import backtype.storm.topology.InputDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Tuple;
 import ch.epfl.data.squall.components.ComponentProperties;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storage.TupleStorage;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
@@ -37,9 +36,10 @@ import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.StormJoinerBoltComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
-import ch.epfl.data.squall.thetajoin.matrix_mapping.ContentSensitiveMatrixAssignment;
-import ch.epfl.data.squall.thetajoin.matrix_mapping.EquiMatrixAssignment;
-import ch.epfl.data.squall.thetajoin.matrix_mapping.MatrixAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ContentInsensitiveMatrixAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ContentSensitiveMatrixAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.MatrixAssignment;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.squall.utilities.SystemParameters;
@@ -57,7 +57,7 @@ public class StormThetaJoin extends StormJoinerBoltComponent {
 			boolean isPartitioner, int hierarchyPosition,
 			TopologyBuilder builder, TopologyKiller killer, Config conf,
 			InterchangingComponent interComp, boolean isContentSensitive,
-			TypeConversion wrapper) {
+			Type wrapper) {
 		super(firstEmitter, secondEmitter, cp, allCompNames, joinPredicate,
 				hierarchyPosition, builder, killer, isPartitioner, conf);
 		_statsUtils = new StatisticsUtilities(getConf(), LOG);
@@ -71,7 +71,7 @@ public class StormThetaJoin extends StormJoinerBoltComponent {
 			final int secondCardinality = SystemParameters.getInt(conf,
 					secondEmitter.getName() + "_CARD");
 			// regions assignment exist only for the last-level join
-			_currentMappingAssignment = new EquiMatrixAssignment(
+			_currentMappingAssignment = new ContentInsensitiveMatrixAssignment(
 					firstCardinality, secondCardinality, parallelism, -1);
 		} else {
 			_currentMappingAssignment = new ContentSensitiveMatrixAssignment(

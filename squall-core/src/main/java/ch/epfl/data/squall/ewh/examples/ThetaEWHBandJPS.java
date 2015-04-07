@@ -29,11 +29,6 @@ import org.apache.log4j.Logger;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.theta.ThetaJoinComponentFactory;
-import ch.epfl.data.squall.conversion.DateIntegerConversion;
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.StringConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.ewh.components.DummyComponent;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.operators.PrintOperator;
@@ -41,6 +36,11 @@ import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
+import ch.epfl.data.squall.types.DateIntegerType;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.StringType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.SystemParameters.HistogramType;
@@ -50,9 +50,9 @@ public class ThetaEWHBandJPS {
 	private static Logger LOG = Logger.getLogger(ThetaEWHBandJPS.class);
 
 	private QueryBuilder _queryBuilder = new QueryBuilder();
-	private static final TypeConversion<String> _stringConv = new StringConversion();
-	private static final IntegerConversion _ic = new IntegerConversion();
-	private DateIntegerConversion _dic = new DateIntegerConversion();
+	private static final Type<String> _stringConv = new StringType();
+	private static final IntegerType _ic = new IntegerType();
+	private DateIntegerType _dic = new DateIntegerType();
 
 	public ThetaEWHBandJPS(String dataPath, String extension, Map conf) {
 		// creates materialized relations
@@ -121,7 +121,7 @@ public class ThetaEWHBandJPS {
 			_queryBuilder.add(relationJPS2);
 		}
 
-		NumericConversion keyType = _ic;
+		NumericType keyType = _ic;
 		int comparisonValue = 1; // default for this join
 		if (SystemParameters.isExisting(conf, "COMPARISON_VALUE")) {
 			comparisonValue = SystemParameters.getInt(conf, "COMPARISON_VALUE");

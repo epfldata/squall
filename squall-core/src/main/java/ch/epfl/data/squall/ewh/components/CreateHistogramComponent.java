@@ -30,8 +30,6 @@ import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.EquiJoinComponent;
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.ewh.storm_components.CreateHistogramBolt;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
@@ -42,6 +40,8 @@ import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storage.AggregationStorage;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.Type;
 
 // equi-depth histogram on one or both input relations
 public class CreateHistogramComponent implements Component {
@@ -54,10 +54,10 @@ public class CreateHistogramComponent implements Component {
 
 	private int _numOfLastJoiners;
 	private ComparisonPredicate _comparison;
-	private NumericConversion _wrapper;
+	private NumericType _wrapper;
 
 	public CreateHistogramComponent(Component r1, Component r2,
-			NumericConversion keyType, ComparisonPredicate comparison,
+			NumericType keyType, ComparisonPredicate comparison,
 			int numOfLastJoiners) {
 		_r1 = r1;
 		_r2 = r2;
@@ -185,7 +185,7 @@ public class CreateHistogramComponent implements Component {
 	}
 
 	@Override
-	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
+	public Component setContentSensitiveThetaJoinWrapper(Type wrapper) {
 		throw new RuntimeException("Should not be here!");
 	}
 

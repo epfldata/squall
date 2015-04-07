@@ -29,7 +29,7 @@ import java.util.Random;
 
 import org.apache.log4j.Logger;
 
-import ch.epfl.data.squall.conversion.DateConversion;
+import ch.epfl.data.squall.types.DateType;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 import com.sleepycat.bind.tuple.LongBinding;
@@ -72,7 +72,7 @@ public class BerkeleyDBStoreSkewed<KeyType> extends BerkeleyDBStore<KeyType> {
 
 	private static Logger LOG = Logger.getLogger(BerkeleyDBStoreSkewed.class);
 
-	private final DateConversion _dc = new DateConversion();
+	private final DateType _dc = new DateType();
 	private Random randomGen = new Random();
 
 	private int DISPERSION = 10000;

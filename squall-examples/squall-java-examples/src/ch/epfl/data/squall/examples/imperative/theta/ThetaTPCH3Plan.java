@@ -30,12 +30,6 @@ import org.apache.log4j.Logger;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.theta.ThetaJoinComponentFactory;
-import ch.epfl.data.squall.conversion.DateConversion;
-import ch.epfl.data.squall.conversion.DoubleConversion;
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.StringConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.Multiplication;
 import ch.epfl.data.squall.expressions.Subtraction;
@@ -49,18 +43,24 @@ import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
+import ch.epfl.data.squall.types.DateType;
+import ch.epfl.data.squall.types.DoubleType;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.StringType;
+import ch.epfl.data.squall.types.Type;
 
 public class ThetaTPCH3Plan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(ThetaTPCH3Plan.class);
 
-	private static final IntegerConversion _ic = new IntegerConversion();
+	private static final IntegerType _ic = new IntegerType();
 
 	private static final String _customerMktSegment = "BUILDING";
 	private static final String _dateStr = "1995-03-15";
 
-	private static final TypeConversion<Date> _dateConv = new DateConversion();
-	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
-	private static final TypeConversion<String> _sc = new StringConversion();
+	private static final Type<Date> _dateConv = new DateType();
+	private static final NumericType<Double> _doubleConv = new DoubleType();
+	private static final Type<String> _sc = new StringType();
 	private static final Date _date = _dateConv.fromString(_dateStr);
 
 	private QueryBuilder _queryBuilder = new QueryBuilder();

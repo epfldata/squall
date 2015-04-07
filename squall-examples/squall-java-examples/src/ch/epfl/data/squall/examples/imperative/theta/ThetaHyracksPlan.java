@@ -29,7 +29,6 @@ import org.apache.log4j.Logger;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.theta.ThetaJoinComponentFactory;
-import ch.epfl.data.squall.conversion.IntegerConversion;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.operators.AggregateCountOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
@@ -37,13 +36,14 @@ import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
+import ch.epfl.data.squall.types.IntegerType;
 
 public class ThetaHyracksPlan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(ThetaHyracksPlan.class);
 
 	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
-	private static final IntegerConversion _ic = new IntegerConversion();
+	private static final IntegerType _ic = new IntegerType();
 
 	public ThetaHyracksPlan(String dataPath, String extension, Map conf) {
 		final int Theta_JoinType = ThetaQueryPlansParameters

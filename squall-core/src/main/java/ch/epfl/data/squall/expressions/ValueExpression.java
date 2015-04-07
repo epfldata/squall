@@ -23,7 +23,7 @@ package ch.epfl.data.squall.expressions;
 import java.io.Serializable;
 import java.util.List;
 
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 
 public interface ValueExpression<T extends Comparable<T>> extends Serializable {
@@ -40,7 +40,7 @@ public interface ValueExpression<T extends Comparable<T>> extends Serializable {
 	// IntegerYearFromDate)
 	public List<ValueExpression> getInnerExpressions();
 
-	public TypeConversion getType();
+	public Type getType();
 
 	public void inverseNumber();
 

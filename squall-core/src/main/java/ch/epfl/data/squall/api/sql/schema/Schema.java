@@ -27,7 +27,7 @@ import ch.epfl.data.squall.api.sql.schema.parser.ParseException;
 import ch.epfl.data.squall.api.sql.schema.parser.SchemaParser;
 import ch.epfl.data.squall.api.sql.schema.parser.SchemaParser.ColumnInfo;
 import ch.epfl.data.squall.api.sql.schema.parser.SchemaParser.TableInfo;
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
@@ -169,7 +169,7 @@ public class Schema {
 	/*
 	 * For a field N1.NATIONNAME, fullSchemaColumnName is NATION.NATIONNAME
 	 */
-	public TypeConversion getType(String fullSchemaColumnName) {
+	public Type getType(String fullSchemaColumnName) {
 		final ColumnInfo column = getColumnInfo(fullSchemaColumnName);
 		if (column == null)
 			throw new RuntimeException("Column " + fullSchemaColumnName

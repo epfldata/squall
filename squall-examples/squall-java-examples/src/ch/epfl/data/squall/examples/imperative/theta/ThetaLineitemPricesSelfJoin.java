@@ -28,11 +28,6 @@ import java.util.Map;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.theta.ThetaJoinComponentFactory;
-import ch.epfl.data.squall.conversion.DateConversion;
-import ch.epfl.data.squall.conversion.DoubleConversion;
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.StringConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.AggregateCountOperator;
@@ -41,15 +36,20 @@ import ch.epfl.data.squall.operators.SelectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
+import ch.epfl.data.squall.types.DateType;
+import ch.epfl.data.squall.types.DoubleType;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.StringType;
+import ch.epfl.data.squall.types.Type;
 
 public class ThetaLineitemPricesSelfJoin {
 
 	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final String _date1Str = "1993-06-17";
-	private static final TypeConversion<Date> _dateConv = new DateConversion();
-	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
+	private static final Type<Date> _dateConv = new DateType();
+	private static final NumericType<Double> _doubleConv = new DoubleType();
 	private static final Date _date1 = _dateConv.fromString(_date1Str);
-	private static final TypeConversion<String> _stringConv = new StringConversion();
+	private static final Type<String> _stringConv = new StringType();
 
 	public ThetaLineitemPricesSelfJoin(String dataPath, String extension,
 			Map conf) {

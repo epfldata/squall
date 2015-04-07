@@ -22,8 +22,8 @@ package ch.epfl.data.squall.expressions;
 
 import java.util.List;
 
-import ch.epfl.data.squall.conversion.LongConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.LongType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 
 // concatenates an integer key (e.g. Orders.Custkey) with a double / 10.000 (e.g. Orders.TotalPrice)
@@ -31,7 +31,7 @@ import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 public class ConcatIntDouble implements ValueExpression<Long> {
 	private static final long serialVersionUID = 1L;
 
-	private final TypeConversion<Long> _wrapper = new LongConversion();
+	private final Type<Long> _wrapper = new LongType();
 
 	private int _intIndex;
 	private int _dblIndex;
@@ -83,7 +83,7 @@ public class ConcatIntDouble implements ValueExpression<Long> {
 	}
 
 	@Override
-	public TypeConversion getType() {
+	public Type getType() {
 		return _wrapper;
 	}
 

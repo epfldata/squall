@@ -25,13 +25,13 @@ import java.util.List;
 
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.squall.types.Type;
 
 public interface Component extends Serializable, ComponentProperties,
 		StormEmitter {
@@ -48,7 +48,7 @@ public interface Component extends Serializable, ComponentProperties,
 	// methods necessary for query plan processing
 	public void setChild(Component child);
 
-	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper);
+	public Component setContentSensitiveThetaJoinWrapper(Type wrapper);
 
 	// method necessary for direct grouping and load balancing:
 	// at receiver side:

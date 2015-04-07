@@ -27,17 +27,17 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import ch.epfl.data.squall.components.DataSourceComponent;
-import ch.epfl.data.squall.conversion.IntegerConversion;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
+import ch.epfl.data.squall.types.IntegerType;
 
 public class HyracksL1Plan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(HyracksL1Plan.class);
 
 	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
-	private static final IntegerConversion _ic = new IntegerConversion();
+	private static final IntegerType _ic = new IntegerType();
 
 	public HyracksL1Plan(String dataPath, String extension, Map conf) {
 		// -------------------------------------------------------------------------------------

@@ -22,15 +22,15 @@ package ch.epfl.data.squall.expressions;
 
 import java.util.List;
 
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 
 //translates double 123.45 to 12345
 public class DoubleToInt implements ValueExpression<Integer> {
 	private static final long serialVersionUID = 1L;
 
-	private final TypeConversion<Integer> _wrapper = new IntegerConversion();
+	private final Type<Integer> _wrapper = new IntegerType();
 
 	private int _columnIndex;
 
@@ -69,7 +69,7 @@ public class DoubleToInt implements ValueExpression<Integer> {
 	}
 
 	@Override
-	public TypeConversion getType() {
+	public Type getType() {
 		return _wrapper;
 	}
 

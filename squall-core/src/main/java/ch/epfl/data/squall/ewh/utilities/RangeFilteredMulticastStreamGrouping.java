@@ -29,8 +29,8 @@ import org.apache.log4j.Logger;
 
 import backtype.storm.generated.GlobalStreamId;
 import backtype.storm.task.WorkerTopologyContext;
-import ch.epfl.data.squall.conversion.NumericConversion;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
+import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.SystemParameters.HistogramType;
@@ -55,7 +55,7 @@ public class RangeFilteredMulticastStreamGrouping extends
 
 	// with multicast
 	public RangeFilteredMulticastStreamGrouping(Map map,
-			ComparisonPredicate comparison, NumericConversion wrapper,
+			ComparisonPredicate comparison, NumericType wrapper,
 			HistogramType dstHistType, HistogramType srcHistType,
 			String parentCompName) {
 		super(map, comparison, wrapper, dstHistType);

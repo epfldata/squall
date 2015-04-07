@@ -27,8 +27,6 @@ import java.util.Map;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.theta.ThetaJoinComponentFactory;
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.StringConversion;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.ProjectOperator;
@@ -39,13 +37,15 @@ import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.StringType;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class ThetaOrdersLineFluctuationsPlan extends QueryPlan {
 
 	private QueryBuilder _queryBuilder = new QueryBuilder();
-	private static final IntegerConversion _ic = new IntegerConversion();
-	private static final StringConversion _sc = new StringConversion();
+	private static final IntegerType _ic = new IntegerType();
+	private static final StringType _sc = new StringType();
 
 	public ThetaOrdersLineFluctuationsPlan(String dataPath, String extension,
 			Map conf) {

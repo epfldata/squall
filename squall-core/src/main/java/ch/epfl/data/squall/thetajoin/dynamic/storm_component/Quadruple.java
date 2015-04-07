@@ -23,7 +23,7 @@ package ch.epfl.data.squall.thetajoin.dynamic.storm_component;
 import java.util.List;
 
 import ch.epfl.data.squall.storage.TupleStorage;
-import ch.epfl.data.squall.thetajoin.indexes.Index;
+import ch.epfl.data.squall.storage.indexes.Index;
 
 public class Quadruple {
 	public TupleStorage affectedStorage, oppositeStorage;

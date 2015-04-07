@@ -24,9 +24,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import ch.epfl.data.squall.conversion.StringConversion;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueExpression;
+import ch.epfl.data.squall.types.StringType;
 import ch.epfl.data.squall.visitors.OperatorVisitor;
 
 public class ProjectOperator implements Operator {
@@ -39,7 +39,7 @@ public class ProjectOperator implements Operator {
 	public ProjectOperator(int... projectIndexes) {
 		for (final int columnNumber : projectIndexes) {
 			final ColumnReference columnReference = new ColumnReference(
-					new StringConversion(), columnNumber);
+					new StringType(), columnNumber);
 			_veList.add(columnReference);
 		}
 	}

@@ -30,9 +30,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
-import ch.epfl.data.squall.conversion.DateConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
+import ch.epfl.data.squall.types.DateType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 import com.sleepycat.bind.serial.ClassCatalog;
@@ -122,7 +122,7 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStorage<KeyType> {
 
 	private Database _db;
 	private SecondaryDatabase _timeStampDB;
-	private static final DateConversion _dc = new DateConversion();
+	private static final DateType _dc = new DateType();
 	private final Class<KeyType> _type;
 	private int _size;
 
@@ -502,7 +502,7 @@ public class BerkeleyDBStore<KeyType> implements BPlusTreeStorage<KeyType> {
 	}
 
 	public void testDates() {
-		TypeConversion<Date> dateConv = new DateConversion();
+		Type<Date> dateConv = new DateType();
 
 		Date key1 = dateConv.fromString("2013-10-31");
 		String value11 = "12";

@@ -29,8 +29,8 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.operators.AggregateOperator;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class AggregationStorage<V> extends KeyValueStore<Object, V> {
@@ -39,14 +39,14 @@ public class AggregationStorage<V> extends KeyValueStore<Object, V> {
 	private static Logger LOG = Logger.getLogger(AggregationStorage.class);
 
 	private boolean _singleEntry;
-	private final TypeConversion _wrapper;
+	private final Type _wrapper;
 	private final AggregateOperator _outerAggOp;
 	private static final String SINGLE_ENTRY_KEY = "SEK"; /* Single entry key */
 
 	// private static final int FINAL_AGGREGATION_TIMEOUT = 10000; /* msecs */
 
 	public AggregationStorage(AggregateOperator outerAggOp,
-			TypeConversion wrapper, Map map, boolean singleEntry) {
+			Type wrapper, Map map, boolean singleEntry) {
 		super(singleEntry ? 1 : SystemParameters.getInt(map,
 				"STORAGE_MEMORY_SIZE_MB"), map);
 		_wrapper = wrapper;

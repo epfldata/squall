@@ -27,11 +27,6 @@ import java.util.Map;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.theta.ThetaJoinComponentFactory;
-import ch.epfl.data.squall.conversion.DoubleConversion;
-import ch.epfl.data.squall.conversion.LongConversion;
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.StringConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.ewh.components.DummyComponent;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueExpression;
@@ -45,6 +40,11 @@ import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
+import ch.epfl.data.squall.types.DoubleType;
+import ch.epfl.data.squall.types.LongType;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.StringType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.SystemParameters.HistogramType;
@@ -52,9 +52,9 @@ import ch.epfl.data.squall.utilities.SystemParameters.HistogramType;
 //this is Eocd for high scalability
 public class ThetaEWHOrdersScaleJoin {
 	private QueryBuilder _queryBuilder = new QueryBuilder();
-	private static final TypeConversion<String> _stringConv = new StringConversion();
-	private static final LongConversion _lc = new LongConversion();
-	private static final DoubleConversion _dc = new DoubleConversion();
+	private static final Type<String> _stringConv = new StringType();
+	private static final LongType _lc = new LongType();
+	private static final DoubleType _dc = new DoubleType();
 
 	private static ValueSpecification RANGE1_LOWER;
 	private static ValueSpecification RANGE1_UPPER;
@@ -158,7 +158,7 @@ public class ThetaEWHOrdersScaleJoin {
 			_queryBuilder.add(relationOrders2);
 		}
 
-		NumericConversion keyType = _lc;
+		NumericType keyType = _lc;
 		ComparisonPredicate comparison = new ComparisonPredicate(
 				ComparisonPredicate.EQUAL_OP);
 		int firstKeyProject = 0;

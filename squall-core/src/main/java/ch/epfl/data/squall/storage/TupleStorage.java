@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import ch.epfl.data.squall.predicates.Predicate;
-import ch.epfl.data.squall.thetajoin.indexes.Index;
+import ch.epfl.data.squall.storage.indexes.Index;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.visitors.PredicateUpdateIndexesVisitor;
 

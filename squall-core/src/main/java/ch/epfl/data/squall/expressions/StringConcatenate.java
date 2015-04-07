@@ -24,8 +24,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import ch.epfl.data.squall.conversion.StringConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.StringType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 
@@ -70,8 +70,8 @@ public class StringConcatenate implements ValueExpression<String> {
 	}
 
 	@Override
-	public TypeConversion getType() {
-		return new StringConversion();
+	public Type getType() {
+		return new StringType();
 	}
 
 	@Override

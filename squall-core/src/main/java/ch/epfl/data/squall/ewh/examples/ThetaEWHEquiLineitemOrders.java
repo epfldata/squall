@@ -27,9 +27,6 @@ import java.util.Map;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.theta.ThetaJoinComponentFactory;
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.StringConversion;
 import ch.epfl.data.squall.ewh.components.DummyComponent;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueSpecification;
@@ -38,13 +35,16 @@ import ch.epfl.data.squall.operators.SelectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.StringType;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class ThetaEWHEquiLineitemOrders {
 	private QueryBuilder _queryBuilder = new QueryBuilder();
-	private static final IntegerConversion _ic = new IntegerConversion();
-	private static final StringConversion _stringConv = new StringConversion();
+	private static final IntegerType _ic = new IntegerType();
+	private static final StringType _stringConv = new StringType();
 
 	public ThetaEWHEquiLineitemOrders(String dataPath, String extension,
 			Map conf) {
@@ -116,7 +116,7 @@ public class ThetaEWHEquiLineitemOrders {
 				.setOutputPartKey(hashOrders);
 		_queryBuilder.add(relationOrders);
 
-		NumericConversion keyType = _ic;
+		NumericType keyType = _ic;
 		ComparisonPredicate comparison = new ComparisonPredicate(
 				ComparisonPredicate.EQUAL_OP);
 		int firstKeyProject = 0;

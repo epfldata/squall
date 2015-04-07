@@ -25,15 +25,15 @@ import java.util.List;
 import java.util.Map;
 
 import ch.epfl.data.squall.components.DataSourceComponent;
-import ch.epfl.data.squall.conversion.DateIntegerConversion;
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.NumericConversion;
 import ch.epfl.data.squall.ewh.components.OkcanSampleMatrixComponent;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SampleOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
+import ch.epfl.data.squall.types.DateIntegerType;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class OkcanSampleMatrixPlan extends QueryPlan {
@@ -49,12 +49,12 @@ public class OkcanSampleMatrixPlan extends QueryPlan {
 				.getInt(conf, "FIRST_KEY_PROJECT");
 		int secondProjection = SystemParameters.getInt(conf,
 				"SECOND_KEY_PROJECT");
-		NumericConversion keyType;
+		NumericType keyType;
 		String keyTypeStr = SystemParameters.getString(conf, "KEY_TYPE_STR");
 		if (keyTypeStr.equals("DATE_INTEGER")) {
-			keyType = new DateIntegerConversion();
+			keyType = new DateIntegerType();
 		} else if (keyTypeStr.equals("INTEGER")) {
-			keyType = new IntegerConversion();
+			keyType = new IntegerType();
 		} else {
 			throw new RuntimeException("Unsupported type " + keyTypeStr);
 		}

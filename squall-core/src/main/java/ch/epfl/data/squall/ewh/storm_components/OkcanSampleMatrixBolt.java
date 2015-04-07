@@ -36,7 +36,6 @@ import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
-import ch.epfl.data.squall.conversion.NumericConversion;
 import ch.epfl.data.squall.ewh.algorithms.OkcanCandidateInputAlgorithm;
 import ch.epfl.data.squall.ewh.algorithms.OkcanCandidateOutputAlgorithm;
 import ch.epfl.data.squall.ewh.algorithms.TilingAlgorithm;
@@ -51,6 +50,7 @@ import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.utilities.DeepCopy;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
@@ -63,7 +63,7 @@ public class OkcanSampleMatrixBolt<JAT extends Number & Comparable<JAT>>
 	private StormEmitter _firstEmitter, _secondEmitter;
 	private final String _firstEmitterIndex, _secondEmitterIndex;
 	private final String _componentName;
-	private NumericConversion _wrapper;
+	private NumericType _wrapper;
 	private ComparisonPredicate _comparison;
 	private Map _conf;
 	private OutputCollector _collector;
@@ -83,7 +83,7 @@ public class OkcanSampleMatrixBolt<JAT extends Number & Comparable<JAT>>
 
 	public OkcanSampleMatrixBolt(StormEmitter firstEmitter,
 			StormEmitter secondEmitter, String componentName,
-			int numOfLastJoiners, NumericConversion<JAT> wrapper,
+			int numOfLastJoiners, NumericType<JAT> wrapper,
 			ComparisonPredicate comparison, int firstNumOfBuckets,
 			int secondNumOfBuckets, List<String> allCompNames,
 			TopologyBuilder builder, TopologyKiller killer, Config conf) {

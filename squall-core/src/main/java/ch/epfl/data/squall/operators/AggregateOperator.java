@@ -22,9 +22,9 @@ package ch.epfl.data.squall.operators;
 
 import java.util.List;
 
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.storage.BasicStore;
+import ch.epfl.data.squall.types.Type;
 
 public interface AggregateOperator<T> extends Operator {
 	public void clearStorage();
@@ -48,7 +48,7 @@ public interface AggregateOperator<T> extends Operator {
 
 	public int[] getWindowSemanticsInfo();
 
-	public TypeConversion getType();
+	public Type getType();
 
 	public boolean hasGroupBy();
 

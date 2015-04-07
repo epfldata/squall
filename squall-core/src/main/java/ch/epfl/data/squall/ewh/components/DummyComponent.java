@@ -31,7 +31,6 @@ import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.ewh.storm_components.DummyBolt;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
@@ -40,6 +39,7 @@ import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 
 /*
@@ -190,7 +190,7 @@ public class DummyComponent implements Component {
 	}
 
 	@Override
-	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
+	public Component setContentSensitiveThetaJoinWrapper(Type wrapper) {
 		return this;
 	}
 

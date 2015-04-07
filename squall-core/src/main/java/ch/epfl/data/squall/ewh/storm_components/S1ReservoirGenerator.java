@@ -42,13 +42,13 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-import ch.epfl.data.squall.conversion.NumericConversion;
 import ch.epfl.data.squall.ewh.data_structures.FixedSizePriorityQueue;
 import ch.epfl.data.squall.ewh.data_structures.KeyPriorityProbability;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.SystemParameters.HistogramType;
@@ -62,7 +62,7 @@ public class S1ReservoirGenerator<JAT extends Number & Comparable<JAT>> extends
 	private final String _d2CombinerIndex, _s1SourceIndex, _componentIndex,
 			_partitionerIndex;
 	private final String _componentName;
-	private NumericConversion _wrapper;
+	private NumericType _wrapper;
 	private ComparisonPredicate _comparison;
 	private Map _conf;
 	private OutputCollector _collector;
@@ -154,7 +154,7 @@ public class S1ReservoirGenerator<JAT extends Number & Comparable<JAT>> extends
 			String partitionerName,
 			boolean isEWHS1Histogram, // receives either d2 or d2equi from
 										// D2Combiner
-			NumericConversion<JAT> wrapper, ComparisonPredicate comparison,
+			NumericType<JAT> wrapper, ComparisonPredicate comparison,
 			int firstNumOfBuckets, int secondNumOfBuckets,
 			List<String> allCompNames, int hierarchyPosition,
 			TopologyBuilder builder, TopologyKiller killer, Config conf) {

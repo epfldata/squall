@@ -29,7 +29,6 @@ import org.apache.log4j.Logger;
 
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
@@ -45,6 +44,7 @@ import ch.epfl.data.squall.storm_components.StormDstTupleStorageBDB;
 import ch.epfl.data.squall.storm_components.StormDstTupleStorageJoin;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
@@ -250,7 +250,7 @@ public class EquiJoinComponent extends JoinerComponent implements Component {
 	}
 
 	@Override
-	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
+	public Component setContentSensitiveThetaJoinWrapper(Type wrapper) {
 		return this;
 	}
 

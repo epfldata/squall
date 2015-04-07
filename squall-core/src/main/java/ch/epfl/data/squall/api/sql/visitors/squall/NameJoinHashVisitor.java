@@ -35,9 +35,9 @@ import ch.epfl.data.squall.api.sql.util.NotFromMyBranchException;
 import ch.epfl.data.squall.api.sql.util.ParserUtil;
 import ch.epfl.data.squall.api.sql.util.TupleSchema;
 import ch.epfl.data.squall.components.Component;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueExpression;
+import ch.epfl.data.squall.types.Type;
 
 public class NameJoinHashVisitor extends IndexJoinHashVisitor {
 	private final NameTranslator _nt;
@@ -62,7 +62,7 @@ public class NameJoinHashVisitor extends IndexJoinHashVisitor {
 		final int position = _nt.indexOf(_tupleSchema, expr);
 		if (position != ParserUtil.NOT_FOUND) {
 			// we found an expression already in the tuple schema
-			final TypeConversion tc = _nt.getType(_tupleSchema, expr);
+			final Type tc = _nt.getType(_tupleSchema, expr);
 			final ValueExpression ve = new ColumnReference(tc, position,
 					ParserUtil.getStringExpr(expr));
 			pushToExprStack(ve);
@@ -93,7 +93,7 @@ public class NameJoinHashVisitor extends IndexJoinHashVisitor {
 			final int position = _nt.getColumnIndex(_tupleSchema, column);
 
 			// extract type for the column
-			final TypeConversion tc = _nt.getType(_tupleSchema, column);
+			final Type tc = _nt.getType(_tupleSchema, column);
 
 			final ValueExpression ve = new ColumnReference(tc, position,
 					ParserUtil.getStringExpr(column));

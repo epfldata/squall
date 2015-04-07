@@ -29,14 +29,14 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import ch.epfl.data.squall.components.JoinerComponent;
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.Addition;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.storage.AggregationStorage;
 import ch.epfl.data.squall.storage.BasicStore;
 import ch.epfl.data.squall.storage.WindowAggregationStorage;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.visitors.OperatorVisitor;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
@@ -57,7 +57,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements
 	private ProjectOperator _groupByProjection;
 	private int _numTuplesProcessed = 0;
 
-	private final NumericConversion _wrapper;
+	private final NumericType _wrapper;
 	private final ValueExpression<T> _ve;
 	private BasicStore<T> _storage;
 
@@ -67,7 +67,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements
 	private int _slideRangeSecs = -1;
 
 	public AggregateSumOperator(ValueExpression<T> ve, Map map) {
-		_wrapper = (NumericConversion) ve.getType();
+		_wrapper = (NumericType) ve.getType();
 		_ve = ve;
 		_map = map;
 		_storage = new AggregationStorage<T>(this, _wrapper, _map, true);
@@ -142,7 +142,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements
 	}
 
 	@Override
-	public TypeConversion getType() {
+	public Type getType() {
 		return _wrapper;
 	}
 

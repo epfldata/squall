@@ -28,14 +28,14 @@ import java.util.Map;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.SumCount;
-import ch.epfl.data.squall.conversion.SumCountConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.storage.AggregationStorage;
 import ch.epfl.data.squall.storage.BasicStore;
 import ch.epfl.data.squall.storage.WindowAggregationStorage;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.SumCount;
+import ch.epfl.data.squall.types.SumCountType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.visitors.OperatorVisitor;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
@@ -55,7 +55,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 	private ProjectOperator _groupByProjection;
 	private int _numTuplesProcessed = 0;
 
-	private final SumCountConversion _wrapper = new SumCountConversion();
+	private final SumCountType _wrapper = new SumCountType();
 	private final ValueExpression _ve;
 	private BasicStore<SumCount> _storage;
 
@@ -137,7 +137,7 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 	}
 
 	@Override
-	public TypeConversion getType() {
+	public Type getType() {
 		return _wrapper;
 	}
 
@@ -189,15 +189,15 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 		Double sumDelta;
 		Long countDelta;
 
-		final TypeConversion veType = _ve.getType();
-		if (veType instanceof SumCountConversion) {
+		final Type veType = _ve.getType();
+		if (veType instanceof SumCountType) {
 			// when merging results from multiple Components which have SumCount
 			// as the output
 			final SumCount sc = (SumCount) _ve.eval(tuple);
 			sumDelta = sc.getSum();
 			countDelta = sc.getCount();
 		} else {
-			final NumericConversion nc = (NumericConversion) veType;
+			final NumericType nc = (NumericType) veType;
 			sumDelta = nc.toDouble(_ve.eval(tuple));
 			countDelta = 1L;
 		}

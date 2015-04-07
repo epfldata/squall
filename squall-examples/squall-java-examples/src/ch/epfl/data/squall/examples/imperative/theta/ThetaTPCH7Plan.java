@@ -30,12 +30,6 @@ import org.apache.log4j.Logger;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.theta.ThetaJoinComponentFactory;
-import ch.epfl.data.squall.conversion.DateConversion;
-import ch.epfl.data.squall.conversion.DoubleConversion;
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.StringConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.IntegerYearFromDate;
 import ch.epfl.data.squall.expressions.Multiplication;
@@ -53,22 +47,28 @@ import ch.epfl.data.squall.predicates.OrPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
+import ch.epfl.data.squall.types.DateType;
+import ch.epfl.data.squall.types.DoubleType;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.StringType;
+import ch.epfl.data.squall.types.Type;
 
 public class ThetaTPCH7Plan extends QueryPlan {
 	private static Logger LOG = Logger.getLogger(ThetaTPCH7Plan.class);
 
 	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
-	private static final IntegerConversion _ic = new IntegerConversion();
+	private static final IntegerType _ic = new IntegerType();
 
 	private static final String _date1Str = "1995-01-01";
 	private static final String _date2Str = "1996-12-31";
 	private static final String _firstCountryName = "FRANCE";
 	private static final String _secondCountryName = "GERMANY";
 
-	private static final TypeConversion<Date> _dateConv = new DateConversion();
-	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
-	private static final TypeConversion<String> _sc = new StringConversion();
+	private static final Type<Date> _dateConv = new DateType();
+	private static final NumericType<Double> _doubleConv = new DoubleType();
+	private static final Type<String> _sc = new StringType();
 	private static final Date _date1 = _dateConv.fromString(_date1Str);
 	private static final Date _date2 = _dateConv.fromString(_date2Str);
 

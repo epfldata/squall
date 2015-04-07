@@ -32,7 +32,6 @@ import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.JoinerComponent;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
@@ -43,6 +42,7 @@ import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.storm_components.theta.StormThetaJoin;
 import ch.epfl.data.squall.storm_components.theta.StormThetaJoinBDB;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
@@ -65,7 +65,7 @@ public class ThetaJoinStaticComponent extends JoinerComponent implements
 	private boolean _isContentSensitive;
 	private Predicate _joinPredicate;
 	private InterchangingComponent _interComp = null;
-	private TypeConversion _contentSensitiveThetaJoinWrapper = null;
+	private Type _contentSensitiveThetaJoinWrapper = null;
 
 	// equi-weight histogram
 	private boolean _isPartitioner;
@@ -218,7 +218,7 @@ public class ThetaJoinStaticComponent extends JoinerComponent implements
 
 	@Override
 	public ThetaJoinStaticComponent setContentSensitiveThetaJoinWrapper(
-			TypeConversion wrapper) {
+			Type wrapper) {
 		_contentSensitiveThetaJoinWrapper = wrapper;
 		return this;
 	}

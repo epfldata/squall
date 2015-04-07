@@ -22,15 +22,15 @@ package ch.epfl.data.squall.expressions;
 
 import java.util.List;
 
-import ch.epfl.data.squall.conversion.LongConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.LongType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 
 //translates phone in a form with dashes (e.g 88-9) into a Long
 public class LongPhone implements ValueExpression<Long> {
 	private static final long serialVersionUID = 1L;
 
-	private final TypeConversion<Long> _wrapper = new LongConversion();
+	private final Type<Long> _wrapper = new LongType();
 
 	private int _columnIndex;
 	private int _firstDigits = -1;
@@ -78,7 +78,7 @@ public class LongPhone implements ValueExpression<Long> {
 	}
 
 	@Override
-	public TypeConversion getType() {
+	public Type getType() {
 		return _wrapper;
 	}
 

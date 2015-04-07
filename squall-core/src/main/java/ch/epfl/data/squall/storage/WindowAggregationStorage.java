@@ -31,8 +31,8 @@ import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.operators.AggregateOperator;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class WindowAggregationStorage<V> extends WindowKeyValueStore<Object, V> {
@@ -43,13 +43,13 @@ public class WindowAggregationStorage<V> extends WindowKeyValueStore<Object, V> 
 			.getLogger(WindowAggregationStorage.class);
 
 	private boolean _singleEntry;
-	private final TypeConversion _wrapper;
+	private final Type _wrapper;
 	private final AggregateOperator _outerAggOp;
 	private static final String SINGLE_ENTRY_KEY = "SEK"; /* Single entry key */
 	private static long _startingTimeStamp = System.currentTimeMillis();
 
 	public WindowAggregationStorage(AggregateOperator outerAggOp,
-			TypeConversion wrapper, Map map, boolean singleEntry,
+			Type wrapper, Map map, boolean singleEntry,
 			int windowedRange, int slidelength) {
 		super(singleEntry ? 1 : SystemParameters.getInt(map,
 				"STORAGE_MEMORY_SIZE_MB"), map, _startingTimeStamp,

@@ -32,9 +32,6 @@ import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.OperatorComponent;
 import ch.epfl.data.squall.components.theta.ThetaJoinComponentFactory;
-import ch.epfl.data.squall.conversion.DateConversion;
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.DateSum;
 import ch.epfl.data.squall.expressions.ValueExpression;
@@ -49,6 +46,9 @@ import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
+import ch.epfl.data.squall.types.DateType;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.Type;
 
 public class ThetaTPCH4Plan extends QueryPlan {
 	private static void computeDates() {
@@ -69,8 +69,8 @@ public class ThetaTPCH4Plan extends QueryPlan {
 	}
 
 	private static Logger LOG = Logger.getLogger(ThetaTPCH4Plan.class);
-	private static final TypeConversion<Date> _dc = new DateConversion();
-	private static final IntegerConversion _ic = new IntegerConversion();
+	private static final Type<Date> _dc = new DateType();
+	private static final IntegerType _ic = new IntegerType();
 
 	private QueryBuilder _queryBuilder = new QueryBuilder();
 

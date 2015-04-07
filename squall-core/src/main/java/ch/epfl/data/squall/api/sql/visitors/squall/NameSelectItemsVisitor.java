@@ -37,17 +37,17 @@ import ch.epfl.data.squall.api.sql.optimizers.name.NameTranslator;
 import ch.epfl.data.squall.api.sql.util.ParserUtil;
 import ch.epfl.data.squall.api.sql.util.TupleSchema;
 import ch.epfl.data.squall.components.Component;
-import ch.epfl.data.squall.conversion.StringConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueExpression;
+import ch.epfl.data.squall.types.StringType;
+import ch.epfl.data.squall.types.Type;
 
 public class NameSelectItemsVisitor extends IndexSelectItemsVisitor {
 	private final NameTranslator _nt;
 
 	private final TupleSchema _tupleSchema;
 
-	private final static StringConversion _sc = new StringConversion();
+	private final static StringType _sc = new StringType();
 
 	public NameSelectItemsVisitor(TupleSchema tupleSchema, Map map,
 			Component affectedComponent) {
@@ -89,7 +89,7 @@ public class NameSelectItemsVisitor extends IndexSelectItemsVisitor {
 		final int position = _nt.indexOf(_tupleSchema, expr);
 		if (position != ParserUtil.NOT_FOUND) {
 			// we found an expression already in the tuple schema
-			final TypeConversion tc = _nt.getType(_tupleSchema, expr);
+			final Type tc = _nt.getType(_tupleSchema, expr);
 			final ValueExpression ve = new ColumnReference(tc, position,
 					ParserUtil.getStringExpr(expr));
 			pushToExprStack(ve);
@@ -124,7 +124,7 @@ public class NameSelectItemsVisitor extends IndexSelectItemsVisitor {
 		// but only for GroupByProjections as the top level method.
 		// That is, we can safely assume StringConversion method.
 		// Permanent fix is to create StringConversion over overallAggregation.
-		final TypeConversion tc = _sc;
+		final Type tc = _sc;
 
 		final ValueExpression ve = new ColumnReference(tc, position,
 				ParserUtil.getStringExpr(column));

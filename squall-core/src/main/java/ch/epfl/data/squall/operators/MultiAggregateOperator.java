@@ -27,8 +27,8 @@ import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.storage.BasicStore;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.visitors.OperatorVisitor;
 
 public class MultiAggregateOperator implements AggregateOperator {
@@ -111,7 +111,7 @@ public class MultiAggregateOperator implements AggregateOperator {
 	}
 
 	@Override
-	public TypeConversion getType() {
+	public Type getType() {
 		throw new UnsupportedOperationException(
 				"You are not supposed to call this method from MultiAggregateOperator.");
 	}

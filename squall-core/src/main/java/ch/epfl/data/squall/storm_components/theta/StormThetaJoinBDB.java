@@ -41,7 +41,7 @@ import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.StormJoinerBoltComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
-import ch.epfl.data.squall.thetajoin.matrix_mapping.EquiMatrixAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ContentInsensitiveMatrixAssignment;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.squall.utilities.SystemParameters;
@@ -67,7 +67,7 @@ public class StormThetaJoinBDB extends StormJoinerBoltComponent {
 				secondEmitter.getName() + "_CARD");
 		final int parallelism = SystemParameters.getInt(conf, getID() + "_PAR");
 		InputDeclarer currentBolt = builder.setBolt(getID(), this, parallelism);
-		final EquiMatrixAssignment _currentMappingAssignment = new EquiMatrixAssignment(
+		final ContentInsensitiveMatrixAssignment _currentMappingAssignment = new ContentInsensitiveMatrixAssignment(
 				firstCardinality, secondCardinality, parallelism, -1);
 		final String dim = _currentMappingAssignment.getMappingDimensions();
 		LOG.info(getID() + " Initial Dimensions is: " + dim);

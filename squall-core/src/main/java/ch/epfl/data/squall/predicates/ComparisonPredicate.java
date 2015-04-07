@@ -23,19 +23,19 @@ package ch.epfl.data.squall.predicates;
 import java.util.ArrayList;
 import java.util.List;
 
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.Addition;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.expressions.ValueSpecification;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.visitors.PredicateVisitor;
 
 public class ComparisonPredicate<T extends Comparable<T>> implements Predicate {
 	public static void main(String[] args) {
 		ComparisonPredicate<Integer> comparison = new ComparisonPredicate<Integer>(
 				ComparisonPredicate.SYM_BAND_WITH_BOUNDS_OP, 10,
-				new IntegerConversion());
+				new IntegerType());
 
 		int x1 = 0;
 		int y1 = 50;
@@ -146,7 +146,7 @@ public class ComparisonPredicate<T extends Comparable<T>> implements Predicate {
 
 	private int indexType; // Either B+tree or BBinarytree
 	private ValueExpression<T> _ve1, _ve2;
-	private TypeConversion<T> _wrapper;
+	private Type<T> _wrapper;
 
 	private int _operation;
 
@@ -157,7 +157,7 @@ public class ComparisonPredicate<T extends Comparable<T>> implements Predicate {
 
 	// for band operations
 	public ComparisonPredicate(int op, int diff,
-			TypeConversion<T> typeConversion) {
+			Type<T> typeConversion) {
 		_operation = op;
 		_diff = diff;
 		_wrapper = typeConversion;
@@ -181,7 +181,7 @@ public class ComparisonPredicate<T extends Comparable<T>> implements Predicate {
 		_operation = operation;
 		_ve1 = ve1;
 		_ve2 = new Addition(ve2, new ValueSpecification(
-				new IntegerConversion(), difference));
+				new IntegerType(), difference));
 		_diff = Integer.valueOf(-2 * difference);
 		indexType = inequalityIndexType;
 	}
@@ -229,7 +229,7 @@ public class ComparisonPredicate<T extends Comparable<T>> implements Predicate {
 
 	// used in sampling matrix generation
 	public List<T> getJoinableKeys(T key) {
-		NumericConversion numWrapper = (NumericConversion) _wrapper;
+		NumericType numWrapper = (NumericType) _wrapper;
 		List<T> joinableKeys = new ArrayList<T>();
 		switch (_operation) {
 		case EQUAL_OP:
@@ -318,7 +318,7 @@ public class ComparisonPredicate<T extends Comparable<T>> implements Predicate {
 		return (T) _ve1.getType().getInitialValue();
 	}
 
-	public TypeConversion<T> getwrapper() {
+	public Type<T> getwrapper() {
 		return _wrapper;
 	}
 

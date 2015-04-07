@@ -34,24 +34,24 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import ch.epfl.data.squall.api.sql.schema.ColumnNameType;
-import ch.epfl.data.squall.conversion.DateConversion;
-import ch.epfl.data.squall.conversion.DoubleConversion;
-import ch.epfl.data.squall.conversion.LongConversion;
-import ch.epfl.data.squall.conversion.StringConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.DateType;
+import ch.epfl.data.squall.types.DoubleType;
+import ch.epfl.data.squall.types.LongType;
+import ch.epfl.data.squall.types.StringType;
+import ch.epfl.data.squall.types.Type;
 
 public class SchemaParser implements SchemaParserConstants {
 	public static class ColumnInfo {
 
 		private String _name;
-		private TypeConversion _type;
+		private Type _type;
 		private long _distinctValues = INVALID;
 		private Object _minValue, _maxValue; // used for ranges
 
-		private static final TypeConversion _lc = new LongConversion();
-		private static final TypeConversion _dbc = new DoubleConversion();
-		private static final TypeConversion _sc = new StringConversion();
-		private static final TypeConversion _dtc = new DateConversion();
+		private static final Type _lc = new LongType();
+		private static final Type _dbc = new DoubleType();
+		private static final Type _sc = new StringType();
+		private static final Type _dtc = new DateType();
 
 		public long getDistinctValues() {
 			return _distinctValues;
@@ -69,7 +69,7 @@ public class SchemaParser implements SchemaParserConstants {
 			return _name;
 		}
 
-		public TypeConversion getType() {
+		public Type getType() {
 			return _type;
 		}
 
@@ -93,7 +93,7 @@ public class SchemaParser implements SchemaParserConstants {
 			_type = strToTypeConv(type);
 		}
 
-		public TypeConversion strToTypeConv(String type) {
+		public Type strToTypeConv(String type) {
 			if (type.equalsIgnoreCase("LONG"))
 				return _lc;
 			else if (type.equalsIgnoreCase("DOUBLE"))
@@ -462,13 +462,13 @@ public class SchemaParser implements SchemaParserConstants {
 		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
 		case SCALLED:
 			jj_consume_token(SCALLED);
-			final TypeConversion tc = ci.getType();
-			if (tc instanceof LongConversion) {
-				final LongConversion lc = (LongConversion) tc;
+			final Type tc = ci.getType();
+			if (tc instanceof LongType) {
+				final LongType lc = (LongType) tc;
 				final Long lvalue = (Long) value;
 				value = (long) (lc.toDouble(lvalue) * scallingFactor);
-			} else if (tc instanceof DoubleConversion) {
-				final DoubleConversion dbc = (DoubleConversion) tc;
+			} else if (tc instanceof DoubleType) {
+				final DoubleType dbc = (DoubleType) tc;
 				final Double dvalue = (Double) value;
 				value = (double) (dbc.toDouble(dvalue) * scallingFactor);
 			} else {

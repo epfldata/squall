@@ -24,8 +24,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 
@@ -47,14 +47,14 @@ public class Multiplication<T extends Number & Comparable<T>> implements
 	private static final long serialVersionUID = 1L;
 
 	private final List<ValueExpression> _veList = new ArrayList<ValueExpression>();
-	private final NumericConversion<T> _wrapper;
+	private final NumericType<T> _wrapper;
 
 	public Multiplication(ValueExpression ve1, ValueExpression ve2,
 			ValueExpression... veArray) {
 		_veList.add(ve1);
 		_veList.add(ve2);
 		_veList.addAll(Arrays.asList(veArray));
-		_wrapper = (NumericConversion<T>) MyUtilities
+		_wrapper = (NumericType<T>) MyUtilities
 				.getDominantNumericType(_veList);
 	}
 
@@ -74,7 +74,7 @@ public class Multiplication<T extends Number & Comparable<T>> implements
 		double result = 1;
 		for (final ValueExpression factor : _veList) {
 			final Object currentVal = factor.eval(tuple);
-			final NumericConversion currentType = (NumericConversion) factor
+			final NumericType currentType = (NumericType) factor
 					.getType();
 			result *= currentType.toDouble(currentVal);
 		}
@@ -93,7 +93,7 @@ public class Multiplication<T extends Number & Comparable<T>> implements
 	}
 
 	@Override
-	public TypeConversion getType() {
+	public Type getType() {
 		return _wrapper;
 	}
 

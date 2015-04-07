@@ -32,9 +32,9 @@ import org.ujmp.core.Matrix;
 import org.ujmp.core.enums.FileFormat;
 import org.ujmp.core.matrix.AbstractMatrix;
 
-import ch.epfl.data.squall.conversion.NumericConversion;
 import ch.epfl.data.squall.ewh.visualize.VisualizerInterface;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
+import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.utilities.MyUtilities;
 
 // Join Attribute Type
@@ -60,7 +60,7 @@ public abstract class JoinMatrix<JAT extends Comparable<JAT>> implements
 	protected Map<JAT, Integer> _freqX, _freqY; // key, frequency
 	protected Map<JAT, Integer> _keyXFirstPos, _keyYFirstPos; // key,
 																// firstPosition
-	protected NumericConversion _wrapper;
+	protected NumericType _wrapper;
 
 	protected String _matrixName, _matrixPath;
 
@@ -209,7 +209,7 @@ public abstract class JoinMatrix<JAT extends Comparable<JAT>> implements
 		return _ujmpMatrix;
 	}
 
-	public NumericConversion getWrapper() {
+	public NumericType getWrapper() {
 		return _wrapper;
 	}
 

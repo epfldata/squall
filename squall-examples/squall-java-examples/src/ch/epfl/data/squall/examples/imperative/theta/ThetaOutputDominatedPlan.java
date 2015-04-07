@@ -29,8 +29,6 @@ import org.apache.log4j.Logger;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.theta.ThetaJoinComponentFactory;
-import ch.epfl.data.squall.conversion.DoubleConversion;
-import ch.epfl.data.squall.conversion.NumericConversion;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.AggregateSumOperator;
@@ -38,6 +36,8 @@ import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
+import ch.epfl.data.squall.types.DoubleType;
+import ch.epfl.data.squall.types.NumericType;
 
 public class ThetaOutputDominatedPlan extends QueryPlan {
 
@@ -46,7 +46,7 @@ public class ThetaOutputDominatedPlan extends QueryPlan {
 
 	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
-	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
+	private static final NumericType<Double> _doubleConv = new DoubleType();
 
 	/*
 	 * SELECT SUM(SUPPLIER.SUPPKEY) FROM SUPPLIER, NATION

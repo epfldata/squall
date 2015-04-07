@@ -23,8 +23,8 @@ package ch.epfl.data.squall.expressions;
 import java.util.ArrayList;
 import java.util.List;
 
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 
 /*
@@ -37,9 +37,9 @@ public class ValueSpecification<T extends Comparable<T>> implements
 	private static final long serialVersionUID = 1L;
 
 	private T _constant;
-	private final TypeConversion<T> _wrapper;
+	private final Type<T> _wrapper;
 
-	public ValueSpecification(TypeConversion<T> wrapper, T constant) {
+	public ValueSpecification(Type<T> wrapper, T constant) {
 		_constant = constant;
 		_wrapper = wrapper;
 	}
@@ -71,14 +71,14 @@ public class ValueSpecification<T extends Comparable<T>> implements
 	}
 
 	@Override
-	public TypeConversion getType() {
+	public Type getType() {
 		return _wrapper;
 	}
 
 	@Override
 	public void inverseNumber() {
-		if (_wrapper instanceof NumericConversion) {
-			final NumericConversion makis = (NumericConversion) _wrapper;
+		if (_wrapper instanceof NumericType) {
+			final NumericType makis = (NumericType) _wrapper;
 			// double temp = makis.toDouble((Number) _constant);
 			final double val = ((Number) _constant).doubleValue();
 			final double temp = makis.toDouble(new Double(val));
@@ -88,8 +88,8 @@ public class ValueSpecification<T extends Comparable<T>> implements
 
 	@Override
 	public boolean isNegative() {
-		if (_wrapper instanceof NumericConversion) {
-			final NumericConversion makis = (NumericConversion) _wrapper;
+		if (_wrapper instanceof NumericType) {
+			final NumericType makis = (NumericType) _wrapper;
 			final double temp = makis.toDouble(_constant);
 			return (temp < 0);
 		}

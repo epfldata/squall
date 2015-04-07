@@ -50,8 +50,8 @@ import ch.epfl.data.squall.thetajoin.dynamic.advisor.Maybe;
 import ch.epfl.data.squall.thetajoin.dynamic.advisor.TheoreticalAdvisorNew;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
-import ch.epfl.data.squall.utilities.thetajoin_dynamic.ThetaJoinUtilities;
-import ch.epfl.data.squall.utilities.thetajoin_dynamic.ThetaState.state;
+import ch.epfl.data.squall.utilities.thetajoin.dynamic.ThetaJoinUtilities;
+import ch.epfl.data.squall.utilities.thetajoin.dynamic.ThetaState.state;
 
 public class ThetaReshufflerAdvisedEpochs extends BaseRichBolt {
 

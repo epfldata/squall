@@ -32,10 +32,6 @@ import java.util.logging.SimpleFormatter;
 
 import org.apache.log4j.Logger;
 
-import ch.epfl.data.squall.conversion.DateIntegerConversion;
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.ewh.algorithms.BSPAlgorithm;
 import ch.epfl.data.squall.ewh.algorithms.InputOutputShallowCoarsener;
 import ch.epfl.data.squall.ewh.algorithms.InputShallowCoarsener;
@@ -56,13 +52,17 @@ import ch.epfl.data.squall.ewh.visualize.UJMPVisualizer;
 import ch.epfl.data.squall.ewh.visualize.VisualizerInterface;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
+import ch.epfl.data.squall.types.DateIntegerType;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.DeepCopy;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class PushStatisticCollector {
 	private static class Hyracks implements PLCQueryPlan {
-		private IntegerConversion _ic = new IntegerConversion();
+		private IntegerType _ic = new IntegerType();
 
 		private Map _map;
 
@@ -93,7 +93,7 @@ public class PushStatisticCollector {
 		}
 
 		@Override
-		public NumericConversion getWrapper() {
+		public NumericType getWrapper() {
 			return _ic;
 		}
 
@@ -115,13 +115,13 @@ public class PushStatisticCollector {
 	private static interface PLCQueryPlan {
 		public JoinMatrix generateMatrix();
 
-		public NumericConversion getWrapper();
+		public NumericType getWrapper();
 
 		public void processTuple(List<String> tuple, int relationNumber);
 	}
 
 	private static class ThetaLineitemSelfJoin implements PLCQueryPlan {
-		private DateIntegerConversion _dateIntConv = new DateIntegerConversion();
+		private DateIntegerType _dateIntConv = new DateIntegerType();
 
 		private Map _map;
 
@@ -153,7 +153,7 @@ public class PushStatisticCollector {
 		}
 
 		@Override
-		public NumericConversion getWrapper() {
+		public NumericType getWrapper() {
 			return _dateIntConv;
 		}
 
@@ -174,7 +174,7 @@ public class PushStatisticCollector {
 
 	private static class ThetaLineitemSelfJoinInputDominated implements
 			PLCQueryPlan {
-		private IntegerConversion _ic = new IntegerConversion();
+		private IntegerType _ic = new IntegerType();
 
 		private Map _map;
 
@@ -205,7 +205,7 @@ public class PushStatisticCollector {
 		}
 
 		@Override
-		public NumericConversion getWrapper() {
+		public NumericType getWrapper() {
 			return _ic;
 		}
 
@@ -225,7 +225,7 @@ public class PushStatisticCollector {
 	}
 
 	private static class ThetaTPCH5_R_N_S_L implements PLCQueryPlan {
-		private IntegerConversion _ic = new IntegerConversion();
+		private IntegerType _ic = new IntegerType();
 
 		private Map _map;
 
@@ -256,7 +256,7 @@ public class PushStatisticCollector {
 		}
 
 		@Override
-		public NumericConversion getWrapper() {
+		public NumericType getWrapper() {
 			return _ic;
 		}
 
@@ -276,7 +276,7 @@ public class PushStatisticCollector {
 	}
 
 	private static class ThetaTPCH7_L_S_N1 implements PLCQueryPlan {
-		private IntegerConversion _ic = new IntegerConversion();
+		private IntegerType _ic = new IntegerType();
 
 		private Map _map;
 
@@ -307,7 +307,7 @@ public class PushStatisticCollector {
 		}
 
 		@Override
-		public NumericConversion getWrapper() {
+		public NumericType getWrapper() {
 			return _ic;
 		}
 
@@ -327,14 +327,14 @@ public class PushStatisticCollector {
 	}
 
 	private static <T> void appendKeys(List<T> keys, ProjectOperator project,
-			List<String> tuple, TypeConversion<T> wrapper) {
+			List<String> tuple, Type<T> wrapper) {
                 String key = project.process(tuple, -1).get(0);
 		keys.add(wrapper.fromString(key));
 	}
 
 	private static <JAT extends Comparable<JAT>> double computeLowerProb(
 			FrequencyPosition fp, int sp, JAT k, JoinMatrix<JAT> joinMatrix,
-			boolean isX, NumericConversion wrapper) {
+			boolean isX, NumericType wrapper) {
 		if (k.equals(wrapper.getMinValue()) || k.equals(wrapper.getMaxValue())) {
 			// the extreme values are always entirely included
 			return 0;
@@ -359,7 +359,7 @@ public class PushStatisticCollector {
 
 	private static <JAT extends Comparable<JAT>> double computeUpperProb(
 			FrequencyPosition fp, int sp, JAT k, JoinMatrix<JAT> joinMatrix,
-			boolean isX, NumericConversion wrapper) {
+			boolean isX, NumericType wrapper) {
 		if (k.equals(wrapper.getMinValue()) || k.equals(wrapper.getMaxValue())) {
 			// the extreme values are always entirely included
 			return 1;
@@ -451,7 +451,7 @@ public class PushStatisticCollector {
 
 	public static <JAT extends Comparable<JAT>> List<KeyRegion> generateKeyRegions(
 			List<Region> regions, JoinMatrix<JAT> joinMatrix,
-			NumericConversion wrapper) {
+			NumericType wrapper) {
 		List<KeyRegion> keyRegions = new ArrayList<KeyRegion>();
 		joinMatrix.precomputeFrequencies();
 		int index = 0;
@@ -637,7 +637,7 @@ public class PushStatisticCollector {
 
 			// generate matrix
 			JoinMatrix joinMatrix = _queryPlan.generateMatrix();
-			NumericConversion wrapper = _queryPlan.getWrapper();
+			NumericType wrapper = _queryPlan.getWrapper();
 			String queryName = SystemParameters.getString(_map,
 					"DIP_QUERY_NAME");
 			String dataPath = SystemParameters.getString(_map, "DIP_DATA_PATH");

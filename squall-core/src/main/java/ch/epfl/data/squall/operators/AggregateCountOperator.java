@@ -28,13 +28,13 @@ import java.util.Map;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
-import ch.epfl.data.squall.conversion.LongConversion;
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.storage.AggregationStorage;
 import ch.epfl.data.squall.storage.BasicStore;
 import ch.epfl.data.squall.storage.WindowAggregationStorage;
+import ch.epfl.data.squall.types.LongType;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.visitors.OperatorVisitor;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
@@ -54,7 +54,7 @@ public class AggregateCountOperator implements AggregateOperator<Long> {
 	private ProjectOperator _groupByProjection;
 	private int _numTuplesProcessed = 0;
 
-	private final NumericConversion<Long> _wrapper = new LongConversion();
+	private final NumericType<Long> _wrapper = new LongType();
 	private BasicStore<Long> _storage;
 
 	private final Map _map;
@@ -135,7 +135,7 @@ public class AggregateCountOperator implements AggregateOperator<Long> {
 	}
 
 	@Override
-	public TypeConversion getType() {
+	public Type getType() {
 		return _wrapper;
 	}
 

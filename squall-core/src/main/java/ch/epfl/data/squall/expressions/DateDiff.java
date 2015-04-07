@@ -24,16 +24,16 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import ch.epfl.data.squall.conversion.DateConversion;
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.DateType;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 
 public class DateDiff implements ValueExpression<Integer> {
 	private static final long serialVersionUID = 1L;
 
-	private final TypeConversion<Date> _dc = new DateConversion();
-	private final TypeConversion<Integer> _ic = new IntegerConversion();
+	private final Type<Date> _dc = new DateType();
+	private final Type<Integer> _ic = new IntegerType();
 
 	private final ValueExpression<Date> _ve1, _ve2;
 
@@ -77,7 +77,7 @@ public class DateDiff implements ValueExpression<Integer> {
 	}
 
 	@Override
-	public TypeConversion getType() {
+	public Type getType() {
 		return _ic;
 	}
 

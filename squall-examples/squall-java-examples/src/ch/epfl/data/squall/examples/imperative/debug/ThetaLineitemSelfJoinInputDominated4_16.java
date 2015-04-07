@@ -28,12 +28,6 @@ import java.util.Map;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.theta.ThetaJoinComponentFactory;
-import ch.epfl.data.squall.conversion.DateConversion;
-import ch.epfl.data.squall.conversion.DateIntegerConversion;
-import ch.epfl.data.squall.conversion.DoubleConversion;
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.StringConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.AggregateCountOperator;
@@ -44,6 +38,12 @@ import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.predicates.OrPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
+import ch.epfl.data.squall.types.DateType;
+import ch.epfl.data.squall.types.DateIntegerType;
+import ch.epfl.data.squall.types.DoubleType;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.StringType;
+import ch.epfl.data.squall.types.Type;
 
 public class ThetaLineitemSelfJoinInputDominated4_16 {
 
@@ -53,15 +53,15 @@ public class ThetaLineitemSelfJoinInputDominated4_16 {
 
 	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final String _date1Str = "1993-06-17";
-	private static final TypeConversion<Date> _dateConv = new DateConversion();
+	private static final Type<Date> _dateConv = new DateType();
 	// private static final NumericConversion<Double> _doubleConv = new
 	// DoubleConversion();
 	private static final Date _date1 = _dateConv.fromString(_date1Str);
-	private static final TypeConversion<String> _stringConv = new StringConversion();
+	private static final Type<String> _stringConv = new StringType();
 
-	private static final TypeConversion<Integer> _dateIntConv = new DateIntegerConversion();
-	private static final IntegerConversion _ic = new IntegerConversion();
-	private static final DoubleConversion _dblConv = new DoubleConversion();
+	private static final Type<Integer> _dateIntConv = new DateIntegerType();
+	private static final IntegerType _ic = new IntegerType();
+	private static final DoubleType _dblConv = new DoubleType();
 
 	public ThetaLineitemSelfJoinInputDominated4_16(String dataPath,
 			String extension, Map conf) {

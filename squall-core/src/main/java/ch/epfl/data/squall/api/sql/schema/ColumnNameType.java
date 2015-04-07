@@ -22,15 +22,15 @@ package ch.epfl.data.squall.api.sql.schema;
 
 import java.io.Serializable;
 
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.Type;
 
 public class ColumnNameType implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private final String _name; // Column's fullAliasedName, i.e. N1.NAME
-	private final TypeConversion _type;
+	private final Type _type;
 
-	public ColumnNameType(String name, TypeConversion type) {
+	public ColumnNameType(String name, Type type) {
 		_name = name;
 		_type = type;
 	}
@@ -50,7 +50,7 @@ public class ColumnNameType implements Serializable {
 		return _name;
 	}
 
-	public TypeConversion getType() {
+	public Type getType() {
 		return _type;
 	}
 

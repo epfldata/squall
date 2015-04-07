@@ -23,9 +23,9 @@ package ch.epfl.data.squall.predicates;
 import java.util.ArrayList;
 import java.util.List;
 
-import ch.epfl.data.squall.conversion.StringConversion;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.expressions.ValueSpecification;
+import ch.epfl.data.squall.types.StringType;
 import ch.epfl.data.squall.visitors.PredicateVisitor;
 
 /*
@@ -48,7 +48,7 @@ public class LikePredicate implements Predicate {
 		if (_ve2 instanceof ValueSpecification) {
 			String value = _ve2.eval(null);
 			value = value.replace("%", "");
-			_ve2 = new ValueSpecification<String>(new StringConversion(), value);
+			_ve2 = new ValueSpecification<String>(new StringType(), value);
 		}
 	}
 

@@ -36,9 +36,9 @@ import net.sf.jsqlparser.schema.Column;
 import ch.epfl.data.squall.api.sql.schema.Schema;
 import ch.epfl.data.squall.api.sql.util.ParserUtil;
 import ch.epfl.data.squall.api.sql.util.TableAliasName;
-import ch.epfl.data.squall.conversion.DoubleConversion;
-import ch.epfl.data.squall.conversion.LongConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.DoubleType;
+import ch.epfl.data.squall.types.LongType;
+import ch.epfl.data.squall.types.Type;
 
 /* TODO high prio:
  * no matter on which component we do invoke, the only important is to know previous projections
@@ -167,7 +167,7 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator {
 	public double estimate(MinorThan mt) {
 		final List<Column> columns = ParserUtil.getJSQLColumns(mt);
 		final Column column = columns.get(0);
-		final TypeConversion tc = _schema.getType(ParserUtil
+		final Type tc = _schema.getType(ParserUtil
 				.getFullSchemaColumnName(column, _tan));
 
 		// TODO: assume uniform distribution
@@ -177,12 +177,12 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator {
 		Object maxValue = _schema.getRange(fullSchemaColumnName).getMax();
 
 		// We have to compare the same types
-		if (tc instanceof DoubleConversion) {
+		if (tc instanceof DoubleType) {
 			if (minValue instanceof Long)
 				minValue = longToDouble((Long) minValue);
 			if (maxValue instanceof Long)
 				maxValue = longToDouble((Long) maxValue);
-		} else if (tc instanceof LongConversion) {
+		} else if (tc instanceof LongType) {
 			if (minValue instanceof Double)
 				minValue = doubleToLong((Double) minValue);
 			if (maxValue instanceof Double)
@@ -201,10 +201,10 @@ public class SelingerSelectivityEstimator implements SelectivityEstimator {
 		if (conditionConstant != null) {
 			// a constant on one side
 			// MAKE TPCH-6 WORK WITH NCL OPTIMIZER
-			if (tc instanceof DoubleConversion) {
+			if (tc instanceof DoubleType) {
 				if (conditionConstant instanceof Long)
 					conditionConstant = longToDouble((Long) conditionConstant);
-			} else if (tc instanceof LongConversion)
+			} else if (tc instanceof LongType)
 				if (conditionConstant instanceof Double)
 					conditionConstant = doubleToLong((Double) conditionConstant);
 			final double distance = tc.getDistance(conditionConstant, minValue);

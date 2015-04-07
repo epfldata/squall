@@ -29,9 +29,6 @@ import org.apache.log4j.Logger;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.theta.ThetaJoinComponentFactory;
-import ch.epfl.data.squall.conversion.DoubleConversion;
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.NumericConversion;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.Multiplication;
 import ch.epfl.data.squall.expressions.Subtraction;
@@ -45,6 +42,9 @@ import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
+import ch.epfl.data.squall.types.DoubleType;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.NumericType;
 
 public class ThetaInputDominatedPlan extends QueryPlan {
 
@@ -52,8 +52,8 @@ public class ThetaInputDominatedPlan extends QueryPlan {
 
 	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
-	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
-	private static final IntegerConversion _ic = new IntegerConversion();
+	private static final NumericType<Double> _doubleConv = new DoubleType();
+	private static final IntegerType _ic = new IntegerType();
 
 	/*
 	 * SELECT SUM(LINEITEM.EXTENDEDPRICE*(1-LINEITEM.DISCOUNT)) FROM LINEITEM,

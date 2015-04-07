@@ -38,10 +38,10 @@ import ch.epfl.data.squall.api.sql.visitors.jsql.MaxSubExpressionsVisitor;
 import ch.epfl.data.squall.api.sql.visitors.jsql.SQLVisitor;
 import ch.epfl.data.squall.api.sql.visitors.squall.NameProjectVisitor;
 import ch.epfl.data.squall.components.Component;
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ProjectOperator;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.Type;
 
 /*
  * This class takes expressions from GlobalProjExpr,
@@ -67,7 +67,7 @@ public class ProjSchemaCreator {
 	private TupleSchema _outputTupleSchema;
 	private List<ValueExpression> _veList;
 
-	private static final IntegerConversion _ic = new IntegerConversion();
+	private static final IntegerType _ic = new IntegerType();
 
 	public ProjSchemaCreator(ProjGlobalCollect globalProject,
 			TupleSchema inputTupleSchema, Component component, SQLVisitor pq,
@@ -170,7 +170,7 @@ public class ProjSchemaCreator {
 		for (final Expression expr : choosenExprs) {
 			// first to determine the type, we use the first column for that
 
-			final TypeConversion tc = getTC(expr);
+			final Type tc = getTC(expr);
 
 			// attach the TypeConversion
 			final String exprStr = ParserUtil.getStringExpr(expr);
@@ -235,7 +235,7 @@ public class ProjSchemaCreator {
 	/*
 	 * Have to distinguish special cases from normal ones
 	 */
-	private TypeConversion getTC(Expression expr) {
+	private Type getTC(Expression expr) {
 		if (expr instanceof Function) {
 			final Function fun = (Function) expr;
 			if (fun.getName().equalsIgnoreCase("EXTRACT_YEAR"))

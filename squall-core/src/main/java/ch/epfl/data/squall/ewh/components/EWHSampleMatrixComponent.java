@@ -30,8 +30,6 @@ import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.ewh.storm_components.D2CombinerBolt;
 import ch.epfl.data.squall.ewh.storm_components.EWHSampleMatrixBolt;
 import ch.epfl.data.squall.ewh.storm_components.S1ReservoirGenerator;
@@ -46,6 +44,8 @@ import ch.epfl.data.squall.storage.AggregationStorage;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.SystemParameters.HistogramType;
 
@@ -62,13 +62,13 @@ public class EWHSampleMatrixComponent implements Component {
 	private boolean _isFirstD2;
 	private int _numOfLastJoiners;
 	private ComparisonPredicate _comparison;
-	private NumericConversion _wrapper;
+	private NumericType _wrapper;
 	private int _firstRelationSize, _secondRelationSize;
 	private int _firstNumOfBuckets, _secondNumOfBuckets;
 
 	public EWHSampleMatrixComponent(Component firstParent,
 			Component secondParent, boolean isFirstD2,
-			NumericConversion keyType, ComparisonPredicate comparison,
+			NumericType keyType, ComparisonPredicate comparison,
 			int numOfLastJoiners, int firstRelationSize,
 			int secondRelationSize, int firstNumOfBuckets,
 			int secondNumOfBuckets) {
@@ -240,7 +240,7 @@ public class EWHSampleMatrixComponent implements Component {
 	}
 
 	@Override
-	public Component setContentSensitiveThetaJoinWrapper(TypeConversion wrapper) {
+	public Component setContentSensitiveThetaJoinWrapper(Type wrapper) {
 		throw new RuntimeException("Should not be here!");
 	}
 

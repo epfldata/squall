@@ -22,8 +22,8 @@ package ch.epfl.data.squall.expressions;
 
 import java.util.List;
 
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 
 // concatenates an integer key (e.g. Orders.Custkey) with a string starting with a digit (e.g. Orders.Order-Priority = "5-Low")
@@ -31,7 +31,7 @@ import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 public class ConcatIntString implements ValueExpression<Integer> {
 	private static final long serialVersionUID = 1L;
 
-	private final TypeConversion<Integer> _wrapper = new IntegerConversion();
+	private final Type<Integer> _wrapper = new IntegerType();
 
 	private int _intIndex;
 	private int _strIndex;
@@ -72,7 +72,7 @@ public class ConcatIntString implements ValueExpression<Integer> {
 	}
 
 	@Override
-	public TypeConversion getType() {
+	public Type getType() {
 		return _wrapper;
 	}
 

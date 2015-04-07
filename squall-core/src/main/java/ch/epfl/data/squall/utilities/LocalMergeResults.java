@@ -29,7 +29,6 @@ import java.util.concurrent.Semaphore;
 import org.apache.log4j.Logger;
 
 //import frontend.functional.scala.operators.ScalaAggregateOperator;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.operators.AggregateAvgOperator;
 import ch.epfl.data.squall.operators.AggregateOperator;
@@ -37,6 +36,7 @@ import ch.epfl.data.squall.operators.AggregateSumOperator;
 import ch.epfl.data.squall.storage.AggregationStorage;
 import ch.epfl.data.squall.storage.WindowAggregationStorage;
 import ch.epfl.data.squall.storm_components.StormComponent;
+import ch.epfl.data.squall.types.Type;
 
 public class LocalMergeResults {
 	private static void addMoreResults(AggregateOperator lastAgg, Map map) {
@@ -65,7 +65,7 @@ public class LocalMergeResults {
 
 	private static AggregateOperator createOverallAgg(
 			AggregateOperator lastAgg, Map map) {
-		final TypeConversion wrapper = lastAgg.getType();
+		final Type wrapper = lastAgg.getType();
 		AggregateOperator overallAgg;
 
 		ColumnReference cr;

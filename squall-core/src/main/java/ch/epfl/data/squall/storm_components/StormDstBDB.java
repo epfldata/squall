@@ -52,7 +52,7 @@ import ch.epfl.data.squall.storage.BPlusTreeStorage;
 import ch.epfl.data.squall.storage.BerkeleyDBStore;
 import ch.epfl.data.squall.storage.BerkeleyDBStoreSkewed;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
-import ch.epfl.data.squall.thetajoin.matrix_mapping.EquiMatrixAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ContentInsensitiveMatrixAssignment;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.squall.utilities.SystemParameters;
@@ -159,7 +159,7 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter,
 
 		InputDeclarer currentBolt = builder.setBolt(_ID, this, parallelism);
 
-		final EquiMatrixAssignment _currentMappingAssignment = new EquiMatrixAssignment(
+		final ContentInsensitiveMatrixAssignment _currentMappingAssignment = new ContentInsensitiveMatrixAssignment(
 				firstCardinality, secondCardinality, parallelism, -1);
 		final String dim = _currentMappingAssignment.getMappingDimensions();
 		LOG.info(_ID + " Initial Dimensions is: " + dim);

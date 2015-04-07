@@ -25,14 +25,14 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import ch.epfl.data.squall.conversion.DateConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.DateType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 
 public class DateSum implements ValueExpression<Date> {
 	private static final long serialVersionUID = 1L;
 
-	private final TypeConversion<Date> _dc = new DateConversion();
+	private final Type<Date> _dc = new DateType();
 
 	private final ValueExpression<Date> _ve;
 	private final int _interval, _unit;
@@ -75,7 +75,7 @@ public class DateSum implements ValueExpression<Date> {
 	}
 
 	@Override
-	public TypeConversion getType() {
+	public Type getType() {
 		return _dc;
 	}
 

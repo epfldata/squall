@@ -23,7 +23,7 @@ package ch.epfl.data.squall.expressions;
 import java.util.ArrayList;
 import java.util.List;
 
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 
 public class ColumnReference<T extends Comparable<T>> implements
@@ -32,9 +32,9 @@ public class ColumnReference<T extends Comparable<T>> implements
 
 	private int _columnIndex;
 	private String _columnStr;
-	private TypeConversion<T> _wrapper;
+	private Type<T> _wrapper;
 
-	public ColumnReference(TypeConversion<T> wrapper, int columnIndex) {
+	public ColumnReference(Type<T> wrapper, int columnIndex) {
 		_columnIndex = columnIndex;
 		_wrapper = wrapper;
 	}
@@ -42,7 +42,7 @@ public class ColumnReference<T extends Comparable<T>> implements
 	/*
 	 * columnStr is optional, used only in toString method
 	 */
-	public ColumnReference(TypeConversion<T> wrapper, int columnIndex,
+	public ColumnReference(Type<T> wrapper, int columnIndex,
 			String columnStr) {
 		this(wrapper, columnIndex);
 		_columnStr = columnStr;
@@ -79,7 +79,7 @@ public class ColumnReference<T extends Comparable<T>> implements
 	}
 
 	@Override
-	public TypeConversion getType() {
+	public Type getType() {
 		return _wrapper;
 	}
 

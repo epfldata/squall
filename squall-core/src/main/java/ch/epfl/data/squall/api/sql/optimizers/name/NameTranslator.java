@@ -30,7 +30,7 @@ import org.apache.log4j.Logger;
 import ch.epfl.data.squall.api.sql.schema.ColumnNameType;
 import ch.epfl.data.squall.api.sql.util.ParserUtil;
 import ch.epfl.data.squall.api.sql.util.TupleSchema;
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.Type;
 
 /*
  * Expressions are being translated to columns from TupleSchema
@@ -81,7 +81,7 @@ public class NameTranslator {
 	 * (TableAlias.ColumnName) For a field N1.NATIONNAME, columnName is
 	 * N1.NATIONNAME
 	 */
-	public TypeConversion getType(TupleSchema tupleSchema, Expression expr) {
+	public Type getType(TupleSchema tupleSchema, Expression expr) {
 		final int index = indexOf(tupleSchema, expr);
 		if (index == ParserUtil.NOT_FOUND) {
 			final String exprStr = ParserUtil.getStringExpr(expr);

@@ -75,11 +75,6 @@ import ch.epfl.data.squall.api.sql.schema.Schema;
 import ch.epfl.data.squall.api.sql.util.ParserUtil;
 import ch.epfl.data.squall.api.sql.util.TableAliasName;
 import ch.epfl.data.squall.components.Component;
-import ch.epfl.data.squall.conversion.DateConversion;
-import ch.epfl.data.squall.conversion.DoubleConversion;
-import ch.epfl.data.squall.conversion.LongConversion;
-import ch.epfl.data.squall.conversion.StringConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.IntegerYearFromDate;
 import ch.epfl.data.squall.expressions.ValueExpression;
@@ -90,6 +85,11 @@ import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.predicates.LikePredicate;
 import ch.epfl.data.squall.predicates.OrPredicate;
 import ch.epfl.data.squall.predicates.Predicate;
+import ch.epfl.data.squall.types.DateType;
+import ch.epfl.data.squall.types.DoubleType;
+import ch.epfl.data.squall.types.LongType;
+import ch.epfl.data.squall.types.StringType;
+import ch.epfl.data.squall.types.Type;
 
 /*
  * Translates JSQL expressions to a SelectionOperator of a component.
@@ -110,10 +110,10 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 	// we will have a single object per (possibly) multiple spout/bolt threads.
 	// generating plans is done from a single thread, static additionally saves
 	// space
-	private static LongConversion _lc = new LongConversion();
-	private static DoubleConversion _dblConv = new DoubleConversion();
-	private static DateConversion _dateConv = new DateConversion();
-	private static StringConversion _sc = new StringConversion();
+	private static LongType _lc = new LongType();
+	private static DoubleType _dblConv = new DoubleType();
+	private static DateType _dateConv = new DateType();
+	private static StringType _sc = new StringType();
 
 	/*
 	 * Used from NameWhereVisitor - no parameters need to be set
@@ -207,7 +207,7 @@ public class IndexWhereVisitor implements ExpressionVisitor, ItemsListVisitor {
 	@Override
 	public void visit(Column column) {
 		// extract type for the column
-		final TypeConversion tc = _schema.getType(ParserUtil
+		final Type tc = _schema.getType(ParserUtil
 				.getFullSchemaColumnName(column, _tan));
 
 		// extract the position (index) of the required column

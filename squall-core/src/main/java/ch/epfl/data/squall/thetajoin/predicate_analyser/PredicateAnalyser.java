@@ -22,9 +22,6 @@ package ch.epfl.data.squall.thetajoin.predicate_analyser;
 
 import java.util.List;
 
-import ch.epfl.data.squall.conversion.DoubleConversion;
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.NumericConversion;
 import ch.epfl.data.squall.expressions.Addition;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.Multiplication;
@@ -35,10 +32,13 @@ import ch.epfl.data.squall.predicates.AndPredicate;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.predicates.OrPredicate;
 import ch.epfl.data.squall.predicates.Predicate;
+import ch.epfl.data.squall.types.DoubleType;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.NumericType;
 
 public class PredicateAnalyser {
 
-	NumericConversion numConv = new DoubleConversion();
+	NumericType numConv = new DoubleType();
 
 	ValueExpression[] CleanPart = new ValueExpression[2];
 	ValueExpression[] Parameter = new ValueExpression[2];
@@ -65,9 +65,9 @@ public class PredicateAnalyser {
 			return new ColumnReference<Double>(numConv,
 					((ColumnReference) other).getColumnIndex());
 		else if (other instanceof ValueSpecification) {
-			IntegerConversion change;
-			if (other.getType() instanceof IntegerConversion) {
-				change = (IntegerConversion) other.getType();
+			IntegerType change;
+			if (other.getType() instanceof IntegerType) {
+				change = (IntegerType) other.getType();
 				final double temp = change.toDouble(other.eval(null));
 				final ValueSpecification tempVS = new ValueSpecification<Double>(
 						numConv, temp);

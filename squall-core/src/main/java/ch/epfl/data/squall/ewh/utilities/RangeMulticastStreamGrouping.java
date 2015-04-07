@@ -31,8 +31,8 @@ import org.apache.log4j.Logger;
 import backtype.storm.generated.GlobalStreamId;
 import backtype.storm.grouping.CustomStreamGrouping;
 import backtype.storm.task.WorkerTopologyContext;
-import ch.epfl.data.squall.conversion.NumericConversion;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
+import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.utilities.DeepCopy;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
@@ -57,21 +57,21 @@ public class RangeMulticastStreamGrouping implements CustomStreamGrouping,
 														// them
 
 	protected final Map _map;
-	protected NumericConversion _wrapper;
+	protected NumericType _wrapper;
 	private ComparisonPredicate _comparison;
 	private int _numLastJoiners;
 	private HistogramType _histType;
 
 	// with multicast
 	public RangeMulticastStreamGrouping(Map map,
-			ComparisonPredicate comparison, NumericConversion wrapper,
+			ComparisonPredicate comparison, NumericType wrapper,
 			HistogramType histType) {
 		this(map, wrapper, histType);
 		_comparison = comparison;
 	}
 
 	// without multicast
-	public RangeMulticastStreamGrouping(Map map, NumericConversion wrapper,
+	public RangeMulticastStreamGrouping(Map map, NumericType wrapper,
 			HistogramType histType) {
 		_map = map;
 		_wrapper = wrapper;

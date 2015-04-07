@@ -29,10 +29,10 @@ import org.apache.log4j.Logger;
 import org.ujmp.core.bytematrix.impl.DefaultSparseByteMatrix;
 import org.ujmp.core.io.ImportMatrixSPARSECSV;
 
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.ewh.visualize.VisualizerInterface;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.DeepCopy;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
@@ -99,10 +99,10 @@ public class UJMPAdapterByteMatrix<JAT extends Comparable<JAT>> extends
 	}
 
 	public UJMPAdapterByteMatrix(int xSize, int ySize, Map map,
-			ComparisonPredicate<JAT> cp, TypeConversion<JAT> wrapper) {
+			ComparisonPredicate<JAT> cp, Type<JAT> wrapper) {
 		this(xSize, ySize, map);
 		_cp = cp;
-		_wrapper = (NumericConversion) wrapper;
+		_wrapper = (NumericType) wrapper;
 	}
 
 	public UJMPAdapterByteMatrix(String matrixPath, String matrixName) {
@@ -152,7 +152,7 @@ public class UJMPAdapterByteMatrix<JAT extends Comparable<JAT>> extends
 		copy._freqY = (Map<JAT, Integer>) DeepCopy.copy(_freqY);
 		copy._keyXFirstPos = (Map<JAT, Integer>) DeepCopy.copy(_keyXFirstPos);
 		copy._keyYFirstPos = (Map<JAT, Integer>) DeepCopy.copy(_keyYFirstPos);
-		copy._wrapper = (NumericConversion) DeepCopy.copy(_wrapper);
+		copy._wrapper = (NumericType) DeepCopy.copy(_wrapper);
 		copy._cp = (ComparisonPredicate) DeepCopy.copy(_cp);
 
 		return copy;

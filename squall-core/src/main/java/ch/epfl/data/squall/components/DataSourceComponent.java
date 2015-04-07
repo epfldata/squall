@@ -30,7 +30,6 @@ import org.apache.log4j.Logger;
 
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
@@ -39,6 +38,7 @@ import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormDataSource;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
@@ -206,7 +206,7 @@ public class DataSourceComponent implements Component {
 
 	@Override
 	public DataSourceComponent setContentSensitiveThetaJoinWrapper(
-			TypeConversion wrapper) {
+			Type wrapper) {
 		return this;
 	}
 

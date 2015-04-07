@@ -32,7 +32,7 @@ import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class WindowKeyValueStore<K, V> extends BasicStore<V> {
@@ -43,7 +43,7 @@ public class WindowKeyValueStore<K, V> extends BasicStore<V> {
 	private static final long serialVersionUID = 1L;
 
 	private static Logger LOG = Logger.getLogger(WindowKeyValueStore.class);
-	private TypeConversion _tc = null;
+	private Type _tc = null;
 
 	// Window Semantics Related
 	private long _startingTimeStamp;
@@ -102,7 +102,7 @@ public class WindowKeyValueStore<K, V> extends BasicStore<V> {
 				slidelength);
 	}
 
-	public WindowKeyValueStore(TypeConversion tc, Map conf,
+	public WindowKeyValueStore(Type tc, Map conf,
 			long startingTimeStamp, int windowedRange, int slidelength) {
 		this(SystemParameters.getInt(conf, "STORAGE_MEMORY_SIZE_MB"),
 				DEFAULT_HASH_INDICES, conf, startingTimeStamp, windowedRange,
@@ -222,7 +222,7 @@ public class WindowKeyValueStore<K, V> extends BasicStore<V> {
 		this._memstore.clear();
 	}
 
-	public void setTypeConversion(TypeConversion tc) {
+	public void setTypeConversion(Type tc) {
 		this._tc = tc;
 	}
 

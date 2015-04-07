@@ -74,15 +74,15 @@ import ch.epfl.data.squall.api.sql.optimizers.name.NameTranslator;
 import ch.epfl.data.squall.api.sql.util.ParserUtil;
 import ch.epfl.data.squall.api.sql.util.TupleSchema;
 import ch.epfl.data.squall.components.Component;
-import ch.epfl.data.squall.conversion.DateConversion;
-import ch.epfl.data.squall.conversion.DoubleConversion;
-import ch.epfl.data.squall.conversion.LongConversion;
-import ch.epfl.data.squall.conversion.StringConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.IntegerYearFromDate;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.expressions.ValueSpecification;
+import ch.epfl.data.squall.types.DateType;
+import ch.epfl.data.squall.types.DoubleType;
+import ch.epfl.data.squall.types.LongType;
+import ch.epfl.data.squall.types.StringType;
+import ch.epfl.data.squall.types.Type;
 
 /*
  * Used for Cost-optimizer(nameTranslator)
@@ -100,10 +100,10 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor {
 	// we will have a single object per (possibly) multiple spout/bolt threads.
 	// generating plans is done from a single thread, static additionally saves
 	// space
-	private static LongConversion _lc = new LongConversion();
-	private static DoubleConversion _dblConv = new DoubleConversion();
-	private static DateConversion _dateConv = new DateConversion();
-	private static StringConversion _sc = new StringConversion();
+	private static LongType _lc = new LongType();
+	private static DoubleType _dblConv = new DoubleType();
+	private static DateType _dateConv = new DateType();
+	private static StringType _sc = new StringType();
 
 	public NameProjectVisitor(TupleSchema inputTupleSchema,
 			Component affectedComponent) {
@@ -129,7 +129,7 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor {
 		final int position = _nt.indexOf(_inputTupleSchema, expr);
 		if (position != ParserUtil.NOT_FOUND) {
 			// we found an expression already in the tuple schema
-			final TypeConversion tc = _nt.getType(_inputTupleSchema, expr);
+			final Type tc = _nt.getType(_inputTupleSchema, expr);
 			final ValueExpression ve = new ColumnReference(tc, position,
 					ParserUtil.getStringExpr(expr));
 			pushToExprStack(ve);
@@ -204,7 +204,7 @@ public class NameProjectVisitor implements ExpressionVisitor, ItemsListVisitor {
 		final int position = _nt.getColumnIndex(_inputTupleSchema, column);
 
 		// extract type for the column
-		final TypeConversion tc = _nt.getType(_inputTupleSchema, column);
+		final Type tc = _nt.getType(_inputTupleSchema, column);
 
 		final ValueExpression ve = new ColumnReference(tc, position,
 				ParserUtil.getStringExpr(column));

@@ -30,12 +30,6 @@ import org.apache.log4j.Logger;
 
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.EquiJoinComponent;
-import ch.epfl.data.squall.conversion.DateConversion;
-import ch.epfl.data.squall.conversion.DoubleConversion;
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.StringConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.DateSum;
 import ch.epfl.data.squall.expressions.ValueExpression;
@@ -45,6 +39,12 @@ import ch.epfl.data.squall.operators.SelectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
+import ch.epfl.data.squall.types.DateType;
+import ch.epfl.data.squall.types.DoubleType;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.StringType;
+import ch.epfl.data.squall.types.Type;
 
 public class TPCH5_R_N_S_LPlan extends QueryPlan {
 	private static void computeDates() {
@@ -66,11 +66,11 @@ public class TPCH5_R_N_S_LPlan extends QueryPlan {
 
 	private static Logger LOG = Logger.getLogger(TPCH5_R_N_S_LPlan.class);
 
-	private static final IntegerConversion _ic = new IntegerConversion();
-	private static final TypeConversion<Date> _dc = new DateConversion();
-	private static final TypeConversion<String> _sc = new StringConversion();
+	private static final IntegerType _ic = new IntegerType();
+	private static final Type<Date> _dc = new DateType();
+	private static final Type<String> _sc = new StringType();
 
-	private static final NumericConversion<Double> _doubleConv = new DoubleConversion();
+	private static final NumericType<Double> _doubleConv = new DoubleType();
 
 	private QueryBuilder _queryBuilder = new QueryBuilder();
 	// query variables

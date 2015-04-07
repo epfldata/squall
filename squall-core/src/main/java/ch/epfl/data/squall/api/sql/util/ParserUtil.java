@@ -57,12 +57,12 @@ import ch.epfl.data.squall.api.sql.visitors.squall.ColumnRefCollectVisitor;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.theta.ThetaJoinStaticComponent;
-import ch.epfl.data.squall.conversion.TypeConversion;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
@@ -174,7 +174,7 @@ public class ParserUtil {
 		for (final ColumnNameType cnt : originalSchema) {
 			String columnName = cnt.getName();
 			columnName = getFullName(tableCompName, columnName);
-			final TypeConversion tc = cnt.getType();
+			final Type tc = cnt.getType();
 			cnts.add(new ColumnNameType(columnName, tc));
 		}
 

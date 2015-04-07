@@ -32,7 +32,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class KeyValueStore<K, V> extends BasicStore<V>{
@@ -43,7 +43,7 @@ public class KeyValueStore<K, V> extends BasicStore<V>{
 	private static final long serialVersionUID = 1L;
 
 	private static Logger LOG = Logger.getLogger(KeyValueStore.class);
-	private TypeConversion _tc = null;
+	private Type _tc = null;
 	private HashMap<K, ArrayList<V>> _memstore;
 	protected static final int DEFAULT_HASH_INDICES = 256;
 
@@ -63,7 +63,7 @@ public class KeyValueStore<K, V> extends BasicStore<V>{
 				DEFAULT_HASH_INDICES, conf);
 	}
 
-	public KeyValueStore(TypeConversion tc, Map conf) {
+	public KeyValueStore(Type tc, Map conf) {
 		this(SystemParameters.getInt(conf, "STORAGE_MEMORY_SIZE_MB"),
 				DEFAULT_HASH_INDICES, conf);
 		this._tc = tc;
@@ -264,7 +264,7 @@ public class KeyValueStore<K, V> extends BasicStore<V>{
 		this._memstore.clear();
 	}
 
-	public void setTypeConversion(TypeConversion tc) {
+	public void setTypeConversion(Type tc) {
 		this._tc = tc;
 	}
 

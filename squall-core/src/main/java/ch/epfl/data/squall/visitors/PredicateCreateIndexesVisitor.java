@@ -33,10 +33,10 @@ import ch.epfl.data.squall.predicates.LikePredicate;
 import ch.epfl.data.squall.predicates.OrPredicate;
 import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.predicates.booleanPrimitive;
-import ch.epfl.data.squall.thetajoin.indexes.BalancedBinaryTreeIndex;
-import ch.epfl.data.squall.thetajoin.indexes.BplusTreeIndex;
-import ch.epfl.data.squall.thetajoin.indexes.HashIndex;
-import ch.epfl.data.squall.thetajoin.indexes.Index;
+import ch.epfl.data.squall.storage.indexes.BalancedBinaryTreeIndex;
+import ch.epfl.data.squall.storage.indexes.BplusTreeIndex;
+import ch.epfl.data.squall.storage.indexes.HashIndex;
+import ch.epfl.data.squall.storage.indexes.Index;
 
 public class PredicateCreateIndexesVisitor implements PredicateVisitor {
 

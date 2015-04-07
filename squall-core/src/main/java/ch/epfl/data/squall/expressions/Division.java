@@ -24,9 +24,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import ch.epfl.data.squall.conversion.IntegerConversion;
-import ch.epfl.data.squall.conversion.NumericConversion;
-import ch.epfl.data.squall.conversion.TypeConversion;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 
 /*
@@ -46,7 +46,7 @@ public class Division implements ValueExpression<Integer> {
 	private static final long serialVersionUID = 1L;
 
 	private final List<ValueExpression> _veList = new ArrayList<ValueExpression>();
-	private final NumericConversion<Integer> _wrapper = new IntegerConversion();
+	private final NumericType<Integer> _wrapper = new IntegerType();
 
 	public Division(ValueExpression ve1, ValueExpression ve2,
 			ValueExpression... veArray) {
@@ -69,14 +69,14 @@ public class Division implements ValueExpression<Integer> {
 	public Integer eval(List<String> tuple) {
 		final ValueExpression firstVE = _veList.get(0);
 		final Object firstObj = firstVE.eval(tuple);
-		final NumericConversion firstType = (NumericConversion) firstVE
+		final NumericType firstType = (NumericType) firstVE
 				.getType();
 		double result = firstType.toDouble(firstObj);
 
 		for (int i = 1; i < _veList.size(); i++) {
 			final ValueExpression currentVE = _veList.get(i);
 			final Object currentObj = currentVE.eval(tuple);
-			final NumericConversion currentType = (NumericConversion) currentVE
+			final NumericType currentType = (NumericType) currentVE
 					.getType();
 			result /= currentType.toDouble(currentObj);
 		}
@@ -95,7 +95,7 @@ public class Division implements ValueExpression<Integer> {
 	}
 
 	@Override
-	public TypeConversion getType() {
+	public Type getType() {
 		return _wrapper;
 	}
 

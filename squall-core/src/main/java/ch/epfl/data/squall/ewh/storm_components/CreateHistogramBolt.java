@@ -36,11 +36,11 @@ import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
-import ch.epfl.data.squall.conversion.NumericConversion;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.utilities.DeepCopy;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
@@ -55,7 +55,7 @@ public class CreateHistogramBolt<JAT extends Number & Comparable<JAT>> extends
 	private StormEmitter _r1Emitter, _r2Emitter;
 	private String _r1EmitterIndex, _r2EmitterIndex;
 	private final String _componentName;
-	private NumericConversion _wrapper;
+	private NumericType _wrapper;
 	private ComparisonPredicate _comparison;
 	private Map _conf;
 	private OutputCollector _collector;
@@ -72,7 +72,7 @@ public class CreateHistogramBolt<JAT extends Number & Comparable<JAT>> extends
 
 	public CreateHistogramBolt(StormEmitter r1Source, StormEmitter r2Source,
 			String componentName, int numOfLastJoiners,
-			NumericConversion<JAT> wrapper, ComparisonPredicate comparison,
+			NumericType<JAT> wrapper, ComparisonPredicate comparison,
 			List<String> allCompNames, TopologyBuilder builder,
 			TopologyKiller killer, Config conf) {
 
