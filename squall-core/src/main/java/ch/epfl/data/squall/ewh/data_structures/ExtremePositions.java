@@ -21,26 +21,26 @@
 package ch.epfl.data.squall.ewh.data_structures;
 
 public class ExtremePositions {
-	private int _mostLeft, _mostRight;
+    private int _mostLeft, _mostRight;
 
-	public ExtremePositions(int mostLeft, int mostRight) {
-		_mostLeft = mostLeft;
-		_mostRight = mostRight;
-	}
+    public ExtremePositions(int mostLeft, int mostRight) {
+	_mostLeft = mostLeft;
+	_mostRight = mostRight;
+    }
 
-	public int getMostLeft() {
-		return _mostLeft;
-	}
+    public void setMostLeft(int mostLeft) {
+	_mostLeft = mostLeft;
+    }
 
-	public int getMostRight() {
-		return _mostRight;
-	}
+    public void setMostRight(int mostRight) {
+	_mostRight = mostRight;
+    }
 
-	public void setMostLeft(int mostLeft) {
-		_mostLeft = mostLeft;
-	}
+    public int getMostLeft() {
+	return _mostLeft;
+    }
 
-	public void setMostRight(int mostRight) {
-		_mostRight = mostRight;
-	}
+    public int getMostRight() {
+	return _mostRight;
+    }
 }

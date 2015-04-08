@@ -22,30 +22,30 @@ package ch.epfl.data.squall.ewh.algorithms.optimality;
 
 public class WeightFunction {
 
-	private double _a, _b;
+    private double _a, _b;
 
-	public WeightFunction(double a, double b) {
-		_a = a;
-		_b = b;
-	}
+    public WeightFunction(double a, double b) {
+	_a = a;
+	_b = b;
+    }
 
-	public double getA() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
+    public double getWeight(int halfPerimeter, int frequency) {
+	return _a * halfPerimeter + _b * frequency;
+    }
 
-	public double getB() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
+    @Override
+    public String toString() {
+	return "a = " + _a + ", b = " + _b;
+    }
 
-	public double getWeight(int halfPerimeter, int frequency) {
-		return _a * halfPerimeter + _b * frequency;
-	}
+    public double getA() {
+	// TODO Auto-generated method stub
+	return 0;
+    }
 
-	@Override
-	public String toString() {
-		return "a = " + _a + ", b = " + _b;
-	}
+    public double getB() {
+	// TODO Auto-generated method stub
+	return 0;
+    }
 
 }

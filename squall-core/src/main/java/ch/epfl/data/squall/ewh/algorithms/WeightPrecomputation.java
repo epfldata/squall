@@ -25,26 +25,26 @@ import ch.epfl.data.squall.ewh.data_structures.Region;
 
 public interface WeightPrecomputation {
 
-	public int getFrequency(Region region);
+    public WeightFunction getWeightFunction();
 
-	public int getMinHalfPerimeterForWeight(double maxWeight);
+    // prefix sum dimension
+    public int getXSize();
 
-	public int getPrefixSum(int x, int y); // necessary for
-	// PWeightPrecomputation
+    public int getYSize();
 
-	public int getTotalFrequency();
+    public double getWeight(Region region);
 
-	public double getWeight(Region region);
+    public int getFrequency(Region region);
 
-	public WeightFunction getWeightFunction();
+    // according to the matrix, not on the join condition
+    // for join condition, look at Coarsener
+    public boolean isEmpty(Region region);
 
-	// prefix sum dimension
-	public int getXSize();
+    public int getTotalFrequency();
 
-	public int getYSize();
+    public int getMinHalfPerimeterForWeight(double maxWeight);
 
-	// according to the matrix, not on the join condition
-	// for join condition, look at Coarsener
-	public boolean isEmpty(Region region);
+    public int getPrefixSum(int x, int y); // necessary for
+					   // PWeightPrecomputation
 
 }

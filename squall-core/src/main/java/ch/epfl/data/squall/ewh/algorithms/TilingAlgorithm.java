@@ -28,19 +28,19 @@ import ch.epfl.data.squall.ewh.data_structures.Region;
 
 public interface TilingAlgorithm {
 
-	// returns null for those algorithm which do not use it (e.g. Okcan)
-	public WeightPrecomputation getPrecomputation();
+    // sb is for collecting stats
+    public List<Region> partition(JoinMatrix joinMatrix, StringBuilder sb);
 
-	public String getShortName();
+    // returns null for those algorithm which do not use it (e.g. Okcan)
+    public WeightPrecomputation getPrecomputation();
 
-	public double getWeight(Region region);
+    // is always specified; that's what algorithm's optimality will be tested
+    // against
+    // not necessarily what it opimizes for (e.g. Okcan)
+    public WeightFunction getWeightFunction();
 
-	// is always specified; that's what algorithm's optimality will be tested
-	// against
-	// not necessarily what it opimizes for (e.g. Okcan)
-	public WeightFunction getWeightFunction();
+    public double getWeight(Region region);
 
-	// sb is for collecting stats
-	public List<Region> partition(JoinMatrix joinMatrix, StringBuilder sb);
+    public String getShortName();
 
 }

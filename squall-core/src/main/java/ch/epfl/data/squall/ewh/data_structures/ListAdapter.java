@@ -21,15 +21,15 @@
 package ch.epfl.data.squall.ewh.data_structures;
 
 public interface ListAdapter<T extends Comparable<T>> {
-	public void add(T t);
+    public void add(T t);
 
-	public T get(int index);
+    public void set(int index, T t);
 
-	public void remove(int index);
+    public T get(int index);
 
-	public void set(int index, T t);
+    public void remove(int index);
 
-	public int size();
+    public void sort();
 
-	public void sort();
+    public int size();
 }
