@@ -18,7 +18,7 @@
  */
 
 
-package ch.epfl.data.squall.ewh.utilities;
+package ch.epfl.data.squall.ewh.storm_components.stream_grouping;
 
 import java.util.ArrayList;
 import java.util.HashMap;

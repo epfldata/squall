@@ -56,7 +56,7 @@ import ch.epfl.data.squall.ewh.algorithms.PWeightPrecomputation;
 import ch.epfl.data.squall.ewh.algorithms.ShallowCoarsener;
 import ch.epfl.data.squall.ewh.algorithms.WeightPrecomputation;
 import ch.epfl.data.squall.ewh.algorithms.optimality.WeightFunction;
-import ch.epfl.data.squall.ewh.components.CreateHistogramComponent;
+import ch.epfl.data.squall.ewh.components.EquiDepthHistogramComponent;
 import ch.epfl.data.squall.ewh.components.EWHSampleMatrixComponent;
 import ch.epfl.data.squall.ewh.components.OkcanSampleMatrixComponent;
 import ch.epfl.data.squall.ewh.data_structures.JoinMatrix;
@@ -68,8 +68,8 @@ import ch.epfl.data.squall.ewh.data_structures.NumOfBuckets;
 import ch.epfl.data.squall.ewh.data_structures.Region;
 import ch.epfl.data.squall.ewh.data_structures.UJMPAdapterIntMatrix;
 import ch.epfl.data.squall.ewh.operators.SampleAsideAndForwardOperator;
-import ch.epfl.data.squall.ewh.utilities.RangeFilteredMulticastStreamGrouping;
-import ch.epfl.data.squall.ewh.utilities.RangeMulticastStreamGrouping;
+import ch.epfl.data.squall.ewh.storm_components.stream_grouping.RangeFilteredMulticastStreamGrouping;
+import ch.epfl.data.squall.ewh.storm_components.stream_grouping.RangeMulticastStreamGrouping;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
@@ -264,7 +264,7 @@ public class MyUtilities {
 		} else {
 			r1 = null;
 		}
-		CreateHistogramComponent r2HistComp = new CreateHistogramComponent(r1,
+		EquiDepthHistogramComponent r2HistComp = new EquiDepthHistogramComponent(r1,
 				r2, keyType, comparison, numLastJoiners);
 		queryBuilder.add(r2HistComp);
 

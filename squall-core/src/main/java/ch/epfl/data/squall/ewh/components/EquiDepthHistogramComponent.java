@@ -32,7 +32,7 @@ import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.EquiJoinComponent;
 import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.types.Type;
-import ch.epfl.data.squall.ewh.storm_components.CreateHistogramBolt;
+import ch.epfl.data.squall.ewh.storm_components.EquiDepthHistogramBolt;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
@@ -44,7 +44,7 @@ import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 
 // equi-depth histogram on one or both input relations
-public class CreateHistogramComponent implements Component {
+public class EquiDepthHistogramComponent implements Component {
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(EquiJoinComponent.class);
 
@@ -56,7 +56,7 @@ public class CreateHistogramComponent implements Component {
     private ComparisonPredicate _comparison;
     private NumericType _wrapper;
 
-    public CreateHistogramComponent(Component r1, Component r2,
+    public EquiDepthHistogramComponent(Component r1, Component r2,
 	    NumericType keyType, ComparisonPredicate comparison,
 	    int numOfLastJoiners) {
 	_r1 = r1;
@@ -123,13 +123,13 @@ public class CreateHistogramComponent implements Component {
     public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
 	    List<String> allCompNames, Config conf, int hierarchyPosition) {
 
-	new CreateHistogramBolt(_r1, _r2, _componentName, _numOfLastJoiners,
+	new EquiDepthHistogramBolt(_r1, _r2, _componentName, _numOfLastJoiners,
 		_wrapper, _comparison, allCompNames, builder, killer, conf);
     }
 
     // below is not used
     @Override
-    public CreateHistogramComponent add(Operator operator) {
+    public EquiDepthHistogramComponent add(Operator operator) {
 	throw new RuntimeException("Should not be here!");
     }
 
@@ -175,7 +175,7 @@ public class CreateHistogramComponent implements Component {
     }
 
     @Override
-    public CreateHistogramComponent setBatchOutputMillis(long millis) {
+    public EquiDepthHistogramComponent setBatchOutputMillis(long millis) {
 	throw new RuntimeException("Should not be here!");
     }
 
@@ -187,38 +187,38 @@ public class CreateHistogramComponent implements Component {
     // list of distinct keys, used for direct stream grouping and load-balancing
     // ()
     @Override
-    public CreateHistogramComponent setFullHashList(List<String> fullHashList) {
+    public EquiDepthHistogramComponent setFullHashList(List<String> fullHashList) {
 	throw new RuntimeException("Should not be here!");
     }
 
     @Override
-    public CreateHistogramComponent setHashExpressions(
+    public EquiDepthHistogramComponent setHashExpressions(
 	    List<ValueExpression> hashExpressions) {
 	throw new RuntimeException("Should not be here!");
     }
 
     @Override
-    public CreateHistogramComponent setOutputPartKey(List<Integer> hashIndexes) {
+    public EquiDepthHistogramComponent setOutputPartKey(List<Integer> hashIndexes) {
 	throw new RuntimeException("Should not be here!");
     }
 
     @Override
-    public CreateHistogramComponent setOutputPartKey(int... hashIndexes) {
+    public EquiDepthHistogramComponent setOutputPartKey(int... hashIndexes) {
 	throw new RuntimeException("Should not be here!");
     }
 
     @Override
-    public CreateHistogramComponent setPrintOut(boolean printOut) {
+    public EquiDepthHistogramComponent setPrintOut(boolean printOut) {
 	throw new RuntimeException("Should not be here!");
     }
 
     // Out of the second storage (join of R tuple with S relation)
-    public CreateHistogramComponent setSecondPreAggProj(
+    public EquiDepthHistogramComponent setSecondPreAggProj(
 	    ProjectOperator secondPreAggProj) {
 	throw new RuntimeException("Should not be here!");
     }
 
-    public CreateHistogramComponent setSecondPreAggStorage(
+    public EquiDepthHistogramComponent setSecondPreAggStorage(
 	    AggregationStorage secondPreAggStorage) {
 	throw new RuntimeException("Should not be here!");
     }
@@ -230,7 +230,7 @@ public class CreateHistogramComponent implements Component {
     }
 
     @Override
-    public CreateHistogramComponent setJoinPredicate(Predicate predicate) {
+    public EquiDepthHistogramComponent setJoinPredicate(Predicate predicate) {
 	throw new RuntimeException("Should not be here!");
     }
 

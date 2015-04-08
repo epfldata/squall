@@ -18,7 +18,7 @@
  */
 
 
-package ch.epfl.data.squall.ewh.data_structures;
+package ch.epfl.data.squall.ewh.utilities;
 
 import gnu.trove.list.array.TIntArrayList;
 

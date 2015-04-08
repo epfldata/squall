@@ -18,25 +18,25 @@
  */
 
 
-package ch.epfl.data.squall.ewh.data_structures;
+package ch.epfl.data.squall.ewh.utilities;
 
-public class OverweightedException extends Exception {
+import ch.epfl.data.squall.ewh.algorithms.ShallowCoarsener;
+
+public class TooSmallMaxWeightException extends Exception {
     private static final long serialVersionUID = 1L;
-    private double _maxWeight; // what was asked for; not the region weight
-    private int _x1, _y1, _x2, _y2; // region of the matrix with too high weight
+    private double _maxWeight;
+    private ShallowCoarsener _coarsener;
 
-    public OverweightedException(double maxWeight, int x1, int y1, int x2,
-	    int y2) {
+    public TooSmallMaxWeightException(double maxWeight,
+	    ShallowCoarsener coarsener) {
 	_maxWeight = maxWeight;
-	_x1 = x1;
-	_y1 = y1;
-	_x2 = x2;
-	_y2 = y2;
+	_coarsener = coarsener;
     }
 
     @Override
     public String toString() {
 	return "Impossible to achieve maxWeight less than " + _maxWeight
-		+ ": [" + _x1 + ", " + _y1 + ", " + _x2 + ", " + _y2 + "]";
+		+ " with " + (_coarsener != null ? _coarsener : "");
     }
+
 }

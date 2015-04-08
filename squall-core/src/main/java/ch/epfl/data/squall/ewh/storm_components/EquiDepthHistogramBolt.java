@@ -47,10 +47,10 @@ import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.SystemParameters.HistogramType;
 
 //equi-depth histogram on one or both input relations
-public class CreateHistogramBolt<JAT extends Number & Comparable<JAT>> extends
+public class EquiDepthHistogramBolt<JAT extends Number & Comparable<JAT>> extends
 	BaseRichBolt {
     private static final long serialVersionUID = 1L;
-    private static Logger LOG = Logger.getLogger(CreateHistogramBolt.class);
+    private static Logger LOG = Logger.getLogger(EquiDepthHistogramBolt.class);
 
     private StormEmitter _r1Emitter, _r2Emitter;
     private String _r1EmitterIndex, _r2EmitterIndex;
@@ -70,7 +70,7 @@ public class CreateHistogramBolt<JAT extends Number & Comparable<JAT>> extends
     private List<JAT> _joinKeys1 = new ArrayList<JAT>();
     private List<JAT> _joinKeys2 = new ArrayList<JAT>();
 
-    public CreateHistogramBolt(StormEmitter r1Source, StormEmitter r2Source,
+    public EquiDepthHistogramBolt(StormEmitter r1Source, StormEmitter r2Source,
 	    String componentName, int numOfLastJoiners,
 	    NumericType<JAT> wrapper, ComparisonPredicate comparison,
 	    List<String> allCompNames, TopologyBuilder builder,

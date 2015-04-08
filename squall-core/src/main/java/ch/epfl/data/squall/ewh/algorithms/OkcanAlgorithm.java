@@ -30,10 +30,10 @@ import org.apache.log4j.Logger;
 import ch.epfl.data.squall.ewh.data_structures.BooleanRegions;
 import ch.epfl.data.squall.ewh.data_structures.ExtremePositions;
 import ch.epfl.data.squall.ewh.data_structures.JoinMatrix;
-import ch.epfl.data.squall.ewh.data_structures.OverweightedException;
 import ch.epfl.data.squall.ewh.data_structures.Region;
-import ch.epfl.data.squall.ewh.data_structures.TooSmallMaxWeightException;
 import ch.epfl.data.squall.ewh.main.PushStatisticCollector;
+import ch.epfl.data.squall.ewh.utilities.OverweightedException;
+import ch.epfl.data.squall.ewh.utilities.TooSmallMaxWeightException;
 import ch.epfl.data.squall.utilities.MyUtilities;
 
 public abstract class OkcanAlgorithm implements TilingAlgorithm {
