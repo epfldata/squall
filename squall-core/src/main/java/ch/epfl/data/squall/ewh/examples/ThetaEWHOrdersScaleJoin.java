@@ -39,6 +39,7 @@ import ch.epfl.data.squall.predicates.BetweenPredicate;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
+import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
 import ch.epfl.data.squall.types.DoubleType;
 import ch.epfl.data.squall.types.LongType;
@@ -50,7 +51,7 @@ import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.SystemParameters.HistogramType;
 
 //this is Eocd for high scalability
-public class ThetaEWHOrdersScaleJoin {
+public class ThetaEWHOrdersScaleJoin extends QueryPlan{
 	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final Type<String> _stringConv = new StringType();
 	private static final LongType _lc = new LongType();

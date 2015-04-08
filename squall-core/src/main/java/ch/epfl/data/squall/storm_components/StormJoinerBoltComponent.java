@@ -649,12 +649,15 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 			return oppositeStorage.get(currentOperator, keyValue, diff);
 		// Even if valueIndexed is at first time an integer with
 		// precomputation a*col +b, it become a double
-		else if (_typeOfValueIndexed.get(0) instanceof Double)
-			return oppositeStorage.get(currentOperator,
-					Double.parseDouble(keyValue), diff);
 		else if (_typeOfValueIndexed.get(0) instanceof Integer)
 			return oppositeStorage.get(currentOperator,
 					Integer.parseInt(keyValue), diff);
+		else if (_typeOfValueIndexed.get(0) instanceof Long)
+			return oppositeStorage.get(currentOperator,
+					Long.parseLong(keyValue), diff);		
+		else if (_typeOfValueIndexed.get(0) instanceof Double)
+			return oppositeStorage.get(currentOperator,
+					Double.parseDouble(keyValue), diff);
 		else if (_typeOfValueIndexed.get(0) instanceof Date)
 			try {
 				return oppositeStorage.get(currentOperator,
@@ -710,12 +713,15 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 						value);
 			// Even if valueIndexed is at first time an integer with
 			// precomputation a*col +b, it become a double
-			else if (_typeOfValueIndexed.get(i) instanceof Double)
-				currentRowIds = currentOpposIndex.getValues(currentOperator,
-						Double.parseDouble(value));
 			else if (_typeOfValueIndexed.get(i) instanceof Integer)
 				currentRowIds = currentOpposIndex.getValues(currentOperator,
 						Integer.parseInt(value));
+			else if (_typeOfValueIndexed.get(i) instanceof Long)
+				currentRowIds = currentOpposIndex.getValues(currentOperator,
+						Long.parseLong(value));			
+			else if (_typeOfValueIndexed.get(i) instanceof Double)
+				currentRowIds = currentOpposIndex.getValues(currentOperator,
+						Double.parseDouble(value));
 			else if (_typeOfValueIndexed.get(i) instanceof Date)
 				try {
 					currentRowIds = currentOpposIndex.getValues(
@@ -758,6 +764,9 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 			if (typesOfValuesToIndex.get(i) instanceof Integer)
 				affectedIndexes.get(i).put(row_id,
 						Integer.parseInt(valuesToIndex.get(i)));
+			else if (typesOfValuesToIndex.get(i) instanceof Long)
+				affectedIndexes.get(i).put(row_id,
+						Long.parseLong(valuesToIndex.get(i)));
 			else if (typesOfValuesToIndex.get(i) instanceof Double)
 				affectedIndexes.get(i).put(row_id,
 						Double.parseDouble(valuesToIndex.get(i)));

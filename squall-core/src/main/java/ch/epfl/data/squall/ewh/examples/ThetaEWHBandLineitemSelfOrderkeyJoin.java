@@ -36,6 +36,7 @@ import ch.epfl.data.squall.operators.SelectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.predicates.OrPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
+import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
 import ch.epfl.data.squall.types.IntegerType;
 import ch.epfl.data.squall.types.NumericType;
@@ -44,7 +45,7 @@ import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
-public class ThetaEWHBandLineitemSelfOrderkeyJoin {
+public class ThetaEWHBandLineitemSelfOrderkeyJoin extends QueryPlan{
 	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final Type<String> _stringConv = new StringType();
 	private static final IntegerType _ic = new IntegerType();

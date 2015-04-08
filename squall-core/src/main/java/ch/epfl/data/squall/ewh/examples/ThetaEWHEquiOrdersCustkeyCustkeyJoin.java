@@ -35,6 +35,7 @@ import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SelectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
+import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
 import ch.epfl.data.squall.types.DateIntegerType;
 import ch.epfl.data.squall.types.IntegerType;
@@ -46,7 +47,7 @@ import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.SystemParameters.HistogramType;
 
 //Eocd
-public class ThetaEWHEquiOrdersCustkeyCustkeyJoin {
+public class ThetaEWHEquiOrdersCustkeyCustkeyJoin extends QueryPlan{
 	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final Type<String> _stringConv = new StringType();
 	private static final IntegerType _ic = new IntegerType();

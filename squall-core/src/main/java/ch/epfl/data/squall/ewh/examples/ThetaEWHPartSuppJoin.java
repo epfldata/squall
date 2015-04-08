@@ -33,6 +33,7 @@ import ch.epfl.data.squall.operators.PrintOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
+import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
 import ch.epfl.data.squall.types.IntegerType;
 import ch.epfl.data.squall.types.NumericType;
@@ -43,7 +44,7 @@ import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.SystemParameters.HistogramType;
 
 // a candidate for new Eocd for the new Linux cluster
-public class ThetaEWHPartSuppJoin {
+public class ThetaEWHPartSuppJoin extends QueryPlan{
 
 	private QueryBuilder _queryBuilder = new QueryBuilder();
 	private static final Type<String> _stringConv = new StringType();

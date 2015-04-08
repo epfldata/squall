@@ -38,6 +38,7 @@ import ch.epfl.data.squall.operators.PrintOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
+import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
 import ch.epfl.data.squall.types.DateIntegerType;
 import ch.epfl.data.squall.types.IntegerType;
@@ -48,7 +49,7 @@ import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.SystemParameters.HistogramType;
 
-public class ThetaEWHBandOrdersOrderkeyCustkeyJoin {
+public class ThetaEWHBandOrdersOrderkeyCustkeyJoin extends QueryPlan{
 	private static Logger LOG = Logger
 			.getLogger(ThetaEWHBandOrdersOrderkeyCustkeyJoin.class);
 	private QueryBuilder _queryBuilder = new QueryBuilder();
