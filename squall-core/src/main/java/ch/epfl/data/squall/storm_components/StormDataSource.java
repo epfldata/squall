@@ -281,12 +281,16 @@ public class StormDataSource extends StormSpoutComponent {
 		super.open(map, tc, collector);
 		try {
 			_fileSection = tc.getThisTaskIndex();
-			_reader = new SerializableFileInputStream(new File(_inputPath),
+
+			
+			if(_inputPath.startsWith("hdfs"))
+				_reader = new SerializableHDFSFileInputStream(_inputPath,
+						1 * 1024 * 1024, _fileSection, _fileParts);
+			else
+				_reader = new SerializableFileInputStream(new File(_inputPath),
 					1 * 1024 * 1024, _fileSection, _fileParts);
 
-//			_reader = new SerializableHDFSFileInputStream(_inputPath,
-//					1 * 1024 * 1024, _fileSection, _fileParts);
-
+			
 		} catch (final Exception e) {
 			final String error = MyUtilities.getStackTrace(e);
 			LOG.info(error);

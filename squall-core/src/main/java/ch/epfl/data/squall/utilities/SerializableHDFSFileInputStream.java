@@ -35,8 +35,7 @@ public class SerializableHDFSFileInputStream extends InputStream implements
 		Serializable, CustomReader {
 	// self-test
 	public static void main(String args[]) throws IOException {
-		final SerializableHDFSFileInputStream reader = new SerializableHDFSFileInputStream(
-				args[0]);
+		final SerializableHDFSFileInputStream reader = new SerializableHDFSFileInputStream("hdfs://localhost:9000/0.3/0.3/customer.tbl");
 		while (true) {
 			final String l = reader.readLine();
 			if (l == null)
@@ -147,7 +146,7 @@ public class SerializableHDFSFileInputStream extends InputStream implements
 			_bufferPtr = 0;
 		}
 
-		//final FileInputStream fis = new FileInputStream(_file);
+		_fis = _file.open(new Path(_uri));
 		int bytesRead = -100;
 		try {
 			if (_filePtr > 0)
