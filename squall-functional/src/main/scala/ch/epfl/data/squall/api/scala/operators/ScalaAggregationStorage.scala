@@ -22,7 +22,6 @@ package ch.epfl.data.squall.api.scala.operators
 
 import ch.epfl.data.squall.storage.AggregationStorage
 import ch.epfl.data.squall.operators.AggregateOperator
-import ch.epfl.data.squall.conversion.TypeConversion
 import Numeric.Implicits._
 
 /**

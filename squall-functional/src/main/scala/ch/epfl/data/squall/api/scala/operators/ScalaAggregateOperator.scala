@@ -26,12 +26,10 @@ import ch.epfl.data.squall.operators.DistinctOperator
 import ch.epfl.data.squall.expressions.ValueExpression
 import ch.epfl.data.squall.operators.ProjectOperator
 import ch.epfl.data.squall.storage.BasicStore
-import ch.epfl.data.squall.conversion.TypeConversion
 import scala.reflect.runtime.universe._
 import scala.math.Numeric
 import org.apache.log4j.Logger
 import java.util.Arrays.ArrayList
-import ch.epfl.data.squall.conversion.NumericConversion
 import ch.epfl.data.squall.storage.AggregationStorage
 import ch.epfl.data.squall.api.scala.SquallType._
 import java.util.Arrays
@@ -44,6 +42,7 @@ import java.util.ArrayList
 import java.util.Arrays.ArrayList
 import ch.epfl.data.squall.storage._
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager
+import ch.epfl.data.squall.types.Type;
 
 class ScalaAggregateOperator[T: SquallType, A: Numeric](val _agg: T => A, val _map: java.util.Map[_, _]) extends AggregateOperator[A] {
 
@@ -129,7 +128,7 @@ class ScalaAggregateOperator[T: SquallType, A: Numeric](val _agg: T => A, val _m
     _storage.asInstanceOf[BasicStore[A]]
   }
 
-  override def getType(): TypeConversion[Number] = {
+  override def getType(): Type[Number] = {
     null
   }
 

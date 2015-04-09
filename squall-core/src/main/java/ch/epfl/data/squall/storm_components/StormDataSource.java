@@ -45,6 +45,7 @@ import ch.epfl.data.squall.utilities.CustomReader;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.squall.utilities.SerializableFileInputStream;
+import ch.epfl.data.squall.utilities.SerializableHDFSFileInputStream;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class StormDataSource extends StormSpoutComponent {
@@ -282,6 +283,9 @@ public class StormDataSource extends StormSpoutComponent {
 			_fileSection = tc.getThisTaskIndex();
 			_reader = new SerializableFileInputStream(new File(_inputPath),
 					1 * 1024 * 1024, _fileSection, _fileParts);
+
+//			_reader = new SerializableHDFSFileInputStream(_inputPath,
+//					1 * 1024 * 1024, _fileSection, _fileParts);
 
 		} catch (final Exception e) {
 			final String error = MyUtilities.getStackTrace(e);

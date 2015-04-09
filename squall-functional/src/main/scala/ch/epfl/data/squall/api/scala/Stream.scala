@@ -25,7 +25,6 @@ import ch.epfl.data.squall.api.scala.SquallType._
 import ch.epfl.data.squall.api.scala.operators.ScalaAggregateOperator
 import ch.epfl.data.squall.api.scala.operators.ScalaMapOperator
 import ch.epfl.data.squall.query_plans.QueryBuilder
-
 import ch.epfl.data.squall.query_plans.QueryBuilder
 import ch.epfl.data.squall.operators.Operator
 import ch.epfl.data.squall.components.EquiJoinComponent
@@ -39,10 +38,9 @@ import ch.epfl.data.squall.api.scala.operators.predicates.ScalaPredicate
 import ch.epfl.data.squall.predicates.ComparisonPredicate
 import ch.epfl.data.squall.predicates.Predicate
 import ch.epfl.data.squall.expressions.ColumnReference
-import ch.epfl.data.squall.conversion.NumericConversion
-import ch.epfl.data.squall.conversion.IntegerConversion
 import ch.epfl.data.squall.predicates.booleanPrimitive
 import ch.epfl.data.squall.predicates.AndPredicate
+import ch.epfl.data.squall.types.IntegerType
 
 /**
  * @author mohamed
@@ -138,7 +136,7 @@ object Stream {
 
   def createPredicate(first: List[Int], second: List[Int]): Predicate = {
     //NumericConversion
-    val keyType = new IntegerConversion();
+    val keyType = new IntegerType();
     val inter = first.zip(second).map(keyPairs => new ComparisonPredicate(ComparisonPredicate.EQUAL_OP, new ColumnReference(keyType, keyPairs._1), new ColumnReference(keyType, keyPairs._2)))
     val start: Predicate = new booleanPrimitive(true)
     inter.foldLeft(start)((pred1, pred2) => new AndPredicate(pred1, pred2))
