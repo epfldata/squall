@@ -165,8 +165,8 @@ class ScalaAggregateOperator[T: SquallType, A: Numeric](val _agg: T => A, val _m
 
     // propagate further the affected tupleHash-tupleValue pair
     val affectedTuple: java.util.List[String] = new ArrayList[String]();
-    //affectedTuple.add(tupleHash);
-    //affectedTuple.add(strValue);
+    affectedTuple.add(tupleHash);
+    affectedTuple.add(strValue);
     return affectedTuple;
 
   }

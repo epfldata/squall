@@ -218,6 +218,7 @@ public class LocalMergeResults {
 	// we need it due to collectedLastComponents, and lines of result
 	// in cluster mode, they can communicate only through conf file
 	public static int localPrintAndCompare(Map map) {
+		if(_computedAgg==null) return -1;
 		localPrint(_computedAgg.printContent(), map);
 		return localCompare(map);
 	}

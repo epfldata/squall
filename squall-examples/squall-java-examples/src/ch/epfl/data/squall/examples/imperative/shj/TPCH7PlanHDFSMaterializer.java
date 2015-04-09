@@ -52,8 +52,8 @@ import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.types.StringType;
 import ch.epfl.data.squall.types.Type;
 
-public class TPCH7Plan extends QueryPlan {
-	private static Logger LOG = Logger.getLogger(TPCH7Plan.class);
+public class TPCH7PlanHDFSMaterializer extends QueryPlan {
+	private static Logger LOG = Logger.getLogger(TPCH7PlanHDFSMaterializer.class);
 
 	private final QueryBuilder _queryBuilder = new QueryBuilder();
 
@@ -68,7 +68,7 @@ public class TPCH7Plan extends QueryPlan {
 	private static final Date _date1 = _dateConv.fromString(_date1Str);
 	private static final Date _date2 = _dateConv.fromString(_date2Str);
 
-	public TPCH7Plan(String dataPath, String extension, Map conf) {
+	public TPCH7PlanHDFSMaterializer(String dataPath, String extension, Map conf) {
 
 		// -------------------------------------------------------------------------------------
 		final List<Integer> hashNation2 = Arrays.asList(1);
@@ -220,6 +220,10 @@ public class TPCH7Plan extends QueryPlan {
 		EquiJoinComponent finalComp = new EquiJoinComponent(N_C_Ojoin,
 				L_S_Njoin).add(so).add(agg);
 		_queryBuilder.add(finalComp);
+		
+		HDFSmaterializer hd = new HDFSmaterializer(finalComp, "hdfsMat", "hdfs://localhost:9000/", "tpch7", 4); //set parallelism
+		_queryBuilder.add(hd);
+		
 
 	}
 

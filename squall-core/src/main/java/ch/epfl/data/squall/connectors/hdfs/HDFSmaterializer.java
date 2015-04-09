@@ -76,13 +76,17 @@ public class HDFSmaterializer implements Component{
 	private List<String> _fullHashList;
 	
 	private String _hdfsPath;
+	private String _folderName;
+	private int _parallelism;
 	
-	public HDFSmaterializer(Component parent, String componentName, String hdfsPath) {
+	public HDFSmaterializer(Component parent, String componentName, String hdfsPath, String folderName, int parallelism) {
 
 		_parent = parent;
 		_parent.setChild(this);
 		_componentName = componentName;
 		_hdfsPath = hdfsPath;
+		_folderName=folderName;
+		_parallelism=parallelism;
 	}
 
 
@@ -97,7 +101,7 @@ public class HDFSmaterializer implements Component{
 		FileRotationPolicy rotationPolicy = new FileSizeRotationPolicy(5.0f, Units.MB);
 
 		FileNameFormat fileNameFormat = new DefaultFileNameFormat()
-		.withPath("/foo/");
+		.withPath("/"+_folderName+"/").withExtension(".txt");
 
 		HdfsBolt bolt = new HdfsBolt()
 		.withFsUrl(hdfsPath)
@@ -209,7 +213,7 @@ public class HDFSmaterializer implements Component{
 		BaseRichBolt hdfsBolt= createHDFSmaterializer(_hdfsPath);
 
 		
-		builder.setBolt("hdfs", hdfsBolt, 4).shuffleGrouping(((StormEmitter)_parent).getEmitterIDs()[0]);
+		builder.setBolt("hdfs", hdfsBolt, _parallelism).shuffleGrouping(((StormEmitter)_parent).getEmitterIDs()[0]);
 		
 	}
 

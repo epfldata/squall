@@ -178,12 +178,12 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements
 			tupleHash = MyUtilities.createHashString(tuple, _groupByColumns,
 					_map);
 		final T value = _storage.update(tuple, tupleHash, lineageTimestamp);
-		// final String strValue = _wrapper.toString(value);
+		 final String strValue = _wrapper.toString(value);
 
 		// propagate further the affected tupleHash-tupleValue pair
 		final List<String> affectedTuple = new ArrayList<String>();
-		// affectedTuple.add(tupleHash);
-		// affectedTuple.add(strValue);
+		 affectedTuple.add(tupleHash);
+		 affectedTuple.add(strValue);
 
 		return affectedTuple;
 	}
