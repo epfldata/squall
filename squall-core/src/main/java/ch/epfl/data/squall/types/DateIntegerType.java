@@ -20,6 +20,8 @@
 
 package ch.epfl.data.squall.types;
 
+import java.util.Random;
+
 public class DateIntegerType implements NumericType<Integer> {
 	public static void main(String[] args) {
 		DateIntegerType dcConv = new DateIntegerType();
@@ -38,6 +40,8 @@ public class DateIntegerType implements NumericType<Integer> {
 	private static final long serialVersionUID = 1L;
 
 	private final DateType _dc = new DateType();
+	
+	private final Random _rnd = new Random();
 
 	@Override
 	public Integer fromDouble(double d) {
@@ -110,6 +114,14 @@ public class DateIntegerType implements NumericType<Integer> {
 		String strDate = obj.toString();
 		return strDate.substring(0, 4) + "-" + strDate.substring(4, 6) + "-"
 				+ strDate.substring(6, 8);
+	}
+
+	@Override
+	public Integer generateRandomInstance() {
+		final int year = (_rnd.nextInt(2020-1800) + 1800) * 10000;
+		final int month = (_rnd.nextInt(12)) * 100;
+		final int day = _rnd.nextInt(30);
+		return year + month + day;
 	}
 
 }

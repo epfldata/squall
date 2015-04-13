@@ -52,4 +52,9 @@ public class SumCountType implements Type<SumCount> {
 		return sc.getSum() + ":" + sc.getCount();
 	}
 
+	@Override
+	public SumCount generateRandomInstance() {
+		throw new RuntimeException("Not implemented");
+	}
+
 }

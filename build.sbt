@@ -69,6 +69,8 @@ lazy val squall = (project in file("squall-core")).
       "com.novocode" % "junit-interface" % "0.11" % Test,
       "org.apache.hadoop" % "hadoop-client" % "2.2.0" exclude("org.slf4j", "slf4j-log4j12"),
       "org.apache.hadoop" % "hadoop-hdfs" % "2.2.0" exclude("org.slf4j", "slf4j-log4j12")
+      //"com.github.ptgoetz" % "storm-signals" % "0.2.0",
+      //"com.netflix.curator" % "curator-framework" % "1.0.1"
     ),
     // http://www.scala-sbt.org/0.13/docs/Running-Project-Code.html
     // We need to fork the JVM, as storm uses multiple threads

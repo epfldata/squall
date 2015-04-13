@@ -20,8 +20,11 @@
 
 package ch.epfl.data.squall.types;
 
+import java.util.Random;
+
 public class StringType implements Type<String> {
 	private static final long serialVersionUID = 1L;
+	private final Random _rnd = new Random();
 
 	@Override
 	public String fromString(String str) {
@@ -48,4 +51,21 @@ public class StringType implements Type<String> {
 	public String toString(String obj) {
 		return obj;
 	}
+
+	@Override
+	public String generateRandomInstance() {
+		return generateRandomString(30);
+	}
+	
+	private String generateRandomString(int size){
+		char[] chars = "abcdefghijklmnopqrstuvwxyz".toCharArray();
+		StringBuilder sb = new StringBuilder();
+		Random random = new Random();
+		for (int i = 0; i < size; i++) {
+		    char c = chars[random.nextInt(chars.length)];
+		    sb.append(c);
+		}
+		return sb.toString();
+	}
+	
 }

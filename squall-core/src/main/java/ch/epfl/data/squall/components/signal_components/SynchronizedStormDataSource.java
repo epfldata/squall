@@ -18,10 +18,8 @@
  */
 
 
-package ch.epfl.data.squall.storm_components;
+package ch.epfl.data.squall.components.signal_components;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,25 +35,21 @@ import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
 import ch.epfl.data.squall.components.ComponentProperties;
+import ch.epfl.data.squall.components.signal_components.storm.StormSignalConnection;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
+import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
-import ch.epfl.data.squall.utilities.CustomReader;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.PeriodicAggBatchSend;
-import ch.epfl.data.squall.utilities.SerializableFileInputStream;
-import ch.epfl.data.squall.utilities.SerializableHDFSFileInputStream;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
-public class StormDataSource extends StormSpoutComponent {
+public class SynchronizedStormDataSource extends StormSynchronizedSpoutComponent  {
 	private static final long serialVersionUID = 1L;
-	private static Logger LOG = Logger.getLogger(StormDataSource.class);
+	private static Logger LOG = Logger.getLogger(SynchronizedStormDataSource.class);
 
-	private final String _inputPath;
-	private int _fileSection;
-	private final int _fileParts;
-	private CustomReader _reader = null;
 
 	private boolean _hasReachedEOF = false;
 	private boolean _hasSentEOF = false; // have sent EOF to TopologyKiller
@@ -65,28 +59,33 @@ public class StormDataSource extends StormSpoutComponent {
 	private long _pendingTuples = 0;
 	private int _numSentTuples = 0;
 
-	private final ChainOperator _operatorChain;
-
 	// for aggregate batch sending
 	private final Semaphore _semAgg = new Semaphore(1, true);
 	private boolean _firstTime = true;
 	private PeriodicAggBatchSend _periodicAggBatch;
 	private final long _aggBatchOutputMillis;
+	
+	private final ChainOperator _operatorChain;
+	
+	private final int _keyIndex;
+	
+	private int _keyValue=0;
 
 	private String _name;
+	
+	private ArrayList<Type> _schema;
 
-	public StormDataSource(ComponentProperties cp, List<String> allCompNames,
-			String inputPath, int hierarchyPosition, int parallelism,
+	public SynchronizedStormDataSource(ComponentProperties cp, List<String> allCompNames,
+			ArrayList<Type> tupleTypes, int hierarchyPosition, int parallelism, int keyIndex,
 			boolean isPartitioner, TopologyBuilder builder,
 			TopologyKiller killer, Config conf) {
 
 		super(cp, allCompNames, hierarchyPosition, isPartitioner, conf);
-		_operatorChain = cp.getChainOperator();
+		_keyIndex=keyIndex;
 		_name = cp.getName();
 		_aggBatchOutputMillis = cp.getBatchOutputMillis();
-		_inputPath = inputPath;
-		_fileParts = parallelism;
-
+		_operatorChain = cp.getChainOperator();
+		_schema=tupleTypes;
 		if (getHierarchyPosition() == FINAL_COMPONENT
 				&& (!MyUtilities.isAckEveryTuple(conf)))
 			killer.registerComponent(this, parallelism);
@@ -94,8 +93,8 @@ public class StormDataSource extends StormSpoutComponent {
 		builder.setSpout(getID(), this, parallelism);
 		if (MyUtilities.isAckEveryTuple(conf))
 			killer.registerComponent(this, parallelism);
+		
 	}
-
 
 	// ack method on spout is called only if in AckEveryTuple mode (ACKERS > 0)
 	@Override
@@ -160,12 +159,8 @@ public class StormDataSource extends StormSpoutComponent {
 
 	@Override
 	public void close() {
-		try {
-			_reader.close();
-		} catch (final Exception e) {
-			final String error = MyUtilities.getStackTrace(e);
-			LOG.info(error);
-		}
+		super.close();
+		
 	}
 
 	/*
@@ -251,7 +246,9 @@ public class StormDataSource extends StormSpoutComponent {
 				Utils.sleep(timeout);
 		}
 
-		final String line = readLine();
+		final String line = generateLine();
+		//LOG.info("sending: "+line);
+		
 		if (line == null) {
 			if (!_hasReachedEOF) {
 				_hasReachedEOF = true;
@@ -273,33 +270,19 @@ public class StormDataSource extends StormSpoutComponent {
 	@Override
 	public void open(Map map, TopologyContext tc, SpoutOutputCollector collector) {
 		super.open(map, tc, collector);
-		try {
-			_fileSection = tc.getThisTaskIndex();
-
-			
-			if(_inputPath.startsWith("hdfs"))
-				_reader = new SerializableHDFSFileInputStream(_inputPath,
-						1 * 1024 * 1024, _fileSection, _fileParts);
-			else
-				_reader = new SerializableFileInputStream(new File(_inputPath),
-					1 * 1024 * 1024, _fileSection, _fileParts);
-
-			
-		} catch (final Exception e) {
-			final String error = MyUtilities.getStackTrace(e);
-			LOG.info(error);
-			throw new RuntimeException("Filename not found:" + error);
-		}
 	}
 
 	// HELPER methods
-	protected String readLine() {
-		String text = null;
-		try {
-			text = _reader.readLine();
-		} catch (final IOException e) {
-			final String errMessage = MyUtilities.getStackTrace(e);
-			LOG.info(errMessage);
+	protected String generateLine() {
+		String text = "";
+		for (int i = 0; i < _schema.size(); i++) {
+			if(i==_keyIndex)
+				text+=String.valueOf(_keyValue);
+			else{
+			Type attribute =  _schema.get(i);
+			text+=attribute.toString(attribute.generateRandomInstance());
+			}
+			text+="|";
 		}
 		return text;
 	}
@@ -316,5 +299,22 @@ public class StormDataSource extends StormSpoutComponent {
 					getCollector().emit(SystemParameters.EOF_STREAM,
 							new Values(SystemParameters.EOF));
 				}
+	}
+
+	@Override
+	public void onSignal(byte[] payload) {
+		int x= byteArrayToInt(payload);
+		LOG.info("Changed the KeyValue from "+_keyValue+" to "+x);
+		_keyValue = x;
+	}
+	
+	private int byteArrayToInt(byte[] b) 
+	{
+	    int value = 0;
+	    for (int i = 0; i < 4; i++) {
+	        int shift = (4 - 1 - i) * 8;
+	        value += (b[i] & 0x000000FF) << shift;
+	    }
+	    return value;
 	}
 }

@@ -31,4 +31,6 @@ public interface Type<T> extends Serializable {
 	public T getInitialValue();
 
 	public String toString(T obj);
+	
+	public T generateRandomInstance();
 }

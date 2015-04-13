@@ -20,8 +20,11 @@
 
 package ch.epfl.data.squall.types;
 
+import java.util.Random;
+
 public class IntegerType implements NumericType<Integer> {
 	private static final long serialVersionUID = 1L;
+	private final Random _rnd = new Random();
 
 	@Override
 	public Integer fromDouble(double d) {
@@ -88,5 +91,10 @@ public class IntegerType implements NumericType<Integer> {
 	@Override
 	public String toString(Integer obj) {
 		return obj.toString();
+	}
+
+	@Override
+	public Integer generateRandomInstance() {
+		return _rnd.nextInt();
 	}
 }

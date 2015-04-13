@@ -24,6 +24,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Random;
 
 import org.apache.log4j.Logger;
 
@@ -34,6 +35,10 @@ public class DateType implements Type<Date> {
 	private static Logger LOG = Logger.getLogger(DateType.class);
 
 	private static final String STRING_DATE_FORMAT = "yyyy-MM-dd";
+	
+	private static DateIntegerType _dt = new DateIntegerType();
+	
+	private final Random _rnd = new Random();
 
 	// this cannot be static, because a static field with a constructor cannot
 	// be serialized
@@ -119,5 +124,11 @@ public class DateType implements Type<Date> {
 	@Override
 	public String toString(Date obj) {
 		return string_format.format(obj);
+	}
+
+	@Override
+	public Date generateRandomInstance() {
+		int intDate=0;
+		return fromString(_dt.toStringWithDashes(_dt.generateRandomInstance()));
 	}
 }
