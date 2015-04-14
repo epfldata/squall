@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.ewh.algorithms.optimality;
 
 import ch.epfl.data.squall.ewh.data_structures.Region;

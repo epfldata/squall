@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.ewh.components;
 
 import java.util.ArrayList;
@@ -30,8 +29,6 @@ import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
-import ch.epfl.data.squall.types.NumericType;
-import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.ewh.storm_components.D2CombinerBolt;
 import ch.epfl.data.squall.ewh.storm_components.EWHSampleMatrixBolt;
 import ch.epfl.data.squall.ewh.storm_components.S1ReservoirGenerator;
@@ -46,6 +43,8 @@ import ch.epfl.data.squall.storage.AggregationStorage;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.SystemParameters.HistogramType;
 
@@ -67,11 +66,10 @@ public class EWHSampleMatrixComponent implements Component {
     private int _firstNumOfBuckets, _secondNumOfBuckets;
 
     public EWHSampleMatrixComponent(Component firstParent,
-	    Component secondParent, boolean isFirstD2,
-	    NumericType keyType, ComparisonPredicate comparison,
-	    int numOfLastJoiners, int firstRelationSize,
-	    int secondRelationSize, int firstNumOfBuckets,
-	    int secondNumOfBuckets) {
+	    Component secondParent, boolean isFirstD2, NumericType keyType,
+	    ComparisonPredicate comparison, int numOfLastJoiners,
+	    int firstRelationSize, int secondRelationSize,
+	    int firstNumOfBuckets, int secondNumOfBuckets) {
 	_firstParent = firstParent;
 	_firstParent.setChild(this);
 	_secondParent = secondParent;

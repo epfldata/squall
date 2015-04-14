@@ -17,20 +17,19 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.types;
 
 import java.io.Serializable;
 
 public interface Type<T> extends Serializable {
-	public T fromString(String str);
+    public T fromString(String str);
 
-	// bigger - smaller
-	public double getDistance(T bigger, T smaller);
+    // bigger - smaller
+    public double getDistance(T bigger, T smaller);
 
-	public T getInitialValue();
+    public T getInitialValue();
 
-	public String toString(T obj);
-	
-	public T generateRandomInstance();
+    public String toString(T obj);
+
+    public T generateRandomInstance();
 }

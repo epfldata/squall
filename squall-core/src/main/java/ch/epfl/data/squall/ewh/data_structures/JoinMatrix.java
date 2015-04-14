@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.ewh.data_structures;
 
 import java.io.File;
@@ -32,9 +31,9 @@ import org.ujmp.core.Matrix;
 import org.ujmp.core.enums.FileFormat;
 import org.ujmp.core.matrix.AbstractMatrix;
 
-import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.ewh.visualize.VisualizerInterface;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
+import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.utilities.MyUtilities;
 
 // Join Attribute Type

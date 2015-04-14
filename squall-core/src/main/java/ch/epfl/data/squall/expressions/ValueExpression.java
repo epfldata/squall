@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.expressions;
 
 import java.io.Serializable;
@@ -27,22 +26,22 @@ import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 
 public interface ValueExpression<T extends Comparable<T>> extends Serializable {
-	public void accept(ValueExpressionVisitor vev);
+    public void accept(ValueExpressionVisitor vev);
 
-	// matt...
-	public void changeValues(int i, ValueExpression<T> newExpr);
+    // matt...
+    public void changeValues(int i, ValueExpression<T> newExpr);
 
-	public T eval(List<String> tuple);
+    public T eval(List<String> tuple);
 
-	public String evalString(List<String> tuple);
+    public String evalString(List<String> tuple);
 
-	// not ValueExpression<T> because inside might be other type(as in
-	// IntegerYearFromDate)
-	public List<ValueExpression> getInnerExpressions();
+    // not ValueExpression<T> because inside might be other type(as in
+    // IntegerYearFromDate)
+    public List<ValueExpression> getInnerExpressions();
 
-	public Type getType();
+    public Type getType();
 
-	public void inverseNumber();
+    public void inverseNumber();
 
-	public boolean isNegative();
+    public boolean isNegative();
 }

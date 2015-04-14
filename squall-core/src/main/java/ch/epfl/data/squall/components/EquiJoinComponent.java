@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.components;
 
 import java.util.ArrayList;
@@ -49,295 +48,295 @@ import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
 public class EquiJoinComponent extends JoinerComponent implements Component {
-	private static final long serialVersionUID = 1L;
-	private static Logger LOG = Logger.getLogger(EquiJoinComponent.class);
+    private static final long serialVersionUID = 1L;
+    private static Logger LOG = Logger.getLogger(EquiJoinComponent.class);
 
-	private final Component _firstParent;
-	private final Component _secondParent;
-	private Component _child;
+    private final Component _firstParent;
+    private final Component _secondParent;
+    private Component _child;
 
-	private final String _componentName;
+    private final String _componentName;
 
-	private long _batchOutputMillis;
+    private long _batchOutputMillis;
 
-	private List<Integer> _hashIndexes;
-	private List<ValueExpression> _hashExpressions;
+    private List<Integer> _hashIndexes;
+    private List<ValueExpression> _hashExpressions;
 
-	private StormEmitter _joiner;
+    private StormEmitter _joiner;
 
-	private final ChainOperator _chain = new ChainOperator();
+    private final ChainOperator _chain = new ChainOperator();
 
-	// The storage is actually KeyValue<String, String>
-	// or AggregationStorage<Numeric> for pre-aggregation
-	// Access method returns a list of Strings (a list of Numerics for
-	// pre-aggregation)
-	private BasicStore<String> _firstStorage, _secondStorage;
-	// preAggregation
-	private ProjectOperator _firstPreAggProj, _secondPreAggProj;
+    // The storage is actually KeyValue<String, String>
+    // or AggregationStorage<Numeric> for pre-aggregation
+    // Access method returns a list of Strings (a list of Numerics for
+    // pre-aggregation)
+    private BasicStore<String> _firstStorage, _secondStorage;
+    // preAggregation
+    private ProjectOperator _firstPreAggProj, _secondPreAggProj;
 
-	private boolean _printOut;
-	private boolean _printOutSet; // whether printOut was already set
+    private boolean _printOut;
+    private boolean _printOutSet; // whether printOut was already set
 
-	private List<String> _fullHashList;
-	private Predicate _joinPredicate;
+    private List<String> _fullHashList;
+    private Predicate _joinPredicate;
 
-	private boolean _isRemoveIndex = true;
+    private boolean _isRemoveIndex = true;
 
-	public EquiJoinComponent(Component firstParent, Component secondParent) {
-		_firstParent = firstParent;
-		_firstParent.setChild(this);
-		_secondParent = secondParent;
-		_secondParent.setChild(this);
+    public EquiJoinComponent(Component firstParent, Component secondParent) {
+	_firstParent = firstParent;
+	_firstParent.setChild(this);
+	_secondParent = secondParent;
+	_secondParent.setChild(this);
 
-		_componentName = firstParent.getName() + "_" + secondParent.getName();
+	_componentName = firstParent.getName() + "_" + secondParent.getName();
+    }
+
+    public EquiJoinComponent(Component firstParent, Component secondParent,
+	    boolean isRemoveIndex) {
+	_firstParent = firstParent;
+	_firstParent.setChild(this);
+	_secondParent = secondParent;
+	_secondParent.setChild(this);
+	_componentName = firstParent.getName() + "_" + secondParent.getName();
+	_isRemoveIndex = isRemoveIndex;
+    }
+
+    public EquiJoinComponent(Component firstParent, int firstJoinIndex,
+	    Component secondParent, int secondJoinIndex) {
+	this(firstParent, secondParent);
+	firstParent.setOutputPartKey(firstJoinIndex);
+	secondParent.setOutputPartKey(secondJoinIndex);
+    }
+
+    @Override
+    public EquiJoinComponent add(Operator operator) {
+	_chain.addOperator(operator);
+	return this;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+	if (obj instanceof Component)
+	    return _componentName.equals(((Component) obj).getName());
+	else
+	    return false;
+    }
+
+    @Override
+    public List<DataSourceComponent> getAncestorDataSources() {
+	final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
+	for (final Component parent : getParents())
+	    list.addAll(parent.getAncestorDataSources());
+	return list;
+    }
+
+    @Override
+    public long getBatchOutputMillis() {
+	return _batchOutputMillis;
+    }
+
+    @Override
+    public ChainOperator getChainOperator() {
+	return _chain;
+    }
+
+    @Override
+    public Component getChild() {
+	return _child;
+    }
+
+    // from StormEmitter interface
+    @Override
+    public String[] getEmitterIDs() {
+	return _joiner.getEmitterIDs();
+    }
+
+    @Override
+    public List<String> getFullHashList() {
+	return _fullHashList;
+    }
+
+    @Override
+    public List<ValueExpression> getHashExpressions() {
+	return _hashExpressions;
+    }
+
+    @Override
+    public List<Integer> getHashIndexes() {
+	return _hashIndexes;
+    }
+
+    @Override
+    public String getInfoID() {
+	return _joiner.getInfoID();
+    }
+
+    @Override
+    public String getName() {
+	return _componentName;
+    }
+
+    @Override
+    public Component[] getParents() {
+	return new Component[] { _firstParent, _secondParent };
+    }
+
+    @Override
+    public boolean getPrintOut() {
+	return _printOut;
+    }
+
+    @Override
+    public int hashCode() {
+	int hash = 7;
+	hash = 37 * hash
+		+ (_componentName != null ? _componentName.hashCode() : 0);
+	return hash;
+    }
+
+    @Override
+    public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
+	    List<String> allCompNames, Config conf, int hierarchyPosition) {
+
+	// by default print out for the last component
+	// for other conditions, can be set via setPrintOut
+	if (hierarchyPosition == StormComponent.FINAL_COMPONENT
+		&& !_printOutSet)
+	    setPrintOut(true);
+
+	MyUtilities.checkBatchOutput(_batchOutputMillis,
+		_chain.getAggregation(), conf);
+
+	// If not set in Preaggregation, we set normal storages
+	if (_firstStorage == null)
+	    _firstStorage = new KeyValueStore<String, String>(conf);
+	if (_secondStorage == null)
+	    _secondStorage = new KeyValueStore<String, String>(conf);
+
+	boolean isBDB = MyUtilities.isBDB(conf);
+	if (isBDB && _joinPredicate == null) {
+	    throw new RuntimeException(
+		    "Please provide _joinPredicate if you want to run BDB!");
 	}
 
-	public EquiJoinComponent(Component firstParent, Component secondParent,
-			boolean isRemoveIndex) {
-		_firstParent = firstParent;
-		_firstParent.setChild(this);
-		_secondParent = secondParent;
-		_secondParent.setChild(this);
-		_componentName = firstParent.getName() + "_" + secondParent.getName();
-		_isRemoveIndex = isRemoveIndex;
+	// TODO: what is with the if condition
+	if (isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)) {
+	    _joiner = new StormDstTupleStorageBDB(_firstParent, _secondParent,
+		    this, allCompNames, _joinPredicate, hierarchyPosition,
+		    builder, killer, conf);
+	} else if (_joinPredicate != null) {
+	    _joiner = new StormDstTupleStorageJoin(_firstParent, _secondParent,
+		    this, allCompNames, _joinPredicate, hierarchyPosition,
+		    builder, killer, conf);
+	} else {
+	    // should issue a warning
+	    _joiner = new StormDstJoin(_firstParent, _secondParent, this,
+		    allCompNames, _firstStorage, _secondStorage,
+		    _firstPreAggProj, _secondPreAggProj, hierarchyPosition,
+		    builder, killer, conf, _isRemoveIndex);
 	}
+    }
 
-	public EquiJoinComponent(Component firstParent, int firstJoinIndex,
-			Component secondParent, int secondJoinIndex) {
-		this(firstParent, secondParent);
-		firstParent.setOutputPartKey(firstJoinIndex);
-		secondParent.setOutputPartKey(secondJoinIndex);
-	}
+    @Override
+    public EquiJoinComponent setBatchOutputMillis(long millis) {
+	_batchOutputMillis = millis;
+	return this;
+    }
 
-	@Override
-	public EquiJoinComponent add(Operator operator) {
-		_chain.addOperator(operator);
-		return this;
-	}
+    @Override
+    public void setChild(Component child) {
+	_child = child;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof Component)
-			return _componentName.equals(((Component) obj).getName());
-		else
-			return false;
-	}
+    @Override
+    public Component setContentSensitiveThetaJoinWrapper(Type wrapper) {
+	return this;
+    }
 
-	@Override
-	public List<DataSourceComponent> getAncestorDataSources() {
-		final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
-		for (final Component parent : getParents())
-			list.addAll(parent.getAncestorDataSources());
-		return list;
-	}
+    // Out of the first storage (join of S tuple with R relation)
+    public EquiJoinComponent setFirstPreAggProj(ProjectOperator firstPreAggProj) {
+	_firstPreAggProj = firstPreAggProj;
+	return this;
+    }
 
-	@Override
-	public long getBatchOutputMillis() {
-		return _batchOutputMillis;
-	}
+    // next four methods are for Preaggregation
+    public EquiJoinComponent setFirstPreAggStorage(
+	    AggregationStorage firstPreAggStorage) {
+	_firstStorage = firstPreAggStorage;
+	return this;
+    }
 
-	@Override
-	public ChainOperator getChainOperator() {
-		return _chain;
-	}
+    // list of distinct keys, used for direct stream grouping and load-balancing
+    // ()
+    @Override
+    public EquiJoinComponent setFullHashList(List<String> fullHashList) {
+	_fullHashList = fullHashList;
+	return this;
+    }
 
-	@Override
-	public Component getChild() {
-		return _child;
-	}
+    @Override
+    public EquiJoinComponent setHashExpressions(
+	    List<ValueExpression> hashExpressions) {
+	_hashExpressions = hashExpressions;
+	return this;
+    }
 
-	// from StormEmitter interface
-	@Override
-	public String[] getEmitterIDs() {
-		return _joiner.getEmitterIDs();
-	}
+    @Override
+    public Component setInterComp(InterchangingComponent inter) {
+	throw new RuntimeException(
+		"EquiJoin component does not support setInterComp");
+    }
 
-	@Override
-	public List<String> getFullHashList() {
-		return _fullHashList;
-	}
+    @Override
+    public EquiJoinComponent setJoinPredicate(Predicate predicate) {
+	_joinPredicate = predicate;
+	return this;
+    }
 
-	@Override
-	public List<ValueExpression> getHashExpressions() {
-		return _hashExpressions;
-	}
+    @Override
+    public EquiJoinComponent setOutputPartKey(int... hashIndexes) {
+	return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
+    }
 
-	@Override
-	public List<Integer> getHashIndexes() {
-		return _hashIndexes;
-	}
+    @Override
+    public EquiJoinComponent setOutputPartKey(List<Integer> hashIndexes) {
+	_hashIndexes = hashIndexes;
+	return this;
+    }
 
-	@Override
-	public String getInfoID() {
-		return _joiner.getInfoID();
-	}
+    @Override
+    public EquiJoinComponent setPrintOut(boolean printOut) {
+	_printOutSet = true;
+	_printOut = printOut;
+	return this;
+    }
 
-	@Override
-	public String getName() {
-		return _componentName;
-	}
+    // Out of the second storage (join of R tuple with S relation)
+    public EquiJoinComponent setSecondPreAggProj(
+	    ProjectOperator secondPreAggProj) {
+	_secondPreAggProj = secondPreAggProj;
+	return this;
+    }
 
-	@Override
-	public Component[] getParents() {
-		return new Component[] { _firstParent, _secondParent };
-	}
+    public EquiJoinComponent setSecondPreAggStorage(
+	    AggregationStorage secondPreAggStorage) {
+	_secondStorage = secondPreAggStorage;
+	return this;
+    }
 
-	@Override
-	public boolean getPrintOut() {
-		return _printOut;
-	}
+    @Override
+    public Component setSlidingWindow(int windowRange) {
+	WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
+	_windowSize = windowRange * 1000; // Width in terms of millis, Default
+					  // is -1 which is full history
+	return this;
+    }
 
-	@Override
-	public int hashCode() {
-		int hash = 7;
-		hash = 37 * hash
-				+ (_componentName != null ? _componentName.hashCode() : 0);
-		return hash;
-	}
-
-	@Override
-	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
-			List<String> allCompNames, Config conf, int hierarchyPosition) {
-
-		// by default print out for the last component
-		// for other conditions, can be set via setPrintOut
-		if (hierarchyPosition == StormComponent.FINAL_COMPONENT
-				&& !_printOutSet)
-			setPrintOut(true);
-
-		MyUtilities.checkBatchOutput(_batchOutputMillis,
-				_chain.getAggregation(), conf);
-
-		// If not set in Preaggregation, we set normal storages
-		if (_firstStorage == null)
-			_firstStorage = new KeyValueStore<String, String>(conf);
-		if (_secondStorage == null)
-			_secondStorage = new KeyValueStore<String, String>(conf);
-
-		boolean isBDB = MyUtilities.isBDB(conf);
-		if (isBDB && _joinPredicate == null) {
-			throw new RuntimeException(
-					"Please provide _joinPredicate if you want to run BDB!");
-		}
-
-		// TODO: what is with the if condition
-		if (isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)) {
-			_joiner = new StormDstTupleStorageBDB(_firstParent, _secondParent,
-					this, allCompNames, _joinPredicate, hierarchyPosition,
-					builder, killer, conf);
-		} else if (_joinPredicate != null) {
-			_joiner = new StormDstTupleStorageJoin(_firstParent, _secondParent,
-					this, allCompNames, _joinPredicate, hierarchyPosition,
-					builder, killer, conf);
-		} else {
-			// should issue a warning
-			_joiner = new StormDstJoin(_firstParent, _secondParent, this,
-					allCompNames, _firstStorage, _secondStorage,
-					_firstPreAggProj, _secondPreAggProj, hierarchyPosition,
-					builder, killer, conf, _isRemoveIndex);
-		}
-	}
-
-	@Override
-	public EquiJoinComponent setBatchOutputMillis(long millis) {
-		_batchOutputMillis = millis;
-		return this;
-	}
-
-	@Override
-	public void setChild(Component child) {
-		_child = child;
-	}
-
-	@Override
-	public Component setContentSensitiveThetaJoinWrapper(Type wrapper) {
-		return this;
-	}
-
-	// Out of the first storage (join of S tuple with R relation)
-	public EquiJoinComponent setFirstPreAggProj(ProjectOperator firstPreAggProj) {
-		_firstPreAggProj = firstPreAggProj;
-		return this;
-	}
-
-	// next four methods are for Preaggregation
-	public EquiJoinComponent setFirstPreAggStorage(
-			AggregationStorage firstPreAggStorage) {
-		_firstStorage = firstPreAggStorage;
-		return this;
-	}
-
-	// list of distinct keys, used for direct stream grouping and load-balancing
-	// ()
-	@Override
-	public EquiJoinComponent setFullHashList(List<String> fullHashList) {
-		_fullHashList = fullHashList;
-		return this;
-	}
-
-	@Override
-	public EquiJoinComponent setHashExpressions(
-			List<ValueExpression> hashExpressions) {
-		_hashExpressions = hashExpressions;
-		return this;
-	}
-
-	@Override
-	public Component setInterComp(InterchangingComponent inter) {
-		throw new RuntimeException(
-				"EquiJoin component does not support setInterComp");
-	}
-
-	@Override
-	public EquiJoinComponent setJoinPredicate(Predicate predicate) {
-		_joinPredicate = predicate;
-		return this;
-	}
-
-	@Override
-	public EquiJoinComponent setOutputPartKey(int... hashIndexes) {
-		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
-	}
-
-	@Override
-	public EquiJoinComponent setOutputPartKey(List<Integer> hashIndexes) {
-		_hashIndexes = hashIndexes;
-		return this;
-	}
-
-	@Override
-	public EquiJoinComponent setPrintOut(boolean printOut) {
-		_printOutSet = true;
-		_printOut = printOut;
-		return this;
-	}
-
-	// Out of the second storage (join of R tuple with S relation)
-	public EquiJoinComponent setSecondPreAggProj(
-			ProjectOperator secondPreAggProj) {
-		_secondPreAggProj = secondPreAggProj;
-		return this;
-	}
-
-	public EquiJoinComponent setSecondPreAggStorage(
-			AggregationStorage secondPreAggStorage) {
-		_secondStorage = secondPreAggStorage;
-		return this;
-	}
-
-	@Override
-	public Component setSlidingWindow(int windowRange) {
-		WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
-		_windowSize = windowRange * 1000; // Width in terms of millis, Default
-											// is -1 which is full history
-		return this;
-	}
-
-	@Override
-	public Component setTumblingWindow(int windowRange) {
-		WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
-		_tumblingWindowSize = windowRange * 1000;// For tumbling semantics
-		return this;
-	}
+    @Override
+    public Component setTumblingWindow(int windowRange) {
+	WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
+	_tumblingWindowSize = windowRange * 1000;// For tumbling semantics
+	return this;
+    }
 
 }

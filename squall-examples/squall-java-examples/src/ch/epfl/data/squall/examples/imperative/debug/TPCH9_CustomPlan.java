@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.examples.imperative.debug;
 
 import java.util.Arrays;
@@ -49,143 +48,144 @@ import ch.epfl.data.squall.types.StringType;
 import ch.epfl.data.squall.types.Type;
 
 public class TPCH9_CustomPlan extends QueryPlan {
-	private static Logger LOG = Logger.getLogger(TPCH9_CustomPlan.class);
+    private static Logger LOG = Logger.getLogger(TPCH9_CustomPlan.class);
 
-	private static final NumericType<Double> _doubleConv = new DoubleType();
-	private static final Type<Date> _dateConv = new DateType();
-	private static final StringType _sc = new StringType();
+    private static final NumericType<Double> _doubleConv = new DoubleType();
+    private static final Type<Date> _dateConv = new DateType();
+    private static final StringType _sc = new StringType();
 
-	private static final String COLOR = "%green%";
+    private static final String COLOR = "%green%";
 
-	private QueryBuilder _queryBuilder = new QueryBuilder();
+    private QueryBuilder _queryBuilder = new QueryBuilder();
 
-	public TPCH9_CustomPlan(String dataPath, String extension, Map conf) {
-		// -------------------------------------------------------------------------------------
-		List<Integer> hashPart = Arrays.asList(0);
+    public TPCH9_CustomPlan(String dataPath, String extension, Map conf) {
+	// -------------------------------------------------------------------------------------
+	List<Integer> hashPart = Arrays.asList(0);
 
-		SelectOperator selectionPart = new SelectOperator(
-				new LikePredicate(new ColumnReference(_sc, 1),
-						new ValueSpecification(_sc, COLOR)));
+	SelectOperator selectionPart = new SelectOperator(
+		new LikePredicate(new ColumnReference(_sc, 1),
+			new ValueSpecification(_sc, COLOR)));
 
-		ProjectOperator projectionPart = new ProjectOperator(new int[] { 0 });
+	ProjectOperator projectionPart = new ProjectOperator(new int[] { 0 });
 
-		DataSourceComponent relationPart = new DataSourceComponent("PART",
-				dataPath + "part" + extension).setOutputPartKey(hashPart)
-		// .addOperator(selectionPart)
-				.add(projectionPart);
-		_queryBuilder.add(relationPart);
+	DataSourceComponent relationPart = new DataSourceComponent("PART",
+		dataPath + "part" + extension).setOutputPartKey(hashPart)
+	// .addOperator(selectionPart)
+		.add(projectionPart);
+	_queryBuilder.add(relationPart);
 
-		// -------------------------------------------------------------------------------------
-		List<Integer> hashLineitem = Arrays.asList(1);
+	// -------------------------------------------------------------------------------------
+	List<Integer> hashLineitem = Arrays.asList(1);
 
-		ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0,
-				1, 2, 4, 5, 6 });
+	ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0,
+		1, 2, 4, 5, 6 });
 
-		DataSourceComponent relationLineitem = new DataSourceComponent(
-				"LINEITEM", dataPath + "lineitem" + extension)
-				.setOutputPartKey(hashLineitem).add(projectionLineitem);
-		_queryBuilder.add(relationLineitem);
+	DataSourceComponent relationLineitem = new DataSourceComponent(
+		"LINEITEM", dataPath + "lineitem" + extension)
+		.setOutputPartKey(hashLineitem).add(projectionLineitem);
+	_queryBuilder.add(relationLineitem);
 
-		// -------------------------------------------------------------------------------------
-		EquiJoinComponent P_Ljoin = new EquiJoinComponent(relationPart,
-				relationLineitem).setOutputPartKey(Arrays.asList(0, 2));
-		_queryBuilder.add(P_Ljoin);
-		// -------------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------------
+	EquiJoinComponent P_Ljoin = new EquiJoinComponent(relationPart,
+		relationLineitem).setOutputPartKey(Arrays.asList(0, 2));
+	_queryBuilder.add(P_Ljoin);
+	// -------------------------------------------------------------------------------------
 
-		List<Integer> hashPartsupp = Arrays.asList(0, 1);
+	List<Integer> hashPartsupp = Arrays.asList(0, 1);
 
-		ProjectOperator projectionPartsupp = new ProjectOperator(new int[] { 0,
-				1, 3 });
+	ProjectOperator projectionPartsupp = new ProjectOperator(new int[] { 0,
+		1, 3 });
 
-		DataSourceComponent relationPartsupp = new DataSourceComponent(
-				"PARTSUPP", dataPath + "partsupp" + extension)
-				.setOutputPartKey(hashPartsupp).add(projectionPartsupp);
-		_queryBuilder.add(relationPartsupp);
+	DataSourceComponent relationPartsupp = new DataSourceComponent(
+		"PARTSUPP", dataPath + "partsupp" + extension)
+		.setOutputPartKey(hashPartsupp).add(projectionPartsupp);
+	_queryBuilder.add(relationPartsupp);
 
-		// -------------------------------------------------------------------------------------
-		EquiJoinComponent P_L_PSjoin = new EquiJoinComponent(P_Ljoin,
-				relationPartsupp).setOutputPartKey(Arrays.asList(0)).add(
-				new ProjectOperator(new int[] { 1, 2, 3, 4, 5, 6 }));
-		_queryBuilder.add(P_L_PSjoin);
-		// -------------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------------
+	EquiJoinComponent P_L_PSjoin = new EquiJoinComponent(P_Ljoin,
+		relationPartsupp).setOutputPartKey(Arrays.asList(0)).add(
+		new ProjectOperator(new int[] { 1, 2, 3, 4, 5, 6 }));
+	_queryBuilder.add(P_L_PSjoin);
+	// -------------------------------------------------------------------------------------
 
-		List<Integer> hashOrders = Arrays.asList(0);
+	List<Integer> hashOrders = Arrays.asList(0);
 
-		ProjectOperator projectionOrders = new ProjectOperator(
-				new ColumnReference(_sc, 0), new IntegerYearFromDate(
-						new ColumnReference(_dateConv, 4)));
+	ProjectOperator projectionOrders = new ProjectOperator(
+		new ColumnReference(_sc, 0), new IntegerYearFromDate(
+			new ColumnReference(_dateConv, 4)));
 
-		DataSourceComponent relationOrders = new DataSourceComponent("ORDERS",
-				dataPath + "orders" + extension).setOutputPartKey(hashOrders)
-				.add(projectionOrders);
-		_queryBuilder.add(relationOrders);
+	DataSourceComponent relationOrders = new DataSourceComponent("ORDERS",
+		dataPath + "orders" + extension).setOutputPartKey(hashOrders)
+		.add(projectionOrders);
+	_queryBuilder.add(relationOrders);
 
-		// -------------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------------
 
-		EquiJoinComponent P_L_PS_Ojoin = new EquiJoinComponent(P_L_PSjoin,
-				relationOrders).setOutputPartKey(Arrays.asList(0)).add(
-				new ProjectOperator(new int[] { 1, 2, 3, 4, 5, 6 }));
-		_queryBuilder.add(P_L_PS_Ojoin);
-		// -------------------------------------------------------------------------------------
+	EquiJoinComponent P_L_PS_Ojoin = new EquiJoinComponent(P_L_PSjoin,
+		relationOrders).setOutputPartKey(Arrays.asList(0)).add(
+		new ProjectOperator(new int[] { 1, 2, 3, 4, 5, 6 }));
+	_queryBuilder.add(P_L_PS_Ojoin);
+	// -------------------------------------------------------------------------------------
 
-		List<Integer> hashSupplier = Arrays.asList(0);
+	List<Integer> hashSupplier = Arrays.asList(0);
 
-		ProjectOperator projectionSupplier = new ProjectOperator(new int[] { 0,
-				3 });
+	ProjectOperator projectionSupplier = new ProjectOperator(new int[] { 0,
+		3 });
 
-		DataSourceComponent relationSupplier = new DataSourceComponent(
-				"SUPPLIER", dataPath + "supplier" + extension)
-				.setOutputPartKey(hashSupplier).add(projectionSupplier);
-		_queryBuilder.add(relationSupplier);
+	DataSourceComponent relationSupplier = new DataSourceComponent(
+		"SUPPLIER", dataPath + "supplier" + extension)
+		.setOutputPartKey(hashSupplier).add(projectionSupplier);
+	_queryBuilder.add(relationSupplier);
 
-		// -------------------------------------------------------------------------------------
-		EquiJoinComponent P_L_PS_O_Sjoin = new EquiJoinComponent(P_L_PS_Ojoin,
-				relationSupplier).setOutputPartKey(Arrays.asList(5)).add(
-				new ProjectOperator(new int[] { 1, 2, 3, 4, 5, 6 }));
-		_queryBuilder.add(P_L_PS_O_Sjoin);
-		// -------------------------------------------------------------------------------------
-		List<Integer> hashNation = Arrays.asList(0);
+	// -------------------------------------------------------------------------------------
+	EquiJoinComponent P_L_PS_O_Sjoin = new EquiJoinComponent(P_L_PS_Ojoin,
+		relationSupplier).setOutputPartKey(Arrays.asList(5)).add(
+		new ProjectOperator(new int[] { 1, 2, 3, 4, 5, 6 }));
+	_queryBuilder.add(P_L_PS_O_Sjoin);
+	// -------------------------------------------------------------------------------------
+	List<Integer> hashNation = Arrays.asList(0);
 
-		ProjectOperator projectionNation = new ProjectOperator(
-				new int[] { 0, 1 });
+	ProjectOperator projectionNation = new ProjectOperator(
+		new int[] { 0, 1 });
 
-		DataSourceComponent relationNation = new DataSourceComponent("NATION",
-				dataPath + "nation" + extension).setOutputPartKey(hashNation)
-				.add(projectionNation);
-		_queryBuilder.add(relationNation);
+	DataSourceComponent relationNation = new DataSourceComponent("NATION",
+		dataPath + "nation" + extension).setOutputPartKey(hashNation)
+		.add(projectionNation);
+	_queryBuilder.add(relationNation);
 
-		// -------------------------------------------------------------------------------------
-		// set up aggregation function on the StormComponent(Bolt) where join is
-		// performed
+	// -------------------------------------------------------------------------------------
+	// set up aggregation function on the StormComponent(Bolt) where join is
+	// performed
 
-		// 1 - discount
-		ValueExpression<Double> substract1 = new Subtraction(
-				new ValueSpecification(_doubleConv, 1.0), new ColumnReference(
-						_doubleConv, 2));
-		// extendedPrice*(1-discount)
-		ValueExpression<Double> product1 = new Multiplication(
-				new ColumnReference(_doubleConv, 1), substract1);
+	// 1 - discount
+	ValueExpression<Double> substract1 = new Subtraction(
+		new ValueSpecification(_doubleConv, 1.0), new ColumnReference(
+			_doubleConv, 2));
+	// extendedPrice*(1-discount)
+	ValueExpression<Double> product1 = new Multiplication(
+		new ColumnReference(_doubleConv, 1), substract1);
 
-		// ps_supplycost * l_quantity
-		ValueExpression<Double> product2 = new Multiplication(
-				new ColumnReference(_doubleConv, 3), new ColumnReference(
-						_doubleConv, 0));
+	// ps_supplycost * l_quantity
+	ValueExpression<Double> product2 = new Multiplication(
+		new ColumnReference(_doubleConv, 3), new ColumnReference(
+			_doubleConv, 0));
 
-		// all together
-		ValueExpression<Double> substract2 = new Subtraction(product1, product2);
+	// all together
+	ValueExpression<Double> substract2 = new Subtraction(product1, product2);
 
-		AggregateOperator agg = new AggregateSumOperator(substract2, conf)
-				.setGroupByColumns(Arrays.asList(5, 4));
+	AggregateOperator agg = new AggregateSumOperator(substract2, conf)
+		.setGroupByColumns(Arrays.asList(5, 4));
 
-		EquiJoinComponent P_L_PS_O_S_Njoin = new EquiJoinComponent(
-				P_L_PS_O_Sjoin, relationNation).add(
-				new ProjectOperator(new int[] { 0, 1, 2, 3, 4, 6 })).add(agg);
-		_queryBuilder.add(P_L_PS_O_S_Njoin);
-		// -------------------------------------------------------------------------------------
+	EquiJoinComponent P_L_PS_O_S_Njoin = new EquiJoinComponent(
+		P_L_PS_O_Sjoin, relationNation).add(
+		new ProjectOperator(new int[] { 0, 1, 2, 3, 4, 6 })).add(agg);
+	_queryBuilder.add(P_L_PS_O_S_Njoin);
+	// -------------------------------------------------------------------------------------
 
-	}
+    }
 
-	public QueryBuilder getQueryPlan() {
-		return _queryBuilder;
-	}
+    @Override
+    public QueryBuilder getQueryPlan() {
+	return _queryBuilder;
+    }
 }

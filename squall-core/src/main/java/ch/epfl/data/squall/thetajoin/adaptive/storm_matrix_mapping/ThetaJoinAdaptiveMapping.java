@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.thetajoin.adaptive.storm_matrix_mapping;
 
 import java.util.Arrays;
@@ -32,56 +31,56 @@ import ch.epfl.data.squall.utilities.MyUtilities;
 
 public class ThetaJoinAdaptiveMapping implements CustomStreamGrouping {
 
-	/**
-	 * This class is only responsible for the mapping for DATA_STREAM and
-	 * LAST_ACKS ... ONLY !!
-	 */
-	private static final long serialVersionUID = 1L;
+    /**
+     * This class is only responsible for the mapping for DATA_STREAM and
+     * LAST_ACKS ... ONLY !!
+     */
+    private static final long serialVersionUID = 1L;
 
-	private List<Integer> _targetTasks;
-	private final Map _map;
-	private Random rnd;
+    private List<Integer> _targetTasks;
+    private final Map _map;
+    private Random rnd;
 
-	public ThetaJoinAdaptiveMapping(Map map, int seed) {
-		_map = map;
-		if (seed >= 0)
-			rnd = new Random(seed);
-		else
-			rnd = new Random();
-	}
+    public ThetaJoinAdaptiveMapping(Map map, int seed) {
+	_map = map;
+	if (seed >= 0)
+	    rnd = new Random(seed);
+	else
+	    rnd = new Random();
+    }
 
-	@Override
-	public List<Integer> chooseTasks(int taskId, List<Object> values) {
-		final List<String> tuple = (List<String>) values.get(1);
-		if (MyUtilities.isFinalAck(tuple, _map))
-			return _targetTasks;
+    @Override
+    public List<Integer> chooseTasks(int taskId, List<Object> values) {
+	final List<String> tuple = (List<String>) values.get(1);
+	if (MyUtilities.isFinalAck(tuple, _map))
+	    return _targetTasks;
 
-		// else uniformly choose an element from the tasks (Shuffling grouping)
-		return Arrays
-				.asList(_targetTasks.get(rnd.nextInt(_targetTasks.size())));
-	}
+	// else uniformly choose an element from the tasks (Shuffling grouping)
+	return Arrays
+		.asList(_targetTasks.get(rnd.nextInt(_targetTasks.size())));
+    }
 
-	@Override
-	public void prepare(WorkerTopologyContext context, GlobalStreamId stream,
-			List<Integer> targetTasks) {
-		_targetTasks = targetTasks;
-	}
+    @Override
+    public void prepare(WorkerTopologyContext context, GlobalStreamId stream,
+	    List<Integer> targetTasks) {
+	_targetTasks = targetTasks;
+    }
 
-	/*
-	 * Uncomment for storm version 0.7
-	 * **********************************************
-	 * 
-	 * @Override public void prepare(Fields outFields, int numTasks) { _numTasks
-	 * = numTasks; }
-	 * 
-	 * @Override public List<Integer> taskIndices(List<Object> values) {
-	 * ////////////////////// String tupleString = (String) values.get(1);
-	 * if(MyUtilities.isFinalAck(tupleString, _map)){ List<Integer> result = new
-	 * ArrayList<Integer>(); for(int i=0; i< _numTasks; i++){ result.add(i); }
-	 * return result; } ////////////////// uniformly choose an element from the
-	 * tasks (Shuffling grouping) ArrayList<Integer> tasks= new
-	 * ArrayList<Integer>(1); tasks.add(rnd.nextInt(_numTasks)); return tasks; }
-	 * *********************************************
-	 */
+    /*
+     * Uncomment for storm version 0.7
+     * **********************************************
+     * 
+     * @Override public void prepare(Fields outFields, int numTasks) { _numTasks
+     * = numTasks; }
+     * 
+     * @Override public List<Integer> taskIndices(List<Object> values) {
+     * ////////////////////// String tupleString = (String) values.get(1);
+     * if(MyUtilities.isFinalAck(tupleString, _map)){ List<Integer> result = new
+     * ArrayList<Integer>(); for(int i=0; i< _numTasks; i++){ result.add(i); }
+     * return result; } ////////////////// uniformly choose an element from the
+     * tasks (Shuffling grouping) ArrayList<Integer> tasks= new
+     * ArrayList<Integer>(1); tasks.add(rnd.nextInt(_numTasks)); return tasks; }
+     * *********************************************
+     */
 
 }

@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.api.scala.operators
 
 import ch.epfl.data.squall.operators.AggregateOperator
@@ -67,16 +66,15 @@ class ScalaAggregateOperator[T: SquallType, A: Numeric](val _agg: T => A, val _m
   override def accept(ov: OperatorVisitor): Unit = {
     ov.visit(this)
   }
-  
-  
-  def getNewInstance():ScalaAggregateOperator[T, A]  = {
-    
-    val clone= new ScalaAggregateOperator(_agg, _map)
-    if(_windowRangeSecs>0 || _slideRangeSecs>0)
+
+  def getNewInstance(): ScalaAggregateOperator[T, A] = {
+
+    val clone = new ScalaAggregateOperator(_agg, _map)
+    if (_windowRangeSecs > 0 || _slideRangeSecs > 0)
       clone.SetWindowSemantics(_windowRangeSecs, _slideRangeSecs)
     clone
   }
-  
+
   def alreadySetOther(GB_COLUMNS: Int): Boolean = {
     return (_groupByType != GB_COLUMNS && _groupByType != GB_UNSET);
   }
@@ -233,7 +231,7 @@ class ScalaAggregateOperator[T: SquallType, A: Numeric](val _agg: T => A, val _m
   }
 
   def SetWindowSemantics(windowRangeInSeconds: Int, windowSlideInSeconds: Int): AggregateOperator[A] = {
-    WindowSemanticsManager._IS_WINDOW_SEMANTICS=true;
+    WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
     _windowRangeSecs = windowRangeInSeconds;
     _slideRangeSecs = windowSlideInSeconds;
     _storage = new ScalaWindowAggregationStorage[A](this, _map, true, _windowRangeSecs, _slideRangeSecs);

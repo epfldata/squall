@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.ewh.components;
 
 import java.util.ArrayList;
@@ -30,8 +29,6 @@ import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.EquiJoinComponent;
-import ch.epfl.data.squall.types.NumericType;
-import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.ewh.storm_components.OkcanSampleMatrixBolt;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
@@ -42,6 +39,8 @@ import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storage.AggregationStorage;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.Type;
 
 public class OkcanSampleMatrixComponent implements Component {
     private static final long serialVersionUID = 1L;

@@ -17,13 +17,11 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.components.signal_components;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
@@ -44,219 +42,221 @@ import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class SignaledDataSourceComponent implements Component {
-	private static final long serialVersionUID = 1L;
-	private static Logger LOG = Logger.getLogger(SignaledDataSourceComponent.class);
+    private static final long serialVersionUID = 1L;
+    private static Logger LOG = Logger
+	    .getLogger(SignaledDataSourceComponent.class);
 
-	private final String _componentName;
+    private final String _componentName;
 
+    private long _batchOutputMillis;
 
-	private long _batchOutputMillis;
+    private List<Integer> _hashIndexes;
+    private List<ValueExpression> _hashExpressions;
 
-	private List<Integer> _hashIndexes;
-	private List<ValueExpression> _hashExpressions;
+    private SynchronizedStormDataSource _dataSource;
 
-	private SynchronizedStormDataSource _dataSource;
+    private final ChainOperator _chain = new ChainOperator();
 
-	private final ChainOperator _chain = new ChainOperator();
+    private boolean _printOut;
+    private boolean _printOutSet; // whether printOut condition is already set
 
-	private boolean _printOut;
-	private boolean _printOutSet; // whether printOut condition is already set
+    private Component _child;
 
-	private Component _child;
+    // equi-weight histogram
+    private boolean _isPartitioner;
 
-	// equi-weight histogram
-	private boolean _isPartitioner;
-	
-	private String _zookeeperHost;
-	private ArrayList<Type> _schema;
-	private int _keyIndex;
+    private String _zookeeperHost;
+    private ArrayList<Type> _schema;
+    private int _keyIndex;
 
-	// invoked from the new Interface (QueryPlan not QueryBuilder)
-	public SignaledDataSourceComponent(String componentName, String zookeeperHost, ArrayList<Type> schema, int keyIndex) {
-		_componentName = componentName;
-		_zookeeperHost = zookeeperHost;
-		_keyIndex=keyIndex;
-		_schema=schema;
-	}
+    // invoked from the new Interface (QueryPlan not QueryBuilder)
+    public SignaledDataSourceComponent(String componentName,
+	    String zookeeperHost, ArrayList<Type> schema, int keyIndex) {
+	_componentName = componentName;
+	_zookeeperHost = zookeeperHost;
+	_keyIndex = keyIndex;
+	_schema = schema;
+    }
 
-	@Override
-	public SignaledDataSourceComponent add(Operator operator) {
-		_chain.addOperator(operator);
-		return this;
-	}
+    @Override
+    public SignaledDataSourceComponent add(Operator operator) {
+	_chain.addOperator(operator);
+	return this;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof Component)
-			return _componentName.equals(((Component) obj).getName());
-		else
-			return false;
-	}
+    @Override
+    public boolean equals(Object obj) {
+	if (obj instanceof Component)
+	    return _componentName.equals(((Component) obj).getName());
+	else
+	    return false;
+    }
 
-	@Override
-	public List<DataSourceComponent> getAncestorDataSources() {
-		throw new RuntimeException("Not implemented yet");
-	}
+    @Override
+    public List<DataSourceComponent> getAncestorDataSources() {
+	throw new RuntimeException("Not implemented yet");
+    }
 
-	@Override
-	public long getBatchOutputMillis() {
-		return _batchOutputMillis;
-	}
+    @Override
+    public long getBatchOutputMillis() {
+	return _batchOutputMillis;
+    }
 
-	@Override
-	public ChainOperator getChainOperator() {
-		return _chain;
-	}
+    @Override
+    public ChainOperator getChainOperator() {
+	return _chain;
+    }
 
-	@Override
-	public Component getChild() {
-		return _child;
-	}
+    @Override
+    public Component getChild() {
+	return _child;
+    }
 
-	// from StormEmitter interface
-	@Override
-	public String[] getEmitterIDs() {
-		return _dataSource.getEmitterIDs();
-	}
+    // from StormEmitter interface
+    @Override
+    public String[] getEmitterIDs() {
+	return _dataSource.getEmitterIDs();
+    }
 
-	@Override
-	public List<String> getFullHashList() {
-		throw new RuntimeException(
-				"This method should not be invoked for DataSourceComponent!");
-	}
+    @Override
+    public List<String> getFullHashList() {
+	throw new RuntimeException(
+		"This method should not be invoked for DataSourceComponent!");
+    }
 
-	@Override
-	public List<ValueExpression> getHashExpressions() {
-		return _hashExpressions;
-	}
+    @Override
+    public List<ValueExpression> getHashExpressions() {
+	return _hashExpressions;
+    }
 
-	@Override
-	public List<Integer> getHashIndexes() {
-		return _hashIndexes;
-	}
+    @Override
+    public List<Integer> getHashIndexes() {
+	return _hashIndexes;
+    }
 
-	@Override
-	public String getInfoID() {
-		return _dataSource.getInfoID() + "\n";
-	}
+    @Override
+    public String getInfoID() {
+	return _dataSource.getInfoID() + "\n";
+    }
 
-	@Override
-	public String getName() {
-		return _componentName;
-	}
+    @Override
+    public String getName() {
+	return _componentName;
+    }
 
-	@Override
-	public Component[] getParents() {
-		return null;
-	}
+    @Override
+    public Component[] getParents() {
+	return null;
+    }
 
-	@Override
-	public boolean getPrintOut() {
-		return _printOut;
-	}
+    @Override
+    public boolean getPrintOut() {
+	return _printOut;
+    }
 
-	@Override
-	public int hashCode() {
-		int hash = 3;
-		hash = 59 * hash
-				+ (_componentName != null ? _componentName.hashCode() : 0);
-		return hash;
-	}
+    @Override
+    public int hashCode() {
+	int hash = 3;
+	hash = 59 * hash
+		+ (_componentName != null ? _componentName.hashCode() : 0);
+	return hash;
+    }
 
-	@Override
-	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
-			List<String> allCompNames, Config conf, int hierarchyPosition) {
+    @Override
+    public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
+	    List<String> allCompNames, Config conf, int hierarchyPosition) {
 
-		// by default print out for the last component
-		// for other conditions, can be set via setPrintOut
-		if (hierarchyPosition == StormComponent.FINAL_COMPONENT
-				&& !_printOutSet)
-			setPrintOut(true);
+	// by default print out for the last component
+	// for other conditions, can be set via setPrintOut
+	if (hierarchyPosition == StormComponent.FINAL_COMPONENT
+		&& !_printOutSet)
+	    setPrintOut(true);
 
-		final int parallelism = SystemParameters.getInt(conf, _componentName
-				+ "_PAR");
-		if (parallelism > 1 && _chain.getDistinct() != null)
-			throw new RuntimeException(
-					_componentName
-							+ ": Distinct operator cannot be specified for multiple spouts for one input file!");
+	final int parallelism = SystemParameters.getInt(conf, _componentName
+		+ "_PAR");
+	if (parallelism > 1 && _chain.getDistinct() != null)
+	    throw new RuntimeException(
+		    _componentName
+			    + ": Distinct operator cannot be specified for multiple spouts for one input file!");
 
-		MyUtilities.checkBatchOutput(_batchOutputMillis,
-				_chain.getAggregation(), conf);
-		
-		//TODO
-		SignalSpout sp = new SignalSpout(_zookeeperHost, this.getName());
-		builder.setSpout(this.getName()+"-signal", sp, 1);
+	MyUtilities.checkBatchOutput(_batchOutputMillis,
+		_chain.getAggregation(), conf);
 
-		_dataSource = new SynchronizedStormDataSource(this, allCompNames, _schema,
-				hierarchyPosition, parallelism, _keyIndex, _isPartitioner, builder,
-				killer, conf);
-	}
+	// TODO
+	SignalSpout sp = new SignalSpout(_zookeeperHost, this.getName());
+	builder.setSpout(this.getName() + "-signal", sp, 1);
 
-	@Override
-	public SignaledDataSourceComponent setBatchOutputMillis(long millis) {
-		throw new RuntimeException(
-				"Setting batch mode is not allowed for DataSourceComponents!");
-		// _batchOutputMillis = millis;
-		// return this;
-	}
+	_dataSource = new SynchronizedStormDataSource(this, allCompNames,
+		_schema, hierarchyPosition, parallelism, _keyIndex,
+		_isPartitioner, builder, killer, conf);
+    }
 
-	@Override
-	public void setChild(Component child) {
-		_child = child;
-	}
+    @Override
+    public SignaledDataSourceComponent setBatchOutputMillis(long millis) {
+	throw new RuntimeException(
+		"Setting batch mode is not allowed for DataSourceComponents!");
+	// _batchOutputMillis = millis;
+	// return this;
+    }
 
-	@Override
-	public SignaledDataSourceComponent setContentSensitiveThetaJoinWrapper(
-			Type wrapper) {
-		return this;
-	}
+    @Override
+    public void setChild(Component child) {
+	_child = child;
+    }
 
-	@Override
-	public SignaledDataSourceComponent setFullHashList(List<String> fullHashList) {
-		throw new RuntimeException(
-				"This method should not be invoked for DataSourceComponent!");
-	}
+    @Override
+    public SignaledDataSourceComponent setContentSensitiveThetaJoinWrapper(
+	    Type wrapper) {
+	return this;
+    }
 
-	@Override
-	public SignaledDataSourceComponent setHashExpressions(
-			List<ValueExpression> hashExpressions) {
-		_hashExpressions = hashExpressions;
-		return this;
-	}
+    @Override
+    public SignaledDataSourceComponent setFullHashList(List<String> fullHashList) {
+	throw new RuntimeException(
+		"This method should not be invoked for DataSourceComponent!");
+    }
 
-	@Override
-	public SignaledDataSourceComponent setInterComp(InterchangingComponent inter) {
-		throw new RuntimeException(
-				"Datasource component does not support setInterComp");
-	}
+    @Override
+    public SignaledDataSourceComponent setHashExpressions(
+	    List<ValueExpression> hashExpressions) {
+	_hashExpressions = hashExpressions;
+	return this;
+    }
 
-	@Override
-	public SignaledDataSourceComponent setJoinPredicate(Predicate joinPredicate) {
-		throw new RuntimeException(
-				"Datasource component does not support Join Predicates");
-	}
+    @Override
+    public SignaledDataSourceComponent setInterComp(InterchangingComponent inter) {
+	throw new RuntimeException(
+		"Datasource component does not support setInterComp");
+    }
 
-	@Override
-	public SignaledDataSourceComponent setOutputPartKey(int... hashIndexes) {
-		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
-	}
+    @Override
+    public SignaledDataSourceComponent setJoinPredicate(Predicate joinPredicate) {
+	throw new RuntimeException(
+		"Datasource component does not support Join Predicates");
+    }
 
-	@Override
-	public SignaledDataSourceComponent setOutputPartKey(List<Integer> hashIndexes) {
-		_hashIndexes = hashIndexes;
-		return this;
-	}
+    @Override
+    public SignaledDataSourceComponent setOutputPartKey(int... hashIndexes) {
+	return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
+    }
 
-	public SignaledDataSourceComponent setPartitioner(boolean isPartitioner) {
-		_isPartitioner = isPartitioner;
-		return this;
-	}
+    @Override
+    public SignaledDataSourceComponent setOutputPartKey(
+	    List<Integer> hashIndexes) {
+	_hashIndexes = hashIndexes;
+	return this;
+    }
 
-	@Override
-	public SignaledDataSourceComponent setPrintOut(boolean printOut) {
-		_printOutSet = true;
-		_printOut = printOut;
-		return this;
-	}
+    public SignaledDataSourceComponent setPartitioner(boolean isPartitioner) {
+	_isPartitioner = isPartitioner;
+	return this;
+    }
+
+    @Override
+    public SignaledDataSourceComponent setPrintOut(boolean printOut) {
+	_printOutSet = true;
+	_printOut = printOut;
+	return this;
+    }
 
 }

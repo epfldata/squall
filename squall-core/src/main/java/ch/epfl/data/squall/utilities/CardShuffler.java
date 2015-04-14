@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.utilities;
 
 import java.util.ArrayList;
@@ -31,48 +30,48 @@ import java.util.Random;
 
 public class CardShuffler {
 
-	private static void exchange(List<Integer> array, int first, int second) {
-		int temp = array.get(first);
-		array.set(first, array.get(second));
-		array.set(second, temp);
+    private static void exchange(List<Integer> array, int first, int second) {
+	int temp = array.get(first);
+	array.set(first, array.get(second));
+	array.set(second, temp);
+    }
+
+    public static void main(String[] args) {
+	Random random = new Random();
+	int position = 0;
+	int offset = 16;
+	int size = 16;
+
+	List<Integer> arrayR = new ArrayList<Integer>(Arrays.asList(3, 3, 4, 4,
+		4, 5, 7, 7, 9, 10, 11, 12, 12, 13, 13, 14));
+	List<Integer> arrayS = new ArrayList<Integer>(Arrays.asList(3, 3, 4, 4,
+		7, 7, 7, 8, 10, 11, 12, 13, 13, 14, 14, 15));
+
+	for (int i = 0; i < size; i++) {
+	    int exchangeIndex = position + random.nextInt(offset);
+	    exchange(arrayR, i, exchangeIndex);
+	    exchange(arrayS, i, exchangeIndex);
+	    position++;
+	    offset--;
 	}
 
-	public static void main(String[] args) {
-		Random random = new Random();
-		int position = 0;
-		int offset = 16;
-		int size = 16;
-
-		List<Integer> arrayR = new ArrayList<Integer>(Arrays.asList(3, 3, 4, 4,
-				4, 5, 7, 7, 9, 10, 11, 12, 12, 13, 13, 14));
-		List<Integer> arrayS = new ArrayList<Integer>(Arrays.asList(3, 3, 4, 4,
-				7, 7, 7, 8, 10, 11, 12, 13, 13, 14, 14, 15));
-
-		for (int i = 0; i < size; i++) {
-			int exchangeIndex = position + random.nextInt(offset);
-			exchange(arrayR, i, exchangeIndex);
-			exchange(arrayS, i, exchangeIndex);
-			position++;
-			offset--;
+	System.out.println("Array R is " + arrayR);
+	System.out.println("Array S is " + arrayS);
+	StringBuilder sb = new StringBuilder("JoinMatrix: \n");
+	for (int i = 0; i < size; i++) {
+	    for (int j = 0; j < size; j++) {
+		if (arrayR.get(i).equals(arrayS.get(j))) {
+		    sb.append("1");
+		} else {
+		    sb.append("0");
 		}
-
-		System.out.println("Array R is " + arrayR);
-		System.out.println("Array S is " + arrayS);
-		StringBuilder sb = new StringBuilder("JoinMatrix: \n");
-		for (int i = 0; i < size; i++) {
-			for (int j = 0; j < size; j++) {
-				if (arrayR.get(i).equals(arrayS.get(j))) {
-					sb.append("1");
-				} else {
-					sb.append("0");
-				}
-				if (j != size - 1) {
-					sb.append(", ");
-				}
-			}
-			sb.append("\n");
+		if (j != size - 1) {
+		    sb.append(", ");
 		}
-		System.out.println(sb.toString());
+	    }
+	    sb.append("\n");
 	}
+	System.out.println(sb.toString());
+    }
 
 }

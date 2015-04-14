@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.examples.imperative.sync;
 
 import java.util.ArrayList;
@@ -36,44 +35,46 @@ import ch.epfl.data.squall.types.Type;
 
 public class TestSync extends QueryPlan {
 
-	public TestSync(String dataPath, String extension, Map conf) {
-          super(dataPath, extension, conf);
-	}
+    public TestSync(String dataPath, String extension, Map conf) {
+	super(dataPath, extension, conf);
+    }
 
-	@Override
-	public Component createQueryPlan(String dataPath, String extension, Map conf) {
-		// -------------------------------------------------------------------------------------
-		
-		ArrayList<Type> customerSchema= new ArrayList<Type>();
-		customerSchema.add(new IntegerType());
-		customerSchema.add(new StringType());
-		customerSchema.add(new StringType());
-		customerSchema.add(new IntegerType());
-		customerSchema.add(new StringType());
-		customerSchema.add(new DoubleType());
-		customerSchema.add(new StringType());
-		customerSchema.add(new StringType());
-		
-		Component customer = new SignaledDataSourceComponent("CUSTOMER", "localhost:2000" , customerSchema, 0);
-		
-		ArrayList<Type> ordersSchema= new ArrayList<Type>();
-		ordersSchema.add(new IntegerType());
-		ordersSchema.add(new IntegerType());
-		ordersSchema.add(new StringType());
-		ordersSchema.add(new DoubleType());
-		ordersSchema.add(new DateType());
-		ordersSchema.add(new StringType());
-		ordersSchema.add(new StringType());
-		ordersSchema.add(new IntegerType());
-		ordersSchema.add(new StringType());
-		
-		// -------------------------------------------------------------------------------------
-		Component orders = new SignaledDataSourceComponent("ORDERS", "localhost:2000" , ordersSchema, 0);
+    @Override
+    public Component createQueryPlan(String dataPath, String extension, Map conf) {
+	// -------------------------------------------------------------------------------------
 
-		// -------------------------------------------------------------------------------------
-		Component custOrders = new EquiJoinComponent(customer, 0, orders, 0)
-				.add(new AggregateCountOperator(conf).setGroupByColumns(1));
-		return custOrders;
-		// -------------------------------------------------------------------------------------
-	}
+	ArrayList<Type> customerSchema = new ArrayList<Type>();
+	customerSchema.add(new IntegerType());
+	customerSchema.add(new StringType());
+	customerSchema.add(new StringType());
+	customerSchema.add(new IntegerType());
+	customerSchema.add(new StringType());
+	customerSchema.add(new DoubleType());
+	customerSchema.add(new StringType());
+	customerSchema.add(new StringType());
+
+	Component customer = new SignaledDataSourceComponent("CUSTOMER",
+		"localhost:2000", customerSchema, 0);
+
+	ArrayList<Type> ordersSchema = new ArrayList<Type>();
+	ordersSchema.add(new IntegerType());
+	ordersSchema.add(new IntegerType());
+	ordersSchema.add(new StringType());
+	ordersSchema.add(new DoubleType());
+	ordersSchema.add(new DateType());
+	ordersSchema.add(new StringType());
+	ordersSchema.add(new StringType());
+	ordersSchema.add(new IntegerType());
+	ordersSchema.add(new StringType());
+
+	// -------------------------------------------------------------------------------------
+	Component orders = new SignaledDataSourceComponent("ORDERS",
+		"localhost:2000", ordersSchema, 0);
+
+	// -------------------------------------------------------------------------------------
+	Component custOrders = new EquiJoinComponent(customer, 0, orders, 0)
+		.add(new AggregateCountOperator(conf).setGroupByColumns(1));
+	return custOrders;
+	// -------------------------------------------------------------------------------------
+    }
 }

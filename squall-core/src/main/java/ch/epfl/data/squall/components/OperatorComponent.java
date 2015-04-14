@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.components;
 
 import java.util.ArrayList;
@@ -46,216 +45,216 @@ import ch.epfl.data.squall.utilities.MyUtilities;
  */
 
 public class OperatorComponent implements Component {
-	private static final long serialVersionUID = 1L;
-	private static Logger LOG = Logger.getLogger(OperatorComponent.class);
+    private static final long serialVersionUID = 1L;
+    private static Logger LOG = Logger.getLogger(OperatorComponent.class);
 
-	private final String _componentName;
+    private final String _componentName;
 
-	private long _batchOutputMillis;
+    private long _batchOutputMillis;
 
-	private List<Integer> _hashIndexes;
-	private List<ValueExpression> _hashExpressions;
+    private List<Integer> _hashIndexes;
+    private List<ValueExpression> _hashExpressions;
 
-	private final ChainOperator _chain = new ChainOperator();
+    private final ChainOperator _chain = new ChainOperator();
 
-	private boolean _printOut;
-	private boolean _printOutSet;
+    private boolean _printOut;
+    private boolean _printOutSet;
 
-	//private Component _parent;
-	private Component _child;
-	private StormOperator _stormOperator;
+    // private Component _parent;
+    private Component _child;
+    private StormOperator _stormOperator;
 
-	private List<String> _fullHashList;
-	
-	private ArrayList<Component> _parents;
+    private List<String> _fullHashList;
 
-	public OperatorComponent(Component parent, String componentName) {
-		_parents= new ArrayList<Component>(1);
-		parent.setChild(this);
-		_parents.add(parent);
-		_componentName = componentName;
-	}
-	
-	public OperatorComponent(ArrayList<Component> parents, String componentName) {
-		_parents=parents;
-		for (Component parent : parents) {
-			parent.setChild(this);
-		}
+    private ArrayList<Component> _parents;
 
-		_componentName = componentName;
+    public OperatorComponent(Component parent, String componentName) {
+	_parents = new ArrayList<Component>(1);
+	parent.setChild(this);
+	_parents.add(parent);
+	_componentName = componentName;
+    }
+
+    public OperatorComponent(ArrayList<Component> parents, String componentName) {
+	_parents = parents;
+	for (Component parent : parents) {
+	    parent.setChild(this);
 	}
 
-	@Override
-	public OperatorComponent add(Operator operator) {
-		_chain.addOperator(operator);
-		return this;
+	_componentName = componentName;
+    }
+
+    @Override
+    public OperatorComponent add(Operator operator) {
+	_chain.addOperator(operator);
+	return this;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+	if (obj instanceof Component)
+	    return _componentName.equals(((Component) obj).getName());
+	else
+	    return false;
+    }
+
+    @Override
+    public List<DataSourceComponent> getAncestorDataSources() {
+	final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
+	for (Component parent : _parents) {
+	    list.addAll(parent.getAncestorDataSources());
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof Component)
-			return _componentName.equals(((Component) obj).getName());
-		else
-			return false;
+	return list;
+    }
+
+    @Override
+    public long getBatchOutputMillis() {
+	return _batchOutputMillis;
+    }
+
+    @Override
+    public ChainOperator getChainOperator() {
+	return _chain;
+    }
+
+    @Override
+    public Component getChild() {
+	return _child;
+    }
+
+    // from StormComponent
+    @Override
+    public String[] getEmitterIDs() {
+	return _stormOperator.getEmitterIDs();
+    }
+
+    @Override
+    public List<String> getFullHashList() {
+	return _fullHashList;
+    }
+
+    @Override
+    public List<ValueExpression> getHashExpressions() {
+	return _hashExpressions;
+    }
+
+    @Override
+    public List<Integer> getHashIndexes() {
+	return _hashIndexes;
+    }
+
+    @Override
+    public String getInfoID() {
+	return _stormOperator.getInfoID();
+    }
+
+    @Override
+    public String getName() {
+	return _componentName;
+    }
+
+    @Override
+    public Component[] getParents() {
+	// return new Component[] { _parent };
+	Component[] res = new Component[_parents.size()];
+	int index = 0;
+	for (Component parent : _parents) {
+	    res[index] = parent;
+	    index++;
 	}
+	return res;
 
-	@Override
-	public List<DataSourceComponent> getAncestorDataSources() {
-		final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
-		for (Component parent : _parents) {
-			list.addAll(parent.getAncestorDataSources());
-		}
-		
-		return list;
-	}
+    }
 
-	@Override
-	public long getBatchOutputMillis() {
-		return _batchOutputMillis;
-	}
+    @Override
+    public boolean getPrintOut() {
+	return _printOut;
+    }
 
-	@Override
-	public ChainOperator getChainOperator() {
-		return _chain;
-	}
+    @Override
+    public int hashCode() {
+	int hash = 5;
+	hash = 47 * hash
+		+ (_componentName != null ? _componentName.hashCode() : 0);
+	return hash;
+    }
 
-	@Override
-	public Component getChild() {
-		return _child;
-	}
+    @Override
+    public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
+	    List<String> allCompNames, Config conf, int hierarchyPosition) {
 
-	// from StormComponent
-	@Override
-	public String[] getEmitterIDs() {
-		return _stormOperator.getEmitterIDs();
-	}
+	// by default print out for the last component
+	// for other conditions, can be set via setPrintOut
+	if (hierarchyPosition == StormComponent.FINAL_COMPONENT
+		&& !_printOutSet)
+	    setPrintOut(true);
 
-	@Override
-	public List<String> getFullHashList() {
-		return _fullHashList;
-	}
+	MyUtilities.checkBatchOutput(_batchOutputMillis,
+		_chain.getAggregation(), conf);
 
-	@Override
-	public List<ValueExpression> getHashExpressions() {
-		return _hashExpressions;
-	}
+	// _stormOperator = new StormOperator(_parent, this, allCompNames,
+	// hierarchyPosition, builder, killer, conf);
+	_stormOperator = new StormOperator(_parents, this, allCompNames,
+		hierarchyPosition, builder, killer, conf);
+    }
 
-	@Override
-	public List<Integer> getHashIndexes() {
-		return _hashIndexes;
-	}
+    @Override
+    public OperatorComponent setBatchOutputMillis(long millis) {
+	_batchOutputMillis = millis;
+	return this;
+    }
 
-	@Override
-	public String getInfoID() {
-		return _stormOperator.getInfoID();
-	}
+    @Override
+    public void setChild(Component child) {
+	_child = child;
+    }
 
-	@Override
-	public String getName() {
-		return _componentName;
-	}
+    @Override
+    public Component setContentSensitiveThetaJoinWrapper(Type wrapper) {
+	return this;
+    }
 
-	@Override
-	public Component[] getParents() {
-		//return new Component[] { _parent };
-		Component[] res = new Component[_parents.size()];
-		int index=0;
-		for (Component parent : _parents) {
-			res[index]=parent;
-			index++;
-		}
-		return res;
-		
-	}
+    @Override
+    public OperatorComponent setFullHashList(List<String> fullHashList) {
+	_fullHashList = fullHashList;
+	return this;
+    }
 
-	@Override
-	public boolean getPrintOut() {
-		return _printOut;
-	}
+    @Override
+    public OperatorComponent setHashExpressions(
+	    List<ValueExpression> hashExpressions) {
+	_hashExpressions = hashExpressions;
+	return this;
+    }
 
-	@Override
-	public int hashCode() {
-		int hash = 5;
-		hash = 47 * hash
-				+ (_componentName != null ? _componentName.hashCode() : 0);
-		return hash;
-	}
+    @Override
+    public Component setInterComp(InterchangingComponent inter) {
+	throw new RuntimeException(
+		"Operator component does not support setInterComp");
+    }
 
-	@Override
-	public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
-			List<String> allCompNames, Config conf, int hierarchyPosition) {
+    @Override
+    public Component setJoinPredicate(Predicate joinPredicate) {
+	throw new RuntimeException(
+		"Operator component does not support Join Predicates");
+    }
 
-		// by default print out for the last component
-		// for other conditions, can be set via setPrintOut
-		if (hierarchyPosition == StormComponent.FINAL_COMPONENT
-				&& !_printOutSet)
-			setPrintOut(true);
+    @Override
+    public OperatorComponent setOutputPartKey(int... hashIndexes) {
+	return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
+    }
 
-		MyUtilities.checkBatchOutput(_batchOutputMillis,
-				_chain.getAggregation(), conf);
+    @Override
+    public OperatorComponent setOutputPartKey(List<Integer> hashIndexes) {
+	_hashIndexes = hashIndexes;
+	return this;
+    }
 
-//		_stormOperator = new StormOperator(_parent, this, allCompNames,
-//				hierarchyPosition, builder, killer, conf);
-		_stormOperator = new StormOperator(_parents, this, allCompNames,
-				hierarchyPosition, builder, killer, conf);
-	}
-
-	@Override
-	public OperatorComponent setBatchOutputMillis(long millis) {
-		_batchOutputMillis = millis;
-		return this;
-	}
-
-	@Override
-	public void setChild(Component child) {
-		_child = child;
-	}
-
-	@Override
-	public Component setContentSensitiveThetaJoinWrapper(Type wrapper) {
-		return this;
-	}
-
-	@Override
-	public OperatorComponent setFullHashList(List<String> fullHashList) {
-		_fullHashList = fullHashList;
-		return this;
-	}
-
-	@Override
-	public OperatorComponent setHashExpressions(
-			List<ValueExpression> hashExpressions) {
-		_hashExpressions = hashExpressions;
-		return this;
-	}
-
-	@Override
-	public Component setInterComp(InterchangingComponent inter) {
-		throw new RuntimeException(
-				"Operator component does not support setInterComp");
-	}
-
-	@Override
-	public Component setJoinPredicate(Predicate joinPredicate) {
-		throw new RuntimeException(
-				"Operator component does not support Join Predicates");
-	}
-
-	@Override
-	public OperatorComponent setOutputPartKey(int... hashIndexes) {
-		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
-	}
-
-	@Override
-	public OperatorComponent setOutputPartKey(List<Integer> hashIndexes) {
-		_hashIndexes = hashIndexes;
-		return this;
-	}
-
-	@Override
-	public OperatorComponent setPrintOut(boolean printOut) {
-		_printOutSet = true;
-		_printOut = printOut;
-		return this;
-	}
+    @Override
+    public OperatorComponent setPrintOut(boolean printOut) {
+	_printOutSet = true;
+	_printOut = printOut;
+	return this;
+    }
 }

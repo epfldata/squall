@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.ewh.main;
 
 import java.io.File;
@@ -33,8 +32,6 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import backtype.storm.Config;
-import ch.epfl.data.squall.types.IntegerType;
-import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.ewh.data_structures.JoinMatrix;
 import ch.epfl.data.squall.ewh.data_structures.Region;
 import ch.epfl.data.squall.ewh.data_structures.UJMPAdapterByteMatrix;
@@ -43,6 +40,8 @@ import ch.epfl.data.squall.ewh.visualize.VisualizerInterface;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.CustomReader;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SerializableFileInputStream;
@@ -87,15 +86,13 @@ public class PullStatisticCollector {
     }
 
     private static <T extends Comparable<T>> T readTupleJoinKey(
-	    CustomReader reader, ChainOperator operators,
-	    Type<T> conv, Map map) {
+	    CustomReader reader, ChainOperator operators, Type<T> conv, Map map) {
 	List<String> tuple = readTuple(reader, operators, map);
 	return tuple != null ? conv.fromString(tuple.get(0)) : null;
     }
 
     private static <T extends Comparable<T>> List<T> readAllTupleJoinKeys(
-	    CustomReader reader, ChainOperator operators,
-	    Type<T> conv, Map map) {
+	    CustomReader reader, ChainOperator operators, Type<T> conv, Map map) {
 	List<T> tupleKeys = new ArrayList<T>();
 	T key = null;
 	while ((key = readTupleJoinKey(reader, operators, conv, map)) != null) {

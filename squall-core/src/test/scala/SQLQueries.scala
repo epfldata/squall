@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 import org.scalatest._
 import scala.sys.process._
 import java.io._
@@ -35,7 +34,7 @@ class SQLQueries extends FunSuite {
     out
   }
 
-  for(confFile <- confDir.listFiles()) {
+  for (confFile <- confDir.listFiles()) {
     test(confFile.getName()) {
       assertResult(0) {
         runQuery(confFile.getAbsolutePath())

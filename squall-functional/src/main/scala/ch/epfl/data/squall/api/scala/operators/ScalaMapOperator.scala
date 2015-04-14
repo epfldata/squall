@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.api.scala.operators
 
 import ch.epfl.data.squall.operators.Operator

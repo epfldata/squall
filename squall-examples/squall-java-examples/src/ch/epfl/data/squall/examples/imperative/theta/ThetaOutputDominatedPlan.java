@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.examples.imperative.theta;
 
 import java.util.Arrays;
@@ -33,7 +32,6 @@ import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.AggregateSumOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
-import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
@@ -42,56 +40,57 @@ import ch.epfl.data.squall.types.NumericType;
 
 public class ThetaOutputDominatedPlan extends QueryPlan {
 
-	private static Logger LOG = Logger
-			.getLogger(ThetaOutputDominatedPlan.class);
+    private static Logger LOG = Logger
+	    .getLogger(ThetaOutputDominatedPlan.class);
 
-	private final QueryBuilder _queryBuilder = new QueryBuilder();
+    private final QueryBuilder _queryBuilder = new QueryBuilder();
 
-	private static final NumericType<Double> _doubleConv = new DoubleType();
+    private static final NumericType<Double> _doubleConv = new DoubleType();
 
-	/*
-	 * SELECT SUM(SUPPLIER.SUPPKEY) FROM SUPPLIER, NATION
-	 */
-	public ThetaOutputDominatedPlan(String dataPath, String extension, Map conf) {
-		final int Theta_JoinType = ThetaQueryPlansParameters
-				.getThetaJoinType(conf);
-		// -------------------------------------------------------------------------------------
-		final List<Integer> hashSupplier = Arrays.asList(0);
+    /*
+     * SELECT SUM(SUPPLIER.SUPPKEY) FROM SUPPLIER, NATION
+     */
+    public ThetaOutputDominatedPlan(String dataPath, String extension, Map conf) {
+	final int Theta_JoinType = ThetaQueryPlansParameters
+		.getThetaJoinType(conf);
+	// -------------------------------------------------------------------------------------
+	final List<Integer> hashSupplier = Arrays.asList(0);
 
-		final ProjectOperator projectionSupplier = new ProjectOperator(
-				new int[] { 0 });
+	final ProjectOperator projectionSupplier = new ProjectOperator(
+		new int[] { 0 });
 
-		final DataSourceComponent relationSupplier = new DataSourceComponent(
-				"SUPPLIER", dataPath + "supplier" + extension).add(
-				projectionSupplier).setOutputPartKey(hashSupplier);
-		_queryBuilder.add(relationSupplier);
+	final DataSourceComponent relationSupplier = new DataSourceComponent(
+		"SUPPLIER", dataPath + "supplier" + extension).add(
+		projectionSupplier).setOutputPartKey(hashSupplier);
+	_queryBuilder.add(relationSupplier);
 
-		// -------------------------------------------------------------------------------------
-		final List<Integer> hashNation = Arrays.asList(0);
+	// -------------------------------------------------------------------------------------
+	final List<Integer> hashNation = Arrays.asList(0);
 
-		final ProjectOperator projectionNation = new ProjectOperator(
-				new int[] { 1 });
+	final ProjectOperator projectionNation = new ProjectOperator(
+		new int[] { 1 });
 
-		final DataSourceComponent relationNation = new DataSourceComponent(
-				"NATION", dataPath + "nation" + extension)
-				.add(projectionNation).setOutputPartKey(hashNation);
-		_queryBuilder.add(relationNation);
-		
-		final AggregateOperator agg = new AggregateSumOperator(
-				new ColumnReference(_doubleConv, 0), conf);
-		// Empty parameters = Cartesian Product
+	final DataSourceComponent relationNation = new DataSourceComponent(
+		"NATION", dataPath + "nation" + extension)
+		.add(projectionNation).setOutputPartKey(hashNation);
+	_queryBuilder.add(relationNation);
 
-		Component lastJoiner = ThetaJoinComponentFactory
-				.createThetaJoinOperator(Theta_JoinType, relationSupplier,
-						relationNation, _queryBuilder)
-				.add(new ProjectOperator(new int[] { 0 })).add(agg);
-		// lastJoiner.setPrintOut(false);
+	final AggregateOperator agg = new AggregateSumOperator(
+		new ColumnReference(_doubleConv, 0), conf);
+	// Empty parameters = Cartesian Product
 
-		// -------------------------------------------------------------------------------------
+	Component lastJoiner = ThetaJoinComponentFactory
+		.createThetaJoinOperator(Theta_JoinType, relationSupplier,
+			relationNation, _queryBuilder)
+		.add(new ProjectOperator(new int[] { 0 })).add(agg);
+	// lastJoiner.setPrintOut(false);
 
-	}
+	// -------------------------------------------------------------------------------------
 
-	public QueryBuilder getQueryPlan() {
-		return _queryBuilder;
-	}
+    }
+
+    @Override
+    public QueryBuilder getQueryPlan() {
+	return _queryBuilder;
+    }
 }

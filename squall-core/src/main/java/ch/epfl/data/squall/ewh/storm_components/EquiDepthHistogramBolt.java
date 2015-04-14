@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.ewh.storm_components;
 
 import java.util.ArrayList;
@@ -36,19 +35,19 @@ import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
-import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.utilities.DeepCopy;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.SystemParameters.HistogramType;
 
 //equi-depth histogram on one or both input relations
-public class EquiDepthHistogramBolt<JAT extends Number & Comparable<JAT>> extends
-	BaseRichBolt {
+public class EquiDepthHistogramBolt<JAT extends Number & Comparable<JAT>>
+	extends BaseRichBolt {
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(EquiDepthHistogramBolt.class);
 

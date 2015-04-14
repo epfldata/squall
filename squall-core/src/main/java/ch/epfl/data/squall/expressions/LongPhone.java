@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.expressions;
 
 import java.util.List;
@@ -28,75 +27,75 @@ import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 
 //translates phone in a form with dashes (e.g 88-9) into a Long
 public class LongPhone implements ValueExpression<Long> {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private final Type<Long> _wrapper = new LongType();
+    private final Type<Long> _wrapper = new LongType();
 
-	private int _columnIndex;
-	private int _firstDigits = -1;
+    private int _columnIndex;
+    private int _firstDigits = -1;
 
-	public LongPhone(int columnIndex) {
-		_columnIndex = columnIndex;
+    public LongPhone(int columnIndex) {
+	_columnIndex = columnIndex;
+    }
+
+    public LongPhone(int columnIndex, int firstDigits) {
+	this(columnIndex);
+	_firstDigits = firstDigits;
+    }
+
+    @Override
+    public void accept(ValueExpressionVisitor vev) {
+	throw new RuntimeException("Not implemented for a moment!");
+	// vev.visit(this);
+    }
+
+    // unused
+    @Override
+    public void changeValues(int i, ValueExpression<Long> newExpr) {
+	// nothing
+    }
+
+    @Override
+    public Long eval(List<String> tuple) {
+	String value = tuple.get(_columnIndex);
+	value = value.replace("-", "");
+	if (_firstDigits != -1) {
+	    value = value.substring(0, _firstDigits);
 	}
+	return _wrapper.fromString(value);
+    }
 
-	public LongPhone(int columnIndex, int firstDigits) {
-		this(columnIndex);
-		_firstDigits = firstDigits;
-	}
+    @Override
+    public String evalString(List<String> tuple) {
+	final long result = eval(tuple);
+	return _wrapper.toString(result);
+    }
 
-	@Override
-	public void accept(ValueExpressionVisitor vev) {
-		throw new RuntimeException("Not implemented for a moment!");
-		// vev.visit(this);
-	}
+    @Override
+    public List<ValueExpression> getInnerExpressions() {
+	return null;
+    }
 
-	// unused
-	@Override
-	public void changeValues(int i, ValueExpression<Long> newExpr) {
-		// nothing
-	}
+    @Override
+    public Type getType() {
+	return _wrapper;
+    }
 
-	@Override
-	public Long eval(List<String> tuple) {
-		String value = tuple.get(_columnIndex);
-		value = value.replace("-", "");
-		if (_firstDigits != -1) {
-			value = value.substring(0, _firstDigits);
-		}
-		return _wrapper.fromString(value);
-	}
+    @Override
+    public void inverseNumber() {
+	// nothing
 
-	@Override
-	public String evalString(List<String> tuple) {
-		final long result = eval(tuple);
-		return _wrapper.toString(result);
-	}
+    }
 
-	@Override
-	public List<ValueExpression> getInnerExpressions() {
-		return null;
-	}
+    @Override
+    public boolean isNegative() {
+	return false;
+    }
 
-	@Override
-	public Type getType() {
-		return _wrapper;
-	}
-
-	@Override
-	public void inverseNumber() {
-		// nothing
-
-	}
-
-	@Override
-	public boolean isNegative() {
-		return false;
-	}
-
-	@Override
-	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append("LongPhone ").append(_columnIndex);
-		return sb.toString();
-	}
+    @Override
+    public String toString() {
+	final StringBuilder sb = new StringBuilder();
+	sb.append("LongPhone ").append(_columnIndex);
+	return sb.toString();
+    }
 }

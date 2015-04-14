@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.api.sql.visitors.squall;
 
 import java.util.ArrayList;
@@ -37,65 +36,65 @@ import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 
 public class ColumnRefCollectVisitor implements ValueExpressionVisitor {
-	private final List<ColumnReference> _crList = new ArrayList<ColumnReference>();
+    private final List<ColumnReference> _crList = new ArrayList<ColumnReference>();
 
-	public List<ColumnReference> getColumnRefs() {
-		return _crList;
-	}
+    public List<ColumnReference> getColumnRefs() {
+	return _crList;
+    }
 
-	@Override
-	public void visit(Addition add) {
-		visit(add.getInnerExpressions());
-	}
+    @Override
+    public void visit(Addition add) {
+	visit(add.getInnerExpressions());
+    }
 
-	@Override
-	public void visit(ColumnReference cr) {
-		_crList.add(cr);
-	}
+    @Override
+    public void visit(ColumnReference cr) {
+	_crList.add(cr);
+    }
 
-	@Override
-	public void visit(DateDiff dd) {
-		visit(dd.getInnerExpressions());
-	}
+    @Override
+    public void visit(DateDiff dd) {
+	visit(dd.getInnerExpressions());
+    }
 
-	@Override
-	public void visit(DateSum ds) {
-		visit(ds.getInnerExpressions());
-	}
+    @Override
+    public void visit(DateSum ds) {
+	visit(ds.getInnerExpressions());
+    }
 
-	@Override
-	public void visit(Division dvsn) {
-		visit(dvsn.getInnerExpressions());
-	}
+    @Override
+    public void visit(Division dvsn) {
+	visit(dvsn.getInnerExpressions());
+    }
 
-	@Override
-	public void visit(IntegerYearFromDate iyfd) {
-		visit(iyfd.getInnerExpressions());
-	}
+    @Override
+    public void visit(IntegerYearFromDate iyfd) {
+	visit(iyfd.getInnerExpressions());
+    }
 
-	private void visit(List<ValueExpression> veList) {
-		for (final ValueExpression ve : veList)
-			ve.accept(this);
-	}
+    private void visit(List<ValueExpression> veList) {
+	for (final ValueExpression ve : veList)
+	    ve.accept(this);
+    }
 
-	@Override
-	public void visit(Multiplication mult) {
-		visit(mult.getInnerExpressions());
-	}
+    @Override
+    public void visit(Multiplication mult) {
+	visit(mult.getInnerExpressions());
+    }
 
-	@Override
-	public void visit(StringConcatenate sc) {
-		visit(sc.getInnerExpressions());
-	}
+    @Override
+    public void visit(StringConcatenate sc) {
+	visit(sc.getInnerExpressions());
+    }
 
-	@Override
-	public void visit(Subtraction sub) {
-		visit(sub.getInnerExpressions());
-	}
+    @Override
+    public void visit(Subtraction sub) {
+	visit(sub.getInnerExpressions());
+    }
 
-	@Override
-	public void visit(ValueSpecification vs) {
-		// constant
-	}
+    @Override
+    public void visit(ValueSpecification vs) {
+	// constant
+    }
 
 }

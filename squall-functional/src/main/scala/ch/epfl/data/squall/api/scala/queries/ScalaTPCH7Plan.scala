@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.api.scala.queries
 
 import ch.epfl.data.squall.api.scala.SquallType._
@@ -60,7 +59,7 @@ object ScalaTPCH7Plan {
 
     val orders = Source[orders]("ORDERS").map { t => Tuple2(t._1, t._2) }
     val NCOjoin = NCjoin.join(orders)(k1 => k1._2)(k2 => k2._2).onSlidingWindow(10)
-    .map(t => Tuple2(t._1._1, t._2._1))
+      .map(t => Tuple2(t._1._1, t._2._1))
 
     val supplier = Source[supplier]("SUPPLIER").map { t => Tuple2(t._1, t._4) }
     val nation1 = Source[nation]("Nation1").filter { t => t._2.equals(_firstCountryName) || t._2.equals(_secondCountryName) }.map { t => Tuple2(t._2, t._1) }
@@ -68,7 +67,7 @@ object ScalaTPCH7Plan {
 
     val lineitems = Source[lineitems]("LINEITEM").filter { t => t._11.compareTo(_date1) >= 0 && t._11.compareTo(_date2) <= 0 }.map { t => Tuple4(_year_format.format(t._11), (1 - t._7) * t._6, t._3, t._1) }
     val LSNjoin = lineitems.join(SNjoin)(k1 => k1._3)(k2 => k2._1).onSlidingWindow(15)
-    .map(t => Tuple4(t._2._2, t._1._1, t._1._2, t._1._4))
+      .map(t => Tuple4(t._2._2, t._1._1, t._1._2, t._1._4))
 
     val NCOLSNJoin = NCOjoin.join(LSNjoin)(k1 => k1._2)(k2 => k2._4)
       .filter(t => (t._1._1.equals(_firstCountryName) && t._2._1.equals(_secondCountryName)) || (t._2._1.equals(_firstCountryName) && t._1._1.equals(_secondCountryName)))

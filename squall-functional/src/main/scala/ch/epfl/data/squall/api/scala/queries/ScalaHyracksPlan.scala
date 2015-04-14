@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.api.scala.queries
 
 import ch.epfl.data.squall.api.scala.SquallType._
@@ -37,11 +36,10 @@ import ch.epfl.data.squall.api.scala.TPCHSchema._
  */
 class ScalaHyracksPlan(dataPath: String, extension: String, conf: java.util.Map[String, String]) extends QueryPlan {
 
-
   override def getQueryPlan(): QueryBuilder = {
     val customers = Source[customer]("customer").map { t => Tuple2(t._1, t._7) }
     val orders = Source[orders]("orders").map { t => t._2 }
-    val join = customers.join(orders)(k1=> k1._1)(x => x)
+    val join = customers.join(orders)(k1 => k1._1)(x => x)
     val agg = join.groupByKey(x => 1, x => x._1._2)
     agg.execute(conf)
   }

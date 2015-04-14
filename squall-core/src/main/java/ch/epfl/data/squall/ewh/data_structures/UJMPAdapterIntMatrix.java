@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.ewh.data_structures;
 
 import java.io.File;
@@ -29,10 +28,10 @@ import org.apache.log4j.Logger;
 import org.ujmp.core.intmatrix.impl.DefaultSparseIntMatrix;
 import org.ujmp.core.io.ImportMatrixSPARSECSV;
 
-import ch.epfl.data.squall.types.NumericType;
-import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.ewh.visualize.VisualizerInterface;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.DeepCopy;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;

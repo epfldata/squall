@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.components.theta;
 
 import ch.epfl.data.squall.components.Component;
@@ -27,26 +26,22 @@ import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class ThetaJoinComponentFactory {
 
-	public static JoinerComponent createThetaJoinOperator(int thetaJoinType,
-			Component firstParent, Component secondParent,
-			QueryBuilder queryBuilder) {
-		JoinerComponent result = null;
-		if (thetaJoinType == SystemParameters.STATIC_CIS) {
-			result = new ThetaJoinComponent(firstParent, secondParent,
-					false);
-		} else if (thetaJoinType == SystemParameters.EPOCHS_CIS) {
-			result = new AdaptiveThetaJoinComponent(firstParent,
-					secondParent);
-		} else if (thetaJoinType == SystemParameters.STATIC_CS) {
-			result = new ThetaJoinComponent(firstParent, secondParent,
-					true);
-		} else if (thetaJoinType == SystemParameters.EPOCHS_CS) {
-			result = new AdaptiveThetaJoinComponent(firstParent,
-					secondParent);
-		} else {
-			throw new RuntimeException("Unsupported Thtea Join Type");
-		}
-		queryBuilder.add(result);
-		return result;
+    public static JoinerComponent createThetaJoinOperator(int thetaJoinType,
+	    Component firstParent, Component secondParent,
+	    QueryBuilder queryBuilder) {
+	JoinerComponent result = null;
+	if (thetaJoinType == SystemParameters.STATIC_CIS) {
+	    result = new ThetaJoinComponent(firstParent, secondParent, false);
+	} else if (thetaJoinType == SystemParameters.EPOCHS_CIS) {
+	    result = new AdaptiveThetaJoinComponent(firstParent, secondParent);
+	} else if (thetaJoinType == SystemParameters.STATIC_CS) {
+	    result = new ThetaJoinComponent(firstParent, secondParent, true);
+	} else if (thetaJoinType == SystemParameters.EPOCHS_CS) {
+	    result = new AdaptiveThetaJoinComponent(firstParent, secondParent);
+	} else {
+	    throw new RuntimeException("Unsupported Thtea Join Type");
 	}
+	queryBuilder.add(result);
+	return result;
+    }
 }

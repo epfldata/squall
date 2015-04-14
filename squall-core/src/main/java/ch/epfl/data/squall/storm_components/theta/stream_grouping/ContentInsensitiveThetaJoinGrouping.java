@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.storm_components.theta.stream_grouping;
 
 import java.util.ArrayList;
@@ -33,72 +32,74 @@ import ch.epfl.data.squall.thetajoin.matrix_assignment.MatrixAssignment;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.MatrixAssignment.Dimension;
 import ch.epfl.data.squall.utilities.MyUtilities;
 
-public class ContentInsensitiveThetaJoinGrouping implements CustomStreamGrouping {
-	private static final long serialVersionUID = 1L;
-	private static Logger LOG = Logger.getLogger(ContentInsensitiveThetaJoinGrouping.class);
+public class ContentInsensitiveThetaJoinGrouping implements
+	CustomStreamGrouping {
+    private static final long serialVersionUID = 1L;
+    private static Logger LOG = Logger
+	    .getLogger(ContentInsensitiveThetaJoinGrouping.class);
 
-	private final MatrixAssignment _assignment;
-	private final String _firstEmitterIndex, _secondEmitterIndex;
-	private List<Integer> _targetTasks;
-	private final Map _map;
+    private final MatrixAssignment _assignment;
+    private final String _firstEmitterIndex, _secondEmitterIndex;
+    private List<Integer> _targetTasks;
+    private final Map _map;
 
-	public ContentInsensitiveThetaJoinGrouping(String firstIndex, String secondIndex,
-			MatrixAssignment assignment, Map map) {
-		_assignment = assignment;
-		_firstEmitterIndex = firstIndex;
-		_secondEmitterIndex = secondIndex;
-		_map = map;
+    public ContentInsensitiveThetaJoinGrouping(String firstIndex,
+	    String secondIndex, MatrixAssignment assignment, Map map) {
+	_assignment = assignment;
+	_firstEmitterIndex = firstIndex;
+	_secondEmitterIndex = secondIndex;
+	_map = map;
+    }
+
+    // @Override
+    @Override
+    public List<Integer> chooseTasks(int taskId, List<Object> stormTuple) {
+	// the following is checking for FinalAck
+	if (!MyUtilities.isManualBatchingMode(_map)) {
+	    final List<String> tuple = (List<String>) stormTuple.get(1); // TUPLE
+	    if (MyUtilities.isFinalAck(tuple, _map))
+		return _targetTasks;
+	} else {
+	    final String tupleBatch = (String) stormTuple.get(1); // TUPLE
+	    if (MyUtilities.isFinalAckManualBatching(tupleBatch, _map))
+		// send to everyone
+		return _targetTasks;
 	}
 
-	// @Override
-	@Override
-	public List<Integer> chooseTasks(int taskId, List<Object> stormTuple) {
-		// the following is checking for FinalAck
-		if (!MyUtilities.isManualBatchingMode(_map)) {
-			final List<String> tuple = (List<String>) stormTuple.get(1); // TUPLE
-			if (MyUtilities.isFinalAck(tuple, _map))
-				return _targetTasks;
-		} else {
-			final String tupleBatch = (String) stormTuple.get(1); // TUPLE
-			if (MyUtilities.isFinalAckManualBatching(tupleBatch, _map))
-				// send to everyone
-				return _targetTasks;
-		}
+	// the following picks tasks for Non-FinalAck
+	return chooseTasksNonFinalAck(stormTuple);
+    }
 
-		// the following picks tasks for Non-FinalAck
-		return chooseTasksNonFinalAck(stormTuple);
+    private List<Integer> chooseTasksNonFinalAck(List<Object> stormTuple) {
+	// ////////////////
+	List<Integer> tasks = null;
+	final String tableName = (String) stormTuple.get(0);
+	if (tableName.equals(_firstEmitterIndex))
+	    tasks = translateIdsToTasks(_assignment.getRegionIDs(Dimension.ROW));
+	else if (tableName.equals(_secondEmitterIndex))
+	    tasks = translateIdsToTasks(_assignment
+		    .getRegionIDs(Dimension.COLUMN));
+	else {
+	    LOG.info("First Name: " + _firstEmitterIndex);
+	    LOG.info("Second Name: " + _secondEmitterIndex);
+	    LOG.info("Table Name: " + tableName);
+	    LOG.info("WRONG ASSIGNMENT");
 	}
+	return tasks;
+    }
 
-	private List<Integer> chooseTasksNonFinalAck(List<Object> stormTuple) {
-		// ////////////////
-		List<Integer> tasks = null;
-		final String tableName = (String) stormTuple.get(0);
-		if (tableName.equals(_firstEmitterIndex))
-			tasks = translateIdsToTasks(_assignment.getRegionIDs(Dimension.ROW));
-		else if (tableName.equals(_secondEmitterIndex))
-			tasks = translateIdsToTasks(_assignment
-					.getRegionIDs(Dimension.COLUMN));
-		else {
-			LOG.info("First Name: " + _firstEmitterIndex);
-			LOG.info("Second Name: " + _secondEmitterIndex);
-			LOG.info("Table Name: " + tableName);
-			LOG.info("WRONG ASSIGNMENT");
-		}
-		return tasks;
-	}
+    @Override
+    public void prepare(WorkerTopologyContext wtc, GlobalStreamId gsi,
+	    List<Integer> targetTasks) {
+	// LOG.info("Number of tasks is : "+numTasks);
+	_targetTasks = targetTasks;
+    }
 
-	@Override
-	public void prepare(WorkerTopologyContext wtc, GlobalStreamId gsi,
-			List<Integer> targetTasks) {
-		// LOG.info("Number of tasks is : "+numTasks);
-		_targetTasks = targetTasks;
-	}
-
-	private List<Integer> translateIdsToTasks(ArrayList<Integer> ids) {
-		final List<Integer> converted = new ArrayList<Integer>();
-		for (final int id : ids)
-			converted.add(_targetTasks.get(id));
-		return converted;
-	}
+    private List<Integer> translateIdsToTasks(ArrayList<Integer> ids) {
+	final List<Integer> converted = new ArrayList<Integer>();
+	for (final int id : ids)
+	    converted.add(_targetTasks.get(id));
+	return converted;
+    }
 
 }

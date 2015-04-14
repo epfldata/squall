@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.api.scala
 import backtype.storm.tuple._
 import scala.reflect.runtime.universe._
@@ -56,10 +55,10 @@ object Stream {
     val tpL = implicitly[SquallType[L]]
     val tpV = implicitly[SquallType[V]]
   }
-  
-  case class SlideWindowJoinStream[T: SquallType](Str: JoinStream[T], rangeSize:Int) extends Stream[T]
+
+  case class SlideWindowJoinStream[T: SquallType](Str: JoinStream[T], rangeSize: Int) extends Stream[T]
   case class GroupedStream[T: SquallType, U: SquallType, N: Numeric](Str: Stream[T], agg: T => N, ind: T => U) extends TailStream[T, U, N]
-  case class WindowStream[T: SquallType, U: SquallType, N: Numeric](Str: TailStream[T, U, N], rangeSize:Int, slideSize:Int) extends TailStream[T, U, N]
+  case class WindowStream[T: SquallType, U: SquallType, N: Numeric](Str: TailStream[T, U, N], rangeSize: Int, slideSize: Int) extends TailStream[T, U, N]
 
   //TODO change types to be generic
   class Stream[T: SquallType] extends Serializable {
@@ -71,18 +70,18 @@ object Stream {
     def groupByKey[N: Numeric, U: SquallType](agg: T => N, keyIndices: T => U): TailStream[T, U, N] = GroupedStream[T, U, N](this, agg, keyIndices)
 
   }
-  
-  class JoinStream[T: SquallType] extends Stream[T]{
-   def onSlidingWindow(rangeSize:Int) = SlideWindowJoinStream[T](this, rangeSize)
+
+  class JoinStream[T: SquallType] extends Stream[T] {
+    def onSlidingWindow(rangeSize: Int) = SlideWindowJoinStream[T](this, rangeSize)
   }
 
   class TailStream[T: SquallType, U: SquallType, N: Numeric] {
     //def slidingWindow(rangeSize:Int) = SlideWindowStream[T](rangeSize)
-    def onWindow(rangeSize:Int, slideSize:Int) = WindowStream[T, U, N](this, rangeSize, slideSize)
-    def onTumblingWindow(rangeSize:Int) = WindowStream[T, U, N](this, rangeSize, -1)
-    
+    def onWindow(rangeSize: Int, slideSize: Int) = WindowStream[T, U, N](this, rangeSize, slideSize)
+    def onTumblingWindow(rangeSize: Int) = WindowStream[T, U, N](this, rangeSize, -1)
+
     def execute(map: java.util.Map[String, String]): QueryBuilder = {
-      var metaData= List[Int](-1,-1)
+      var metaData = List[Int](-1, -1)
       mainInterprete[T, U, N](this, metaData, map)
     }
   }
@@ -127,11 +126,11 @@ object Stream {
 
       interpJoin(j, qb, metaData, confmap)(typeT, typeU, typeV, typeL)
     }
-    
+
     case SlideWindowJoinStream(parent, rangeSize) => {
       interprete(parent, qb, Tuple4(metaData._1, metaData._2, metaData._3, rangeSize), confmap)
     }
-    
+
   }
 
   def createPredicate(first: List[Int], second: List[Int]): Predicate = {
@@ -165,8 +164,8 @@ object Stream {
     val indicesL1 = typeL.convertIndexesOfTypeToListOfInt(resT)
     val indicesL2 = typeL.convertIndexesOfTypeToListOfInt(resU)
 
-    val firstComponent = interprete(j.Str1, qb, Tuple4(List(), indicesL1, null,-1), confmap)(j.Str1.squalType)
-    val secondComponent = interprete(j.Str2, qb, Tuple4(List(), null, indicesL2,-1), confmap)(j.Str2.squalType)
+    val firstComponent = interprete(j.Str1, qb, Tuple4(List(), indicesL1, null, -1), confmap)(j.Str1.squalType)
+    val secondComponent = interprete(j.Str2, qb, Tuple4(List(), null, indicesL2, -1), confmap)(j.Str2.squalType)
 
     var equijoinComponent = qb.createEquiJoin(firstComponent, secondComponent, false)
     equijoinComponent.setJoinPredicate(createPredicate(indicesL1, indicesL2))
@@ -187,7 +186,7 @@ object Stream {
   private implicit def toIntegerList(lst: List[Int]) =
     seqAsJavaListConverter(lst.map(i => i: java.lang.Integer)).asJava
 
-  private def mainInterprete[T: SquallType, U: SquallType, A: Numeric](str: TailStream[T, U, A], windowMetaData:List[Int], map: java.util.Map[String, String]): QueryBuilder = str match {
+  private def mainInterprete[T: SquallType, U: SquallType, A: Numeric](str: TailStream[T, U, A], windowMetaData: List[Int], map: java.util.Map[String, String]): QueryBuilder = str match {
     case GroupedStream(parent, agg, ind) => {
       val st1 = implicitly[SquallType[T]]
       val st2 = implicitly[SquallType[U]]
@@ -195,23 +194,22 @@ object Stream {
       val indexArray = List.range(0, length)
       val image = st1.convertToIndexesOfTypeT(indexArray)
       val res = ind(image)
-      val indices = st2.convertIndexesOfTypeToListOfInt(res)        
-      var aggOp = new ScalaAggregateOperator(agg, map).setGroupByColumns(toIntegerList(indices))//.SetWindowSemantics(10)
-      if(windowMetaData.get(0)>0 && windowMetaData.get(1)<=0)
-          aggOp.SetWindowSemantics(windowMetaData.get(0))
-       else if(windowMetaData.get(1)>0 && windowMetaData.get(0)>windowMetaData.get(1))
-          aggOp.SetWindowSemantics(windowMetaData.get(0),windowMetaData.get(1))
+      val indices = st2.convertIndexesOfTypeToListOfInt(res)
+      var aggOp = new ScalaAggregateOperator(agg, map).setGroupByColumns(toIntegerList(indices)) //.SetWindowSemantics(10)
+      if (windowMetaData.get(0) > 0 && windowMetaData.get(1) <= 0)
+        aggOp.SetWindowSemantics(windowMetaData.get(0))
+      else if (windowMetaData.get(1) > 0 && windowMetaData.get(0) > windowMetaData.get(1))
+        aggOp.SetWindowSemantics(windowMetaData.get(0), windowMetaData.get(1))
       val _queryBuilder = new QueryBuilder();
-      interprete(parent, _queryBuilder, Tuple4(List(aggOp), null, null,-1), map)
+      interprete(parent, _queryBuilder, Tuple4(List(aggOp), null, null, -1), map)
       _queryBuilder
     }
     case WindowStream(parent, rangeSize, slideSize) => {
       //only the last one is effective
-      if((windowMetaData.get(0)<0 && windowMetaData.get(1)<0)){
+      if ((windowMetaData.get(0) < 0 && windowMetaData.get(1) < 0)) {
         mainInterprete(parent, List(rangeSize, slideSize), map)
-      }
-      else mainInterprete(parent, windowMetaData, map)
-      
+      } else mainInterprete(parent, windowMetaData, map)
+
     }
   }
 

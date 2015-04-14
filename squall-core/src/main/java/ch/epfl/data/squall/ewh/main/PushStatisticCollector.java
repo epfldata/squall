@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.ewh.main;
 
 import java.text.DateFormat;
@@ -32,10 +31,6 @@ import java.util.logging.SimpleFormatter;
 
 import org.apache.log4j.Logger;
 
-import ch.epfl.data.squall.types.DateIntegerType;
-import ch.epfl.data.squall.types.IntegerType;
-import ch.epfl.data.squall.types.NumericType;
-import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.ewh.algorithms.BSPAlgorithm;
 import ch.epfl.data.squall.ewh.algorithms.InputOutputShallowCoarsener;
 import ch.epfl.data.squall.ewh.algorithms.InputShallowCoarsener;
@@ -56,6 +51,10 @@ import ch.epfl.data.squall.ewh.visualize.UJMPVisualizer;
 import ch.epfl.data.squall.ewh.visualize.VisualizerInterface;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
+import ch.epfl.data.squall.types.DateIntegerType;
+import ch.epfl.data.squall.types.IntegerType;
+import ch.epfl.data.squall.types.NumericType;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.DeepCopy;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;

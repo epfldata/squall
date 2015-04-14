@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.visitors;
 
 import ch.epfl.data.squall.predicates.AndPredicate;
@@ -29,16 +28,16 @@ import ch.epfl.data.squall.predicates.booleanPrimitive;
 
 public interface PredicateVisitor {
 
-	public void visit(AndPredicate and);
+    public void visit(AndPredicate and);
 
-	public void visit(BetweenPredicate between);
+    public void visit(BetweenPredicate between);
 
-	public void visit(booleanPrimitive bool);
+    public void visit(booleanPrimitive bool);
 
-	public void visit(ComparisonPredicate comparison);
+    public void visit(ComparisonPredicate comparison);
 
-	public void visit(LikePredicate like);
+    public void visit(LikePredicate like);
 
-	public void visit(OrPredicate or);
+    public void visit(OrPredicate or);
 
 }

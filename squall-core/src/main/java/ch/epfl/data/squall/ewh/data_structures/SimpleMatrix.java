@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.ewh.data_structures;
 
 //used for prefixSum in DenseMonotonicWeightPrecomputation and PWeightPrecomputation

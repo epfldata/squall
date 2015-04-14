@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.ewh.algorithms;
 
 import org.apache.log4j.Logger;

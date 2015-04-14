@@ -17,55 +17,54 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.types;
 
 import java.util.Random;
 
 public class StringType implements Type<String> {
-	private static final long serialVersionUID = 1L;
-	private final Random _rnd = new Random();
+    private static final long serialVersionUID = 1L;
+    private final Random _rnd = new Random();
 
-	@Override
-	public String fromString(String str) {
-		return str;
-	}
+    @Override
+    public String fromString(String str) {
+	return str;
+    }
 
-	@Override
-	public double getDistance(String bigger, String smaller) {
-		throw new RuntimeException("Not applicable!");
-	}
+    @Override
+    public double getDistance(String bigger, String smaller) {
+	throw new RuntimeException("Not applicable!");
+    }
 
-	@Override
-	public String getInitialValue() {
-		return "";
-	}
+    @Override
+    public String getInitialValue() {
+	return "";
+    }
 
-	// for printing(debugging) purposes
-	@Override
-	public String toString() {
-		return "STRING";
-	}
+    // for printing(debugging) purposes
+    @Override
+    public String toString() {
+	return "STRING";
+    }
 
-	@Override
-	public String toString(String obj) {
-		return obj;
-	}
+    @Override
+    public String toString(String obj) {
+	return obj;
+    }
 
-	@Override
-	public String generateRandomInstance() {
-		return generateRandomString(30);
+    @Override
+    public String generateRandomInstance() {
+	return generateRandomString(30);
+    }
+
+    private String generateRandomString(int size) {
+	char[] chars = "abcdefghijklmnopqrstuvwxyz".toCharArray();
+	StringBuilder sb = new StringBuilder();
+	Random random = new Random();
+	for (int i = 0; i < size; i++) {
+	    char c = chars[random.nextInt(chars.length)];
+	    sb.append(c);
 	}
-	
-	private String generateRandomString(int size){
-		char[] chars = "abcdefghijklmnopqrstuvwxyz".toCharArray();
-		StringBuilder sb = new StringBuilder();
-		Random random = new Random();
-		for (int i = 0; i < size; i++) {
-		    char c = chars[random.nextInt(chars.length)];
-		    sb.append(c);
-		}
-		return sb.toString();
-	}
-	
+	return sb.toString();
+    }
+
 }

@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.utilities;
 
 import java.util.Timer;
@@ -27,32 +26,32 @@ import ch.epfl.data.squall.storm_components.StormComponent;
 
 public class PeriodicAggBatchSend extends Timer {
 
-	public class PeriodicTask extends TimerTask {
-		private final StormComponent _comp;
-
-		public PeriodicTask(StormComponent comp) {
-			_comp = comp;
-		}
-
-		@Override
-		public void run() {
-			_comp.aggBatchSend();
-		}
-	}
-
-	private final PeriodicTask _pt;
-
+    public class PeriodicTask extends TimerTask {
 	private final StormComponent _comp;
 
-	public PeriodicAggBatchSend(long period, StormComponent comp) {
-		_comp = comp;
-		_pt = new PeriodicTask(comp);
-
-		scheduleAtFixedRate(_pt, 0, period);
+	public PeriodicTask(StormComponent comp) {
+	    _comp = comp;
 	}
 
-	public StormComponent getComponent() {
-		return _comp;
+	@Override
+	public void run() {
+	    _comp.aggBatchSend();
 	}
+    }
+
+    private final PeriodicTask _pt;
+
+    private final StormComponent _comp;
+
+    public PeriodicAggBatchSend(long period, StormComponent comp) {
+	_comp = comp;
+	_pt = new PeriodicTask(comp);
+
+	scheduleAtFixedRate(_pt, 0, period);
+    }
+
+    public StormComponent getComponent() {
+	return _comp;
+    }
 
 }

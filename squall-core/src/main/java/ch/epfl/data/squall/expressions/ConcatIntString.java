@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.expressions;
 
 import java.util.List;
@@ -29,69 +28,69 @@ import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 // concatenates an integer key (e.g. Orders.Custkey) with a string starting with a digit (e.g. Orders.Order-Priority = "5-Low")
 //     this fits in integer even for 320G TPCH database
 public class ConcatIntString implements ValueExpression<Integer> {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private final Type<Integer> _wrapper = new IntegerType();
+    private final Type<Integer> _wrapper = new IntegerType();
 
-	private int _intIndex;
-	private int _strIndex;
+    private int _intIndex;
+    private int _strIndex;
 
-	public ConcatIntString(int intIndex, int strIndex) {
-		_intIndex = intIndex;
-		_strIndex = strIndex;
-	}
+    public ConcatIntString(int intIndex, int strIndex) {
+	_intIndex = intIndex;
+	_strIndex = strIndex;
+    }
 
-	@Override
-	public void accept(ValueExpressionVisitor vev) {
-		throw new RuntimeException("Not implemented for a moment!");
-		// vev.visit(this);
-	}
+    @Override
+    public void accept(ValueExpressionVisitor vev) {
+	throw new RuntimeException("Not implemented for a moment!");
+	// vev.visit(this);
+    }
 
-	// unused
-	@Override
-	public void changeValues(int i, ValueExpression<Integer> newExpr) {
-		// nothing
-	}
+    // unused
+    @Override
+    public void changeValues(int i, ValueExpression<Integer> newExpr) {
+	// nothing
+    }
 
-	@Override
-	public Integer eval(List<String> tuple) {
-		int intValue1 = Integer.parseInt(tuple.get(_intIndex));
-		int intValue2 = Integer.parseInt(tuple.get(_strIndex).substring(0, 1));
-		return intValue1 + intValue2 * 100000000;
-	}
+    @Override
+    public Integer eval(List<String> tuple) {
+	int intValue1 = Integer.parseInt(tuple.get(_intIndex));
+	int intValue2 = Integer.parseInt(tuple.get(_strIndex).substring(0, 1));
+	return intValue1 + intValue2 * 100000000;
+    }
 
-	@Override
-	public String evalString(List<String> tuple) {
-		final int result = eval(tuple);
-		return _wrapper.toString(result);
-	}
+    @Override
+    public String evalString(List<String> tuple) {
+	final int result = eval(tuple);
+	return _wrapper.toString(result);
+    }
 
-	@Override
-	public List<ValueExpression> getInnerExpressions() {
-		return null;
-	}
+    @Override
+    public List<ValueExpression> getInnerExpressions() {
+	return null;
+    }
 
-	@Override
-	public Type getType() {
-		return _wrapper;
-	}
+    @Override
+    public Type getType() {
+	return _wrapper;
+    }
 
-	@Override
-	public void inverseNumber() {
-		// nothing
+    @Override
+    public void inverseNumber() {
+	// nothing
 
-	}
+    }
 
-	@Override
-	public boolean isNegative() {
-		return false;
-	}
+    @Override
+    public boolean isNegative() {
+	return false;
+    }
 
-	@Override
-	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append("ConcatIntString ").append(_intIndex).append(", ")
-				.append(_strIndex);
-		return sb.toString();
-	}
+    @Override
+    public String toString() {
+	final StringBuilder sb = new StringBuilder();
+	sb.append("ConcatIntString ").append(_intIndex).append(", ")
+		.append(_strIndex);
+	return sb.toString();
+    }
 }

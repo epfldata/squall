@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.expressions;
 
 import java.util.ArrayList;
@@ -30,86 +29,86 @@ import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.visitors.ValueExpressionVisitor;
 
 public class IntegerYearFromDate implements ValueExpression<Integer> {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private final ValueExpression<Date> _veDate;
-	private final Type<Integer> _wrapper = new IntegerType();
+    private final ValueExpression<Date> _veDate;
+    private final Type<Integer> _wrapper = new IntegerType();
 
-	public IntegerYearFromDate(ValueExpression<Date> veDate) {
-		_veDate = veDate;
-	}
+    public IntegerYearFromDate(ValueExpression<Date> veDate) {
+	_veDate = veDate;
+    }
 
-	@Override
-	public void accept(ValueExpressionVisitor vev) {
-		vev.visit(this);
-	}
+    @Override
+    public void accept(ValueExpressionVisitor vev) {
+	vev.visit(this);
+    }
+
+    /*
+     * @Override public Integer eval(List<String> firstTuple, List<String>
+     * secondTuple) { Date date = _veDate.eval(firstTuple, secondTuple);
+     * Calendar c = Calendar.getInstance(); c.setTime(date); int year =
+     * c.get(Calendar.YEAR); // Alternative approach: //SimpleDateFormat
+     * formatNowYear = new SimpleDateFormat("yyyy"); //String currentYear =
+     * formatNowYear.format(date); // = '2006' return year; }
+     */
+
+    @Override
+    public void changeValues(int i, ValueExpression<Integer> newExpr) {
+	// nothing
+
+    }
+
+    @Override
+    public Integer eval(List<String> tuple) {
+	final Date date = _veDate.eval(tuple);
+
+	final Calendar c = Calendar.getInstance();
+	c.setTime(date);
+	final int year = c.get(Calendar.YEAR);
 
 	/*
-	 * @Override public Integer eval(List<String> firstTuple, List<String>
-	 * secondTuple) { Date date = _veDate.eval(firstTuple, secondTuple);
-	 * Calendar c = Calendar.getInstance(); c.setTime(date); int year =
-	 * c.get(Calendar.YEAR); // Alternative approach: //SimpleDateFormat
-	 * formatNowYear = new SimpleDateFormat("yyyy"); //String currentYear =
-	 * formatNowYear.format(date); // = '2006' return year; }
+	 * Alternative approach: SimpleDateFormat formatNowYear = new
+	 * SimpleDateFormat("yyyy"); String currentYear =
+	 * formatNowYear.format(date); // = '2006'
 	 */
 
-	@Override
-	public void changeValues(int i, ValueExpression<Integer> newExpr) {
-		// nothing
+	return year;
+    }
 
-	}
+    @Override
+    public String evalString(List<String> tuple) {
+	final int result = eval(tuple);
+	return _wrapper.toString(result);
+    }
 
-	@Override
-	public Integer eval(List<String> tuple) {
-		final Date date = _veDate.eval(tuple);
+    @Override
+    public List<ValueExpression> getInnerExpressions() {
+	final List<ValueExpression> result = new ArrayList<ValueExpression>();
+	result.add(_veDate);
+	return result;
+    }
 
-		final Calendar c = Calendar.getInstance();
-		c.setTime(date);
-		final int year = c.get(Calendar.YEAR);
+    @Override
+    public Type getType() {
+	return _wrapper;
+    }
 
-		/*
-		 * Alternative approach: SimpleDateFormat formatNowYear = new
-		 * SimpleDateFormat("yyyy"); String currentYear =
-		 * formatNowYear.format(date); // = '2006'
-		 */
+    @Override
+    public void inverseNumber() {
+	// nothing
 
-		return year;
-	}
+    }
 
-	@Override
-	public String evalString(List<String> tuple) {
-		final int result = eval(tuple);
-		return _wrapper.toString(result);
-	}
+    @Override
+    public boolean isNegative() {
+	return false;
+    }
 
-	@Override
-	public List<ValueExpression> getInnerExpressions() {
-		final List<ValueExpression> result = new ArrayList<ValueExpression>();
-		result.add(_veDate);
-		return result;
-	}
-
-	@Override
-	public Type getType() {
-		return _wrapper;
-	}
-
-	@Override
-	public void inverseNumber() {
-		// nothing
-
-	}
-
-	@Override
-	public boolean isNegative() {
-		return false;
-	}
-
-	@Override
-	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append("IntegerYearFromDate ").append(_veDate.toString());
-		return sb.toString();
-	}
+    @Override
+    public String toString() {
+	final StringBuilder sb = new StringBuilder();
+	sb.append("IntegerYearFromDate ").append(_veDate.toString());
+	return sb.toString();
+    }
 
 }

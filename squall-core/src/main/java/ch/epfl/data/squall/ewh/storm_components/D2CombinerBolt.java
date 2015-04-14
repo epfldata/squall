@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.ewh.storm_components;
 
 import java.util.ArrayList;
@@ -39,11 +38,11 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.SystemParameters.HistogramType;
@@ -88,7 +87,8 @@ public class D2CombinerBolt<JAT extends Number & Comparable<JAT>> extends
 
     private STATE _state = STATE.PRODUCING_D2;
 
-    public D2CombinerBolt(StormEmitter d2Source, String s1ReservoirMergeName,
+    public D2CombinerBolt(StormEmitter d2Source,
+	    String s1ReservoirMergeName,
 	    String componentName,
 	    boolean isFirstD2,
 	    NumericType<JAT> wrapper,

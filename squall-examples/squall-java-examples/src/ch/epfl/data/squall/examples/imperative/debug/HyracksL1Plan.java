@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package ch.epfl.data.squall.examples.imperative.debug;
 
 import java.util.Arrays;
@@ -33,37 +32,38 @@ import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.types.IntegerType;
 
 public class HyracksL1Plan extends QueryPlan {
-	private static Logger LOG = Logger.getLogger(HyracksL1Plan.class);
+    private static Logger LOG = Logger.getLogger(HyracksL1Plan.class);
 
-	private final QueryBuilder _queryBuilder = new QueryBuilder();
+    private final QueryBuilder _queryBuilder = new QueryBuilder();
 
-	private static final IntegerType _ic = new IntegerType();
+    private static final IntegerType _ic = new IntegerType();
 
-	public HyracksL1Plan(String dataPath, String extension, Map conf) {
-		// -------------------------------------------------------------------------------------
-		// start of query plan filling
-		final ProjectOperator projectionCustomer = new ProjectOperator(
-				new int[] { 0, 6 });
-		final List<Integer> hashCustomer = Arrays.asList(0);
-		DataSourceComponent relationCustomer = new DataSourceComponent(
-				"CUSTOMER", dataPath + "customer" + extension)
-				.add(projectionCustomer).setOutputPartKey(hashCustomer)
-				.setPrintOut(false);
-		_queryBuilder.add(relationCustomer);
+    public HyracksL1Plan(String dataPath, String extension, Map conf) {
+	// -------------------------------------------------------------------------------------
+	// start of query plan filling
+	final ProjectOperator projectionCustomer = new ProjectOperator(
+		new int[] { 0, 6 });
+	final List<Integer> hashCustomer = Arrays.asList(0);
+	DataSourceComponent relationCustomer = new DataSourceComponent(
+		"CUSTOMER", dataPath + "customer" + extension)
+		.add(projectionCustomer).setOutputPartKey(hashCustomer)
+		.setPrintOut(false);
+	_queryBuilder.add(relationCustomer);
 
-		// -------------------------------------------------------------------------------------
-		final ProjectOperator projectionOrders = new ProjectOperator(
-				new int[] { 1 });
-		final List<Integer> hashOrders = Arrays.asList(0);
-		DataSourceComponent relationOrders = new DataSourceComponent("ORDERS",
-				dataPath + "orders" + extension).add(projectionOrders)
-				.setOutputPartKey(hashOrders).setPrintOut(false);
-		_queryBuilder.add(relationOrders);
+	// -------------------------------------------------------------------------------------
+	final ProjectOperator projectionOrders = new ProjectOperator(
+		new int[] { 1 });
+	final List<Integer> hashOrders = Arrays.asList(0);
+	DataSourceComponent relationOrders = new DataSourceComponent("ORDERS",
+		dataPath + "orders" + extension).add(projectionOrders)
+		.setOutputPartKey(hashOrders).setPrintOut(false);
+	_queryBuilder.add(relationOrders);
 
-	}
+    }
 
-	public QueryBuilder getQueryPlan() {
-		return _queryBuilder;
-	}
+    @Override
+    public QueryBuilder getQueryPlan() {
+	return _queryBuilder;
+    }
 
 }
