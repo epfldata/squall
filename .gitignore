@@ -1,8 +1,10 @@
 # Extensions
 *.class
+*.swp
 
 
 # Paths
+.idea
 eclipse
 deploy
 storm-0*
