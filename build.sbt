@@ -72,6 +72,13 @@ lazy val squall = (project in file("squall-core")).
       //"com.github.ptgoetz" % "storm-signals" % "0.2.0",
       //"com.netflix.curator" % "curator-framework" % "1.0.1"
     ),
+    scalaVersion := "2.10.2", // dbtoaster dependenceis
+    libraryDependencies ++= Seq(
+      "org.scala-lang.virtualized" % "scala-library" % scalaVersion.value,
+      "org.scala-lang.virtualized" % "scala-compiler" % scalaVersion.value,
+      "com.typesafe.akka" %% "akka-actor" % "2.3.4",
+      "org.scalariform" %% "scalariform" % "0.1.4"
+    ),
     // http://www.scala-sbt.org/0.13/docs/Running-Project-Code.html
     // We need to fork the JVM, as storm uses multiple threads
     fork := true,
@@ -111,6 +118,16 @@ lazy val squall = (project in file("squall-core")).
 // For the macros
 lazy val functional_macros = (project in file("squall-functional-macros")).
   dependsOn(squall).
+  settings(projectDependencies := {
+  Seq(
+    (projectID in squall).value.
+        excludeAll(
+        ExclusionRule(organization = "org.scala-lang.virtualized"),
+        ExclusionRule(organization = "com.typesafe.akka"),
+        ExclusionRule(organization = "org.scalariform")
+      )
+  )
+  }).
   settings(commonSettings: _*).
   settings(
     name := "squall-frontend-core",
@@ -119,6 +136,16 @@ lazy val functional_macros = (project in file("squall-functional-macros")).
 
 lazy val functional = (project in file("squall-functional")).
   dependsOn(squall, functional_macros).
+  settings(projectDependencies := {
+    Seq(
+      (projectID in squall).value.
+        excludeAll(
+          ExclusionRule(organization = "org.scala-lang.virtualized"),
+          ExclusionRule(organization = "com.typesafe.akka"),
+          ExclusionRule(organization = "org.scalariform")
+        )
+    )
+  }).
   settings(commonSettings: _*).
   settings(
 //    fork := true,
