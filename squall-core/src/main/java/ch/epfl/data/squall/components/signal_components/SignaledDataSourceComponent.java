@@ -183,12 +183,15 @@ public class SignaledDataSourceComponent implements Component {
 		_chain.getAggregation(), conf);
 
 	// TODO
-	SignalSpout sp = new SignalSpout(_zookeeperHost, this.getName());
-	builder.setSpout(this.getName() + "-signal", sp, 1);
+	DistributionSignalSpout dsp = new DistributionSignalSpout(_zookeeperHost, this.getName());
+	builder.setSpout(this.getName() + "-distr", dsp, 1);
+	
+	HarmonizerSignalSpout hsp = new HarmonizerSignalSpout(_zookeeperHost, this.getName(), this.getName() + "-harmonizer", 10000, 5000);
+	builder.setSpout(this.getName() + "-harm", hsp, 1);
 
 	_dataSource = new SynchronizedStormDataSource(this, allCompNames,
 		_schema, hierarchyPosition, parallelism, _keyIndex,
-		_isPartitioner, builder, killer, conf);
+		_isPartitioner, builder, killer, conf, _zookeeperHost, this.getName() + "-harmonizer", 1000);
     }
 
     @Override

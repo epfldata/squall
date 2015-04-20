@@ -12,7 +12,7 @@ import backtype.storm.topology.base.BaseRichSpout;
 import backtype.storm.utils.Utils;
 import ch.epfl.data.squall.components.signal_components.storm.SignalClient;
 
-public class SignalSpout extends BaseRichSpout {
+public class DistributionSignalSpout extends BaseRichSpout {
 
     /**
 	 * 
@@ -22,9 +22,9 @@ public class SignalSpout extends BaseRichSpout {
     private transient SignalClient _sc;
     private String _zookeeperhost, _syncedSpoutName;
     private int _currentValue = 0;
-    private static Logger LOG = Logger.getLogger(SignalSpout.class);
+    private static Logger LOG = Logger.getLogger(DistributionSignalSpout.class);
 
-    public SignalSpout(String zookeeperhost, String syncedSpoutName) {
+    public DistributionSignalSpout(String zookeeperhost, String syncedSpoutName) {
 	_rnd = new Random();
 	_zookeeperhost = zookeeperhost;
 	_syncedSpoutName = syncedSpoutName;
@@ -38,9 +38,7 @@ public class SignalSpout extends BaseRichSpout {
 
     @Override
     public void nextTuple() {
-
-	Utils.sleep(1000 * 2);
-
+	Utils.sleep(1000 * 60);
 	try {
 	    _currentValue = _rnd.nextInt(100);
 	    _sc.send(toBytes(_currentValue));

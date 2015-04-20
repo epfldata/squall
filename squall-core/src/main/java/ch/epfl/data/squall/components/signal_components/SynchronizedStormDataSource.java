@@ -19,11 +19,14 @@
 
 package ch.epfl.data.squall.components.signal_components;
 
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 
@@ -34,14 +37,12 @@ import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
 import ch.epfl.data.squall.components.ComponentProperties;
-import ch.epfl.data.squall.operators.AggregateOperator;
+import ch.epfl.data.squall.components.signal_components.storm.SignalClient;
 import ch.epfl.data.squall.operators.ChainOperator;
-import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
-import ch.epfl.data.squall.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class SynchronizedStormDataSource extends
@@ -58,43 +59,52 @@ public class SynchronizedStormDataSource extends
     private long _pendingTuples = 0;
     private int _numSentTuples = 0;
 
-    // for aggregate batch sending
-    private final Semaphore _semAgg = new Semaphore(1, true);
-    private boolean _firstTime = true;
-    private PeriodicAggBatchSend _periodicAggBatch;
-    private final long _aggBatchOutputMillis;
-
     private final ChainOperator _operatorChain;
 
     private final int _keyIndex;
-
     private int _keyValue = 0;
-
     private String _name;
-
     private ArrayList<Type> _schema;
+    
+    
+    //Harmonizer parameters
+    private String _zookeeperhost, _harmonizerSyncedSpoutName;
+    private int _harmonizerUpdateThreshold;
+    private int _currentHarmonizerUpdateFreq=0;
+    private transient SignalClient _scHarmonizer;
+    private HashMap<Integer, Integer> _keyFrequencies;
+    private boolean _isHarmonized;
 
     public SynchronizedStormDataSource(ComponentProperties cp,
 	    List<String> allCompNames, ArrayList<Type> tupleTypes,
 	    int hierarchyPosition, int parallelism, int keyIndex,
 	    boolean isPartitioner, TopologyBuilder builder,
 	    TopologyKiller killer, Config conf) {
-
 	super(cp, allCompNames, hierarchyPosition, isPartitioner, conf);
 	_keyIndex = keyIndex;
 	_name = cp.getName();
-	_aggBatchOutputMillis = cp.getBatchOutputMillis();
 	_operatorChain = cp.getChainOperator();
 	_schema = tupleTypes;
 	if (getHierarchyPosition() == FINAL_COMPONENT
 		&& (!MyUtilities.isAckEveryTuple(conf)))
 	    killer.registerComponent(this, parallelism);
-
 	builder.setSpout(getID(), this, parallelism);
 	if (MyUtilities.isAckEveryTuple(conf))
 	    killer.registerComponent(this, parallelism);
-
     }
+    
+    public SynchronizedStormDataSource(ComponentProperties cp,
+    	    List<String> allCompNames, ArrayList<Type> tupleTypes,
+    	    int hierarchyPosition, int parallelism, int keyIndex,
+    	    boolean isPartitioner, TopologyBuilder builder,
+    	    TopologyKiller killer, Config conf, String zookeeperhost, String harmonizerName, int harmonizerUpdateThreshold) {
+    	this(cp,allCompNames, tupleTypes,hierarchyPosition, parallelism, keyIndex, isPartitioner, builder, killer, conf);
+    	_harmonizerSyncedSpoutName= harmonizerName;
+    	_zookeeperhost=zookeeperhost;
+    	_harmonizerUpdateThreshold=harmonizerUpdateThreshold;
+    	_keyFrequencies= new HashMap<Integer, Integer>();
+    	_isHarmonized=true;
+        }
 
     // ack method on spout is called only if in AckEveryTuple mode (ACKERS > 0)
     @Override
@@ -104,26 +114,7 @@ public class SynchronizedStormDataSource extends
 
     @Override
     public void aggBatchSend() {
-	if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
-	    if (_operatorChain != null) {
-		final Operator lastOperator = _operatorChain.getLastOperator();
-		if (lastOperator instanceof AggregateOperator) {
-		    try {
-			_semAgg.acquire();
-		    } catch (final InterruptedException ex) {
-		    }
-
-		    // sending
-		    final AggregateOperator agg = (AggregateOperator) lastOperator;
-		    final List<String> tuples = agg.getContent();
-		    for (final String tuple : tuples)
-			tupleSend(MyUtilities.stringToTuple(tuple, getConf()),
-				null, 0);
-		    // clearing
-		    agg.clearStorage();
-		    _semAgg.release();
-		}
-	    }
+    	throw new RuntimeException("Batching is disabled in this operator!");
     }
 
     protected void applyOperatorsAndSend(List<String> tuple) {
@@ -131,15 +122,8 @@ public class SynchronizedStormDataSource extends
 	if ((MyUtilities.isCustomTimestampMode(getConf()) && getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
 		|| MyUtilities.isWindowTimestampMode(getConf()))
 	    timestamp = System.currentTimeMillis();
-	if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
-	    try {
-		_semAgg.acquire();
-	    } catch (final InterruptedException ex) {
-	    }
+	
 	tuple = _operatorChain.process(tuple, timestamp);
-
-	if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
-	    _semAgg.release();
 
 	if (tuple == null)
 	    return;
@@ -147,11 +131,7 @@ public class SynchronizedStormDataSource extends
 	_numSentTuples++;
 	_pendingTuples++;
 	printTuple(tuple);
-
-	if (MyUtilities
-		.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
-	    tupleSend(tuple, null, timestamp);
-	}
+	
 	if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
 	    printTupleLatency(_numSentTuples - 1, timestamp);
 	}
@@ -160,7 +140,7 @@ public class SynchronizedStormDataSource extends
     @Override
     public void close() {
 	super.close();
-
+	_scHarmonizer.close();
     }
 
     /*
@@ -219,35 +199,28 @@ public class SynchronizedStormDataSource extends
 
     // from IRichSpout interface
     @Override
-    public void nextTuple() {
-	if (_firstTime
-		&& MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis)) {
-	    _periodicAggBatch = new PeriodicAggBatchSend(_aggBatchOutputMillis,
-		    this);
-	    _firstTime = false;
-	}
-
-	if (SystemParameters.isExisting(getConf(), "TIMEOUT_1MS_EVERY_XTH")) {
-	    // Obsolete - this is for compatibility with old configurations
-	    final long timeout = 1;
-	    final int freqWait = SystemParameters.getInt(getConf(),
-		    "TIMEOUT_1MS_EVERY_XTH");
-	    if (_numSentTuples > 0 && _numSentTuples % freqWait == 0)
-		Utils.sleep(timeout);
-	}
-
-	if (SystemParameters.isExisting(getConf(), "TIMEOUT_EVERY_X_TUPLE")
-		&& SystemParameters.isExisting(getConf(), "TIMEOUT_X_MS")) {
-	    final int freqWait = SystemParameters.getInt(getConf(),
-		    "TIMEOUT_EVERY_X_TUPLE");
-	    final long timeout = SystemParameters.getInt(getConf(),
-		    "TIMEOUT_X_MS");
-	    if (_numSentTuples > 0 && _numSentTuples % freqWait == 0)
-		Utils.sleep(timeout);
-	}
-
+    public void nextTuple() {    	
 	final String line = generateLine();
-	// LOG.info("sending: "+line);
+	
+	
+	//Send frequency statistics & housekeeping
+	if(_isHarmonized && _currentHarmonizerUpdateFreq>_harmonizerUpdateThreshold){
+		try {
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			ObjectOutput out = null;
+			  out = new ObjectOutputStream(bos);   
+			  out.writeObject(_keyFrequencies);
+			  byte[] objectBytes = bos.toByteArray();
+			  _scHarmonizer.send(objectBytes);
+			   //LOG.info("Spout sending histogram.....");
+		      out.close();
+		      bos.close();
+		} catch (Exception e) {
+		    e.printStackTrace();
+		}
+		_keyFrequencies.clear();
+		_currentHarmonizerUpdateFreq=0;
+	}
 
 	if (line == null) {
 	    if (!_hasReachedEOF) {
@@ -264,12 +237,31 @@ public class SynchronizedStormDataSource extends
 
 	final List<String> tuple = MyUtilities.fileLineToTuple(line, getConf());
 	applyOperatorsAndSend(tuple);
+	
+	//Update frequency statistics
+	if(_isHarmonized){
+		updateHistogram(Integer.parseInt(tuple.get(_keyIndex)));
+		_currentHarmonizerUpdateFreq++;
+	}
+	
+    }
+    
+    private void updateHistogram(int key){
+    	Integer value= _keyFrequencies.get(key);
+    	if(value!=null)
+    		_keyFrequencies.put(key, value+1);
+    	else
+    		_keyFrequencies.put(key, 1);
     }
 
     // BaseRichSpout
     @Override
     public void open(Map map, TopologyContext tc, SpoutOutputCollector collector) {
 	super.open(map, tc, collector);
+	if(_harmonizerSyncedSpoutName!=null && _zookeeperhost!=null){
+		_scHarmonizer = new SignalClient(_zookeeperhost, _harmonizerSyncedSpoutName);
+		_scHarmonizer.start();
+	}
     }
 
     // HELPER methods
@@ -301,6 +293,10 @@ public class SynchronizedStormDataSource extends
 		}
     }
 
+    /**
+     * Signal from the Distribution Spout Signaler or it can be from the Harmonizer Signal
+     * @param payload
+     */
     @Override
     public void onSignal(byte[] payload) {
 	int x = byteArrayToInt(payload);

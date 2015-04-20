@@ -212,6 +212,11 @@ public abstract class StormSynchronizedSpoutComponent extends BaseSignalSpout
 		    _collector.emit(new Values(_componentIndex, tupleString));
 	}
     }
+    
+    @Override
+    public void close() {
+    	super.close();
+    }
 
     // BaseRichSpout
     @Override

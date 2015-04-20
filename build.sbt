@@ -65,6 +65,8 @@ lazy val squall = (project in file("squall-core")).
       "com.sleepycat" % "je" % "5.0.73",
       // storm-core: 0.9.2-incubating -> 0.9.3
       "org.apache.storm" % "storm-core" % "0.9.3",
+      //"io.dropwizard" % "dropwizard-metrics" % "0.8.1",
+      //"org.apache.storm" % "storm-starter" % "0.9.3",
       "junit" % "junit" % "4.12" % Test,
       "com.novocode" % "junit-interface" % "0.11" % Test,
       "org.apache.hadoop" % "hadoop-client" % "2.2.0" exclude("org.slf4j", "slf4j-log4j12"),
