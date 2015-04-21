@@ -24,8 +24,10 @@ import java.util.Map;
 
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.EquiJoinComponent;
+import ch.epfl.data.squall.components.OperatorComponent;
 import ch.epfl.data.squall.components.signal_components.SignaledDataSourceComponent;
 import ch.epfl.data.squall.operators.AggregateCountOperator;
+import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.types.DateType;
 import ch.epfl.data.squall.types.DoubleType;
@@ -54,7 +56,7 @@ public class TestSync extends QueryPlan {
 	customerSchema.add(new StringType());
 
 	Component customer = new SignaledDataSourceComponent("CUSTOMER",
-		"localhost:2000", customerSchema, 0);
+		"localhost:2000", customerSchema, 0, 10, 10000, 5000, 1000);
 
 	ArrayList<Type> ordersSchema = new ArrayList<Type>();
 	ordersSchema.add(new IntegerType());
@@ -68,13 +70,25 @@ public class TestSync extends QueryPlan {
 	ordersSchema.add(new StringType());
 
 	// -------------------------------------------------------------------------------------
-	Component orders = new SignaledDataSourceComponent("ORDERS",
-		"localhost:2000", ordersSchema, 0);
+//	Component orders = new SignaledDataSourceComponent("ORDERS",
+//		"localhost:2000", ordersSchema, 0, 10, 10000, 5000, 1000);
+	
+//	ArrayList<Component> merge = new ArrayList<Component>();
+//	merge.add(customer);merge.add(orders);
+	
+//	Component aggOpt = new OperatorComponent(merge, "CUSTOMER_ORDERS");
+	
+	Component aggOpt = new OperatorComponent(customer, "CUSTOMER_ORDERS");
+	
+	AggregateCountOperator count= new AggregateCountOperator(conf);
+	
+	aggOpt.add(count);
 
 	// -------------------------------------------------------------------------------------
-	Component custOrders = new EquiJoinComponent(customer, 0, orders, 0)
-		.add(new AggregateCountOperator(conf).setGroupByColumns(1));
-	return custOrders;
+//	Component custOrders = new EquiJoinComponent(customer, 0, orders, 0)
+//		.add(new AggregateCountOperator(conf).setGroupByColumns(1));
+	//return custOrders;
+	return aggOpt;
 	// -------------------------------------------------------------------------------------
     }
 }

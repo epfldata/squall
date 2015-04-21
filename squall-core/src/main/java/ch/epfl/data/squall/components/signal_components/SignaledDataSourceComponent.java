@@ -68,14 +68,26 @@ public class SignaledDataSourceComponent implements Component {
     private String _zookeeperHost;
     private ArrayList<Type> _schema;
     private int _keyIndex;
+    
+    private int _distributionRefreshSeconds;
+    private int _harmonizerWindowCountThreshold;
+    private int _harmonizerFrequentThreshold;
+    private int _harmonizerUpdaterRate;
+    
 
     // invoked from the new Interface (QueryPlan not QueryBuilder)
     public SignaledDataSourceComponent(String componentName,
-	    String zookeeperHost, ArrayList<Type> schema, int keyIndex) {
+	    String zookeeperHost, ArrayList<Type> schema, int keyIndex, 
+	    int distributionRefreshSeconds, int harmonizerWindowCountThreshold, 
+	    int harmonizerFrequentThreshold, int harmonizerUpdaterRate) {
 	_componentName = componentName;
 	_zookeeperHost = zookeeperHost;
 	_keyIndex = keyIndex;
 	_schema = schema;
+	_distributionRefreshSeconds= distributionRefreshSeconds;
+    _harmonizerWindowCountThreshold= harmonizerWindowCountThreshold;
+    _harmonizerFrequentThreshold=harmonizerFrequentThreshold;
+    _harmonizerUpdaterRate=harmonizerUpdaterRate;
     }
 
     @Override
@@ -181,17 +193,17 @@ public class SignaledDataSourceComponent implements Component {
 
 	MyUtilities.checkBatchOutput(_batchOutputMillis,
 		_chain.getAggregation(), conf);
-
+	
 	// TODO
-	DistributionSignalSpout dsp = new DistributionSignalSpout(_zookeeperHost, this.getName());
+	DistributionSignalSpout dsp = new DistributionSignalSpout(_zookeeperHost, this.getName(), _distributionRefreshSeconds);
 	builder.setSpout(this.getName() + "-distr", dsp, 1);
 	
-	HarmonizerSignalSpout hsp = new HarmonizerSignalSpout(_zookeeperHost, this.getName(), this.getName() + "-harmonizer", 10000, 5000);
+	HarmonizerSignalSpout hsp = new HarmonizerSignalSpout(_zookeeperHost, this.getName(), this.getName() + "-harmonizer", _harmonizerWindowCountThreshold, _harmonizerFrequentThreshold);
 	builder.setSpout(this.getName() + "-harm", hsp, 1);
 
 	_dataSource = new SynchronizedStormDataSource(this, allCompNames,
 		_schema, hierarchyPosition, parallelism, _keyIndex,
-		_isPartitioner, builder, killer, conf, _zookeeperHost, this.getName() + "-harmonizer", 1000);
+		_isPartitioner, builder, killer, conf, _zookeeperHost, this.getName() + "-harmonizer", _harmonizerUpdaterRate);
     }
 
     @Override

@@ -334,6 +334,13 @@ public abstract class StormSynchronizedSpoutComponent extends BaseSignalSpout
 		_conf);
 	MyUtilities.sendTuple(stormTupleSnd, _collector, _conf);
     }
+    
+    private void regularTupleSend(String streamID, List<String> tuple, long timestamp) {
+    	final Values stormTupleSnd = MyUtilities.createTupleValues(tuple,
+    		timestamp, _componentIndex, _hashIndexes, _hashExpressions,
+    		_conf);
+    	MyUtilities.sendTuple(streamID, stormTupleSnd, _collector, _conf);
+        }
 
     @Override
     public void tupleSend(List<String> tuple, Tuple stormTupleRcv,
@@ -345,6 +352,29 @@ public abstract class StormSynchronizedSpoutComponent extends BaseSignalSpout
 		finalAckSend();
 	    else
 		regularTupleSend(tuple, timestamp);
+	} else if (!isLastAck) {
+	    // appending tuple if it is not lastAck
+	    addToManualBatch(tuple, timestamp);
+	    if (getNumSentTuples() % MyUtilities.getCompBatchSize(_ID, _conf) == 0)
+		manualBatchSend();
+	} else {
+	    // has to be sent separately, because of the BatchStreamGrouping
+	    // logic
+	    manualBatchSend(); // we need to send the last batch, if it is
+	    // not empty
+	    finalAckSend();
+	}
+    }
+    
+    public void tupleSend(String streamID, List<String> tuple, Tuple stormTupleRcv,
+	    long timestamp) {
+	final boolean isLastAck = MyUtilities.isFinalAck(tuple, _conf);
+
+	if (!MyUtilities.isManualBatchingMode(_conf)) {
+	    if (isLastAck)
+		finalAckSend();
+	    else
+		regularTupleSend(streamID, tuple, timestamp);
 	} else if (!isLastAck) {
 	    // appending tuple if it is not lastAck
 	    addToManualBatch(tuple, timestamp);

@@ -31,6 +31,7 @@ import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Tuple;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.ComponentProperties;
+import ch.epfl.data.squall.components.signal_components.SynchronizedStormDataSource;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
@@ -77,6 +78,15 @@ public class StormOperator extends StormBoltComponent {
 	_fullHashList = cp.getFullHashList();
 
 	for (StormEmitter parentEmitter : parentEmitters) {
+		
+		//This is specific only to the Synchronized operator
+		// add the shuffling stream grouping
+		if(parentEmitter instanceof SynchronizedStormDataSource){
+			final String[] emitterIDs = parentEmitter.getEmitterIDs();
+		    for (final String emitterID : emitterIDs)
+			currentBolt.shuffleGrouping(emitterID, SynchronizedStormDataSource.SHUFFLE_GROUPING_STREAMID);
+		}
+		
 	    if (MyUtilities.isManualBatchingMode(getConf()))
 		currentBolt = MyUtilities.attachEmitterBatch(conf,
 			_fullHashList, currentBolt, parentEmitter);

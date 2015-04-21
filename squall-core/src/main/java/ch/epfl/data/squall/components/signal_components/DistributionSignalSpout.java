@@ -23,11 +23,14 @@ public class DistributionSignalSpout extends BaseRichSpout {
     private String _zookeeperhost, _syncedSpoutName;
     private int _currentValue = 0;
     private static Logger LOG = Logger.getLogger(DistributionSignalSpout.class);
+    private int _refreshTimeSecs;
+    
 
-    public DistributionSignalSpout(String zookeeperhost, String syncedSpoutName) {
+    public DistributionSignalSpout(String zookeeperhost, String syncedSpoutName, int refreshTimeSecs) {
 	_rnd = new Random();
 	_zookeeperhost = zookeeperhost;
 	_syncedSpoutName = syncedSpoutName;
+	_refreshTimeSecs=refreshTimeSecs;
     }
 
     @Override
@@ -38,10 +41,12 @@ public class DistributionSignalSpout extends BaseRichSpout {
 
     @Override
     public void nextTuple() {
-	Utils.sleep(1000 * 60);
+	Utils.sleep(1000 * _refreshTimeSecs);
 	try {
+		
 	    _currentValue = _rnd.nextInt(100);
-	    _sc.send(toBytes(_currentValue));
+	    byte[] signal= SignalUtilities.createSignal(SignalUtilities.DISTRIBUTION_SIGNAL, SignalUtilities.toBytes(_currentValue));
+	    _sc.send(signal);
 	    LOG.info("Signaller sending ....." + _currentValue);
 	} catch (Exception e) {
 	    e.printStackTrace();
@@ -59,13 +64,5 @@ public class DistributionSignalSpout extends BaseRichSpout {
 
     }
 
-    private byte[] toBytes(int i) {
-	byte[] result = new byte[4];
-	result[0] = (byte) (i >> 24);
-	result[1] = (byte) (i >> 16);
-	result[2] = (byte) (i >> 8);
-	result[3] = (byte) (i /* >> 0 */);
-	return result;
-    }
 
 }
