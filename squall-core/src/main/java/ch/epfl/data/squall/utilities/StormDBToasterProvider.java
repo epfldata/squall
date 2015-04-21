@@ -49,7 +49,8 @@ public class StormDBToasterProvider {
 
             for (DBToasterJoinComponent dbtComp : dbToasterComponents) {
                 LOG.info("Generating DBToaster code for " + dbtComp.getName() + " Component");
-                DBToasterCodeGen.compile(dbtComp.getSQLQuery(), dbtComp.getName(), extractedDir);
+                String genJarFile = DBToasterCodeGen.compile(dbtComp.getSQLQuery(), dbtComp.getName());
+                JarUtilities.extractJarFile(genJarFile, extractedDir);
             }
 
             if (distributed) {
