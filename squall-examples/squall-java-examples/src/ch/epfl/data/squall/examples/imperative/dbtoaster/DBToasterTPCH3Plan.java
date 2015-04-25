@@ -26,6 +26,7 @@ import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.AggregateOperator;
+import ch.epfl.data.squall.operators.AggregateSumOperator;
 import ch.epfl.data.squall.operators.AggregateUpdateOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SelectOperator;
@@ -128,7 +129,7 @@ public class DBToasterTPCH3Plan extends QueryPlan {
 
         DBToasterJoinComponent dbToasterComponent = dbToasterCompBuilder.build();
 
-        AggregateOperator agg = new AggregateUpdateOperator(new ColumnReference(_doubleConv, 3), conf)
+        AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_doubleConv, 3), conf)
                 .setGroupByColumns(Arrays.asList(0, 1, 2));
         dbToasterComponent.add(agg);
 

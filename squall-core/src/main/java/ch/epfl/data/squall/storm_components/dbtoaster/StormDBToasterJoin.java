@@ -220,17 +220,6 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
     }
 
-    private List<List<String>> convertStreamToOutputTuples(Object[] stream) {
-        List<List<String>> tuples = new LinkedList<List<String>>();
-        for (Object o : stream) {
-            Object[] t = (Object[]) o;
-            List<String> tuple = new LinkedList<String>();
-            for (Object a : t) tuple.add("" + a);
-            tuples.add(tuple);
-        }
-        return tuples;
-    }
-
     protected void performJoin(Tuple stormTupleRcv, List<String> tuple,
                                ValueExpression[] columnReferences,
                                boolean isLastInBatch) {
@@ -239,15 +228,15 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
         dbtoasterEngine.insertTuple(stormTupleRcv.getSourceComponent(), typedTuple.toArray());
 
-        Object[] stream = dbtoasterEngine.getStream();
-        List<List<String>> tuples = convertStreamToOutputTuples(stream);
+        List<Object[]> stream = dbtoasterEngine.getStreamOfUpdateTuples();
 
         long lineageTimestamp = 0L;
         if (MyUtilities.isCustomTimestampMode(getConf()))
             lineageTimestamp = stormTupleRcv
                     .getLongByField(StormComponent.TIMESTAMP);
 
-        for (List<String> outputTuple : tuples) {
+        for (Object[] u : stream) {
+            List<String> outputTuple = createStringTuple(u);
             applyOperatorsAndSend(stormTupleRcv, outputTuple, lineageTimestamp, isLastInBatch);
         }
 
@@ -262,6 +251,12 @@ public class StormDBToasterJoin extends StormBoltComponent {
             typedTuple.add(value);
         }
         return typedTuple;
+    }
+
+    private List<String> createStringTuple(Object[] typedTuple) {
+        List<String> tuple = new LinkedList<String>();
+        for (Object o : typedTuple) tuple.add("" + o);
+        return tuple;
     }
 
     protected void applyOperatorsAndSend(Tuple stormTupleRcv,

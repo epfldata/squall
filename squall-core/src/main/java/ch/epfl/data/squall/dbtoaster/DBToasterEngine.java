@@ -25,9 +25,12 @@ import org.apache.log4j.Logger;
 import scala.collection.immutable.$colon$colon;
 import scala.collection.immutable.List;
 import scala.collection.immutable.List$;
+import scala.Tuple2;
 import ddbt.lib.Messages.*;
 import ddbt.lib.IQuery;
 import java.io.Serializable;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 public class DBToasterEngine implements Serializable {
 
@@ -38,7 +41,7 @@ public class DBToasterEngine implements Serializable {
 
     private static final List EMPTY_LIST = List$.MODULE$.empty();
 
-    public static List<Object> tuple(Object ... ts) {
+    public static List<Object> convertTupleToDbtTuple(Object ... ts) {
         List<Object> result = EMPTY_LIST;
         for(int i = ts.length; i > 0; i--) {
             result = new $colon$colon<Object>(ts[i - 1], result);
@@ -61,13 +64,31 @@ public class DBToasterEngine implements Serializable {
     }
 
     public void insertTuple(String relationName, Object[] tuple) {
-        List<Object> result = tuple(tuple);
-        _query.handleEvent(new TupleEvent(TUPLE_INSERT, relationName, result));
+        List<Object> dbtTuple = convertTupleToDbtTuple(tuple);
+        _query.handleEvent(new TupleEvent(TUPLE_INSERT, relationName, dbtTuple));
     }
 
-    public Object[] getStream() {
-        Object[] result = (Object[]) _query.handleEvent(new GetStream(1));
-        return result;
+    public void deleteTuple(String relationName, Object[] tuple) {
+        List<Object> dbtTuple = convertTupleToDbtTuple(tuple);
+        _query.handleEvent(new TupleEvent(TUPLE_DELETE, relationName, dbtTuple));
+    }
+
+    public java.util.List<Object[]> getStreamOfUpdateTuples() {
+
+        java.util.List<Object[]> outputTuples = new LinkedList();
+        List<Object> updateStream = (List<Object>) _query.handleEvent(new GetStream(1));
+        Iterator<Object> iterator = scala.collection.JavaConversions.asJavaIterator(updateStream.iterator());
+
+        while (iterator.hasNext()) {
+            Object o = iterator.next();
+            if (o instanceof Object[]) {
+                outputTuples.add((Object[]) o);
+            } else {
+                outputTuples.add(new Object[] {o});
+            }
+        }
+
+        return outputTuples;
     }
 
     public void endStream() {
