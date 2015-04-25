@@ -1713,11 +1713,22 @@ public class MyUtilities {
 	String msgId = null;
 	if (MyUtilities.isAckEveryTuple(conf))
 	    msgId = "T"; // as short as possible
-
 	if (msgId != null)
 	    collector.emit(stormTupleSnd, msgId);
 	else
 	    collector.emit(stormTupleSnd);
+    }
+    
+ // this is for Spout
+    public static void sendTuple(String streamID, Values stormTupleSnd,
+	    SpoutOutputCollector collector, Map conf) {
+	String msgId = null;
+	if (MyUtilities.isAckEveryTuple(conf))
+	    msgId = "T"; // as short as possible
+	if (msgId != null)
+	    collector.emit(streamID, stormTupleSnd, msgId);
+	else
+	    collector.emit(streamID, stormTupleSnd);
     }
 
     /*
