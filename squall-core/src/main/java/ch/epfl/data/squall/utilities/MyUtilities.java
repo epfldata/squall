@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import ch.epfl.data.squall.storm_components.stream_grouping.StarSchemaStreamGrouping;
 import org.apache.log4j.Logger;
 
 import backtype.storm.Config;
@@ -525,6 +526,29 @@ public class MyUtilities {
 		currentBolt = currentBolt.globalGrouping(emitterID, streamId);
 	}
 	return currentBolt;
+    }
+
+    public static InputDeclarer attachEmitterStarSchema(Map map,
+        InputDeclarer currentBolt, StormEmitter[] emitters,
+        List<String> allCompNames, long[] cardinality) {
+
+        String starEmitterIndex = String.valueOf(allCompNames.indexOf(emitters[0].getName()));
+        long largestCardinality = cardinality[0];
+        // find the starEmitter as the one with largest cardinality
+        for (int i = 1; i < emitters.length; i++) {
+            if (cardinality[i] > largestCardinality) {
+                largestCardinality = cardinality[i];
+                starEmitterIndex = String.valueOf(allCompNames.indexOf(emitters[i].getName()));
+            }
+        }
+
+        for (final StormEmitter emitter : emitters) {
+            final String[] emitterIDs = emitter.getEmitterIDs();
+            for (final String emitterID : emitterIDs)
+                currentBolt = currentBolt.customGrouping(emitterID, new StarSchemaStreamGrouping(map, starEmitterIndex));
+        }
+
+        return currentBolt;
     }
 
     public static void checkBatchOutput(long batchOutputMillis,

@@ -24,5 +24,5 @@ package ch.epfl.data.squall.utilities;
 public enum PartitioningScheme {
     HYPERCUBE,
     HASH,
-    MULTIWAYSTAR
+    STARSCHEMA
 }

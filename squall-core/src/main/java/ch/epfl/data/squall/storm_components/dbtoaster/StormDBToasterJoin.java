@@ -128,28 +128,29 @@ public class StormDBToasterJoin extends StormBoltComponent {
                     SystemParameters.DUMP_RESULTS_STREAM);
     }
 
-    private InputDeclarer attachEmitters(Config conf, InputDeclarer currentBolt, PartitioningScheme partitioningScheme) {
+    private InputDeclarer attachEmitters(Config conf, InputDeclarer currentBolt,
+                 List<String> allCompNames, PartitioningScheme partitioningScheme) {
         switch (partitioningScheme) {
             case HYPERCUBE:
-                throw new RuntimeException("Hypercube is not yet supported");
-            case MULTIWAYSTAR:
-                throw new RuntimeException("Multiway star is not yet supported");
-            //        final HyperCubeAssignment _currentMappingAssignment;
-//        long[] cardinality = new long[_emitters.length];
-//        for (int i = 0; i < _emitters.length; i++) {
-//            cardinality[i] = SystemParameters.getInt(conf, _emitters[i].getName() + "_CARD");
-//        }
-//        _currentMappingAssignment = new HyperCubeAssignerFactory().getAssigner(parallelism, cardinality);
-//
-//        currentBolt = MyUtilities.hyperCubeAttachEmitterComponents(currentBolt,
-//                Arrays.asList(emitters), allCompNames,
-//                _currentMappingAssignment, conf, null);
+                throw new RuntimeException("Hypercube partitioning is not yet supported");
+            case STARSCHEMA:
+                long[] cardinality = getEmittersCardinality(conf);
+                currentBolt = MyUtilities.attachEmitterStarSchema(conf,
+                        currentBolt, _emitters, allCompNames, cardinality);
             case HASH:
                 currentBolt = MyUtilities.attachEmitterHash(conf, _fullHashList,
                     currentBolt, _emitters[0], Arrays.copyOfRange(_emitters, 1, _emitters.length));
                 break;
         }
         return currentBolt;
+    }
+
+    private long[] getEmittersCardinality(Config conf) {
+        long[] cardinality = new long[_emitters.length];
+        for (int i = 0; i < _emitters.length; i++) {
+            cardinality[i] = SystemParameters.getInt(conf, _emitters[i].getName() + "_CARD");
+        }
+        return cardinality;
     }
 
     @Override
