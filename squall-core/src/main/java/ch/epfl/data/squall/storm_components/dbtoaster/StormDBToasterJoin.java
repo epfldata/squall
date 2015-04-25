@@ -39,6 +39,7 @@ import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.utilities.MyUtilities;
+import ch.epfl.data.squall.utilities.PartitioningScheme;
 import ch.epfl.data.squall.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.statistics.StatisticsUtilities;
@@ -87,6 +88,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
     public StormDBToasterJoin(StormEmitter[] emitters,
                               ComponentProperties cp, List<String> allCompNames,
                               Map<String, ValueExpression[]> emitterNameColRefs,
+                              PartitioningScheme partitioningScheme,
                               int hierarchyPosition, TopologyBuilder builder,
                               TopologyKiller killer, Config conf) {
         super(cp, allCompNames, hierarchyPosition, conf);
@@ -114,7 +116,25 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
         // connecting with previous level using Hypercube Assignment
         InputDeclarer currentBolt = builder.setBolt(getID(), this, parallelism);
-//        final HyperCubeAssignment _currentMappingAssignment;
+        currentBolt = attachEmitters(conf, currentBolt, partitioningScheme);
+
+
+        // connecting with Killer
+        if (getHierarchyPosition() == FINAL_COMPONENT
+                && (!MyUtilities.isAckEveryTuple(conf)))
+            killer.registerComponent(this, parallelism);
+        if (cp.getPrintOut() && _operatorChain.isBlocking())
+            currentBolt.allGrouping(killer.getID(),
+                    SystemParameters.DUMP_RESULTS_STREAM);
+    }
+
+    private InputDeclarer attachEmitters(Config conf, InputDeclarer currentBolt, PartitioningScheme partitioningScheme) {
+        switch (partitioningScheme) {
+            case HYPERCUBE:
+                throw new RuntimeException("Hypercube is not yet supported");
+            case MULTIWAYSTAR:
+                throw new RuntimeException("Multiway star is not yet supported");
+            //        final HyperCubeAssignment _currentMappingAssignment;
 //        long[] cardinality = new long[_emitters.length];
 //        for (int i = 0; i < _emitters.length; i++) {
 //            cardinality[i] = SystemParameters.getInt(conf, _emitters[i].getName() + "_CARD");
@@ -124,17 +144,12 @@ public class StormDBToasterJoin extends StormBoltComponent {
 //        currentBolt = MyUtilities.hyperCubeAttachEmitterComponents(currentBolt,
 //                Arrays.asList(emitters), allCompNames,
 //                _currentMappingAssignment, conf, null);
-        //TODO: replace this with hypercube join:
-        currentBolt = MyUtilities.attachEmitterHash(conf, _fullHashList,
-                currentBolt, _emitters[0], Arrays.copyOfRange(_emitters, 1, _emitters.length));
-
-        // connecting with Killer
-        if (getHierarchyPosition() == FINAL_COMPONENT
-                && (!MyUtilities.isAckEveryTuple(conf)))
-            killer.registerComponent(this, parallelism);
-        if (cp.getPrintOut() && _operatorChain.isBlocking())
-            currentBolt.allGrouping(killer.getID(),
-                    SystemParameters.DUMP_RESULTS_STREAM);
+            case HASH:
+                currentBolt = MyUtilities.attachEmitterHash(conf, _fullHashList,
+                    currentBolt, _emitters[0], Arrays.copyOfRange(_emitters, 1, _emitters.length));
+                break;
+        }
+        return currentBolt;
     }
 
     @Override

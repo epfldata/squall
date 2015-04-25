@@ -44,6 +44,7 @@ import ch.epfl.data.squall.types.IntegerType;
 import ch.epfl.data.squall.types.LongType;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
+import ch.epfl.data.squall.utilities.PartitioningScheme;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.SelectItem;
@@ -88,7 +89,9 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
     private Map<String, ValueExpression[]> _parentNameColRefs;
     private String _equivalentSQL;
 
-    private DBToasterJoinComponent(List<Component> relations, Map<String, ValueExpression[]> relColRefs, String sql) {
+    private PartitioningScheme _partitioningScheme = PartitioningScheme.HASH;
+
+    protected DBToasterJoinComponent(List<Component> relations, Map<String, ValueExpression[]> relColRefs, String sql) {
 
         _parents = relations;
         _parentNameColRefs = relColRefs;
@@ -207,6 +210,7 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
         _joiner = new StormDBToasterJoin(getParents(), this,
                 allCompNames,
                 _parentNameColRefs,
+                _partitioningScheme,
                 hierarchyPosition,
                 builder, killer, conf);
     }
@@ -288,111 +292,12 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
         return this;
     }
 
-    public String getSQLQuery() {
-        return _equivalentSQL;
+    public void setPartitioningScheme(PartitioningScheme partitioningScheme) {
+        _partitioningScheme = partitioningScheme;
     }
 
-    public static class Builder {
-        private List<Component> _relations = new LinkedList<Component>();
-        private Map<String, ValueExpression[]> _relColRefs = new HashMap<String, ValueExpression[]>();
-        private String _sql;
-        private Pattern _sqlVarPattern = Pattern.compile("([A-Za-z0-9_]+)\\.f([0-9]+)");
-
-        public Builder addRelation(Component relation, ColumnReference... columnReferences) {
-            _relations.add(relation);
-            ValueExpression[] cols = new ValueExpression[columnReferences.length];
-
-            for (ColumnReference cref : columnReferences) {
-                cols[cref.getColumnIndex()] = cref;
-            }
-            _relColRefs.put(relation.getName(), cols);
-            return this;
-        }
-
-        private boolean parentRelationExists(String name) {
-            boolean exist = false;
-            for (Component rel : _relations) {
-                if (rel.getName().equals(name)) {
-                    exist = true;
-                    break;
-                }
-            }
-            return exist;
-        }
-
-        private void validateTables(List<Table> tables) {
-            for (Table table : tables) {
-                String tableName = table.getName();
-                if (!parentRelationExists(tableName)) {
-                    throw new RuntimeException("Invalid table name: " + tableName + " in the SQL query");
-                }
-            }
-        }
-
-        private void validateSelectItems(List<SelectItem> items) {
-            for (SelectItem item : items) {
-                String itemName = item.toString();
-                Matcher matcher = _sqlVarPattern.matcher(itemName);
-                while (matcher.find()) {
-                    String tableName = matcher.group(1);
-                    int fieldId = Integer.parseInt(matcher.group(2));
-
-                    if (!parentRelationExists(tableName)) {
-                        throw new RuntimeException("Invalid table name: " + tableName + " in the SQL query");
-                    }
-
-                    if (fieldId < 0 || fieldId >= _relColRefs.get(tableName).length) {
-                        throw new RuntimeException("Invalid field f" + fieldId + " in table: " + tableName);
-                    }
-
-                }
-            }
-
-        }
-        private void validateSQL(String sql) {
-            SQLVisitor parsedQuery = ParserUtil.parseQuery(sql);
-            List<Table> tables = parsedQuery.getTableList();
-            validateTables(tables);
-            List<SelectItem> items = parsedQuery.getSelectItems();
-            validateSelectItems(items);
-        }
-
-        private String getSQLTypeFromTypeConversion(Type typeConversion) {
-            if (typeConversion instanceof LongType || typeConversion instanceof IntegerType) {
-                return "int";
-            } else if (typeConversion instanceof DoubleType) {
-                return "float";
-            } else if (typeConversion instanceof DateLongType) { // DBToaster code use Long for Date type.
-                return "date";
-            } else {
-                return "String";
-            }
-        }
-
-        private String generateSchemaSQL() {
-            StringBuilder schemas = new StringBuilder();
-
-            for (String relName : _relColRefs.keySet()) {
-                schemas.append("CREATE STREAM ").append(relName).append("(");
-                ValueExpression[] columnReferences = _relColRefs.get(relName);
-                for (int i = 0; i < columnReferences.length; i++) {
-                    schemas.append("f").append(i).append(" ").append(getSQLTypeFromTypeConversion(columnReferences[i].getType()));
-                    if (i != columnReferences.length - 1) schemas.append(",");
-                }
-                schemas.append(") FROM FILE '' LINE DELIMITED csv;\n");
-            }
-            return schemas.toString();
-        }
-
-        public void setSQL(String sql) {
-            validateSQL(sql);
-            this._sql = generateSchemaSQL() + sql;
-        }
-
-        public DBToasterJoinComponent build() {
-            return new DBToasterJoinComponent(_relations, _relColRefs, _sql);
-        }
-
+    public String getSQLQuery() {
+        return _equivalentSQL;
     }
 
 }

@@ -23,6 +23,7 @@ package ch.epfl.data.squall.examples.imperative.dbtoaster;
 
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
+import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponentBuilder;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.AggregateUpdateOperator;
@@ -53,7 +54,7 @@ public class DBToasterHyracksPlan extends QueryPlan {
                 .setOutputPartKey(0);
 
         // -------------------------------------------------------------------------------------
-        DBToasterJoinComponent.Builder builder = new DBToasterJoinComponent.Builder();
+        DBToasterJoinComponentBuilder builder = new DBToasterJoinComponentBuilder();
         builder.addRelation(relationCustomer, new ColumnReference(_lc, 0), new ColumnReference(_sc, 1));
         builder.addRelation(relationOrders, new ColumnReference(_lc, 0), new ColumnReference(_lc, 1));
         builder.setSQL("SELECT CUSTOMER.f1, COUNT(ORDERS.f0) FROM CUSTOMER, ORDERS WHERE CUSTOMER.f0 = ORDERS.f1 GROUP BY CUSTOMER.f1");

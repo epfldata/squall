@@ -23,6 +23,7 @@ package ch.epfl.data.squall.examples.imperative.dbtoaster;
 
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
+import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponentBuilder;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.AggregateOperator;
@@ -117,7 +118,7 @@ public class DBToasterTPCH3Plan extends QueryPlan {
         _queryBuilder.add(relationLineitem);
 
         // -----------------------------------------------------------------------------------
-        DBToasterJoinComponent.Builder dbToasterCompBuilder = new DBToasterJoinComponent.Builder();
+        DBToasterJoinComponentBuilder dbToasterCompBuilder = new DBToasterJoinComponentBuilder();
         dbToasterCompBuilder.addRelation(relationCustomer, new ColumnReference(_lc, 0));
         dbToasterCompBuilder.addRelation(relationOrders, new ColumnReference(_lc, 0), new ColumnReference(_lc, 1),
                 new ColumnReference(_dateLongConv, 2), new ColumnReference(_lc, 3)); // Have to use DateLongConversion instead of DateConversion as DBToaster use Long as Date

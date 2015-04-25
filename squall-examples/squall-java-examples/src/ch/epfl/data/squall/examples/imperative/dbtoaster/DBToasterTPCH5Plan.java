@@ -23,6 +23,7 @@ package ch.epfl.data.squall.examples.imperative.dbtoaster;
 
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
+import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponentBuilder;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.DateSum;
 import ch.epfl.data.squall.expressions.ValueExpression;
@@ -164,7 +165,7 @@ public class DBToasterTPCH5Plan extends QueryPlan {
 
         // -------------------------------------------------------------------------------------
 
-        DBToasterJoinComponent.Builder dbtBuilder = new DBToasterJoinComponent.Builder();
+        DBToasterJoinComponentBuilder dbtBuilder = new DBToasterJoinComponentBuilder();
         // Region: regionKey
         dbtBuilder.addRelation(relationRegion, new ColumnReference(_lc, 0));
         // Nation: nationKey, name, regionKey
