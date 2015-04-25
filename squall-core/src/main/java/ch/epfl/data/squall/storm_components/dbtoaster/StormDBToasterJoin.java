@@ -116,8 +116,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
         // connecting with previous level using Hypercube Assignment
         InputDeclarer currentBolt = builder.setBolt(getID(), this, parallelism);
-        currentBolt = attachEmitters(conf, currentBolt, partitioningScheme);
-
+        currentBolt = attachEmitters(conf, currentBolt, allCompNames, partitioningScheme);
 
         // connecting with Killer
         if (getHierarchyPosition() == FINAL_COMPONENT
