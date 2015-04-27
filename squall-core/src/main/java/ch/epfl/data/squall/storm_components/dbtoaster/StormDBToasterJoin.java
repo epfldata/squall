@@ -88,7 +88,6 @@ public class StormDBToasterJoin extends StormBoltComponent {
     public StormDBToasterJoin(StormEmitter[] emitters,
                               ComponentProperties cp, List<String> allCompNames,
                               Map<String, ValueExpression[]> emitterNameColRefs,
-                              PartitioningScheme partitioningScheme,
                               int hierarchyPosition, TopologyBuilder builder,
                               TopologyKiller killer, Config conf) {
         super(cp, allCompNames, hierarchyPosition, conf);
@@ -116,8 +115,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
         // connecting with previous level using Hypercube Assignment
         InputDeclarer currentBolt = builder.setBolt(getID(), this, parallelism);
-        currentBolt = attachEmitters(conf, currentBolt, allCompNames, partitioningScheme);
-
+        currentBolt = attachEmitters(conf, currentBolt, allCompNames);
         // connecting with Killer
         if (getHierarchyPosition() == FINAL_COMPONENT
                 && (!MyUtilities.isAckEveryTuple(conf)))
@@ -128,20 +126,33 @@ public class StormDBToasterJoin extends StormBoltComponent {
     }
 
     private InputDeclarer attachEmitters(Config conf, InputDeclarer currentBolt,
-                 List<String> allCompNames, PartitioningScheme partitioningScheme) {
-        switch (partitioningScheme) {
+                 List<String> allCompNames) {
+        switch (getPartitioningScheme(conf)) {
             case HYPERCUBE:
                 throw new RuntimeException("Hypercube partitioning is not yet supported");
+
             case STARSCHEMA:
                 long[] cardinality = getEmittersCardinality(conf);
                 currentBolt = MyUtilities.attachEmitterStarSchema(conf,
-                        currentBolt, _emitters, allCompNames, cardinality);
+                        currentBolt, _emitters, cardinality);
+                break;
             case HASH:
                 currentBolt = MyUtilities.attachEmitterHash(conf, _fullHashList,
                     currentBolt, _emitters[0], Arrays.copyOfRange(_emitters, 1, _emitters.length));
                 break;
         }
         return currentBolt;
+    }
+
+    private PartitioningScheme getPartitioningScheme(Config conf) {
+        String schemeName = SystemParameters.getString(conf, getName() + "_PART_SCHEME");
+        if (schemeName == null || schemeName.equals("")) {
+            LOG.info("use default Hash partitioning scheme");
+            return PartitioningScheme.HASH;
+        } else {
+            LOG.info("use partitioning scheme : " + schemeName);
+            return PartitioningScheme.valueOf(schemeName);
+        }
     }
 
     private long[] getEmittersCardinality(Config conf) {
@@ -178,7 +189,6 @@ public class StormDBToasterJoin extends StormBoltComponent {
                     .getStringByField(StormComponent.COMP_INDEX); // getString(0);
             final List<String> tuple = (List<String>) stormTupleRcv
                     .getValueByField(StormComponent.TUPLE); // getValue(1);
-
             if (processFinalAck(tuple, stormTupleRcv)) {
                 // need to close db toaster app here
                 dbtoasterEngine.endStream();

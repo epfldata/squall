@@ -89,8 +89,6 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
     private Map<String, ValueExpression[]> _parentNameColRefs;
     private String _equivalentSQL;
 
-    private PartitioningScheme _partitioningScheme = PartitioningScheme.HASH;
-
     protected DBToasterJoinComponent(List<Component> relations, Map<String, ValueExpression[]> relColRefs, String sql) {
 
         _parents = relations;
@@ -210,7 +208,6 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
         _joiner = new StormDBToasterJoin(getParents(), this,
                 allCompNames,
                 _parentNameColRefs,
-                _partitioningScheme,
                 hierarchyPosition,
                 builder, killer, conf);
     }
@@ -290,10 +287,6 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
         WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
         _tumblingWindowSize = windowRange * 1000;// For tumbling semantics
         return this;
-    }
-
-    public void setPartitioningScheme(PartitioningScheme partitioningScheme) {
-        _partitioningScheme = partitioningScheme;
     }
 
     public String getSQLQuery() {

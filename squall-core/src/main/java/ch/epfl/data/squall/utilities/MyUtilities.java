@@ -530,22 +530,28 @@ public class MyUtilities {
 
     public static InputDeclarer attachEmitterStarSchema(Map map,
         InputDeclarer currentBolt, StormEmitter[] emitters,
-        List<String> allCompNames, long[] cardinality) {
+        long[] cardinality) {
 
-        String starEmitterIndex = String.valueOf(allCompNames.indexOf(emitters[0].getName()));
+        String starEmitterName = emitters[0].getName();
         long largestCardinality = cardinality[0];
         // find the starEmitter as the one with largest cardinality
         for (int i = 1; i < emitters.length; i++) {
             if (cardinality[i] > largestCardinality) {
                 largestCardinality = cardinality[i];
-                starEmitterIndex = String.valueOf(allCompNames.indexOf(emitters[i].getName()));
+                starEmitterName = emitters[i].getName();
             }
         }
 
         for (final StormEmitter emitter : emitters) {
             final String[] emitterIDs = emitter.getEmitterIDs();
-            for (final String emitterID : emitterIDs)
-                currentBolt = currentBolt.customGrouping(emitterID, new StarSchemaStreamGrouping(map, starEmitterIndex));
+            if (emitter.getName().equals(starEmitterName)) {
+                for (final String emitterID : emitterIDs)
+                    currentBolt = currentBolt.customGrouping(emitterID, new ShuffleStreamGrouping(map));
+            } else {
+                for (final String emitterID : emitterIDs) {
+                    currentBolt = currentBolt.allGrouping(emitterID);
+                }
+            }
         }
 
         return currentBolt;

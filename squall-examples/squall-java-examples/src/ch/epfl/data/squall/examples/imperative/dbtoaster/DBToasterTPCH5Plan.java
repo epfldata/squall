@@ -22,6 +22,7 @@
 package ch.epfl.data.squall.examples.imperative.dbtoaster;
 
 import ch.epfl.data.squall.components.DataSourceComponent;
+import ch.epfl.data.squall.components.OperatorComponent;
 import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
 import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponentBuilder;
 import ch.epfl.data.squall.expressions.ColumnReference;
@@ -29,6 +30,7 @@ import ch.epfl.data.squall.expressions.DateSum;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.AggregateOperator;
+import ch.epfl.data.squall.operators.AggregateSumOperator;
 import ch.epfl.data.squall.operators.AggregateUpdateOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SelectOperator;
@@ -186,10 +188,14 @@ public class DBToasterTPCH5Plan extends QueryPlan {
                 "GROUP BY NATION.f1");
 
         DBToasterJoinComponent dbtComp = dbtBuilder.build();
-
-        AggregateOperator agg = new AggregateUpdateOperator(new ColumnReference(_doubleConv, 1), conf).setGroupByColumns(0);
-        dbtComp.add(agg);
+        dbtComp.setOutputPartKey(0);
         _queryBuilder.add(dbtComp);
+
+        AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_doubleConv, 1), conf).setGroupByColumns(0);
+
+        OperatorComponent finalComponent = new OperatorComponent(
+                dbtComp, "FINAL_RESULT").add(agg);
+        _queryBuilder.add(finalComponent);
 
     }
 
