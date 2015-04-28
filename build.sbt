@@ -64,7 +64,8 @@ lazy val squall = (project in file("squall-core")).
       // bdb-je: 5.0.84 -> 5.0.73
       "com.sleepycat" % "je" % "5.0.73",
       // storm-core: 0.9.2-incubating -> 0.9.3
-      "org.apache.storm" % "storm-core" % "0.9.3",
+      "org.apache.storm" % "storm-core" % "0.9.3" % "provided",
+      "org.slf4j" % "log4j-over-slf4j" % "1.7.12",
       //"io.dropwizard" % "dropwizard-metrics" % "0.8.1",
       //"org.apache.storm" % "storm-starter" % "0.9.3",
       "junit" % "junit" % "4.12" % Test,
@@ -81,7 +82,7 @@ lazy val squall = (project in file("squall-core")).
     runParser := {
       val arguments: Seq[String] = spaceDelimited("<arg>").parsed
       val classpath: Seq[File] = (
-        ((fullClasspath in Runtime).value map { _.data }) ++
+        ((fullClasspath in Compile).value map { _.data }) ++
           (arguments.tail map { file(_) })
       )
       val options = ForkOptions(
@@ -95,7 +96,7 @@ lazy val squall = (project in file("squall-core")).
     runPlanner := {
       val arguments: Seq[String] = spaceDelimited("<arg>").parsed
       val classpath: Seq[File] = (
-        ((fullClasspath in Runtime).value map { _.data }) ++
+        ((fullClasspath in Compile).value map { _.data }) ++
           (arguments.tail map { file(_) })
       )
       val options = ForkOptions(
@@ -130,6 +131,7 @@ lazy val functional = (project in file("squall-functional")).
         (test in Test).value
     },
     name := "squall-frontend",
+    libraryDependencies += "org.apache.storm" % "storm-core" % "0.9.3" % "provided",
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
     libraryDependencies +=  "org.scalatest" % "scalatest_2.11" % "2.2.4" % Test
   )
