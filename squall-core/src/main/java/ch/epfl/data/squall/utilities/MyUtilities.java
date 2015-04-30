@@ -35,7 +35,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import ch.epfl.data.squall.storm_components.stream_grouping.StarSchemaStreamGrouping;
 import org.apache.log4j.Logger;
 
 import backtype.storm.Config;
