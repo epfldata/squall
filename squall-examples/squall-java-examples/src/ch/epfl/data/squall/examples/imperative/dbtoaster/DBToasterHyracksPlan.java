@@ -22,10 +22,13 @@
 package ch.epfl.data.squall.examples.imperative.dbtoaster;
 
 import ch.epfl.data.squall.components.Component;
+import ch.epfl.data.squall.components.DataSourceComponent;
+import ch.epfl.data.squall.components.OperatorComponent;
 import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
 import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponentBuilder;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.operators.AggregateOperator;
+import ch.epfl.data.squall.operators.AggregateSumOperator;
 import ch.epfl.data.squall.operators.AggregateUpdateOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
@@ -33,6 +36,7 @@ import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.types.LongType;
 import ch.epfl.data.squall.types.StringType;
 
+import java.util.Arrays;
 import java.util.Map;
 
 public class DBToasterHyracksPlan extends QueryPlan {
@@ -44,14 +48,23 @@ public class DBToasterHyracksPlan extends QueryPlan {
 
     public DBToasterHyracksPlan(String dataPath, String extension, Map conf) {
         // -------------------------------------------------------------------------------------
-        Component relationCustomer = _queryBuilder
-                .createDataSource("CUSTOMER", conf)
-                .add(new ProjectOperator(0, 6)).setOutputPartKey(0);
+
+        final ProjectOperator projectionCustomer = new ProjectOperator(
+                new int[] { 0, 6 });
+        final DataSourceComponent relationCustomer = new DataSourceComponent(
+                "CUSTOMER", dataPath + "customer" + extension).add(
+                projectionCustomer).setOutputPartKey(Arrays.asList(0));
+        _queryBuilder.add(relationCustomer);
+
 
         // -------------------------------------------------------------------------------------
-        Component relationOrders = _queryBuilder
-                .createDataSource("ORDERS", conf).add(new ProjectOperator(0, 1))
-                .setOutputPartKey(0);
+
+        final ProjectOperator projectionOrders = new ProjectOperator(
+                new int[] { 0, 1 });
+        final DataSourceComponent relationOrders = new DataSourceComponent(
+                "ORDERS", dataPath + "orders" + extension)
+                .add(projectionOrders).setOutputPartKey(Arrays.asList(1));
+        _queryBuilder.add(relationOrders);
 
         // -------------------------------------------------------------------------------------
         DBToasterJoinComponentBuilder builder = new DBToasterJoinComponentBuilder();
@@ -60,10 +73,16 @@ public class DBToasterHyracksPlan extends QueryPlan {
         builder.setSQL("SELECT CUSTOMER.f1, COUNT(ORDERS.f0) FROM CUSTOMER, ORDERS WHERE CUSTOMER.f0 = ORDERS.f1 GROUP BY CUSTOMER.f1");
 
         DBToasterJoinComponent dbToasterComponent = builder.build();
-
-        AggregateOperator agg = new AggregateUpdateOperator(new ColumnReference(_lc, 1), conf).setGroupByColumns(0);
-        dbToasterComponent.add(agg);
         _queryBuilder.add(dbToasterComponent);
+
+        // -------------------------------------------------------------------------------------
+        final AggregateSumOperator agg = new AggregateSumOperator(
+                new ColumnReference(_lc, 1), conf).setGroupByColumns(Arrays
+                .asList(0));
+
+        OperatorComponent oc = new OperatorComponent(dbToasterComponent,
+                "COUNTAGG").add(agg);
+        _queryBuilder.add(oc);
 
     }
 

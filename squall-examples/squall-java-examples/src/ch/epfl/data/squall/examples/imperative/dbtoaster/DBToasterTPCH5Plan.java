@@ -188,7 +188,6 @@ public class DBToasterTPCH5Plan extends QueryPlan {
                 "GROUP BY NATION.f1");
 
         DBToasterJoinComponent dbtComp = dbtBuilder.build();
-        dbtComp.setOutputPartKey(0);
         _queryBuilder.add(dbtComp);
 
         AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_doubleConv, 1), conf).setGroupByColumns(0);
