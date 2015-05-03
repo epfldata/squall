@@ -46,13 +46,14 @@ import ch.epfl.data.squall.components.ComponentProperties;
 import ch.epfl.data.squall.components.signal_components.storm.SignalClient;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.storm_components.StormComponent;
+import ch.epfl.data.squall.storm_components.SynchronizedStormDataSourceInterface;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class SynchronizedStormDataSource extends
-StormSynchronizedSpoutComponent {
+StormSynchronizedSpoutComponent implements SynchronizedStormDataSourceInterface{
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger
 			.getLogger(SynchronizedStormDataSource.class);
