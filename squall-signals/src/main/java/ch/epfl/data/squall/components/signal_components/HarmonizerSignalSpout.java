@@ -50,6 +50,7 @@ public class HarmonizerSignalSpout extends BaseSignalSpout{
 	@Override
 	public void onSignal(byte[] data) {
 		try{
+			LOG.info("Harmonizer Signaller received signal from spout .....");
 			ByteArrayInputStream bis = new ByteArrayInputStream(data);
 			ObjectInput in = null;
 			in = new ObjectInputStream(bis);
@@ -92,7 +93,7 @@ public class HarmonizerSignalSpout extends BaseSignalSpout{
 				byte[] signal= SignalUtilities.createSignal(SignalUtilities.HARMONIZER_SIGNAL, objectBytes);
 				_scDataSpout.send(signal);
 				_isChange=false;
-				LOG.info("Harmonizer sending frequent set....."+ _frequentSet.toString()+" " + _frequentSet.size());
+				LOG.info("Harmonizer Signaller sending frequent set....."+ _frequentSet.toString()+" " + _frequentSet.size());
 				out.close();
 				bos.close();
 			} catch (Exception e) {

@@ -47,7 +47,7 @@ public class DistributionSignalSpout extends BaseRichSpout {
 	    _currentValue = _rnd.nextInt(100);
 	    byte[] signal= SignalUtilities.createSignal(SignalUtilities.DISTRIBUTION_SIGNAL, SignalUtilities.toBytes(_currentValue));
 	    _sc.send(signal);
-	    LOG.info("Signaller sending ....." + _currentValue);
+	    LOG.info("Distribution Signaller sending ....." + _currentValue);
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}

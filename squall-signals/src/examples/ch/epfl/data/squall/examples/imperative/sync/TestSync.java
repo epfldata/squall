@@ -34,6 +34,7 @@ import ch.epfl.data.squall.types.DoubleType;
 import ch.epfl.data.squall.types.IntegerType;
 import ch.epfl.data.squall.types.StringType;
 import ch.epfl.data.squall.types.Type;
+import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class TestSync extends QueryPlan {
 
@@ -55,9 +56,23 @@ public class TestSync extends QueryPlan {
 	customerSchema.add(new StringType());
 	customerSchema.add(new StringType());
 
-	Component customer = new SignaledDataSourceComponent("CUSTOMER",
-		"localhost:2000", customerSchema, 0, 10, 10000, 5000, 1000);
-
+	
+	int distributionSecs  = SystemParameters.getInt(conf,"DISTRIBUTION_SECS");
+	int tuplesThresh  = SystemParameters.getInt(conf,"TUPLES_THRES");
+	String zookeeperHost  = SystemParameters.getString(conf,"ZOOKEEPER_HOST");
+	int windowSize  = SystemParameters.getInt(conf,"WINOW_SIZE");
+	
+	Component customer;
+	if(windowSize<0)
+		customer = new SignaledDataSourceComponent("CUSTOMER",
+				zookeeperHost, customerSchema, 0, distributionSecs, tuplesThresh); //secs, windowsize, frquentthres, update rate harmnizer
+	else{
+		int frequencyThres  = SystemParameters.getInt(conf,"FREQUENCY_THRESH");
+		int updateRate  = SystemParameters.getInt(conf,"UPDATE_RATE");
+		customer = new SignaledDataSourceComponent("CUSTOMER",
+				zookeeperHost, customerSchema, 0, distributionSecs,tuplesThresh, windowSize, frequencyThres, updateRate); //secs, number of tuples threshold, windowsize, frquentthres, update rate harmnizer
+	}
+	
 	ArrayList<Type> ordersSchema = new ArrayList<Type>();
 	ordersSchema.add(new IntegerType());
 	ordersSchema.add(new IntegerType());

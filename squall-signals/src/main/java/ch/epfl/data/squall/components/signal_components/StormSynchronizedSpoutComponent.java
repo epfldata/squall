@@ -139,6 +139,10 @@ public abstract class StormSynchronizedSpoutComponent extends BaseSignalSpout
 	    outputFields.add(StormComponent.TIMESTAMP);
 	declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(
 		outputFields));
+	
+	//For shuffling under skew
+	declarer.declareStream(SynchronizedStormDataSource.SHUFFLE_GROUPING_STREAMID, new Fields(
+			outputFields));
 
 	if (_isPartitioner) {
 	    // EQUI-WEIGHT HISTOGRAM
@@ -339,6 +343,7 @@ public abstract class StormSynchronizedSpoutComponent extends BaseSignalSpout
     	final Values stormTupleSnd = MyUtilities.createTupleValues(tuple,
     		timestamp, _componentIndex, _hashIndexes, _hashExpressions,
     		_conf);
+    	//System.out.println("Arrived to streamID send");
     	MyUtilities.sendTuple(streamID, stormTupleSnd, _collector, _conf);
         }
 
