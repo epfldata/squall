@@ -35,6 +35,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import ch.epfl.data.squall.storm_components.stream_grouping.HyperCubeStaticGrouping;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HyperCubeAssignment;
 import org.apache.log4j.Logger;
 
 import backtype.storm.Config;
@@ -530,7 +532,7 @@ public class MyUtilities {
     public static InputDeclarer attachEmitterStarSchema(Map map,
         InputDeclarer currentBolt, StormEmitter[] emitters,
         long[] cardinality) {
-
+        LOG.info("Should not use star schema here");
         String starEmitterName = emitters[0].getName();
         long largestCardinality = cardinality[0];
         // find the starEmitter as the one with largest cardinality
@@ -553,6 +555,26 @@ public class MyUtilities {
             }
         }
 
+        return currentBolt;
+    }
+
+    public static InputDeclarer hyperCubeAttachEmitterComponents(
+            InputDeclarer currentBolt, List<StormEmitter> emitters, List<String> allCompNames,
+            HyperCubeAssignment assignment, Map map, Type wrapper) {
+
+
+        String[] emitterIndexes = new String[emitters.size()];
+        for (int i = 0; i < emitterIndexes.length; i++)
+            emitterIndexes[i] = String.valueOf(allCompNames
+                    .indexOf(emitters.get(i).getName()));
+
+        CustomStreamGrouping mapping = new HyperCubeStaticGrouping(emitterIndexes, assignment, map);
+
+        for (final StormEmitter emitter : emitters) {
+            final String[] emitterIDs = emitter.getEmitterIDs();
+            for (final String emitterID : emitterIDs)
+                currentBolt = currentBolt.customGrouping(emitterID, mapping);
+        }
         return currentBolt;
     }
 

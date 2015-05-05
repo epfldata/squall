@@ -92,4 +92,79 @@ public class Utilities {
 	return factors;
     }
 
+    /**
+     * Compute the difference between two lists. For example [2,3,2,4] - [2,4] =
+     * [3,2]
+     *
+     * @param l1
+     *            list to be removed from
+     * @param l2
+     *            list of elements to remove
+     */
+    public static void removeOnce(List<Integer> l1, List<Integer> l2) {
+        for (Integer removeElement : l2) {
+            l1.remove(removeElement);
+        }
+    }
+
+    /**
+     * Convenience method to convert from unspecified number of parameters into an array of parameters
+     */
+    public static long[] arrayOf(long... values) {
+        return values;
+    }
+
+    /**
+     * Copy each element of source array into destination array
+     */
+    public static void copy(int[] source, int[] des) {
+        for (int i = 0; i < source.length; i++) {
+            des[i] = source[i];
+        }
+    }
+
+    /**
+     * Return the product over all elements of an array
+     */
+    public static int multiply(int[] a) {
+        int mult = 1;
+        for (final int value : a)
+            mult *= value;
+        return mult;
+    }
+
+    /**
+     * Check if an integer is prime
+     */
+    public static boolean isPrime(int num) {
+        if (num % 2 == 0)
+            return false;
+        for (int i = 3; i * i <= num; i += 2)
+            if (num % i == 0)
+                return false;
+        return true;
+    }
+
+    /**
+     * Return the index of maximum value of an array
+     */
+    public static int indexOfMax(double[] a) {
+        int index = 0;
+        for (int i = 1; i < a.length; i++) {
+            if (a[i] > a[index])
+                index = i;
+        }
+        return index;
+    }
+
+    /**
+     * Check whether an array contains an element with value less than v.
+     */
+    public static boolean existsLess(double[] a, double v) {
+        for (double ai : a) {
+            if (ai < v)
+                return true;
+        }
+        return false;
+    }
 }
