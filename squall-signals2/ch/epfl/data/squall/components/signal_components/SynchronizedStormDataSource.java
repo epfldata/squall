@@ -34,8 +34,6 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import com.esotericsoftware.minlog.Log;
-
 import backtype.storm.Config;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -46,13 +44,14 @@ import ch.epfl.data.squall.components.ComponentProperties;
 import ch.epfl.data.squall.components.signal_components.storm.SignalClient;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.storm_components.StormComponent;
+import ch.epfl.data.squall.storm_components.SynchronizedStormDataSourceInterface;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class SynchronizedStormDataSource extends
-StormSynchronizedSpoutComponent {
+StormSynchronizedSpoutComponent implements SynchronizedStormDataSourceInterface {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger
 			.getLogger(SynchronizedStormDataSource.class);
@@ -83,9 +82,6 @@ StormSynchronizedSpoutComponent {
 	private boolean _isHarmonized;
 	private HashSet<Integer> _frequentSet;
 	private int _numOfTuplesThreshold;
-	
-
-	public static String SHUFFLE_GROUPING_STREAMID = "sync_shuffle";  
 
 	public SynchronizedStormDataSource(ComponentProperties cp,
 			List<String> allCompNames, ArrayList<Type> tupleTypes,
@@ -150,7 +146,7 @@ StormSynchronizedSpoutComponent {
 		if (MyUtilities.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
 			int tuplekey= Integer.parseInt(tuple.get(_keyIndex));
 			if(_frequentSet.contains(tuplekey))
-				tupleSend(SHUFFLE_GROUPING_STREAMID, tuple, null, timestamp);
+				tupleSend(SynchronizedStormDataSourceInterface.SHUFFLE_GROUPING_STREAMID, tuple, null, timestamp);
 			else tupleSend(tuple, null, timestamp);
 		}
 

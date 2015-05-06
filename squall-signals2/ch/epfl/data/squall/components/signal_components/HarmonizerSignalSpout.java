@@ -14,7 +14,6 @@ import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
-import scala.Array;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;

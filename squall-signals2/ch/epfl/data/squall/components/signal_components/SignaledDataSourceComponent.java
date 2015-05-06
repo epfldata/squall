@@ -35,13 +35,14 @@ import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
+import ch.epfl.data.squall.storm_components.SignaledDataSourceComponentInterface;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
-public class SignaledDataSourceComponent implements Component {
+public class SignaledDataSourceComponent implements Component, SignaledDataSourceComponentInterface {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger
 			.getLogger(SignaledDataSourceComponent.class);
