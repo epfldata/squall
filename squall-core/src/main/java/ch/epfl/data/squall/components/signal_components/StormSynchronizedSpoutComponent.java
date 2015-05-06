@@ -45,6 +45,8 @@ import ch.epfl.data.squall.utilities.SystemParameters;
 
 public abstract class StormSynchronizedSpoutComponent extends BaseSignalSpout
 	implements StormComponent, StormEmitter {
+	
+	public static String SHUFFLE_GROUPING_STREAMID = "sync_shuffle";
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger
 	    .getLogger(StormSynchronizedSpoutComponent.class);
@@ -140,10 +142,9 @@ public abstract class StormSynchronizedSpoutComponent extends BaseSignalSpout
 	declarer.declareStream(SystemParameters.DATA_STREAM, new Fields(
 		outputFields));
 	
-	//For shuffling under skew
-	declarer.declareStream(SynchronizedStormDataSource.SHUFFLE_GROUPING_STREAMID, new Fields(
+	declarer.declareStream(SHUFFLE_GROUPING_STREAMID, new Fields(
 			outputFields));
-
+	
 	if (_isPartitioner) {
 	    // EQUI-WEIGHT HISTOGRAM
 	    final List<String> outputFieldsPart = new ArrayList<String>();
@@ -343,7 +344,6 @@ public abstract class StormSynchronizedSpoutComponent extends BaseSignalSpout
     	final Values stormTupleSnd = MyUtilities.createTupleValues(tuple,
     		timestamp, _componentIndex, _hashIndexes, _hashExpressions,
     		_conf);
-    	//System.out.println("Arrived to streamID send");
     	MyUtilities.sendTuple(streamID, stormTupleSnd, _collector, _conf);
         }
 

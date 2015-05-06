@@ -73,30 +73,34 @@ public class SignaledDataSourceComponent implements Component {
 	private int _harmonizerWindowCountThreshold;
 	private int _harmonizerFrequentThreshold;
 	private int _harmonizerUpdaterRate;
-
-	private int _numberOfTuplesThreshold;
-
+	private int _numOfTuplesThreshold;
 	private boolean _isHarmonized=false;
 
+
+	// invoked from the new Interface (QueryPlan not QueryBuilder)
 	public SignaledDataSourceComponent(String componentName,
-			String zookeeperHost, ArrayList<Type> schema, int keyIndex, int distributionRefreshSeconds, int numberOfTuplesThreshold) {
-		_distributionRefreshSeconds= distributionRefreshSeconds;
+			String zookeeperHost, ArrayList<Type> schema, int keyIndex, 
+			int distributionRefreshSeconds, int numOfTuplesThreshold, int harmonizerWindowCountThreshold, 
+			int harmonizerFrequentThreshold, int harmonizerUpdaterRate) {
+		this(componentName,zookeeperHost, schema, keyIndex, 
+				distributionRefreshSeconds, numOfTuplesThreshold);
+		_harmonizerWindowCountThreshold= harmonizerWindowCountThreshold;
+		if(_harmonizerWindowCountThreshold>0){
+			_harmonizerFrequentThreshold=harmonizerFrequentThreshold;
+			_harmonizerUpdaterRate=harmonizerUpdaterRate;
+			_isHarmonized=true;
+		}
+	}
+
+	public SignaledDataSourceComponent(String componentName,
+			String zookeeperHost, ArrayList<Type> schema, int keyIndex, 
+			int distributionRefreshSeconds, int numOfTuplesThreshold) {
+		_numOfTuplesThreshold=numOfTuplesThreshold;
 		_componentName = componentName;
 		_zookeeperHost = zookeeperHost;
 		_keyIndex = keyIndex;
 		_schema = schema;
-		_numberOfTuplesThreshold=numberOfTuplesThreshold;
-	}
-
-	public SignaledDataSourceComponent(String componentName,
-			String zookeeperHost, ArrayList<Type> schema, int keyIndex, int numberOfTuplesThreshold, 
-			int distributionRefreshSeconds, int harmonizerWindowCountThreshold, 
-			int harmonizerFrequentThreshold, int harmonizerUpdaterRate) {
-		this(componentName,zookeeperHost, schema, keyIndex, numberOfTuplesThreshold,distributionRefreshSeconds);
-		_harmonizerWindowCountThreshold= harmonizerWindowCountThreshold;
-		_harmonizerFrequentThreshold=harmonizerFrequentThreshold;
-		_harmonizerUpdaterRate=harmonizerUpdaterRate;
-		_isHarmonized=true;
+		_distributionRefreshSeconds= distributionRefreshSeconds;
 	}
 
 	@Override
@@ -203,10 +207,11 @@ public class SignaledDataSourceComponent implements Component {
 		MyUtilities.checkBatchOutput(_batchOutputMillis,
 				_chain.getAggregation(), conf);
 
+		// TODO
+
 		DistributionSignalSpout dsp = new DistributionSignalSpout(_zookeeperHost, this.getName(), _distributionRefreshSeconds);
 		builder.setSpout(this.getName() + "-distr", dsp, 1);
 
-		// TODO
 		if(_isHarmonized){
 
 			HarmonizerSignalSpout hsp = new HarmonizerSignalSpout(_zookeeperHost, this.getName(), this.getName() + "-harmonizer", _harmonizerWindowCountThreshold, _harmonizerFrequentThreshold);
@@ -214,81 +219,81 @@ public class SignaledDataSourceComponent implements Component {
 
 			_dataSource = new SynchronizedStormDataSource(this, allCompNames,
 					_schema, hierarchyPosition, parallelism, _keyIndex,
-					_isPartitioner, builder, killer, conf, _numberOfTuplesThreshold, _zookeeperHost, this.getName() + "-harmonizer", _harmonizerUpdaterRate);
+					_isPartitioner, builder, killer, conf, _numOfTuplesThreshold, _zookeeperHost, this.getName() + "-harmonizer", _harmonizerUpdaterRate);
 		}
 		else{
 			_dataSource = new SynchronizedStormDataSource(this, allCompNames,
 					_schema, hierarchyPosition, parallelism, _keyIndex,
-					_isPartitioner, builder, killer, conf, _numberOfTuplesThreshold);
+					_isPartitioner, builder, killer, conf, _numOfTuplesThreshold);
 		}
-	}
+		}
 
-	@Override
-	public SignaledDataSourceComponent setBatchOutputMillis(long millis) {
-		throw new RuntimeException(
-				"Setting batch mode is not allowed for DataSourceComponents!");
-		// _batchOutputMillis = millis;
-		// return this;
-	}
+		@Override
+		public SignaledDataSourceComponent setBatchOutputMillis(long millis) {
+			throw new RuntimeException(
+					"Setting batch mode is not allowed for DataSourceComponents!");
+			// _batchOutputMillis = millis;
+			// return this;
+		}
 
-	@Override
-	public void setChild(Component child) {
-		_child = child;
-	}
+		@Override
+		public void setChild(Component child) {
+			_child = child;
+		}
 
-	@Override
-	public SignaledDataSourceComponent setContentSensitiveThetaJoinWrapper(
-			Type wrapper) {
-		return this;
-	}
+		@Override
+		public SignaledDataSourceComponent setContentSensitiveThetaJoinWrapper(
+				Type wrapper) {
+			return this;
+		}
 
-	@Override
-	public SignaledDataSourceComponent setFullHashList(List<String> fullHashList) {
-		throw new RuntimeException(
-				"This method should not be invoked for DataSourceComponent!");
-	}
+		@Override
+		public SignaledDataSourceComponent setFullHashList(List<String> fullHashList) {
+			throw new RuntimeException(
+					"This method should not be invoked for DataSourceComponent!");
+		}
 
-	@Override
-	public SignaledDataSourceComponent setHashExpressions(
-			List<ValueExpression> hashExpressions) {
-		_hashExpressions = hashExpressions;
-		return this;
-	}
+		@Override
+		public SignaledDataSourceComponent setHashExpressions(
+				List<ValueExpression> hashExpressions) {
+			_hashExpressions = hashExpressions;
+			return this;
+		}
 
-	@Override
-	public SignaledDataSourceComponent setInterComp(InterchangingComponent inter) {
-		throw new RuntimeException(
-				"Datasource component does not support setInterComp");
-	}
+		@Override
+		public SignaledDataSourceComponent setInterComp(InterchangingComponent inter) {
+			throw new RuntimeException(
+					"Datasource component does not support setInterComp");
+		}
 
-	@Override
-	public SignaledDataSourceComponent setJoinPredicate(Predicate joinPredicate) {
-		throw new RuntimeException(
-				"Datasource component does not support Join Predicates");
-	}
+		@Override
+		public SignaledDataSourceComponent setJoinPredicate(Predicate joinPredicate) {
+			throw new RuntimeException(
+					"Datasource component does not support Join Predicates");
+		}
 
-	@Override
-	public SignaledDataSourceComponent setOutputPartKey(int... hashIndexes) {
-		return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
-	}
+		@Override
+		public SignaledDataSourceComponent setOutputPartKey(int... hashIndexes) {
+			return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
+		}
 
-	@Override
-	public SignaledDataSourceComponent setOutputPartKey(
-			List<Integer> hashIndexes) {
-		_hashIndexes = hashIndexes;
-		return this;
-	}
+		@Override
+		public SignaledDataSourceComponent setOutputPartKey(
+				List<Integer> hashIndexes) {
+			_hashIndexes = hashIndexes;
+			return this;
+		}
 
-	public SignaledDataSourceComponent setPartitioner(boolean isPartitioner) {
-		_isPartitioner = isPartitioner;
-		return this;
-	}
+		public SignaledDataSourceComponent setPartitioner(boolean isPartitioner) {
+			_isPartitioner = isPartitioner;
+			return this;
+		}
 
-	@Override
-	public SignaledDataSourceComponent setPrintOut(boolean printOut) {
-		_printOutSet = true;
-		_printOut = printOut;
-		return this;
-	}
+		@Override
+		public SignaledDataSourceComponent setPrintOut(boolean printOut) {
+			_printOutSet = true;
+			_printOut = printOut;
+			return this;
+		}
 
-}
+	}

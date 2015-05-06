@@ -22,6 +22,8 @@ package ch.epfl.data.squall.examples.imperative.sync;
 import java.util.ArrayList;
 import java.util.Map;
 
+import org.apache.commons.lang.SystemUtils;
+
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.EquiJoinComponent;
 import ch.epfl.data.squall.components.OperatorComponent;
@@ -41,10 +43,19 @@ public class TestSync extends QueryPlan {
     public TestSync(String dataPath, String extension, Map conf) {
 	super(dataPath, extension, conf);
     }
-
+    
     @Override
     public Component createQueryPlan(String dataPath, String extension, Map conf) {
 	// -------------------------------------------------------------------------------------
+    	
+    	String zookeeperHost = SystemParameters.getString(conf, "ZOOKEEPER_HOST");
+    	int distseconds = SystemParameters.getInt(conf, "DISTRIBUTION_SECS");
+    	int tupleThresh = SystemParameters.getInt(conf, "TUPLES_THRES");
+    	int windowsize = SystemParameters.getInt(conf, "WINOW_SIZE");
+    	int frequencyThresh = SystemParameters.getInt(conf, "FREQUENCY_THRESH");
+    	int updateRate = SystemParameters.getInt(conf, "UPDATE_RATE");
+
+    
 
 	ArrayList<Type> customerSchema = new ArrayList<Type>();
 	customerSchema.add(new IntegerType());
@@ -57,22 +68,9 @@ public class TestSync extends QueryPlan {
 	customerSchema.add(new StringType());
 
 	
-	int distributionSecs  = SystemParameters.getInt(conf,"DISTRIBUTION_SECS");
-	int tuplesThresh  = SystemParameters.getInt(conf,"TUPLES_THRES");
-	String zookeeperHost  = SystemParameters.getString(conf,"ZOOKEEPER_HOST");
-	int windowSize  = SystemParameters.getInt(conf,"WINOW_SIZE");
-	
-	Component customer;
-	if(windowSize<0)
-		customer = new SignaledDataSourceComponent("CUSTOMER",
-				zookeeperHost, customerSchema, 0, distributionSecs, tuplesThresh); //secs, windowsize, frquentthres, update rate harmnizer
-	else{
-		int frequencyThres  = SystemParameters.getInt(conf,"FREQUENCY_THRESH");
-		int updateRate  = SystemParameters.getInt(conf,"UPDATE_RATE");
-		customer = new SignaledDataSourceComponent("CUSTOMER",
-				zookeeperHost, customerSchema, 0, distributionSecs,tuplesThresh, windowSize, frequencyThres, updateRate); //secs, number of tuples threshold, windowsize, frquentthres, update rate harmnizer
-	}
-	
+	Component customer = new SignaledDataSourceComponent("CUSTOMER",
+			zookeeperHost, customerSchema, 0, distseconds, tupleThresh, windowsize, frequencyThresh, updateRate);
+
 	ArrayList<Type> ordersSchema = new ArrayList<Type>();
 	ordersSchema.add(new IntegerType());
 	ordersSchema.add(new IntegerType());
