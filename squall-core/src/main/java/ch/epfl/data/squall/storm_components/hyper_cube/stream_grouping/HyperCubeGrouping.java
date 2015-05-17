@@ -1,25 +1,4 @@
-/*
- *
- *  * Copyright (c) 2011-2015 EPFL DATA Laboratory
- *  * Copyright (c) 2014-2015 The Squall Collaboration (see NOTICE)
- *  *
- *  * All rights reserved.
- *  *
- *  * Licensed under the Apache License, Version 2.0 (the "License");
- *  * you may not use this file except in compliance with the License.
- *  * You may obtain a copy of the License at
- *  *
- *  * http://www.apache.org/licenses/LICENSE-2.0
- *  *
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
- *
- */
-
-package ch.epfl.data.squall.storm_components.stream_grouping;
+package ch.epfl.data.squall.storm_components.hyper_cube.stream_grouping;
 
 import backtype.storm.generated.GlobalStreamId;
 import backtype.storm.grouping.CustomStreamGrouping;
@@ -35,17 +14,17 @@ import java.util.Map;
 /**
  * Created by khayyam on 4/10/15.
  */
-public class HyperCubeStaticGrouping implements CustomStreamGrouping {
+public class HyperCubeGrouping implements CustomStreamGrouping {
     private static final long serialVersionUID = 1L;
-    private static Logger LOG = Logger.getLogger(HyperCubeStaticGrouping.class);
+    private static Logger LOG = Logger.getLogger(HyperCubeGrouping.class);
 
     private final HyperCubeAssignment _assignment;
     private final String[] _emitterIndexes;
     private List<Integer> _targetTasks;
     private final Map _map;
 
-    public HyperCubeStaticGrouping(String[] emitterIndexes,
-                                   HyperCubeAssignment assignment, Map map) {
+    public HyperCubeGrouping(String[] emitterIndexes,
+                             HyperCubeAssignment assignment, Map map) {
         _assignment = assignment;
         _emitterIndexes = emitterIndexes;
         _map = map;
@@ -82,13 +61,13 @@ public class HyperCubeStaticGrouping implements CustomStreamGrouping {
             }
 
 
-//        if (tasks == null) {
-//            for (int i = 0; i < _emitterIndexes.length; i++)
-//                LOG.info("First Name: " + _emitterIndexes[i]);
-//
-//            LOG.info("Table Name: " + tableName);
-//            LOG.info("WRONG ASSIGNMENT");
-//        }
+        if (tasks == null) {
+            for (int i = 0; i < _emitterIndexes.length; i++)
+                LOG.info("First Name: " + _emitterIndexes[i]);
+
+            LOG.info("Table Name: " + tableName);
+            LOG.info("WRONG ASSIGNMENT");
+        }
         return tasks;
     }
 
@@ -101,12 +80,13 @@ public class HyperCubeStaticGrouping implements CustomStreamGrouping {
 
     private List<Integer> translateIdsToTasks(List<Integer> ids) {
 
-//        for (int i = 0; i < _targetTasks.size(); i++)
-//            System.out.println(_targetTasks.get(i));
+        for (int i = 0; i < _targetTasks.size(); i++)
+            System.out.println(_targetTasks.get(i));
 
         final List<Integer> converted = new ArrayList<Integer>();
         for (final int id : ids)
             converted.add(_targetTasks.get(id));
         return converted;
     }
+
 }
