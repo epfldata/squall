@@ -192,11 +192,11 @@ public class DBToasterTPCH5Plan extends QueryPlan {
         _queryBuilder.add(dbtComp);
 
 
-        /*AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_doubleConv, 1), conf).setGroupByColumns(0);
+        AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_doubleConv, 1), conf).setGroupByColumns(0);
 
         OperatorComponent finalComponent = new OperatorComponent(
                 dbtComp, "FINAL_RESULT").add(agg);
-        _queryBuilder.add(finalComponent);*/
+        _queryBuilder.add(finalComponent);
 
     }
 

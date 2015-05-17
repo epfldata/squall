@@ -25,23 +25,18 @@ import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.OperatorComponent;
 import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponentBuilder;
-import ch.epfl.data.squall.components.theta.ThetaJoinComponentFactory;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.DateSum;
-import ch.epfl.data.squall.expressions.Multiplication;
-import ch.epfl.data.squall.expressions.Subtraction;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.AggregateSumOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SelectOperator;
-import ch.epfl.data.squall.predicates.AndPredicate;
 import ch.epfl.data.squall.predicates.BetweenPredicate;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
-import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
 import ch.epfl.data.squall.types.DateType;
 import ch.epfl.data.squall.types.DoubleType;
 import ch.epfl.data.squall.types.IntegerType;
@@ -239,12 +234,12 @@ public class DBToasterTPCH5SequentialJoinPlan extends QueryPlan {
 
         // -------------------------------------------------------------------------------------
 
-        /*
+
         AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_doubleConv, 1), conf).setGroupByColumns(0);
 
         OperatorComponent finalComponent = new OperatorComponent(
                 R_N_S_L_C_Ojoin, "FINAL_RESULT").add(agg);
-        _queryBuilder.add(finalComponent);*/
+        _queryBuilder.add(finalComponent);
 
         // -------------------------------------------------------------------------------------
     }

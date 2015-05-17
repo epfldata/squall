@@ -122,7 +122,7 @@ public class DBToasterTPCH3Plan extends QueryPlan {
         DBToasterJoinComponentBuilder dbToasterCompBuilder = new DBToasterJoinComponentBuilder();
         dbToasterCompBuilder.addRelation(relationCustomer, _lc);
         dbToasterCompBuilder.addRelation(relationOrders, _lc, _lc,
-                _dateLongConv, _lc); // Have to use DateLongConversion instead of DateConversion as DBToaster use Long as Date
+                _sc, _lc); // Have to use DateLongConversion instead of DateConversion as DBToaster use Long as Date
         dbToasterCompBuilder.addRelation(relationLineitem, _lc, _doubleConv,
                 _doubleConv);
         dbToasterCompBuilder.setSQL("SELECT LINEITEM.f0, SUM(LINEITEM.f1 * (1 - LINEITEM.f2)) FROM CUSTOMER, ORDERS, LINEITEM " +
@@ -135,13 +135,13 @@ public class DBToasterTPCH3Plan extends QueryPlan {
         _queryBuilder.add(dbToasterComponent);
 
 
-        /*final AggregateSumOperator agg = new AggregateSumOperator(
+        final AggregateSumOperator agg = new AggregateSumOperator(
                 new ColumnReference(_doubleConv, 3), conf).setGroupByColumns(Arrays
                 .asList(0, 1, 2));
 
         OperatorComponent oc = new OperatorComponent(dbToasterComponent,
                 "COUNTAGG").add(agg);
-        _queryBuilder.add(oc);*/
+        _queryBuilder.add(oc);
 
     }
 

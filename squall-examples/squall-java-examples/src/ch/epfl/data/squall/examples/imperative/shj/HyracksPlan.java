@@ -24,9 +24,12 @@ import java.util.Map;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.EquiJoinComponent;
+import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.operators.AggregateCountOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
+import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryPlan;
+import ch.epfl.data.squall.types.IntegerType;
 
 public class HyracksPlan extends QueryPlan {
 
@@ -34,19 +37,26 @@ public class HyracksPlan extends QueryPlan {
 	super(dataPath, extension, conf);
     }
 
+    private static final IntegerType _ic = new IntegerType();
+
     @Override
     public Component createQueryPlan(String dataPath, String extension, Map conf) {
 	// -------------------------------------------------------------------------------------
 	Component customer = new DataSourceComponent("customer", conf)
-		.add(new ProjectOperator(0, 6));
+		.add(new ProjectOperator(0, 6)).setOutputPartKey(0);
 
 	// -------------------------------------------------------------------------------------
 	Component orders = new DataSourceComponent("orders", conf)
-		.add(new ProjectOperator(1));
+		.add(new ProjectOperator(1)).setOutputPartKey(0);
 
+        final ColumnReference colCustomer = new ColumnReference(_ic, 0);
+        final ColumnReference colOrders = new ColumnReference(_ic, 0);
+        final ComparisonPredicate comp = new ComparisonPredicate(
+                ComparisonPredicate.EQUAL_OP, colCustomer, colOrders);
 	// -------------------------------------------------------------------------------------
-	Component custOrders = new EquiJoinComponent(customer, 0, orders, 0)
+	Component custOrders = new EquiJoinComponent(customer, orders).setJoinPredicate(comp)
 		.add(new AggregateCountOperator(conf).setGroupByColumns(1));
+
 	return custOrders;
 	// -------------------------------------------------------------------------------------
     }

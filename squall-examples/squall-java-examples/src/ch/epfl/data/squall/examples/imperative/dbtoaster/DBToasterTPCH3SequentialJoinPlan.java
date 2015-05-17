@@ -102,15 +102,11 @@ public class DBToasterTPCH3SequentialJoinPlan extends QueryPlan {
         _queryBuilder.add(relationOrders);
 
         // -------------------------------------------------------------------------------------
-//        final EquiJoinComponent C_Ojoin = new EquiJoinComponent(
-//                relationCustomer, relationOrders).add(
-//                new ProjectOperator(new int[] { 1, 2, 3 })).setOutputPartKey(
-//                Arrays.asList(0));
 
         DBToasterJoinComponentBuilder dbToasterCompBuilder = new DBToasterJoinComponentBuilder();
         dbToasterCompBuilder.addRelation(relationCustomer, _lc);
         dbToasterCompBuilder.addRelation(relationOrders, _lc, _lc,
-                _dateLongConv, _lc);
+                _sc, _lc);
         dbToasterCompBuilder.setSQL("SELECT ORDERS.f0, ORDERS.f2, ORDERS.f3 FROM CUSTOMER, ORDERS " +
                 "WHERE CUSTOMER.f0 = ORDERS.f1");
 
@@ -137,24 +133,9 @@ public class DBToasterTPCH3SequentialJoinPlan extends QueryPlan {
 
 
         // -------------------------------------------------------------------------------------
-        // set up aggregation function on the StormComponent(Bolt) where join is
-        // performed
-
-        // 1 - discount
-//        final ValueExpression<Double> substract = new Subtraction(
-//                new ValueSpecification(_doubleConv, 1.0), new ColumnReference(
-//                _doubleConv, 4));
-//        // extendedPrice*(1-discount)
-//        final ValueExpression<Double> product = new Multiplication(
-//                new ColumnReference(_doubleConv, 3), substract);
-//        final AggregateOperator agg = new AggregateSumOperator(product, conf)
-//                .setGroupByColumns(Arrays.asList(0, 1, 2));
-//
-//        EquiJoinComponent finalComp = new EquiJoinComponent(C_Ojoin,
-//                relationLineitem).add(agg);
         dbToasterCompBuilder = new DBToasterJoinComponentBuilder();
         dbToasterCompBuilder.addRelation(C_Ojoin, _lc,
-                _lc, _lc);
+                _sc, _lc);
         dbToasterCompBuilder.addRelation(relationLineitem, _lc,
                 _doubleConv,
                 _doubleConv);
@@ -170,7 +151,7 @@ public class DBToasterTPCH3SequentialJoinPlan extends QueryPlan {
 
         // -------------------------------------------------------------------------------------
 
-        /*
+
         final AggregateSumOperator agg = new AggregateSumOperator(
                 new ColumnReference(_doubleConv, 3), conf).setGroupByColumns(Arrays
                 .asList(0, 1, 2));
@@ -178,7 +159,7 @@ public class DBToasterTPCH3SequentialJoinPlan extends QueryPlan {
         OperatorComponent oc = new OperatorComponent(C_O_Ljoin,
                 "COUNTAGG").add(agg);
         _queryBuilder.add(oc);
-        */
+
     }
 
     @Override

@@ -25,6 +25,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import ch.epfl.data.squall.predicates.AndPredicate;
+import ch.epfl.data.squall.types.IntegerType;
 import org.apache.log4j.Logger;
 
 import ch.epfl.data.squall.components.DataSourceComponent;
@@ -69,6 +71,8 @@ public class TPCH5Plan extends QueryPlan {
     }
 
     private static Logger LOG = Logger.getLogger(TPCH5Plan.class);
+    private static final IntegerType _ic = new IntegerType();
+
     private static final Type<Date> _dc = new DateType();
     private static final Type<String> _sc = new StringType();
 
@@ -116,8 +120,13 @@ public class TPCH5Plan extends QueryPlan {
 	final ProjectOperator projectionRN = new ProjectOperator(new int[] { 1,
 		2 });
 
+    ColumnReference colR = new ColumnReference(_ic, 0);
+    ColumnReference colN = new ColumnReference(_ic, 2);
+    ComparisonPredicate R_N_comp = new ComparisonPredicate(
+            ComparisonPredicate.EQUAL_OP, colR, colN);
+
 	final EquiJoinComponent R_Njoin = new EquiJoinComponent(relationRegion,
-		relationNation).setOutputPartKey(hashRN).add(projectionRN);
+		relationNation).setOutputPartKey(hashRN).add(projectionRN).setJoinPredicate(R_N_comp);
 	_queryBuilder.add(R_Njoin);
 
 	// -------------------------------------------------------------------------------------
@@ -137,8 +146,13 @@ public class TPCH5Plan extends QueryPlan {
 	final ProjectOperator projectionRNS = new ProjectOperator(new int[] {
 		0, 1, 2 });
 
+    ColumnReference colR_N = new ColumnReference(_ic, 0);
+    ColumnReference colS = new ColumnReference(_ic, 1);
+    ComparisonPredicate R_N_S_comp = new ComparisonPredicate(
+            ComparisonPredicate.EQUAL_OP, colR_N, colS);
+
 	final EquiJoinComponent R_N_Sjoin = new EquiJoinComponent(R_Njoin,
-		relationSupplier).setOutputPartKey(hashRNS).add(projectionRNS);
+		relationSupplier).setOutputPartKey(hashRNS).add(projectionRNS).setJoinPredicate(R_N_S_comp);
 	_queryBuilder.add(R_N_Sjoin);
 
 	// -------------------------------------------------------------------------------------
@@ -156,11 +170,17 @@ public class TPCH5Plan extends QueryPlan {
 	final List<Integer> hashRNSL = Arrays.asList(0, 2);
 
 	final ProjectOperator projectionRNSL = new ProjectOperator(new int[] {
-		0, 1, 3, 4, 5 });
+		0, 1, 3, 5, 6 });
+
+    ColumnReference colR_N_S = new ColumnReference(_ic, 2);
+    ColumnReference colL = new ColumnReference(_ic, 1);
+    ComparisonPredicate R_N_S_L_comp = new ComparisonPredicate(
+            ComparisonPredicate.EQUAL_OP, colR_N_S, colL);
 
 	final EquiJoinComponent R_N_S_Ljoin = new EquiJoinComponent(R_N_Sjoin,
 		relationLineitem).setOutputPartKey(hashRNSL)
-		.add(projectionRNSL);
+		.add(projectionRNSL)
+        .setJoinPredicate(R_N_S_L_comp);
 	_queryBuilder.add(R_N_S_Ljoin);
 
 	// -------------------------------------------------------------------------------------
@@ -197,9 +217,13 @@ public class TPCH5Plan extends QueryPlan {
 	final ProjectOperator projectionCO = new ProjectOperator(new int[] { 1,
 		2 });
 
+    ColumnReference colC = new ColumnReference(_ic, 0);
+    ColumnReference colO = new ColumnReference(_ic, 1);
+    ComparisonPredicate C_O_comp = new ComparisonPredicate(
+            ComparisonPredicate.EQUAL_OP, colC, colO);
 	final EquiJoinComponent C_Ojoin = new EquiJoinComponent(
 		relationCustomer, relationOrders).setOutputPartKey(hashCO).add(
-		projectionCO);
+		projectionCO).setJoinPredicate(C_O_comp);
 	_queryBuilder.add(C_Ojoin);
 
 	// -------------------------------------------------------------------------------------
@@ -208,9 +232,19 @@ public class TPCH5Plan extends QueryPlan {
 	final ProjectOperator projectionRNSLCO = new ProjectOperator(new int[] {
 		1, 3, 4 });
 
+    ColumnReference colR_N_S_L1 = new ColumnReference(_ic, 0);
+    ColumnReference colR_N_S_L2 = new ColumnReference(_ic, 2);
+    ColumnReference colC_O1 = new ColumnReference(_ic, 0);
+    ColumnReference colC_O2 = new ColumnReference(_ic, 1);
+    ComparisonPredicate pred1 = new ComparisonPredicate(
+            ComparisonPredicate.EQUAL_OP, colR_N_S_L1, colC_O1);
+    ComparisonPredicate pred2 = new ComparisonPredicate(
+            ComparisonPredicate.EQUAL_OP, colR_N_S_L2, colC_O2);
+    AndPredicate R_N_S_L_C_O_comp = new AndPredicate(pred1, pred2);
+
 	final EquiJoinComponent R_N_S_L_C_Ojoin = new EquiJoinComponent(
 		R_N_S_Ljoin, C_Ojoin).setOutputPartKey(hashRNSLCO).add(
-		projectionRNSLCO);
+		projectionRNSLCO).setJoinPredicate(R_N_S_L_C_O_comp);
 	_queryBuilder.add(R_N_S_L_C_Ojoin);
 
 	// -------------------------------------------------------------------------------------
