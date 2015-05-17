@@ -74,14 +74,10 @@ public class HyperCubeGrouping implements CustomStreamGrouping {
     @Override
     public void prepare(WorkerTopologyContext wtc, GlobalStreamId gsi,
                         List<Integer> targetTasks) {
-        // LOG.info("Number of tasks is : "+numTasks);
         _targetTasks = targetTasks;
     }
 
     private List<Integer> translateIdsToTasks(List<Integer> ids) {
-
-        for (int i = 0; i < _targetTasks.size(); i++)
-            System.out.println(_targetTasks.get(i));
 
         final List<Integer> converted = new ArrayList<Integer>();
         for (final int id : ids)
