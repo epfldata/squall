@@ -51,28 +51,34 @@ object ScalaTPCH7Plan {
   private val _firstCountryName = "FRANCE"
   private val _secondCountryName = "GERMANY"
 
-  def getQueryPlan(conf: java.util.Map[String, String]): QueryBuilder = {
+  def getQueryPlan(conf: java.util.Map[String, Object]): QueryBuilder = {
 
-    val nation2 = Source[nation]("Nation2").filter { t => t._2.equals(_firstCountryName) || t._2.equals(_secondCountryName) }.map { t => Tuple2(t._2, t._1) }
-    val customers: Stream[(Int, Int)] = Source[customer]("CUSTOMER").map { t => Tuple2(t._1, t._4) }
-    val NCjoin = nation2.join(customers)(k1 => k1._2)(k2 => k2._2).map(t => Tuple2(t._1._1, t._2._1))
+    val nation2 = Source[Nation]("Nation2").
+      filter { t => t.name == _firstCountryName || t.name == _secondCountryName }.
+      map { t => (t.name, t.nationkey) }
+    val customers: Stream[(Int, Int)] = Source[Customer]("CUSTOMER") map { t => (t.custkey, t.nationkey) }
+    val NCjoin = (nation2 join customers)(_._2)(_._2) map { case (n, c) => (n._1, c._1) }
 
-    val orders = Source[orders]("ORDERS").map { t => Tuple2(t._1, t._2) }
-    val NCOjoin = NCjoin.join(orders)(k1 => k1._2)(k2 => k2._2).onSlidingWindow(10)
-      .map(t => Tuple2(t._1._1, t._2._1))
+    val orders = Source[Orders]("ORDERS") map { t => (t.orderkey, t.custkey) }
+    val NCOjoin = (NCjoin join orders)(_._2)(_._2).onSlidingWindow(10) map { case (nc, o) => (nc._1, o._1) }
 
-    val supplier = Source[supplier]("SUPPLIER").map { t => Tuple2(t._1, t._4) }
-    val nation1 = Source[nation]("Nation1").filter { t => t._2.equals(_firstCountryName) || t._2.equals(_secondCountryName) }.map { t => Tuple2(t._2, t._1) }
-    val SNjoin = supplier.join(nation1)(k1 => k1._2)(k2 => k2._2).map(t => Tuple2(t._1._1, t._2._1))
+    val supplier = Source[Supplier]("SUPPLIER") map { t => (t.suppkey, t.nationkey) }
+    val nation1 = Source[Nation]("Nation1").
+      filter { t => t.name.equals(_firstCountryName) || t.name.equals(_secondCountryName) }.
+      map { t => (t.name, t.nationkey) }
+    val SNjoin = (supplier join nation1)(_._2)(_._2) map { case (s, n) => (s._1, n._1) }
 
-    val lineitems = Source[lineitems]("LINEITEM").filter { t => t._11.compareTo(_date1) >= 0 && t._11.compareTo(_date2) <= 0 }.map { t => Tuple4(_year_format.format(t._11), (1 - t._7) * t._6, t._3, t._1) }
-    val LSNjoin = lineitems.join(SNjoin)(k1 => k1._3)(k2 => k2._1).onSlidingWindow(15)
-      .map(t => Tuple4(t._2._2, t._1._1, t._1._2, t._1._4))
+    val lineitems = Source[Lineitems]("LINEITEM").
+      filter { t => t.shipdate.compareTo(_date1) >= 0 && t.shipdate.compareTo(_date2) <= 0 }.
+      map { t => (_year_format.format(t.shipdate), (1 - t.discount) * t.extendedprice, t.suppkey, t.orderkey) }
+    val LSNjoin = (lineitems join SNjoin)(_._3)(_._1).onSlidingWindow(15)
+      .map { case (l, sn) => (sn._2, l._1, l._2, l._4) }
 
-    val NCOLSNJoin = NCOjoin.join(LSNjoin)(k1 => k1._2)(k2 => k2._4)
-      .filter(t => (t._1._1.equals(_firstCountryName) && t._2._1.equals(_secondCountryName)) || (t._2._1.equals(_firstCountryName) && t._1._1.equals(_secondCountryName)))
+    val NCOLSNJoin = (NCOjoin join LSNjoin)(_._2)(_._4)
+      .filter { case(nco, lsn) => ((nco._1 == _firstCountryName && lsn._1 == _secondCountryName)
+                               || (lsn._1 == _firstCountryName && nco._1 == _secondCountryName)) }
 
-    val agg = NCOLSNJoin.groupByKey(t => t._2._3, x => Tuple3(x._2._1, x._1._1, x._2._2)).onWindow(20, 5) //List(2,0,3)
+    val agg = NCOLSNJoin.groupByKey(_._2._3, x => (x._2._1, x._1._1, x._2._2)).onWindow(20, 5) //List(2,0,3)
 
     agg.execute(conf)
   }

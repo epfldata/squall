@@ -43,14 +43,21 @@ object ScalaTPCH3Plan {
   val string_format = new SimpleDateFormat("yyyy-MM-dd")
   val compDate = string_format.parse("1995-03-15")
 
-  def getQueryPlan(conf: java.util.Map[String, String]): QueryBuilder = {
+  def getQueryPlan(conf: java.util.Map[String, Object]): QueryBuilder = {
 
-    val customers = Source[customer]("CUSTOMER").filter { t => t._7.equals("BUILDING") }.map { t => t._1 }
-    val orders = Source[orders]("ORDERS").filter { t => t._5.compareTo(compDate) < 0 }.map { t => Tuple4(t._1, t._2, t._5, t._8) }
-    val COjoin = customers.join(orders)(k1 => k1)(k2 => k2._2).map(t => Tuple3(t._2._1, t._2._3, t._2._4))
-    val lineitems = Source[lineitems]("LINEITEM").filter { t => t._11.compareTo(compDate) > 0 }.map { t => Tuple3(t._1, t._6, t._7) }
-    val COLjoin = COjoin.join(lineitems)(k1 => k1._1)(k2 => k2._1)
-    val agg = COLjoin.groupByKey(t => (1 - t._2._3) * t._2._2, t => Tuple3(t._1._1, t._1._2, t._1._3)) //List(0,1,2)
+    val customers = Source[Customer]("CUSTOMER").
+      filter { _.mktsegment == "BUILDING" } map { _.custkey }
+    val orders = Source[Orders]("ORDERS").
+      filter { _.orderdate.compareTo(compDate) < 0 }.
+      map { t => (t.orderkey, t.custkey, t.orderdate, t.shippriority) }
+    val COjoin = (customers join orders)(k1 => k1)(_._2).
+      map { case (c, o) => (o._1, o._3, o._4) }
+    val lineitems = Source[Lineitems]("LINEITEM").
+      filter { _.shipdate.compareTo(compDate) > 0 }.
+      map { t => (t.orderkey, t.extendedprice, t.discount) }
+    val COLjoin = (COjoin join lineitems)(_._1)(_._1)
+    val agg = COLjoin.groupByKey({ case(co, l) => (1 - l._3) * l._2 },
+                                 { case(co, l) => (co._1, co._2, co._3) }) //List(0,1,2)
 
     agg.execute(conf)
 

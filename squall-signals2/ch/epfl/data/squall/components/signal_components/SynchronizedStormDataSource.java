@@ -34,8 +34,6 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import com.esotericsoftware.minlog.Log;
-
 import backtype.storm.Config;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -46,13 +44,14 @@ import ch.epfl.data.squall.components.ComponentProperties;
 import ch.epfl.data.squall.components.signal_components.storm.SignalClient;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.storm_components.StormComponent;
+import ch.epfl.data.squall.storm_components.SynchronizedStormDataSourceInterface;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class SynchronizedStormDataSource extends
-StormSynchronizedSpoutComponent {
+StormSynchronizedSpoutComponent implements SynchronizedStormDataSourceInterface {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = Logger
 			.getLogger(SynchronizedStormDataSource.class);
@@ -82,16 +81,15 @@ StormSynchronizedSpoutComponent {
 	private HashMap<Integer, Integer> _keyFrequencies;
 	private boolean _isHarmonized;
 	private HashSet<Integer> _frequentSet;
-	
-
-	public static String SHUFFLE_GROUPING_STREAMID = "sync_shuffle";  
+	private int _numOfTuplesThreshold;
 
 	public SynchronizedStormDataSource(ComponentProperties cp,
 			List<String> allCompNames, ArrayList<Type> tupleTypes,
 			int hierarchyPosition, int parallelism, int keyIndex,
 			boolean isPartitioner, TopologyBuilder builder,
-			TopologyKiller killer, Config conf) {
+			TopologyKiller killer, Config conf, int numOfTuplesThreshold) {
 		super(cp, allCompNames, hierarchyPosition, isPartitioner, conf);
+		_numOfTuplesThreshold=numOfTuplesThreshold;
 		_keyIndex = keyIndex;
 		_name = cp.getName();
 		_aggBatchOutputMillis = cp.getBatchOutputMillis();
@@ -110,8 +108,8 @@ StormSynchronizedSpoutComponent {
 			List<String> allCompNames, ArrayList<Type> tupleTypes,
 			int hierarchyPosition, int parallelism, int keyIndex,
 			boolean isPartitioner, TopologyBuilder builder,
-			TopologyKiller killer, Config conf, String zookeeperhost, String harmonizerName, int harmonizerUpdateThreshold) {
-		this(cp,allCompNames, tupleTypes,hierarchyPosition, parallelism, keyIndex, isPartitioner, builder, killer, conf);
+			TopologyKiller killer, Config conf, int numOfTuplesThreshold, String zookeeperhost, String harmonizerName, int harmonizerUpdateThreshold) {
+		this(cp,allCompNames, tupleTypes,hierarchyPosition, parallelism, keyIndex, isPartitioner, builder, killer, conf, numOfTuplesThreshold);
 		_harmonizerSyncedSpoutName= harmonizerName;
 		_zookeeperhost=zookeeperhost;
 		_harmonizerUpdateThreshold=harmonizerUpdateThreshold;
@@ -148,8 +146,8 @@ StormSynchronizedSpoutComponent {
 		if (MyUtilities.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
 			int tuplekey= Integer.parseInt(tuple.get(_keyIndex));
 			if(_frequentSet.contains(tuplekey))
-				tupleSend(SHUFFLE_GROUPING_STREAMID, tuple, null, timestamp);
-			tupleSend(tuple, null, timestamp);
+				tupleSend(SynchronizedStormDataSourceInterface.SHUFFLE_GROUPING_STREAMID, tuple, null, timestamp);
+			else tupleSend(tuple, null, timestamp);
 		}
 
 		if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
@@ -239,7 +237,7 @@ StormSynchronizedSpoutComponent {
 			_keyFrequencies.clear();
 			_currentHarmonizerUpdateFreq=0;
 		}
-		if (line == null) {
+		if (_numSentTuples>=_numOfTuplesThreshold) {
 			if (!_hasReachedEOF) {
 				_hasReachedEOF = true;
 				eofFinalization();

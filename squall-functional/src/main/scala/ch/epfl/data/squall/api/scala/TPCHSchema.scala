@@ -25,13 +25,81 @@ package ch.epfl.data.squall.api.scala
 
 object TPCHSchema {
 
-  type customer = Tuple8[Int, String, String, Int, String, Double, String, String]
-  type orders = Tuple9[Int, Int, String, Double, java.util.Date, String, String, Int, String]
-  type lineitems = Tuple16[Int, Int, Int, Int, Double, Double, Double, Double, String, String, java.util.Date, java.util.Date, java.util.Date, String, String, String]
-  type region = Tuple3[Int, String, String]
-  type nation = Tuple4[Int, String, Int, String]
-  type partsupp = Tuple5[Int, Int, Int, Double, String]
-  type supplier = Tuple7[Int, String, String, Int, String, Double, String]
-  type part = Tuple9[Int, String, String, String, String, Int, String, Double, String]
-
+  case class Customer(
+    custkey    : Int,
+    name       : String,
+    address    : String,
+    nationkey  : Int,
+    phone      : String,
+    acctbal    : Double,
+    mktsegment : String,
+    comment    : String
+  )
+  case class Orders(
+    orderkey      : Int,
+    custkey       : Int,
+    orderstatus   : String,
+    totalprice    : Double,
+    orderdate     : java.util.Date,
+    orderpriority : String,
+    clerk         : String,
+    shippriority  : Int,
+    comment       : String
+  )
+  case class Lineitems(
+    orderkey      : Int,
+    partkey       : Int,
+    suppkey       : Int,
+    linenumber    : Int,
+    quantity      : Double,
+    extendedprice : Double,
+    discount      : Double,
+    tax           : Double,
+    returnflag    : String,
+    linestatus    : String,
+    shipdate      : java.util.Date,
+    commitdate    : java.util.Date,
+    receiptdate   : java.util.Date,
+    shipinstruct  : String,
+    shipmode      : String,
+    comment       : String
+  )
+  case class Region(
+    regionkey : Int,
+    name      : String,
+    comment   : String
+  )
+  case class Nation(
+    nationkey : Int,
+    name      : String,
+    regionkey : Int,
+    comment   : String
+  )
+  case class Partsupp(
+    partkey    : Int,
+    suppkey    : Int,
+    availqty   : Int,
+    supplycost : Double,
+    comment    : String
+  )
+  case class Supplier(
+    suppkey   : Int,
+    name      : String,
+    address   : String,
+    nationkey : Int,
+    phone     : String,
+    acctbal   : Double,
+    comment   : String
+  )
+  case class Part(
+    partkey     : Int,
+    name        : String,
+    mfgr        : String,
+    brand       : String,
+    parttype    : String,
+    size        : Int,
+    container   : String,
+    retailprice : Double,
+    comment     : String
+  )
 }

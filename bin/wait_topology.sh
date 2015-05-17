@@ -44,7 +44,7 @@ FIRST_TIME=true
 ALREADY_KILLED=false
 PRINTED_FINAL_STATS=false
 
-FREEZED_SECONDS=$(( 2 * 60 * 60 ))
+FREEZED_SECONDS=$(( 30 * 60 ))
 FREEZED_INVOCATIONS=$((FREEZED_SECONDS/TIMEOUT_INVOKE))
 declare -i invocations
 invocations=0
@@ -87,7 +87,7 @@ do
 		fi
 		if [ "$invocations" == "$FREEZED_INVOCATIONS" ]; then
 			echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-			echo "ERROR: Topology $TOPOLOGY_NAME executed for more than 2 hours. Considered freezed. The topology will be killed..."
+			echo "ERROR: Topology $TOPOLOGY_NAME executed for more than 30 minutes. Considered freezed. The topology will be killed..."
 			echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 			storm kill $TOPOLOGY_NAME
 			ALREADY_KILLED=true
