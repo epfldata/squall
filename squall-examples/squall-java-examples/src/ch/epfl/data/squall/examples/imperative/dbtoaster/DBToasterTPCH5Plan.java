@@ -169,17 +169,17 @@ public class DBToasterTPCH5Plan extends QueryPlan {
 
         DBToasterJoinComponentBuilder dbtBuilder = new DBToasterJoinComponentBuilder();
         // Region: regionKey
-        dbtBuilder.addRelation(relationRegion, new ColumnReference(_lc, 0));
+        dbtBuilder.addRelation(relationRegion, _lc);
         // Nation: nationKey, name, regionKey
-        dbtBuilder.addRelation(relationNation, new ColumnReference(_lc, 0), new ColumnReference(_sc, 1), new ColumnReference(_lc, 2));
+        dbtBuilder.addRelation(relationNation, _lc, _sc, _lc);
         // Supplier: supkey, nationKey
-        dbtBuilder.addRelation(relationSupplier, new ColumnReference(_lc, 0), new ColumnReference(_lc, 1));
+        dbtBuilder.addRelation(relationSupplier, _lc, _lc);
         // Lineitem: orderKey, supKey, extendedPrice, discount
-        dbtBuilder.addRelation(relationLineitem, new ColumnReference(_lc, 0), new ColumnReference(_lc, 1), new ColumnReference(_doubleConv, 2), new ColumnReference(_doubleConv, 3));
+        dbtBuilder.addRelation(relationLineitem, _lc, _lc, _doubleConv, _doubleConv);
         // Customer: custKey, nationKey
-        dbtBuilder.addRelation(relationCustomer, new ColumnReference(_lc, 0), new ColumnReference(_lc, 1));
+        dbtBuilder.addRelation(relationCustomer, _lc, _lc);
         // Orders: orderKey, custKey
-        dbtBuilder.addRelation(relationOrders, new ColumnReference(_lc, 0), new ColumnReference(_lc, 1));
+        dbtBuilder.addRelation(relationOrders, _lc, _lc);
 
         dbtBuilder.setSQL("SELECT NATION.f1, SUM(LINEITEM.f2 * (1 - LINEITEM.f3)) " +
                 "FROM CUSTOMER, ORDERS, LINEITEM, SUPPLIER, NATION, REGION " +
@@ -188,13 +188,15 @@ public class DBToasterTPCH5Plan extends QueryPlan {
                 "GROUP BY NATION.f1");
 
         DBToasterJoinComponent dbtComp = dbtBuilder.build();
+        dbtComp.setPrintOut(false);
         _queryBuilder.add(dbtComp);
 
-        AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_doubleConv, 1), conf).setGroupByColumns(0);
+
+        /*AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_doubleConv, 1), conf).setGroupByColumns(0);
 
         OperatorComponent finalComponent = new OperatorComponent(
                 dbtComp, "FINAL_RESULT").add(agg);
-        _queryBuilder.add(finalComponent);
+        _queryBuilder.add(finalComponent);*/
 
     }
 

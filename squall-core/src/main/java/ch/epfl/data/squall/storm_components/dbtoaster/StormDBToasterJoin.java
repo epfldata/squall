@@ -29,7 +29,6 @@ import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Tuple;
 import ch.epfl.data.squall.components.ComponentProperties;
 import ch.epfl.data.squall.dbtoaster.DBToasterEngine;
-import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
@@ -38,6 +37,9 @@ import ch.epfl.data.squall.storm_components.StormBoltComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HyperCubeAssignerFactory;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HyperCubeAssignment;
+import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.PartitioningScheme;
 import ch.epfl.data.squall.utilities.PeriodicAggBatchSend;
@@ -83,22 +85,22 @@ public class StormDBToasterJoin extends StormBoltComponent {
     private String _dbToasterQueryName;
 
     private StormEmitter[] _emitters;
-    private Map<String, ValueExpression[]> _indexedColRefs;
+    private Map<String, Type[]> _emitterIndexesColTypes;
 
     public StormDBToasterJoin(StormEmitter[] emitters,
                               ComponentProperties cp, List<String> allCompNames,
-                              Map<String, ValueExpression[]> emitterNameColRefs,
+                              Map<String, Type[]> emitterNameColTypes,
                               int hierarchyPosition, TopologyBuilder builder,
                               TopologyKiller killer, Config conf) {
         super(cp, allCompNames, hierarchyPosition, conf);
 
 
         _emitters = emitters;
-        _indexedColRefs = new HashMap<String, ValueExpression[]>();
+        _emitterIndexesColTypes = new HashMap<String, Type[]>();
         for (StormEmitter e : _emitters) {
             String emitterIndex = String.valueOf(allCompNames.indexOf(e.getName()));
-            ValueExpression[] colRefs = emitterNameColRefs.get(e.getName());
-            _indexedColRefs.put(emitterIndex, colRefs);
+            Type[] colRefs = emitterNameColTypes.get(e.getName());
+            _emitterIndexesColTypes.put(emitterIndex, colRefs);
         }
 
         _operatorChain = cp.getChainOperator();
@@ -115,7 +117,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
         // connecting with previous level using Hypercube Assignment
         InputDeclarer currentBolt = builder.setBolt(getID(), this, parallelism);
-        currentBolt = attachEmitters(conf, currentBolt, allCompNames);
+        currentBolt = attachEmitters(conf, currentBolt, allCompNames, parallelism);
         // connecting with Killer
         if (getHierarchyPosition() == FINAL_COMPONENT
                 && (!MyUtilities.isAckEveryTuple(conf)))
@@ -126,15 +128,22 @@ public class StormDBToasterJoin extends StormBoltComponent {
     }
 
     private InputDeclarer attachEmitters(Config conf, InputDeclarer currentBolt,
-                 List<String> allCompNames) {
+                 List<String> allCompNames, int parallelism) {
         switch (getPartitioningScheme(conf)) {
             case HYPERCUBE:
-                throw new RuntimeException("Hypercube partitioning is not yet supported");
-
-            case STARSCHEMA:
                 long[] cardinality = getEmittersCardinality(conf);
+                LOG.info("cardinalities: " + Arrays.toString(cardinality));
+                final HyperCubeAssignment _currentHyperCubeMappingAssignment =
+                        new HyperCubeAssignerFactory().getAssigner(parallelism, cardinality);
+
+                LOG.info("assignment: " + _currentHyperCubeMappingAssignment.getMappingDimensions());
+                    currentBolt = MyUtilities.hyperCubeAttachEmitterComponents(currentBolt,
+                            Arrays.asList(_emitters), allCompNames,
+                            _currentHyperCubeMappingAssignment, conf, null);
+                break;
+            case STARSCHEMA:
                 currentBolt = MyUtilities.attachEmitterStarSchema(conf,
-                        currentBolt, _emitters, cardinality);
+                        currentBolt, _emitters, getEmittersCardinality(conf));
                 break;
             case HASH:
                 currentBolt = MyUtilities.attachEmitterHash(conf, _fullHashList,
@@ -147,8 +156,8 @@ public class StormDBToasterJoin extends StormBoltComponent {
     private PartitioningScheme getPartitioningScheme(Config conf) {
         String schemeName = SystemParameters.getString(conf, getName() + "_PART_SCHEME");
         if (schemeName == null || schemeName.equals("")) {
-            LOG.info("use default Hash partitioning scheme");
-            return PartitioningScheme.HASH;
+            LOG.info("use default Hypercube partitioning scheme");
+            return PartitioningScheme.HYPERCUBE;
         } else {
             LOG.info("use partitioning scheme : " + schemeName);
             return PartitioningScheme.valueOf(schemeName);
@@ -239,17 +248,16 @@ public class StormDBToasterJoin extends StormBoltComponent {
     private void processNonLastTuple(String inputComponentIndex,
                                      List<String> tuple, Tuple stormTupleRcv,
                                      boolean isLastInBatch) {
-
-        ValueExpression[] colRefs = _indexedColRefs.get(inputComponentIndex);
+        Type[] colRefs = _emitterIndexesColTypes.get(inputComponentIndex);
         performJoin(stormTupleRcv, tuple, colRefs, isLastInBatch);
 
     }
 
     protected void performJoin(Tuple stormTupleRcv, List<String> tuple,
-                               ValueExpression[] columnReferences,
+                               Type[] columnTypes,
                                boolean isLastInBatch) {
 
-        List<Object> typedTuple = createTypedTuple(tuple, columnReferences);
+        List<Object> typedTuple = createTypedTuple(tuple, columnTypes);
 
         dbtoasterEngine.insertTuple(stormTupleRcv.getSourceComponent(), typedTuple.toArray());
 
@@ -267,12 +275,11 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
     }
 
-    private List<Object> createTypedTuple(List<String> tuple, ValueExpression[] columnReferences) {
+    private List<Object> createTypedTuple(List<String> tuple, Type[] columnTypes) {
         List<Object> typedTuple = new ArrayList<Object>();
 
-        for (int i = 0; i < columnReferences.length; i++) {
-            ValueExpression ve = columnReferences[i];
-            Object value = ve.eval(tuple);
+        for (int i = 0; i < columnTypes.length; i++) {
+            Object value = columnTypes[i].fromString(tuple.get(i));
             typedTuple.add(value);
         }
         return typedTuple;

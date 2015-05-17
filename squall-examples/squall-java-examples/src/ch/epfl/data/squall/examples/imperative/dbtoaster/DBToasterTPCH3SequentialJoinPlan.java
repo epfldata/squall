@@ -22,14 +22,17 @@
 package ch.epfl.data.squall.examples.imperative.dbtoaster;
 
 import ch.epfl.data.squall.components.DataSourceComponent;
+import ch.epfl.data.squall.components.EquiJoinComponent;
 import ch.epfl.data.squall.components.OperatorComponent;
 import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
 import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponentBuilder;
 import ch.epfl.data.squall.expressions.ColumnReference;
+import ch.epfl.data.squall.expressions.Multiplication;
+import ch.epfl.data.squall.expressions.Subtraction;
+import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.AggregateSumOperator;
-import ch.epfl.data.squall.operators.AggregateUpdateOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SelectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
@@ -38,7 +41,6 @@ import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.types.DateLongType;
 import ch.epfl.data.squall.types.DateType;
 import ch.epfl.data.squall.types.DoubleType;
-import ch.epfl.data.squall.types.IntegerType;
 import ch.epfl.data.squall.types.LongType;
 import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.types.StringType;
@@ -50,8 +52,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class DBToasterTPCH3Plan extends QueryPlan {
-    private static Logger LOG = Logger.getLogger(DBToasterTPCH3Plan.class);
+public class DBToasterTPCH3SequentialJoinPlan extends QueryPlan {
+    private static Logger LOG = Logger.getLogger(DBToasterTPCH3SequentialJoinPlan.class);
 
     private static final String _customerMktSegment = "BUILDING";
     private static final String _dateStr = "1995-03-15";
@@ -59,15 +61,13 @@ public class DBToasterTPCH3Plan extends QueryPlan {
     private static final Type<Date> _dateConv = new DateType();
     private static final Type<Long> _dateLongConv = new DateLongType();
     private static final NumericType<Double> _doubleConv = new DoubleType();
+    private static final NumericType<Long> _lc = new LongType();
     private static final Type<String> _sc = new StringType();
-    private static final Type<Long> _lc = new LongType();
-    private static final Type<Integer> _ic = new IntegerType();
     private static final Date _date = _dateConv.fromString(_dateStr);
 
     private final QueryBuilder _queryBuilder = new QueryBuilder();
 
-    public DBToasterTPCH3Plan(String dataPath, String extension, Map conf) {
-
+    public DBToasterTPCH3SequentialJoinPlan(String dataPath, String extension, Map conf) {
         // -------------------------------------------------------------------------------------
         final List<Integer> hashCustomer = Arrays.asList(0);
 
@@ -76,7 +76,7 @@ public class DBToasterTPCH3Plan extends QueryPlan {
                         new ValueSpecification(_sc, _customerMktSegment)));
 
         final ProjectOperator projectionCustomer = new ProjectOperator(
-                new int[]{0});
+                new int[] { 0 });
 
         final DataSourceComponent relationCustomer = new DataSourceComponent(
                 "CUSTOMER", dataPath + "customer" + extension)
@@ -92,14 +92,31 @@ public class DBToasterTPCH3Plan extends QueryPlan {
                         new ColumnReference(_dateConv, 4),
                         new ValueSpecification(_dateConv, _date)));
 
-        final ProjectOperator projectionOrders = new ProjectOperator(new int[]{
-                0, 1, 4, 7});
+        final ProjectOperator projectionOrders = new ProjectOperator(new int[] {
+                0, 1, 4, 7 });
 
         final DataSourceComponent relationOrders = new DataSourceComponent(
                 "ORDERS", dataPath + "orders" + extension)
                 .setOutputPartKey(hashOrders).add(selectionOrders)
                 .add(projectionOrders);
         _queryBuilder.add(relationOrders);
+
+        // -------------------------------------------------------------------------------------
+//        final EquiJoinComponent C_Ojoin = new EquiJoinComponent(
+//                relationCustomer, relationOrders).add(
+//                new ProjectOperator(new int[] { 1, 2, 3 })).setOutputPartKey(
+//                Arrays.asList(0));
+
+        DBToasterJoinComponentBuilder dbToasterCompBuilder = new DBToasterJoinComponentBuilder();
+        dbToasterCompBuilder.addRelation(relationCustomer, _lc);
+        dbToasterCompBuilder.addRelation(relationOrders, _lc, _lc,
+                _dateLongConv, _lc);
+        dbToasterCompBuilder.setSQL("SELECT ORDERS.f0, ORDERS.f2, ORDERS.f3 FROM CUSTOMER, ORDERS " +
+                "WHERE CUSTOMER.f0 = ORDERS.f1");
+
+        final DBToasterJoinComponent C_Ojoin = dbToasterCompBuilder.build()
+                .add(new ProjectOperator(new int[] {0, 1, 2})).setOutputPartKey(Arrays.asList(0));
+        _queryBuilder.add(C_Ojoin);
 
         // -------------------------------------------------------------------------------------
         final List<Integer> hashLineitem = Arrays.asList(0);
@@ -110,7 +127,7 @@ public class DBToasterTPCH3Plan extends QueryPlan {
                         new ValueSpecification(_dateConv, _date)));
 
         final ProjectOperator projectionLineitem = new ProjectOperator(
-                new int[]{0, 5, 6});
+                new int[] { 0, 5, 6 });
 
         final DataSourceComponent relationLineitem = new DataSourceComponent(
                 "LINEITEM", dataPath + "lineitem" + extension)
@@ -118,33 +135,53 @@ public class DBToasterTPCH3Plan extends QueryPlan {
                 .add(projectionLineitem);
         _queryBuilder.add(relationLineitem);
 
-        // -----------------------------------------------------------------------------------
-        DBToasterJoinComponentBuilder dbToasterCompBuilder = new DBToasterJoinComponentBuilder();
-        dbToasterCompBuilder.addRelation(relationCustomer, _lc);
-        dbToasterCompBuilder.addRelation(relationOrders, _lc, _lc,
-                _dateLongConv, _lc); // Have to use DateLongConversion instead of DateConversion as DBToaster use Long as Date
-        dbToasterCompBuilder.addRelation(relationLineitem, _lc, _doubleConv,
+
+        // -------------------------------------------------------------------------------------
+        // set up aggregation function on the StormComponent(Bolt) where join is
+        // performed
+
+        // 1 - discount
+//        final ValueExpression<Double> substract = new Subtraction(
+//                new ValueSpecification(_doubleConv, 1.0), new ColumnReference(
+//                _doubleConv, 4));
+//        // extendedPrice*(1-discount)
+//        final ValueExpression<Double> product = new Multiplication(
+//                new ColumnReference(_doubleConv, 3), substract);
+//        final AggregateOperator agg = new AggregateSumOperator(product, conf)
+//                .setGroupByColumns(Arrays.asList(0, 1, 2));
+//
+//        EquiJoinComponent finalComp = new EquiJoinComponent(C_Ojoin,
+//                relationLineitem).add(agg);
+        dbToasterCompBuilder = new DBToasterJoinComponentBuilder();
+        dbToasterCompBuilder.addRelation(C_Ojoin, _lc,
+                _lc, _lc);
+        dbToasterCompBuilder.addRelation(relationLineitem, _lc,
+                _doubleConv,
                 _doubleConv);
-        dbToasterCompBuilder.setSQL("SELECT LINEITEM.f0, SUM(LINEITEM.f1 * (1 - LINEITEM.f2)) FROM CUSTOMER, ORDERS, LINEITEM " +
-                "WHERE CUSTOMER.f0 = ORDERS.f1 AND ORDERS.f0 = LINEITEM.f0 " +
-                "GROUP BY LINEITEM.f0, ORDERS.f2, ORDERS.f3");
 
-        DBToasterJoinComponent dbToasterComponent = dbToasterCompBuilder.build();
-        dbToasterComponent.setPrintOut(false);
+        dbToasterCompBuilder.setSQL("SELECT LINEITEM.f0, SUM(LINEITEM.f1 * (1 - LINEITEM.f2)) FROM CUSTOMER_ORDERS, LINEITEM " +
+                "WHERE CUSTOMER_ORDERS.f0 = LINEITEM.f0 " +
+                "GROUP BY LINEITEM.f0, CUSTOMER_ORDERS.f1, CUSTOMER_ORDERS.f2");
 
-        _queryBuilder.add(dbToasterComponent);
+        final DBToasterJoinComponent C_O_Ljoin = dbToasterCompBuilder.build();
+        C_O_Ljoin.setPrintOut(false);
 
+        _queryBuilder.add(C_O_Ljoin);
 
-        /*final AggregateSumOperator agg = new AggregateSumOperator(
+        // -------------------------------------------------------------------------------------
+
+        /*
+        final AggregateSumOperator agg = new AggregateSumOperator(
                 new ColumnReference(_doubleConv, 3), conf).setGroupByColumns(Arrays
                 .asList(0, 1, 2));
 
-        OperatorComponent oc = new OperatorComponent(dbToasterComponent,
+        OperatorComponent oc = new OperatorComponent(C_O_Ljoin,
                 "COUNTAGG").add(agg);
-        _queryBuilder.add(oc);*/
-
+        _queryBuilder.add(oc);
+        */
     }
 
+    @Override
     public QueryBuilder getQueryPlan() {
         return _queryBuilder;
     }

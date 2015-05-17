@@ -24,14 +24,11 @@ package ch.epfl.data.squall.components.dbtoaster;
 import ch.epfl.data.squall.api.sql.util.ParserUtil;
 import ch.epfl.data.squall.api.sql.visitors.jsql.SQLVisitor;
 import ch.epfl.data.squall.components.Component;
-import ch.epfl.data.squall.expressions.ColumnReference;
-import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.types.DateLongType;
 import ch.epfl.data.squall.types.DoubleType;
 import ch.epfl.data.squall.types.IntegerType;
 import ch.epfl.data.squall.types.LongType;
 import ch.epfl.data.squall.types.Type;
-import ch.epfl.data.squall.utilities.PartitioningScheme;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.SelectItem;
 
@@ -44,18 +41,13 @@ import java.util.regex.Pattern;
 
 public class DBToasterJoinComponentBuilder {
     private List<Component> _relations = new LinkedList<Component>();
-    private Map<String, ValueExpression[]> _relColRefs = new HashMap<String, ValueExpression[]>();
+    private Map<String, Type[]> _relColTypes = new HashMap<String, Type[]>();
     private String _sql;
     private Pattern _sqlVarPattern = Pattern.compile("([A-Za-z0-9_]+)\\.f([0-9]+)");
 
-    public DBToasterJoinComponentBuilder addRelation(Component relation, ColumnReference... columnReferences) {
+    public DBToasterJoinComponentBuilder addRelation(Component relation, Type... types) {
         _relations.add(relation);
-        ValueExpression[] cols = new ValueExpression[columnReferences.length];
-
-        for (ColumnReference cref : columnReferences) {
-            cols[cref.getColumnIndex()] = cref;
-        }
-        _relColRefs.put(relation.getName(), cols);
+        _relColTypes.put(relation.getName(), types);
         return this;
     }
 
@@ -91,7 +83,7 @@ public class DBToasterJoinComponentBuilder {
                     throw new RuntimeException("Invalid table name: " + tableName + " in the SQL query");
                 }
 
-                if (fieldId < 0 || fieldId >= _relColRefs.get(tableName).length) {
+                if (fieldId < 0 || fieldId >= _relColTypes.get(tableName).length) {
                     throw new RuntimeException("Invalid field f" + fieldId + " in table: " + tableName);
                 }
 
@@ -122,12 +114,12 @@ public class DBToasterJoinComponentBuilder {
     private String generateSchemaSQL() {
         StringBuilder schemas = new StringBuilder();
 
-        for (String relName : _relColRefs.keySet()) {
+        for (String relName : _relColTypes.keySet()) {
             schemas.append("CREATE STREAM ").append(relName).append("(");
-            ValueExpression[] columnReferences = _relColRefs.get(relName);
-            for (int i = 0; i < columnReferences.length; i++) {
-                schemas.append("f").append(i).append(" ").append(getSQLTypeFromTypeConversion(columnReferences[i].getType()));
-                if (i != columnReferences.length - 1) schemas.append(",");
+            Type[] colTypes = _relColTypes.get(relName);
+            for (int i = 0; i < colTypes.length; i++) {
+                schemas.append("f").append(i).append(" ").append(getSQLTypeFromTypeConversion(colTypes[i]));
+                if (i != colTypes.length - 1) schemas.append(",");
             }
             schemas.append(") FROM FILE '' LINE DELIMITED csv;\n");
         }
@@ -139,12 +131,8 @@ public class DBToasterJoinComponentBuilder {
         this._sql = generateSchemaSQL() + sql;
     }
 
-    public void setPartitioningScheme(PartitioningScheme partScheme) {
-
-    }
-
     public DBToasterJoinComponent build() {
-        return new DBToasterJoinComponent(_relations, _relColRefs, _sql);
+        return new DBToasterJoinComponent(_relations, _relColTypes, _sql);
     }
 
 }

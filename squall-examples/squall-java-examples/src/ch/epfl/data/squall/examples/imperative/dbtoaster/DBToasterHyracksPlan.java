@@ -21,15 +21,12 @@
 
 package ch.epfl.data.squall.examples.imperative.dbtoaster;
 
-import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.OperatorComponent;
 import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
 import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponentBuilder;
 import ch.epfl.data.squall.expressions.ColumnReference;
-import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.AggregateSumOperator;
-import ch.epfl.data.squall.operators.AggregateUpdateOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
@@ -68,21 +65,23 @@ public class DBToasterHyracksPlan extends QueryPlan {
 
         // -------------------------------------------------------------------------------------
         DBToasterJoinComponentBuilder builder = new DBToasterJoinComponentBuilder();
-        builder.addRelation(relationCustomer, new ColumnReference(_lc, 0), new ColumnReference(_sc, 1));
-        builder.addRelation(relationOrders, new ColumnReference(_lc, 0), new ColumnReference(_lc, 1));
+        builder.addRelation(relationCustomer, _lc, _sc);
+        builder.addRelation(relationOrders, _lc, _lc);
         builder.setSQL("SELECT CUSTOMER.f1, COUNT(ORDERS.f0) FROM CUSTOMER, ORDERS WHERE CUSTOMER.f0 = ORDERS.f1 GROUP BY CUSTOMER.f1");
 
         DBToasterJoinComponent dbToasterComponent = builder.build();
+        dbToasterComponent.setPrintOut(false);
         _queryBuilder.add(dbToasterComponent);
 
         // -------------------------------------------------------------------------------------
+        /*
         final AggregateSumOperator agg = new AggregateSumOperator(
                 new ColumnReference(_lc, 1), conf).setGroupByColumns(Arrays
                 .asList(0));
 
         OperatorComponent oc = new OperatorComponent(dbToasterComponent,
                 "COUNTAGG").add(agg);
-        _queryBuilder.add(oc);
+        _queryBuilder.add(oc);*/
 
     }
 

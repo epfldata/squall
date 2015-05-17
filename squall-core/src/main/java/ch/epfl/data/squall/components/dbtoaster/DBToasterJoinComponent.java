@@ -23,12 +23,9 @@ package ch.epfl.data.squall.components.dbtoaster;
 
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
-import ch.epfl.data.squall.api.sql.util.ParserUtil;
-import ch.epfl.data.squall.api.sql.visitors.jsql.SQLVisitor;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.JoinerComponent;
-import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
@@ -38,27 +35,16 @@ import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.dbtoaster.StormDBToasterJoin;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
-import ch.epfl.data.squall.types.DateLongType;
-import ch.epfl.data.squall.types.DoubleType;
-import ch.epfl.data.squall.types.IntegerType;
-import ch.epfl.data.squall.types.LongType;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
-import ch.epfl.data.squall.utilities.PartitioningScheme;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
-import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.select.SelectItem;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class DBToasterJoinComponent extends JoinerComponent implements Component {
 
@@ -86,13 +72,13 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
     private List<String> _fullHashList;
 
     private List<Component> _parents;
-    private Map<String, ValueExpression[]> _parentNameColRefs;
+    private Map<String, Type[]> _parentNameColTypes;
     private String _equivalentSQL;
 
-    protected DBToasterJoinComponent(List<Component> relations, Map<String, ValueExpression[]> relColRefs, String sql) {
+    protected DBToasterJoinComponent(List<Component> relations, Map<String, Type[]> relationTypes, String sql) {
 
         _parents = relations;
-        _parentNameColRefs = relColRefs;
+        _parentNameColTypes = relationTypes;
 
         // componentName
         StringBuilder nameBuilder = new StringBuilder();
@@ -207,7 +193,7 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
 
         _joiner = new StormDBToasterJoin(getParents(), this,
                 allCompNames,
-                _parentNameColRefs,
+                _parentNameColTypes,
                 hierarchyPosition,
                 builder, killer, conf);
     }
