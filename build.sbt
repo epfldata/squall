@@ -49,7 +49,7 @@ lazy val squall = (project in file("squall-core")).
     mainClass := Some("ch.epfl.data.squall.main.Main"),
     unmanagedSourceDirectories in Compile += baseDirectory.value / "../squall-examples/squall-java-examples/src/",
     // Don't use scala as a dependency
-    autoScalaLibrary := false,
+    //autoScalaLibrary := false,
     // Set the external library directories to ./contrib
     unmanagedBase := baseDirectory.value / "../contrib",
     // We need to add Clojars as a resolver, as Storm depends on some

@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import ch.epfl.data.squall.types.IntegerType;
 import org.apache.log4j.Logger;
 
 import ch.epfl.data.squall.components.DataSourceComponent;
@@ -57,6 +58,8 @@ import ch.epfl.data.squall.types.Type;
 
 public class TPCH3Plan extends QueryPlan {
     private static Logger LOG = Logger.getLogger(TPCH3Plan.class);
+
+    private static final IntegerType _ic = new IntegerType();
 
     private static final String _customerMktSegment = "BUILDING";
     private static final String _dateStr = "1995-03-15";
@@ -103,10 +106,16 @@ public class TPCH3Plan extends QueryPlan {
 	_queryBuilder.add(relationOrders);
 
 	// -------------------------------------------------------------------------------------
+
+    ColumnReference colC = new ColumnReference(_ic, 0);
+    ColumnReference colO = new ColumnReference(_ic, 1);
+    ComparisonPredicate C_O_comp = new ComparisonPredicate(
+            ComparisonPredicate.EQUAL_OP, colC, colO);
+
 	final EquiJoinComponent C_Ojoin = new EquiJoinComponent(
 		relationCustomer, relationOrders).add(
-		new ProjectOperator(new int[] { 1, 2, 3 })).setOutputPartKey(
-		Arrays.asList(0));
+		new ProjectOperator(new int[] { 1, 3, 4 })).setOutputPartKey(
+		Arrays.asList(0)).setJoinPredicate(C_O_comp);
 	_queryBuilder.add(C_Ojoin);
 
 	// -------------------------------------------------------------------------------------
@@ -133,15 +142,21 @@ public class TPCH3Plan extends QueryPlan {
 	// 1 - discount
 	final ValueExpression<Double> substract = new Subtraction(
 		new ValueSpecification(_doubleConv, 1.0), new ColumnReference(
-			_doubleConv, 4));
+			_doubleConv, 5));
 	// extendedPrice*(1-discount)
 	final ValueExpression<Double> product = new Multiplication(
-		new ColumnReference(_doubleConv, 3), substract);
+		new ColumnReference(_doubleConv, 4), substract);
 	final AggregateOperator agg = new AggregateSumOperator(product, conf)
 		.setGroupByColumns(Arrays.asList(0, 1, 2));
 
+
+    ColumnReference colC_O = new ColumnReference(_ic, 0);
+    ColumnReference colL = new ColumnReference(_ic, 0);
+    ComparisonPredicate C_O_L_comp = new ComparisonPredicate(
+            ComparisonPredicate.EQUAL_OP, colC_O, colL);
+
 	EquiJoinComponent finalComp = new EquiJoinComponent(C_Ojoin,
-		relationLineitem).add(agg);
+		relationLineitem).add(agg).setJoinPredicate(C_O_L_comp);
 	_queryBuilder.add(finalComp);
 	// -------------------------------------------------------------------------------------
 
