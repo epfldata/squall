@@ -64,19 +64,22 @@ public class DBToasterEngine implements Serializable {
     }
 
     public void insertTuple(String relationName, Object[] tuple) {
-        List<Object> dbtTuple = convertTupleToDbtTuple(tuple);
-        _query.handleEvent(new TupleEvent(TUPLE_INSERT, relationName, dbtTuple));
+        receiveTuple(relationName, TUPLE_INSERT, tuple);
     }
 
     public void deleteTuple(String relationName, Object[] tuple) {
-        List<Object> dbtTuple = convertTupleToDbtTuple(tuple);
-        _query.handleEvent(new TupleEvent(TUPLE_DELETE, relationName, dbtTuple));
+        receiveTuple(relationName, TUPLE_DELETE, tuple);
     }
 
-    public java.util.List<Object[]> getStreamOfUpdateTuples() {
+    public void receiveTuple(String relationName, byte tupleOp, Object[] tuple) {
+        List<Object> dbtTuple = convertTupleToDbtTuple(tuple);
+        _query.handleEvent(new TupleEvent(tupleOp, relationName, dbtTuple));
+    }
+
+    public java.util.List<Object[]> getStreamOfUpdateTuples(boolean withMultiplicity) {
 
         java.util.List<Object[]> outputTuples = new LinkedList();
-        List<Object> updateStream = (List<Object>) _query.handleEvent(new GetStream(1));
+        List<Object> updateStream = (List<Object>) _query.handleEvent(new GetStream(1, withMultiplicity));
         Iterator<Object> iterator = scala.collection.JavaConversions.asJavaIterator(updateStream.iterator());
 
         while (iterator.hasNext()) {

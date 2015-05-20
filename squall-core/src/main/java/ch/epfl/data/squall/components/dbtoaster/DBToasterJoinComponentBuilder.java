@@ -28,6 +28,7 @@ import ch.epfl.data.squall.types.DateLongType;
 import ch.epfl.data.squall.types.DoubleType;
 import ch.epfl.data.squall.types.IntegerType;
 import ch.epfl.data.squall.types.LongType;
+import ch.epfl.data.squall.types.MultiplicityType;
 import ch.epfl.data.squall.types.Type;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.SelectItem;
@@ -44,11 +45,21 @@ public class DBToasterJoinComponentBuilder {
     private Map<String, Type[]> _relColTypes = new HashMap<String, Type[]>();
     private String _sql;
     private Pattern _sqlVarPattern = Pattern.compile("([A-Za-z0-9_]+)\\.f([0-9]+)");
+    private String _name;
+
 
     public DBToasterJoinComponentBuilder addRelation(Component relation, Type... types) {
         _relations.add(relation);
         _relColTypes.put(relation.getName(), types);
         return this;
+    }
+
+    public DBToasterJoinComponentBuilder addRelationWithMultiplicity(Component relation, Type... types) {
+        _relations.add(relation);
+        Type[] colTypes = new Type[types.length + 1];
+        colTypes[0] = new MultiplicityType();
+        System.arraycopy(types, 0, colTypes, 1, types.length);
+
     }
 
     private boolean parentRelationExists(String name) {
@@ -131,8 +142,21 @@ public class DBToasterJoinComponentBuilder {
         this._sql = generateSchemaSQL() + sql;
     }
 
+    public void setComponentName(String name) {
+        this._name = name;
+    }
+
     public DBToasterJoinComponent build() {
-        return new DBToasterJoinComponent(_relations, _relColTypes, _sql);
+        if (this._name == null) {
+            // componentName
+            StringBuilder nameBuilder = new StringBuilder();
+            for (Component com : _relations) {
+                if (nameBuilder.length() != 0) nameBuilder.append("_");
+                nameBuilder.append(com.getName());
+            }
+            _name = nameBuilder.toString();
+        }
+        return new DBToasterJoinComponent(_relations, _relColTypes, _sql, _name);
     }
 
 }

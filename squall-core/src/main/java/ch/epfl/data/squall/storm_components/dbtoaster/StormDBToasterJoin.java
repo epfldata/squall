@@ -39,6 +39,7 @@ import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.HyperCubeAssignerFactory;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.HyperCubeAssignment;
+import ch.epfl.data.squall.types.MultiplicityType;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.PartitioningScheme;
@@ -82,31 +83,36 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
     private DBToasterEngine dbtoasterEngine;
     private static final String DBT_GEN_PKG = "ddbt.gen.";
+    private static final String QUERY_CLASS_SUFFIX = "Impl";
     private String _dbToasterQueryName;
+    private boolean _outputWithMultiplicity;
 
     private StormEmitter[] _emitters;
-    private Map<String, Type[]> _emitterIndexesColTypes;
+    private Map<String, Type[]> _emitterIndexesColTypes; // map between emitter index and types of tuple from the emitter
 
     public StormDBToasterJoin(StormEmitter[] emitters,
                               ComponentProperties cp, List<String> allCompNames,
                               Map<String, Type[]> emitterNameColTypes,
                               int hierarchyPosition, TopologyBuilder builder,
-                              TopologyKiller killer, Config conf) {
+                              TopologyKiller killer, Config conf, boolean outputMultiplicity) {
         super(cp, allCompNames, hierarchyPosition, conf);
 
 
         _emitters = emitters;
         _emitterIndexesColTypes = new HashMap<String, Type[]>();
+
         for (StormEmitter e : _emitters) {
             String emitterIndex = String.valueOf(allCompNames.indexOf(e.getName()));
             Type[] colRefs = emitterNameColTypes.get(e.getName());
             _emitterIndexesColTypes.put(emitterIndex, colRefs);
+
         }
 
         _operatorChain = cp.getChainOperator();
         _fullHashList = cp.getFullHashList();
 
-        _dbToasterQueryName = cp.getName() + "Impl";
+        _dbToasterQueryName = cp.getName() + QUERY_CLASS_SUFFIX;
+        _outputWithMultiplicity = outputMultiplicity;
 
         _aggBatchOutputMillis = cp.getBatchOutputMillis();
 
@@ -248,20 +254,34 @@ public class StormDBToasterJoin extends StormBoltComponent {
     private void processNonLastTuple(String inputComponentIndex,
                                      List<String> tuple, Tuple stormTupleRcv,
                                      boolean isLastInBatch) {
-        Type[] colRefs = _emitterIndexesColTypes.get(inputComponentIndex);
-        performJoin(stormTupleRcv, tuple, colRefs, isLastInBatch);
+        Type[] colTypes = _emitterIndexesColTypes.get(inputComponentIndex);
+        boolean tupleWithMultiplicity = colTypes[0] instanceof MultiplicityType; // check if the first field is multiplicity field
+        performJoin(stormTupleRcv, tuple, colTypes, tupleWithMultiplicity, isLastInBatch);
 
     }
 
+    /**
+     * PerformJoin method insert tuple / delete tuple to the DBToasterInstance and get the output stream
+     * @param stormTupleRcv
+     * @param tuple
+     * @param columnTypes
+     * @param tupleWithMultiplicity
+     * @param isLastInBatch
+     */
     protected void performJoin(Tuple stormTupleRcv, List<String> tuple,
                                Type[] columnTypes,
+                               boolean tupleWithMultiplicity,
                                boolean isLastInBatch) {
 
         List<Object> typedTuple = createTypedTuple(tuple, columnTypes);
+        byte multiplicity = 1;
+        if (tupleWithMultiplicity) {
+            multiplicity = (byte) typedTuple.remove(0);
+        }
 
-        dbtoasterEngine.insertTuple(stormTupleRcv.getSourceComponent(), typedTuple.toArray());
+        dbtoasterEngine.receiveTuple(stormTupleRcv.getSourceComponent(), multiplicity, typedTuple.toArray());
 
-        List<Object[]> stream = dbtoasterEngine.getStreamOfUpdateTuples();
+        List<Object[]> stream = dbtoasterEngine.getStreamOfUpdateTuples(_outputWithMultiplicity);
 
         long lineageTimestamp = 0L;
         if (MyUtilities.isCustomTimestampMode(getConf()))
@@ -276,7 +296,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
     }
 
     private List<Object> createTypedTuple(List<String> tuple, Type[] columnTypes) {
-        List<Object> typedTuple = new ArrayList<Object>();
+        List<Object> typedTuple = new LinkedList<Object>();
 
         for (int i = 0; i < columnTypes.length; i++) {
             Object value = columnTypes[i].fromString(tuple.get(i));

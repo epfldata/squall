@@ -74,21 +74,15 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
     private List<Component> _parents;
     private Map<String, Type[]> _parentNameColTypes;
     private String _equivalentSQL;
+    private boolean _outputWithMultiplicity;
 
-    protected DBToasterJoinComponent(List<Component> relations, Map<String, Type[]> relationTypes, String sql) {
-
+    protected DBToasterJoinComponent(List<Component> relations, Map<String, Type[]> relationTypes, String sql, String name) {
         _parents = relations;
-        _parentNameColTypes = relationTypes;
-
-        // componentName
-        StringBuilder nameBuilder = new StringBuilder();
-        for (Component com : _parents) {
-            com.setChild(this);
-            if (nameBuilder.length() != 0) nameBuilder.append("_");
-            nameBuilder.append(com.getName());
+        for (Component comp : _parents) {
+            comp.setChild(this);
         }
-        _componentName = nameBuilder.toString();
-
+        _parentNameColTypes = relationTypes;
+        _componentName = name;
         _equivalentSQL = sql;
     }
 
@@ -195,7 +189,7 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
                 allCompNames,
                 _parentNameColTypes,
                 hierarchyPosition,
-                builder, killer, conf);
+                builder, killer, conf, _outputWithMultiplicity);
     }
 
     @Override
@@ -272,6 +266,22 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
     public Component setTumblingWindow(int windowRange) {
         WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
         _tumblingWindowSize = windowRange * 1000;// For tumbling semantics
+        return this;
+    }
+
+    /**
+     * Whether to output tuple with a multiplicity field.
+     * <p>
+     * If this is set to true, the stream of output tuples contains an additional "multiplicity" field at the first index.
+     * Multiplicity value +1 represents added tuple while multiplicity -1 represent deleted tuple
+     * </p>
+     * <p>
+     * If this is not set, the stream of output tuples does not have "multiplicity". The value field of tuple will be the change delta between consecutive tuples
+     * </p>
+     * @param withMul
+     */
+    public Component setOutputWithMultiplicity(boolean withMul) {
+        _outputWithMultiplicity = withMul;
         return this;
     }
 
