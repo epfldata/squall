@@ -35,6 +35,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import ch.epfl.data.squall.storm_components.hyper_cube.stream_grouping.HyperCubeGrouping;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HyperCubeAssignment;
 import org.apache.log4j.Logger;
 
 import backtype.storm.Config;
@@ -527,6 +529,55 @@ public class MyUtilities {
 	return currentBolt;
     }
 
+    public static InputDeclarer attachEmitterStarSchema(Map map,
+        InputDeclarer currentBolt, StormEmitter[] emitters,
+        long[] cardinality) {
+        LOG.info("Should not use star schema here");
+        String starEmitterName = emitters[0].getName();
+        long largestCardinality = cardinality[0];
+        // find the starEmitter as the one with largest cardinality
+        for (int i = 1; i < emitters.length; i++) {
+            if (cardinality[i] > largestCardinality) {
+                largestCardinality = cardinality[i];
+                starEmitterName = emitters[i].getName();
+            }
+        }
+
+        for (final StormEmitter emitter : emitters) {
+            final String[] emitterIDs = emitter.getEmitterIDs();
+            if (emitter.getName().equals(starEmitterName)) {
+                for (final String emitterID : emitterIDs)
+                    currentBolt = currentBolt.customGrouping(emitterID, new ShuffleStreamGrouping(map));
+            } else {
+                for (final String emitterID : emitterIDs) {
+                    currentBolt = currentBolt.allGrouping(emitterID);
+                }
+            }
+        }
+
+        return currentBolt;
+    }
+
+    public static InputDeclarer hyperCubeAttachEmitterComponents(
+            InputDeclarer currentBolt, List<StormEmitter> emitters, List<String> allCompNames,
+            HyperCubeAssignment assignment, Map map, Type wrapper) {
+
+
+        String[] emitterIndexes = new String[emitters.size()];
+        for (int i = 0; i < emitterIndexes.length; i++)
+            emitterIndexes[i] = String.valueOf(allCompNames
+                    .indexOf(emitters.get(i).getName()));
+
+        CustomStreamGrouping mapping = new HyperCubeGrouping(emitterIndexes, assignment, map);
+
+        for (final StormEmitter emitter : emitters) {
+            final String[] emitterIDs = emitter.getEmitterIDs();
+            for (final String emitterID : emitterIDs)
+                currentBolt = currentBolt.customGrouping(emitterID, mapping);
+        }
+        return currentBolt;
+    }
+
     public static void checkBatchOutput(long batchOutputMillis,
 	    AggregateOperator aggregation, Map conf) {
 	if (aggregation == null && batchOutputMillis != 0)
@@ -915,6 +966,18 @@ public class MyUtilities {
 		// (S)
 		outputTuple.add(secondTuple.get(j));
 	return outputTuple;
+    }
+
+    public static List<String> createOutputTuple(List<List<String>> tuples) {
+        final List<String> outputTuple = new ArrayList<String>();
+
+        for (List<String> tpI : tuples) {
+            for (String coulumnJ : tpI) {
+                outputTuple.add(coulumnJ);
+            }
+        }
+
+        return outputTuple;
     }
 
     public static Values createRelSizeTuple(String componentIndex, int relSize) {
@@ -1800,6 +1863,49 @@ public class MyUtilities {
 		currentBolt = currentBolt.customGrouping(emitterID, mapping);
 	}
 	return currentBolt;
+    }
+
+
+    public static InputDeclarer hyperCubeAttachEmitterComponents(
+            InputDeclarer currentBolt, List<StormEmitter> emitters, List<String> allCompNames,
+            HyperCubeAssignment assignment, Map map) {
+
+
+        String[] emitterIndexes = new String[emitters.size()];
+        for (int i = 0; i < emitterIndexes.length; i++)
+            emitterIndexes[i] = String.valueOf(allCompNames
+                    .indexOf(emitters.get(i).getName()));
+
+        CustomStreamGrouping mapping = new HyperCubeGrouping(emitterIndexes, assignment, map);
+
+        for (final StormEmitter emitter : emitters) {
+            final String[] emitterIDs = emitter.getEmitterIDs();
+            for (final String emitterID : emitterIDs)
+                currentBolt = currentBolt.customGrouping(emitterID, mapping);
+        }
+        return currentBolt;
+    }
+
+    public static InputDeclarer hypecCubeAttachEmitterComponentsWithInterChanging(
+            InputDeclarer currentBolt, List<StormEmitter> emitters, List<String> allCompNames,
+            HyperCubeAssignment assignment, Map map, InterchangingComponent inter) {
+
+        String[] emitterIndexes = new String[emitters.size()];
+        for (int i = 0; i < emitterIndexes.length; i++)
+            emitterIndexes[i] = String.valueOf(allCompNames
+                    .indexOf(emitters.get(i).getName()));
+
+        final CustomStreamGrouping mapping = new HyperCubeGrouping(emitterIndexes, assignment, map);
+
+        final ArrayList<StormEmitter> emittersList = new ArrayList<StormEmitter>();
+        emittersList.add(inter);
+
+        for (final StormEmitter emitter : emittersList) {
+            final String[] emitterIDs = emitter.getEmitterIDs();
+            for (final String emitterID : emitterIDs)
+                currentBolt = currentBolt.customGrouping(emitterID, mapping);
+        }
+        return currentBolt;
     }
 
     // FIXME

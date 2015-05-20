@@ -686,28 +686,36 @@ public class ParserUtil {
 
     public static SQLVisitor parseQuery(Map map) {
 	final String sqlString = readSQL(map);
+    final String queryName = SystemParameters.getString(map,
+            "DIP_QUERY_NAME");
 
-	final CCJSqlParserManager pm = new CCJSqlParserManager();
-	Statement statement = null;
-	try {
-	    statement = pm.parse(new StringReader(sqlString));
-	} catch (final JSQLParserException ex) {
-	    LOG.info("JSQLParserException");
-	}
+        return parseQuery(sqlString, queryName);
+    }
 
-	if (statement instanceof Select) {
-	    final Select selectStatement = (Select) statement;
-	    final String queryName = SystemParameters.getString(map,
-		    "DIP_QUERY_NAME");
-	    final SQLVisitor parsedQuery = new SQLVisitor(queryName);
+    public static SQLVisitor parseQuery(String sqlString) {
+        return parseQuery(sqlString, "");
+    }
 
-	    // visit whole SELECT statement
-	    parsedQuery.visit(selectStatement);
-	    parsedQuery.doneVisiting();
+    private static SQLVisitor parseQuery(String sqlString, String queryName) {
+    final CCJSqlParserManager pm = new CCJSqlParserManager();
+    Statement statement = null;
+    try {
+        statement = pm.parse(new StringReader(sqlString));
+    } catch (final JSQLParserException ex) {
+        LOG.info("JSQLParserException");
+    }
 
-	    return parsedQuery;
-	}
-	throw new RuntimeException("Please provide SELECT statement!");
+    if (statement instanceof Select) {
+        final Select selectStatement = (Select) statement;
+        final SQLVisitor parsedQuery = new SQLVisitor(queryName);
+
+        // visit whole SELECT statement
+        parsedQuery.visit(selectStatement);
+        parsedQuery.doneVisiting();
+
+        return parsedQuery;
+    }
+    throw new RuntimeException("Please provide SELECT statement!");
     }
 
     // used after parallelismToMap method is invoked
