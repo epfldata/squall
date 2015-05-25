@@ -34,7 +34,7 @@ public interface WeightPrecomputation {
     public double getWeight(Region region);
 
     public int getFrequency(Region region);
-
+    
     // according to the matrix, not on the join condition
     // for join condition, look at Coarsener
     public boolean isEmpty(Region region);

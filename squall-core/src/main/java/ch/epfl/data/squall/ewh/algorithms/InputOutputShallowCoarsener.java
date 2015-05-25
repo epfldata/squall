@@ -66,22 +66,55 @@ public class InputOutputShallowCoarsener extends OutputShallowCoarsener {
 	return _wp.getWeight(region);
     }
 
+//    // returns 0 if the region contains no output
+//    @Override
+//    protected double getWeightEmpty0(Region region) {
+//	// too expensive and does not yield better partitioning than only
+//	// "return _wp.getWeight(region);" (tried on one example though):
+//	if (_wp.getFrequency(region) == 0
+//		&& !MyUtilities.isCandidateRegion(_originalMatrix, region,
+//			_originalMatrix.getComparisonPredicate(), _map)) {
+//	    // if (_wp.getFrequency(region) == 0){
+//	    // input can be arbitrarily large if it contains no output
+//	    // Would it be an improvement if we assign non-zero weights for
+//	    // empty regions which are candidates?
+//	    return 0;
+//	} else {
+//	    return _wp.getWeight(region);
+//	}
+//    }
+    
+//    //optimized version1
+//    // returns 0 if the region contains no output
+//    @Override
+//    protected double getWeightEmpty0(Region region) {
+//    	int frequency = _wp.getFrequency(region); 
+//    	if (frequency == 0
+//    			&& !MyUtilities.isCandidateRegion(_originalMatrix, region,
+//    					_originalMatrix.getComparisonPredicate(), _map)) {
+			//input can be arbitrarily large if it contains no output
+			//Would it be an improvement if we assign non-zero weights for
+			//empty regions which are candidates?    
+//    		return 0;
+//    	} else {
+//    		return _wp.getWeightFunction().getWeight(region.getHalfPerimeter(), frequency);
+//    	}
+//    }
+    
+    //optimized version2
     // returns 0 if the region contains no output
     @Override
     protected double getWeightEmpty0(Region region) {
-	// too expensive and does not yield better partitioning than only
-	// "return _wp.getWeight(region);" (tried on one example though):
-	if (_wp.getFrequency(region) == 0
-		&& !MyUtilities.isCandidateRegion(_originalMatrix, region,
-			_originalMatrix.getComparisonPredicate(), _map)) {
-	    // if (_wp.getFrequency(region) == 0){
-	    // input can be arbitrarily large if it contains no output
-	    // Would it be an improvement if we assign non-zero weights for
-	    // empty regions which are candidates?
-	    return 0;
-	} else {
-	    return _wp.getWeight(region);
-	}
+    	if (!MyUtilities.isCandidateRegion(_originalMatrix, region,
+    					_originalMatrix.getComparisonPredicate(), _map)) {
+    		//If a cell is not a candidate, there should be no output samples
+    		return 0;
+			//input can be arbitrarily large if it contains no output
+			//Would it be an improvement if we assign non-zero weights for
+			//empty regions which are candidates?    		
+    	} else {
+    		return _wp.getWeight(region);
+    	}
     }
 
     @Override
