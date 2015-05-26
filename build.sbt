@@ -7,7 +7,7 @@ lazy val commonSettings = Seq(
   name := "squall",
   organization := "ch.epfl.data",
   version := "0.2.0",
-  scalaVersion := "2.11.5",
+  scalaVersion := "2.11.6",
   // Avoids having the scala version in the path to the jars
   crossPaths := false,
   // Options for assembling a single jar
