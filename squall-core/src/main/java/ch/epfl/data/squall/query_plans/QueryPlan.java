@@ -39,7 +39,7 @@ public abstract class QueryPlan {
 
     // _queryBuilder expects components in the parent->child order
     // root is the leaf child
-    protected void build(Component root) {
+    public void build(Component root) {
 	if (root == null)
 	    return;
 	Component[] parents = root.getParents();

@@ -43,7 +43,7 @@ import ch.epfl.data.squall.utilities.StormWrapper;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class Main {
-    private static void addVariablesToMap(Map map, String confPath) {
+    public static void addVariablesToMap(Map map, String confPath) {
 	// setting topologyName: DIP_TOPOLOGY_NAME_PREFIX + CONFIG_FILE_NAME
 	String confFilename = MyUtilities.getPartFromEnd(confPath, 0);
 	String prefix = SystemParameters.getString(map,
@@ -112,7 +112,7 @@ public class Main {
 	return queryPlan;
     }
 
-    private static TopologyBuilder createTopology(QueryBuilder qp, Config conf) {
+    public static TopologyBuilder createTopology(QueryBuilder qp, Config conf) {
 	TopologyBuilder builder = new TopologyBuilder();
 	TopologyKiller killer = new TopologyKiller(builder);
 
@@ -180,7 +180,7 @@ public class Main {
 
     // this method is a skeleton for more complex ones
     // an optimizer should do this in a smarter way
-    private static void putBatchSizes(QueryBuilder plan, Map map) {
+    public static void putBatchSizes(QueryBuilder plan, Map map) {
 	if (SystemParameters.isExisting(map, "BATCH_SIZE")) {
 
 	    // if the batch mode is specified, but nothing is put in map yet
