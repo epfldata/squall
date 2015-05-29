@@ -57,6 +57,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Semaphore;
 
 public class StormDBToasterJoin extends StormBoltComponent {
@@ -89,24 +90,28 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
     private StormEmitter[] _emitters;
     private Map<String, Type[]> _emitterIndexesColTypes; // map between emitter index and types of tuple from the emitter
+    private Set<String> _emittersWithMultiplicity;
+    private static final MultiplicityType _mulType = new MultiplicityType();
 
     public StormDBToasterJoin(StormEmitter[] emitters,
                               ComponentProperties cp, List<String> allCompNames,
                               Map<String, Type[]> emitterNameColTypes,
+                              Set<String> emittersWithMultiplicity,
                               int hierarchyPosition, TopologyBuilder builder,
                               TopologyKiller killer, Config conf, boolean outputMultiplicity) {
         super(cp, allCompNames, hierarchyPosition, conf);
 
 
         _emitters = emitters;
-        _emitterIndexesColTypes = new HashMap<String, Type[]>();
+        _emitterIndexesColTypes = emitterNameColTypes;
+        _emittersWithMultiplicity = emittersWithMultiplicity;
 
-        for (StormEmitter e : _emitters) {
-            String emitterIndex = String.valueOf(allCompNames.indexOf(e.getName()));
-            Type[] colRefs = emitterNameColTypes.get(e.getName());
-            _emitterIndexesColTypes.put(emitterIndex, colRefs);
-
-        }
+//        for (StormEmitter e : _emitters) {
+//            String emitterIndex = String.valueOf(allCompNames.indexOf(e.getName()));
+//            Type[] colRefs = emitterNameColTypes.get(e.getName());
+//            _emitterIndexesColTypes.put(emitterIndex, colRefs);
+//
+//        }
 
         _operatorChain = cp.getChainOperator();
         _fullHashList = cp.getFullHashList();
@@ -254,9 +259,10 @@ public class StormDBToasterJoin extends StormBoltComponent {
     private void processNonLastTuple(String inputComponentIndex,
                                      List<String> tuple, Tuple stormTupleRcv,
                                      boolean isLastInBatch) {
-        Type[] colTypes = _emitterIndexesColTypes.get(inputComponentIndex);
-        boolean tupleWithMultiplicity = colTypes[0] instanceof MultiplicityType; // check if the first field is multiplicity field
-        performJoin(stormTupleRcv, tuple, colTypes, tupleWithMultiplicity, isLastInBatch);
+        Type[] colTypes = _emitterIndexesColTypes.get(stormTupleRcv.getSourceComponent());
+        //boolean tupleWithMultiplicity = colTypes[0] instanceof MultiplicityType; // check if the first field is multiplicity field
+
+        performJoin(stormTupleRcv, tuple, colTypes, _emittersWithMultiplicity.contains(stormTupleRcv.getSourceComponent()), isLastInBatch);
 
     }
 
@@ -273,11 +279,12 @@ public class StormDBToasterJoin extends StormBoltComponent {
                                boolean tupleWithMultiplicity,
                                boolean isLastInBatch) {
 
-        List<Object> typedTuple = createTypedTuple(tuple, columnTypes);
         byte multiplicity = 1;
         if (tupleWithMultiplicity) {
-            multiplicity = (byte) typedTuple.remove(0);
+            multiplicity = _mulType.fromString(tuple.get(0));
         }
+
+        List<Object> typedTuple = createTypedTuple(tuple, columnTypes, tupleWithMultiplicity);
 
         dbtoasterEngine.receiveTuple(stormTupleRcv.getSourceComponent(), multiplicity, typedTuple.toArray());
 
@@ -295,13 +302,15 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
     }
 
-    private List<Object> createTypedTuple(List<String> tuple, Type[] columnTypes) {
+    private List<Object> createTypedTuple(List<String> tuple, Type[] columnTypes, boolean multiplicityIncluded) {
         List<Object> typedTuple = new LinkedList<Object>();
 
+        int offset = multiplicityIncluded ? 1 : 0;
         for (int i = 0; i < columnTypes.length; i++) {
-            Object value = columnTypes[i].fromString(tuple.get(i));
+            Object value = columnTypes[i].fromString(tuple.get(i + offset));//ignore the first multiplicity field by offset by 1
             typedTuple.add(value);
         }
+
         return typedTuple;
     }
 

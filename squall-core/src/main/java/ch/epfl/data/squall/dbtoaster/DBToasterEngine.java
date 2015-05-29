@@ -25,7 +25,6 @@ import org.apache.log4j.Logger;
 import scala.collection.immutable.$colon$colon;
 import scala.collection.immutable.List;
 import scala.collection.immutable.List$;
-import scala.Tuple2;
 import ddbt.lib.Messages.*;
 import ddbt.lib.IQuery;
 import java.io.Serializable;
@@ -57,10 +56,10 @@ public class DBToasterEngine implements Serializable {
             ClassLoader cl = this.getClass().getClassLoader();
             if (cl == null) cl = ClassLoader.getSystemClassLoader();
             _query = (IQuery) cl.loadClass(queryClass).newInstance();
+            _query.handleEvent(new StreamInit(0)); // invoke initialization event
         } catch (Exception e) {
             throw new RuntimeException("Fail to initialize Query class " + queryClass, e);
         }
-
     }
 
     public void insertTuple(String relationName, Object[] tuple) {

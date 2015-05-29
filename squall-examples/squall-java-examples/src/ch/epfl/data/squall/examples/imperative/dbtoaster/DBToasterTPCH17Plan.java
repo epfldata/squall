@@ -23,10 +23,13 @@ package ch.epfl.data.squall.examples.imperative.dbtoaster;
 
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
+import ch.epfl.data.squall.components.OperatorComponent;
 import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
 import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponentBuilder;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueSpecification;
+import ch.epfl.data.squall.operators.AggregateOperator;
+import ch.epfl.data.squall.operators.AggregateSumOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SelectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
@@ -59,19 +62,19 @@ public class DBToasterTPCH17Plan extends QueryPlan {
     public DBToasterTPCH17Plan(String dataPath, String extension, Map conf) {
 
         final ProjectOperator projectionLineitem = new ProjectOperator(
-                new int[] { 1, 4 });
+                new int[] { 1, 4 }); // partkey, quantity
 
         final DataSourceComponent relationLineItem = new DataSourceComponent(
-                "LINEITEM", dataPath + "lineitem" + extension)
+                "NESTED_L", dataPath + "lineitem" + extension)
                 .setOutputPartKey(0).add(projectionLineitem);
         _queryBuilder.add(relationLineItem);
 
         //----------------------------------------------------------------------------
 
         DBToasterJoinComponentBuilder builder = new DBToasterJoinComponentBuilder();
-        builder.addRelation(relationLineItem, _long, _long);
+        builder.addRelation(relationLineItem, _long, _long); // partkey, quantity
         builder.setComponentName("L_AVG");
-        builder.setSQL("SELECT LINEITEM.f1, 0.2 * AVG(LINEITEM.f0) FROM LINEITEM GROUP BY LINEITEM.f1");
+        builder.setSQL("SELECT NESTED_L.f0, 0.2 * AVG(NESTED_L.f1) FROM NESTED_L GROUP BY NESTED_L.f0");
         Component nestedL_avg = builder.build()
                                                 .setOutputWithMultiplicity(true)
                                                 .setOutputPartKey(0);
@@ -98,7 +101,7 @@ public class DBToasterTPCH17Plan extends QueryPlan {
                         new ValueSpecification(_string, P_CONTAINER)));
 
         final ProjectOperator projectionPart = new ProjectOperator(
-                new int[] {0}); // partkey, brand, container
+                new int[] {0}); // partkey
 
         final DataSourceComponent relationPart = new DataSourceComponent(
                 "PART", dataPath + "part" + extension)
@@ -111,13 +114,22 @@ public class DBToasterTPCH17Plan extends QueryPlan {
         // ------------------------------------------------------------------
 
         builder = new DBToasterJoinComponentBuilder();
-        builder.addRelation(nestedL_avg, _multiplicity, _long, _double); // partkey, avg_quantity
+        builder.addRelationWithMultiplicity(nestedL_avg, _long, _double); // partkey, avg_quantity
         builder.addRelation(relationPart, _long);
         builder.addRelation(outerRelationLineItem, _long, _long, _double); // partkey, quantity, extended price
 
-        builder.setSQL("SELECT SUM(LINEITEM.f2)/7.0 AS AVG_YEARLY FROM LINEITEM, PART WHERE " +
+        builder.setSQL("SELECT SUM(LINEITEM.f2)/7.0 AS AVG_YEARLY FROM LINEITEM, PART, L_AVG WHERE " +
                 "PART.f0 = LINEITEM.f0 AND " +
-                "PART.f0 = L_AVG.f");
+                "PART.f0 = L_AVG.f0 AND LINEITEM.f1 < L_AVG.f1");
+        Component P_L_L_AVG = builder.build();
+        _queryBuilder.add(P_L_L_AVG);
+
+        AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_double, 0), conf);
+
+        OperatorComponent finalComponent = new OperatorComponent(
+                P_L_L_AVG, "FINAL_RESULT").add(agg);
+        _queryBuilder.add(finalComponent);
+
 
     }
 

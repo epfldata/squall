@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class DBToasterJoinComponent extends JoinerComponent implements Component {
 
@@ -73,11 +74,13 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
 
     private List<Component> _parents;
     private Map<String, Type[]> _parentNameColTypes;
+    private Set<String> _parentsWithMultiplicity;
     private String _equivalentSQL;
     private boolean _outputWithMultiplicity;
 
-    protected DBToasterJoinComponent(List<Component> relations, Map<String, Type[]> relationTypes, String sql, String name) {
+    protected DBToasterJoinComponent(List<Component> relations, Map<String, Type[]> relationTypes, Set<String> relationsWithMultiplicity, String sql, String name) {
         _parents = relations;
+        _parentsWithMultiplicity = relationsWithMultiplicity;
         for (Component comp : _parents) {
             comp.setChild(this);
         }
@@ -188,6 +191,7 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
         _joiner = new StormDBToasterJoin(getParents(), this,
                 allCompNames,
                 _parentNameColTypes,
+                _parentsWithMultiplicity,
                 hierarchyPosition,
                 builder, killer, conf, _outputWithMultiplicity);
     }

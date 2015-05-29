@@ -34,15 +34,18 @@ import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.SelectItem;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DBToasterJoinComponentBuilder {
     private List<Component> _relations = new LinkedList<Component>();
     private Map<String, Type[]> _relColTypes = new HashMap<String, Type[]>();
+    private Set<String> _relMultiplicity = new HashSet<String>();
     private String _sql;
     private Pattern _sqlVarPattern = Pattern.compile("([A-Za-z0-9_]+)\\.f([0-9]+)");
     private String _name;
@@ -55,11 +58,8 @@ public class DBToasterJoinComponentBuilder {
     }
 
     public DBToasterJoinComponentBuilder addRelationWithMultiplicity(Component relation, Type... types) {
-        _relations.add(relation);
-        Type[] colTypes = new Type[types.length + 1];
-        colTypes[0] = new MultiplicityType();
-        System.arraycopy(types, 0, colTypes, 1, types.length);
-
+        _relMultiplicity.add(relation.getName());
+        return addRelation(relation, types);
     }
 
     private boolean parentRelationExists(String name) {
@@ -156,7 +156,7 @@ public class DBToasterJoinComponentBuilder {
             }
             _name = nameBuilder.toString();
         }
-        return new DBToasterJoinComponent(_relations, _relColTypes, _sql, _name);
+        return new DBToasterJoinComponent(_relations, _relColTypes, _relMultiplicity, _sql, _name);
     }
 
 }
