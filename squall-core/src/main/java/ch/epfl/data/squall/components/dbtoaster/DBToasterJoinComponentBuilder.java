@@ -28,7 +28,6 @@ import ch.epfl.data.squall.types.DateLongType;
 import ch.epfl.data.squall.types.DoubleType;
 import ch.epfl.data.squall.types.IntegerType;
 import ch.epfl.data.squall.types.LongType;
-import ch.epfl.data.squall.types.MultiplicityType;
 import ch.epfl.data.squall.types.Type;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.SelectItem;
