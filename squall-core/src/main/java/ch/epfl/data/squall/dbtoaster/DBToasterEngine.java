@@ -30,6 +30,7 @@ import ddbt.lib.IQuery;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.ListIterator;
 
 public class DBToasterEngine implements Serializable {
 
@@ -40,10 +41,14 @@ public class DBToasterEngine implements Serializable {
 
     private static final List EMPTY_LIST = List$.MODULE$.empty();
 
-    public static List<Object> convertTupleToDbtTuple(Object ... ts) {
+    private static List<Object> convertTupleToDbtTuple(java.util.List<Object> ts) {
         List<Object> result = EMPTY_LIST;
-        for(int i = ts.length; i > 0; i--) {
-            result = new $colon$colon<Object>(ts[i - 1], result);
+//        for(int i = ts.length; i > 0; i--) {
+//            result = new $colon$colon<Object>(ts[i - 1], result);
+//        }
+        ListIterator<Object> li = ts.listIterator(ts.size()); // start after the last element
+        while (li.hasPrevious()) {
+            result = new $colon$colon<Object>(li.previous(), result);
         }
         return result;
     }
@@ -62,15 +67,15 @@ public class DBToasterEngine implements Serializable {
         }
     }
 
-    public void insertTuple(String relationName, Object[] tuple) {
+    public void insertTuple(String relationName, java.util.List<Object> tuple) {
         receiveTuple(relationName, TUPLE_INSERT, tuple);
     }
 
-    public void deleteTuple(String relationName, Object[] tuple) {
+    public void deleteTuple(String relationName, java.util.List<Object> tuple) {
         receiveTuple(relationName, TUPLE_DELETE, tuple);
     }
 
-    public void receiveTuple(String relationName, byte tupleOp, Object[] tuple) {
+    public void receiveTuple(String relationName, byte tupleOp, java.util.List<Object> tuple) {
         List<Object> dbtTuple = convertTupleToDbtTuple(tuple);
         _query.handleEvent(new TupleEvent(tupleOp, relationName, dbtTuple));
     }

@@ -271,7 +271,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
 
 
-        dbtoasterEngine.receiveTuple(sourceComponentName, multiplicity, typedTuple.toArray());
+        dbtoasterEngine.receiveTuple(sourceComponentName, multiplicity, typedTuple);
 
         List<Object[]> stream = dbtoasterEngine.getStreamOfUpdateTuples(_outputWithMultiplicity);
 
