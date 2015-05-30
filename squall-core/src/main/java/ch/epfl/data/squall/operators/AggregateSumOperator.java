@@ -21,9 +21,12 @@ package ch.epfl.data.squall.operators;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
+import org.apache.avro.generic.GenericData;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
@@ -184,6 +187,43 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements
 	affectedTuple.add(strValue);
 
 	return affectedTuple;
+    }
+
+    public List<String>[] processUpdate(List<String> tuple, long lineageTimestamp) {
+        _numTuplesProcessed++;
+        if (_distinct != null) {
+            tuple = _distinct.process(tuple, lineageTimestamp);
+            if (tuple == null)
+                return null;
+        }
+        String tupleHash;
+        if (_groupByType == GB_PROJECTION)
+            tupleHash = MyUtilities.createHashString(tuple, _groupByColumns,
+                    _groupByProjection.getExpressions(), _map);
+        else
+            tupleHash = MyUtilities.createHashString(tuple, _groupByColumns,
+                    _map);
+
+        // might consider to split the tupleHash based on delimiter instead as this does not take into account GB_PROJECTION
+        final List<String> tupleKey = new ArrayList<>(_groupByColumns.size());
+        for (int i = 0; i < _groupByColumns.size(); i++)
+            tupleKey.add(tuple.get(_groupByColumns.get(i)));
+
+        // get old value
+        List<String> oldTuple = null;
+        List<T> currentValues = _storage.access(tupleHash);
+        if (currentValues != null && currentValues.size() > 0) {
+            T oldValue = currentValues.get(0);
+            oldTuple = new ArrayList<String>(tupleKey);
+            oldTuple.add(_wrapper.toString(oldValue));
+        }
+
+        // new value after process
+        final T newValue = _storage.update(tuple, tupleHash, lineageTimestamp);
+        List<String> newTuple = new ArrayList<String>(tupleKey);
+        newTuple.add(_wrapper.toString(newValue));
+
+        return new List[] {oldTuple, newTuple};
     }
 
     // actual operator implementation

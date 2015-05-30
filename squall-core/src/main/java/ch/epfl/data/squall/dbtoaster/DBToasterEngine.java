@@ -28,6 +28,7 @@ import scala.collection.immutable.List$;
 import ddbt.lib.Messages.*;
 import ddbt.lib.IQuery;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
@@ -36,7 +37,7 @@ public class DBToasterEngine implements Serializable {
 
     private static Logger LOG = Logger.getLogger(DBToasterEngine.class);
 
-    public static final byte TUPLE_DELETE = 0x00;
+    public static final byte TUPLE_DELETE = -0x01;
     public static final byte TUPLE_INSERT = 0x01;
 
     private static final List EMPTY_LIST = List$.MODULE$.empty();
@@ -76,6 +77,7 @@ public class DBToasterEngine implements Serializable {
     }
 
     public void receiveTuple(String relationName, byte tupleOp, java.util.List<Object> tuple) {
+//        LOG.info("receive tuple: " + Arrays.toString(tuple.toArray()) + " Op: " + tupleOp);
         List<Object> dbtTuple = convertTupleToDbtTuple(tuple);
         _query.handleEvent(new TupleEvent(tupleOp, relationName, dbtTuple));
     }

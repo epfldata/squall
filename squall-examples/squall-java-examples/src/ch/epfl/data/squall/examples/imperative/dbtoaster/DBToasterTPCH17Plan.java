@@ -54,7 +54,6 @@ public class DBToasterTPCH17Plan extends QueryPlan {
     private static final Type<Long> _long = new LongType();
     private static final Type<Double> _double = new DoubleType();
     private static final Type<String> _string = new StringType();
-    private static final Type _multiplicity = new MultiplicityType();
     private static final String P_BRAND = "Brand#44";
     private static final String P_CONTAINER = "WRAP PKG";
 
@@ -75,9 +74,7 @@ public class DBToasterTPCH17Plan extends QueryPlan {
         builder.addRelation(relationLineItem, _long, _long); // partkey, quantity
         builder.setComponentName("L_AVG");
         builder.setSQL("SELECT NESTED_L.f0, 0.2 * AVG(NESTED_L.f1) FROM NESTED_L GROUP BY NESTED_L.f0");
-        Component nestedL_avg = builder.build()
-                                                .setOutputWithMultiplicity(true)
-                                                .setOutputPartKey(0);
+        Component nestedL_avg = builder.build().setOutputPartKey(0);
         _queryBuilder.add(nestedL_avg);
 
         //----------------------------------------------------------------------------
