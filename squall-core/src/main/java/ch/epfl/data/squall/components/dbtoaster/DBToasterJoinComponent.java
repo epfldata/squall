@@ -27,6 +27,7 @@ import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.JoinerComponent;
 import ch.epfl.data.squall.expressions.ValueExpression;
+import ch.epfl.data.squall.operators.AggregateStream;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.predicates.Predicate;
@@ -63,7 +64,6 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
     private List<ValueExpression> _hashExpressions;
 
     private StormEmitter _joiner;
-    private Predicate _joinPredicate;
 
     private final ChainOperator _chain = new ChainOperator();
 
@@ -75,12 +75,16 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
     private List<Component> _parents;
     private Map<String, Type[]> _parentNameColTypes;
     private Set<String> _parentsWithMultiplicity;
+    private Map<String, AggregateStream> _parentsWithAggregator;
     private String _equivalentSQL;
     private boolean _outputWithMultiplicity;
 
-    protected DBToasterJoinComponent(List<Component> relations, Map<String, Type[]> relationTypes, Set<String> relationsWithMultiplicity, String sql, String name) {
+    protected DBToasterJoinComponent(List<Component> relations, Map<String, Type[]> relationTypes,
+                                     Set<String> relationsWithMultiplicity, Map<String, AggregateStream>  relationsWithAggregator,
+                                     String sql, String name) {
         _parents = relations;
         _parentsWithMultiplicity = relationsWithMultiplicity;
+        _parentsWithAggregator = relationsWithAggregator;
         for (Component comp : _parents) {
             comp.setChild(this);
         }
@@ -192,6 +196,7 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
                 allCompNames,
                 _parentNameColTypes,
                 _parentsWithMultiplicity,
+                _parentsWithAggregator,
                 hierarchyPosition,
                 builder, killer, conf, _outputWithMultiplicity);
     }
@@ -254,8 +259,7 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
 
     @Override
     public DBToasterJoinComponent setJoinPredicate(Predicate predicate) {
-        _joinPredicate = predicate;
-        return this;
+        throw new UnsupportedOperationException();
     }
 
     @Override

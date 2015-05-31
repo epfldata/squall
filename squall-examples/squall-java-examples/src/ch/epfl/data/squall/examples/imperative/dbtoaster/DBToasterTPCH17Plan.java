@@ -24,7 +24,6 @@ package ch.epfl.data.squall.examples.imperative.dbtoaster;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.OperatorComponent;
-import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
 import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponentBuilder;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueSpecification;
@@ -37,7 +36,6 @@ import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.types.DoubleType;
 import ch.epfl.data.squall.types.LongType;
-import ch.epfl.data.squall.types.MultiplicityType;
 import ch.epfl.data.squall.types.StringType;
 import ch.epfl.data.squall.types.Type;
 
@@ -60,18 +58,18 @@ public class DBToasterTPCH17Plan extends QueryPlan {
 
     public DBToasterTPCH17Plan(String dataPath, String extension, Map conf) {
 
-        final ProjectOperator projectionLineitem = new ProjectOperator(
+        final ProjectOperator projectionNestedLineitem = new ProjectOperator(
                 new int[] { 1, 4 }); // partkey, quantity
 
-        final DataSourceComponent relationLineItem = new DataSourceComponent(
+        final DataSourceComponent relationNestedLineItem = new DataSourceComponent(
                 "NESTED_L", dataPath + "lineitem" + extension)
-                .setOutputPartKey(0).add(projectionLineitem);
-        _queryBuilder.add(relationLineItem);
+                .setOutputPartKey(0).add(projectionNestedLineitem);
+        _queryBuilder.add(relationNestedLineItem);
 
         //----------------------------------------------------------------------------
 
         DBToasterJoinComponentBuilder builder = new DBToasterJoinComponentBuilder();
-        builder.addRelation(relationLineItem, _long, _long); // partkey, quantity
+        builder.addRelation(relationNestedLineItem, _long, _long); // partkey, quantity
         builder.setComponentName("L_AVG");
         builder.setSQL("SELECT NESTED_L.f0, 0.2 * AVG(NESTED_L.f1) FROM NESTED_L GROUP BY NESTED_L.f0");
         Component nestedL_avg = builder.build().setOutputPartKey(0);
@@ -82,10 +80,10 @@ public class DBToasterTPCH17Plan extends QueryPlan {
         final ProjectOperator projectionOuterLineitem = new ProjectOperator(
                 new int[] {1, 4, 5}); // partkey, quantity, extended price
 
-        final DataSourceComponent outerRelationLineItem = new DataSourceComponent(
+        final DataSourceComponent relationOuterLineItem = new DataSourceComponent(
                 "LINEITEM", dataPath + "lineitem" + extension)
                 .setOutputPartKey(0).add(projectionOuterLineitem);
-        _queryBuilder.add(outerRelationLineItem);
+        _queryBuilder.add(relationOuterLineItem);
 
         // ---------------------------------------------------------------------------
 
@@ -110,14 +108,22 @@ public class DBToasterTPCH17Plan extends QueryPlan {
 
         // ------------------------------------------------------------------
 
-        builder = new DBToasterJoinComponentBuilder();
-        builder.addRelationWithMultiplicity(nestedL_avg, _long, _double); // partkey, avg_quantity
+        builder = new DBToasterJoinComponentBuilder(conf);
+
+        // addAggregatedRelation by default uses AggregateSumOperator.
+        // As the aggregate function of the nested relation is Average, the partitioning Scheme of L_AVG must be Key partiitoning.
+        // The changes need to be done in order to use the different part scheme in case of nested average:
+        // - Implements AggregateStream in AggregateAvgOperator
+        // - Don't use StormDBToasterJoin for the nested component because DBToaster can not provide information on change of count when calculating average. Modify OperatorComponent which use AggregateAvgOperator to output stream of update
+        // - Refactor the addAggregatedRelation method to accept different aggregator.
+        builder.addAggregatedRelation(nestedL_avg, _long, _double); // partkey, avg_quantity
         builder.addRelation(relationPart, _long);
-        builder.addRelation(outerRelationLineItem, _long, _long, _double); // partkey, quantity, extended price
+        builder.addRelation(relationOuterLineItem, _long, _long, _double); // partkey, quantity, extended price
 
         builder.setSQL("SELECT SUM(LINEITEM.f2)/7.0 AS AVG_YEARLY FROM LINEITEM, PART, L_AVG WHERE " +
                 "PART.f0 = LINEITEM.f0 AND " +
                 "PART.f0 = L_AVG.f0 AND LINEITEM.f1 < L_AVG.f1");
+
         Component P_L_L_AVG = builder.build();
         _queryBuilder.add(P_L_L_AVG);
 

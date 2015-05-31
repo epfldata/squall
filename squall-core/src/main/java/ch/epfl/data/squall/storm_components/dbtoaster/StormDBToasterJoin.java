@@ -29,9 +29,8 @@ import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Tuple;
 import ch.epfl.data.squall.components.ComponentProperties;
 import ch.epfl.data.squall.dbtoaster.DBToasterEngine;
-import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.operators.AggregateOperator;
-import ch.epfl.data.squall.operators.AggregateSumOperator;
+import ch.epfl.data.squall.operators.AggregateStream;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
@@ -41,7 +40,6 @@ import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.HyperCubeAssignerFactory;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.HyperCubeAssignment;
-import ch.epfl.data.squall.types.MultiplicityType;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.PartitioningScheme;
@@ -52,7 +50,6 @@ import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -87,12 +84,13 @@ public class StormDBToasterJoin extends StormBoltComponent {
     private StormEmitter[] _emitters;
     private Map<String, Type[]> _emitterNamesColTypes; // map between emitter names and types of tuple from the emitter
     private Set<String> _emittersWithMultiplicity;
-    private Map<String, AggregateSumOperator> _emitterOperators;
+    private Map<String, AggregateStream> _emitterAggregators;
 
     public StormDBToasterJoin(StormEmitter[] emitters,
                               ComponentProperties cp, List<String> allCompNames,
                               Map<String, Type[]> emitterNameColTypes,
                               Set<String> emittersWithMultiplicity,
+                              Map<String, AggregateStream> emittersWithAggregator,
                               int hierarchyPosition, TopologyBuilder builder,
                               TopologyKiller killer, Config conf, boolean outputMultiplicity) {
         super(cp, allCompNames, hierarchyPosition, conf);
@@ -101,20 +99,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
         _emitters = emitters;
         _emitterNamesColTypes = emitterNameColTypes;
         _emittersWithMultiplicity = emittersWithMultiplicity;
-        if (_emittersWithMultiplicity.size() > 0) {
-            _emitterOperators = new HashMap<String, AggregateSumOperator>();
-            for (String name : _emittersWithMultiplicity) {
-                Type[] colTypes = _emitterNamesColTypes.get(name);
-                int valueCol = colTypes.length - 1;
-                int[] groupByCols = new int[colTypes.length - 1];
-                for (int i = 0; i < groupByCols.length; i++)
-                    groupByCols[i] = i;
-
-                LOG.info("table: " + name + " aggregate with group by: " + Arrays.toString(groupByCols));
-
-                _emitterOperators.put(name, new AggregateSumOperator(new ColumnReference(colTypes[valueCol], valueCol), getConf()).setGroupByColumns(groupByCols));
-            }
-        }
+        _emitterAggregators = emittersWithAggregator;
 
         _operatorChain = cp.getChainOperator();
         _fullHashList = cp.getFullHashList();
@@ -141,6 +126,16 @@ public class StormDBToasterJoin extends StormBoltComponent {
                     SystemParameters.DUMP_RESULTS_STREAM);
     }
 
+    /**
+     * Attach emitters based on PART_SCHEME set up in the configuration.
+     * The exception is with emitters whose tuples have multiplicity field. They <b>broadcast</b> to all tasks
+     *
+     * @param conf
+     * @param currentBolt
+     * @param allCompNames
+     * @param parallelism
+     * @return
+     */
     private InputDeclarer attachEmitters(Config conf, InputDeclarer currentBolt,
                  List<String> allCompNames, int parallelism) {
 
@@ -271,44 +266,22 @@ public class StormDBToasterJoin extends StormBoltComponent {
         getCollector().ack(stormTupleRcv);
     }
 
+
     private void processNonLastTuple(List<String> tuple, Tuple stormTupleRcv,
                                      boolean isLastInBatch) {
 
         String sourceComponentName = stormTupleRcv.getSourceComponent();
-        Type[] colTypes = _emitterNamesColTypes.get(sourceComponentName);
 
-        boolean tupleWithMultiplicity = _emittersWithMultiplicity.contains(sourceComponentName);
-
-        byte multiplicity = 1;
-        if (!tupleWithMultiplicity) {
-            if (sourceComponentName.equals("LINEITEM") && tuple.get(0).equals("840"))
-                LOG.info("receive tuple from :  " + sourceComponentName + " " + Arrays.toString(tuple.toArray()));
-            List<Object> typedTuple = createTypedTuple(tuple, colTypes);
-            performJoin(sourceComponentName, stormTupleRcv, typedTuple, multiplicity, isLastInBatch);
+        // if the tuple coming from aggregated relation, it will be first applied the corresponding AggregateStream operator first
+        if (_emitterAggregators.size() > 0 && _emitterAggregators.containsKey(sourceComponentName)) {
+            AggregateStream emitOp = _emitterAggregators.get(sourceComponentName);
+            List<List<String>> updateTuples = emitOp.updateStream(tuple, true);
+            for (List<String> t : updateTuples) {
+                performJoin(sourceComponentName, stormTupleRcv, t, isLastInBatch);
+            }
 
         } else {
-            //LOG.info("Processing tuple from " + sourceComponentName + " : " + Arrays.toString(tuple.toArray()));
-
-            if (sourceComponentName.equals("L_AVG") && tuple.get(0).equals("840"))
-                LOG.info("receive tuple from :  " + sourceComponentName + " " + Arrays.toString(tuple.toArray()));
-
-            AggregateSumOperator emitOp = _emitterOperators.get(sourceComponentName);
-            List<String>[] updatePair = emitOp.processUpdate(tuple, 0);
-            if (updatePair[0] != null) {
-                if (sourceComponentName.equals("L_AVG") && tuple.get(0).equals("840"))
-                    LOG.info("output tuple delete : " + Arrays.toString(updatePair[0].toArray()));
-
-                List<Object> typedTuple = createTypedTuple(tuple, colTypes);
-                performJoin(sourceComponentName, stormTupleRcv, typedTuple, DBToasterEngine.TUPLE_DELETE, isLastInBatch);
-            }
-
-            if (updatePair[1] != null) {
-                if (sourceComponentName.equals("L_AVG") && tuple.get(0).equals("840"))
-                    LOG.info("output tuple insert : " + Arrays.toString(updatePair[1].toArray()));
-
-                List<Object> typedTuple = createTypedTuple(tuple, colTypes);
-                performJoin(sourceComponentName, stormTupleRcv, typedTuple, DBToasterEngine.TUPLE_INSERT, isLastInBatch);
-            }
+            performJoin(sourceComponentName, stormTupleRcv, tuple, isLastInBatch);
         }
 
     }
@@ -317,16 +290,21 @@ public class StormDBToasterJoin extends StormBoltComponent {
      * PerformJoin method insert tuple / delete tuple to the DBToasterInstance and get the output stream
      * @param sourceComponentName
      * @param stormTupleRcv
-     * @param typedTuple
-     * @param multiplicity
      * @param isLastInBatch
      */
     protected void performJoin(String sourceComponentName, Tuple stormTupleRcv,
-                               List<Object> typedTuple,
-                               byte multiplicity,
+                               List<String> tuple,
                                boolean isLastInBatch) {
 
+        boolean tupleWithMultiplicity = _emittersWithMultiplicity.contains(sourceComponentName);
+        Type[] colTypes = _emitterNamesColTypes.get(sourceComponentName);
 
+        byte multiplicity = 1;
+        if (tupleWithMultiplicity) {
+            multiplicity = Byte.valueOf(tuple.get(0));
+        }
+
+        List<Object> typedTuple = createTypedTuple(tuple, colTypes, tupleWithMultiplicity);
 
         dbtoasterEngine.receiveTuple(sourceComponentName, multiplicity, typedTuple);
 
@@ -339,18 +317,25 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
         for (Object[] u : stream) {
             List<String> outputTuple = createStringTuple(u);
-            //LOG.info("output tuple: " + Arrays.toString(outputTuple.toArray()));
             applyOperatorsAndSend(stormTupleRcv, outputTuple, lineageTimestamp, isLastInBatch);
         }
 
     }
 
-    private List<Object> createTypedTuple(List<String> tuple, Type[] columnTypes) {
+    /**
+     * Create typed tuple from column types array.
+     * The correspondence between type and field are offset by 1 if there is multiplicity
+     * @param tuple
+     * @param columnTypes
+     * @param multiplicityIncluded
+     * @return
+     */
+    private List<Object> createTypedTuple(List<String> tuple, Type[] columnTypes, boolean multiplicityIncluded) {
         List<Object> typedTuple = new LinkedList<Object>();
 
-//        int offset = multiplicityIncluded ? 1 : 0;
+        int offset = multiplicityIncluded ? 1 : 0;
         for (int i = 0; i < columnTypes.length; i++) {
-            Object value = columnTypes[i].fromString(tuple.get(i));//ignore the first multiplicity field by offset by 1
+            Object value = columnTypes[i].fromString(tuple.get(i + offset));//ignore the first multiplicity field by offset by 1
             typedTuple.add(value);
         }
 
