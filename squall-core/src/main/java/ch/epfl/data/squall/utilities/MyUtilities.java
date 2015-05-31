@@ -567,7 +567,7 @@ public class MyUtilities {
     }
 
 
-    public static InputDeclarer hyperCubeAttachEmitterComponents(
+    public static InputDeclarer attachEmitterHyperCube(
             InputDeclarer currentBolt, List<StormEmitter> emitters, List<String> allCompNames,
             HyperCubeAssignment assignment, Map map) {
 
@@ -1810,7 +1810,7 @@ public class MyUtilities {
 	// values
 	final String[] columnValues = tupleString.split(SystemParameters
 		.getString(conf, "DIP_GLOBAL_SPLIT_DELIMITER"));
-	return new ArrayList<String>(Arrays.asList(columnValues));
+        return new ArrayList<String>(Arrays.asList(columnValues));
     }
 
     public static InputDeclarer thetaAttachEmitterComponents(

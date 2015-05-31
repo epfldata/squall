@@ -162,7 +162,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
                         new HyperCubeAssignerFactory().getAssigner(parallelism, cardinality);
 
                 LOG.info("assignment: " + _currentHyperCubeMappingAssignment.getMappingDimensions());
-                currentBolt = MyUtilities.hyperCubeAttachEmitterComponents(currentBolt,
+                currentBolt = MyUtilities.attachEmitterHyperCube(currentBolt,
                         nonNestedEmitters, allCompNames,
                         _currentHyperCubeMappingAssignment, conf);
                 break;
