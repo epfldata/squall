@@ -87,7 +87,7 @@ public class DBToasterCodeGen {
                     "-xd", Files.createTempDirectory("dbtoastergen").toAbsolutePath().toString(),
                     "-l", "scala",
                     tmpSQLFile,
-                    "-w",
+                    "-wa",
                     "-n", queryName,
                     "-o", File.createTempFile(queryName, ".scala").getAbsolutePath(),
                     "-c", jarFile};
