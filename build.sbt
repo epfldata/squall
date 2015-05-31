@@ -112,12 +112,14 @@ lazy val squall = (project in file("squall-core")).
   )
 
 // For the macros
-lazy val functional_macros = (project in file("squall-functional-macros")).
+lazy val functional_macros = (project in file("squall-functional")).
   dependsOn(squall).
   settings(commonSettings: _*).
   settings(
-    name := "squall-frontend-core",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _)
+    name := "squall-frontend-macros",
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
+    scalaSource in Compile := baseDirectory.value / "macros",
+    target := target.value / "macros"
   )
 
 lazy val functional = (project in file("squall-functional")).

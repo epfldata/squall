@@ -80,7 +80,7 @@ object Stream {
     def onWindow(rangeSize: Int, slideSize: Int) = WindowStream[T, U, N](this, rangeSize, slideSize)
     def onTumblingWindow(rangeSize: Int) = WindowStream[T, U, N](this, rangeSize, -1)
 
-    def execute(map: java.util.Map[String, String]): QueryBuilder = {
+    def execute(map: java.util.Map[String, Object]): QueryBuilder = {
       var metaData = List[Int](-1, -1)
       mainInterprete[T, U, N](this, metaData, map)
     }
@@ -91,7 +91,8 @@ object Stream {
   // 2: Hash Indexes of R1
   // 3: Hash Indexes of R2
   // 4: Sliding Window value
-  private def interprete[T: SquallType](str: Stream[T], qb: QueryBuilder, metaData: Tuple4[List[Operator], List[Int], List[Int], Int], confmap: java.util.Map[String, String]): Component = str match {
+  // TODO: why is metadata a tuple?
+  private def interprete[T: SquallType](str: Stream[T], qb: QueryBuilder, metaData: Tuple4[List[Operator], List[Int], List[Int], Int], confmap: java.util.Map[String, Object]): Component = str match {
     case Source(name) => {
       println("Reached Source")
       var dataSourceComponent = qb.createDataSource(name, confmap)
@@ -141,7 +142,7 @@ object Stream {
     inter.foldLeft(start)((pred1, pred2) => new AndPredicate(pred1, pred2))
   }
 
-  def interpJoin[T: SquallType, U: SquallType, V: SquallType, L: SquallType](j: JoinedStream[T, U, V, L], qb: QueryBuilder, metaData: Tuple4[List[Operator], List[Int], List[Int], Int], confmap: java.util.Map[String, String]): Component = {
+  def interpJoin[T: SquallType, U: SquallType, V: SquallType, L: SquallType](j: JoinedStream[T, U, V, L], qb: QueryBuilder, metaData: Tuple4[List[Operator], List[Int], List[Int], Int], confmap: java.util.Map[String, Object]): Component = {
     val typeT = j.tpT
     val typeU = j.tpU
     val typeL = j.tpL
@@ -186,7 +187,7 @@ object Stream {
   private implicit def toIntegerList(lst: List[Int]) =
     seqAsJavaListConverter(lst.map(i => i: java.lang.Integer)).asJava
 
-  private def mainInterprete[T: SquallType, U: SquallType, A: Numeric](str: TailStream[T, U, A], windowMetaData: List[Int], map: java.util.Map[String, String]): QueryBuilder = str match {
+  private def mainInterprete[T: SquallType, U: SquallType, A: Numeric](str: TailStream[T, U, A], windowMetaData: List[Int], map: java.util.Map[String, Object]): QueryBuilder = str match {
     case GroupedStream(parent, agg, ind) => {
       val st1 = implicitly[SquallType[T]]
       val st2 = implicitly[SquallType[U]]

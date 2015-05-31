@@ -108,7 +108,7 @@ class ScalaAggregateOperator[T: SquallType, A: Numeric](val _agg: T => A, val _m
   def getGroupByStr(): String = {
     var sb: StringBuilder = new StringBuilder();
     sb.append("(");
-    for (i <- 0 to _groupByColumns.size()) {
+    for (i <- 0 until _groupByColumns.size()) {
       sb.append(_groupByColumns.get(i));
       if (i == _groupByColumns.size() - 1)
         sb.append(")");
