@@ -38,7 +38,7 @@ public interface AggregateStream {
      *     The output is:
      *     <ul>
      *         <li>
-     *             withMultiplicity: (-1, 4, 5, 2), (1, 4, 5, 5)
+     *             withMultiplicity: (4, 5, 2, -1), (4, 5, 5, 1)
      *         </li>
      *         <li>
      *             without multiplicity: (4, 5, 3)

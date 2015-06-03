@@ -79,7 +79,6 @@ public class StormDBToasterJoin extends StormBoltComponent {
     private static final String DBT_GEN_PKG = "ddbt.gen.";
     private static final String QUERY_CLASS_SUFFIX = "Impl";
     private String _dbToasterQueryName;
-    private boolean _outputWithMultiplicity;
 
     private StormEmitter[] _emitters;
     private Map<String, Type[]> _emitterNamesColTypes; // map between emitter names and types of tuple from the emitter
@@ -92,7 +91,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
                               Set<String> emittersWithMultiplicity,
                               Map<String, AggregateStream> emittersWithAggregator,
                               int hierarchyPosition, TopologyBuilder builder,
-                              TopologyKiller killer, Config conf, boolean outputMultiplicity) {
+                              TopologyKiller killer, Config conf) {
         super(cp, allCompNames, hierarchyPosition, conf);
 
 
@@ -105,7 +104,6 @@ public class StormDBToasterJoin extends StormBoltComponent {
         _fullHashList = cp.getFullHashList();
 
         _dbToasterQueryName = cp.getName() + QUERY_CLASS_SUFFIX;
-        _outputWithMultiplicity = outputMultiplicity;
 
         _aggBatchOutputMillis = cp.getBatchOutputMillis();
 
@@ -143,7 +141,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
         List<StormEmitter> nestedEmitters = new ArrayList<StormEmitter>();
         List<StormEmitter> nonNestedEmitters = new ArrayList<StormEmitter>();
         for (StormEmitter e : _emitters) {
-            if (_emittersWithMultiplicity.contains(e.getName())) {
+            if (_emitterAggregators.containsKey(e.getName())) {
                 nestedEmitters.add(e);
             } else {
                 nonNestedEmitters.add(e);
@@ -299,16 +297,19 @@ public class StormDBToasterJoin extends StormBoltComponent {
         boolean tupleWithMultiplicity = _emittersWithMultiplicity.contains(sourceComponentName);
         Type[] colTypes = _emitterNamesColTypes.get(sourceComponentName);
 
-        byte multiplicity = 1;
+        int multiplicity = 1;
         if (tupleWithMultiplicity) {
-            multiplicity = Byte.valueOf(tuple.get(0));
+            multiplicity = Byte.valueOf(tuple.get(tuple.size() - 1));
         }
 
-        List<Object> typedTuple = createTypedTuple(tuple, colTypes, tupleWithMultiplicity);
+        byte tupleOp = (multiplicity > 0) ? DBToasterEngine.TUPLE_INSERT : DBToasterEngine.TUPLE_DELETE;
 
-        dbtoasterEngine.receiveTuple(sourceComponentName, multiplicity, typedTuple);
+        List<Object> typedTuple = createTypedTuple(tuple, colTypes);
 
-        List<Object[]> stream = dbtoasterEngine.getStreamOfUpdateTuples(_outputWithMultiplicity);
+        for (int i = 0; i < Math.abs(multiplicity); i++)
+            dbtoasterEngine.receiveTuple(sourceComponentName, tupleOp, typedTuple);
+
+        List<Object[]> stream = dbtoasterEngine.getStreamOfUpdateTuples();
 
         long lineageTimestamp = 0L;
         if (MyUtilities.isCustomTimestampMode(getConf()))
@@ -324,18 +325,15 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
     /**
      * Create typed tuple from column types array.
-     * The correspondence between type and field are offset by 1 if there is multiplicity
      * @param tuple
      * @param columnTypes
-     * @param multiplicityIncluded
      * @return
      */
-    private List<Object> createTypedTuple(List<String> tuple, Type[] columnTypes, boolean multiplicityIncluded) {
+    private List<Object> createTypedTuple(List<String> tuple, Type[] columnTypes) {
         List<Object> typedTuple = new LinkedList<Object>();
 
-        int offset = multiplicityIncluded ? 1 : 0;
         for (int i = 0; i < columnTypes.length; i++) {
-            Object value = columnTypes[i].fromString(tuple.get(i + offset));//ignore the first multiplicity field by offset by 1
+            Object value = columnTypes[i].fromString(tuple.get(i));
             typedTuple.add(value);
         }
 
@@ -343,7 +341,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
     }
 
     private List<String> createStringTuple(Object[] typedTuple) {
-        List<String> tuple = new LinkedList<String>();
+        List<String> tuple = new ArrayList<String>();
         for (Object o : typedTuple) tuple.add("" + o);
         return tuple;
     }

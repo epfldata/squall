@@ -77,7 +77,6 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
     private Set<String> _parentsWithMultiplicity;
     private Map<String, AggregateStream> _parentsWithAggregator;
     private String _equivalentSQL;
-    private boolean _outputWithMultiplicity;
 
     protected DBToasterJoinComponent(List<Component> relations, Map<String, Type[]> relationTypes,
                                      Set<String> relationsWithMultiplicity, Map<String, AggregateStream>  relationsWithAggregator,
@@ -198,7 +197,7 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
                 _parentsWithMultiplicity,
                 _parentsWithAggregator,
                 hierarchyPosition,
-                builder, killer, conf, _outputWithMultiplicity);
+                builder, killer, conf);
     }
 
     @Override
@@ -277,21 +276,6 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
         return this;
     }
 
-    /**
-     * Whether to output tuple with a multiplicity field.
-     * <p>
-     * If this is set to true, the stream of output tuples contains an additional "multiplicity" field at the first index.
-     * Multiplicity value +1 represents added tuple while multiplicity -1 represent deleted tuple
-     * </p>
-     * <p>
-     * If this is not set, the stream of output tuples does not have "multiplicity". The value field of tuple will be the change delta between consecutive tuples
-     * </p>
-     * @param withMul
-     */
-    public Component setOutputWithMultiplicity(boolean withMul) {
-        _outputWithMultiplicity = withMul;
-        return this;
-    }
 
     public String getSQLQuery() {
         return _equivalentSQL;

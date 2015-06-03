@@ -77,10 +77,10 @@ public class DBToasterEngine implements Serializable {
         _query.handleEvent(new TupleEvent(tupleOp, relationName, dbtTuple));
     }
 
-    public java.util.List<Object[]> getStreamOfUpdateTuples(boolean withMultiplicity) {
+    public java.util.List<Object[]> getStreamOfUpdateTuples() {
 
         java.util.List<Object[]> outputTuples = new LinkedList();
-        List<Object> updateStream = (List<Object>) _query.handleEvent(new GetStream(1, withMultiplicity));
+        List<Object> updateStream = (List<Object>) _query.handleEvent(new GetStream(1, false));
         Iterator<Object> iterator = scala.collection.JavaConversions.asJavaIterator(updateStream.iterator());
 
         while (iterator.hasNext()) {

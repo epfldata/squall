@@ -239,11 +239,12 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements
 
     private List<String> createUpdateTuple(String multiplicity, List<String> tupleKey, String tupleValue) {
         List<String> updateTuple = new ArrayList<String>();
-        if (multiplicity != null)
-            updateTuple.add(multiplicity);
 
         updateTuple.addAll(tupleKey);
         updateTuple.add(tupleValue);
+
+        if (multiplicity != null)
+            updateTuple.add(multiplicity);
         return updateTuple;
     }
 
