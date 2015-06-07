@@ -116,7 +116,7 @@ public class StormHyperCubeJoin extends StormBoltComponent {
         _currentMappingAssignment = new HyperCubeAssignerFactory().getAssigner(parallelism, cardinality);
 
         if (interComp == null)
-            currentBolt = MyUtilities.hyperCubeAttachEmitterComponents(currentBolt,
+            currentBolt = MyUtilities.attachEmitterHyperCube(currentBolt,
                     emitters, allCompNames,
                     _currentMappingAssignment, conf);
         else {

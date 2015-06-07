@@ -24,6 +24,9 @@ package ch.epfl.data.squall.components.dbtoaster;
 import ch.epfl.data.squall.api.sql.util.ParserUtil;
 import ch.epfl.data.squall.api.sql.visitors.jsql.SQLVisitor;
 import ch.epfl.data.squall.components.Component;
+import ch.epfl.data.squall.expressions.ColumnReference;
+import ch.epfl.data.squall.operators.AggregateSumOperator;
+import ch.epfl.data.squall.operators.AggregateStream;
 import ch.epfl.data.squall.types.DateLongType;
 import ch.epfl.data.squall.types.DoubleType;
 import ch.epfl.data.squall.types.IntegerType;
@@ -33,22 +36,104 @@ import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.SelectItem;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DBToasterJoinComponentBuilder {
     private List<Component> _relations = new LinkedList<Component>();
     private Map<String, Type[]> _relColTypes = new HashMap<String, Type[]>();
+    private Set<String> _relMultiplicity = new HashSet<String>();
+    private Map<String, AggregateStream> _relAggregators = new HashMap<String, AggregateStream>();
     private String _sql;
     private Pattern _sqlVarPattern = Pattern.compile("([A-Za-z0-9_]+)\\.f([0-9]+)");
+    private String _name;
+    private Map _conf;
 
+    public DBToasterJoinComponentBuilder() {
+
+    }
+
+    public DBToasterJoinComponentBuilder(Map conf) {
+        this._conf = conf;
+    }
+
+    /**
+     * <p>
+     *     Add relation whose incoming tuples will be added to DBToaster instance.
+     * </p>
+     * @param relation parent relation
+     * @param types incoming tuples' field types which will be used to convert from String-based tuple to typed tuple
+     * @return
+     *
+     * @see ch.epfl.data.squall.dbtoaster.DBToasterEngine#receiveTuple
+     * @see ch.epfl.data.squall.storm_components.dbtoaster.StormDBToasterJoin#performJoin
+     */
     public DBToasterJoinComponentBuilder addRelation(Component relation, Type... types) {
         _relations.add(relation);
         _relColTypes.put(relation.getName(), types);
         return this;
+    }
+
+    /**
+     * <p>
+     *     Add relation whose tuples have multiplicity fields.
+     *     The multiplicity field provides the capability to taken back, i.e, remove the tuple which has been sent previously
+     *     This is useful when the tuple previously sent is no longer valid
+     * </p>
+     * <p>
+     *     The multiplicity field have to be at the first index and has value of 1 or -1.
+     *     The DBToaster instance will be invoked with the corresponding Tuple Operation, Insert or Delete respectively
+     * </p>
+     * <p>
+     *     Tuples from the relation are <b>broadcasted</b> to all tasks of this component
+     * </p>
+     *
+     * @param relation parent relation
+     * @param types the types array, <b>offset the multiplicity field</b>
+     * @return
+     *
+     * @see ch.epfl.data.squall.dbtoaster.DBToasterEngine#receiveTuple
+     * @see ch.epfl.data.squall.storm_components.dbtoaster.StormDBToasterJoin#performJoin
+     * @see ch.epfl.data.squall.storm_components.dbtoaster.StormDBToasterJoin#attachEmitters
+     */
+    public DBToasterJoinComponentBuilder addRelationWithMultiplicity(Component relation, Type... types) {
+        _relMultiplicity.add(relation.getName());
+        return addRelation(relation, types);
+    }
+
+    /**
+     * <p>
+     *     Add relation which is resulted from aggregation.
+     *     As a result the incoming tuple should be aggregated from all tasks for the relation before processing.
+     *     Here the default aggregator use {@link ch.epfl.data.squall.operators.AggregateSumOperator} which implements the {@link ch.epfl.data.squall.operators.AggregateStream} interface.
+     * </p>
+     * <p>
+     *     Because online aggregation can invalidate previously sent tuple, the tuple from aggregate operator is output with multiplicity.
+     *     Therefore, this method in turn invokes {@link #addRelationWithMultiplicity}.
+     * </p>
+     * <p>
+     *     <b>This method can be refactored to accept other aggregator</b> like AggregateAvgOperator which need to implement {@link ch.epfl.data.squall.operators.AggregateStream}
+     * </p>
+     * @param relation parent relation
+     * @param types
+     * @return
+     *
+     * @see ch.epfl.data.squall.storm_components.dbtoaster.StormDBToasterJoin#processNonLastTuple
+     * @see ch.epfl.data.squall.operators.AggregateStream
+     */
+    public DBToasterJoinComponentBuilder addAggregatedRelation(Component relation, Type... types) {
+        int valueCol = types.length - 1;
+        int[] groupByCols = new int[types.length - 1];
+        for (int i = 0; i < groupByCols.length; i++)
+            groupByCols[i] = i;
+        _relAggregators.put(relation.getName(), new AggregateSumOperator(new ColumnReference(types[valueCol], valueCol), _conf).setGroupByColumns(groupByCols));
+
+        return addRelationWithMultiplicity(relation, types);
     }
 
     private boolean parentRelationExists(String name) {
@@ -89,8 +174,8 @@ public class DBToasterJoinComponentBuilder {
 
             }
         }
-
     }
+
     private void validateSQL(String sql) {
         SQLVisitor parsedQuery = ParserUtil.parseQuery(sql);
         List<Table> tables = parsedQuery.getTableList();
@@ -99,12 +184,17 @@ public class DBToasterJoinComponentBuilder {
         validateSelectItems(items);
     }
 
-    private String getSQLTypeFromTypeConversion(Type typeConversion) {
-        if (typeConversion instanceof LongType || typeConversion instanceof IntegerType) {
+    /**
+     * The conversion of SquallType to SQL type used in DBToaster's sql input is based on DBToaster's sql syntax
+     * @param type
+     * @return
+     */
+    private String getSQLTypeFromTypeConversion(Type type) {
+        if (type instanceof LongType || type instanceof IntegerType) {
             return "int";
-        } else if (typeConversion instanceof DoubleType) {
+        } else if (type instanceof DoubleType) {
             return "float";
-        } else if (typeConversion instanceof DateLongType) { // DBToaster code use Long for Date type.
+        } else if (type instanceof DateLongType) { // DBToaster's generated code uses Long for Date type.
             return "date";
         } else {
             return "String";
@@ -131,8 +221,21 @@ public class DBToasterJoinComponentBuilder {
         this._sql = generateSchemaSQL() + sql;
     }
 
+    public void setComponentName(String name) {
+        this._name = name;
+    }
+
     public DBToasterJoinComponent build() {
-        return new DBToasterJoinComponent(_relations, _relColTypes, _sql);
+        if (this._name == null) {
+            // componentName
+            StringBuilder nameBuilder = new StringBuilder();
+            for (Component com : _relations) {
+                if (nameBuilder.length() != 0) nameBuilder.append("_");
+                nameBuilder.append(com.getName());
+            }
+            _name = nameBuilder.toString();
+        }
+        return new DBToasterJoinComponent(_relations, _relColTypes, _relMultiplicity, _relAggregators, _sql, _name);
     }
 
 }
