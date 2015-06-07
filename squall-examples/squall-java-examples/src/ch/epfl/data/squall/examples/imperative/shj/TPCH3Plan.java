@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import ch.epfl.data.squall.types.IntegerType;
 import org.apache.log4j.Logger;
 
 import ch.epfl.data.squall.components.DataSourceComponent;
@@ -69,86 +70,86 @@ public class TPCH3Plan extends QueryPlan {
     private final QueryBuilder _queryBuilder = new QueryBuilder();
 
     public TPCH3Plan(String dataPath, String extension, Map conf) {
-	// -------------------------------------------------------------------------------------
-	final List<Integer> hashCustomer = Arrays.asList(0);
+        // -------------------------------------------------------------------------------------
+        final List<Integer> hashCustomer = Arrays.asList(0);
 
-	final SelectOperator selectionCustomer = new SelectOperator(
-		new ComparisonPredicate(new ColumnReference(_sc, 6),
-			new ValueSpecification(_sc, _customerMktSegment)));
+        final SelectOperator selectionCustomer = new SelectOperator(
+                new ComparisonPredicate(new ColumnReference(_sc, 6),
+                        new ValueSpecification(_sc, _customerMktSegment)));
 
-	final ProjectOperator projectionCustomer = new ProjectOperator(
-		new int[] { 0 });
+        final ProjectOperator projectionCustomer = new ProjectOperator(
+                new int[] { 0 });
 
-	final DataSourceComponent relationCustomer = new DataSourceComponent(
-		"CUSTOMER", dataPath + "customer" + extension)
-		.setOutputPartKey(hashCustomer).add(selectionCustomer)
-		.add(projectionCustomer);
-	_queryBuilder.add(relationCustomer);
+        final DataSourceComponent relationCustomer = new DataSourceComponent(
+                "CUSTOMER", dataPath + "customer" + extension)
+                .setOutputPartKey(hashCustomer).add(selectionCustomer)
+                .add(projectionCustomer);
+        _queryBuilder.add(relationCustomer);
 
-	// -------------------------------------------------------------------------------------
-	final List<Integer> hashOrders = Arrays.asList(1);
+        // -------------------------------------------------------------------------------------
+        final List<Integer> hashOrders = Arrays.asList(1);
 
-	final SelectOperator selectionOrders = new SelectOperator(
-		new ComparisonPredicate(ComparisonPredicate.LESS_OP,
-			new ColumnReference(_dateConv, 4),
-			new ValueSpecification(_dateConv, _date)));
+        final SelectOperator selectionOrders = new SelectOperator(
+                new ComparisonPredicate(ComparisonPredicate.LESS_OP,
+                        new ColumnReference(_dateConv, 4),
+                        new ValueSpecification(_dateConv, _date)));
 
-	final ProjectOperator projectionOrders = new ProjectOperator(new int[] {
-		0, 1, 4, 7 });
+        final ProjectOperator projectionOrders = new ProjectOperator(new int[] {
+                0, 1, 4, 7 });
 
-	final DataSourceComponent relationOrders = new DataSourceComponent(
-		"ORDERS", dataPath + "orders" + extension)
-		.setOutputPartKey(hashOrders).add(selectionOrders)
-		.add(projectionOrders);
-	_queryBuilder.add(relationOrders);
+        final DataSourceComponent relationOrders = new DataSourceComponent(
+                "ORDERS", dataPath + "orders" + extension)
+                .setOutputPartKey(hashOrders).add(selectionOrders)
+                .add(projectionOrders);
+        _queryBuilder.add(relationOrders);
 
-	// -------------------------------------------------------------------------------------
-	final EquiJoinComponent C_Ojoin = new EquiJoinComponent(
-		relationCustomer, relationOrders).add(
-		new ProjectOperator(new int[] { 1, 2, 3 })).setOutputPartKey(
-		Arrays.asList(0));
-	_queryBuilder.add(C_Ojoin);
+        // -------------------------------------------------------------------------------------
+        final EquiJoinComponent C_Ojoin = new EquiJoinComponent(
+                relationCustomer, relationOrders).add(
+                new ProjectOperator(new int[] { 1, 2, 3 })).setOutputPartKey(
+                Arrays.asList(0));
+        _queryBuilder.add(C_Ojoin);
 
-	// -------------------------------------------------------------------------------------
-	final List<Integer> hashLineitem = Arrays.asList(0);
+        // -------------------------------------------------------------------------------------
+        final List<Integer> hashLineitem = Arrays.asList(0);
 
-	final SelectOperator selectionLineitem = new SelectOperator(
-		new ComparisonPredicate(ComparisonPredicate.GREATER_OP,
-			new ColumnReference(_dateConv, 10),
-			new ValueSpecification(_dateConv, _date)));
+        final SelectOperator selectionLineitem = new SelectOperator(
+                new ComparisonPredicate(ComparisonPredicate.GREATER_OP,
+                        new ColumnReference(_dateConv, 10),
+                        new ValueSpecification(_dateConv, _date)));
 
-	final ProjectOperator projectionLineitem = new ProjectOperator(
-		new int[] { 0, 5, 6 });
+        final ProjectOperator projectionLineitem = new ProjectOperator(
+                new int[] { 0, 5, 6 });
 
-	final DataSourceComponent relationLineitem = new DataSourceComponent(
-		"LINEITEM", dataPath + "lineitem" + extension)
-		.setOutputPartKey(hashLineitem).add(selectionLineitem)
-		.add(projectionLineitem);
-	_queryBuilder.add(relationLineitem);
+        final DataSourceComponent relationLineitem = new DataSourceComponent(
+                "LINEITEM", dataPath + "lineitem" + extension)
+                .setOutputPartKey(hashLineitem).add(selectionLineitem)
+                .add(projectionLineitem);
+        _queryBuilder.add(relationLineitem);
 
-	// -------------------------------------------------------------------------------------
-	// set up aggregation function on the StormComponent(Bolt) where join is
-	// performed
+        // -------------------------------------------------------------------------------------
+        // set up aggregation function on the StormComponent(Bolt) where join is
+        // performed
 
-	// 1 - discount
-	final ValueExpression<Double> substract = new Subtraction(
-		new ValueSpecification(_doubleConv, 1.0), new ColumnReference(
-			_doubleConv, 4));
-	// extendedPrice*(1-discount)
-	final ValueExpression<Double> product = new Multiplication(
-		new ColumnReference(_doubleConv, 3), substract);
-	final AggregateOperator agg = new AggregateSumOperator(product, conf)
-		.setGroupByColumns(Arrays.asList(0, 1, 2));
+        // 1 - discount
+        final ValueExpression<Double> substract = new Subtraction(
+                new ValueSpecification(_doubleConv, 1.0), new ColumnReference(
+                _doubleConv, 4));
+        // extendedPrice*(1-discount)
+        final ValueExpression<Double> product = new Multiplication(
+                new ColumnReference(_doubleConv, 3), substract);
+        final AggregateOperator agg = new AggregateSumOperator(product, conf)
+                .setGroupByColumns(Arrays.asList(0, 1, 2));
 
-	EquiJoinComponent finalComp = new EquiJoinComponent(C_Ojoin,
-		relationLineitem).add(agg);
-	_queryBuilder.add(finalComp);
-	// -------------------------------------------------------------------------------------
+        EquiJoinComponent finalComp = new EquiJoinComponent(C_Ojoin,
+                relationLineitem).add(agg);
+        _queryBuilder.add(finalComp);
+        // -------------------------------------------------------------------------------------
 
     }
 
     @Override
     public QueryBuilder getQueryPlan() {
-	return _queryBuilder;
+        return _queryBuilder;
     }
 }

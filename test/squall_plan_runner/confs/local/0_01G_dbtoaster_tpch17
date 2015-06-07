@@ -1,0 +1,39 @@
+DIP_DISTRIBUTED false
+DIP_QUERY_NAME tpch17
+DIP_QUERY_PLAN ch.epfl.data.squall.examples.imperative.dbtoaster.DBToasterTPCH17Plan
+DIP_TOPOLOGY_NAME_PREFIX username
+DIP_NUM_ACKERS 0
+
+DIP_DATA_PATH ../test/data/tpch/0.01G/
+DIP_RESULT_ROOT ../test/results/
+
+PART_PAR 1
+NESTED_L_PAR 1
+LINEITEM_PAR 1
+L_AVG_PAR 2
+L_AVG_PART_LINEITEM_PAR 2
+FINAL_RESULT_PAR 1
+
+#L_AVG_PART_LINEITEM_PART_SCHEME HASH 
+L_AVG_PART_SCHEME HASH
+
+PART_CARD 2000
+NESTED_L_CARD 100
+L_AVG_CARD 2000
+LINEITEM_CARD 60175
+
+#below are unlikely to change
+DIP_EXTENSION .tbl
+DIP_READ_SPLIT_DELIMITER \|
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_KILL_AT_THE_END true
+
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_CLUSTER_DIR /data/squall_zone/storage
+STORAGE_COLD_START true
+STORAGE_MEMORY_SIZE_MB 4096

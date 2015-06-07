@@ -21,9 +21,12 @@ package ch.epfl.data.squall.main;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
+import ch.epfl.data.squall.utilities.StormDBToasterProvider;
 import org.apache.log4j.Logger;
 
 import backtype.storm.Config;
@@ -116,9 +119,14 @@ public class Main {
 	List<Component> queryPlan = qp.getPlan();
 	List<String> allCompNames = qp.getComponentNames();
 	Collections.sort(allCompNames);
-	int planSize = queryPlan.size();
+
+    List<DBToasterJoinComponent> dbtComponents = new LinkedList<DBToasterJoinComponent>();
+    int planSize = queryPlan.size();
 	for (int i = 0; i < planSize; i++) {
 	    Component component = queryPlan.get(i);
+        if (component instanceof DBToasterJoinComponent) {
+        dbtComponents.add((DBToasterJoinComponent) component);
+        }
 	    Component child = component.getChild();
 	    if (child == null) {
 		// a last component (it might be multiple of them)
@@ -137,7 +145,8 @@ public class Main {
 			StormComponent.INTERMEDIATE);
 	    }
 	}
-
+    if (dbtComponents.size() > 0) StormDBToasterProvider.prepare(dbtComponents,
+            SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED"));
 	// printing infoID information and returning the result
 	// printInfoID(killer, queryPlan); commented out because IDs are now
 	// desriptive names

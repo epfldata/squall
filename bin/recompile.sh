@@ -2,7 +2,7 @@
 
 cd ../
 
-# sbt clean
+#sbt clean
 
 # Generate squall-0.2.0.jar
 sbt package
