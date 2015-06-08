@@ -26,3 +26,6 @@ CLUSTER_R2HIST=$STORM_TMP_DIR/r2_hist
 CLUSTER_GATHER_HIST=/data/lab/fromhome/avitorovic/gather_hist
 
 CLUSTER_GATHER_DIR=/data/lab/fromhome/avitorovic/gather_logs
+
+# DBTOASTER installation folder. Only required if QueryPlan uses DBToasterJoinComponent
+DBTOASTER_HOME=~/opt/dbtoaster

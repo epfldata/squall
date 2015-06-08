@@ -51,6 +51,9 @@ if ! [ -f $CONFIG_PATH ]; then
 	exit
 fi
 
+echo "Set DBTOASTER_HOME to $DBTOASTER_HOME"
+export DBTOASTER_HOME=$DBTOASTER_HOME
+
 confname=${CONFIG_PATH##*/}
 
 ../$STORMNAME/bin/storm jar ../squall-core/target/squall-0.2.0.jar $CLASS $CONFIG_PATH
