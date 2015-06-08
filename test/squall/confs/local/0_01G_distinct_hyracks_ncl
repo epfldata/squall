@@ -1,5 +1,5 @@
 DIP_DISTRIBUTED false
-DIP_QUERY_NAME distinct_hyracks
+DIP_QUERY_NAME hyracks
 
 DIP_TOPOLOGY_NAME_PREFIX username
 DIP_DATA_ROOT ../test/data/tpch/
