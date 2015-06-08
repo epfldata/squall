@@ -101,7 +101,7 @@ public class DenseMonotonicWeightPrecomputation implements WeightPrecomputation 
     public double getWeight(Region region) {
 	return _wf.getWeight(region.getHalfPerimeter(), getFrequency(region));
     }
-
+    
     @Override
     public boolean isEmpty(Region region) {
 	return getFrequency(region) == 0;
