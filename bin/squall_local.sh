@@ -36,6 +36,9 @@ if ! [ -f $CONFIG_PATH ]; then
 	exit 1
 fi
 
+echo "Set DBTOASTER_HOME to $DBTOASTER_HOME"
+export DBTOASTER_HOME=$DBTOASTER_HOME
+
 # Now run
 cd ..
 

@@ -1,6 +1,4 @@
 #!/bin/bash
-./recompile.sh
-rm /tmp/tmp*
 
 # Check command line of command line arguments 
 if [ $# -lt 1 ]; then
@@ -13,6 +11,10 @@ if [[ "$MODE" != "PLAN_RUNNER" && "$MODE" != "SQL" ]]; then
 	echo "Invalid mode $MODE: mode can be either PLAN_RUNNER or SQL. Exit..."
 	exit
 fi
+
+./recompile.sh
+. ./install_dbtoaster.sh
+rm /tmp/tmp*
 
 # Throw a warning if there are more arguments than required
 if [ $# -gt 1 ]; then
