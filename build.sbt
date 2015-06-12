@@ -1,5 +1,7 @@
 import complete.DefaultParsers._
 
+scalaVersion := "2.11.6"
+
 lazy val runParser = inputKey[Unit]("Runs the SQL interface with the given configuration.")
 lazy val runPlanner = inputKey[Unit]("Runs the imperative interface with the given configuration.")
 
@@ -7,7 +9,7 @@ lazy val commonSettings = Seq(
   name := "squall",
   organization := "ch.epfl.data",
   version := "0.2.0",
-  scalaVersion := "2.11.5",
+  scalaVersion := "2.11.6",
   // Avoids having the scala version in the path to the jars
   crossPaths := false,
   // Options for assembling a single jar
@@ -120,6 +122,12 @@ lazy val functional_macros = (project in file("squall-functional-macros")).
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _)
   )
 
+
+// Temporal directory for REPL output
+// TODO: this should probably be a task
+lazy val repl_outdir   = sbt.IO.createTemporaryDirectory
+lazy val repl_classdir = {sbt.IO.createDirectory(repl_outdir / "classes"); repl_outdir / "classes"}
+
 lazy val functional = (project in file("squall-functional")).
   dependsOn(squall, functional_macros).
   settings(commonSettings: _*).
@@ -133,6 +141,20 @@ lazy val functional = (project in file("squall-functional")).
     name := "squall-frontend",
     libraryDependencies += "org.apache.storm" % "storm-core" % "0.9.3" % "provided",
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
-    libraryDependencies +=  "org.scalatest" % "scalatest_2.11" % "2.2.4" % Test
+    libraryDependencies +=  "org.scalatest" % "scalatest_2.11" % "2.2.4" % Test,
+    // Interactive mode
+    // TODO: this should probably be a task
+    scalacOptions in (Compile, console) += "-Yrepl-sync",
+    scalacOptions in (Compile, console) += "-Yrepl-class-based",
+    scalacOptions in (Compile, console) += "-Yrepl-outdir",
+    scalacOptions in (Compile, console) += repl_classdir.getAbsolutePath(),
+    initialCommands in Compile in console += "import ch.epfl.data.squall.query_plans.QueryBuilder;",
+    initialCommands in Compile in console += "import ch.epfl.data.squall.api.scala.SquallType._;",
+    initialCommands in Compile in console += "import ch.epfl.data.squall.api.scala.Stream._;",
+    initialCommands in Compile in console += "import ch.epfl.data.squall.api.scala.TPCHSchema._;",
+    initialCommands in Compile in console += s"""val REPL = new ch.epfl.data.squall.api.scala.REPL(\"${repl_outdir}\");""",
+    initialCommands in Compile in console += "import REPL._;",
+    initialCommands in Compile in console += "start;",
+    console in Compile <<= (console in Compile).dependsOn(assembly)
   )
 
