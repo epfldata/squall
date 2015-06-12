@@ -31,7 +31,7 @@ init_cluster_profiling() {
 		return # Cluster already in profiling mode
 	fi
 	echo "Updating cluster with profiling configuration..."
-	./snd_conf.sh storm.yaml.profiling
+	./snd_storm_conf.sh ../resources/storm-linux_4GB_profiling.yaml
 	echo "DONE"
 	restart_cluster
 }
@@ -46,7 +46,7 @@ restore_normal_cluster() {
 	fi
 	echo "Updating cluster with normal configuration..."
    # NOTE: No guarantee that storm.yaml is the current configuration; it's fine as long as we are not in profile mode
-	./snd_conf.sh storm.yaml
+	./snd_storm_conf.sh ../resources/storm-linux_4GB.yaml
 	echo "DONE"
 	restart_cluster
 }

@@ -8,6 +8,7 @@
 eclipse
 deploy
 storm-0*
+apache-storm-*
 
 bin/extract_constants
 bin/old

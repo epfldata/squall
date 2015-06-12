@@ -346,6 +346,15 @@ public class MyUtilities {
 	return currentBolt;
     }
 
+    public static InputDeclarer attachEmitterBroadcast(InputDeclarer currentBolt, List<StormEmitter> emitters) {
+        for (StormEmitter e : emitters) {
+            for (String emitterId : e.getEmitterIDs()) {
+                currentBolt = currentBolt.allGrouping(emitterId);
+            }
+        }
+        return currentBolt;
+    }
+
     public static InputDeclarer attachEmitterComponentsReshuffled(
 	    InputDeclarer currentBolt, StormEmitter emitter1,
 	    StormEmitter... emittersArray) {
@@ -530,16 +539,15 @@ public class MyUtilities {
     }
 
     public static InputDeclarer attachEmitterStarSchema(Map map,
-        InputDeclarer currentBolt, StormEmitter[] emitters,
+        InputDeclarer currentBolt, List<StormEmitter> emitters,
         long[] cardinality) {
-        LOG.info("Should not use star schema here");
-        String starEmitterName = emitters[0].getName();
+        String starEmitterName = emitters.get(0).getName();
         long largestCardinality = cardinality[0];
         // find the starEmitter as the one with largest cardinality
-        for (int i = 1; i < emitters.length; i++) {
+        for (int i = 1; i < emitters.size(); i++) {
             if (cardinality[i] > largestCardinality) {
                 largestCardinality = cardinality[i];
-                starEmitterName = emitters[i].getName();
+                starEmitterName = emitters.get(i).getName();
             }
         }
 
@@ -558,9 +566,10 @@ public class MyUtilities {
         return currentBolt;
     }
 
-    public static InputDeclarer hyperCubeAttachEmitterComponents(
+
+    public static InputDeclarer attachEmitterHyperCube(
             InputDeclarer currentBolt, List<StormEmitter> emitters, List<String> allCompNames,
-            HyperCubeAssignment assignment, Map map, Type wrapper) {
+            HyperCubeAssignment assignment, Map map) {
 
 
         String[] emitterIndexes = new String[emitters.size()];
@@ -1801,7 +1810,7 @@ public class MyUtilities {
 	// values
 	final String[] columnValues = tupleString.split(SystemParameters
 		.getString(conf, "DIP_GLOBAL_SPLIT_DELIMITER"));
-	return new ArrayList<String>(Arrays.asList(columnValues));
+        return new ArrayList<String>(Arrays.asList(columnValues));
     }
 
     public static InputDeclarer thetaAttachEmitterComponents(
@@ -1863,27 +1872,6 @@ public class MyUtilities {
 		currentBolt = currentBolt.customGrouping(emitterID, mapping);
 	}
 	return currentBolt;
-    }
-
-
-    public static InputDeclarer hyperCubeAttachEmitterComponents(
-            InputDeclarer currentBolt, List<StormEmitter> emitters, List<String> allCompNames,
-            HyperCubeAssignment assignment, Map map) {
-
-
-        String[] emitterIndexes = new String[emitters.size()];
-        for (int i = 0; i < emitterIndexes.length; i++)
-            emitterIndexes[i] = String.valueOf(allCompNames
-                    .indexOf(emitters.get(i).getName()));
-
-        CustomStreamGrouping mapping = new HyperCubeGrouping(emitterIndexes, assignment, map);
-
-        for (final StormEmitter emitter : emitters) {
-            final String[] emitterIDs = emitter.getEmitterIDs();
-            for (final String emitterID : emitterIDs)
-                currentBolt = currentBolt.customGrouping(emitterID, mapping);
-        }
-        return currentBolt;
     }
 
     public static InputDeclarer hypecCubeAttachEmitterComponentsWithInterChanging(

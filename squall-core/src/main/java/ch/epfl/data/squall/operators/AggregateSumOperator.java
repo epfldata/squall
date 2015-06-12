@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import ch.epfl.data.squall.expressions.Subtraction;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
@@ -40,7 +41,7 @@ import ch.epfl.data.squall.visitors.OperatorVisitor;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
 public class AggregateSumOperator<T extends Number & Comparable<T>> implements
-	AggregateOperator<T> {
+	AggregateOperator<T>, AggregateStream {
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(AggregateSumOperator.class);
 
@@ -184,6 +185,67 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements
 	affectedTuple.add(strValue);
 
 	return affectedTuple;
+    }
+
+    @Override
+    public List<List<String>> updateStream(List<String> tuple, boolean withMultiplicity) {
+        _numTuplesProcessed++;
+        if (_distinct != null) {
+            tuple = _distinct.process(tuple, 0);
+            if (tuple == null)
+                return null;
+        }
+        String tupleHash;
+        if (_groupByType == GB_PROJECTION)
+            tupleHash = MyUtilities.createHashString(tuple, _groupByColumns,
+                    _groupByProjection.getExpressions(), _map);
+        else
+            tupleHash = MyUtilities.createHashString(tuple, _groupByColumns,
+                    _map);
+
+        // might consider to split the tupleHash based on delimiter instead as this does not take into account GB_PROJECTION
+        final List<String> tupleKey = new ArrayList<>(_groupByColumns.size());
+        for (int i = 0; i < _groupByColumns.size(); i++)
+            tupleKey.add(tuple.get(_groupByColumns.get(i)));
+
+        // get old value
+        T oldValue = null;
+        List<T> currentValues = _storage.access(tupleHash);
+        if (currentValues != null && currentValues.size() > 0) {
+            oldValue = currentValues.get(0);
+        }
+
+        // new value after process
+        final T newValue = _storage.update(tuple, tupleHash, 0);
+
+        if (withMultiplicity) {
+            List<List<String>> output = new ArrayList<List<String>>();
+            if (oldValue != null) {
+                List<String> oldTuple = createUpdateTuple("-1", tupleKey, _wrapper.toString(oldValue));
+                output.add(oldTuple);
+            }
+            List<String> newTuple = createUpdateTuple("1", tupleKey, _wrapper.toString(newValue));
+            output.add(newTuple);
+            return output;
+
+        } else {
+            Subtraction<T> s = new Subtraction<T>(new ValueSpecification<T>(_wrapper, newValue),
+                                                    new ValueSpecification<T>(_wrapper, oldValue));
+            T delta = s.eval(null);
+            return Arrays.asList(createUpdateTuple(null, tupleKey, _wrapper.toString(delta)));
+        }
+
+    }
+
+    private List<String> createUpdateTuple(String multiplicity, List<String> tupleKey, String tupleValue) {
+        List<String> updateTuple = new ArrayList<String>();
+
+        updateTuple.addAll(tupleKey);
+        updateTuple.add(tupleValue);
+
+        if (multiplicity != null)
+            updateTuple.add(multiplicity);
+        return updateTuple;
     }
 
     // actual operator implementation

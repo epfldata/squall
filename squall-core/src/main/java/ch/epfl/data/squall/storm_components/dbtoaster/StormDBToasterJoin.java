@@ -30,6 +30,7 @@ import backtype.storm.tuple.Tuple;
 import ch.epfl.data.squall.components.ComponentProperties;
 import ch.epfl.data.squall.dbtoaster.DBToasterEngine;
 import ch.epfl.data.squall.operators.AggregateOperator;
+import ch.epfl.data.squall.operators.AggregateStream;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
@@ -47,15 +48,12 @@ import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.statistics.StatisticsUtilities;
 import org.apache.log4j.Logger;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Semaphore;
 
 public class StormDBToasterJoin extends StormBoltComponent {
@@ -75,38 +73,37 @@ public class StormDBToasterJoin extends StormBoltComponent {
     private PeriodicAggBatchSend _periodicAggBatch;
     private final long _aggBatchOutputMillis;
 
-    // for printing statistics for creating graphs
-    protected Calendar _cal = Calendar.getInstance();
-    protected DateFormat _statDateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
     protected StatisticsUtilities _statsUtils;
 
     private DBToasterEngine dbtoasterEngine;
     private static final String DBT_GEN_PKG = "ddbt.gen.";
+    private static final String QUERY_CLASS_SUFFIX = "Impl";
     private String _dbToasterQueryName;
 
     private StormEmitter[] _emitters;
-    private Map<String, Type[]> _emitterIndexesColTypes;
+    private Map<String, Type[]> _emitterNamesColTypes; // map between emitter names and types of tuple from the emitter
+    private Set<String> _emittersWithMultiplicity;
+    private Map<String, AggregateStream> _emitterAggregators;
 
     public StormDBToasterJoin(StormEmitter[] emitters,
                               ComponentProperties cp, List<String> allCompNames,
                               Map<String, Type[]> emitterNameColTypes,
+                              Set<String> emittersWithMultiplicity,
+                              Map<String, AggregateStream> emittersWithAggregator,
                               int hierarchyPosition, TopologyBuilder builder,
                               TopologyKiller killer, Config conf) {
         super(cp, allCompNames, hierarchyPosition, conf);
 
 
         _emitters = emitters;
-        _emitterIndexesColTypes = new HashMap<String, Type[]>();
-        for (StormEmitter e : _emitters) {
-            String emitterIndex = String.valueOf(allCompNames.indexOf(e.getName()));
-            Type[] colRefs = emitterNameColTypes.get(e.getName());
-            _emitterIndexesColTypes.put(emitterIndex, colRefs);
-        }
+        _emitterNamesColTypes = emitterNameColTypes;
+        _emittersWithMultiplicity = emittersWithMultiplicity;
+        _emitterAggregators = emittersWithAggregator;
 
         _operatorChain = cp.getChainOperator();
         _fullHashList = cp.getFullHashList();
 
-        _dbToasterQueryName = cp.getName() + "Impl";
+        _dbToasterQueryName = cp.getName() + QUERY_CLASS_SUFFIX;
 
         _aggBatchOutputMillis = cp.getBatchOutputMillis();
 
@@ -127,27 +124,53 @@ public class StormDBToasterJoin extends StormBoltComponent {
                     SystemParameters.DUMP_RESULTS_STREAM);
     }
 
+    /**
+     * Attach emitters based on PART_SCHEME set up in the configuration.
+     * The exception is with emitters whose tuples have multiplicity field. They <b>broadcast</b> to all tasks
+     *
+     * @param conf
+     * @param currentBolt
+     * @param allCompNames
+     * @param parallelism
+     * @return
+     */
     private InputDeclarer attachEmitters(Config conf, InputDeclarer currentBolt,
                  List<String> allCompNames, int parallelism) {
+
+        // split between nested and non-nested emitters
+        List<StormEmitter> nestedEmitters = new ArrayList<StormEmitter>();
+        List<StormEmitter> nonNestedEmitters = new ArrayList<StormEmitter>();
+        for (StormEmitter e : _emitters) {
+            if (_emitterAggregators.containsKey(e.getName())) {
+                nestedEmitters.add(e);
+            } else {
+                nonNestedEmitters.add(e);
+            }
+        }
+
+        // all nested emitters should broadcast to this
+        MyUtilities.attachEmitterBroadcast(currentBolt, nestedEmitters);
+
+        // other non-nested emitters follow the specified partitioning scheme
         switch (getPartitioningScheme(conf)) {
             case HYPERCUBE:
-                long[] cardinality = getEmittersCardinality(conf);
+                long[] cardinality = getEmittersCardinality(nonNestedEmitters, conf);
                 LOG.info("cardinalities: " + Arrays.toString(cardinality));
                 final HyperCubeAssignment _currentHyperCubeMappingAssignment =
                         new HyperCubeAssignerFactory().getAssigner(parallelism, cardinality);
 
                 LOG.info("assignment: " + _currentHyperCubeMappingAssignment.getMappingDimensions());
-                    currentBolt = MyUtilities.hyperCubeAttachEmitterComponents(currentBolt,
-                            Arrays.asList(_emitters), allCompNames,
-                            _currentHyperCubeMappingAssignment, conf, null);
+                currentBolt = MyUtilities.attachEmitterHyperCube(currentBolt,
+                        nonNestedEmitters, allCompNames,
+                        _currentHyperCubeMappingAssignment, conf);
                 break;
             case STARSCHEMA:
                 currentBolt = MyUtilities.attachEmitterStarSchema(conf,
-                        currentBolt, _emitters, getEmittersCardinality(conf));
+                        currentBolt, nonNestedEmitters, getEmittersCardinality(nonNestedEmitters, conf));
                 break;
             case HASH:
                 currentBolt = MyUtilities.attachEmitterHash(conf, _fullHashList,
-                    currentBolt, _emitters[0], Arrays.copyOfRange(_emitters, 1, _emitters.length));
+                        currentBolt, nonNestedEmitters.get(0), nonNestedEmitters.subList(1, nonNestedEmitters.size()).toArray(new StormEmitter[nonNestedEmitters.size() - 1]));
                 break;
         }
         return currentBolt;
@@ -164,10 +187,10 @@ public class StormDBToasterJoin extends StormBoltComponent {
         }
     }
 
-    private long[] getEmittersCardinality(Config conf) {
-        long[] cardinality = new long[_emitters.length];
-        for (int i = 0; i < _emitters.length; i++) {
-            cardinality[i] = SystemParameters.getInt(conf, _emitters[i].getName() + "_CARD");
+    private long[] getEmittersCardinality(List<StormEmitter> emitters, Config conf) {
+        long[] cardinality = new long[emitters.size()];
+        for (int i = 0; i < emitters.size(); i++) {
+            cardinality[i] = SystemParameters.getInt(conf, emitters.get(i).getName() + "_CARD");
         }
         return cardinality;
     }
@@ -194,8 +217,6 @@ public class StormDBToasterJoin extends StormBoltComponent {
         }
 
         if (!MyUtilities.isManualBatchingMode(getConf())) {
-            final String inputComponentIndex = stormTupleRcv
-                    .getStringByField(StormComponent.COMP_INDEX); // getString(0);
             final List<String> tuple = (List<String>) stormTupleRcv
                     .getValueByField(StormComponent.TUPLE); // getValue(1);
             if (processFinalAck(tuple, stormTupleRcv)) {
@@ -204,11 +225,9 @@ public class StormDBToasterJoin extends StormBoltComponent {
                 return;
             }
 
-            processNonLastTuple(inputComponentIndex, tuple,
+            processNonLastTuple(tuple,
                     stormTupleRcv, true);
         } else {
-            final String inputComponentIndex = stormTupleRcv
-                    .getStringByField(StormComponent.COMP_INDEX); // getString(0);
             final String inputBatch = stormTupleRcv
                     .getStringByField(StormComponent.TUPLE);// getString(1);
             final String[] wholeTuples = inputBatch
@@ -236,7 +255,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
                     return;
                 }
                 // processing a tuple
-                processNonLastTuple(inputComponentIndex, tuple,
+                processNonLastTuple(tuple,
                         stormTupleRcv, (i == batchSize - 1));
 
             }
@@ -245,21 +264,50 @@ public class StormDBToasterJoin extends StormBoltComponent {
         getCollector().ack(stormTupleRcv);
     }
 
-    private void processNonLastTuple(String inputComponentIndex,
-                                     List<String> tuple, Tuple stormTupleRcv,
+
+    private void processNonLastTuple(List<String> tuple, Tuple stormTupleRcv,
                                      boolean isLastInBatch) {
-        Type[] colRefs = _emitterIndexesColTypes.get(inputComponentIndex);
-        performJoin(stormTupleRcv, tuple, colRefs, isLastInBatch);
+
+        String sourceComponentName = stormTupleRcv.getSourceComponent();
+
+        // if the tuple coming from aggregated relation, it will be first applied the corresponding AggregateStream operator first
+        if (_emitterAggregators.size() > 0 && _emitterAggregators.containsKey(sourceComponentName)) {
+            AggregateStream emitOp = _emitterAggregators.get(sourceComponentName);
+            List<List<String>> updateTuples = emitOp.updateStream(tuple, true);
+            for (List<String> t : updateTuples) {
+                performJoin(sourceComponentName, stormTupleRcv, t, isLastInBatch);
+            }
+
+        } else {
+            performJoin(sourceComponentName, stormTupleRcv, tuple, isLastInBatch);
+        }
 
     }
 
-    protected void performJoin(Tuple stormTupleRcv, List<String> tuple,
-                               Type[] columnTypes,
+    /**
+     * PerformJoin method insert tuple / delete tuple to the DBToasterInstance and get the output stream
+     * @param sourceComponentName
+     * @param stormTupleRcv
+     * @param isLastInBatch
+     */
+    protected void performJoin(String sourceComponentName, Tuple stormTupleRcv,
+                               List<String> tuple,
                                boolean isLastInBatch) {
 
-        List<Object> typedTuple = createTypedTuple(tuple, columnTypes);
+        boolean tupleWithMultiplicity = _emittersWithMultiplicity.contains(sourceComponentName);
+        Type[] colTypes = _emitterNamesColTypes.get(sourceComponentName);
 
-        dbtoasterEngine.insertTuple(stormTupleRcv.getSourceComponent(), typedTuple.toArray());
+        int multiplicity = 1;
+        if (tupleWithMultiplicity) {
+            multiplicity = Byte.valueOf(tuple.get(tuple.size() - 1));
+        }
+
+        byte tupleOp = (multiplicity > 0) ? DBToasterEngine.TUPLE_INSERT : DBToasterEngine.TUPLE_DELETE;
+
+        List<Object> typedTuple = createTypedTuple(tuple, colTypes);
+
+        for (int i = 0; i < Math.abs(multiplicity); i++)
+            dbtoasterEngine.receiveTuple(sourceComponentName, tupleOp, typedTuple);
 
         List<Object[]> stream = dbtoasterEngine.getStreamOfUpdateTuples();
 
@@ -275,18 +323,25 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
     }
 
+    /**
+     * Create typed tuple from column types array.
+     * @param tuple
+     * @param columnTypes
+     * @return
+     */
     private List<Object> createTypedTuple(List<String> tuple, Type[] columnTypes) {
-        List<Object> typedTuple = new ArrayList<Object>();
+        List<Object> typedTuple = new LinkedList<Object>();
 
         for (int i = 0; i < columnTypes.length; i++) {
             Object value = columnTypes[i].fromString(tuple.get(i));
             typedTuple.add(value);
         }
+
         return typedTuple;
     }
 
     private List<String> createStringTuple(Object[] typedTuple) {
-        List<String> tuple = new LinkedList<String>();
+        List<String> tuple = new ArrayList<String>();
         for (Object o : typedTuple) tuple.add("" + o);
         return tuple;
     }

@@ -40,14 +40,15 @@ EXEC_LOG_FILE_NAME=local_exec.info
 echo "Recompiling ..."
 ./recompile.sh
 
+# should uncomment when end-to-end profiling is to be used
 # 2. storm.yaml is set at the beginning and it is not returned to its original state
-echo "Changing the configuration and reseting... "
-if [ $PROFILING == YES ] 
-then
-  ./profiling.sh START $RESTART_BEFORE
-else
-  ./profiling.sh END $RESTART_BEFORE
-fi
+#echo "Changing the configuration and reseting... "
+#if [ $PROFILING == YES ] 
+#then
+#  ./profiling.sh START $RESTART_BEFORE
+#else
+#  ./profiling.sh END $RESTART_BEFORE
+#fi
 
 # 3. for each generated file, run it and wait until it is terminated
 TESTCONFS=( `ls ${CONF_PATH}/` )
