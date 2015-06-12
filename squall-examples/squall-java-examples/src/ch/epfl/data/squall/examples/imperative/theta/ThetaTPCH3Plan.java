@@ -108,7 +108,7 @@ public class ThetaTPCH3Plan extends QueryPlan {
 	Component C_Ojoin = ThetaJoinComponentFactory
 		.createThetaJoinOperator(Theta_JoinType, relationCustomer,
 			relationOrders, _queryBuilder)
-		.add(new ProjectOperator(new int[] { 1, 2, 3 }))
+		.add(new ProjectOperator(new int[] { 1, 3, 4 }))
 		.setOutputPartKey(Arrays.asList(0)).setJoinPredicate(C_O_comp);
 
 	// -------------------------------------------------------------------------------------
@@ -153,7 +153,7 @@ public class ThetaTPCH3Plan extends QueryPlan {
 		.setJoinPredicate(C_O_L_comp)
 		.setContentSensitiveThetaJoinWrapper(_ic);
 
-	// -------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------------
 
     }
 

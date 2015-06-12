@@ -51,7 +51,7 @@ lazy val squall = (project in file("squall-core")).
     mainClass := Some("ch.epfl.data.squall.main.Main"),
     unmanagedSourceDirectories in Compile += baseDirectory.value / "../squall-examples/squall-java-examples/src/",
     // Don't use scala as a dependency
-    autoScalaLibrary := false,
+    //autoScalaLibrary := false,
     // Set the external library directories to ./contrib
     unmanagedBase := baseDirectory.value / "../contrib",
     // We need to add Clojars as a resolver, as Storm depends on some
@@ -114,12 +114,14 @@ lazy val squall = (project in file("squall-core")).
   )
 
 // For the macros
-lazy val functional_macros = (project in file("squall-functional-macros")).
+lazy val functional_macros = (project in file("squall-functional")).
   dependsOn(squall).
   settings(commonSettings: _*).
   settings(
-    name := "squall-frontend-core",
-    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _)
+    name := "squall-frontend-macros",
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
+    scalaSource in Compile := baseDirectory.value / "macros",
+    target := target.value / "macros"
   )
 
 
