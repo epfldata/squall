@@ -17,9 +17,10 @@ fi
 # check if scala installed
 if hash scala 2>/dev/null; then
     version=$(scala -version 2>&1 | awk -F " " '{print $5}') 
-    if [[ $version != "2.10"* ]]; then
-        echo "ERROR: scala version is $version . scala version 2.10 must be installed. DBtoaster tests will fail"
-    fi
+    echo "Scala version $version is installed"
+    #if [[ $version != "2.10"* ]]; then
+        #echo "ERROR: scala version is $version . scala version 2.10 must be installed. DBtoaster tests will fail"
+    #fi
 else 
     echo "ERROR: scala is not installed. DBtoaster tests will fail. You need to install Scala 2.10"
 fi
