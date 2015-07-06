@@ -43,28 +43,23 @@ import ch.epfl.data.squall.storm_components.StormDstTupleStorageBDB;
 import ch.epfl.data.squall.storm_components.StormDstTupleStorageJoin;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
-import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
-public class EquiJoinComponent extends JoinerComponent implements Component {
+public class EquiJoinComponent extends JoinerComponent<EquiJoinComponent> implements Component {
+    protected EquiJoinComponent getThis() {
+      return this;
+    }
+
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(EquiJoinComponent.class);
 
     private final Component _firstParent;
     private final Component _secondParent;
-    private Component _child;
 
     private final String _componentName;
 
-    private long _batchOutputMillis;
-
-    private List<Integer> _hashIndexes;
-    private List<ValueExpression> _hashExpressions;
-
     private StormEmitter _joiner;
-
-    private final ChainOperator _chain = new ChainOperator();
 
     // The storage is actually KeyValue<String, String>
     // or AggregationStorage<Numeric> for pre-aggregation
@@ -73,9 +68,6 @@ public class EquiJoinComponent extends JoinerComponent implements Component {
     private BasicStore<String> _firstStorage, _secondStorage;
     // preAggregation
     private ProjectOperator _firstPreAggProj, _secondPreAggProj;
-
-    private boolean _printOut;
-    private boolean _printOutSet; // whether printOut was already set
 
     private List<String> _fullHashList;
     private Predicate _joinPredicate;
@@ -109,40 +101,11 @@ public class EquiJoinComponent extends JoinerComponent implements Component {
     }
 
     @Override
-    public EquiJoinComponent add(Operator operator) {
-	_chain.addOperator(operator);
-	return this;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-	if (obj instanceof Component)
-	    return _componentName.equals(((Component) obj).getName());
-	else
-	    return false;
-    }
-
-    @Override
     public List<DataSourceComponent> getAncestorDataSources() {
 	final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
 	for (final Component parent : getParents())
 	    list.addAll(parent.getAncestorDataSources());
 	return list;
-    }
-
-    @Override
-    public long getBatchOutputMillis() {
-	return _batchOutputMillis;
-    }
-
-    @Override
-    public ChainOperator getChainOperator() {
-	return _chain;
-    }
-
-    @Override
-    public Component getChild() {
-	return _child;
     }
 
     // from StormEmitter interface
@@ -154,16 +117,6 @@ public class EquiJoinComponent extends JoinerComponent implements Component {
     @Override
     public List<String> getFullHashList() {
 	return _fullHashList;
-    }
-
-    @Override
-    public List<ValueExpression> getHashExpressions() {
-	return _hashExpressions;
-    }
-
-    @Override
-    public List<Integer> getHashIndexes() {
-	return _hashIndexes;
     }
 
     @Override
@@ -182,30 +135,17 @@ public class EquiJoinComponent extends JoinerComponent implements Component {
     }
 
     @Override
-    public boolean getPrintOut() {
-	return _printOut;
-    }
-
-    @Override
-    public int hashCode() {
-	int hash = 7;
-	hash = 37 * hash
-		+ (_componentName != null ? _componentName.hashCode() : 0);
-	return hash;
-    }
-
-    @Override
     public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
 	    List<String> allCompNames, Config conf, int hierarchyPosition) {
 
 	// by default print out for the last component
 	// for other conditions, can be set via setPrintOut
 	if (hierarchyPosition == StormComponent.FINAL_COMPONENT
-		&& !_printOutSet)
+		&& !getPrintOutSet())
 	    setPrintOut(true);
 
-	MyUtilities.checkBatchOutput(_batchOutputMillis,
-		_chain.getAggregation(), conf);
+	MyUtilities.checkBatchOutput(getBatchOutputMillis(),
+                                     getChainOperator().getAggregation(), conf);
 
 	// If not set in Preaggregation, we set normal storages
 	if (_firstStorage == null)
@@ -237,22 +177,6 @@ public class EquiJoinComponent extends JoinerComponent implements Component {
 	}
     }
 
-    @Override
-    public EquiJoinComponent setBatchOutputMillis(long millis) {
-	_batchOutputMillis = millis;
-	return this;
-    }
-
-    @Override
-    public void setChild(Component child) {
-	_child = child;
-    }
-
-    @Override
-    public Component setContentSensitiveThetaJoinWrapper(Type wrapper) {
-	return this;
-    }
-
     // Out of the first storage (join of S tuple with R relation)
     public EquiJoinComponent setFirstPreAggProj(ProjectOperator firstPreAggProj) {
 	_firstPreAggProj = firstPreAggProj;
@@ -275,13 +199,6 @@ public class EquiJoinComponent extends JoinerComponent implements Component {
     }
 
     @Override
-    public EquiJoinComponent setHashExpressions(
-	    List<ValueExpression> hashExpressions) {
-	_hashExpressions = hashExpressions;
-	return this;
-    }
-
-    @Override
     public Component setInterComp(InterchangingComponent inter) {
 	throw new RuntimeException(
 		"EquiJoin component does not support setInterComp");
@@ -290,24 +207,6 @@ public class EquiJoinComponent extends JoinerComponent implements Component {
     @Override
     public EquiJoinComponent setJoinPredicate(Predicate predicate) {
 	_joinPredicate = predicate;
-	return this;
-    }
-
-    @Override
-    public EquiJoinComponent setOutputPartKey(int... hashIndexes) {
-	return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
-    }
-
-    @Override
-    public EquiJoinComponent setOutputPartKey(List<Integer> hashIndexes) {
-	_hashIndexes = hashIndexes;
-	return this;
-    }
-
-    @Override
-    public EquiJoinComponent setPrintOut(boolean printOut) {
-	_printOutSet = true;
-	_printOut = printOut;
 	return this;
     }
 

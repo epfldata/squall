@@ -47,7 +47,11 @@ import ch.epfl.data.squall.storm_components.StormBoltComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.utilities.MyUtilities;
 
-public class HyperCubeJoinComponent extends JoinerComponent implements Component {
+public class HyperCubeJoinComponent extends JoinerComponent<HyperCubeJoinComponent> implements Component {
+    protected HyperCubeJoinComponent getThis() {
+      return this;
+    }
+
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(HyperCubeJoinComponent.class);
     private ArrayList<Component> parents;

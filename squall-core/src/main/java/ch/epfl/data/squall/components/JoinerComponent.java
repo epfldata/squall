@@ -19,7 +19,7 @@
 
 package ch.epfl.data.squall.components;
 
-public abstract class JoinerComponent implements Component {
+public abstract class JoinerComponent<C extends Component> extends RichComponent<C> {
 
     public long _windowSize = -1; // Width in terms of millis, Default is -1
 				  // which is full history

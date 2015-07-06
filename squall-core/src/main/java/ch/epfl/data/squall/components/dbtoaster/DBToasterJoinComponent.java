@@ -48,7 +48,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class DBToasterJoinComponent extends JoinerComponent implements Component {
+public class DBToasterJoinComponent extends JoinerComponent<DBToasterJoinComponent> implements Component {
+    protected DBToasterJoinComponent getThis() {
+      return this;
+    }
 
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(DBToasterJoinComponent.class);
@@ -212,8 +215,8 @@ public class DBToasterJoinComponent extends JoinerComponent implements Component
     }
 
     @Override
-    public Component setContentSensitiveThetaJoinWrapper(Type wrapper) {
-        return null;
+    public DBToasterJoinComponent setContentSensitiveThetaJoinWrapper(Type wrapper) {
+        return this;
     }
 
 

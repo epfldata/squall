@@ -58,8 +58,11 @@ import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
-public class AdaptiveThetaJoinComponent extends JoinerComponent implements
-	Component {
+public class AdaptiveThetaJoinComponent extends JoinerComponent<AdaptiveThetaJoinComponent> implements Component {
+    protected AdaptiveThetaJoinComponent getThis() {
+      return this;
+    }
+
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger
 	    .getLogger(AdaptiveThetaJoinComponent.class);
@@ -299,7 +302,7 @@ public class AdaptiveThetaJoinComponent extends JoinerComponent implements
 
     // TODO IMPLEMENT ME
     @Override
-    public Component setContentSensitiveThetaJoinWrapper(Type wrapper) {
+    public AdaptiveThetaJoinComponent setContentSensitiveThetaJoinWrapper(Type wrapper) {
 	return this;
     }
 

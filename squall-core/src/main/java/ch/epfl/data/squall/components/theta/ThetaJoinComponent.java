@@ -45,7 +45,11 @@ import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
-public class ThetaJoinComponent extends JoinerComponent implements Component {
+public class ThetaJoinComponent extends JoinerComponent<ThetaJoinComponent> implements Component {
+    protected ThetaJoinComponent getThis() {
+      return this;
+    }
+
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(ThetaJoinComponent.class);
     private final Component _firstParent;
