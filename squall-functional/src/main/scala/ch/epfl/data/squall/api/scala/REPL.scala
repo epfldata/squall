@@ -43,6 +43,7 @@ class REPL(val outdir: String) {
   // TODO: eventually most of this should be handled by a "context object"
   // Initialize
   val conf = new Config
+  var local = false
 
   // Load default values
   SystemParameters.putInMap(conf, "DIP_TOPOLOGY_NAME_PREFIX", "username")
@@ -58,11 +59,7 @@ class REPL(val outdir: String) {
   SystemParameters.putInMap(conf, "STORAGE_COLD_START", "true")
   SystemParameters.putInMap(conf, "STORAGE_MEMORY_SIZE_MB", "4096")
 
-  // Run in distributed mode
-  SystemParameters.putInMap(conf, "DIP_DISTRIBUTED", "true")
-
   // Configure for tpch
-  SystemParameters.putInMap(conf, "DIP_DATA_PATH", "/shared/tpch/0.01G/")
   SystemParameters.putInMap(conf, "CUSTOMER_PAR", "1")
   SystemParameters.putInMap(conf, "ORDERS_PAR", "1")
   SystemParameters.putInMap(conf, "LINEITEM_PAR", "1")
@@ -80,6 +77,7 @@ print("""
 Type "help" for Squall related help
 
 """)
+    setLocal
   }
 
   // TODO: make a more useful help. Maybe use a Map to define the possible
@@ -98,10 +96,9 @@ Type "help" for Squall related help
   }
 
   var count = 0
-  def submit(queryPlan: QueryBuilder) = {
+  def prepareSubmit(): String = {
     val jar = packClasses()
 
-    ////////////////////////////////////////////////////////////////////////////
     ////// Here comes the ugly part. We have to trick Storm, as we are doing
     ////// things that are not really standard.
 
@@ -122,8 +119,7 @@ Type "help" for Squall related help
     val p = new Properties(System.getProperties());
     p.setProperty("storm.jar", jar)
     System.setProperties(p);
-    ////////////////////////////////////////////////////////////////////////////
-
+    ////////////////////////
 
     // Configure the query. To easily identify it we use the prefixes repl_0_,
     // repl_1_, repl_2_... Followed by a random number to avoid exceptions
@@ -133,10 +129,36 @@ Type "help" for Squall related help
     SystemParameters.putInMap(conf, "DIP_TOPOLOGY_NAME", tpname)
     count = count + 1
 
+    tpname
+  }
+
+  def submit(queryPlan: QueryBuilder) = {
+    val tpname = prepareSubmit()
+
     // Create and send the topology
-    val builder = queryPlan.createTopology(conf)
-    StormWrapper.submitTopology(conf, builder)
-    println("Submitted topology as " + tpname)
+    if (local) {
+      StormWrapper.localSubmitAndWait(conf, queryPlan)
+    } else {
+      StormWrapper.submitTopology(conf, queryPlan.createTopology(conf))
+      println("Submitted topology as " + tpname)
+    }
+  }
+
+  def setDistributed() = {
+    SystemParameters.putInMap(conf, "DIP_DISTRIBUTED", "true")
+    SystemParameters.putInMap(conf, "DIP_DATA_PATH", "/shared/tpch/0.01G/")
+
+    local = false
+    println("Mode set to local")
+  }
+
+  def setLocal() = {
+    SystemParameters.putInMap(conf, "DIP_DATA_PATH", "test/data/tpch/0.01G/")
+    SystemParameters.putInMap(conf, "DIP_DISTRIBUTED", "false")
+    SystemParameters.putInMap(conf, "DIP_NUM_ACKERS", 0)
+
+    local = true
+    println("Mode set to local")
   }
 
   // An example query plan
