@@ -28,7 +28,6 @@ import scala.collection.JavaConversions._
 
 import ch.epfl.data.squall.utilities.StormWrapper
 import ch.epfl.data.squall.utilities.SystemParameters
-import ch.epfl.data.squall.main.Main
 
 import backtype.storm.Config
 
@@ -130,13 +129,12 @@ Type "help" for Squall related help
     // repl_1_, repl_2_... Followed by a random number to avoid exceptions
     // telling us that the topology already exists.
     val tpname = "repl_" + count + "_" + scala.util.Random.nextInt()
-    Main.putBatchSizes(queryPlan, conf)
     SystemParameters.putInMap(conf, "DIP_QUERY_NAME", "repl_" + count)
     SystemParameters.putInMap(conf, "DIP_TOPOLOGY_NAME", tpname)
     count = count + 1
 
     // Create and send the topology
-    val builder = Main.createTopology(queryPlan, conf)
+    val builder = queryPlan.createTopology(conf)
     StormWrapper.submitTopology(conf, builder)
     println("Submitted topology as " + tpname)
   }
