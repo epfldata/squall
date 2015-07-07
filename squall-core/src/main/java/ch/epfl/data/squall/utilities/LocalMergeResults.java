@@ -33,6 +33,7 @@ import ch.epfl.data.squall.operators.AggregateAvgOperator;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.AggregateSumOperator;
 import ch.epfl.data.squall.storage.AggregationStorage;
+import ch.epfl.data.squall.storage.BasicStore;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.types.Type;
 
@@ -165,6 +166,7 @@ public class LocalMergeResults {
 		addMoreResults(lastAgg, map);
 
 		_semFullResult.release();
+		_semNumResults.release();
 	    } catch (final InterruptedException ex) {
 		throw new RuntimeException(
 			"InterruptedException unexpectedly occured!");
@@ -220,6 +222,15 @@ public class LocalMergeResults {
 	return localCompare(map);
     }
 
+    public static BasicStore getResults() {
+      	return _computedAgg.getStorage();
+    }
+
+    public static void waitForResults(int howMany) throws InterruptedException {
+      _semNumResults.acquire(howMany);
+      //assert(_collectedLastComponents == howMany);
+    }
+
     private static Logger LOG = Logger.getLogger(LocalMergeResults.class);
 
     // for writing the full final result in Local Mode
@@ -234,4 +245,5 @@ public class LocalMergeResults {
     private static AggregateOperator _fileAgg;
 
     private static Semaphore _semFullResult = new Semaphore(1, true);
+    private static Semaphore _semNumResults = new Semaphore(0, true);
 }

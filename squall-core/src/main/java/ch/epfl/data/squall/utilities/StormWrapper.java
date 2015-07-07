@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 import org.apache.thrift7.TException;
@@ -43,10 +44,20 @@ import backtype.storm.generated.Nimbus.Client;
 import backtype.storm.generated.NotAliveException;
 import backtype.storm.generated.TopologyInfo;
 import backtype.storm.generated.TopologySummary;
+import backtype.storm.generated.StormTopology;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.utils.NimbusClient;
+import backtype.storm.utils.Utils;
+
+import ch.epfl.data.squall.storage.BasicStore;
+import ch.epfl.data.squall.query_plans.QueryBuilder;
+import ch.epfl.data.squall.components.Component;
 
 public class StormWrapper {
+  private static boolean _waiting;
+  private static Semaphore _semWait = new Semaphore(0, true);
+  private static LocalCluster localCluster = null;
+
     private static void clusterKillTopology(Map conf, String topologyName) {
 	final Client client = getNimbusStub(conf);
 	try {
@@ -120,14 +131,26 @@ public class StormWrapper {
 		"DIP_DISTRIBUTED");
 	final String topologyName = SystemParameters.getString(conf,
 		"DIP_TOPOLOGY_NAME");
-	if (!distributed)
-	    localKillCluster(conf, topologyName);
-	else
-	    clusterKillTopology(conf, topologyName);
+	if (distributed) {
+          Utils.sleep(SystemParameters.CLUSTER_SLEEP_BEFORE_KILL_MILLIS);
+          clusterKillTopology(conf, topologyName);
+        } else if (_waiting) {
+          _semWait.release();
+        } else {
+          Utils.sleep(SystemParameters.LOCAL_SLEEP_BEFORE_KILL_MILLIS);
+          localKillTopology(conf, topologyName);
+        }
     }
 
+  public static void shutdown() {
+    if (localCluster != null) {
+      localCluster.shutdown();
+    }
+  }
+
+
     // all the staff below are only for local execution
-    private static void localKillCluster(Map conf, String topologyName) {
+    private static void localKillTopology(Map conf, String topologyName) {
 	final long endTime = System.currentTimeMillis();
 	LOG.info("Running time (sec):" + ((endTime - startTime) / 1000));
 	int result = LocalMergeResults.localPrintAndCompare(conf);
@@ -138,7 +161,23 @@ public class StormWrapper {
 	System.exit(result);
     }
 
+
+  public static BasicStore localSubmitAndWait(Config conf, QueryBuilder plan) throws InterruptedException {
+    StormTopology topology = plan.createTopology(conf).createTopology();
+
+    _waiting = true;
+    submitTopology(conf, plan.createTopology(conf).createTopology());
+    _semWait.acquire();
+
+    LocalMergeResults.waitForResults(plan.getNumberFinalTasks(conf));
+    return LocalMergeResults.getResults();
+  }
+
     public static void submitTopology(Config conf, TopologyBuilder builder) {
+      submitTopology(conf, builder.createTopology());
+    }
+
+    public static void submitTopology(Config conf, StormTopology topology) {
 	// transform mine parameters into theirs
 	final boolean distributed = SystemParameters.getBoolean(conf,
 		"DIP_DISTRIBUTED");
@@ -169,8 +208,7 @@ public class StormWrapper {
 	    }
 
 	    try {
-		StormSubmitter.submitTopology(topologyName, conf,
-			builder.createTopology());
+		StormSubmitter.submitTopology(topologyName, conf, topology);
 	    } catch (final AlreadyAliveException aae) {
 		final String error = MyUtilities.getStackTrace(aae);
 		LOG.info(error);
@@ -185,9 +223,12 @@ public class StormWrapper {
 	    conf.setNumAckers(numAckers);
 
 	    conf.setFallBackOnJavaSerialization(false);
-	    final LocalCluster cluster = new LocalCluster();
+            if (localCluster == null) {
+              localCluster = new LocalCluster();
+            }
+
 	    startTime = System.currentTimeMillis();
-	    cluster.submitTopology(topologyName, conf, builder.createTopology());
+	    localCluster.submitTopology(topologyName, conf, topology);
 	}
     }
 

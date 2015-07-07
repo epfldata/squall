@@ -142,4 +142,20 @@ public class QueryBuilder implements Serializable {
 	return builder;
     }
 
+
+  public int getNumberFinalTasks(Config conf) {
+    int numFinalTasks = 0;
+
+    for(Component component : getPlan()) {
+      if (component.getChild() == null) {
+	final int parallelism = SystemParameters.getInt(conf, component.getName() + "_PAR");
+        numFinalTasks = numFinalTasks + (parallelism == 0 ? 1 : parallelism);
+      }
+    }
+
+    return numFinalTasks;
+
+  }
+
+
 }
