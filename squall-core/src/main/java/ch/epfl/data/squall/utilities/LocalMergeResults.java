@@ -38,6 +38,32 @@ import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.types.Type;
 
 public class LocalMergeResults {
+    private static Logger LOG = Logger.getLogger(LocalMergeResults.class);
+
+    // for writing the full final result in Local Mode
+    private static int _collectedLastComponents = 0;
+
+    private static int _numTuplesProcessed = 0;
+    // the number of tuples the componentTask is reponsible for (!! not how many
+    // tuples are in storage!!)
+
+    private static AggregateOperator _computedAgg;
+
+    private static AggregateOperator _fileAgg;
+
+    private static Semaphore _semFullResult = new Semaphore(1, true);
+    private static Semaphore _semNumResults = new Semaphore(0, true);
+
+
+  public static void reset() {
+    _collectedLastComponents = 0;
+    _numTuplesProcessed = 0;
+    _computedAgg = null;
+    _fileAgg = null;
+    _semFullResult = new Semaphore(1, true);
+    _semNumResults = new Semaphore(0, true);
+  }
+
     private static void addMoreResults(AggregateOperator lastAgg, Map map) {
 	if (_computedAgg == null) {
 	    // first task of the last component asked to be added
@@ -131,7 +157,7 @@ public class LocalMergeResults {
 	return resultRoot;
     }
 
-    private static String getResultFilePath(Map map) {
+    public static String getResultFilePath(Map map) {
 	final String rootDir = getResultDir(map);
 	final String schemaName = getSchemaName(map);
 	final String dataSize = getDataSizeInfo(map);
@@ -230,20 +256,4 @@ public class LocalMergeResults {
       _semNumResults.acquire(howMany);
       //assert(_collectedLastComponents == howMany);
     }
-
-    private static Logger LOG = Logger.getLogger(LocalMergeResults.class);
-
-    // for writing the full final result in Local Mode
-    private static int _collectedLastComponents = 0;
-
-    private static int _numTuplesProcessed = 0;
-    // the number of tuples the componentTask is reponsible for (!! not how many
-    // tuples are in storage!!)
-
-    private static AggregateOperator _computedAgg;
-
-    private static AggregateOperator _fileAgg;
-
-    private static Semaphore _semFullResult = new Semaphore(1, true);
-    private static Semaphore _semNumResults = new Semaphore(0, true);
 }

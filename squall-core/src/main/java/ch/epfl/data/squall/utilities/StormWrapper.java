@@ -45,6 +45,7 @@ import backtype.storm.generated.NotAliveException;
 import backtype.storm.generated.TopologyInfo;
 import backtype.storm.generated.TopologySummary;
 import backtype.storm.generated.StormTopology;
+import backtype.storm.generated.KillOptions;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.utils.NimbusClient;
 import backtype.storm.utils.Utils;
@@ -161,13 +162,21 @@ public class StormWrapper {
 	System.exit(result);
     }
 
-
-  public static BasicStore localSubmitAndWait(Config conf, QueryBuilder plan) throws InterruptedException {
+  public static BasicStore<Object> localSubmitAndWait(Config conf, QueryBuilder plan) throws InterruptedException {
     StormTopology topology = plan.createTopology(conf).createTopology();
+    final String topologyName = SystemParameters.getString(conf,
+                                                           "DIP_TOPOLOGY_NAME");
+
+    LocalMergeResults.reset();
 
     _waiting = true;
     submitTopology(conf, plan.createTopology(conf).createTopology());
     _semWait.acquire();
+
+    KillOptions options = new KillOptions();
+    options.set_wait_secs(0);
+    localCluster.killTopologyWithOpts(topologyName, options);
+    _waiting = false;
 
     LocalMergeResults.waitForResults(plan.getNumberFinalTasks(conf));
     return LocalMergeResults.getResults();

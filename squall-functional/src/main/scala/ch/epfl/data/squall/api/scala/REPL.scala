@@ -89,8 +89,12 @@ Type "help" for Squall related help
   private def packClasses(): String = {
     println("Packing jar file...")
     import scala.sys.process._
+    if(local) {
+      (s"jar cf ${outdir}/repl.jar -C ${outdir}/classes/ .").!!
+    } else {
       (s"cp squall-functional/target/squall-frontend-standalone-0.2.0.jar ${outdir}/repl.jar").!!
       (s"jar uf ${outdir}/repl.jar -C ${outdir}/classes/ .").!!
+    }
     println("Done packing")
     s"${outdir}/repl.jar"
   }
