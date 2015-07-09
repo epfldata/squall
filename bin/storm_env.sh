@@ -31,4 +31,4 @@ CLUSTER_GATHER_DIR=/data/lab/fromhome/avitorovic/gather_logs
 CLUSTER_GATHER_SNAPSHOT_DIR=/data/lab/fromhome/avitorovic/gather_snapshots
 
 # DBTOASTER installation folder. Only required if QueryPlan uses DBToasterJoinComponent
-DBTOASTER_HOME=~/opt/dbtoaster
+DBTOASTER_HOME=/tmp/dbtoaster

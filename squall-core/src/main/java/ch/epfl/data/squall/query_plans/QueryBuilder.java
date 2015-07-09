@@ -21,12 +21,26 @@ package ch.epfl.data.squall.query_plans;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.EquiJoinComponent;
+import ch.epfl.data.squall.components.theta.AdaptiveThetaJoinComponent;
+import ch.epfl.data.squall.ewh.components.DummyComponent;
+import ch.epfl.data.squall.storm_components.StormComponent;
+import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
+import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.Config;
+
+import ch.epfl.data.squall.utilities.SystemParameters;
+
+import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
+import ch.epfl.data.squall.utilities.StormDBToasterProvider;
+
 
 public class QueryBuilder implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -86,5 +100,62 @@ public class QueryBuilder implements Serializable {
     public List<Component> getPlan() {
 	return _plan;
     }
+
+    public TopologyBuilder createTopology(Config conf) {
+	TopologyBuilder builder = new TopologyBuilder();
+	TopologyKiller killer = new TopologyKiller(builder);
+
+	List<Component> queryPlan = this.getPlan();
+	List<String> allCompNames = this.getComponentNames();
+	Collections.sort(allCompNames);
+
+    List<DBToasterJoinComponent> dbtComponents = new LinkedList<DBToasterJoinComponent>();
+    int planSize = queryPlan.size();
+	for (int i = 0; i < planSize; i++) {
+	    Component component = queryPlan.get(i);
+        if (component instanceof DBToasterJoinComponent) {
+        dbtComponents.add((DBToasterJoinComponent) component);
+        }
+	    Component child = component.getChild();
+	    if (child == null) {
+		// a last component (it might be multiple of them)
+		component.makeBolts(builder, killer, allCompNames, conf,
+			StormComponent.FINAL_COMPONENT);
+	    } else if (child instanceof DummyComponent) {
+		component.makeBolts(builder, killer, allCompNames, conf,
+			StormComponent.NEXT_TO_DUMMY);
+	    } else if (child.getChild() == null
+		    && !(child instanceof AdaptiveThetaJoinComponent)) {
+		// if the child is dynamic, then reshuffler is NEXT_TO_LAST
+		component.makeBolts(builder, killer, allCompNames, conf,
+			StormComponent.NEXT_TO_LAST_COMPONENT);
+	    } else {
+		component.makeBolts(builder, killer, allCompNames, conf,
+			StormComponent.INTERMEDIATE);
+	    }
+	}
+    if (dbtComponents.size() > 0) StormDBToasterProvider.prepare(dbtComponents,
+            SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED"));
+	// printing infoID information and returning the result
+	// printInfoID(killer, queryPlan); commented out because IDs are now
+	// desriptive names
+	return builder;
+    }
+
+
+  public int getNumberFinalTasks(Config conf) {
+    int numFinalTasks = 0;
+
+    for(Component component : getPlan()) {
+      if (component.getChild() == null) {
+	final int parallelism = SystemParameters.getInt(conf, component.getName() + "_PAR");
+        numFinalTasks = numFinalTasks + (parallelism == 0 ? 1 : parallelism);
+      }
+    }
+
+    return numFinalTasks;
+
+  }
+
 
 }
