@@ -223,11 +223,6 @@ public class OkcanSampleMatrixComponent implements Component {
     }
 
     @Override
-    public OkcanSampleMatrixComponent setJoinPredicate(Predicate predicate) {
-	throw new RuntimeException("Should not be here!");
-    }
-
-    @Override
     public Component setContentSensitiveThetaJoinWrapper(Type wrapper) {
 	throw new RuntimeException("Should not be here!");
     }

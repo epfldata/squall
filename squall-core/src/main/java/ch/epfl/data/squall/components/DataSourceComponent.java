@@ -150,12 +150,6 @@ public class DataSourceComponent extends RichComponent<DataSourceComponent> {
 		"Datasource component does not support setInterComp");
     }
 
-    @Override
-    public DataSourceComponent setJoinPredicate(Predicate joinPredicate) {
-	throw new RuntimeException(
-		"Datasource component does not support Join Predicates");
-    }
-
     public DataSourceComponent setPartitioner(boolean isPartitioner) {
 	_isPartitioner = isPartitioner;
 	return this;

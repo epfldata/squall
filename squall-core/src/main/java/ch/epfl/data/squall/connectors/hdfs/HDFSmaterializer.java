@@ -247,12 +247,6 @@ public class HDFSmaterializer implements Component {
     }
 
     @Override
-    public Component setJoinPredicate(Predicate joinPredicate) {
-	throw new RuntimeException(
-		"Operator component does not support Join Predicates");
-    }
-
-    @Override
     public HDFSmaterializer setOutputPartKey(int... hashIndexes) {
 	return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
     }

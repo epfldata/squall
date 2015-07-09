@@ -230,12 +230,6 @@ public class InterchangingDataSourceComponent implements Component {
     }
 
     @Override
-    public Component setJoinPredicate(Predicate joinPredicate) {
-	throw new RuntimeException(
-		"InterchangingDatasource component does not support Join Predicates");
-    }
-
-    @Override
     public InterchangingDataSourceComponent setOutputPartKey(int... hashIndexes) {
 	return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
     }

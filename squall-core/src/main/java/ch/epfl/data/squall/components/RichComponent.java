@@ -103,12 +103,6 @@ public abstract class RichComponent<C extends Component> implements Component {
     }
 
     @Override
-    public C setOutputPartKey(List<Integer> hashIndexes) {
-	_hashIndexes = hashIndexes;
-	return getThis();
-    }
-
-    @Override
     public boolean getPrintOut() {
 	return _printOut;
     }
@@ -141,4 +135,11 @@ public abstract class RichComponent<C extends Component> implements Component {
     public C setOutputPartKey(int... hashIndexes) {
 	return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
     }
+
+    @Override
+    public C setOutputPartKey(List<Integer> hashIndexes) {
+	_hashIndexes = hashIndexes;
+	return getThis();
+    }
+
 }

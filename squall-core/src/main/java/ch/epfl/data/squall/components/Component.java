@@ -57,8 +57,6 @@ public interface Component extends Serializable, ComponentProperties,
 
     public Component setInterComp(InterchangingComponent inter);
 
-    public Component setJoinPredicate(Predicate joinPredicate);
-
     public Component setOutputPartKey(int... hashIndexes); // this is a shortcut
 
     // this needs to be separately kept, due to
