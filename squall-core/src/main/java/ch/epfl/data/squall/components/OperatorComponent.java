@@ -44,7 +44,11 @@ import ch.epfl.data.squall.utilities.MyUtilities;
  * and open the template in the editor.
  */
 
-public class OperatorComponent implements Component {
+public class OperatorComponent extends RichComponent<OperatorComponent> {
+    protected OperatorComponent getThis() {
+      return this;
+    }
+
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(OperatorComponent.class);
 
@@ -85,20 +89,6 @@ public class OperatorComponent implements Component {
     }
 
     @Override
-    public OperatorComponent add(Operator operator) {
-	_chain.addOperator(operator);
-	return this;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-	if (obj instanceof Component)
-	    return _componentName.equals(((Component) obj).getName());
-	else
-	    return false;
-    }
-
-    @Override
     public List<DataSourceComponent> getAncestorDataSources() {
 	final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
 	for (Component parent : _parents) {
@@ -106,21 +96,6 @@ public class OperatorComponent implements Component {
 	}
 
 	return list;
-    }
-
-    @Override
-    public long getBatchOutputMillis() {
-	return _batchOutputMillis;
-    }
-
-    @Override
-    public ChainOperator getChainOperator() {
-	return _chain;
-    }
-
-    @Override
-    public Component getChild() {
-	return _child;
     }
 
     // from StormComponent
@@ -132,16 +107,6 @@ public class OperatorComponent implements Component {
     @Override
     public List<String> getFullHashList() {
 	return _fullHashList;
-    }
-
-    @Override
-    public List<ValueExpression> getHashExpressions() {
-	return _hashExpressions;
-    }
-
-    @Override
-    public List<Integer> getHashIndexes() {
-	return _hashIndexes;
     }
 
     @Override
@@ -168,19 +133,6 @@ public class OperatorComponent implements Component {
     }
 
     @Override
-    public boolean getPrintOut() {
-	return _printOut;
-    }
-
-    @Override
-    public int hashCode() {
-	int hash = 5;
-	hash = 47 * hash
-		+ (_componentName != null ? _componentName.hashCode() : 0);
-	return hash;
-    }
-
-    @Override
     public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
 	    List<String> allCompNames, Config conf, int hierarchyPosition) {
 
@@ -200,31 +152,8 @@ public class OperatorComponent implements Component {
     }
 
     @Override
-    public OperatorComponent setBatchOutputMillis(long millis) {
-	_batchOutputMillis = millis;
-	return this;
-    }
-
-    @Override
-    public void setChild(Component child) {
-	_child = child;
-    }
-
-    @Override
-    public Component setContentSensitiveThetaJoinWrapper(Type wrapper) {
-	return this;
-    }
-
-    @Override
     public OperatorComponent setFullHashList(List<String> fullHashList) {
 	_fullHashList = fullHashList;
-	return this;
-    }
-
-    @Override
-    public OperatorComponent setHashExpressions(
-	    List<ValueExpression> hashExpressions) {
-	_hashExpressions = hashExpressions;
 	return this;
     }
 
@@ -232,29 +161,5 @@ public class OperatorComponent implements Component {
     public Component setInterComp(InterchangingComponent inter) {
 	throw new RuntimeException(
 		"Operator component does not support setInterComp");
-    }
-
-    @Override
-    public Component setJoinPredicate(Predicate joinPredicate) {
-	throw new RuntimeException(
-		"Operator component does not support Join Predicates");
-    }
-
-    @Override
-    public OperatorComponent setOutputPartKey(int... hashIndexes) {
-	return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
-    }
-
-    @Override
-    public OperatorComponent setOutputPartKey(List<Integer> hashIndexes) {
-	_hashIndexes = hashIndexes;
-	return this;
-    }
-
-    @Override
-    public OperatorComponent setPrintOut(boolean printOut) {
-	_printOutSet = true;
-	_printOut = printOut;
-	return this;
     }
 }

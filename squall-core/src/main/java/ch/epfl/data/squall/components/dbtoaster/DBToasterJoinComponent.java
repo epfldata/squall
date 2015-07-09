@@ -26,6 +26,7 @@ import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.JoinerComponent;
+import ch.epfl.data.squall.components.RichJoinerComponent;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.AggregateStream;
 import ch.epfl.data.squall.operators.ChainOperator;
@@ -48,7 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class DBToasterJoinComponent extends JoinerComponent<DBToasterJoinComponent> implements Component {
+public class DBToasterJoinComponent extends RichJoinerComponent<DBToasterJoinComponent> {
     protected DBToasterJoinComponent getThis() {
       return this;
     }
@@ -254,7 +255,7 @@ public class DBToasterJoinComponent extends JoinerComponent<DBToasterJoinCompone
     }
 
     @Override
-    public Component setInterComp(InterchangingComponent inter) {
+    public JoinerComponent setInterComp(InterchangingComponent inter) {
         throw new RuntimeException(
                 "DBToasterJoin component does not support setInterComp");
     }
@@ -263,22 +264,6 @@ public class DBToasterJoinComponent extends JoinerComponent<DBToasterJoinCompone
     public DBToasterJoinComponent setJoinPredicate(Predicate predicate) {
         throw new UnsupportedOperationException();
     }
-
-    @Override
-    public Component setSlidingWindow(int windowRange) {
-        WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
-        _windowSize = windowRange * 1000; // Width in terms of millis, Default
-        // is -1 which is full history
-        return this;
-    }
-
-    @Override
-    public Component setTumblingWindow(int windowRange) {
-        WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
-        _tumblingWindowSize = windowRange * 1000;// For tumbling semantics
-        return this;
-    }
-
 
     public String getSQLQuery() {
         return _equivalentSQL;

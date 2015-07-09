@@ -38,6 +38,7 @@ import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.JoinerComponent;
+import ch.epfl.data.squall.components.RichJoinerComponent;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
@@ -47,7 +48,7 @@ import ch.epfl.data.squall.storm_components.StormBoltComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.utilities.MyUtilities;
 
-public class HyperCubeJoinComponent extends JoinerComponent<HyperCubeJoinComponent> implements Component {
+public class HyperCubeJoinComponent extends RichJoinerComponent<HyperCubeJoinComponent> implements Component {
     protected HyperCubeJoinComponent getThis() {
       return this;
     }
@@ -75,12 +76,6 @@ public class HyperCubeJoinComponent extends JoinerComponent<HyperCubeJoinCompone
             tmp.setChild(this);
             componentName += tmp.getName() + "_";
         }
-    }
-
-    @Override
-    public HyperCubeJoinComponent add(Operator operator) {
-        chain.addOperator(operator);
-        return this;
     }
 
     @Override
@@ -250,22 +245,6 @@ public class HyperCubeJoinComponent extends JoinerComponent<HyperCubeJoinCompone
     public HyperCubeJoinComponent setContentSensitiveThetaJoinWrapper(
             Type wrapper) {
         contentSensitiveThetaJoinWrapper = wrapper;
-        return this;
-    }
-
-    @Override
-    public Component setSlidingWindow(int windowRange) {
-        WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
-        _windowSize = windowRange * 1000; // Width in terms of millis, Default
-        // is -1 which is full history
-
-        return this;
-    }
-
-    @Override
-    public Component setTumblingWindow(int windowRange) {
-        WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
-        _tumblingWindowSize = windowRange * 1000;// For tumbling semantics
         return this;
     }
 }

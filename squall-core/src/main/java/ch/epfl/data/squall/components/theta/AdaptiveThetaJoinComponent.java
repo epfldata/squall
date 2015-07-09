@@ -40,6 +40,7 @@ import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.JoinerComponent;
+import ch.epfl.data.squall.components.RichJoinerComponent;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
@@ -58,7 +59,7 @@ import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
-public class AdaptiveThetaJoinComponent extends JoinerComponent<AdaptiveThetaJoinComponent> implements Component {
+public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThetaJoinComponent> {
     protected AdaptiveThetaJoinComponent getThis() {
       return this;
     }
@@ -329,7 +330,7 @@ public class AdaptiveThetaJoinComponent extends JoinerComponent<AdaptiveThetaJoi
     }
 
     @Override
-    public Component setJoinPredicate(Predicate joinPredicate) {
+    public JoinerComponent setJoinPredicate(Predicate joinPredicate) {
 	_joinPredicate = joinPredicate;
 	return this;
     }
@@ -351,21 +352,4 @@ public class AdaptiveThetaJoinComponent extends JoinerComponent<AdaptiveThetaJoi
 	_printOut = printOut;
 	return this;
     }
-
-    @Override
-    public Component setSlidingWindow(int windowRange) {
-	WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
-	_windowSize = windowRange * 1000; // Width in terms of millis, Default
-					  // is -1 which is full history
-
-	return this;
-    }
-
-    @Override
-    public Component setTumblingWindow(int windowRange) {
-	WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
-	_tumblingWindowSize = windowRange * 1000;// For tumbling semantics
-	return null;
-    }
-
 }

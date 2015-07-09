@@ -46,7 +46,7 @@ import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
-public class EquiJoinComponent extends JoinerComponent<EquiJoinComponent> implements Component {
+public class EquiJoinComponent extends RichJoinerComponent<EquiJoinComponent> {
     protected EquiJoinComponent getThis() {
       return this;
     }
@@ -199,7 +199,7 @@ public class EquiJoinComponent extends JoinerComponent<EquiJoinComponent> implem
     }
 
     @Override
-    public Component setInterComp(InterchangingComponent inter) {
+    public JoinerComponent setInterComp(InterchangingComponent inter) {
 	throw new RuntimeException(
 		"EquiJoin component does not support setInterComp");
     }
@@ -220,21 +220,6 @@ public class EquiJoinComponent extends JoinerComponent<EquiJoinComponent> implem
     public EquiJoinComponent setSecondPreAggStorage(
 	    AggregationStorage secondPreAggStorage) {
 	_secondStorage = secondPreAggStorage;
-	return this;
-    }
-
-    @Override
-    public Component setSlidingWindow(int windowRange) {
-	WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
-	_windowSize = windowRange * 1000; // Width in terms of millis, Default
-					  // is -1 which is full history
-	return this;
-    }
-
-    @Override
-    public Component setTumblingWindow(int windowRange) {
-	WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
-	_tumblingWindowSize = windowRange * 1000;// For tumbling semantics
 	return this;
     }
 

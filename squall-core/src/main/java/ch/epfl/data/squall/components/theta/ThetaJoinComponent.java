@@ -31,6 +31,7 @@ import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.JoinerComponent;
+import ch.epfl.data.squall.components.RichJoinerComponent;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
@@ -45,7 +46,7 @@ import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
-public class ThetaJoinComponent extends JoinerComponent<ThetaJoinComponent> implements Component {
+public class ThetaJoinComponent extends RichJoinerComponent<ThetaJoinComponent> {
     protected ThetaJoinComponent getThis() {
       return this;
     }
@@ -202,8 +203,8 @@ public class ThetaJoinComponent extends JoinerComponent<ThetaJoinComponent> impl
 		    hierarchyPosition, builder, killer, conf, _interComp,
 		    _isContentSensitive, _contentSensitiveThetaJoinWrapper);
 	}
-	if (_windowSize > 0 || _tumblingWindowSize > 0)
-	    _joiner.setWindowSemantics(_windowSize, _tumblingWindowSize);
+	if (getSlidingWindow() > 0 || getTumblingWindow() > 0)
+          _joiner.setWindowSemantics(getSlidingWindow(), getTumblingWindow());
     }
 
     @Override
@@ -251,11 +252,6 @@ public class ThetaJoinComponent extends JoinerComponent<ThetaJoinComponent> impl
     }
 
     @Override
-    public ThetaJoinComponent setOutputPartKey(int... hashIndexes) {
-	return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
-    }
-
-    @Override
     public ThetaJoinComponent setOutputPartKey(List<Integer> hashIndexes) {
 	_hashIndexes = hashIndexes;
 	return this;
@@ -270,22 +266,6 @@ public class ThetaJoinComponent extends JoinerComponent<ThetaJoinComponent> impl
     public ThetaJoinComponent setPrintOut(boolean printOut) {
 	_printOutSet = true;
 	_printOut = printOut;
-	return this;
-    }
-
-    @Override
-    public Component setSlidingWindow(int windowRange) {
-	WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
-	_windowSize = windowRange * 1000; // Width in terms of millis, Default
-					  // is -1 which is full history
-
-	return this;
-    }
-
-    @Override
-    public Component setTumblingWindow(int windowRange) {
-	WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
-	_tumblingWindowSize = windowRange * 1000;// For tumbling semantics
 	return this;
     }
 
