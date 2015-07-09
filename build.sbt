@@ -157,6 +157,8 @@ lazy val functional = (project in file("squall-functional")).
     initialCommands in Compile in console += s"""val REPL = new ch.epfl.data.squall.api.scala.REPL(\"${repl_outdir}\");""",
     initialCommands in Compile in console += "import REPL._;",
     initialCommands in Compile in console += "start;",
+    cleanupCommands in Compile in console += "ch.epfl.data.squall.utilities.StormWrapper.shutdown();",
+    cleanupCommands in Compile in console += "println(\"Shutting down...\");",
     console in Compile <<= (console in Compile).dependsOn(assembly)
   )
 
