@@ -54,19 +54,7 @@ public class OperatorComponent extends RichComponent<OperatorComponent> {
 
     private final String _componentName;
 
-    private long _batchOutputMillis;
-
-    private List<Integer> _hashIndexes;
-    private List<ValueExpression> _hashExpressions;
-
-    private final ChainOperator _chain = new ChainOperator();
-
-    private boolean _printOut;
-    private boolean _printOutSet;
-
     // private Component _parent;
-    private Component _child;
-    private StormOperator _stormOperator;
 
     private List<String> _fullHashList;
 
@@ -89,29 +77,8 @@ public class OperatorComponent extends RichComponent<OperatorComponent> {
     }
 
     @Override
-    public List<DataSourceComponent> getAncestorDataSources() {
-	final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
-	for (Component parent : _parents) {
-	    list.addAll(parent.getAncestorDataSources());
-	}
-
-	return list;
-    }
-
-    // from StormComponent
-    @Override
-    public String[] getEmitterIDs() {
-	return _stormOperator.getEmitterIDs();
-    }
-
-    @Override
     public List<String> getFullHashList() {
 	return _fullHashList;
-    }
-
-    @Override
-    public String getInfoID() {
-	return _stormOperator.getInfoID();
     }
 
     @Override
@@ -139,16 +106,16 @@ public class OperatorComponent extends RichComponent<OperatorComponent> {
 	// by default print out for the last component
 	// for other conditions, can be set via setPrintOut
 	if (hierarchyPosition == StormComponent.FINAL_COMPONENT
-		&& !_printOutSet)
+            && !getPrintOutSet())
 	    setPrintOut(true);
 
-	MyUtilities.checkBatchOutput(_batchOutputMillis,
-		_chain.getAggregation(), conf);
+	MyUtilities.checkBatchOutput(getBatchOutputMillis(),
+                                     getChainOperator().getAggregation(), conf);
 
 	// _stormOperator = new StormOperator(_parent, this, allCompNames,
 	// hierarchyPosition, builder, killer, conf);
-	_stormOperator = new StormOperator(_parents, this, allCompNames,
-		hierarchyPosition, builder, killer, conf);
+	setStormEmitter(new StormOperator(_parents, this, allCompNames,
+                                          hierarchyPosition, builder, killer, conf));
     }
 
     @Override

@@ -69,16 +69,9 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
 	    .getLogger(AdaptiveThetaJoinComponent.class);
     private final Component _firstParent;
     private final Component _secondParent;
-    private Component _child;
     private String _componentName;
     private long _batchOutputMillis;
-    private List<Integer> _hashIndexes;
-    private List<ValueExpression> _hashExpressions;
-    private ThetaJoinerAdaptiveAdvisedEpochs _joiner;
     private ThetaReshufflerAdvisedEpochs _reshuffler;
-    private final ChainOperator _chain = new ChainOperator();
-    private boolean _printOut;
-    private boolean _printOutSet; // whether printOut was already set
     private int _joinerParallelism;
     private InterchangingComponent _interComp = null;
 
@@ -97,67 +90,9 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
     }
 
     @Override
-    public AdaptiveThetaJoinComponent add(Operator operator) {
-	_chain.addOperator(operator);
-	return this;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-	if (obj instanceof Component)
-	    return _componentName.equals(((Component) obj).getName());
-	else
-	    return false;
-    }
-
-    @Override
-    public List<DataSourceComponent> getAncestorDataSources() {
-	final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
-	for (final Component parent : getParents())
-	    list.addAll(parent.getAncestorDataSources());
-	return list;
-    }
-
-    @Override
-    public long getBatchOutputMillis() {
-	return _batchOutputMillis;
-    }
-
-    @Override
-    public ChainOperator getChainOperator() {
-	return _chain;
-    }
-
-    @Override
-    public Component getChild() {
-	return _child;
-    }
-
-    // from StormEmitter interface
-    @Override
-    public String[] getEmitterIDs() {
-	return _joiner.getEmitterIDs();
-    }
-
-    @Override
     public List<String> getFullHashList() {
 	throw new RuntimeException(
 		"Load balancing for Dynamic Theta join is done inherently!");
-    }
-
-    @Override
-    public List<ValueExpression> getHashExpressions() {
-	return _hashExpressions;
-    }
-
-    @Override
-    public List<Integer> getHashIndexes() {
-	return _hashIndexes;
-    }
-
-    @Override
-    public String getInfoID() {
-	return _joiner.getInfoID();
     }
 
     public InterchangingComponent getInterComp() {
@@ -175,31 +110,18 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
     }
 
     @Override
-    public boolean getPrintOut() {
-	return _printOut;
-    }
-
-    @Override
-    public int hashCode() {
-	int hash = 7;
-	hash = 37 * hash
-		+ (_componentName != null ? _componentName.hashCode() : 0);
-	return hash;
-    }
-
-    @Override
     public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
 	    List<String> allCompNames, Config conf, int hierarchyPosition) {
 
 	// by default print out for the last component
 	// for other conditions, can be set via setPrintOut
 	if (hierarchyPosition == StormComponent.FINAL_COMPONENT
-		&& !_printOutSet)
+            && !getPrintOutSet())
 	    setPrintOut(true);
 	_joinerParallelism = SystemParameters.getInt(conf, _componentName
 		+ "_PAR");
-	MyUtilities.checkBatchOutput(_batchOutputMillis,
-		_chain.getAggregation(), conf);
+	MyUtilities.checkBatchOutput(getBatchOutputMillis(),
+                                     getChainOperator().getAggregation(), conf);
 
 	int firstCardinality, secondCardinality;
 	if (_secondParent == null) { // then first has to be of type
@@ -233,10 +155,11 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
 	    _reshuffler.set_interComp(_interComp);
 
 	// Create the Join Bolt.
-	_joiner = new ThetaJoinerAdaptiveAdvisedEpochs(_firstParent,
-                                                       _secondParent, this, allCompNames, getJoinPredicate(),
-                                                       hierarchyPosition, builder, killer, conf, _reshuffler, dim);
-	_reshuffler.setJoinerID(_joiner.getID());
+        ThetaJoinerAdaptiveAdvisedEpochs joiner = new ThetaJoinerAdaptiveAdvisedEpochs(_firstParent,
+                                                                                       _secondParent, this, allCompNames, getJoinPredicate(),
+                                                                                       hierarchyPosition, builder, killer, conf, _reshuffler, dim);
+	setStormEmitter(joiner);
+	_reshuffler.setJoinerID(joiner.getID());
 
 	/*
 	 * setup communication between the components.
@@ -264,36 +187,25 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
 	    // stream
 	}
 	// 3) Hook up the DataMigration from the joiners to the reshuffler
-	_reshuffler.getCurrentBolt().customGrouping(_joiner.getID(),
+	_reshuffler.getCurrentBolt().customGrouping(joiner.getID(),
 		SystemParameters.ThetaDataMigrationJoinerToReshuffler,
 		new ThetaDataMigrationJoinerToReshufflerMapping(conf, -1));
 	// --for the LAST_ACK !!
-	_joiner.getCurrentBolt().allGrouping(_reshuffler.getID());
+	joiner.getCurrentBolt().allGrouping(_reshuffler.getID());
 	// 4) Hook up the signals from the reshuffler to the joiners
-	_joiner.getCurrentBolt().allGrouping(_reshuffler.getID(),
+	joiner.getCurrentBolt().allGrouping(_reshuffler.getID(),
 		SystemParameters.ThetaReshufflerSignal);
 	// 5) Hook up the DataMigration from the reshuffler to the joiners
-	_joiner.getCurrentBolt().directGrouping(_reshuffler.getID(),
+	joiner.getCurrentBolt().directGrouping(_reshuffler.getID(),
 		SystemParameters.ThetaDataMigrationReshufflerToJoiner);
 	// 6) Hook up the Data_Stream data (normal tuples) from the reshuffler
 	// to the joiners
-	_joiner.getCurrentBolt().directGrouping(_reshuffler.getID(),
+	joiner.getCurrentBolt().directGrouping(_reshuffler.getID(),
 		SystemParameters.ThetaDataReshufflerToJoiner);
 	// 7) Hook up the Acks from the Joiner to the Mapper&Synchronizer
-	_reshuffler.getCurrentBolt().directGrouping(_joiner.getID(),
+	_reshuffler.getCurrentBolt().directGrouping(joiner.getID(),
 		SystemParameters.ThetaJoinerAcks);// synchronizer is already one
 	// anyway.
-    }
-
-    @Override
-    public AdaptiveThetaJoinComponent setBatchOutputMillis(long millis) {
-	_batchOutputMillis = millis;
-	return this;
-    }
-
-    @Override
-    public void setChild(Component child) {
-	_child = child;
     }
 
     // TODO IMPLEMENT ME
@@ -311,34 +223,9 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
     }
 
     @Override
-    public AdaptiveThetaJoinComponent setHashExpressions(
-	    List<ValueExpression> hashExpressions) {
-	_hashExpressions = hashExpressions;
-	return this;
-    }
-
-    @Override
     public AdaptiveThetaJoinComponent setInterComp(
 	    InterchangingComponent _interComp) {
 	this._interComp = _interComp;
-	return this;
-    }
-
-    @Override
-    public AdaptiveThetaJoinComponent setOutputPartKey(int... hashIndexes) {
-	return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
-    }
-
-    @Override
-    public AdaptiveThetaJoinComponent setOutputPartKey(List<Integer> hashIndexes) {
-	_hashIndexes = hashIndexes;
-	return this;
-    }
-
-    @Override
-    public AdaptiveThetaJoinComponent setPrintOut(boolean printOut) {
-	_printOutSet = true;
-	_printOut = printOut;
 	return this;
     }
 }

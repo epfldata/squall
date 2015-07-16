@@ -98,14 +98,6 @@ public class EquiJoinComponent extends RichJoinerComponent<EquiJoinComponent> {
     }
 
     @Override
-    public List<DataSourceComponent> getAncestorDataSources() {
-	final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
-	for (final Component parent : getParents())
-	    list.addAll(parent.getAncestorDataSources());
-	return list;
-    }
-
-    @Override
     public List<String> getFullHashList() {
 	return _fullHashList;
     }

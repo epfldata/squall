@@ -76,14 +76,6 @@ public class DBToasterJoinComponent extends RichJoinerComponent<DBToasterJoinCom
     }
 
     @Override
-    public List<DataSourceComponent> getAncestorDataSources() {
-        final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
-        for (final Component parent : getParents())
-            list.addAll(parent.getAncestorDataSources());
-        return list;
-    }
-
-    @Override
     public List<String> getFullHashList() {
         return _fullHashList;
     }
@@ -119,12 +111,6 @@ public class DBToasterJoinComponent extends RichJoinerComponent<DBToasterJoinCom
                                                hierarchyPosition,
                                                builder, killer, conf));
     }
-
-    @Override
-    public DBToasterJoinComponent setContentSensitiveThetaJoinWrapper(Type wrapper) {
-        return this;
-    }
-
 
     // list of distinct keys, used for direct stream grouping and load-balancing
     // ()

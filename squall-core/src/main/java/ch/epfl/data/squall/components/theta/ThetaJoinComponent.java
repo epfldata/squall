@@ -55,15 +55,8 @@ public class ThetaJoinComponent extends RichJoinerComponent<ThetaJoinComponent> 
     private static Logger LOG = Logger.getLogger(ThetaJoinComponent.class);
     private final Component _firstParent;
     private final Component _secondParent;
-    private Component _child;
     private final String _componentName;
     private long _batchOutputMillis;
-    private List<Integer> _hashIndexes;
-    private List<ValueExpression> _hashExpressions;
-    private StormBoltComponent _joiner;
-    private final ChainOperator _chain = new ChainOperator();
-    private boolean _printOut;
-    private boolean _printOutSet; // whether printOut was already set
     private boolean _isContentSensitive;
     private Predicate _joinPredicate;
     private InterchangingComponent _interComp = null;
@@ -83,67 +76,9 @@ public class ThetaJoinComponent extends RichJoinerComponent<ThetaJoinComponent> 
     }
 
     @Override
-    public ThetaJoinComponent add(Operator operator) {
-	_chain.addOperator(operator);
-	return this;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-	if (obj instanceof Component)
-	    return _componentName.equals(((Component) obj).getName());
-	else
-	    return false;
-    }
-
-    @Override
-    public List<DataSourceComponent> getAncestorDataSources() {
-	final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
-	for (final Component parent : getParents())
-	    list.addAll(parent.getAncestorDataSources());
-	return list;
-    }
-
-    @Override
-    public long getBatchOutputMillis() {
-	return _batchOutputMillis;
-    }
-
-    @Override
-    public ChainOperator getChainOperator() {
-	return _chain;
-    }
-
-    @Override
-    public Component getChild() {
-	return _child;
-    }
-
-    // from StormEmitter interface
-    @Override
-    public String[] getEmitterIDs() {
-	return _joiner.getEmitterIDs();
-    }
-
-    @Override
     public List<String> getFullHashList() {
 	throw new RuntimeException(
 		"Load balancing for Theta join is done inherently!");
-    }
-
-    @Override
-    public List<ValueExpression> getHashExpressions() {
-	return _hashExpressions;
-    }
-
-    @Override
-    public List<Integer> getHashIndexes() {
-	return _hashIndexes;
-    }
-
-    @Override
-    public String getInfoID() {
-	return _joiner.getInfoID();
     }
 
     public Predicate getJoinPredicate() {
@@ -161,30 +96,17 @@ public class ThetaJoinComponent extends RichJoinerComponent<ThetaJoinComponent> 
     }
 
     @Override
-    public boolean getPrintOut() {
-	return _printOut;
-    }
-
-    @Override
-    public int hashCode() {
-	int hash = 7;
-	hash = 37 * hash
-		+ (_componentName != null ? _componentName.hashCode() : 0);
-	return hash;
-    }
-
-    @Override
     public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
 	    List<String> allCompNames, Config conf, int hierarchyPosition) {
 
 	// by default print out for the last component
 	// for other conditions, can be set via setPrintOut
 	if (hierarchyPosition == StormComponent.FINAL_COMPONENT
-		&& !_printOutSet)
+            && !getPrintOutSet())
 	    setPrintOut(true);
 
-	MyUtilities.checkBatchOutput(_batchOutputMillis,
-		_chain.getAggregation(), conf);
+	MyUtilities.checkBatchOutput(getBatchOutputMillis(),
+                                     getChainOperator().getAggregation(), conf);
 
 	boolean isBDB = MyUtilities.isBDB(conf);
 	if (isBDB && _joinPredicate == null) {
@@ -192,30 +114,22 @@ public class ThetaJoinComponent extends RichJoinerComponent<ThetaJoinComponent> 
 		    "Please provide _joinPredicate if you want to run BDB!");
 	}
 
+        StormBoltComponent joiner;
 	if (isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)) {
-	    _joiner = new StormThetaJoinBDB(_firstParent, _secondParent, this,
-		    allCompNames, _joinPredicate, hierarchyPosition, builder,
-		    killer, conf, _interComp);
-
+          joiner = new StormThetaJoinBDB(_firstParent, _secondParent, this,
+                                         allCompNames, _joinPredicate, hierarchyPosition, builder,
+                                         killer, conf, _interComp);
 	} else {
-	    _joiner = new StormThetaJoin(_firstParent, _secondParent, this,
-		    allCompNames, _joinPredicate, _isPartitioner,
-		    hierarchyPosition, builder, killer, conf, _interComp,
-		    _isContentSensitive, _contentSensitiveThetaJoinWrapper);
+          joiner = new StormThetaJoin(_firstParent, _secondParent, this,
+                                      allCompNames, _joinPredicate, _isPartitioner,
+                                      hierarchyPosition, builder, killer, conf, _interComp,
+                                      _isContentSensitive, _contentSensitiveThetaJoinWrapper);
 	}
-	if (getSlidingWindow() > 0 || getTumblingWindow() > 0)
-          _joiner.setWindowSemantics(getSlidingWindow(), getTumblingWindow());
-    }
+	if (getSlidingWindow() > 0 || getTumblingWindow() > 0) {
+          joiner.setWindowSemantics(getSlidingWindow(), getTumblingWindow());
+        }
 
-    @Override
-    public ThetaJoinComponent setBatchOutputMillis(long millis) {
-	_batchOutputMillis = millis;
-	return this;
-    }
-
-    @Override
-    public void setChild(Component child) {
-	_child = child;
+        setStormEmitter(joiner);
     }
 
     @Override
@@ -233,13 +147,6 @@ public class ThetaJoinComponent extends RichJoinerComponent<ThetaJoinComponent> 
     }
 
     @Override
-    public ThetaJoinComponent setHashExpressions(
-	    List<ValueExpression> hashExpressions) {
-	_hashExpressions = hashExpressions;
-	return this;
-    }
-
-    @Override
     public ThetaJoinComponent setInterComp(InterchangingComponent inter) {
 	_interComp = inter;
 	return this;
@@ -251,22 +158,8 @@ public class ThetaJoinComponent extends RichJoinerComponent<ThetaJoinComponent> 
 	return this;
     }
 
-    @Override
-    public ThetaJoinComponent setOutputPartKey(List<Integer> hashIndexes) {
-	_hashIndexes = hashIndexes;
-	return this;
-    }
-
     public ThetaJoinComponent setPartitioner(boolean isPartitioner) {
 	_isPartitioner = isPartitioner;
 	return this;
     }
-
-    @Override
-    public ThetaJoinComponent setPrintOut(boolean printOut) {
-	_printOutSet = true;
-	_printOut = printOut;
-	return this;
-    }
-
 }

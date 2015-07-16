@@ -48,7 +48,7 @@ import ch.epfl.data.squall.storm_components.StormBoltComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.utilities.MyUtilities;
 
-public class HyperCubeJoinComponent extends RichJoinerComponent<HyperCubeJoinComponent> implements Component {
+public class HyperCubeJoinComponent extends RichJoinerComponent<HyperCubeJoinComponent> {
     protected HyperCubeJoinComponent getThis() {
       return this;
     }
@@ -57,16 +57,8 @@ public class HyperCubeJoinComponent extends RichJoinerComponent<HyperCubeJoinCom
     private static Logger LOG = Logger.getLogger(HyperCubeJoinComponent.class);
     private ArrayList<Component> parents;
     private String componentName = "_";
-    private long batchOutputMillis;
-    private final ChainOperator chain = new ChainOperator();
-    private Component child;
-    private StormBoltComponent joiner;
-    private List<ValueExpression> hashExpressions;
-    private List<Integer> hashIndexes;
     private Predicate joinPredicate;
-    private boolean printOut;
     private InterchangingComponent interComp = null;
-    private boolean printOutSet; // whether printOut was already set
     private Type contentSensitiveThetaJoinWrapper = null;
 
 
@@ -79,62 +71,9 @@ public class HyperCubeJoinComponent extends RichJoinerComponent<HyperCubeJoinCom
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof Component)
-            return componentName.equals(((Component) obj).getName());
-        else
-            return false;
-    }
-
-    @Override
-    public List<DataSourceComponent> getAncestorDataSources() {
-        final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
-        for (final Component parent : getParents())
-            list.addAll(parent.getAncestorDataSources());
-        return list;
-    }
-
-
-    @Override
-    public long getBatchOutputMillis() {
-        return batchOutputMillis;
-    }
-
-    @Override
-    public ChainOperator getChainOperator() {
-        return chain;
-    }
-
-    @Override
-    public Component getChild() {
-        return child;
-    }
-
-    // from StormEmitter interface
-    @Override
-    public String[] getEmitterIDs() {
-        return joiner.getEmitterIDs();
-    }
-
-    @Override
     public List<String> getFullHashList() {
         throw new RuntimeException(
                 "Load balancing for Theta join is done inherently!");
-    }
-
-    @Override
-    public List<ValueExpression> getHashExpressions() {
-        return hashExpressions;
-    }
-
-    @Override
-    public List<Integer> getHashIndexes() {
-        return hashIndexes;
-    }
-
-    @Override
-    public String getInfoID() {
-        return joiner.getInfoID();
     }
 
     public Predicate getJoinPredicate() {
@@ -152,24 +91,10 @@ public class HyperCubeJoinComponent extends RichJoinerComponent<HyperCubeJoinCom
     }
 
     @Override
-    public boolean getPrintOut() {
-        return printOut;
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 37 * hash
-                + (componentName != null ? componentName.hashCode() : 0);
-        return hash;
-    }
-
-
-    @Override
     public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
                           List<String> allCompNames, Config conf, int hierarchyPosition) {
-        MyUtilities.checkBatchOutput(batchOutputMillis,
-		chain.getAggregation(), conf);
+      MyUtilities.checkBatchOutput(getBatchOutputMillis(),
+                                     getChainOperator().getAggregation(), conf);
 
         // _joiner = new StormThetaJoin();
         ArrayList<StormEmitter> emitters = new ArrayList<StormEmitter>();
@@ -184,16 +109,6 @@ public class HyperCubeJoinComponent extends RichJoinerComponent<HyperCubeJoinCom
 //                hierarchyPosition, builder, killer, conf, interComp, contentSensitiveThetaJoinWrapper);
 
     }
-    @Override
-    public HyperCubeJoinComponent setBatchOutputMillis(long millis) {
-        batchOutputMillis = millis;
-        return this;
-    }
-
-    @Override
-    public void setChild(Component child) {
-        this.child = child;
-    }
 
     // list of distinct keys, used for direct stream grouping and load-balancing
     // ()
@@ -201,24 +116,6 @@ public class HyperCubeJoinComponent extends RichJoinerComponent<HyperCubeJoinCom
     public HyperCubeJoinComponent setFullHashList(List<String> fullHashList) {
         throw new RuntimeException(
                 "Load balancing for Theta join is done inherently!");
-    }
-
-    @Override
-    public HyperCubeJoinComponent setHashExpressions(
-            List<ValueExpression> hashExpressions) {
-        this.hashExpressions = hashExpressions;
-        return this;
-    }
-
-    @Override
-    public HyperCubeJoinComponent setOutputPartKey(List<Integer> hashIndexes) {
-        this.hashIndexes = hashIndexes;
-        return this;
-    }
-
-    @Override
-    public HyperCubeJoinComponent setOutputPartKey(int... hashIndexes) {
-        return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
     }
 
     @Override
@@ -232,14 +129,6 @@ public class HyperCubeJoinComponent extends RichJoinerComponent<HyperCubeJoinCom
         this.joinPredicate = joinPredicate;
         return this;
     }
-
-    @Override
-    public HyperCubeJoinComponent setPrintOut(boolean printOut) {
-        this.printOutSet = true;
-        this.printOut = printOut;
-        return this;
-    }
-
 
     @Override
     public HyperCubeJoinComponent setContentSensitiveThetaJoinWrapper(

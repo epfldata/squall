@@ -21,6 +21,7 @@ package ch.epfl.data.squall.components;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.ArrayList;
 
 import org.apache.commons.lang.ArrayUtils;
 
@@ -160,5 +161,16 @@ public abstract class RichComponent<C extends Component> implements Component {
       _stormEmitter = emitter;
     }
 
+    protected StormEmitter getStormEmitter(StormEmitter emitter) {
+      return _stormEmitter;
+    }
+
+    @Override
+    public List<DataSourceComponent> getAncestorDataSources() {
+	final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
+	for (final Component parent : getParents())
+	    list.addAll(parent.getAncestorDataSources());
+	return list;
+    }
 
 }
