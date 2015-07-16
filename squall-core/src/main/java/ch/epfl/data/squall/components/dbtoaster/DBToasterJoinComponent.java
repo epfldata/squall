@@ -24,7 +24,6 @@ package ch.epfl.data.squall.components.dbtoaster;
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
-import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.JoinerComponent;
 import ch.epfl.data.squall.components.RichJoinerComponent;
 import ch.epfl.data.squall.operators.AggregateStream;
@@ -37,7 +36,6 @@ import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

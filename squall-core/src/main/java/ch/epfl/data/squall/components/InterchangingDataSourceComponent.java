@@ -30,7 +30,6 @@ import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
-import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormInterchangingDataSource;

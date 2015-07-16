@@ -19,22 +19,14 @@
 
 package ch.epfl.data.squall.components.theta;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
-import ch.epfl.data.squall.components.DataSourceComponent;
-import ch.epfl.data.squall.components.JoinerComponent;
 import ch.epfl.data.squall.components.RichJoinerComponent;
-import ch.epfl.data.squall.expressions.ValueExpression;
-import ch.epfl.data.squall.operators.ChainOperator;
-import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormBoltComponent;
@@ -44,7 +36,6 @@ import ch.epfl.data.squall.storm_components.theta.StormThetaJoin;
 import ch.epfl.data.squall.storm_components.theta.StormThetaJoinBDB;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
-import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
 public class ThetaJoinComponent extends RichJoinerComponent<ThetaJoinComponent> {
     protected ThetaJoinComponent getThis() {
