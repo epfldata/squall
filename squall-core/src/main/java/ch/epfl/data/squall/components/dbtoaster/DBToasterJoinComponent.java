@@ -87,7 +87,7 @@ public class DBToasterJoinComponent extends RichJoinerComponent<DBToasterJoinCom
     }
 
     @Override
-    public JoinerComponent setInterComp(InterchangingComponent inter) {
+    public DBToasterJoinComponent setInterComp(InterchangingComponent inter) {
         throw new RuntimeException(
                 "DBToasterJoin component does not support setInterComp");
     }

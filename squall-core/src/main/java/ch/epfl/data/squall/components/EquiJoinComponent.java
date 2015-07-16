@@ -135,12 +135,6 @@ public class EquiJoinComponent extends RichJoinerComponent<EquiJoinComponent> {
 	return this;
     }
 
-    @Override
-    public JoinerComponent setInterComp(InterchangingComponent inter) {
-	throw new RuntimeException(
-		"EquiJoin component does not support setInterComp");
-    }
-
     // Out of the second storage (join of R tuple with S relation)
     public EquiJoinComponent setSecondPreAggProj(
 	    ProjectOperator secondPreAggProj) {
@@ -154,4 +148,9 @@ public class EquiJoinComponent extends RichJoinerComponent<EquiJoinComponent> {
 	return this;
     }
 
+    @Override
+    public EquiJoinComponent setInterComp(InterchangingComponent inter) {
+	throw new RuntimeException(
+		"EquiJoin component does not support setInterComp");
+    }
 }

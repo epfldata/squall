@@ -62,7 +62,6 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
     private final Component _secondParent;
     private ThetaReshufflerAdvisedEpochs _reshuffler;
     private int _joinerParallelism;
-    private InterchangingComponent _interComp = null;
 
     public AdaptiveThetaJoinComponent(Component firstParent,
 	    Component secondParent) {
@@ -82,10 +81,6 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
     public List<String> getFullHashList() {
 	throw new RuntimeException(
 		"Load balancing for Dynamic Theta join is done inherently!");
-    }
-
-    public InterchangingComponent getInterComp() {
-	return _interComp;
     }
 
     @Override
@@ -130,8 +125,8 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
 		_secondParent, allCompNames, _joinerParallelism,
 		hierarchyPosition, conf, builder, dim);
 
-	if (_interComp != null)
-	    _reshuffler.set_interComp(_interComp);
+	if (getInterComp() != null)
+          _reshuffler.set_interComp(getInterComp());
 
 	// Create the Join Bolt.
         ThetaJoinerAdaptiveAdvisedEpochs joiner = new ThetaJoinerAdaptiveAdvisedEpochs(_firstParent,
@@ -152,12 +147,12 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
 	final ThetaJoinAdaptiveMapping dMap = new ThetaJoinAdaptiveMapping(
 		conf, -1);
 	final ArrayList<StormEmitter> emittersList = new ArrayList<StormEmitter>();
-	if (_interComp == null) {
+	if (getInterComp() == null) {
 	    emittersList.add(_firstParent);
 	    if (_secondParent != null)
 		emittersList.add(_secondParent);
 	} else
-	    emittersList.add(_interComp);
+	    emittersList.add(getInterComp());
 	for (final StormEmitter emitter : emittersList) {
 	    final String[] emitterIDs = emitter.getEmitterIDs();
 	    for (final String emitterID : emitterIDs)
@@ -201,10 +196,4 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
 		"Load balancing for Dynamic Theta join is done inherently!");
     }
 
-    @Override
-    public AdaptiveThetaJoinComponent setInterComp(
-	    InterchangingComponent _interComp) {
-	this._interComp = _interComp;
-	return this;
-    }
 }

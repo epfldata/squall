@@ -43,7 +43,6 @@ public class HyperCubeJoinComponent extends RichJoinerComponent<HyperCubeJoinCom
 
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(HyperCubeJoinComponent.class);
-    private InterchangingComponent interComp = null;
     private Type contentSensitiveThetaJoinWrapper = null;
 
     public HyperCubeJoinComponent(ArrayList<Component> parents) {
@@ -82,12 +81,6 @@ public class HyperCubeJoinComponent extends RichJoinerComponent<HyperCubeJoinCom
     public HyperCubeJoinComponent setFullHashList(List<String> fullHashList) {
         throw new RuntimeException(
                 "Load balancing for Theta join is done inherently!");
-    }
-
-    @Override
-    public HyperCubeJoinComponent setInterComp(InterchangingComponent inter) {
-        interComp = inter;
-        return this;
     }
 
     @Override

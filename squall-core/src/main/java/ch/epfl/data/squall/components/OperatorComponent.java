@@ -76,7 +76,7 @@ public class OperatorComponent extends RichComponent<OperatorComponent> {
     }
 
     @Override
-    public Component setInterComp(InterchangingComponent inter) {
+    public OperatorComponent setInterComp(InterchangingComponent inter) {
 	throw new RuntimeException(
 		"Operator component does not support setInterComp");
     }

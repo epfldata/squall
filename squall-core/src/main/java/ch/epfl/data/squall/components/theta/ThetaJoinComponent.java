@@ -47,7 +47,6 @@ public class ThetaJoinComponent extends RichJoinerComponent<ThetaJoinComponent> 
     private final Component _firstParent;
     private final Component _secondParent;
     private boolean _isContentSensitive;
-    private InterchangingComponent _interComp = null;
     private Type _contentSensitiveThetaJoinWrapper = null;
 
     // equi-weight histogram
@@ -90,11 +89,11 @@ public class ThetaJoinComponent extends RichJoinerComponent<ThetaJoinComponent> 
 	if (isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)) {
           joiner = new StormThetaJoinBDB(_firstParent, _secondParent, this,
                                          allCompNames, getJoinPredicate(), hierarchyPosition, builder,
-                                         killer, conf, _interComp);
+                                         killer, conf, getInterComp());
 	} else {
           joiner = new StormThetaJoin(_firstParent, _secondParent, this,
                                       allCompNames, getJoinPredicate(), _isPartitioner,
-                                      hierarchyPosition, builder, killer, conf, _interComp,
+                                      hierarchyPosition, builder, killer, conf, getInterComp(),
                                       _isContentSensitive, _contentSensitiveThetaJoinWrapper);
 	}
 	if (getSlidingWindow() > 0 || getTumblingWindow() > 0) {
@@ -116,12 +115,6 @@ public class ThetaJoinComponent extends RichJoinerComponent<ThetaJoinComponent> 
     public ThetaJoinComponent setFullHashList(List<String> fullHashList) {
 	throw new RuntimeException(
 		"Load balancing for Theta join is done inherently!");
-    }
-
-    @Override
-    public ThetaJoinComponent setInterComp(InterchangingComponent inter) {
-	_interComp = inter;
-	return this;
     }
 
     public ThetaJoinComponent setPartitioner(boolean isPartitioner) {
