@@ -79,7 +79,6 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
     private final ChainOperator _chain = new ChainOperator();
     private boolean _printOut;
     private boolean _printOutSet; // whether printOut was already set
-    private Predicate _joinPredicate;
     private int _joinerParallelism;
     private InterchangingComponent _interComp = null;
 
@@ -165,10 +164,6 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
 	return _interComp;
     }
 
-    public Predicate getJoinPredicate() {
-	return _joinPredicate;
-    }
-
     @Override
     public String getName() {
 	return _componentName;
@@ -239,8 +234,8 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
 
 	// Create the Join Bolt.
 	_joiner = new ThetaJoinerAdaptiveAdvisedEpochs(_firstParent,
-		_secondParent, this, allCompNames, _joinPredicate,
-		hierarchyPosition, builder, killer, conf, _reshuffler, dim);
+                                                       _secondParent, this, allCompNames, getJoinPredicate(),
+                                                       hierarchyPosition, builder, killer, conf, _reshuffler, dim);
 	_reshuffler.setJoinerID(_joiner.getID());
 
 	/*
@@ -326,12 +321,6 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
     public AdaptiveThetaJoinComponent setInterComp(
 	    InterchangingComponent _interComp) {
 	this._interComp = _interComp;
-	return this;
-    }
-
-    @Override
-    public JoinerComponent setJoinPredicate(Predicate joinPredicate) {
-	_joinPredicate = joinPredicate;
 	return this;
     }
 

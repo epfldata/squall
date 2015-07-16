@@ -33,13 +33,13 @@ public abstract class RichJoinerComponent<C extends JoinerComponent> extends Ric
     private Predicate _joinPredicate;
 
     @Override
-    public JoinerComponent setSlidingWindow(int windowRange) {
+    public C setSlidingWindow(int windowRange) {
       WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
       // TODO: *1000?
       _windowSize = windowRange * 1000; // Width in terms of millis, Default
       // is -1 which is full history
 
-      return this;
+      return getThis();
     }
 
     @Override
@@ -48,10 +48,10 @@ public abstract class RichJoinerComponent<C extends JoinerComponent> extends Ric
     }
 
     @Override
-    public JoinerComponent setTumblingWindow(int windowRange) {
+    public C setTumblingWindow(int windowRange) {
         WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
         _tumblingWindowSize = windowRange * 1000;// For tumbling semantics
-        return this;
+        return getThis();
     }
 
     @Override
@@ -62,6 +62,12 @@ public abstract class RichJoinerComponent<C extends JoinerComponent> extends Ric
     @Override
     public Predicate getJoinPredicate() {
 	return _joinPredicate;
+    }
+
+    @Override
+    public C setJoinPredicate(Predicate joinPredicate) {
+        _joinPredicate = joinPredicate;
+        return getThis();
     }
 
 }

@@ -20,24 +20,17 @@
 package ch.epfl.data.squall.components;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
-import ch.epfl.data.squall.expressions.ValueExpression;
-import ch.epfl.data.squall.operators.ChainOperator;
-import ch.epfl.data.squall.operators.Operator;
-import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormDataSource;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
-import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
@@ -51,8 +44,6 @@ public class DataSourceComponent extends RichComponent<DataSourceComponent> {
 
     private final String _componentName;
     private final String _inputPath;
-
-    private StormDataSource _dataSource;
 
     // equi-weight histogram
     private boolean _isPartitioner;
@@ -76,23 +67,6 @@ public class DataSourceComponent extends RichComponent<DataSourceComponent> {
 	final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
 	list.add(this);
 	return list;
-    }
-
-    // from StormEmitter interface
-    @Override
-    public String[] getEmitterIDs() {
-	return _dataSource.getEmitterIDs();
-    }
-
-    @Override
-    public List<String> getFullHashList() {
-	throw new RuntimeException(
-		"This method should not be invoked for DataSourceComponent!");
-    }
-
-    @Override
-    public String getInfoID() {
-	return _dataSource.getInfoID() + "\n";
     }
 
     @Override
@@ -125,9 +99,9 @@ public class DataSourceComponent extends RichComponent<DataSourceComponent> {
 	MyUtilities.checkBatchOutput(getBatchOutputMillis(),
                                      getChainOperator().getAggregation(), conf);
 
-	_dataSource = new StormDataSource(this, allCompNames, _inputPath,
-		hierarchyPosition, parallelism, _isPartitioner, builder,
-		killer, conf);
+	setStormEmitter(new StormDataSource(this, allCompNames, _inputPath,
+                                            hierarchyPosition, parallelism, _isPartitioner, builder,
+                                            killer, conf));
     }
 
     @Override
@@ -150,9 +124,14 @@ public class DataSourceComponent extends RichComponent<DataSourceComponent> {
 		"Datasource component does not support setInterComp");
     }
 
+    @Override
+    public List<String> getFullHashList() {
+	throw new RuntimeException(
+		"This method should not be invoked for DataSourceComponent!");
+    }
+
     public DataSourceComponent setPartitioner(boolean isPartitioner) {
 	_isPartitioner = isPartitioner;
 	return this;
     }
-
 }

@@ -28,6 +28,7 @@ import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.types.Type;
+import ch.epfl.data.squall.storm_components.StormEmitter;
 
 public abstract class RichComponent<C extends Component> implements Component {
 
@@ -42,6 +43,8 @@ public abstract class RichComponent<C extends Component> implements Component {
 
     private boolean _printOut;
     private boolean _printOutSet; // whether printOut condition is already set
+
+    private StormEmitter _stormEmitter;
 
 
     @Override
@@ -141,5 +144,21 @@ public abstract class RichComponent<C extends Component> implements Component {
 	_hashIndexes = hashIndexes;
 	return getThis();
     }
+
+    // from StormEmitter interface
+    @Override
+    public String[] getEmitterIDs() {
+	return _stormEmitter.getEmitterIDs();
+    }
+
+    @Override
+    public String getInfoID() {
+	return _stormEmitter.getInfoID();
+    }
+
+    protected void setStormEmitter(StormEmitter emitter) {
+      _stormEmitter = emitter;
+    }
+
 
 }

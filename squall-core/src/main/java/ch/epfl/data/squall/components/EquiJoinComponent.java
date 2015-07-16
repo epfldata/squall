@@ -59,8 +59,6 @@ public class EquiJoinComponent extends RichJoinerComponent<EquiJoinComponent> {
 
     private final String _componentName;
 
-    private StormEmitter _joiner;
-
     // The storage is actually KeyValue<String, String>
     // or AggregationStorage<Numeric> for pre-aggregation
     // Access method returns a list of Strings (a list of Numerics for
@@ -70,7 +68,6 @@ public class EquiJoinComponent extends RichJoinerComponent<EquiJoinComponent> {
     private ProjectOperator _firstPreAggProj, _secondPreAggProj;
 
     private List<String> _fullHashList;
-    private Predicate _joinPredicate;
 
     private boolean _isRemoveIndex = true;
 
@@ -108,20 +105,9 @@ public class EquiJoinComponent extends RichJoinerComponent<EquiJoinComponent> {
 	return list;
     }
 
-    // from StormEmitter interface
-    @Override
-    public String[] getEmitterIDs() {
-	return _joiner.getEmitterIDs();
-    }
-
     @Override
     public List<String> getFullHashList() {
 	return _fullHashList;
-    }
-
-    @Override
-    public String getInfoID() {
-	return _joiner.getInfoID();
     }
 
     @Override
@@ -154,26 +140,27 @@ public class EquiJoinComponent extends RichJoinerComponent<EquiJoinComponent> {
 	    _secondStorage = new KeyValueStore<String, String>(conf);
 
 	boolean isBDB = MyUtilities.isBDB(conf);
-	if (isBDB && _joinPredicate == null) {
+        Predicate joinPredicate = getJoinPredicate();
+	if (isBDB && joinPredicate == null) {
 	    throw new RuntimeException(
-		    "Please provide _joinPredicate if you want to run BDB!");
+		    "Please provide joinPredicate if you want to run BDB!");
 	}
 
 	// TODO: what is with the if condition
 	if (isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)) {
-	    _joiner = new StormDstTupleStorageBDB(_firstParent, _secondParent,
-		    this, allCompNames, _joinPredicate, hierarchyPosition,
-		    builder, killer, conf);
-	} else if (_joinPredicate != null) {
-	    _joiner = new StormDstTupleStorageJoin(_firstParent, _secondParent,
-		    this, allCompNames, _joinPredicate, hierarchyPosition,
-		    builder, killer, conf);
+          setStormEmitter(new StormDstTupleStorageBDB(_firstParent, _secondParent,
+                                                      this, allCompNames, joinPredicate, hierarchyPosition,
+                                                      builder, killer, conf));
+	} else if (joinPredicate != null) {
+	  setStormEmitter(new StormDstTupleStorageJoin(_firstParent, _secondParent,
+                                                       this, allCompNames, joinPredicate, hierarchyPosition,
+                                                       builder, killer, conf));
 	} else {
 	    // should issue a warning
-	    _joiner = new StormDstJoin(_firstParent, _secondParent, this,
-		    allCompNames, _firstStorage, _secondStorage,
-		    _firstPreAggProj, _secondPreAggProj, hierarchyPosition,
-		    builder, killer, conf, _isRemoveIndex);
+          setStormEmitter(new StormDstJoin(_firstParent, _secondParent, this,
+                                           allCompNames, _firstStorage, _secondStorage,
+                                           _firstPreAggProj, _secondPreAggProj, hierarchyPosition,
+                                           builder, killer, conf, _isRemoveIndex));
 	}
     }
 
@@ -202,12 +189,6 @@ public class EquiJoinComponent extends RichJoinerComponent<EquiJoinComponent> {
     public JoinerComponent setInterComp(InterchangingComponent inter) {
 	throw new RuntimeException(
 		"EquiJoin component does not support setInterComp");
-    }
-
-    @Override
-    public EquiJoinComponent setJoinPredicate(Predicate predicate) {
-	_joinPredicate = predicate;
-	return this;
     }
 
     // Out of the second storage (join of R tuple with S relation)
