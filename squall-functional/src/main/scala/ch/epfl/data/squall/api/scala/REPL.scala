@@ -119,10 +119,7 @@ Type "help" for Squall related help
 
     // Now we have to trick storm into thinking we launched with the storm
     // script. This is easier!
-    import java.util.Properties
-    val p = new Properties(System.getProperties());
-    p.setProperty("storm.jar", jar)
-    System.setProperties(p);
+    System.setProperty("storm.jar", jar);
     ////////////////////////
 
     // Configure the query. To easily identify it we use the prefixes repl_0_,
