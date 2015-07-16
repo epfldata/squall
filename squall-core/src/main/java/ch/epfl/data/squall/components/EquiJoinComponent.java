@@ -49,8 +49,6 @@ public class EquiJoinComponent extends RichJoinerComponent<EquiJoinComponent> {
     private final Component _firstParent;
     private final Component _secondParent;
 
-    private final String _componentName;
-
     // The storage is actually KeyValue<String, String>
     // or AggregationStorage<Numeric> for pre-aggregation
     // Access method returns a list of Strings (a list of Numerics for
@@ -59,26 +57,17 @@ public class EquiJoinComponent extends RichJoinerComponent<EquiJoinComponent> {
     // preAggregation
     private ProjectOperator _firstPreAggProj, _secondPreAggProj;
 
-    private List<String> _fullHashList;
-
-    private boolean _isRemoveIndex = true;
+    private boolean _isRemoveIndex;
 
     public EquiJoinComponent(Component firstParent, Component secondParent) {
-	_firstParent = firstParent;
-	_firstParent.setChild(this);
-	_secondParent = secondParent;
-	_secondParent.setChild(this);
-
-	_componentName = firstParent.getName() + "_" + secondParent.getName();
+      this(firstParent, secondParent, true);
     }
 
     public EquiJoinComponent(Component firstParent, Component secondParent,
 	    boolean isRemoveIndex) {
+      super(new Component[]{firstParent, secondParent});
 	_firstParent = firstParent;
-	_firstParent.setChild(this);
 	_secondParent = secondParent;
-	_secondParent.setChild(this);
-	_componentName = firstParent.getName() + "_" + secondParent.getName();
 	_isRemoveIndex = isRemoveIndex;
     }
 
@@ -87,21 +76,6 @@ public class EquiJoinComponent extends RichJoinerComponent<EquiJoinComponent> {
 	this(firstParent, secondParent);
 	firstParent.setOutputPartKey(firstJoinIndex);
 	secondParent.setOutputPartKey(secondJoinIndex);
-    }
-
-    @Override
-    public List<String> getFullHashList() {
-	return _fullHashList;
-    }
-
-    @Override
-    public String getName() {
-	return _componentName;
-    }
-
-    @Override
-    public Component[] getParents() {
-	return new Component[] { _firstParent, _secondParent };
     }
 
     @Override
@@ -158,14 +132,6 @@ public class EquiJoinComponent extends RichJoinerComponent<EquiJoinComponent> {
     public EquiJoinComponent setFirstPreAggStorage(
 	    AggregationStorage firstPreAggStorage) {
 	_firstStorage = firstPreAggStorage;
-	return this;
-    }
-
-    // list of distinct keys, used for direct stream grouping and load-balancing
-    // ()
-    @Override
-    public EquiJoinComponent setFullHashList(List<String> fullHashList) {
-	_fullHashList = fullHashList;
 	return this;
     }
 

@@ -46,10 +46,7 @@ public class ThetaJoinComponent extends RichJoinerComponent<ThetaJoinComponent> 
     private static Logger LOG = Logger.getLogger(ThetaJoinComponent.class);
     private final Component _firstParent;
     private final Component _secondParent;
-    private final String _componentName;
-    private long _batchOutputMillis;
     private boolean _isContentSensitive;
-    private Predicate _joinPredicate;
     private InterchangingComponent _interComp = null;
     private Type _contentSensitiveThetaJoinWrapper = null;
 
@@ -58,11 +55,9 @@ public class ThetaJoinComponent extends RichJoinerComponent<ThetaJoinComponent> 
 
     public ThetaJoinComponent(Component firstParent, Component secondParent,
 	    boolean isContentSensitive) {
+      super(new Component[]{firstParent, secondParent});
 	_firstParent = firstParent;
-	_firstParent.setChild(this);
 	_secondParent = secondParent;
-	_secondParent.setChild(this);
-	_componentName = firstParent.getName() + "_" + secondParent.getName();
 	_isContentSensitive = isContentSensitive;
     }
 
@@ -70,20 +65,6 @@ public class ThetaJoinComponent extends RichJoinerComponent<ThetaJoinComponent> 
     public List<String> getFullHashList() {
 	throw new RuntimeException(
 		"Load balancing for Theta join is done inherently!");
-    }
-
-    public Predicate getJoinPredicate() {
-	return _joinPredicate;
-    }
-
-    @Override
-    public String getName() {
-	return _componentName;
-    }
-
-    @Override
-    public Component[] getParents() {
-	return new Component[] { _firstParent, _secondParent };
     }
 
     @Override
@@ -100,19 +81,19 @@ public class ThetaJoinComponent extends RichJoinerComponent<ThetaJoinComponent> 
                                      getChainOperator().getAggregation(), conf);
 
 	boolean isBDB = MyUtilities.isBDB(conf);
-	if (isBDB && _joinPredicate == null) {
+	if (isBDB && getJoinPredicate() == null) {
 	    throw new RuntimeException(
-		    "Please provide _joinPredicate if you want to run BDB!");
+		    "Please provide joinPredicate if you want to run BDB!");
 	}
 
         StormBoltComponent joiner;
 	if (isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)) {
           joiner = new StormThetaJoinBDB(_firstParent, _secondParent, this,
-                                         allCompNames, _joinPredicate, hierarchyPosition, builder,
+                                         allCompNames, getJoinPredicate(), hierarchyPosition, builder,
                                          killer, conf, _interComp);
 	} else {
           joiner = new StormThetaJoin(_firstParent, _secondParent, this,
-                                      allCompNames, _joinPredicate, _isPartitioner,
+                                      allCompNames, getJoinPredicate(), _isPartitioner,
                                       hierarchyPosition, builder, killer, conf, _interComp,
                                       _isContentSensitive, _contentSensitiveThetaJoinWrapper);
 	}
@@ -140,12 +121,6 @@ public class ThetaJoinComponent extends RichJoinerComponent<ThetaJoinComponent> 
     @Override
     public ThetaJoinComponent setInterComp(InterchangingComponent inter) {
 	_interComp = inter;
-	return this;
-    }
-
-    @Override
-    public ThetaJoinComponent setJoinPredicate(Predicate joinPredicate) {
-	_joinPredicate = joinPredicate;
 	return this;
     }
 

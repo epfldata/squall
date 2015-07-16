@@ -19,6 +19,8 @@
 
 package ch.epfl.data.squall.components;
 
+import java.util.List;
+
 import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
@@ -31,6 +33,26 @@ public abstract class RichJoinerComponent<C extends JoinerComponent> extends Ric
     private long _tumblingWindowSize = -1;// For tumbling semantics
 
     private Predicate _joinPredicate;
+
+    public RichJoinerComponent(Component parent, String componentName) {
+      super(parent,  componentName);
+    }
+
+    public RichJoinerComponent(Component[] parents, String componentName) {
+      super(parents, componentName);
+    }
+
+    public RichJoinerComponent(List<Component> parents, String componentName) {
+      super(parents, componentName);
+    }
+
+    public RichJoinerComponent(Component[] parents) {
+      super(parents);
+    }
+
+    public RichJoinerComponent(List<Component> parents) {
+      super(parents);
+    }
 
     @Override
     public C setSlidingWindow(int windowRange) {
@@ -69,5 +91,6 @@ public abstract class RichJoinerComponent<C extends JoinerComponent> extends Ric
         _joinPredicate = joinPredicate;
         return getThis();
     }
+
 
 }

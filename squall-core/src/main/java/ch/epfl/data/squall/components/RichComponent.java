@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
@@ -35,18 +36,69 @@ public abstract class RichComponent<C extends Component> implements Component {
 
     protected abstract C getThis();
 
+    private final String _componentName;
+
     private long _batchOutputMillis;
     private final ChainOperator _chain = new ChainOperator();
     private Component _child;
 
     private List<ValueExpression> _hashExpressions;
     private List<Integer> _hashIndexes;
+    private List<String> _fullHashList;
 
     private boolean _printOut;
     private boolean _printOutSet; // whether printOut condition is already set
 
     private StormEmitter _stormEmitter;
 
+    private Component[] _parents;
+
+    public RichComponent(Component parent, String componentName) {
+      _componentName = componentName;
+      _parents = new Component[]{parent};
+      parent.setChild(this);
+    }
+
+    public RichComponent(Component[] parents, String componentName) {
+      _componentName = componentName;
+      _parents = null;
+      if (parents != null) {
+        _parents = parents.clone();
+        for (Component parent : parents) {
+          parent.setChild(this);
+        }
+      }
+    }
+
+    public RichComponent(List<Component> parents, String componentName) {
+      this((Component[])parents.toArray(), componentName);
+    }
+
+    public RichComponent(Component[] parents) {
+      this(parents, makeName(parents));
+    }
+
+    public RichComponent(List<Component> parents) {
+      this((Component[])parents.toArray());
+    }
+
+    private static String makeName(Component[] parents) {
+      ArrayList<String> names = new ArrayList<String>();
+      for (Component parent : parents) {
+        names.add(parent.getName());
+      }
+      return StringUtils.join(names, "_");
+    }
+
+    @Override
+    public String getName() {
+	return _componentName;
+    }
+
+    @Override
+    public Component[] getParents() {
+	return _parents;
+    }
 
     @Override
     public boolean equals(Object obj) {
@@ -171,6 +223,19 @@ public abstract class RichComponent<C extends Component> implements Component {
 	for (final Component parent : getParents())
 	    list.addAll(parent.getAncestorDataSources());
 	return list;
+    }
+
+    @Override
+    public List<String> getFullHashList() {
+	return _fullHashList;
+    }
+
+    // list of distinct keys, used for direct stream grouping and load-balancing
+    // ()
+    @Override
+    public C setFullHashList(List<String> fullHashList) {
+	_fullHashList = fullHashList;
+	return getThis();
     }
 
 }

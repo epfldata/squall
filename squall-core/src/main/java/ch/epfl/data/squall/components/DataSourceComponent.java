@@ -42,7 +42,6 @@ public class DataSourceComponent extends RichComponent<DataSourceComponent> {
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(DataSourceComponent.class);
 
-    private final String _componentName;
     private final String _inputPath;
 
     // equi-weight histogram
@@ -58,7 +57,7 @@ public class DataSourceComponent extends RichComponent<DataSourceComponent> {
     }
 
     public DataSourceComponent(String componentName, String inputPath) {
-	_componentName = componentName;
+      super((Component[])null, componentName);
 	_inputPath = inputPath;
     }
 
@@ -67,16 +66,6 @@ public class DataSourceComponent extends RichComponent<DataSourceComponent> {
 	final List<DataSourceComponent> list = new ArrayList<DataSourceComponent>();
 	list.add(this);
 	return list;
-    }
-
-    @Override
-    public String getName() {
-	return _componentName;
-    }
-
-    @Override
-    public Component[] getParents() {
-	return null;
     }
 
     @Override
@@ -89,11 +78,11 @@ public class DataSourceComponent extends RichComponent<DataSourceComponent> {
 		&& !getPrintOutSet())
 	    setPrintOut(true);
 
-	final int parallelism = SystemParameters.getInt(conf, _componentName
+	final int parallelism = SystemParameters.getInt(conf, getName()
 		+ "_PAR");
 	if (parallelism > 1 && getChainOperator().getDistinct() != null)
 	    throw new RuntimeException(
-		    _componentName
+                                       getName()
 			    + ": Distinct operator cannot be specified for multiple spouts for one input file!");
 
 	MyUtilities.checkBatchOutput(getBatchOutputMillis(),

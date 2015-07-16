@@ -46,51 +46,14 @@ public class OperatorComponent extends RichComponent<OperatorComponent> {
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(OperatorComponent.class);
 
-    private final String _componentName;
-
     // private Component _parent;
 
-    private List<String> _fullHashList;
-
-    private ArrayList<Component> _parents;
-
     public OperatorComponent(Component parent, String componentName) {
-	_parents = new ArrayList<Component>(1);
-	parent.setChild(this);
-	_parents.add(parent);
-	_componentName = componentName;
+      super(parent, componentName);
     }
 
     public OperatorComponent(ArrayList<Component> parents, String componentName) {
-	_parents = parents;
-	for (Component parent : parents) {
-	    parent.setChild(this);
-	}
-
-	_componentName = componentName;
-    }
-
-    @Override
-    public List<String> getFullHashList() {
-	return _fullHashList;
-    }
-
-    @Override
-    public String getName() {
-	return _componentName;
-    }
-
-    @Override
-    public Component[] getParents() {
-	// return new Component[] { _parent };
-	Component[] res = new Component[_parents.size()];
-	int index = 0;
-	for (Component parent : _parents) {
-	    res[index] = parent;
-	    index++;
-	}
-	return res;
-
+      super(parents, componentName);
     }
 
     @Override
@@ -108,14 +71,8 @@ public class OperatorComponent extends RichComponent<OperatorComponent> {
 
 	// _stormOperator = new StormOperator(_parent, this, allCompNames,
 	// hierarchyPosition, builder, killer, conf);
-	setStormEmitter(new StormOperator(_parents, this, allCompNames,
+	setStormEmitter(new StormOperator(getParents(), this, allCompNames,
                                           hierarchyPosition, builder, killer, conf));
-    }
-
-    @Override
-    public OperatorComponent setFullHashList(List<String> fullHashList) {
-	_fullHashList = fullHashList;
-	return this;
     }
 
     @Override

@@ -60,24 +60,22 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
 	    .getLogger(AdaptiveThetaJoinComponent.class);
     private final Component _firstParent;
     private final Component _secondParent;
-    private String _componentName;
-    private long _batchOutputMillis;
     private ThetaReshufflerAdvisedEpochs _reshuffler;
     private int _joinerParallelism;
     private InterchangingComponent _interComp = null;
 
     public AdaptiveThetaJoinComponent(Component firstParent,
 	    Component secondParent) {
+      super(new Component[]{firstParent, secondParent});
 	_firstParent = firstParent;
-	_firstParent.setChild(this);
 	_secondParent = secondParent;
-	if (_secondParent != null) {
-	    _secondParent.setChild(this);
-	    _componentName = firstParent.getName() + "_"
-		    + secondParent.getName();
-	} else
-	    _componentName = new String(firstParent.getName().split("-")[0])
-		    + "_" + new String(firstParent.getName().split("-")[1]);
+    }
+
+
+    public AdaptiveThetaJoinComponent(Component firstParent) {
+      super(new Component[]{firstParent});
+	_firstParent = firstParent;
+	_secondParent = null;
     }
 
     @Override
@@ -91,16 +89,6 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
     }
 
     @Override
-    public String getName() {
-	return _componentName;
-    }
-
-    @Override
-    public Component[] getParents() {
-	return new Component[] { _firstParent, _secondParent };
-    }
-
-    @Override
     public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
 	    List<String> allCompNames, Config conf, int hierarchyPosition) {
 
@@ -109,7 +97,7 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
 	if (hierarchyPosition == StormComponent.FINAL_COMPONENT
             && !getPrintOutSet())
 	    setPrintOut(true);
-	_joinerParallelism = SystemParameters.getInt(conf, _componentName
+	_joinerParallelism = SystemParameters.getInt(conf, getName()
 		+ "_PAR");
 	MyUtilities.checkBatchOutput(getBatchOutputMillis(),
                                      getChainOperator().getAggregation(), conf);
@@ -133,7 +121,7 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
 
 	final String dim = _currentMappingAssignment.getMappingDimensions();
 	// dim ="1-1"; //initiate Splitting
-	LOG.info(_componentName + "Initial Dimensions is: " + dim);
+	LOG.info(getName() + "Initial Dimensions is: " + dim);
 
 	// create the bolts ..
 
@@ -208,7 +196,7 @@ public class AdaptiveThetaJoinComponent extends RichJoinerComponent<AdaptiveThet
     // list of distinct keys, used for direct stream grouping and load-balancing
     // ()
     @Override
-    public ThetaJoinComponent setFullHashList(List<String> fullHashList) {
+    public AdaptiveThetaJoinComponent setFullHashList(List<String> fullHashList) {
 	throw new RuntimeException(
 		"Load balancing for Dynamic Theta join is done inherently!");
     }

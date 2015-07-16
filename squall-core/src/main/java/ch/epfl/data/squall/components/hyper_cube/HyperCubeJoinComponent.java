@@ -32,7 +32,6 @@ import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.RichJoinerComponent;
-import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.utilities.MyUtilities;
@@ -44,39 +43,17 @@ public class HyperCubeJoinComponent extends RichJoinerComponent<HyperCubeJoinCom
 
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(HyperCubeJoinComponent.class);
-    private ArrayList<Component> parents;
-    private String componentName = "_";
-    private Predicate joinPredicate;
     private InterchangingComponent interComp = null;
     private Type contentSensitiveThetaJoinWrapper = null;
 
-
     public HyperCubeJoinComponent(ArrayList<Component> parents) {
-        this.parents = parents;
-        for (Component tmp : this.parents) {
-            tmp.setChild(this);
-            componentName += tmp.getName() + "_";
-        }
+      super(parents);
     }
 
     @Override
     public List<String> getFullHashList() {
         throw new RuntimeException(
                 "Load balancing for Theta join is done inherently!");
-    }
-
-    public Predicate getJoinPredicate() {
-        return joinPredicate;
-    }
-
-    @Override
-    public String getName() {
-        return componentName;
-    }
-
-    @Override
-    public Component[] getParents() {
-        return parents.toArray(new Component[parents.size()]);
     }
 
     @Override
@@ -87,7 +64,7 @@ public class HyperCubeJoinComponent extends RichJoinerComponent<HyperCubeJoinCom
 
         // _joiner = new StormThetaJoin();
         ArrayList<StormEmitter> emitters = new ArrayList<StormEmitter>();
-        for (StormEmitter se : parents)
+        for (StormEmitter se : getParents())
             emitters.add(se);
 
 //        joiner = new NaiveJoiner(emitters.get(0), emitters.get(1), this,
@@ -110,12 +87,6 @@ public class HyperCubeJoinComponent extends RichJoinerComponent<HyperCubeJoinCom
     @Override
     public HyperCubeJoinComponent setInterComp(InterchangingComponent inter) {
         interComp = inter;
-        return this;
-    }
-
-    @Override
-    public HyperCubeJoinComponent setJoinPredicate(Predicate joinPredicate) {
-        this.joinPredicate = joinPredicate;
         return this;
     }
 

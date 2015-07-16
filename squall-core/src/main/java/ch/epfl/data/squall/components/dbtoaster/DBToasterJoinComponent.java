@@ -49,11 +49,6 @@ public class DBToasterJoinComponent extends RichJoinerComponent<DBToasterJoinCom
     private static Logger LOG = Logger.getLogger(DBToasterJoinComponent.class);
 
 
-    private final String _componentName;
-
-    private List<String> _fullHashList;
-
-    private List<Component> _parents;
     private Map<String, Type[]> _parentNameColTypes;
     private Set<String> _parentsWithMultiplicity;
     private Map<String, AggregateStream> _parentsWithAggregator;
@@ -62,30 +57,11 @@ public class DBToasterJoinComponent extends RichJoinerComponent<DBToasterJoinCom
     protected DBToasterJoinComponent(List<Component> relations, Map<String, Type[]> relationTypes,
                                      Set<String> relationsWithMultiplicity, Map<String, AggregateStream>  relationsWithAggregator,
                                      String sql, String name) {
-        _parents = relations;
+      super(relations, name);
         _parentsWithMultiplicity = relationsWithMultiplicity;
         _parentsWithAggregator = relationsWithAggregator;
-        for (Component comp : _parents) {
-            comp.setChild(this);
-        }
         _parentNameColTypes = relationTypes;
-        _componentName = name;
         _equivalentSQL = sql;
-    }
-
-    @Override
-    public List<String> getFullHashList() {
-        return _fullHashList;
-    }
-
-    @Override
-    public String getName() {
-        return _componentName;
-    }
-
-    @Override
-    public Component[] getParents() {
-        return _parents.toArray(new Component[_parents.size()]);
     }
 
     @Override
@@ -108,14 +84,6 @@ public class DBToasterJoinComponent extends RichJoinerComponent<DBToasterJoinCom
                                                _parentsWithAggregator,
                                                hierarchyPosition,
                                                builder, killer, conf));
-    }
-
-    // list of distinct keys, used for direct stream grouping and load-balancing
-    // ()
-    @Override
-    public DBToasterJoinComponent setFullHashList(List<String> fullHashList) {
-        _fullHashList = fullHashList;
-        return this;
     }
 
     @Override
