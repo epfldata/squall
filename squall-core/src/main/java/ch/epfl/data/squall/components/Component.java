@@ -26,7 +26,6 @@ import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.Operator;
-import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
@@ -56,8 +55,6 @@ public interface Component extends Serializable, ComponentProperties,
     public Component setHashExpressions(List<ValueExpression> hashExpressions);
 
     public Component setInterComp(InterchangingComponent inter);
-
-    public Component setJoinPredicate(Predicate joinPredicate);
 
     public Component setOutputPartKey(int... hashIndexes); // this is a shortcut
 

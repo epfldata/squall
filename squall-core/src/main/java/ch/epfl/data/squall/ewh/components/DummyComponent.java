@@ -227,12 +227,6 @@ public class DummyComponent implements Component {
     }
 
     @Override
-    public Component setJoinPredicate(Predicate joinPredicate) {
-	throw new RuntimeException(
-		"Operator component does not support Join Predicates");
-    }
-
-    @Override
     public Component setContentSensitiveThetaJoinWrapper(Type wrapper) {
 	return this;
     }

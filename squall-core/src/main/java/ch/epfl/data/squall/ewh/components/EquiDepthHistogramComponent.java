@@ -230,11 +230,6 @@ public class EquiDepthHistogramComponent implements Component {
     }
 
     @Override
-    public EquiDepthHistogramComponent setJoinPredicate(Predicate predicate) {
-	throw new RuntimeException("Should not be here!");
-    }
-
-    @Override
     public Component setContentSensitiveThetaJoinWrapper(Type wrapper) {
 	throw new RuntimeException("Should not be here!");
     }

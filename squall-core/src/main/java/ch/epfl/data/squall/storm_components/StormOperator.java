@@ -56,7 +56,7 @@ public class StormOperator extends StormBoltComponent {
     private PeriodicAggBatchSend _periodicAggBatch;
     private final long _aggBatchOutputMillis;
 
-    public StormOperator(ArrayList<Component> parentEmitters,
+    public StormOperator(Component[] parentEmitters,
 	    ComponentProperties cp, List<String> allCompNames,
 	    int hierarchyPosition, TopologyBuilder builder,
 	    TopologyKiller killer, Config conf) {

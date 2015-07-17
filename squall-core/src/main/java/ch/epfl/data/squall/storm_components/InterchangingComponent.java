@@ -191,12 +191,6 @@ public class InterchangingComponent implements Component {
     }
 
     @Override
-    public Component setJoinPredicate(Predicate joinPredicate) {
-	throw new RuntimeException(
-		"Interchanging component does not support Join Predicates");
-    }
-
-    @Override
     public Component setOutputPartKey(int... hashIndexes) {
 	return setOutputPartKey(Arrays.asList(ArrayUtils.toObject(hashIndexes)));
     }

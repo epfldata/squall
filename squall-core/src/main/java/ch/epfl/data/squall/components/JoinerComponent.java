@@ -19,16 +19,35 @@
 
 package ch.epfl.data.squall.components;
 
-public abstract class JoinerComponent implements Component {
+import java.util.List;
 
-    public long _windowSize = -1; // Width in terms of millis, Default is -1
-				  // which is full history
-    public long _latestTimeStamp = -1;
+import ch.epfl.data.squall.expressions.ValueExpression;
+import ch.epfl.data.squall.operators.Operator;
+import ch.epfl.data.squall.predicates.Predicate;
+import ch.epfl.data.squall.storm_components.InterchangingComponent;
+import ch.epfl.data.squall.types.Type;
 
-    public long _tumblingWindowSize = -1;// For tumbling semantics
+public interface JoinerComponent extends Component {
+    public JoinerComponent setSlidingWindow(int windowRange);
+    public long getSlidingWindow();
 
-    public abstract Component setSlidingWindow(int windowRange);
+    public JoinerComponent setTumblingWindow(int windowRange);
+    public long getTumblingWindow();
 
-    public abstract Component setTumblingWindow(int windowRange);
+    public JoinerComponent setJoinPredicate(Predicate joinPredicate);
+    public Predicate getJoinPredicate();
 
+
+    // We have to offer the same interface as Component, but returning
+    // JoinerComponent so we can stay in the more specific case instead of
+    // upcasting to Component after each operation
+    public JoinerComponent add(Operator operator);
+    public JoinerComponent setBatchOutputMillis(long millis);
+    public JoinerComponent setContentSensitiveThetaJoinWrapper(Type wrapper);
+    public JoinerComponent setFullHashList(List<String> fullHashList);
+    public JoinerComponent setHashExpressions(List<ValueExpression> hashExpressions);
+    public JoinerComponent setInterComp(InterchangingComponent inter);
+    public JoinerComponent setOutputPartKey(int... hashIndexes);
+    public JoinerComponent setOutputPartKey(List<Integer> hashIndexes);
+    public JoinerComponent setPrintOut(boolean printOut);
 }

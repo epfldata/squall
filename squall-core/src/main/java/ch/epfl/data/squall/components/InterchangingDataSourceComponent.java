@@ -30,7 +30,6 @@ import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
-import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormInterchangingDataSource;
@@ -227,12 +226,6 @@ public class InterchangingDataSourceComponent implements Component {
     public Component setInterComp(InterchangingComponent inter) {
 	throw new RuntimeException(
 		"InterchangingDatasource component does not support setInterComp");
-    }
-
-    @Override
-    public Component setJoinPredicate(Predicate joinPredicate) {
-	throw new RuntimeException(
-		"InterchangingDatasource component does not support Join Predicates");
     }
 
     @Override
