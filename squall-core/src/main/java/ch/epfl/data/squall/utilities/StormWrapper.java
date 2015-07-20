@@ -146,6 +146,7 @@ public class StormWrapper {
   public static void shutdown() {
     if (localCluster != null) {
       localCluster.shutdown();
+      localCluster = null;
     }
   }
 

@@ -122,7 +122,7 @@ public class SquallContext {
 
   public void setLocal() {
     SystemParameters.putInMap(conf, "DIP_DISTRIBUTED", "false");
-    SystemParameters.putInMap(conf, "DIP_DATA_PATH", "test/data/tpch/0.01G/");
+    SystemParameters.putInMap(conf, "DIP_DATA_PATH", "../test/data/tpch/0.01G/");
 
     local = true;
   }

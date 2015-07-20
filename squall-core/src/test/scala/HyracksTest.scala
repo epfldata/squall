@@ -19,25 +19,45 @@
 
 package ch.epfl.data.squall.test
 
+import java.util.ArrayList
+
+import ch.epfl.data.squall.utilities.SquallContext
+import ch.epfl.data.squall.examples.imperative.shj.HyracksPlan
+
 class HyracksTest extends TestSuite {
 
+  val context = new SquallContext();
+
   test("0_01G_hyracks") {
-    val query = "0_01G_hyracks"
-    val result = runQuery(query)
-    assert(result.equals(expectedResultFor(result, query)))
+    expect(List(3706, 3007, 2536, 2772, 2979)) {
+      Logging.beginLog("hyracks")
+      context.setLocal()
+      val plan = new HyracksPlan("test/data/tpch", ".tbl", context.getConfiguration()).getQueryPlan()
+      val result = context.submitLocal("hyracks", plan)
+      Logging.endLog()
+      List("BUILDING", "FURNITURE", "MACHINERY", "HOUSEHOLD", "AUTOMOBILE") map
+      { result.access(_).get(0) }
+    }
   }
 
-  test("0_01G_hyracks_l3_batch") {
-    val query = "0_01G_hyracks_l3_batch"
-    val result = runQuery(query)
-    assert(result.equals(expectedResultFor(result, query)))
-  }
 
-  test("0_01G_hyracks_pre_agg") {
-    val query = "0_01G_hyracks_pre_agg"
-    val result = runQuery(query)
-    assert(result.equals(expectedResultFor(result, query)))
-  }
+  // test("0_01G_hyracks") {
+  //   val query = "0_01G_hyracks"
+  //   val result = runQuery(query)
+  //   assert(result.equals(expectedResultFor(result, query)))
+  // }
+
+  // test("0_01G_hyracks_l3_batch") {
+  //   val query = "0_01G_hyracks_l3_batch"
+  //   val result = runQuery(query)
+  //   assert(result.equals(expectedResultFor(result, query)))
+  // }
+
+  // test("0_01G_hyracks_pre_agg") {
+  //   val query = "0_01G_hyracks_pre_agg"
+  //   val result = runQuery(query)
+  //   assert(result.equals(expectedResultFor(result, query)))
+  // }
   // 0_01G_scalahyracks
 
 }
