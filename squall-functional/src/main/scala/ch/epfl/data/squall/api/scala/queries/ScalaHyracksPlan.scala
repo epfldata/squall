@@ -25,6 +25,7 @@ import ch.epfl.data.squall.query_plans.QueryBuilder
 import ch.epfl.data.squall.query_plans.QueryPlan
 import ch.epfl.data.squall.api.scala._
 import ch.epfl.data.squall.api.scala.TPCHSchema._
+import ch.epfl.data.squall.utilities.SquallContext
 
 /**
  * @author mohamed
@@ -34,14 +35,14 @@ import ch.epfl.data.squall.api.scala.TPCHSchema._
  * FROM CUSTOMER join ORDERS on C_CUSTKEY = O_CUSTKEY
  * GROUP BY C_MKTSEGMENT
  */
-class ScalaHyracksPlan(dataPath: String, extension: String, conf: java.util.Map[String, Object]) extends QueryPlan {
+class ScalaHyracksPlan(dataPath: String, extension: String, context: SquallContext) extends QueryPlan {
 
   override def getQueryPlan(): QueryBuilder = {
     val customers = Source[Customer]("customer").map { t => (t.custkey, t.mktsegment) }
     val orders = Source[Orders]("orders").map { _.custkey }
     val join = (customers join orders)(_._1)(x => x)
     val agg = join.groupByKey(x => 1, _._1._2)
-    agg.execute(conf)
+    agg.execute(context)
   }
 
 }

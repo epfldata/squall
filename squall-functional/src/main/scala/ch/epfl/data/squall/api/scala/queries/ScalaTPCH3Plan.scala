@@ -27,6 +27,8 @@ import ch.epfl.data.squall.api.scala.TPCHSchema._
 import java.util.Date
 import java.text.SimpleDateFormat
 
+import ch.epfl.data.squall.utilities.SquallContext
+
 /**
  * @author mohamed
  * TPC_H Query 3 - Shipping Priority:(http://www.tpc.org/tpch/)
@@ -43,7 +45,7 @@ object ScalaTPCH3Plan {
   val string_format = new SimpleDateFormat("yyyy-MM-dd")
   val compDate = string_format.parse("1995-03-15")
 
-  def getQueryPlan(conf: java.util.Map[String, Object]): QueryBuilder = {
+  def getQueryPlan(context: SquallContext): QueryBuilder = {
 
     val customers = Source[Customer]("CUSTOMER").
       filter { _.mktsegment == "BUILDING" } map { _.custkey }
@@ -59,7 +61,7 @@ object ScalaTPCH3Plan {
     val agg = COLjoin.groupByKey({ case(co, l) => (1 - l._3) * l._2 },
                                  { case(co, l) => (co._1, co._2, co._3) }) //List(0,1,2)
 
-    agg.execute(conf)
+    agg.execute(context)
 
   }
 

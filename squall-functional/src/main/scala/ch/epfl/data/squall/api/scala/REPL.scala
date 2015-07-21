@@ -123,7 +123,7 @@ Type "help" for Squall related help
     val orders = Source[Orders]("orders").map( _.custkey )
     val join = (customers join orders)( _._1 )( x => x )
     val agg = join.groupByKey( x => 1, _._1._2)
-    val plan = agg.execute(context.getConfiguration())
+    val plan = agg.execute(context)
     plan
   }
 
