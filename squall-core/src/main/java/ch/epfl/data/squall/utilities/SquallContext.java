@@ -19,9 +19,22 @@
 
 package ch.epfl.data.squall.utilities;
 
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentHashMap;
+
+import java.io.IOException;
+
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.storage.BasicStore;
 import ch.epfl.data.squall.utilities.StormWrapper;
+import ch.epfl.data.squall.utilities.ReaderProvider;
+import ch.epfl.data.squall.components.DataSourceComponent;
+import ch.epfl.data.squall.operators.StoreOperator;
 
 import org.apache.log4j.Logger;
 
@@ -35,6 +48,7 @@ public class SquallContext {
 
   private Config conf;
   private boolean local;
+  private List<ReaderProvider> readerProviders;
 
   public SquallContext() {
     this(new Config());
@@ -58,12 +72,12 @@ public class SquallContext {
 
   public SquallContext(Config conf) {
     this.conf = conf;
-  }
 
-  // Useful snippet from https://xkcd.com/221/
-  public int getRandomNumber() {
-    return 4; // chosen by fair dice roll.
-              // guaranteed to be random.
+    this.readerProviders = new ArrayList<ReaderProvider>(2);
+    this.registerReaderProvider(new FileReaderProvider("."));
+    this.registerReaderProvider(new FileReaderProvider("../test/data/tpch/0.01G/"));
+    this.registerReaderProvider(new FileReaderProvider("./test/data/tpch/0.01G/"));
+    this.registerReaderProvider(new FileReaderProvider("/shared/tpch/0.01G/"));
   }
 
   @Deprecated
@@ -96,6 +110,30 @@ public class SquallContext {
     setAllParallelisms(plan);
 
     return StormWrapper.localSubmitAndWait(conf, plan);
+  }
+
+
+  public Map<String,String> submitLocalNonBlocking(String name, QueryBuilder plan) {
+  // public StoreOperator submitLocalNonBlocking(String name, QueryBuilder plan) {
+    setLocal();
+
+    // TODO: name should be given in the plan somehow, as it is a property of
+    // the query
+    SystemParameters.putInMap(conf, "DIP_QUERY_NAME", name);
+    SystemParameters.putInMap(conf, "DIP_TOPOLOGY_NAME", name);
+
+    SystemParameters.putInMap(conf, "DIP_KILL_AT_THE_END", "false");
+
+    // TODO: use parallelisms that were already set
+    // TODO: take the parallelism from the component
+    setAllParallelisms(plan);
+    StoreOperator storeOperator = new StoreOperator();
+    plan.getLastComponent().getChainOperator().addOperator(storeOperator);
+
+
+    StormWrapper.submitTopology(conf, plan.createTopology(conf));
+
+    return storeOperator.getStore();
   }
 
   public void submitDistributed(String name, QueryBuilder plan) {
@@ -140,6 +178,45 @@ public class SquallContext {
 
   public boolean isDistributed() {
     return !local;
+  }
+
+  public void registerReaderProvider(ReaderProvider provider) {
+    readerProviders.add(0, provider);
+  }
+
+  public ReaderProvider getProviderFor(String resource) {
+    ReaderProvider provider = null;
+
+    Iterator<ReaderProvider> iterator = readerProviders.iterator();
+    while (iterator.hasNext() && provider == null) {
+      ReaderProvider next = iterator.next();
+      if (next.canProvide(this, resource)) {
+        provider = next;
+      }
+    }
+
+    return provider;
+  }
+
+  public DataSourceComponent createDataSource(String table) throws IOException {
+    ReaderProvider provider = getProviderFor(table);
+
+    if (provider == null) {
+      provider = getProviderFor(table + SystemParameters.getString(conf, "DIP_EXTENSION"));
+      if (provider != null) {
+        table = table + SystemParameters.getString(conf, "DIP_EXTENSION");
+      }
+    }
+
+    if (provider == null) {
+      String error = "Could not find table '" + table + "'. Registered providers in search order:\n";
+      for(ReaderProvider p : readerProviders) {
+        error = error + "\t" + p + "\n";
+      }
+      throw new IOException(error);
+    }
+
+    return new DataSourceComponent(table, provider, table);
   }
 
 }
