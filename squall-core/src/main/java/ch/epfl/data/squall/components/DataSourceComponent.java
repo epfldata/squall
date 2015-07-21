@@ -32,6 +32,8 @@ import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormDataSource;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.utilities.MyUtilities;
+import ch.epfl.data.squall.utilities.ReaderProvider;
+import ch.epfl.data.squall.utilities.FileReaderProvider;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class DataSourceComponent extends RichComponent<DataSourceComponent> {
@@ -42,23 +44,28 @@ public class DataSourceComponent extends RichComponent<DataSourceComponent> {
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(DataSourceComponent.class);
 
-    private final String _inputPath;
+    private final ReaderProvider _provider;
+    private final String _resourceName;
 
     // equi-weight histogram
     private boolean _isPartitioner;
 
     // invoked from the new Interface (QueryPlan not QueryBuilder)
     public DataSourceComponent(String tableName, Map conf) {
-	this(tableName.toUpperCase(),
-	// dataPath + tableName + extension);
-		SystemParameters.getString(conf, "DIP_DATA_PATH") + "/"
-			+ tableName
-			+ SystemParameters.getString(conf, "DIP_EXTENSION"));
+      this(tableName.toUpperCase(),
+           // dataPath + tableName + extension);
+           new FileReaderProvider(SystemParameters.getString(conf, "DIP_DATA_PATH")),
+           tableName + SystemParameters.getString(conf, "DIP_EXTENSION"));
     }
 
     public DataSourceComponent(String componentName, String inputPath) {
+      this(componentName, new FileReaderProvider("."), inputPath);
+    }
+
+    public DataSourceComponent(String componentName, ReaderProvider provider, String resourceName) {
       super((Component[])null, componentName);
-	_inputPath = inputPath;
+      _provider = provider;
+      _resourceName = resourceName;
     }
 
     @Override
@@ -88,7 +95,7 @@ public class DataSourceComponent extends RichComponent<DataSourceComponent> {
 	MyUtilities.checkBatchOutput(getBatchOutputMillis(),
                                      getChainOperator().getAggregation(), conf);
 
-	setStormEmitter(new StormDataSource(this, allCompNames, _inputPath,
+	setStormEmitter(new StormDataSource(this, allCompNames, _provider, _resourceName,
                                             hierarchyPosition, parallelism, _isPartitioner, builder,
                                             killer, conf));
     }

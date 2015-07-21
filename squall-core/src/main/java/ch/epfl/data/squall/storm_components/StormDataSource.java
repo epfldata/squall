@@ -41,6 +41,7 @@ import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.utilities.CustomReader;
+import ch.epfl.data.squall.utilities.ReaderProvider;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.squall.utilities.SerializableFileInputStream;
@@ -51,7 +52,8 @@ public class StormDataSource extends StormSpoutComponent {
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(StormDataSource.class);
 
-    private final String _inputPath;
+    private final String _resourceName;
+    private final ReaderProvider _provider;
     private int _fileSection;
     private final int _fileParts;
     private CustomReader _reader = null;
@@ -75,15 +77,16 @@ public class StormDataSource extends StormSpoutComponent {
     private String _name;
 
     public StormDataSource(ComponentProperties cp, List<String> allCompNames,
-	    String inputPath, int hierarchyPosition, int parallelism,
-	    boolean isPartitioner, TopologyBuilder builder,
-	    TopologyKiller killer, Config conf) {
+                           ReaderProvider provider, String resourceName, int hierarchyPosition, int parallelism,
+                           boolean isPartitioner, TopologyBuilder builder,
+                           TopologyKiller killer, Config conf) {
 
 	super(cp, allCompNames, hierarchyPosition, isPartitioner, conf);
 	_operatorChain = cp.getChainOperator();
 	_name = cp.getName();
 	_aggBatchOutputMillis = cp.getBatchOutputMillis();
-	_inputPath = inputPath;
+	_provider = provider;
+	_resourceName = resourceName;
 	_fileParts = parallelism;
 
 	if (getHierarchyPosition() == FINAL_COMPONENT
@@ -271,21 +274,8 @@ public class StormDataSource extends StormSpoutComponent {
     @Override
     public void open(Map map, TopologyContext tc, SpoutOutputCollector collector) {
 	super.open(map, tc, collector);
-	try {
-	    _fileSection = tc.getThisTaskIndex();
-
-	    if (_inputPath.startsWith("hdfs"))
-		_reader = new SerializableHDFSFileInputStream(_inputPath,
-			1 * 1024 * 1024, _fileSection, _fileParts);
-	    else
-		_reader = new SerializableFileInputStream(new File(_inputPath),
-			1 * 1024 * 1024, _fileSection, _fileParts);
-
-	} catch (final Exception e) {
-	    final String error = MyUtilities.getStackTrace(e);
-	    LOG.info(error);
-	    throw new RuntimeException("Filename not found:" + error);
-	}
+        _fileSection = tc.getThisTaskIndex();
+        _reader = _provider.getReaderForName(_resourceName, _fileSection, _fileParts);
     }
 
     // HELPER methods

@@ -30,8 +30,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
 
-public class SerializableHDFSFileInputStream extends InputStream implements
-	Serializable, CustomReader {
+public class SerializableHDFSFileInputStream extends InputStream implements CustomReader {
     // self-test
     public static void main(String args[]) throws IOException {
 	final SerializableHDFSFileInputStream reader = new SerializableHDFSFileInputStream(
@@ -45,8 +44,8 @@ public class SerializableHDFSFileInputStream extends InputStream implements
     }
 
     /**
-	 * 
-	 */
+     *
+     */
     private static final long serialVersionUID = 1L;
 
     private static Logger LOG = Logger
@@ -103,6 +102,7 @@ public class SerializableHDFSFileInputStream extends InputStream implements
     public SerializableHDFSFileInputStream(String URIstring) throws IOException {
 	this(URIstring, DEFAULT_BUFFER_SIZE, 0, 1);
     }
+
 
     @Override
     public void close() {
