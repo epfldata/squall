@@ -609,15 +609,9 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter,
 	if (_printOut)
 	    if ((_operatorChain != null) && _operatorChain.isBlocking()) {
 		final Operator lastOperator = _operatorChain.getLastOperator();
-		if (lastOperator instanceof AggregateOperator)
-		    MyUtilities.printBlockingResult(_ID,
-			    (AggregateOperator) lastOperator,
-			    _hierarchyPosition, _conf, LOG);
-		else
-		    MyUtilities.printBlockingResult(_ID,
-			    lastOperator.getNumTuplesProcessed(),
-			    lastOperator.printContent(), _hierarchyPosition,
-			    _conf, LOG);
+                MyUtilities.printBlockingResult(_ID,
+                                                lastOperator,
+                                                _hierarchyPosition, _conf, LOG);
 	    }
     }
 

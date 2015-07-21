@@ -32,6 +32,7 @@ import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.operators.AggregateAvgOperator;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.AggregateSumOperator;
+import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.storage.AggregationStorage;
 import ch.epfl.data.squall.storage.BasicStore;
 import ch.epfl.data.squall.storm_components.StormComponent;
@@ -179,7 +180,7 @@ public class LocalMergeResults {
     // comparing the results in Local Mode
     // called on the component task level, when all Spouts fully propagated
     // their tuples
-    public static void localCollectFinalResult(AggregateOperator lastAgg,
+    public static void localCollectFinalResult(Operator lastOperator,
 	    int hierarchyPosition, Map map, Logger log) {
 	if ((!SystemParameters.getBoolean(map, "DIP_DISTRIBUTED"))
 		&& hierarchyPosition == StormComponent.FINAL_COMPONENT)
@@ -188,8 +189,10 @@ public class LocalMergeResults {
 		_semFullResult.acquire();
 
 		_collectedLastComponents++;
-		_numTuplesProcessed += lastAgg.getNumTuplesProcessed();
-		addMoreResults(lastAgg, map);
+		_numTuplesProcessed += lastOperator.getNumTuplesProcessed();
+                if (lastOperator instanceof AggregateOperator) {
+                  addMoreResults((AggregateOperator) lastOperator, map);
+                }
 
 		_semFullResult.release();
 		_semNumResults.release();
@@ -249,7 +252,11 @@ public class LocalMergeResults {
     }
 
     public static BasicStore getResults() {
+      if (_computedAgg != null) {
       	return _computedAgg.getStorage();
+      } else {
+        return null;
+      }
     }
 
     public static void waitForResults(int howMany) throws InterruptedException {

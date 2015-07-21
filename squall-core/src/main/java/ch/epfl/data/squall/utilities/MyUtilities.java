@@ -75,6 +75,7 @@ import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SampleOperator;
+import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
@@ -1589,23 +1590,13 @@ public class MyUtilities {
     }
 
     public static void printBlockingResult(String componentName,
-	    AggregateOperator agg, int hierarchyPosition, Map map, Logger log) {
+	    Operator op, int hierarchyPosition, Map map, Logger log) {
 	// just print it, necessary for both modes (in Local mode we might print
 	// other than final components)
-	printPartialResult(componentName, agg.getNumTuplesProcessed(),
-		agg.printContent(), map, log);
+	printPartialResult(componentName, op.getNumTuplesProcessed(),
+		op.printContent(), map, log);
 
-	LocalMergeResults.localCollectFinalResult(agg, hierarchyPosition, map,
-		log);
-    }
-
-    // this method is called when the last operator is not an aggregateOperator
-    public static void printBlockingResult(String componentName,
-	    int numProcessedTuples, String compContent, int hierarchyPosition,
-	    Map map, Logger log) {
-	// just print it, necessary for both modes (in Local mode we might print
-	// other than final components)
-	printPartialResult(componentName, numProcessedTuples, compContent, map,
+	LocalMergeResults.localCollectFinalResult(op, hierarchyPosition, map,
 		log);
     }
 

@@ -292,15 +292,9 @@ public abstract class StormBoltComponent extends BaseRichBolt implements
 	    if ((getChainOperator() != null) && getChainOperator().isBlocking()) {
 		final Operator lastOperator = getChainOperator()
 			.getLastOperator();
-		if (lastOperator instanceof AggregateOperator)
-		    MyUtilities.printBlockingResult(_ID,
-			    (AggregateOperator) lastOperator,
-			    _hierarchyPosition, _conf, LOG);
-		else
-		    MyUtilities.printBlockingResult(_ID,
-			    lastOperator.getNumTuplesProcessed(),
-			    lastOperator.printContent(), _hierarchyPosition,
-			    _conf, LOG);
+                MyUtilities.printBlockingResult(_ID,
+                                                lastOperator,
+                                                _hierarchyPosition, _conf, LOG);
 	    }
     }
 

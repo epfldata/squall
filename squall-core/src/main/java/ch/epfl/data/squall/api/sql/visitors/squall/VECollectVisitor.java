@@ -33,6 +33,7 @@ import ch.epfl.data.squall.operators.PrintOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SampleOperator;
 import ch.epfl.data.squall.operators.SelectOperator;
+import ch.epfl.data.squall.operators.StoreOperator;
 import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.visitors.OperatorVisitor;
 
@@ -103,6 +104,11 @@ public class VECollectVisitor implements OperatorVisitor {
 
     @Override
     public void visit(PrintOperator printOperator) {
+	// nothing to visit or add
+    }
+
+    @Override
+    public void visit(StoreOperator storeOperator) {
 	// nothing to visit or add
     }
 

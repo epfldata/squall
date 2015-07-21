@@ -27,6 +27,7 @@ import ch.epfl.data.squall.operators.PrintOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SampleOperator;
 import ch.epfl.data.squall.operators.SelectOperator;
+import ch.epfl.data.squall.operators.StoreOperator;
 
 public interface OperatorVisitor {
 
@@ -46,5 +47,7 @@ public interface OperatorVisitor {
     public void visit(SampleOperator sampleOperator);
 
     public void visit(SelectOperator selection);
+
+    public void visit(StoreOperator storeOperator);
 
 }
