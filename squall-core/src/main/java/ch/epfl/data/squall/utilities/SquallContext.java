@@ -77,7 +77,8 @@ public class SquallContext {
     this.registerReaderProvider(new FileReaderProvider("."));
     this.registerReaderProvider(new FileReaderProvider("../test/data/tpch/0.01G/"));
     this.registerReaderProvider(new FileReaderProvider("./test/data/tpch/0.01G/"));
-    this.registerReaderProvider(new FileReaderProvider("/shared/tpch/0.01G/"));
+    // TODO: there should be a different provider for distributed mode
+    this.registerReaderProvider(new FileReaderProvider("/data/tpch/0.01G/"));
   }
 
   @Deprecated
@@ -87,17 +88,13 @@ public class SquallContext {
 
   public void submit(String name, QueryBuilder plan) {
     if (local) {
-      try {
-        submitLocal(name, plan);
-      } catch (InterruptedException e) {
-        LOG.warn(e.getStackTrace());
-      }
+      submitLocal(name, plan);
     } else {
       submitDistributed(name, plan);
     }
   }
 
-  public BasicStore<Object> submitLocal(String name, QueryBuilder plan) throws InterruptedException {
+  public BasicStore<Object> submitLocalAndWait(String name, QueryBuilder plan) throws InterruptedException {
     setLocal();
 
     // TODO: name should be given in the plan somehow, as it is a property of
@@ -113,8 +110,7 @@ public class SquallContext {
   }
 
 
-  public Map<String,String> submitLocalNonBlocking(String name, QueryBuilder plan) {
-  // public StoreOperator submitLocalNonBlocking(String name, QueryBuilder plan) {
+  public Map<String,String> submitLocal(String name, QueryBuilder plan) {
     setLocal();
 
     // TODO: name should be given in the plan somehow, as it is a property of
@@ -167,7 +163,7 @@ public class SquallContext {
 
   public void setDistributed() {
     SystemParameters.putInMap(conf, "DIP_DISTRIBUTED", "true");
-    SystemParameters.putInMap(conf, "DIP_DATA_PATH", "/shared/tpch/0.01G/");
+    SystemParameters.putInMap(conf, "DIP_DATA_PATH", "/data/tpch/0.01G/");
 
     local = false;
   }
@@ -199,12 +195,13 @@ public class SquallContext {
   }
 
   public DataSourceComponent createDataSource(String table) throws IOException {
-    ReaderProvider provider = getProviderFor(table);
+    String resource = table + SystemParameters.getString(conf, "DIP_EXTENSION");
+    ReaderProvider provider = getProviderFor(resource);
 
     if (provider == null) {
-      provider = getProviderFor(table + SystemParameters.getString(conf, "DIP_EXTENSION"));
+      provider = getProviderFor(table);
       if (provider != null) {
-        table = table + SystemParameters.getString(conf, "DIP_EXTENSION");
+        resource = table;
       }
     }
 
@@ -216,7 +213,7 @@ public class SquallContext {
       throw new IOException(error);
     }
 
-    return new DataSourceComponent(table, provider, table);
+    return new DataSourceComponent(table, provider, resource);
   }
 
 }
