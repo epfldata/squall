@@ -66,38 +66,36 @@ Type "help" for Squall related help
   private def packClasses(): String = {
     println("Packing jar file...")
     import scala.sys.process._
-    if(context.isLocal()) {
-      (s"jar cf ${outdir}/repl.jar -C ${outdir}/classes/ .").!!
-    } else {
       (s"cp squall-functional/target/squall-frontend-standalone-0.2.0.jar ${outdir}/repl.jar").!!
-        (s"jar uf ${outdir}/repl.jar -C ${outdir}/classes/ .").!!
-    }
+      (s"jar uf ${outdir}/repl.jar -C ${outdir}/classes/ .").!!
     println("Done packing")
     s"${outdir}/repl.jar"
   }
 
   var count = 0
   def prepareSubmit(): String = {
-    val jar = packClasses()
+    if (context.isDistributed()) {
+      val jar = packClasses()
 
-    ////// Here comes the ugly part. We have to trick Storm, as we are doing
-    ////// things that are not really standard.
+      ////// Here comes the ugly part. We have to trick Storm, as we are doing
+      ////// things that are not really standard.
 
-    //// TODO: HACK FOR STORM 0.9.3, if we ever go to 0.9.4 this won't be necessary (I think)
-    // In storm 0.9.3 once one jar is submitted, no other jar can be submitted
-    // as it assumes that it has already been submitted.
-    // We can use Java reflection to hack into StormSubmitter and "reset" it,
-    // so we can use submit multiple topologies during one run.
-    import backtype.storm.StormSubmitter
-    import java.lang.reflect.Field
-    val f : Field = (new StormSubmitter()).getClass().getDeclaredField("submittedJar");
-    f.setAccessible(true);
-    f.set(new StormSubmitter(), null);
+      //// TODO: HACK FOR STORM 0.9.3, if we ever go to 0.9.4 this won't be necessary (I think)
+      // In storm 0.9.3 once one jar is submitted, no other jar can be submitted
+      // as it assumes that it has already been submitted.
+      // We can use Java reflection to hack into StormSubmitter and "reset" it,
+      // so we can use submit multiple topologies during one run.
+      import backtype.storm.StormSubmitter
+      import java.lang.reflect.Field
+      val f : Field = (new StormSubmitter()).getClass().getDeclaredField("submittedJar");
+      f.setAccessible(true);
+      f.set(new StormSubmitter(), null);
 
-    // Now we have to trick storm into thinking we launched with the storm
-    // script. This is easier!
-    System.setProperty("storm.jar", jar);
-    ////////////////////////
+      // Now we have to trick storm into thinking we launched with the storm
+      // script. This is easier!
+      System.setProperty("storm.jar", jar);
+      ////////////////////////
+    }
 
     // Configure the query. To easily identify it we use the prefixes repl_0_,
     // repl_1_, repl_2_... Followed by a random number to avoid exceptions
