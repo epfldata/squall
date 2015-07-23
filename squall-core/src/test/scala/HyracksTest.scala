@@ -33,7 +33,7 @@ class HyracksTest extends TestSuite {
       Logging.beginLog("hyracks")
       context.setLocal()
       val plan = new HyracksPlan("test/data/tpch", ".tbl", context.getConfiguration()).getQueryPlan()
-      val result = context.submitLocal("hyracks", plan)
+      val result = context.submitLocalAndWait("hyracks", plan)
       Logging.endLog()
       List("BUILDING", "FURNITURE", "MACHINERY", "HOUSEHOLD", "AUTOMOBILE") map
       { result.access(_).get(0) }
