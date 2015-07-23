@@ -51,6 +51,9 @@ class REPL(val outdir: String) {
 Type "help" for Squall related help
 
 """)
+    System.setProperty( "storm.options",
+      "storm.meta.serialization.delegate=ch.epfl.data.squall.api.scala.ReplSerializationDelegate," +
+        s"repl.outdir=${outdir}/classes/" )
     context.setLocal
   }
 
