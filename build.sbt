@@ -151,6 +151,11 @@ lazy val functional = (project in file("squall-functional")).
     scalacOptions in (Compile, console) += "-Yrepl-class-based",
     scalacOptions in (Compile, console) += "-Yrepl-outdir",
     scalacOptions in (Compile, console) += repl_classdir.getAbsolutePath(),
+    initialize in (Compile, console) ~= { _ =>
+      System.setProperty( "storm.options",
+                          "storm.meta.serialization.delegate=ch.epfl.data.squall.api.scala.ReplSerializationDelegate," +
+                          s"repl.outdir=${repl_classdir.getAbsolutePath()}" )
+    },
     initialCommands in Compile in console += "import ch.epfl.data.squall.query_plans.QueryBuilder;",
     initialCommands in Compile in console += "import ch.epfl.data.squall.api.scala.SquallType._;",
     initialCommands in Compile in console += "import ch.epfl.data.squall.api.scala.Stream._;",
