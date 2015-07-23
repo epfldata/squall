@@ -31,11 +31,12 @@ import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.tuple.Values;
 import ch.epfl.data.squall.operators.Operator;
+import ch.epfl.data.squall.operators.OneToOneOperator;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.visitors.OperatorVisitor;
 
-public class SampleAsideAndForwardOperator implements Operator {
+public class SampleAsideAndForwardOperator extends OneToOneOperator implements Operator {
     private static Logger LOG = Logger
 	    .getLogger(SampleAsideAndForwardOperator.class);
     private static final long serialVersionUID = 1L;
@@ -119,7 +120,7 @@ public class SampleAsideAndForwardOperator implements Operator {
     }
 
     @Override
-    public List<String> process(List<String> tuple, long lineageTimestamp) {
+    public List<String> processOne(List<String> tuple, long lineageTimestamp) {
 	_numTuplesProcessed++;
 
 	// sending to this extra streamId

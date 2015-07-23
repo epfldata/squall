@@ -40,7 +40,7 @@ import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.visitors.OperatorVisitor;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
-public class AggregateSumOperator<T extends Number & Comparable<T>> implements
+public class AggregateSumOperator<T extends Number & Comparable<T>> extends OneToOneOperator implements
 	AggregateOperator<T>, AggregateStream {
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(AggregateSumOperator.class);
@@ -162,10 +162,10 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements
 
     // from Operator
     @Override
-    public List<String> process(List<String> tuple, long lineageTimestamp) {
+    public List<String> processOne(List<String> tuple, long lineageTimestamp) {
 	_numTuplesProcessed++;
 	if (_distinct != null) {
-	    tuple = _distinct.process(tuple, lineageTimestamp);
+	    tuple = _distinct.processOne(tuple, lineageTimestamp);
 	    if (tuple == null)
 		return null;
 	}
@@ -191,7 +191,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> implements
     public List<List<String>> updateStream(List<String> tuple, boolean withMultiplicity) {
         _numTuplesProcessed++;
         if (_distinct != null) {
-            tuple = _distinct.process(tuple, 0);
+            tuple = _distinct.processOne(tuple, 0);
             if (tuple == null)
                 return null;
         }

@@ -27,7 +27,7 @@ import org.apache.log4j.Logger;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.visitors.OperatorVisitor;
 
-public class SampleOperator implements Operator {
+public class SampleOperator extends OneToOneOperator implements Operator {
     private static Logger LOG = Logger.getLogger(SampleOperator.class);
     private static final long serialVersionUID = 1L;
 
@@ -76,7 +76,7 @@ public class SampleOperator implements Operator {
     }
 
     @Override
-    public List<String> process(List<String> tuple, long lineageTimestamp) {
+    public List<String> processOne(List<String> tuple, long lineageTimestamp) {
 	_numTuplesProcessed++;
 	if (_rnd.nextDouble() < _sampleRate) {
 	    return tuple;

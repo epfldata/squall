@@ -74,30 +74,40 @@ public class PullStatisticCollector {
 	return text;
     }
 
-    private static List<String> readTuple(CustomReader reader,
+    private static List<List<String>> readTuples(CustomReader reader,
 	    ChainOperator operators, Map map) {
 	String line = null;
 	List<String> tuple = null;
-	while (tuple == null && (line = readLine(reader)) != null) {
+	List<List<String>> result = new ArrayList<List<String>>();
+	while (result.size() == 0 && (line = readLine(reader)) != null) {
 	    tuple = MyUtilities.fileLineToTuple(line, map);
-	    tuple = operators.process(tuple, -1);
+	    result = operators.process(tuple, -1);
 	}
-	return tuple;
+	return result;
     }
 
-    private static <T extends Comparable<T>> T readTupleJoinKey(
+    private static <T extends Comparable<T>> List<T> readTuplesJoinKey(
 	    CustomReader reader, ChainOperator operators, Type<T> conv, Map map) {
-	List<String> tuple = readTuple(reader, operators, map);
-	return tuple != null ? conv.fromString(tuple.get(0)) : null;
+	List<List<String>> tuples = readTuples(reader, operators, map);
+        List<T> result = new ArrayList<T>();
+        for (List<String> tuple : tuples) {
+          result.add(conv.fromString(tuple.get(0)));
+        }
+	return result;
     }
 
     private static <T extends Comparable<T>> List<T> readAllTupleJoinKeys(
 	    CustomReader reader, ChainOperator operators, Type<T> conv, Map map) {
 	List<T> tupleKeys = new ArrayList<T>();
-	T key = null;
-	while ((key = readTupleJoinKey(reader, operators, conv, map)) != null) {
-	    tupleKeys.add(key);
-	}
+        List<T> tuples = readTuplesJoinKey(reader, operators, conv, map);
+
+        while (tuples.size() > 0) {
+          for (T key : tuples) {
+            tupleKeys.add(key);
+          }
+          tuples = readTuplesJoinKey(reader, operators, conv, map);
+        }
+
 	return tupleKeys;
     }
 

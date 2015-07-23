@@ -169,36 +169,36 @@ public class StormHyperCubeJoin extends StormBoltComponent {
     }
 
     protected void applyOperatorsAndSend(Tuple stormTupleRcv,
-                                         List<String> tuple, long lineageTimestamp, boolean isLastInBatch) {
+                                         List<String> inTuple, long lineageTimestamp, boolean isLastInBatch) {
         if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
             try {
                 _semAgg.acquire();
             } catch (final InterruptedException ex) {
             }
-        tuple = operatorChain.process(tuple, lineageTimestamp);
-        if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
+        for (List<String> tuple : operatorChain.process(inTuple, lineageTimestamp)) {
+          if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
             _semAgg.release();
-        if (tuple == null)
+          if (tuple == null)
             return;
-        numSentTuples++;
-        printTuple(tuple);
-        if (numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
+          numSentTuples++;
+          printTuple(tuple);
+          if (numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
             printStatistics(SystemParameters.OUTPUT_PRINT);
-        if (MyUtilities
-                .isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
+          if (MyUtilities
+              .isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
             long timestamp = 0;
             if (MyUtilities.isCustomTimestampMode(getConf()))
-                if (getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
-                    // A tuple has a non-null timestamp only if the component is
-                    // next to last because we measure the latency of the last
-                    // operator
-                    timestamp = System.currentTimeMillis();
+              if (getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
+                // A tuple has a non-null timestamp only if the component is
+                // next to last because we measure the latency of the last
+                // operator
+                timestamp = System.currentTimeMillis();
             // timestamp = System.nanoTime();
             tupleSend(tuple, stormTupleRcv, timestamp);
-        }
-        if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
+          }
+          if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
             printTupleLatency(numSentTuples - 1, lineageTimestamp);
-
+        }
     }
 
 

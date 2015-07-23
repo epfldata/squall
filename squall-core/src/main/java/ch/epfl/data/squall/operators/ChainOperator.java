@@ -26,10 +26,6 @@ import ch.epfl.data.squall.ewh.operators.SampleAsideAndForwardOperator;
 import ch.epfl.data.squall.visitors.OperatorVisitor;
 
 public class ChainOperator implements Operator {
-
-    /**
-	 * 
-	 */
     private static final long serialVersionUID = 1L;
     private List<Operator> _operators = new ArrayList<Operator>();
 
@@ -184,13 +180,19 @@ public class ChainOperator implements Operator {
      * Return tuple if the tuple has to be sent further Otherwise return null.
      */
     @Override
-    public List<String> process(List<String> tuple, long lineageTimestamp) {
-	List<String> result = tuple;
+    public List<List<String>> process(List<String> tuple, long lineageTimestamp) {
+        List<List<String>> result = new ArrayList<List<String>>();
+        result.add(tuple);
 
 	for (final Operator operator : _operators) {
-	    result = operator.process(result, lineageTimestamp);
-	    if (result == null)
-		break;
+            int elements = result.size();
+            for (int i = 0; i < elements; i++) {
+              // Remove the first element
+              tuple = result.remove(0);
+
+              // Add the resulting tuples at the end of the list
+              result.addAll(operator.process(tuple, lineageTimestamp));
+            }
 	}
 	return result;
     }

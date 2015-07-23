@@ -205,39 +205,40 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter,
 	    }
     }
 
-    protected void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> tuple) {
+    protected void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> inTuple) {
 	if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
 	    try {
 		_semAgg.acquire();
 	    } catch (final InterruptedException ex) {
 	    }
-	tuple = _operatorChain.process(tuple, 0);
-	if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
+	for (List<String> tuple : _operatorChain.process(inTuple, 0)) {
+          if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
 	    _semAgg.release();
 
-	if (tuple == null)
+          if (tuple == null)
 	    return;
-	_numSentTuples++;
-	printTuple(tuple);
+          _numSentTuples++;
+          printTuple(tuple);
 
-	// TODO
-	if (_statsUtils.isTestMode()
-		&& _numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
+          // TODO
+          if (_statsUtils.isTestMode()
+              && _numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
 	    if (_hierarchyPosition == StormComponent.FINAL_COMPONENT) {
-		_cal = Calendar.getInstance();
-		LOG.info("," + "RESULT," + _thisTaskID + "," + "TimeStamp:,"
-			+ _dateFormat.format(_cal.getTime()) + ",Sent Tuples,"
-			+ _numSentTuples);
-		LOG.info("First Storage: "
-			+ _firstRelationStorage.getStatistics()
-			+ "\nEnd of First Storage");
-		LOG.info("Second Storage: "
-			+ _secondRelationStorage.getStatistics()
-			+ "\nEnd of Second Storage");
+              _cal = Calendar.getInstance();
+              LOG.info("," + "RESULT," + _thisTaskID + "," + "TimeStamp:,"
+                       + _dateFormat.format(_cal.getTime()) + ",Sent Tuples,"
+                       + _numSentTuples);
+              LOG.info("First Storage: "
+                       + _firstRelationStorage.getStatistics()
+                       + "\nEnd of First Storage");
+              LOG.info("Second Storage: "
+                       + _secondRelationStorage.getStatistics()
+                       + "\nEnd of Second Storage");
 	    }
 
-	if (MyUtilities.isSending(_hierarchyPosition, _batchOutputMillis))
+          if (MyUtilities.isSending(_hierarchyPosition, _batchOutputMillis))
 	    tupleSend(tuple, stormTupleRcv, 0);
+        }
     }
 
     // from IRichBolt

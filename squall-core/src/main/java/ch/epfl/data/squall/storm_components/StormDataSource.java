@@ -128,7 +128,7 @@ public class StormDataSource extends StormSpoutComponent {
 	    }
     }
 
-    protected void applyOperatorsAndSend(List<String> tuple) {
+    protected void applyOperatorsAndSend(List<String> inTuple) {
 	long timestamp = 0;
 	if ((MyUtilities.isCustomTimestampMode(getConf()) && getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
 		|| MyUtilities.isWindowTimestampMode(getConf()))
@@ -138,25 +138,25 @@ public class StormDataSource extends StormSpoutComponent {
 		_semAgg.acquire();
 	    } catch (final InterruptedException ex) {
 	    }
-	tuple = _operatorChain.process(tuple, timestamp);
-
-	if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
+	for (List<String> tuple : _operatorChain.process(inTuple, timestamp)) {
+          if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 	    _semAgg.release();
 
-	if (tuple == null)
+          if (tuple == null)
 	    return;
 
-	_numSentTuples++;
-	_pendingTuples++;
-	printTuple(tuple);
+          _numSentTuples++;
+          _pendingTuples++;
+          printTuple(tuple);
 
-	if (MyUtilities
-		.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
+          if (MyUtilities
+              .isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
 	    tupleSend(tuple, null, timestamp);
-	}
-	if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
+          }
+          if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
 	    printTupleLatency(_numSentTuples - 1, timestamp);
-	}
+          }
+        }
     }
 
     @Override

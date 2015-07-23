@@ -172,7 +172,7 @@ public class StormDstJoin extends StormBoltComponent {
     }
 
     protected void applyOperatorsAndSend(Tuple stormTupleRcv,
-	    List<String> tuple, long lineageTimestamp, boolean isLastInBatch) {
+	    List<String> inTuple, long lineageTimestamp, boolean isLastInBatch) {
 	// System.out.println("Seding Out tuple.....");
 	if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 	    try {
@@ -180,44 +180,44 @@ public class StormDstJoin extends StormBoltComponent {
 	    } catch (final InterruptedException ex) {
 	    }
 
-	tuple = _operatorChain.process(tuple, 0);
-
-	if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
+	for (List<String> tuple : _operatorChain.process(inTuple, 0)) {
+          if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 	    _semAgg.release();
 
-	if (tuple == null)
+          if (tuple == null)
 	    return;
-	_numSentTuples++;
-	printTuple(tuple);
+          _numSentTuples++;
+          printTuple(tuple);
 
-	if (_numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
+          if (_numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
 	    printStatistics(SystemParameters.OUTPUT_PRINT);
 
-	if (MyUtilities
-		.isSending(getHierarchyPosition(), _aggBatchOutputMillis)
-		|| MyUtilities.isWindowTimestampMode(getConf())) {
+          if (MyUtilities
+              .isSending(getHierarchyPosition(), _aggBatchOutputMillis)
+              || MyUtilities.isWindowTimestampMode(getConf())) {
 	    long timestamp = 0;
 	    if (MyUtilities.isCustomTimestampMode(getConf()))
-		timestamp = stormTupleRcv
-			.getLongByField(StormComponent.TIMESTAMP);
+              timestamp = stormTupleRcv
+                .getLongByField(StormComponent.TIMESTAMP);
 	    if (MyUtilities.isWindowTimestampMode(getConf()))
-		timestamp = lineageTimestamp;
+              timestamp = lineageTimestamp;
 	    tupleSend(tuple, stormTupleRcv, timestamp);
-	}
-	if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
+          }
+          if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
 	    long timestamp;
 	    if (MyUtilities.isManualBatchingMode(getConf())) {
-		if (isLastInBatch) {
-		    timestamp = stormTupleRcv
-			    .getLongByField(StormComponent.TIMESTAMP);
-		    printTupleLatency(_numSentTuples - 1, timestamp);
-		}
+              if (isLastInBatch) {
+                timestamp = stormTupleRcv
+                  .getLongByField(StormComponent.TIMESTAMP);
+                printTupleLatency(_numSentTuples - 1, timestamp);
+              }
 	    } else {
-		timestamp = stormTupleRcv
-			.getLongByField(StormComponent.TIMESTAMP);
-		printTupleLatency(_numSentTuples - 1, timestamp);
+              timestamp = stormTupleRcv
+                .getLongByField(StormComponent.TIMESTAMP);
+              printTupleLatency(_numSentTuples - 1, timestamp);
 	    }
-	}
+          }
+        }
     }
 
     @Override
@@ -392,11 +392,16 @@ public class StormDstJoin extends StormBoltComponent {
 			    secondTuple, _rightHashIndexes);
 		}
 
-		if (projPreAgg != null)
+		if (projPreAgg != null) {
 		    // preaggregation
-		    outputTuple = projPreAgg.process(outputTuple, 0);
-		applyOperatorsAndSend(stormTupleRcv, outputTuple,
-			lineageTimestamp, isLastInBatch);
+                  for (List<String> outTuple : projPreAgg.process(outputTuple, 0)) {
+                    applyOperatorsAndSend(stormTupleRcv, outTuple,
+                                          lineageTimestamp, isLastInBatch);
+                  }
+                } else {
+                  applyOperatorsAndSend(stormTupleRcv, outputTuple,
+                                        lineageTimestamp, isLastInBatch);
+                }
 	    }
     }
 

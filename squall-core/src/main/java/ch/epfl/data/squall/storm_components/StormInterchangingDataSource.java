@@ -156,30 +156,33 @@ public class StormInterchangingDataSource extends BaseRichSpout implements
     public void aggBatchSend() {
     }
 
-    protected boolean applyOperatorsAndSend(List<String> tuple, int RelIndex) {
+    protected boolean applyOperatorsAndSend(List<String> inTuple, int RelIndex) {
 	// do selection and projection
 	if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
 	    try {
 		_semAgg.acquire();
 	    } catch (final InterruptedException ex) {
 	    }
+        List<List<String>> tuples;
 	if (RelIndex == 1)
-	    tuple = _operatorChainRel1.process(tuple, 0);
+	    tuples = _operatorChainRel1.process(inTuple, 0);
 	else
-	    tuple = _operatorChainRel2.process(tuple, 0);
+          tuples = _operatorChainRel2.process(inTuple, 0);
 
-	if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
+        if (tuples.size() == 0)
+          return false;
+
+        for (List<String> tuple : tuples) {
+          if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
 	    _semAgg.release();
 
-	if (tuple == null)
-	    return false;
+          _pendingTuples++;
+          printTuple(tuple);
 
-	_pendingTuples++;
-	printTuple(tuple);
-
-	if (MyUtilities.isSending(_hierarchyPosition, _batchOutputMillis))
+          if (MyUtilities.isSending(_hierarchyPosition, _batchOutputMillis))
 	    tupleSend(tuple, null, RelIndex);
-	return true;
+        }
+        return true;
     }
 
     @Override

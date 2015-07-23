@@ -20,6 +20,7 @@
 package ch.epfl.data.squall.api.scala.operators
 
 import ch.epfl.data.squall.operators.Operator
+import ch.epfl.data.squall.operators.AbstractOperator
 import ch.epfl.data.squall.visitors.OperatorVisitor
 import ch.epfl.data.squall.api.scala.SquallType._
 import scala.collection.JavaConverters._
@@ -27,7 +28,7 @@ import scala.collection.JavaConverters._
 /**
  * @author mohamed
  */
-class ScalaMapOperator[T: SquallType, U: SquallType](fn: T => U) extends Operator {
+class ScalaMapOperator[T: SquallType, U: SquallType](fn: T => U) extends AbstractOperator {
 
   private var _numTuplesProcessed: Int = 0;
 
@@ -51,7 +52,7 @@ class ScalaMapOperator[T: SquallType, U: SquallType](fn: T => U) extends Operato
     throw new RuntimeException("printContent for SelectionOperator should never be invoked!");
   }
 
-  def process(tuple: java.util.List[String], lineageTimestamp: Long): java.util.List[String] = {
+  def processOne(tuple: java.util.List[String], lineageTimestamp: Long): java.util.List[String] = {
     _numTuplesProcessed += 1;
     val squalTypeInput: SquallType[T] = implicitly[SquallType[T]]
     val squalTypeOutput: SquallType[U] = implicitly[SquallType[U]]

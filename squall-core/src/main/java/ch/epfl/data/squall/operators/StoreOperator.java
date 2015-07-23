@@ -35,7 +35,7 @@ import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.visitors.OperatorVisitor;
 
-public class StoreOperator implements Operator {
+public class StoreOperator extends OneToOneOperator implements Operator {
     private static Logger LOG = Logger.getLogger(StoreOperator.class);
 
     private static final long serialVersionUID = 1L;
@@ -81,7 +81,7 @@ public class StoreOperator implements Operator {
     }
 
     @Override
-    public List<String> process(List<String> tuple, long lineageTimestamp) {
+    public List<String> processOne(List<String> tuple, long lineageTimestamp) {
       store.put(tuple.get(0), tuple.get(1));
       _numTuplesProcessed++;
       return tuple;
