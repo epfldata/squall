@@ -21,7 +21,7 @@ package ch.epfl.data.squall.api.scala.operators
 
 import ch.epfl.data.squall.operators.AggregateOperator
 import ch.epfl.data.squall.visitors.OperatorVisitor
-import ch.epfl.data.squall.operators.AbstractOperator
+import ch.epfl.data.squall.operators.OneToOneOperator
 import ch.epfl.data.squall.operators.DistinctOperator
 import ch.epfl.data.squall.expressions.ValueExpression
 import ch.epfl.data.squall.operators.ProjectOperator

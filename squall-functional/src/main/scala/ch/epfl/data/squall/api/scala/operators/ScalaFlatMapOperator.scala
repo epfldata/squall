@@ -20,7 +20,6 @@
 package ch.epfl.data.squall.api.scala.operators
 
 import ch.epfl.data.squall.operators.Operator
-import ch.epfl.data.squall.operators.OneToOneOperator
 import ch.epfl.data.squall.visitors.OperatorVisitor
 import ch.epfl.data.squall.api.scala.SquallType._
 import scala.collection.JavaConverters._
@@ -30,7 +29,7 @@ import scala.collection.JavaConversions._
 /**
  * @author mohamed
  */
-class ScalaMapOperator[T: SquallType, U: SquallType](fn: T => U) extends OneToOneOperator {
+class ScalaFlatMapOperator[T: SquallType, U: SquallType](fn: T => List[U]) extends Operator {
 
   private var _numTuplesProcessed: Int = 0;
 
@@ -54,13 +53,13 @@ class ScalaMapOperator[T: SquallType, U: SquallType](fn: T => U) extends OneToOn
     throw new RuntimeException("printContent for SelectionOperator should never be invoked!");
   }
 
-  def processOne(tuple: java.util.List[String], lineageTimestamp: Long): java.util.List[String] = {
+  def process(tuple: java.util.List[String], lineageTimestamp: Long): java.util.List[java.util.List[String]] = {
     _numTuplesProcessed += 1;
     val squalTypeInput: SquallType[T] = implicitly[SquallType[T]]
     val squalTypeOutput: SquallType[U] = implicitly[SquallType[U]]
     val squallTuple = squalTypeInput.convertBack(tuple.toList)
     val cmp = fn(squallTuple)
-    val res = squalTypeOutput.convert(cmp)
-    res
+    val res = cmp map { squalTypeOutput.convert(_) }
+    res map { x => x : java.util.List[String] }
   }
 }
