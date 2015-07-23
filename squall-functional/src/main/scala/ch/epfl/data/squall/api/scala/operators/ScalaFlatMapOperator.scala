@@ -29,7 +29,7 @@ import scala.collection.JavaConversions._
 /**
  * @author mohamed
  */
-class ScalaFlatMapOperator[T: SquallType, U: SquallType](fn: T => List[U]) extends Operator {
+class ScalaFlatMapOperator[T: SquallType, U: SquallType](fn: T => Seq[U]) extends Operator {
 
   private var _numTuplesProcessed: Int = 0;
 

@@ -51,7 +51,7 @@ object Stream {
   case class Source[T: SquallType](name: String) extends Stream[T]
   case class FilteredStream[T: SquallType](Str: Stream[T], fn: T => Boolean) extends Stream[T]
   case class MappedStream[T: SquallType, U: SquallType](Str: Stream[T], fn: T => U) extends Stream[U]
-  case class FlatMappedStream[T: SquallType, U: SquallType](Str: Stream[T], fn: T => List[U]) extends Stream[U]
+  case class FlatMappedStream[T: SquallType, U: SquallType](Str: Stream[T], fn: T => Seq[U]) extends Stream[U]
   case class JoinedStream[T: SquallType, U: SquallType, V: SquallType, L: SquallType](Str1: Stream[T], Str2: Stream[U], ind1: T => L, ind2: U => L) extends JoinStream[V] {
     val tpT = implicitly[SquallType[T]]
     val tpU = implicitly[SquallType[U]]
@@ -69,7 +69,7 @@ object Stream {
 
     def filter(fn: T => Boolean): Stream[T] = FilteredStream(this, fn)
     def map[U: SquallType](fn: T => U): Stream[U] = MappedStream[T, U](this, fn)
-    def flatMap[U: SquallType](fn: T => List[U]): Stream[U] = FlatMappedStream[T, U](this, fn)
+    def flatMap[U: SquallType](fn: T => Seq[U]): Stream[U] = FlatMappedStream[T, U](this, fn)
     def join[U: SquallType, L: SquallType](other: Stream[U])(joinIndices1: T => L)(joinIndices2: U => L): JoinStream[Tuple2[T, U]] = JoinedStream[T, U, Tuple2[T, U], L](this, other, joinIndices1, joinIndices2)
     def groupByKey[N: Numeric, U: SquallType](agg: T => N, keyIndices: T => U): TailStream[T, U, N] = GroupedStream[T, U, N](this, agg, keyIndices)
 
