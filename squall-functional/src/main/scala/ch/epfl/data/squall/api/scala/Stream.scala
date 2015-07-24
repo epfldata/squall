@@ -18,35 +18,27 @@
  */
 
 package ch.epfl.data.squall.api.scala
-import backtype.storm.tuple._
-import scala.reflect.runtime.universe._
+
 import ch.epfl.data.squall.api.scala.SquallType._
-import ch.epfl.data.squall.api.scala.operators.ScalaAggregateOperator
-import ch.epfl.data.squall.api.scala.operators.ScalaMapOperator
-import ch.epfl.data.squall.api.scala.operators.ScalaFlatMapOperator
-import ch.epfl.data.squall.query_plans.QueryBuilder
-import ch.epfl.data.squall.query_plans.QueryBuilder
-import ch.epfl.data.squall.operators.Operator
-import ch.epfl.data.squall.components.EquiJoinComponent
-import ch.epfl.data.squall.components.Component
-import ch.epfl.data.squall.components.DataSourceComponent
-import ch.epfl.data.squall.operators.SelectOperator
-import java.beans.MetaData
-import scala.collection.JavaConverters._
 import ch.epfl.data.squall.api.scala.TPCHSchema._
+import ch.epfl.data.squall.api.scala.operators.{ScalaAggregateOperator, ScalaFlatMapOperator, ScalaMapOperator}
 import ch.epfl.data.squall.api.scala.operators.predicates.ScalaPredicate
-import ch.epfl.data.squall.predicates.ComparisonPredicate
-import ch.epfl.data.squall.predicates.Predicate
+import ch.epfl.data.squall.components.{Component, DataSourceComponent, EquiJoinComponent}
 import ch.epfl.data.squall.expressions.ColumnReference
-import ch.epfl.data.squall.predicates.booleanPrimitive
-import ch.epfl.data.squall.predicates.AndPredicate
+import ch.epfl.data.squall.operators.{Operator, SelectOperator}
+import ch.epfl.data.squall.predicates.{AndPredicate, ComparisonPredicate, Predicate, booleanPrimitive}
+import ch.epfl.data.squall.query_plans.QueryBuilder
 import ch.epfl.data.squall.types.IntegerType
 import ch.epfl.data.squall.utilities.SquallContext
+import org.apache.log4j.Logger
+import scala.collection.JavaConverters._
+import scala.reflect.runtime.universe._
 
 /**
  * @author mohamed
  */
 object Stream {
+  val LOG: Logger= Logger.getLogger(Stream.getClass());
 
   case class Source[T: SquallType](name: String) extends Stream[T]
   case class FilteredStream[T: SquallType](Str: Stream[T], fn: T => Boolean) extends Stream[T]
@@ -98,12 +90,12 @@ object Stream {
   // TODO: why is metadata a tuple?
   private def interprete[T: SquallType](str: Stream[T], qb: QueryBuilder, metaData: Tuple4[List[Operator], List[Int], List[Int], Int], context: SquallContext): Component = str match {
     case Source(name) => {
-      println("Reached Source")
+      LOG.debug("Reached Source")
       var dataSourceComponent = context.createDataSource(name)
       qb.add(dataSourceComponent)
       val operatorList = metaData._1
       if (operatorList != null) {
-        operatorList.foreach { operator => println("   adding operator: " + operator); dataSourceComponent = dataSourceComponent.add(operator) }
+        operatorList.foreach { operator => LOG.debug("   adding operator: " + operator); dataSourceComponent = dataSourceComponent.add(operator) }
       }
       if (metaData._2 != null)
         dataSourceComponent = dataSourceComponent.setOutputPartKey(metaData._2: _*)
@@ -112,23 +104,23 @@ object Stream {
       dataSourceComponent
     }
     case FilteredStream(parent, fn) => {
-      println("Reached Filtered Stream")
+      LOG.debug("Reached Filtered Stream")
       val filterPredicate = new ScalaPredicate(fn)
       val filterOperator = new SelectOperator(filterPredicate)
       interprete(parent, qb, Tuple4(filterOperator :: metaData._1, metaData._2, metaData._3, -1), context)
     }
     case MappedStream(parent, fn) => {
-      println("Reached Mapped Stream")
+      LOG.debug("Reached Mapped Stream")
       val mapOp = new ScalaMapOperator(fn)(parent.squalType, str.squalType)
       interprete(parent, qb, Tuple4(mapOp :: metaData._1, metaData._2, metaData._3, -1), context)(parent.squalType)
     }
     case FlatMappedStream(parent, fn) => {
-      println("Reached FlatMapped Stream")
+      LOG.debug("Reached FlatMapped Stream")
       val mapOp = new ScalaFlatMapOperator(fn)(parent.squalType, str.squalType)
       interprete(parent, qb, Tuple4(mapOp :: metaData._1, metaData._2, metaData._3, -1), context)(parent.squalType)
     }
     case j @ JoinedStream(parent1, parent2, ind1, ind2) => {
-      println("Reached Joined Stream")
+      LOG.debug("Reached Joined Stream")
 
       val typeT = j.tpT
       val typeU = j.tpU
@@ -226,12 +218,12 @@ object Stream {
 
   def main(args: Array[String]) {
     /*
-   val x=Source[Int]("hello").filter{ x:Int => true }.map[(Int,Int)]{ y:Int => Tuple2(2*y,3*y) };
-   val y = Source[Int]("hello").filter{ x:Int => true }.map[Int]{ y:Int => 2*y };
-   val z = x.join[Int,(Int,Int)](y, List(2),List(2)).reduceByKey(x => 3*x._2, List(1,2))
-   val conf= new java.util.HashMap[String,String]()
-   interp(z,conf)
-   */
+     val x=Source[Int]("hello").filter{ x:Int => true }.map[(Int,Int)]{ y:Int => Tuple2(2*y,3*y) };
+     val y = Source[Int]("hello").filter{ x:Int => true }.map[Int]{ y:Int => 2*y };
+     val z = x.join[Int,(Int,Int)](y, List(2),List(2)).reduceByKey(x => 3*x._2, List(1,2))
+     val conf= new java.util.HashMap[String,String]()
+     interp(z,conf)
+     */
   }
 
 }
