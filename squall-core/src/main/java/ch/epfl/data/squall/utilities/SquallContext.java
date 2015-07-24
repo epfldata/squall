@@ -35,6 +35,11 @@ import ch.epfl.data.squall.utilities.StormWrapper;
 import ch.epfl.data.squall.utilities.ReaderProvider;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.operators.StoreOperator;
+import backtype.storm.generated.Nimbus.Client;
+import backtype.storm.generated.ClusterSummary;
+import backtype.storm.generated.TopologySummary;
+import backtype.storm.generated.TopologyInfo;
+import backtype.storm.generated.NotAliveException;
 
 import org.apache.log4j.Logger;
 
@@ -214,6 +219,59 @@ public class SquallContext {
     }
 
     return new DataSourceComponent(table, provider, resource);
+  }
+
+  public ClusterSummary getStormClusterSummary() {
+    return StormWrapper.getClusterInfo(isLocal(), conf);
+  }
+
+  public List<String> getQueries() {
+    ClusterSummary cluster = getStormClusterSummary();
+
+    List<String> result = new ArrayList();
+
+    for (TopologySummary topology : cluster.get_topologies()) {
+      result.add(topology.get_name());
+    }
+
+    return result;
+  }
+
+  public void killQuery(String name) {
+    try {
+      StormWrapper.killTopology(isLocal(), conf, name);
+    } catch (NotAliveException e) {
+      LOG.warn("Tried to kill topology '" + name + "' but it was not running.");
+    }
+  }
+
+  private String getTopologyIdFromName(String name) {
+    ClusterSummary cluster = getStormClusterSummary();
+    String id = null;
+
+    for (TopologySummary topology : cluster.get_topologies()) {
+      if (topology.get_id().startsWith(name)) {
+        id = topology.get_id();
+      }
+    }
+
+    return id;
+  }
+
+
+  public String getQueryStatus(String name) {
+    try {
+      String id = getTopologyIdFromName(name);
+      if (id != null) {
+        TopologyInfo topology = StormWrapper.getTopology(isLocal(), conf, id);
+        return topology.get_status();
+      } else {
+        return null;
+      }
+    } catch (NotAliveException e) {
+      LOG.warn("Tried to get status for topology '" + name + "' but it was not running.");
+      return null;
+    }
   }
 
 }

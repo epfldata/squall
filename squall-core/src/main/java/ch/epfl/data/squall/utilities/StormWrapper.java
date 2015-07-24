@@ -354,6 +354,46 @@ public class StormWrapper {
 	}
     }
 
+    public static ClusterSummary getClusterInfo(boolean local, Map conf) {
+      if (local) {
+        return localCluster.getClusterInfo();
+      } else {
+        Client client = getNimbusStub(conf);
+        try {
+          return client.getClusterInfo();
+        } catch (TException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    }
+
+
+  public static void killTopology(boolean local, Map conf, String name) throws NotAliveException {
+    if (local) {
+      localCluster.killTopology(name);
+    } else {
+        Client client = getNimbusStub(conf);
+        try {
+          client.killTopology(name);
+        } catch (TException e) {
+          throw new RuntimeException(e);
+        }
+    }
+  }
+
+  public static TopologyInfo getTopology(boolean local, Map conf, String name) throws NotAliveException {
+    if (local) {
+      return localCluster.getTopologyInfo(name);
+    } else {
+        Client client = getNimbusStub(conf);
+        try {
+          return client.getTopologyInfo(name);
+        } catch (TException e) {
+          throw new RuntimeException(e);
+        }
+    }
+  }
+
     private static Logger LOG = Logger.getLogger(StormWrapper.class);
 
     private static long startTime;
