@@ -19,13 +19,13 @@
 
 package ch.epfl.data.squall.api.scala
 
-import ch.epfl.data.squall.query_plans.QueryBuilder
 import ch.epfl.data.squall.api.scala.SquallType._
 import ch.epfl.data.squall.api.scala.Stream._
 import ch.epfl.data.squall.api.scala.TPCHSchema._
-
+import ch.epfl.data.squall.query_plans.QueryBuilder
 import ch.epfl.data.squall.utilities.SquallContext
-
+import ch.qos.logback.classic.{Level, Logger, LoggerContext}
+import org.slf4j.LoggerFactory
 import scala.collection.JavaConversions._
 
 
@@ -55,6 +55,7 @@ Type "help" for Squall related help
       "storm.meta.serialization.delegate=ch.epfl.data.squall.api.scala.ReplSerializationDelegate," +
         s"repl.outdir=${outdir}/classes/" )
     context.setLocal
+    stopLogging()
   }
 
   // TODO: make a more useful help. Maybe use a Map to define the possible
@@ -68,7 +69,7 @@ Type "help" for Squall related help
     import scala.sys.process._
       (s"cp squall-functional/target/squall-frontend-standalone-0.2.0.jar ${outdir}/repl.jar").!!
       (s"jar uf ${outdir}/repl.jar -C ${outdir}/classes/ .").!!
-    println("Done packing")
+      println("Done packing")
     s"${outdir}/repl.jar"
   }
 
@@ -116,6 +117,16 @@ Type "help" for Squall related help
     val tpname = prepareSubmit()
     context.submit(tpname, plan)
   }
+
+  private val loggerContext: LoggerContext = LoggerFactory.getILoggerFactory().asInstanceOf[LoggerContext]
+  def activateLogging() = {
+    loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).setLevel(Level.INFO)
+  }
+
+  def stopLogging() = {
+    loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).setLevel(Level.OFF)
+  }
+
 
 
   // An example query plan
