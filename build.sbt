@@ -1,9 +1,23 @@
-import complete.DefaultParsers._
+/*
+ * Copyright (c) 2011-2015 EPFL DATA Laboratory
+ * Copyright (c) 2014-2015 The Squall Collaboration (see NOTICE)
+ *
+ * All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 scalaVersion := "2.11.6"
-
-lazy val runParser = inputKey[Unit]("Runs the SQL interface with the given configuration.")
-lazy val runPlanner = inputKey[Unit]("Runs the imperative interface with the given configuration.")
 
 lazy val commonSettings = Seq(
   name := "squall",
@@ -42,8 +56,19 @@ lazy val commonSettings = Seq(
       }
 )
 
+lazy val SqlTest = config("sql") extend(Test)
+lazy val DbtoasterTest = config("dbtoaster") extend(Test)
+
+def sqlFilter(name: String): Boolean = (name startsWith "ch.epfl.data.squall.test.sql")
+def dbtoasterFilter(name: String): Boolean = (name startsWith "ch.epfl.data.squall.test.dbtoaster")
+def planFilter(name: String): Boolean = !dbtoasterFilter(name) && !sqlFilter(name)
+
 lazy val squall = (project in file("squall-core")).
+  configs(SqlTest).
+  configs(DbtoasterTest).
   settings(commonSettings: _*).
+  settings(inConfig(SqlTest)(Defaults.testTasks): _*).
+  settings(inConfig(DbtoasterTest)(Defaults.testTasks): _*).
   settings(
     javacOptions ++= Seq(
       "-target", "1.7",
@@ -75,43 +100,18 @@ lazy val squall = (project in file("squall-core")).
       "org.apache.hadoop" % "hadoop-client" % "2.2.0" exclude("org.slf4j", "slf4j-log4j12"),
       "org.apache.hadoop" % "hadoop-hdfs" % "2.2.0" exclude("org.slf4j", "slf4j-log4j12"),
       "org.apache.storm" % "storm-hdfs" % "0.10.0-beta1"
-      //"com.github.ptgoetz" % "storm-signals" % "0.2.0",
-      //"com.netflix.curator" % "curator-framework" % "1.0.1"
+        //"com.github.ptgoetz" % "storm-signals" % "0.2.0",
+        //"com.netflix.curator" % "curator-framework" % "1.0.1"
     ),
     // http://www.scala-sbt.org/0.13/docs/Running-Project-Code.html
     // We need to fork the JVM, as storm uses multiple threads
     fork := true,
-    // Running tasks
-    runParser := {
-      val arguments: Seq[String] = spaceDelimited("<arg>").parsed
-      val classpath: Seq[File] = (
-        ((fullClasspath in Compile).value map { _.data }) ++
-          (arguments.tail map { file(_) })
-      )
-      val options = ForkOptions(
-        bootJars = classpath,
-        workingDirectory = Some(file("./bin"))
-      )
-      val mainClass: String = "ch.epfl.data.squall.api.sql.main.ParserMain"
-      val exitCode: Int = Fork.java(options, mainClass +: arguments)
-      sys.exit(exitCode)
-    },
-    runPlanner := {
-      val arguments: Seq[String] = spaceDelimited("<arg>").parsed
-      val classpath: Seq[File] = (
-        ((fullClasspath in Compile).value map { _.data }) ++
-          (arguments.tail map { file(_) })
-      )
-      val options = ForkOptions(
-        bootJars = classpath,
-        workingDirectory = Some(file("./bin"))
-      )
-      val mainClass: String = "ch.epfl.data.squall.main.Main"
-      val exitCode: Int = Fork.java(options, mainClass +: arguments)
-      sys.exit(exitCode)
-    },
+
     // Testing
-    libraryDependencies +=  "org.scalatest" % "scalatest_2.11" % "2.2.4" % Test
+    libraryDependencies +=  "org.scalatest" % "scalatest_2.11" % "2.2.4" % Test,
+    testOptions in Test := Seq(Tests.Filter(planFilter)),
+    testOptions in SqlTest := Seq(Tests.Filter(sqlFilter)),
+    testOptions in DbtoasterTest := Seq(Tests.Filter(dbtoasterFilter))
   )
 
 // For the macros

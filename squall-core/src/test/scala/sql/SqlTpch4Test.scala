@@ -21,8 +21,8 @@ package ch.epfl.data.squall.test.sql
 
 import ch.epfl.data.squall.test.TestSuite
 
-class TPCH12Test extends TestSuite {
+class SqlTpch4Test extends TestSuite {
 
-  testSQL("0_01G_tpch12_ncl")
+  testSQL("0_01G_tpch4_ncl")
 
 }

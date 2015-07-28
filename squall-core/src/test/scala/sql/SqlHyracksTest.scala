@@ -21,11 +21,15 @@ package ch.epfl.data.squall.test.sql
 
 import ch.epfl.data.squall.test.TestSuite
 
-class TPCH9Test extends TestSuite {
+class SqlHyracksTest extends TestSuite {
 
-  testSQL("0_01G_tpch9_irb")
-  testSQL("0_01G_tpch9_ncl")
-  testSQL("0_01G_tpch9_nmcl")
-  testSQL("0_01G_tpch9_nrl")
+  testSQL("0_01G_distinct_hyracks_ncl")
+  testSQL("0_01G_hyracks_irb")
+  testSQL("0_01G_hyracks_is")
+  testSQL("0_01G_hyracks_ncl")
+  testSQL("0_01G_hyracks_nmcl")
+  testSQL("0_01G_hyracks_nmpl")
+  testSQL("0_01G_hyracks_nrl")
+
 
 }
