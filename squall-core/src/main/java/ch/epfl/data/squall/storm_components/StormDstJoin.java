@@ -325,12 +325,6 @@ public class StormDstJoin extends StormBoltComponent {
 	return str;
     }
 
-    @Override
-    protected InterchangingComponent getInterComp() {
-	// should never be invoked
-	return null;
-    }
-
     // HELPER
 
     @Override

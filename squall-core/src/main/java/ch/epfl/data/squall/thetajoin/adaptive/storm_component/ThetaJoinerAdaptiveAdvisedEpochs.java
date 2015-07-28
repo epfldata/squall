@@ -54,7 +54,6 @@ import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storage.BitVector;
 import ch.epfl.data.squall.storage.TupleStorage;
 import ch.epfl.data.squall.storage.indexes.Index;
-import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormBoltComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
@@ -820,11 +819,6 @@ public class ThetaJoinerAdaptiveAdvisedEpochs extends StormBoltComponent {
 	final String str = "DestinationStorage " + getID() + " has ID: "
 		+ getID();
 	return str;
-    }
-
-    @Override
-    protected InterchangingComponent getInterComp() {
-	throw new RuntimeException("Hm, should not be here!");
     }
 
     @Override

@@ -37,7 +37,6 @@ import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storage.AggregationStorage;
-import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.types.Type;
@@ -221,12 +220,6 @@ public class EquiDepthHistogramComponent implements Component {
     public EquiDepthHistogramComponent setSecondPreAggStorage(
 	    AggregationStorage secondPreAggStorage) {
 	throw new RuntimeException("Should not be here!");
-    }
-
-    @Override
-    public Component setInterComp(InterchangingComponent inter) {
-	throw new RuntimeException(
-		"EquiJoin component does not support setInterComp");
     }
 
     @Override

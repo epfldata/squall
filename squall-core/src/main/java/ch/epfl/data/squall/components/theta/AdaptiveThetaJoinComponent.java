@@ -37,7 +37,6 @@ import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.AbstractJoinerComponent;
-import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
@@ -125,9 +124,6 @@ public class AdaptiveThetaJoinComponent extends AbstractJoinerComponent<Adaptive
 		_secondParent, allCompNames, _joinerParallelism,
 		hierarchyPosition, conf, builder, dim);
 
-	if (getInterComp() != null)
-          _reshuffler.set_interComp(getInterComp());
-
 	// Create the Join Bolt.
         ThetaJoinerAdaptiveAdvisedEpochs joiner = new ThetaJoinerAdaptiveAdvisedEpochs(_firstParent,
                                                                                        _secondParent, this, allCompNames, getJoinPredicate(),
@@ -147,12 +143,9 @@ public class AdaptiveThetaJoinComponent extends AbstractJoinerComponent<Adaptive
 	final ThetaJoinAdaptiveMapping dMap = new ThetaJoinAdaptiveMapping(
 		conf, -1);
 	final ArrayList<StormEmitter> emittersList = new ArrayList<StormEmitter>();
-	if (getInterComp() == null) {
-	    emittersList.add(_firstParent);
-	    if (_secondParent != null)
-		emittersList.add(_secondParent);
-	} else
-	    emittersList.add(getInterComp());
+        emittersList.add(_firstParent);
+        if (_secondParent != null)
+          emittersList.add(_secondParent);
 	for (final StormEmitter emitter : emittersList) {
 	    final String[] emitterIDs = emitter.getEmitterIDs();
 	    for (final String emitterID : emitterIDs)

@@ -251,12 +251,6 @@ public class StormOperator extends StormBoltComponent {
     }
 
     @Override
-    protected InterchangingComponent getInterComp() {
-	// should never be invoked
-	return null;
-    }
-
-    @Override
     public long getNumSentTuples() {
 	return _numSentTuples;
     }

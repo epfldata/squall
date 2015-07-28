@@ -28,7 +28,6 @@ import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.AbstractJoinerComponent;
 import ch.epfl.data.squall.predicates.Predicate;
-import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormBoltComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
@@ -89,11 +88,11 @@ public class ThetaJoinComponent extends AbstractJoinerComponent<ThetaJoinCompone
 	if (isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)) {
           joiner = new StormThetaJoinBDB(_firstParent, _secondParent, this,
                                          allCompNames, getJoinPredicate(), hierarchyPosition, builder,
-                                         killer, conf, getInterComp());
+                                         killer, conf);
 	} else {
           joiner = new StormThetaJoin(_firstParent, _secondParent, this,
                                       allCompNames, getJoinPredicate(), _isPartitioner,
-                                      hierarchyPosition, builder, killer, conf, getInterComp(),
+                                      hierarchyPosition, builder, killer, conf,
                                       _isContentSensitive, _contentSensitiveThetaJoinWrapper);
 	}
 	if (getSlidingWindow() > 0 || getTumblingWindow() > 0) {

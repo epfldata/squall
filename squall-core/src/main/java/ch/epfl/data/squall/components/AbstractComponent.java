@@ -31,7 +31,6 @@ import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.storm_components.StormEmitter;
-import ch.epfl.data.squall.storm_components.InterchangingComponent;
 
 public abstract class AbstractComponent<C extends Component> implements Component {
 
@@ -53,8 +52,6 @@ public abstract class AbstractComponent<C extends Component> implements Componen
     private StormEmitter _stormEmitter;
 
     private Component[] _parents;
-
-    private InterchangingComponent _interComp;
 
     public AbstractComponent(Component parent, String componentName) {
       _componentName = componentName;
@@ -240,17 +237,4 @@ public abstract class AbstractComponent<C extends Component> implements Componen
 	_fullHashList = fullHashList;
 	return getThis();
     }
-
-
-    @Override
-    public C setInterComp(InterchangingComponent inter) {
-	_interComp = inter;
-	return getThis();
-    }
-
-    public InterchangingComponent getInterComp() {
-	return _interComp;
-    }
-
-
 }

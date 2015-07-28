@@ -118,8 +118,6 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter,
     SimpleDateFormat format = new SimpleDateFormat(
 	    "EEE MMM d HH:mm:ss zzz yyyy");
 
-    private final InterchangingComponent _inter = null;
-
     private final StatisticsUtilities _statsUtils;
 
     public StormDstBDB(StormEmitter firstEmitter, StormEmitter secondEmitter,
@@ -573,11 +571,8 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter,
     public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
 	_collector = collector;
 	createStorage();
-	if (_inter == null)
-	    _numRemainingParents = MyUtilities.getNumParentTasks(tc,
-		    _firstEmitter, _secondEmitter);
-	else
-	    _numRemainingParents = MyUtilities.getNumParentTasks(tc, _inter);
+	_numRemainingParents = MyUtilities.getNumParentTasks(tc,
+                                                             _firstEmitter, _secondEmitter);
 
 	_thisTaskID = tc.getThisTaskId();
 	// TODO

@@ -223,8 +223,6 @@ public abstract class StormBoltComponent extends BaseRichBolt implements
 	return _ID;
     }
 
-    protected abstract InterchangingComponent getInterComp();
-
     @Override
     public String getName() {
 	return _ID;
@@ -254,12 +252,8 @@ public abstract class StormBoltComponent extends BaseRichBolt implements
     @Override
     public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
 	setCollector(collector);
-	if (getInterComp() == null)
-	    _numRemainingParents = MyUtilities.getNumParentTasks(tc,
+        _numRemainingParents = MyUtilities.getNumParentTasks(tc,
 		    Arrays.asList(_parentEmitters));
-	else
-	    _numRemainingParents = MyUtilities.getNumParentTasks(tc,
-		    getInterComp());
 
 	_thisTaskID = tc.getThisTaskId();
 

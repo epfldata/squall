@@ -24,7 +24,6 @@ import java.util.List;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.predicates.Predicate;
-import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.types.Type;
 
 public interface JoinerComponent extends Component {
@@ -46,7 +45,6 @@ public interface JoinerComponent extends Component {
     public JoinerComponent setContentSensitiveThetaJoinWrapper(Type wrapper);
     public JoinerComponent setFullHashList(List<String> fullHashList);
     public JoinerComponent setHashExpressions(List<ValueExpression> hashExpressions);
-    public JoinerComponent setInterComp(InterchangingComponent inter);
     public JoinerComponent setOutputPartKey(int... hashIndexes);
     public JoinerComponent setOutputPartKey(List<Integer> hashIndexes);
     public JoinerComponent setPrintOut(boolean printOut);

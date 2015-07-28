@@ -27,7 +27,6 @@ import org.apache.log4j.Logger;
 
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
-import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormDataSource;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
@@ -112,12 +111,6 @@ public class DataSourceComponent extends AbstractComponent<DataSourceComponent> 
     public DataSourceComponent setFullHashList(List<String> fullHashList) {
 	throw new RuntimeException(
 		"This method should not be invoked for DataSourceComponent!");
-    }
-
-    @Override
-    public DataSourceComponent setInterComp(InterchangingComponent inter) {
-	throw new RuntimeException(
-		"Datasource component does not support setInterComp");
     }
 
     @Override

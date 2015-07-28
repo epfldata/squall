@@ -44,7 +44,6 @@ import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.predicates.Predicate;
-import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
@@ -238,12 +237,6 @@ public class HDFSmaterializer implements Component {
 	    List<ValueExpression> hashExpressions) {
 	_hashExpressions = hashExpressions;
 	return this;
-    }
-
-    @Override
-    public Component setInterComp(InterchangingComponent inter) {
-	throw new RuntimeException(
-		"Operator component does not support setInterComp");
     }
 
     @Override

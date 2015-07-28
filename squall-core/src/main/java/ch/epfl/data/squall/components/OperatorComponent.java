@@ -27,7 +27,6 @@ import org.apache.log4j.Logger;
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.operators.Operator;
-import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormOperator;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
@@ -75,9 +74,4 @@ public class OperatorComponent extends AbstractComponent<OperatorComponent> {
                                           hierarchyPosition, builder, killer, conf));
     }
 
-    @Override
-    public OperatorComponent setInterComp(InterchangingComponent inter) {
-	throw new RuntimeException(
-		"Operator component does not support setInterComp");
-    }
 }

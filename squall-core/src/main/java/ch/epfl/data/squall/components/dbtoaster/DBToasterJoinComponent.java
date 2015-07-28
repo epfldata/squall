@@ -28,7 +28,6 @@ import ch.epfl.data.squall.components.JoinerComponent;
 import ch.epfl.data.squall.components.AbstractJoinerComponent;
 import ch.epfl.data.squall.operators.AggregateStream;
 import ch.epfl.data.squall.predicates.Predicate;
-import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.dbtoaster.StormDBToasterJoin;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
@@ -84,12 +83,6 @@ public class DBToasterJoinComponent extends AbstractJoinerComponent<DBToasterJoi
                                                _parentsWithAggregator,
                                                hierarchyPosition,
                                                builder, killer, conf));
-    }
-
-    @Override
-    public DBToasterJoinComponent setInterComp(InterchangingComponent inter) {
-        throw new RuntimeException(
-                "DBToasterJoin component does not support setInterComp");
     }
 
     @Override

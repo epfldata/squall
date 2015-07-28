@@ -251,12 +251,6 @@ public class StormSrcStorage extends StormBoltComponent {
 	return str;
     }
 
-    @Override
-    protected InterchangingComponent getInterComp() {
-	// should never be invoked
-	return null;
-    }
-
     // from StormEmitter interface
     @Override
     public String getName() {

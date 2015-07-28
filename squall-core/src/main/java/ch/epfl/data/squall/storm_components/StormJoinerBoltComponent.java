@@ -86,7 +86,6 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
     protected DateFormat _convDateFormat = new SimpleDateFormat(
 	    "EEE MMM d HH:mm:ss zzz yyyy");
     protected StatisticsUtilities _statsUtils;
-    protected InterchangingComponent _inter = null;
 
     public StormJoinerBoltComponent(StormEmitter firstEmitter,
 	    StormEmitter secondEmitter, ComponentProperties cp,
@@ -304,11 +303,6 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 	final String str = "DestinationStorage " + getID() + " has ID: "
 		+ getID();
 	return str;
-    }
-
-    @Override
-    protected InterchangingComponent getInterComp() {
-	return _inter;
     }
 
     @Override

@@ -30,7 +30,6 @@ import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storage.AggregationStorage;
 import ch.epfl.data.squall.storage.BasicStore;
 import ch.epfl.data.squall.storage.KeyValueStore;
-import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormDstJoin;
 import ch.epfl.data.squall.storm_components.StormDstTupleStorageBDB;
@@ -146,11 +145,5 @@ public class EquiJoinComponent extends AbstractJoinerComponent<EquiJoinComponent
 	    AggregationStorage secondPreAggStorage) {
 	_secondStorage = secondPreAggStorage;
 	return this;
-    }
-
-    @Override
-    public EquiJoinComponent setInterComp(InterchangingComponent inter) {
-	throw new RuntimeException(
-		"EquiJoin component does not support setInterComp");
     }
 }

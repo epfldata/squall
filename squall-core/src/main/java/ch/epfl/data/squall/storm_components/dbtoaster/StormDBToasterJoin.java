@@ -33,7 +33,6 @@ import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.AggregateStream;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
-import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormBoltComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
@@ -382,11 +381,6 @@ public class StormDBToasterJoin extends StormBoltComponent {
     @Override
     public ChainOperator getChainOperator() {
         return _operatorChain;
-    }
-
-    @Override
-    protected InterchangingComponent getInterComp() {
-        return null;
     }
 
     @Override
