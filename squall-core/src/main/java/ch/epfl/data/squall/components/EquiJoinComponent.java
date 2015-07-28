@@ -38,7 +38,7 @@ import ch.epfl.data.squall.storm_components.StormDstTupleStorageJoin;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.utilities.MyUtilities;
 
-public class EquiJoinComponent extends RichJoinerComponent<EquiJoinComponent> {
+public class EquiJoinComponent extends AbstractJoinerComponent<EquiJoinComponent> {
     protected EquiJoinComponent getThis() {
       return this;
     }

@@ -25,7 +25,7 @@ import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.JoinerComponent;
-import ch.epfl.data.squall.components.RichJoinerComponent;
+import ch.epfl.data.squall.components.AbstractJoinerComponent;
 import ch.epfl.data.squall.operators.AggregateStream;
 import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class DBToasterJoinComponent extends RichJoinerComponent<DBToasterJoinComponent> {
+public class DBToasterJoinComponent extends AbstractJoinerComponent<DBToasterJoinComponent> {
     protected DBToasterJoinComponent getThis() {
       return this;
     }

@@ -38,7 +38,7 @@ import ch.epfl.data.squall.utilities.MyUtilities;
  * and open the template in the editor.
  */
 
-public class OperatorComponent extends RichComponent<OperatorComponent> {
+public class OperatorComponent extends AbstractComponent<OperatorComponent> {
     protected OperatorComponent getThis() {
       return this;
     }

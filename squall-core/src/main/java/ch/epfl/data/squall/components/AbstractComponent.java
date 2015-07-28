@@ -33,7 +33,7 @@ import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
 
-public abstract class RichComponent<C extends Component> implements Component {
+public abstract class AbstractComponent<C extends Component> implements Component {
 
     protected abstract C getThis();
 
@@ -56,13 +56,13 @@ public abstract class RichComponent<C extends Component> implements Component {
 
     private InterchangingComponent _interComp;
 
-    public RichComponent(Component parent, String componentName) {
+    public AbstractComponent(Component parent, String componentName) {
       _componentName = componentName;
       _parents = new Component[]{parent};
       parent.setChild(this);
     }
 
-    public RichComponent(Component[] parents, String componentName) {
+    public AbstractComponent(Component[] parents, String componentName) {
       _componentName = componentName;
       _parents = null;
       if (parents != null) {
@@ -73,15 +73,15 @@ public abstract class RichComponent<C extends Component> implements Component {
       }
     }
 
-    public RichComponent(List<Component> parents, String componentName) {
+    public AbstractComponent(List<Component> parents, String componentName) {
       this((Component[])parents.toArray(new Component[parents.size()]), componentName);
     }
 
-    public RichComponent(Component[] parents) {
+    public AbstractComponent(Component[] parents) {
       this(parents, makeName(parents));
     }
 
-    public RichComponent(List<Component> parents) {
+    public AbstractComponent(List<Component> parents) {
       this((Component[])parents.toArray());
     }
 

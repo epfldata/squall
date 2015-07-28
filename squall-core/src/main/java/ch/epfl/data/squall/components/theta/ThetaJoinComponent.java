@@ -26,7 +26,7 @@ import org.apache.log4j.Logger;
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.components.Component;
-import ch.epfl.data.squall.components.RichJoinerComponent;
+import ch.epfl.data.squall.components.AbstractJoinerComponent;
 import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormBoltComponent;
@@ -37,7 +37,7 @@ import ch.epfl.data.squall.storm_components.theta.StormThetaJoinBDB;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 
-public class ThetaJoinComponent extends RichJoinerComponent<ThetaJoinComponent> {
+public class ThetaJoinComponent extends AbstractJoinerComponent<ThetaJoinComponent> {
     protected ThetaJoinComponent getThis() {
       return this;
     }

@@ -24,7 +24,7 @@ import java.util.List;
 import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
-public abstract class RichJoinerComponent<C extends JoinerComponent> extends RichComponent<C> implements JoinerComponent {
+public abstract class AbstractJoinerComponent<C extends JoinerComponent> extends AbstractComponent<C> implements JoinerComponent {
 
     private long _windowSize = -1; // Width in terms of millis, Default is -1
 				  // which is full history
@@ -34,23 +34,23 @@ public abstract class RichJoinerComponent<C extends JoinerComponent> extends Ric
 
     private Predicate _joinPredicate;
 
-    public RichJoinerComponent(Component parent, String componentName) {
+    public AbstractJoinerComponent(Component parent, String componentName) {
       super(parent,  componentName);
     }
 
-    public RichJoinerComponent(Component[] parents, String componentName) {
+    public AbstractJoinerComponent(Component[] parents, String componentName) {
       super(parents, componentName);
     }
 
-    public RichJoinerComponent(List<Component> parents, String componentName) {
+    public AbstractJoinerComponent(List<Component> parents, String componentName) {
       super(parents, componentName);
     }
 
-    public RichJoinerComponent(Component[] parents) {
+    public AbstractJoinerComponent(Component[] parents) {
       super(parents);
     }
 
-    public RichJoinerComponent(List<Component> parents) {
+    public AbstractJoinerComponent(List<Component> parents) {
       super(parents);
     }
 

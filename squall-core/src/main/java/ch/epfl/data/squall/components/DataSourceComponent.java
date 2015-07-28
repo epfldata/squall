@@ -36,7 +36,7 @@ import ch.epfl.data.squall.utilities.ReaderProvider;
 import ch.epfl.data.squall.utilities.FileReaderProvider;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
-public class DataSourceComponent extends RichComponent<DataSourceComponent> {
+public class DataSourceComponent extends AbstractComponent<DataSourceComponent> {
     protected DataSourceComponent getThis() {
       return this;
     }
