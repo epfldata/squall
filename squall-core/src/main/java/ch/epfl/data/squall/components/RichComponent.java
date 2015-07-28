@@ -74,7 +74,7 @@ public abstract class RichComponent<C extends Component> implements Component {
     }
 
     public RichComponent(List<Component> parents, String componentName) {
-      this((Component[])parents.toArray(), componentName);
+      this((Component[])parents.toArray(new Component[parents.size()]), componentName);
     }
 
     public RichComponent(Component[] parents) {
