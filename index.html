@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Squall : A streaming / online query processing / analytics engine based on Apache Storm">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Squall</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/epfldata/squall">View on GitHub</a>
+
+          <h1 id="project_title">Squall</h1>
+          <h2 id="project_tagline">A streaming / online query processing / analytics engine based on Apache Storm</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/epfldata/squall/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/epfldata/squall/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        
+
+<h1>
+<a id="squall-" class="anchor" href="#squall-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Squall <a href="https://travis-ci.org/epfldata/squall"><img src="https://travis-ci.org/epfldata/squall.svg?branch=master" alt="Build Status"></a>
+</h1>
+
+<p>Squall is an online query processing engine built on top of <a href="https://storm.apache.org/">Storm</a>. Similar to how Hive provides SQL syntax on top of Hadoop for doing batch processing, Squall executes SQL queries on top of Storm for doing online processing. Squall supports a wide class of SQL analytics ranging from simple aggregations to more advanced UDF join predicates and adaptive rebalancing of load. It is being actively developed by several contributors from the <a href="http://data.epfl.ch/">EPFL DATA</a> lab. Squall is undergoing a continuous process of development, currently it supports the following:</p>
+
+<ul>
+<li>[x] SQL (Select-Project-Join) query processing over continuous streams of data.</li>
+<li>[x] Full fledged &amp; full-history stateful computation essential for approximate query processing, e.g. <a href="http://en.wikipedia.org/wiki/Online_aggregation">Online Aggregation</a>.</li>
+<li>[x] Time based Window Semantics for infinite data streams, e.g., sliding window, tumbling window, and landmark window semantics.</li>
+<li>[x] Theta Joins: arbitrary complex join predicates, including inequality, band, and arbitrary UDF join predicates. This gives a more comprehensive support and flexibility to data analytics. For example, <a href="https://cwiki.apache.org/confluence/display/Hive/Theta+Join">Hive plans</a> to support theta joins in response to user requests.</li>
+<li>[x] Usability: Squall exposes three interfaces for programming. A <strong>SQL</strong> interface that directly translates a sql query to a running topology, a <strong>functional</strong> interface that leverages the syntactic sugar of Scala, and an <strong>imperative</strong> interface that exposes additional control on toplogy design.</li>
+<li>[x] Out-of-Core Processing: Can operate efficiently under limited memory resources through efficient disk based datastructures and indexes.</li>
+<li>[x] Throughput rates of upto Millions of tuples/second and latencies of milliseconds measured on a 16 machine cluster. Scalable to large cluster settings.</li>
+<li>[x] Guarantees: At least-once or at most-once semantics. No support for exactly-once semantics yet, however it is planned for.</li>
+<li>[ ] Elasticity: Scaling out according to the load.</li>
+<li>[ ] DashBoard: Integrating support for real time visualizations.</li>
+<li>[ ] Continuous load balance and adaptation to data skew.</li>
+</ul>
+
+<h3>
+<a id="example" class="anchor" href="#example" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example:</h3>
+
+<p>Consider the following SQL query:</p>
+
+<div class="highlight highlight-sql"><pre><span class="pl-k">SELECT</span> C_MKTSEGMENT, <span class="pl-c1">COUNT</span>(O_ORDERKEY)
+<span class="pl-k">FROM</span> CUSTOMER <span class="pl-k">join</span> ORDERS <span class="pl-k">on</span> C_CUSTKEY <span class="pl-k">=</span> O_CUSTKEY
+<span class="pl-k">GROUP BY</span> C_MKTSEGMENT</pre></div>
+
+<p>We provide several interfaces for running this query:</p>
+
+<h4>
+<a id="declarative" class="anchor" href="#declarative" aria-hidden="true"><span class="octicon octicon-link"></span></a>Declarative</h4>
+
+<p>A Declarative interface that directly parses this SQL query and creates an efficient storm Topology. This module is implicitly equipped with a cost-based optimizer.</p>
+
+<h4>
+<a id="functional" class="anchor" href="#functional" aria-hidden="true"><span class="octicon octicon-link"></span></a>Functional</h4>
+
+<p>A Functional Scala-interface that leverages the brevity, productivity, convenience, and syntactic sugar of functional programming. For example the previous query is represented (<a href="https://github.com/epfldata/squall/blob/master/frontend/src/main/scala/frontend/functional/scala/queries/ScalaHyracksPlan.scala">full code</a>) as follows: </p>
+
+<div class="highlight highlight-scala"><pre>    <span class="pl-k">val</span> <span class="pl-en">customers</span> <span class="pl-k">=</span> <span class="pl-en">Source</span>[customer](<span class="pl-s"><span class="pl-pds">"</span>customer<span class="pl-pds">"</span></span>).map { t <span class="pl-k">=&gt;</span> <span class="pl-en">Tuple2</span>(t._1, t._7) }
+    <span class="pl-k">val</span> <span class="pl-en">orders</span> <span class="pl-k">=</span> <span class="pl-en">Source</span>[orders](<span class="pl-s"><span class="pl-pds">"</span>orders<span class="pl-pds">"</span></span>).map { t <span class="pl-k">=&gt;</span> t._2 }
+    <span class="pl-k">val</span> <span class="pl-en">join</span> <span class="pl-k">=</span> customers.join(orders)(k1<span class="pl-k">=&gt;</span> k1._1)(k2 <span class="pl-k">=&gt;</span> k2) <span class="pl-c">//key1=key2</span>
+    <span class="pl-k">val</span> <span class="pl-en">agg</span> <span class="pl-k">=</span> join.groupByKey(x <span class="pl-k">=&gt;</span> <span class="pl-c1">1</span>, k <span class="pl-k">=&gt;</span> k._1._2) <span class="pl-c">//count and groupby</span>
+    agg.execute(conf)</pre></div>
+
+<h4>
+<a id="imperative" class="anchor" href="#imperative" aria-hidden="true"><span class="octicon octicon-link"></span></a>Imperative</h4>
+
+<p>An Imperative Java-interface that facilitates design and construction of online distributed query plans. For example the previous query is represented (<a href="https://github.com/epfldata/squall/blob/master/core/src/main/java/ch/epfl/data/plan_runner/query_plans/HyracksPlan.java">full code</a>) as follows:</p>
+
+<div class="highlight highlight-java"><pre><span class="pl-smi">Component</span> customer <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">DataSourceComponent</span>(<span class="pl-s"><span class="pl-pds">"</span>customer<span class="pl-pds">"</span></span>, conf)
+                            .add(<span class="pl-k">new</span> <span class="pl-smi">ProjectOperator</span>(<span class="pl-c1">0</span>, <span class="pl-c1">6</span>));
+<span class="pl-smi">Component</span> orders <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">DataSourceComponent</span>(<span class="pl-s"><span class="pl-pds">"</span>orders<span class="pl-pds">"</span></span>, conf)
+                            .add(<span class="pl-k">new</span> <span class="pl-smi">ProjectOperator</span>(<span class="pl-c1">1</span>));
+<span class="pl-smi">Component</span> custOrders <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">EquiJoinComponent</span>(customer, <span class="pl-c1">0</span>, orders, <span class="pl-c1">0</span>) <span class="pl-c">//key1 (index 0) =key2 (index 0)</span>
+                            .add(<span class="pl-k">new</span> <span class="pl-smi">AggregateCountOperator</span>(conf)<span class="pl-k">.</span>setGroupByColumns(<span class="pl-c1">1</span>));</pre></div>
+
+<p>Queries are mapped to operator trees in the spirit of the query plans
+of relational database systems.
+These are are in turn mapped to Storm workers. (There is a parallel
+implementation of each operator, so in general an operator is processed
+by multiple workers).
+Some operations of relational algebra, such as selections and projections,
+are quite simple, and assigning them to separate workers is inefficient.
+Rather than requiring the predecessor operator to send its output over the
+network to the workers implementing these simple operations,
+the simple operations can be integrated into the predecessor operators
+and postprocess the output there. This is typically also done in
+classical relational database systems, but in a distributed environment,
+the benefits are even greater.
+In the Squall API, query plans are built bottom-up from 
+operators (called components or super-operators)
+such as data source scans and joins; 
+these components can then be extended by postprocessing operators such as
+projections.</p>
+
+<h4>
+<a id="window-semantics-example" class="anchor" href="#window-semantics-example" aria-hidden="true"><span class="octicon octicon-link"></span></a>Window Semantics Example</h4>
+
+<p>Squall also provides out-of-the-box functionality for window semantics. That is the user does not have to be concerned with internal details of assignining timestamps, data distribution and state maintenance and finally result consistency and correctness. Final results and aggregations are stored in key-value stores that expose window-identifiers and the corresponding timestamp ranges. The interface exposes the following semantics:</p>
+
+<ul>
+<li>Sliding Window Semantics:</li>
+</ul>
+
+<div class="highlight highlight-scala"><pre>    <span class="pl-c">//Examples</span>
+    <span class="pl-en">Agg</span>.onWindow(<span class="pl-c1">20</span>, <span class="pl-c1">5</span>) <span class="pl-c">//Range 20 secs and slide every 5 seconds</span>
+    <span class="pl-en">Join</span>.onSlidingWindow(<span class="pl-c1">10</span>) <span class="pl-c">// Range 10 seconds and slide every 1 second</span></pre></div>
+
+<ul>
+<li>Tumbling Window Semantics:</li>
+</ul>
+
+<div class="highlight highlight-scala"><pre>    <span class="pl-c">//Examples</span>
+    <span class="pl-en">Agg</span>.onTumblingWindow(<span class="pl-c1">20</span>) <span class="pl-c">// Tumble aggregations every 20 seconds</span></pre></div>
+
+<ul>
+<li>Landmark Window Semantics.</li>
+</ul>
+
+<p><a href="https://github.com/epfldata/squall/blob/master/frontend/src/main/scala/frontend/functional/scala/queries/ScalaTPCH7Plan.scalaz">Here</a> is an example of a fully running query with window semantics.</p>
+
+<h3>
+<a id="documentation" class="anchor" href="#documentation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Documentation</h3>
+
+<p>Detailed documentation can be found on the <a href="http://github.com/epfldata/squall/wiki">Squall wiki</a>.</p>
+
+<h3>
+<a id="contributing-to-squall" class="anchor" href="#contributing-to-squall" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contributing to Squall</h3>
+
+<p>We'd love to have your help in making Squall better. If you're interested, please communicate with us your suggestions and get your name to the <a href="https://github.com/epfldata/squall/wiki/Contributors">Contributors</a> list.</p>
+
+<h3>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h3>
+
+<p>Squall is licensed under <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache License v2.0</a>.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Squall maintained by <a href="https://github.com/epfldata">epfldata</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
