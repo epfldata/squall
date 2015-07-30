@@ -19,6 +19,8 @@
 
 scalaVersion := "2.11.6"
 
+lazy val tempInstallDbtoaster = taskKey[String]("Installs DBToaster in a temporal directory if necessary and returns the DBToaster home")
+
 lazy val commonSettings = Seq(
   name := "squall",
   organization := "ch.epfl.data",
@@ -108,8 +110,50 @@ lazy val squall = (project in file("squall-core")).
     libraryDependencies +=  "org.scalatest" % "scalatest_2.11" % "2.2.4" % Test,
     testOptions in Test := Seq(Tests.Filter(planFilter)),
     testOptions in SqlTest := Seq(Tests.Filter(sqlFilter)),
-    testOptions in DbtoasterTest := Seq(Tests.Filter(dbtoasterFilter))
+    testOptions in DbtoasterTest := Seq(Tests.Filter(dbtoasterFilter)),
+
+    tempInstallDbtoaster := {
+      if (System.getenv("DBTOASTER_HOME") != null && System.getenv("DBTOASTER_HOME") != "") {
+        println("Using DBToaster at " + System.getenv("DBTOASTER_HOME"))
+        System.getenv("DBTOASTER_HOME")
+      } else {
+        // Adapted from Khue bash script
+        import scala.sys.process._
+
+        val installDir = (target / "dbtoaster").value
+        val packagePath = (unmanagedBase / "dbtoaster/dbtoaster-alpha5-release.tar.gz").value
+
+        val OS = System.getProperty("os.name", "generic").toLowerCase();
+        val frontendPath = if ((OS.indexOf("mac") >= 0) || (OS.indexOf("darwin") >= 0)) {
+          (unmanagedBase / "dbtoaster/front_ends/dbtoaster_frontend_macosx").value
+        } else if (OS.indexOf("nux") >= 0) {
+          if (System.getProperty("sun.arch.data.model") == 64) {
+            (unmanagedBase / "dbtoaster/front_ends/dbtoaster_frontend_linux_x86-64").value
+          } else {
+            (unmanagedBase / "dbtoaster/front_ends/dbtoaster_frontend_linux_x86-32").value
+          }
+        } else {
+          throw new Exception("This platform is not supported for DBToaster")
+        }
+
+        println("Installing DBToaster to " + installDir)
+        s"mkdir -p $installDir".!
+        println(s"Extracting $packagePath to $installDir")
+        s"tar -xzf $packagePath -C $installDir --strip-components=1".!
+        s"chmod +x ${installDir}/bin/dbtoaster".!
+        println(s"Select frontend binary $frontendPath")
+        println(s"copy $frontendPath to $installDir/bin/dbtoaster_frontend")
+        s"cp $frontendPath $installDir/bin/dbtoaster_frontend".!
+
+        installDir.getAbsolutePath()
+      }
+    },
+
+
+    envVars in DbtoasterTest := Map("DBTOASTER_HOME" -> tempInstallDbtoaster.value),
+    cleanFiles <+= target / "dbtoaster"
   )
+
 
 // For the macros
 lazy val functional_macros = (project in file("squall-functional")).
