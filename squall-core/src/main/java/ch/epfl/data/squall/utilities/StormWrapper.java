@@ -169,17 +169,32 @@ public class StormWrapper {
                                                            "DIP_TOPOLOGY_NAME");
 
     LocalMergeResults.reset();
+    if (localCluster != null && localCluster.getClusterInfo().get_topologies_size() > 0) {
+      LOG.error("There are already running topologies, localSubmitAndWait should only be called for an empty local cluster.");
+      throw new RuntimeException();
+    }
 
     _waiting = true;
     submitTopology(conf, plan.createTopology(conf).createTopology());
     _semWait.acquire();
 
+    LOG.info("Waiting for results from topology '" + topologyName +"'");
+    LocalMergeResults.waitForResults(plan.getNumberFinalTasks(conf));
+
+    LOG.info("Killing topology '" + topologyName +"'");
     KillOptions options = new KillOptions();
     options.set_wait_secs(0);
     localCluster.killTopologyWithOpts(topologyName, options);
+    if (localCluster.getClusterInfo().get_topologies_size() > 0) {
+      LOG.info("Blocking until '" + topologyName +"' is killed");
+      while (localCluster.getClusterInfo().get_topologies_size() > 0) {
+        Thread.sleep(500);
+      }
+    }
+    LOG.info("'" + topologyName +"' was succesfully killed");
+
     _waiting = false;
 
-    LocalMergeResults.waitForResults(plan.getNumberFinalTasks(conf));
     return LocalMergeResults.getResults();
   }
 
