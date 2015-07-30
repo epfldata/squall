@@ -70,9 +70,6 @@ lazy val squall = (project in file("squall-core")).
   settings(inConfig(SqlTest)(Defaults.testTasks): _*).
   settings(inConfig(DbtoasterTest)(Defaults.testTasks): _*).
   settings(
-    javacOptions ++= Seq(
-      "-target", "1.7",
-      "-source", "1.7"),
     mainClass := Some("ch.epfl.data.squall.main.Main"),
     unmanagedSourceDirectories in Compile += baseDirectory.value / "../squall-examples/squall-java-examples/src/",
     // Don't use scala as a dependency
