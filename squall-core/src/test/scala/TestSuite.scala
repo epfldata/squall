@@ -19,28 +19,17 @@
 
 package ch.epfl.data.squall.test
 
-import org.scalatest._
-import scala.sys.process._
-import java.io._
-
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
-import ch.qos.logback.core.FileAppender;
-import ch.qos.logback.core.util.StatusPrinter;
-import org.slf4j.LoggerFactory;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-
-import ch.epfl.data.squall.utilities.StormWrapper
-import ch.epfl.data.squall.utilities.SystemParameters
-import ch.epfl.data.squall.storage.BasicStore
-import ch.epfl.data.squall.storage.KeyValueStore
-import ch.epfl.data.squall.storage.ValueStore
 import ch.epfl.data.squall.main.Main
 import ch.epfl.data.squall.query_plans.QueryBuilder
-
-// TODO: not usign LocalMergeResults
-import ch.epfl.data.squall.utilities.LocalMergeResults
+import ch.epfl.data.squall.storage.{BasicStore, KeyValueStore}
+import ch.epfl.data.squall.utilities.{LocalMergeResults, StormWrapper, SystemParameters}
+import ch.qos.logback.classic.{Logger, LoggerContext}
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.FileAppender
+import java.io._
+import org.scalatest._
+import org.slf4j.LoggerFactory
 
 class TestSuite extends FunSuite with BeforeAndAfterAll {
 
@@ -79,6 +68,17 @@ class TestSuite extends FunSuite with BeforeAndAfterAll {
     def beginLog(confName: String) = {
       // http://stackoverflow.com/questions/7824620/logback-set-log-file-name-programatically
       val loggerContext: LoggerContext = LoggerFactory.getILoggerFactory().asInstanceOf[LoggerContext]
+      logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)
+
+      val encoder: PatternLayoutEncoder = new PatternLayoutEncoder()
+      encoder.setContext(loggerContext)
+      encoder.setPattern("%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n")
+      encoder.start()
+
+      val verbosity = System.getenv("SQUALL_LOG_VERBOSE")
+      if (verbosity != "TRUE") {
+        logbackLogger.detachAppender("STDOUT")
+      }
 
       fileAppender = new FileAppender()
       fileAppender.setContext(loggerContext)
@@ -87,21 +87,13 @@ class TestSuite extends FunSuite with BeforeAndAfterAll {
       val tempFile = File.createTempFile(confName, ".log")
       println("\tWriting test output to " + tempFile.getAbsolutePath())
       fileAppender.setFile(tempFile.getAbsolutePath())
+      fileAppender.setEncoder(encoder)
+      fileAppender.start()
 
-      val encoder: PatternLayoutEncoder = new PatternLayoutEncoder()
-      encoder.setContext(loggerContext);
-      encoder.setPattern("%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n");
-      encoder.start();
-
-      fileAppender.setEncoder(encoder);
-      fileAppender.start();
-
-      // attach the rolling file appender to the logger of your choice
-      logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)
       logbackLogger.addAppender(fileAppender)
 
       // OPTIONAL: print logback internal status messages
-      //StatusPrinter.print(loggerContext)
+      //  StatusPrinter.print(loggerContext)
     }
 
     def endLog() = {
