@@ -57,6 +57,9 @@ public class SquallContext {
 
   public SquallContext() {
     this(new Config());
+    Map stormConf = backtype.storm.utils.Utils.readStormConfig();
+    conf.putAll(stormConf);
+
     // Load default values
     SystemParameters.putInMap(conf, "DIP_EXTENSION", ".tbl");
     SystemParameters.putInMap(conf, "DIP_READ_SPLIT_DELIMITER", "\\|");
@@ -145,6 +148,8 @@ public class SquallContext {
 
     SystemParameters.putInMap(conf, "DIP_QUERY_NAME", name);
     SystemParameters.putInMap(conf, "DIP_TOPOLOGY_NAME", name);
+
+    SystemParameters.putInMap(conf, "DIP_KILL_AT_THE_END", "true");
 
     // TODO: use parallelisms that were already set
     // TODO: take the parallelism from the component
