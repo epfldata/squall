@@ -57,6 +57,7 @@ public class SquallContext {
 
   public SquallContext() {
     this(new Config());
+
     Map stormConf = backtype.storm.utils.Utils.readStormConfig();
     conf.putAll(stormConf);
 
@@ -282,8 +283,8 @@ public class SquallContext {
     }
   }
 
-  public void setClassDir(String classdir) {
-    SystemParameters.putInMap(conf, "squall.classdir", classdir);
+  public void setDbtoasterClassDir(String classdir) {
+    SystemParameters.putInMap(conf, "squall.dbtoaster.classdir", classdir);
   }
 
 

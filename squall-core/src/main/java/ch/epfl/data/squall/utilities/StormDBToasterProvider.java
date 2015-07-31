@@ -65,8 +65,8 @@ public class StormDBToasterProvider {
     }
 
     private static void updateLocalClassPath(SquallContext context, Path extractedDirPath) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, MalformedURLException {
-        LOG.info("Saved extracted location: " + extractedDirPath.toUri() + " to squall.classdir");
-        context.setClassDir(extractedDirPath.toUri().toString());
+        LOG.info("Saved extracted location: " + extractedDirPath.toUri() + " to squall.dbtoaster.classdir");
+        context.setDbtoasterClassDir(extractedDirPath.toUri().toString());
     }
 
     private static void updateSquallJar(String extractedDir) throws IOException {

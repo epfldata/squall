@@ -204,7 +204,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
         ClassLoader cl;
         try {
-          String classdir = SystemParameters.getString(map, "squall.classdir");
+          String classdir = SystemParameters.getString(map, "squall.dbtoaster.classdir");
           URL classdirURL = new URL(classdir);
           cl = new URLClassLoader(new URL[]{classdirURL});
           LOG.info("Loading DBToaster classes from " + classdir);
