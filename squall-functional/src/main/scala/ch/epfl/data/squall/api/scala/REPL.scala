@@ -38,7 +38,9 @@ import scala.collection.JavaConversions._
   *
   */
 class REPL(val outdir: String) {
-  val context = new SquallContext
+  System.setProperty("storm.options", "storm.meta.serialization.delegate=ch.epfl.data.squall.utilities.SquallSerializationDelegate," + s"squall.classdir=${outdir}/classes/")
+
+  val context = new SquallContext()
 
   def start() = {
     print("""
@@ -51,9 +53,6 @@ class REPL(val outdir: String) {
 Type "help" for Squall related help
 
 """)
-    System.setProperty( "storm.options",
-      "storm.meta.serialization.delegate=ch.epfl.data.squall.api.scala.ReplSerializationDelegate," +
-        s"repl.outdir=${outdir}/classes/" )
     context.setLocal
     stopLogging()
   }

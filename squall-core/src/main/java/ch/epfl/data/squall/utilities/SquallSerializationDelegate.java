@@ -39,8 +39,8 @@ import org.apache.log4j.Logger;
 /*
  * Used in local mode to deserialize for the REPL and DBToaster
  */
-class ReplSerializationDelegate extends DefaultSerializationDelegate {
-  private static Logger LOG = Logger.getLogger(ReplSerializationDelegate.class);
+public class SquallSerializationDelegate extends DefaultSerializationDelegate {
+  private static Logger LOG = Logger.getLogger(SquallSerializationDelegate.class);
 
   private URL classdir;
 
@@ -48,14 +48,18 @@ class ReplSerializationDelegate extends DefaultSerializationDelegate {
   public void prepare(Map stormConf) {
     super.prepare(stormConf);
 
+    LOG.info("Setting up SquallSerializationDelegate");
+    LOG.info(stormConf.toString());
     try {
-      classdir = new File((String)stormConf.get("squall.classdir")).toURL();
-      LOG.info("Adding '" + classdir + "' as search path for deserializing");
+      String classdirPath = (String)stormConf.get("squall.classdir");
+      if (classdirPath != null) {
+        classdir = new File(classdirPath).toURL();
+        LOG.info("Adding '" + classdir + "' as search path for deserializing");
+      } else {
+        throw new RuntimeException("Squall Serialization delegate was set, but option squall.classdir is empty");
+      }
     } catch (MalformedURLException e) {
       throw new RuntimeException(e);
-    }
-    if (classdir == null) {
-      throw new RuntimeException("Squall Serialization delegate was set, but option squall.classdir is empty");
     }
   }
 
