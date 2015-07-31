@@ -54,6 +54,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
+import java.net.URL;
+import java.io.File;
+import java.net.URLClassLoader;
+import java.net.MalformedURLException;
 
 public class StormDBToasterJoin extends StormBoltComponent {
 
@@ -198,7 +202,17 @@ public class StormDBToasterJoin extends StormBoltComponent {
     public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
         super.prepare(map, tc, collector);
 
-        dbtoasterEngine = new DBToasterEngine(DBT_GEN_PKG + _dbToasterQueryName);
+        ClassLoader cl;
+        try {
+          String classdir = SystemParameters.getString(map, "squall.classdir");
+          URL classdirURL = new URL(classdir);
+          cl = new URLClassLoader(new URL[]{classdirURL});
+          LOG.info("Loading DBToaster classes from " + classdir);
+        } catch (MalformedURLException e) {
+          cl = this.getClass().getClassLoader();
+          if (cl == null) cl = ClassLoader.getSystemClassLoader();
+        }
+        dbtoasterEngine = new DBToasterEngine(DBT_GEN_PKG + _dbToasterQueryName, cl);
     }
 
     @Override

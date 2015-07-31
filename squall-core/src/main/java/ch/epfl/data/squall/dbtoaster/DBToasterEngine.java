@@ -52,11 +52,9 @@ public class DBToasterEngine implements Serializable {
 
     private IQuery _query; // DBToaster Query class
 
-    public DBToasterEngine(String queryClass) {
+    public DBToasterEngine(String queryClass, ClassLoader cl) {
         try {
             LOG.info("Loading Query class: " + queryClass);
-            ClassLoader cl = this.getClass().getClassLoader();
-            if (cl == null) cl = ClassLoader.getSystemClassLoader();
             _query = (IQuery) cl.loadClass(queryClass).newInstance();
             _query.handleEvent(new StreamInit(0)); // invoke initialization event
         } catch (Exception e) {

@@ -282,4 +282,9 @@ public class SquallContext {
     }
   }
 
+  public void setClassDir(String classdir) {
+    SystemParameters.putInMap(conf, "squall.classdir", classdir);
+  }
+
+
 }

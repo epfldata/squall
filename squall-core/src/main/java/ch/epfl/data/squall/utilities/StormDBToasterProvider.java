@@ -40,7 +40,7 @@ public class StormDBToasterProvider {
     private static Logger LOG = Logger.getLogger(StormDBToasterProvider.class);
 
 
-    public static void prepare(List<DBToasterJoinComponent> dbToasterComponents, boolean distributed) {
+    public static void prepare(SquallContext context, List<DBToasterJoinComponent> dbToasterComponents, boolean distributed) {
         LOG.info("There are " + dbToasterComponents.size() + " DBToaster component in query plan");
         try {
             // create tmp directory to contain generated files as well as extracted files from squall jar
@@ -56,7 +56,7 @@ public class StormDBToasterProvider {
             if (distributed) {
                 updateSquallJar(extractedDir);
             } else {
-                updateLocalClassPath(extractedDirPath);
+              updateLocalClassPath(context, extractedDirPath);
 
             }
         } catch (Exception e) {
@@ -64,14 +64,9 @@ public class StormDBToasterProvider {
         }
     }
 
-    private static void updateLocalClassPath(Path extractedDirPath) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, MalformedURLException {
-        // if in local mode, add the generated classes to classpath
-        URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-        Class<URLClassLoader> urlClass = URLClassLoader.class;
-        Method method = urlClass.getDeclaredMethod("addURL", new Class[]{URL.class});
-        method.setAccessible(true);
-        LOG.info("Add extracted location: " + extractedDirPath.toUri() + " to Classpath");
-        method.invoke(urlClassLoader, new Object[]{extractedDirPath.toUri().toURL()});
+    private static void updateLocalClassPath(SquallContext context, Path extractedDirPath) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, MalformedURLException {
+        LOG.info("Saved extracted location: " + extractedDirPath.toUri() + " to squall.classdir");
+        context.setClassDir(extractedDirPath.toUri().toString());
     }
 
     private static void updateSquallJar(String extractedDir) throws IOException {

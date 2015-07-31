@@ -136,7 +136,7 @@ public class QueryBuilder implements Serializable {
 			StormComponent.INTERMEDIATE);
 	    }
 	}
-    if (dbtComponents.size() > 0) StormDBToasterProvider.prepare(dbtComponents,
+        if (dbtComponents.size() > 0) StormDBToasterProvider.prepare(context, dbtComponents,
             SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED"));
 	// printing infoID information and returning the result
 	// printInfoID(killer, queryPlan); commented out because IDs are now
