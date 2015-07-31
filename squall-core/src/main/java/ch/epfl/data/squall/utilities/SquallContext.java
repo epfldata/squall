@@ -110,6 +110,8 @@ public class SquallContext {
     SystemParameters.putInMap(conf, "DIP_QUERY_NAME", name);
     SystemParameters.putInMap(conf, "DIP_TOPOLOGY_NAME", name);
 
+    SystemParameters.putInMap(conf, "DIP_KILL_AT_THE_END", "true");
+
     // TODO: use parallelisms that were already set
     // TODO: take the parallelism from the component
     setAllParallelisms(plan);
@@ -165,6 +167,7 @@ public class SquallContext {
   }
 
   public void setLocal() {
+    SystemParameters.putInMap(conf, "storm.cluster.mode", "local");
     SystemParameters.putInMap(conf, "DIP_DISTRIBUTED", "false");
     SystemParameters.putInMap(conf, "DIP_DATA_PATH", "../test/data/tpch/0.01G/");
 
@@ -172,6 +175,7 @@ public class SquallContext {
   }
 
   public void setDistributed() {
+    SystemParameters.putInMap(conf, "storm.cluster.mode", "distributed");
     SystemParameters.putInMap(conf, "DIP_DISTRIBUTED", "true");
     SystemParameters.putInMap(conf, "DIP_DATA_PATH", "/data/tpch/0.01G/");
 
@@ -262,7 +266,6 @@ public class SquallContext {
 
     return id;
   }
-
 
   public String getQueryStatus(String name) {
     try {
