@@ -37,6 +37,7 @@ import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.Config;
 
 import ch.epfl.data.squall.utilities.SystemParameters;
+import ch.epfl.data.squall.utilities.SquallContext;
 
 import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
 import ch.epfl.data.squall.utilities.StormDBToasterProvider;
@@ -101,7 +102,8 @@ public class QueryBuilder implements Serializable {
 	return _plan;
     }
 
-    public TopologyBuilder createTopology(Config conf) {
+    public TopologyBuilder createTopology(SquallContext context) {
+        Config conf = context.getConfiguration();
 	TopologyBuilder builder = new TopologyBuilder();
 	TopologyKiller killer = new TopologyKiller(builder);
 

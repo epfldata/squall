@@ -38,6 +38,7 @@ import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.StormWrapper;
+import ch.epfl.data.squall.utilities.SquallContext;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class Main {
@@ -173,8 +174,9 @@ public class Main {
 
 	addVariablesToMap(conf, confPath);
 	putBatchSizes(queryPlan, conf);
-	TopologyBuilder builder = queryPlan.createTopology(conf);
-	StormWrapper.submitTopology(conf, builder);
+        SquallContext context = new SquallContext(conf);
+	TopologyBuilder builder = queryPlan.createTopology(context);
+	StormWrapper.submitTopology(context, builder);
     }
 
     public Main(String[] args) {
@@ -189,7 +191,8 @@ public class Main {
 
 	addVariablesToMap(conf, confPath);
 	putBatchSizes(queryPlan, conf);
-	TopologyBuilder builder = queryPlan.createTopology(conf);
-	StormWrapper.submitTopology(conf, builder);
+        SquallContext context = new SquallContext(conf);
+	TopologyBuilder builder = queryPlan.createTopology(context);
+	StormWrapper.submitTopology(context, builder);
     }
 }

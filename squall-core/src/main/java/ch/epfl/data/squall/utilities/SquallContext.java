@@ -116,7 +116,7 @@ public class SquallContext {
     // TODO: take the parallelism from the component
     setAllParallelisms(plan);
 
-    return StormWrapper.localSubmitAndWait(conf, plan);
+    return StormWrapper.localSubmitAndWait(this, plan);
   }
 
 
@@ -137,7 +137,7 @@ public class SquallContext {
     plan.getLastComponent().getChainOperator().addOperator(storeOperator);
 
 
-    StormWrapper.submitTopology(conf, plan.createTopology(conf));
+    StormWrapper.submitTopology(this, plan.createTopology(this));
 
     return storeOperator.getStore();
   }
@@ -157,7 +157,7 @@ public class SquallContext {
     // TODO: take the parallelism from the component
     setAllParallelisms(plan);
 
-    StormWrapper.submitTopology(conf, plan.createTopology(conf));
+    StormWrapper.submitTopology(this, plan.createTopology(this));
   }
 
   private void setAllParallelisms(QueryBuilder plan) {

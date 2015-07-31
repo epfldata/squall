@@ -163,8 +163,9 @@ public class StormWrapper {
 	System.exit(result);
     }
 
-  public static BasicStore<Object> localSubmitAndWait(Config conf, QueryBuilder plan) throws InterruptedException {
-    StormTopology topology = plan.createTopology(conf).createTopology();
+  public static BasicStore<Object> localSubmitAndWait(SquallContext context, QueryBuilder plan) throws InterruptedException {
+    Config conf = context.getConfiguration();
+    StormTopology topology = plan.createTopology(context).createTopology();
     final String topologyName = SystemParameters.getString(conf,
                                                            "DIP_TOPOLOGY_NAME");
 
@@ -175,7 +176,7 @@ public class StormWrapper {
     }
 
     _waiting = true;
-    submitTopology(conf, plan.createTopology(conf).createTopology());
+    submitTopology(context, plan.createTopology(context).createTopology());
     _semWait.acquire();
 
     LOG.info("Waiting for results from topology '" + topologyName +"'");
@@ -198,11 +199,13 @@ public class StormWrapper {
     return LocalMergeResults.getResults();
   }
 
-    public static void submitTopology(Config conf, TopologyBuilder builder) {
-      submitTopology(conf, builder.createTopology());
+    public static void submitTopology(SquallContext context, TopologyBuilder builder) {
+      submitTopology(context, builder.createTopology());
     }
 
-    public static void submitTopology(Config conf, StormTopology topology) {
+    public static void submitTopology(SquallContext context, StormTopology topology) {
+        Config conf = context.getConfiguration();
+
 	// transform mine parameters into theirs
 	final boolean distributed = SystemParameters.getBoolean(conf,
 		"DIP_DISTRIBUTED");

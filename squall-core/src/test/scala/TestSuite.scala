@@ -22,7 +22,7 @@ package ch.epfl.data.squall.test
 import ch.epfl.data.squall.main.Main
 import ch.epfl.data.squall.query_plans.QueryBuilder
 import ch.epfl.data.squall.storage.{BasicStore, KeyValueStore}
-import ch.epfl.data.squall.utilities.{LocalMergeResults, StormWrapper, SystemParameters}
+import ch.epfl.data.squall.utilities.{LocalMergeResults, StormWrapper, SystemParameters, SquallContext}
 import ch.qos.logback.classic.{Logger, LoggerContext}
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
 import ch.qos.logback.classic.spi.ILoggingEvent
@@ -55,11 +55,6 @@ class TestSuite extends FunSuite with BeforeAndAfterAll {
       SystemParameters.mapToStormConfig(parser.createConfig(confPath))
     }
   }
-
-  // override def afterAll() {
-  //   println("Shutting down local cluster")
-  //   StormWrapper.shutdown()
-  // }
 
   object Logging {
     var fileAppender: FileAppender[ILoggingEvent] = null;
@@ -109,10 +104,11 @@ class TestSuite extends FunSuite with BeforeAndAfterAll {
     val queryPlan = Main.chooseQueryPlan(conf)
 
     SystemParameters.putInMap(conf, "DIP_TOPOLOGY_NAME", confName)
+    val context = new SquallContext(conf);
 
-    val builder = queryPlan.createTopology(conf)
+    val builder = queryPlan.createTopology(context)
 
-    val result = StormWrapper.localSubmitAndWait(conf, queryPlan)
+    val result = StormWrapper.localSubmitAndWait(context, queryPlan)
 
     Logging.endLog()
     result
@@ -127,9 +123,10 @@ class TestSuite extends FunSuite with BeforeAndAfterAll {
     val queryPlan = parser.generatePlan(conf)
     parser.putAckers(queryPlan, conf)
     SystemParameters.putInMap(conf, "DIP_TOPOLOGY_NAME", confName)
+    val context = new SquallContext(conf);
 
-    val builder = queryPlan.createTopology(conf)
-    val result = StormWrapper.localSubmitAndWait(conf, queryPlan)
+    val builder = queryPlan.createTopology(context)
+    val result = StormWrapper.localSubmitAndWait(context, queryPlan)
 
     Logging.endLog()
     result
