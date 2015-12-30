@@ -1,8 +1,6 @@
 
-<!--
-[alt text][logo]
-[logo]: https://raw.githubusercontent.com/epfldata/squall/master/resources/graphics/logo.jpg "Logo Title Text 2"
--->
+<p> &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;        <img style="float: center" align="middle" src="https://photos-1.dropbox.com/t/2/AABzMRz8qzKbVjydcEmK2ack2qZG96jCEE2GVmKY9FW4Ug/12/43656005/jpeg/32x32/3/1451505600/0/2/logo.jpg/EI65siEYmIgQIAIoAg/408xUQYOc2eHLOs6TtuQUHdba4J5D72XeRQh15lP7As?size_mode=5&size=32x32"> </p>
+
 
 #Squall [![Build Status](https://travis-ci.org/epfldata/squall.svg?branch=master)](https://travis-ci.org/epfldata/squall)
 Squall is an online query processing engine built on top of [Storm](https://storm.apache.org/). Similar to how Hive provides SQL syntax on top of Hadoop for doing batch processing, Squall executes SQL queries on top of Storm for doing online processing. Squall supports a wide class of SQL analytics ranging from simple aggregations to more advanced UDF join predicates and adaptive rebalancing of load. It is being actively developed by several contributors from the [EPFL DATA](http://data.epfl.ch/) lab. Squall is undergoing a continuous process of development, currently it supports the following:
