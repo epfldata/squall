@@ -111,6 +111,12 @@ public class QueryBuilder implements Serializable {
 	List<String> allCompNames = this.getComponentNames();
 	Collections.sort(allCompNames);
 
+	// register metric consumer
+	if (SystemParameters.getBooleanIfExist(conf, "GRAPHITE_METRICS_CONSUMER_ENABLED")) {
+		conf.registerMetricsConsumer(com.verisign.storm.metrics.GraphiteMetricsConsumer.class, 
+			SystemParameters.getInt(conf, "GRAPHITE_METRICS_CONSUMER_PARALELISM"));
+	}
+
     List<DBToasterJoinComponent> dbtComponents = new LinkedList<DBToasterJoinComponent>();
     int planSize = queryPlan.size();
 	for (int i = 0; i < planSize; i++) {
