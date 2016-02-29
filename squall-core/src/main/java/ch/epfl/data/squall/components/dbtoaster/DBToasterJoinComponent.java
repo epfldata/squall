@@ -47,19 +47,20 @@ public class DBToasterJoinComponent extends AbstractJoinerComponent<DBToasterJoi
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(DBToasterJoinComponent.class);
 
-
+    private Map<String, String[]> _relColNames;
     private Map<String, Type[]> _parentNameColTypes;
     private Set<String> _parentsWithMultiplicity;
     private Map<String, AggregateStream> _parentsWithAggregator;
     private String _equivalentSQL;
 
-    protected DBToasterJoinComponent(List<Component> relations, Map<String, Type[]> relationTypes,
+    protected DBToasterJoinComponent(List<Component> relations, Map<String, Type[]> relationTypes, Map<String, String[]> relColNames,
                                      Set<String> relationsWithMultiplicity, Map<String, AggregateStream>  relationsWithAggregator,
                                      String sql, String name) {
       super(relations, name);
         _parentsWithMultiplicity = relationsWithMultiplicity;
         _parentsWithAggregator = relationsWithAggregator;
         _parentNameColTypes = relationTypes;
+        _relColNames = relColNames;
         _equivalentSQL = sql;
     }
 
@@ -79,6 +80,7 @@ public class DBToasterJoinComponent extends AbstractJoinerComponent<DBToasterJoi
         setStormEmitter(new StormDBToasterJoin(getParents(), this,
                                                allCompNames,
                                                _parentNameColTypes,
+                                               _relColNames,
                                                _parentsWithMultiplicity,
                                                _parentsWithAggregator,
                                                hierarchyPosition,

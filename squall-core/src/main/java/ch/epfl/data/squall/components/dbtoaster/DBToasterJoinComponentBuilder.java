@@ -47,6 +47,7 @@ import java.util.regex.Pattern;
 public class DBToasterJoinComponentBuilder {
     private List<Component> _relations = new LinkedList<Component>();
     private Map<String, Type[]> _relColTypes = new HashMap<String, Type[]>();
+    private Map<String, String[]> _relColNames = new HashMap<String, String[]>();
     private Set<String> _relMultiplicity = new HashSet<String>();
     private Map<String, AggregateStream> _relAggregators = new HashMap<String, AggregateStream>();
     private String _sql;
@@ -79,6 +80,12 @@ public class DBToasterJoinComponentBuilder {
         return this;
     }
 
+    public DBToasterJoinComponentBuilder addRelation(Component relation, Type[] types, String[] columnNames) {
+        _relColNames.put(relation.getName(), columnNames);
+        return addRelation(relation, types);
+    }
+
+
     /**
      * <p>
      *     Add relation whose tuples have multiplicity fields.
@@ -104,6 +111,12 @@ public class DBToasterJoinComponentBuilder {
     public DBToasterJoinComponentBuilder addRelationWithMultiplicity(Component relation, Type... types) {
         _relMultiplicity.add(relation.getName());
         return addRelation(relation, types);
+    }
+
+    public DBToasterJoinComponentBuilder addRelationWithMultiplicity(Component relation, Type[] types, String[] columnNames) {
+        _relColNames.put(relation.getName(), columnNames);
+        
+        return addRelationWithMultiplicity(relation, types);
     }
 
     /**
@@ -134,6 +147,11 @@ public class DBToasterJoinComponentBuilder {
         _relAggregators.put(relation.getName(), new AggregateSumOperator(new ColumnReference(types[valueCol], valueCol), _conf).setGroupByColumns(groupByCols));
 
         return addRelationWithMultiplicity(relation, types);
+    }
+
+    public DBToasterJoinComponentBuilder addAggregatedRelation(Component relation, Type[] types, String[] columnNames) {
+        _relColNames.put(relation.getName(), columnNames);
+        return addAggregatedRelation(relation, types);
     }
 
     private boolean parentRelationExists(String name) {
@@ -235,7 +253,7 @@ public class DBToasterJoinComponentBuilder {
             }
             _name = nameBuilder.toString();
         }
-        return new DBToasterJoinComponent(_relations, _relColTypes, _relMultiplicity, _relAggregators, _sql, _name);
+        return new DBToasterJoinComponent(_relations, _relColTypes, _relColNames, _relMultiplicity, _relAggregators, _sql, _name);
     }
 
 }

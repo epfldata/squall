@@ -81,6 +81,8 @@ import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.StormSrcHarmonizer;
+import ch.epfl.data.squall.storm_components.hash_hypercube.HashHyperCubeGrouping;
+import ch.epfl.data.squall.storm_components.hash_hypercube.HashHyperCubeGrouping.EmitterDesc;
 import ch.epfl.data.squall.storm_components.stream_grouping.BatchStreamGrouping;
 import ch.epfl.data.squall.storm_components.stream_grouping.HashStreamGrouping;
 import ch.epfl.data.squall.storm_components.stream_grouping.ShuffleStreamGrouping;
@@ -88,6 +90,8 @@ import ch.epfl.data.squall.storm_components.theta.stream_grouping.ContentInsensi
 import ch.epfl.data.squall.storm_components.theta.stream_grouping.ContentSensitiveThetaJoinGrouping;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.ContentSensitiveMatrixAssignment;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.MatrixAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HashHyperCubeAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HashHyperCubeAssignmentBruteForce.ColumnDesc;
 import ch.epfl.data.squall.types.DateIntegerType;
 import ch.epfl.data.squall.types.DoubleType;
 import ch.epfl.data.squall.types.NumericType;
@@ -566,6 +570,34 @@ public class MyUtilities {
         return currentBolt;
     }
 
+    public static InputDeclarer attachEmitterHashHyperCube(
+    		InputDeclarer currentBolt, List<StormEmitter> emitters, 
+    		Map<String, String[]> emitterColNames, List<String> allCompNames,
+            HashHyperCubeAssignment assignment, List<EmitterDesc> emittersDesc, Map map) {
+
+        CustomStreamGrouping mapping = new HashHyperCubeGrouping(emittersDesc, assignment, map);
+
+        for (final StormEmitter emitter : emitters) {
+            final String[] emitterIDs = emitter.getEmitterIDs();
+            for (final String emitterID : emitterIDs)
+                currentBolt = currentBolt.customGrouping(emitterID, mapping);
+        }
+        return currentBolt;
+    }
+
+    public static List<EmitterDesc> getEmitterDesc(List<StormEmitter> emitters,
+    		List<String> allCompNames, Map<String, String[]> emitterColNames, long[] cardinality) {
+    	List<EmitterDesc> emittersDesc = new ArrayList<EmitterDesc>();
+        
+        for (int i = 0; i < emitters.size(); i++) {
+        	String emitterName = String.valueOf(allCompNames
+                    .indexOf(emitters.get(i).getName()));
+        	EmitterDesc ed = new EmitterDesc(emitterName, cardinality[i], emitterColNames.get(emitterName));
+        	emittersDesc.add(ed);
+        }
+
+        return emittersDesc;
+    }
 
     public static InputDeclarer attachEmitterHyperCube(
             InputDeclarer currentBolt, List<StormEmitter> emitters, List<String> allCompNames,

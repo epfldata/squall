@@ -37,6 +37,10 @@ import ch.epfl.data.squall.storm_components.StormBoltComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.squall.storm_components.hash_hypercube.HashHyperCubeGrouping.EmitterDesc;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HashHyperCubeAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HashHyperCubeAssignmentBruteForce;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HashHyperCubeAssignmentBruteForce.ColumnDesc;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.HyperCubeAssignerFactory;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.HyperCubeAssignment;
 import ch.epfl.data.squall.types.Type;
@@ -45,6 +49,7 @@ import ch.epfl.data.squall.utilities.PartitioningScheme;
 import ch.epfl.data.squall.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.statistics.StatisticsUtilities;
+
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -52,6 +57,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.net.URL;
@@ -85,12 +91,14 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
     private StormEmitter[] _emitters;
     private Map<String, Type[]> _emitterNamesColTypes; // map between emitter names and types of tuple from the emitter
+    private Map<String, String[]> _emitterColNames; // map between emitter name and column names of typle from the emitter
     private Set<String> _emittersWithMultiplicity;
     private Map<String, AggregateStream> _emitterAggregators;
 
     public StormDBToasterJoin(StormEmitter[] emitters,
                               ComponentProperties cp, List<String> allCompNames,
                               Map<String, Type[]> emitterNameColTypes,
+                              Map<String, String[]> emitterColNames,
                               Set<String> emittersWithMultiplicity,
                               Map<String, AggregateStream> emittersWithAggregator,
                               int hierarchyPosition, TopologyBuilder builder,
@@ -100,6 +108,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
         _emitters = emitters;
         _emitterNamesColTypes = emitterNameColTypes;
+        _emitterColNames = emitterColNames;
         _emittersWithMultiplicity = emittersWithMultiplicity;
         _emitterAggregators = emittersWithAggregator;
 
@@ -156,8 +165,21 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
         // other non-nested emitters follow the specified partitioning scheme
         switch (getPartitioningScheme(conf)) {
-            case HYPERCUBE:
+            case HASHHYPERCUBE:
                 long[] cardinality = getEmittersCardinality(nonNestedEmitters, conf);
+                List<ColumnDesc> columns = getColumnDesc(cardinality, nonNestedEmitters);
+                List<EmitterDesc> emittersDesc = MyUtilities.getEmitterDesc(
+                        nonNestedEmitters, allCompNames, _emitterColNames, cardinality);
+
+                HashHyperCubeAssignment _currentHashHyperCubeMappingAssignment = 
+                    new HashHyperCubeAssignmentBruteForce(parallelism, columns, emittersDesc);
+                
+                currentBolt = MyUtilities.attachEmitterHashHyperCube(currentBolt, 
+                        nonNestedEmitters, _emitterColNames, allCompNames,
+                        _currentHashHyperCubeMappingAssignment, emittersDesc, conf);
+                break;
+            case HYPERCUBE:
+                cardinality = getEmittersCardinality(nonNestedEmitters, conf);
                 LOG.info("cardinalities: " + Arrays.toString(cardinality));
                 final HyperCubeAssignment _currentHyperCubeMappingAssignment =
                         new HyperCubeAssignerFactory().getAssigner(parallelism, cardinality);
@@ -177,6 +199,35 @@ public class StormDBToasterJoin extends StormBoltComponent {
                 break;
         }
         return currentBolt;
+    }
+
+    private List<ColumnDesc> getColumnDesc(long[] cardinality, List<StormEmitter> emitters) {
+        HashMap<String, ColumnDesc> tmp = new HashMap<String, ColumnDesc>();
+
+        List<ColumnDesc> desc = new ArrayList<ColumnDesc>();
+        
+        for (int i = 0; i < emitters.size(); i++) {
+            String emitterName = emitters.get(i).getName();
+            Type[] columnTypes = _emitterNamesColTypes.get(emitterName);
+            String[] columnNames = _emitterColNames.get(emitterName);
+
+            for (int j = 0; j < columnNames.length; j++) {
+                ColumnDesc cd = new ColumnDesc(columnNames[j], columnTypes[j], cardinality[i]);
+
+                if (tmp.containsKey(cd.name)) {
+                    cd.size += tmp.get(cd.name).size;
+                    tmp.put(cd.name, cd);
+                } else {
+                    tmp.put(cd.name, cd);
+                }
+            }
+        }
+
+        for (String key : tmp.keySet()) {
+            desc.add(tmp.get(key));
+        }
+
+        return desc;
     }
 
     private PartitioningScheme getPartitioningScheme(Config conf) {
