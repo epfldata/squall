@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.HashSet;
@@ -37,12 +38,14 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 	List<EmitterDesc> emitters;
 	List<ColumnDesc> columns;
 	int[] dimensions;
+	Map<String, Integer> regionIDsMap;
 
 	public HashHyperCubeAssignmentBruteForce(int reducers, List<ColumnDesc> columns, List<EmitterDesc> emitters) {
 		this.reducers = reducers;
 		this.columns = columns;
 		this.emitters = emitters;
 		compute();
+		createRegionMap();
 	}
 
 	private void compute() {
@@ -81,7 +84,6 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 			if (count == 0) {
 				Utilities.copy(rd, partition);
 			} else {
-
 				// If new assignment is better than the best assignment so far
 				if (compareWorkloads(rd, partition) < 0) {
 					Utilities.copy(rd, partition);
@@ -104,7 +106,7 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 			return -1;
 		else if (workload2 < workload1)
 			return 1;
-		else
+		else // choose wich has lower maximum dimension size
 			return maxDim1 - maxDim2;
 	}
 
@@ -137,29 +139,100 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 	}
 
 	@Override
-	public List<Integer> getRegionIDs(Map<String, Object> columns) {
-		// ????
-		return null;
+	public List<Integer> getRegionIDs(Map<String, Object> c) {
+		List<Integer> regions = new ArrayList<Integer>();
+		int[] fixedDim = new int[c.size()];
+		int[] fixedIndex = new int[c.size()];
+		int index = 0;
+
+		for (int i = 0; i < columns.size(); i++) {
+			if (c.containsKey(columns.get(i).name)) {
+				// calculate hash value
+				Object value = c.get(columns.get(i).name);
+				int hashValue = value.hashCode() % dimensions[i];
+
+				if (value instanceof String) {
+					hashValue = stringHash((String)value, dimensions[i]);
+				} else if (value instanceof Integer) {
+					hashValue = intHash((Integer)value, dimensions[i]);
+				} else if (value instanceof Long) {
+					hashValue = longHash((Long)value, dimensions[i]);
+				} else if (value instanceof Double) {
+					hashValue = doubleHash((Double)value, dimensions[i]);					
+				}
+
+				fixedDim[index] = i;
+				fixedIndex[index] = hashValue;
+				index++;
+			}
+		}
+
+		CellIterator gen = new CellIterator(dimensions, fixedDim, fixedIndex);
+			
+		while (gen.hasNext()) {
+			List<Integer> cellIndex = gen.next();
+			int regionID = mapRegionID(mapRegionKey(cellIndex));
+			regions.add(regionID);
+		}
+
+		return regions;
+	}
+
+	// hash functions
+	public int intHash(Integer i, int mod) {
+		return i % mod;
+	}
+
+	public int longHash(Long l, int mod) {
+		return l.hashCode() % mod;
+	}
+
+	public int doubleHash(Double d, int mod) {
+		return d.hashCode() % mod;
+	}
+
+	public int stringHash(String s, int mod) {
+		int hash = 7;
+		for (int i = 0; i < s.length(); i++) {
+    		hash = hash * 31 + s.charAt(i);
+		}
+
+		return hash % mod;
+	}
+
+
+
+	private void createRegionMap() {
+		regionIDsMap = new HashMap<String, Integer>();
+		CellIterator gen = new CellIterator(dimensions);
+		int i = 0;
+		while (gen.hasNext()) {
+			List<Integer> cellIndex = gen.next();
+			regionIDsMap.put(mapRegionKey(cellIndex), i++);
+		}
+	}
+
+	private int mapRegionID(String key) {
+		return regionIDsMap.get(key);
+	}
+
+	private String mapRegionKey(List<Integer> cellIndex) {
+		StringBuilder key = new StringBuilder("");
+		for (Integer index : cellIndex) {
+			key.append(" " + index);
+		}
+
+		return key.toString();
 	}
 
 	@Override
 	public int getNumberOfRegions(String column) {
-		for (ColumnDesc c : columns) {
-			if (c.name == column) {
-				return c.dimension;
-			}
-		}
 		throw new RuntimeException("Dimension is invalid");
 	}
 
 	@Override
 	public String getMappingDimensions() {
-		StringBuilder sb = new StringBuilder();
-		for (ColumnDesc c : columns) {
-			sb.append(c.name + " : " + c.dimension + "\n");
-		}
-
-		return sb.toString();
+		return null;
 	}
 
 
