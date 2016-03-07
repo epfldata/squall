@@ -117,11 +117,18 @@ public class HashHyperCubeGrouping implements CustomStreamGrouping {
     	public String name;
         public long cardinality;
     	public String[] columnNames;
+        public boolean random;
 
     	public EmitterDesc(String name, long cardinality, String[] columnNames) {
     		this.name = name;
             this.cardinality = cardinality;
     		this.columnNames = columnNames;
     	}
+
+        public EmitterDesc(String name, long cardinality, String[] columnsNames, boolean random) {
+            this(name, cardinality, columnsNames);
+
+            this.random = random;
+        }
     }
 }
