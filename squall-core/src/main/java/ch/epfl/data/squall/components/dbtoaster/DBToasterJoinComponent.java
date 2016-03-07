@@ -33,6 +33,7 @@ import ch.epfl.data.squall.storm_components.dbtoaster.StormDBToasterJoin;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ManualHybridHyperCubeAssignment.Dimension;
 import org.apache.log4j.Logger;
 
 import java.util.List;
@@ -48,19 +49,21 @@ public class DBToasterJoinComponent extends AbstractJoinerComponent<DBToasterJoi
     private static Logger LOG = Logger.getLogger(DBToasterJoinComponent.class);
 
     private Map<String, String[]> _relColNames;
+    private Map<String, Dimension> _dimensions; 
     private Map<String, Type[]> _parentNameColTypes;
     private Set<String> _parentsWithMultiplicity;
     private Map<String, AggregateStream> _parentsWithAggregator;
     private String _equivalentSQL;
 
     protected DBToasterJoinComponent(List<Component> relations, Map<String, Type[]> relationTypes, Map<String, String[]> relColNames,
-                                     Set<String> relationsWithMultiplicity, Map<String, AggregateStream>  relationsWithAggregator,
+                                     Map<String, Dimension> dimensions, Set<String> relationsWithMultiplicity, Map<String, AggregateStream>  relationsWithAggregator,
                                      String sql, String name) {
       super(relations, name);
         _parentsWithMultiplicity = relationsWithMultiplicity;
         _parentsWithAggregator = relationsWithAggregator;
         _parentNameColTypes = relationTypes;
         _relColNames = relColNames;
+        _dimensions = dimensions;
         _equivalentSQL = sql;
     }
 
@@ -81,6 +84,7 @@ public class DBToasterJoinComponent extends AbstractJoinerComponent<DBToasterJoi
                                                allCompNames,
                                                _parentNameColTypes,
                                                _relColNames,
+                                               _dimensions,
                                                _parentsWithMultiplicity,
                                                _parentsWithAggregator,
                                                hierarchyPosition,

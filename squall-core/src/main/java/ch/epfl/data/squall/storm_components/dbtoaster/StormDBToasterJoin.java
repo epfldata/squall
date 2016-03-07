@@ -43,6 +43,9 @@ import ch.epfl.data.squall.thetajoin.matrix_assignment.HashHyperCubeAssignmentBr
 import ch.epfl.data.squall.thetajoin.matrix_assignment.HashHyperCubeAssignmentBruteForce.ColumnDesc;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.HyperCubeAssignerFactory;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.HyperCubeAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ManualHybridHyperCubeAssignment.Dimension;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HybridHyperCubeAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ManualHybridHyperCubeAssignment;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.PartitioningScheme;
@@ -92,6 +95,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
     private StormEmitter[] _emitters;
     private Map<String, Type[]> _emitterNamesColTypes; // map between emitter names and types of tuple from the emitter
     private Map<String, String[]> _emitterColNames; // map between emitter name and column names of typle from the emitter
+    private Map<String, Dimension> _dimensions; // used in Manual Hybrid Hypercube.
     private Set<String> _emittersWithMultiplicity;
     private Map<String, AggregateStream> _emitterAggregators;
 
@@ -99,6 +103,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
                               ComponentProperties cp, List<String> allCompNames,
                               Map<String, Type[]> emitterNameColTypes,
                               Map<String, String[]> emitterColNames,
+                              Map<String, Dimension> dimensions,
                               Set<String> emittersWithMultiplicity,
                               Map<String, AggregateStream> emittersWithAggregator,
                               int hierarchyPosition, TopologyBuilder builder,
@@ -109,6 +114,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
         _emitters = emitters;
         _emitterNamesColTypes = emitterNameColTypes;
         _emitterColNames = emitterColNames;
+        _dimensions = dimensions;
         _emittersWithMultiplicity = emittersWithMultiplicity;
         _emitterAggregators = emittersWithAggregator;
 
@@ -165,10 +171,22 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
         // other non-nested emitters follow the specified partitioning scheme
         switch (getPartitioningScheme(conf)) {
-            case HASHHYPERCUBE:
+            case MANUALHYBRIDHYPERCUBE:
                 long[] cardinality = getEmittersCardinality(nonNestedEmitters, conf);
-                List<ColumnDesc> columns = getColumnDesc(cardinality, nonNestedEmitters);
                 List<EmitterDesc> emittersDesc = MyUtilities.getEmitterDesc(
+                        nonNestedEmitters, allCompNames, _emitterColNames, cardinality);
+
+                HybridHyperCubeAssignment _currentHybridHyperCubeMappingAssignment = 
+                    new ManualHybridHyperCubeAssignment(_dimensions);
+                
+                currentBolt = MyUtilities.attachEmitterManualHybridHyperCube(currentBolt, 
+                        nonNestedEmitters, _emitterColNames, allCompNames,
+                        _currentHybridHyperCubeMappingAssignment, emittersDesc, conf);   
+                break;
+            case HASHHYPERCUBE:
+                cardinality = getEmittersCardinality(nonNestedEmitters, conf);
+                List<ColumnDesc> columns = getColumnDesc(cardinality, nonNestedEmitters);
+                emittersDesc = MyUtilities.getEmitterDesc(
                         nonNestedEmitters, allCompNames, _emitterColNames, cardinality);
 
                 HashHyperCubeAssignment _currentHashHyperCubeMappingAssignment = 
