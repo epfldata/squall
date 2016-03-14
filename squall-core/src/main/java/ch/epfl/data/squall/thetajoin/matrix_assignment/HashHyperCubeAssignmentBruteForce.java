@@ -19,10 +19,14 @@
  *
  */
 
+
 package ch.epfl.data.squall.thetajoin.matrix_assignment;
 
 import ch.epfl.data.squall.storm_components.hash_hypercube.HashHyperCubeGrouping.EmitterDesc;
 import ch.epfl.data.squall.types.Type;
+
+import org.apache.log4j.Logger;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
@@ -34,6 +38,7 @@ import java.util.HashSet;
 
 public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHyperCubeAssignment {
 
+	private static Logger LOG = Logger.getLogger(HashHyperCubeAssignmentBruteForce.class);
 	int reducers;
 	List<EmitterDesc> emitters;
 	List<ColumnDesc> columns;
@@ -52,6 +57,11 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 		for (int i = columns.size(); i <= reducers; i++) {
 			int[] best = compute(i);
 			
+			if (dimensions == null) {
+				dimensions = new int[best.length];
+				Utilities.copy(best, dimensions);
+			}
+
 			// If new assignment is better than the best assignment so far
 			if (compareWorkloads(best, dimensions) < 0) {
 				Utilities.copy(best, dimensions);
@@ -112,8 +122,12 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 
 	public long getWorkload(int[] partition) {
 		long workload = 0;
-
+		LOG.info(emitters);
 		for (EmitterDesc emitter : emitters) {
+			
+			LOG.info(emitter.name);
+			LOG.info(emitter.columnNames);
+			
 			Set<String> emitterColumns = new HashSet<String>(Arrays.asList(emitter.columnNames));
 			int replicate = 1;
 			for (int i = 0; i < partition.length; i++) {
@@ -236,7 +250,7 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 	}
 
 
-	public static class ColumnDesc {
+	public static class ColumnDesc implements Serializable {
 		public String name;
 		public Type type;
 

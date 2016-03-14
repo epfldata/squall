@@ -572,8 +572,8 @@ public class MyUtilities {
 
     public static InputDeclarer attachEmitterHashHyperCube(
     		InputDeclarer currentBolt, List<StormEmitter> emitters, 
-    		Map<String, String[]> emitterColNames, List<String> allCompNames,
-            HashHyperCubeAssignment assignment, List<EmitterDesc> emittersDesc, Map map) {
+    		Map<String, String[]> emitterColNames, HashHyperCubeAssignment assignment, 
+    		List<EmitterDesc> emittersDesc, Map map) {
 
         CustomStreamGrouping mapping = new HashHyperCubeGrouping(emittersDesc, assignment, map);
 
@@ -585,15 +585,14 @@ public class MyUtilities {
         return currentBolt;
     }
 
-    public static List<EmitterDesc> getEmitterDesc(List<StormEmitter> emitters,
-    		List<String> allCompNames, Map<String, String[]> emitterColNames, long[] cardinality) {
+    public static List<EmitterDesc> getEmitterDesc(List<StormEmitter> emitters, 
+    		Map<String, String[]> emitterColNames, long[] cardinality) {
     	List<EmitterDesc> emittersDesc = new ArrayList<EmitterDesc>();
         
         for (int i = 0; i < emitters.size(); i++) {
-        	String emitterName = String.valueOf(allCompNames
-                    .indexOf(emitters.get(i).getName()));
-        	EmitterDesc ed = new EmitterDesc(emitterName, cardinality[i], emitterColNames.get(emitterName));
-        	emittersDesc.add(ed);
+        	String emitterName = emitters.get(i).getName();
+         	EmitterDesc ed = new EmitterDesc(emitterName, cardinality[i], emitterColNames.get(emitterName));
+        	emittersDesc.add(ed);       	
         }
 
         return emittersDesc;

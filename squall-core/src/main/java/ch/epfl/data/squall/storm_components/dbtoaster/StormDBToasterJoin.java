@@ -168,15 +168,20 @@ public class StormDBToasterJoin extends StormBoltComponent {
             case HASHHYPERCUBE:
                 long[] cardinality = getEmittersCardinality(nonNestedEmitters, conf);
                 List<ColumnDesc> columns = getColumnDesc(cardinality, nonNestedEmitters);
+                
+                LOG.info(_emitterColNames);
+
                 List<EmitterDesc> emittersDesc = MyUtilities.getEmitterDesc(
-                        nonNestedEmitters, allCompNames, _emitterColNames, cardinality);
+                        nonNestedEmitters, _emitterColNames, cardinality);
+
+                LOG.info(emittersDesc);
 
                 HashHyperCubeAssignment _currentHashHyperCubeMappingAssignment = 
                     new HashHyperCubeAssignmentBruteForce(parallelism, columns, emittersDesc);
                 
                 currentBolt = MyUtilities.attachEmitterHashHyperCube(currentBolt, 
-                        nonNestedEmitters, _emitterColNames, allCompNames,
-                        _currentHashHyperCubeMappingAssignment, emittersDesc, conf);
+                        nonNestedEmitters, _emitterColNames, _currentHashHyperCubeMappingAssignment, 
+                        emittersDesc, conf);
                 break;
             case HYPERCUBE:
                 cardinality = getEmittersCardinality(nonNestedEmitters, conf);

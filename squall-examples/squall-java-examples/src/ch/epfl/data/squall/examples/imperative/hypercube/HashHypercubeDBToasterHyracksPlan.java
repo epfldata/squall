@@ -19,7 +19,7 @@
  *
  */
 
-package ch.epfl.data.squall.examples.imperative.dbtoaster;
+package ch.epfl.data.squall.examples.imperative.hypercube;
 
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.OperatorComponent;

@@ -32,6 +32,7 @@ import ch.epfl.data.squall.thetajoin.matrix_assignment.HashHyperCubeAssignment;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import org.apache.log4j.Logger;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -113,7 +114,7 @@ public class HashHyperCubeGrouping implements CustomStreamGrouping {
 	return converted;
     }
 
-    public static class EmitterDesc {
+    public static class EmitterDesc implements Serializable {
     	public String name;
         public long cardinality;
     	public String[] columnNames;
@@ -123,5 +124,11 @@ public class HashHyperCubeGrouping implements CustomStreamGrouping {
             this.cardinality = cardinality;
     		this.columnNames = columnNames;
     	}
+
+        public String toString() {
+            String tmp = "";
+            for (String s : columnNames) tmp += " " + s;
+            return name + " " + cardinality + "\n" + tmp;
+        }
     }
 }
