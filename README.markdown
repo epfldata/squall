@@ -93,7 +93,7 @@ Squall also provides out-of-the-box functionality for window semantics. That is 
 
 
 ### Documentation
-Detailed documentation can be found on the [Squall wiki](http://github.com/epfldata/squall/wiki).
+White paper is available [here](http://infoscience.epfl.ch/record/217286/files/paper.pdf). Detailed documentation can be found on the [Squall wiki](http://github.com/epfldata/squall/wiki).
 
 ### Contributing to Squall
 We'd love to have your help in making Squall better. If you're interested, please communicate with us your suggestions and get your name to the [Contributors](https://github.com/epfldata/squall/wiki/Contributors) list.
