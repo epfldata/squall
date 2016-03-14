@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package ch.epfl.data.squall.storm_components.hash_hypercube;
+package ch.epfl.data.squall.storm_components.hybrid_hypercube;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,27 +28,27 @@ import org.apache.log4j.Logger;
 import backtype.storm.generated.GlobalStreamId;
 import backtype.storm.grouping.CustomStreamGrouping;
 import backtype.storm.task.WorkerTopologyContext;
-import ch.epfl.data.squall.thetajoin.matrix_assignment.HashHyperCubeAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HybridHyperCubeAssignment;
+import ch.epfl.data.squall.storm_components.hash_hypercube.HashHyperCubeGrouping.EmitterDesc;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import org.apache.log4j.Logger;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
-public class HashHyperCubeGrouping implements CustomStreamGrouping {
+public class HybridHyperCubeGrouping implements CustomStreamGrouping {
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger
-	    .getLogger(HashHyperCubeGrouping.class);
+	    .getLogger(HybridHyperCubeGrouping.class);
 
-    private final HashHyperCubeAssignment _assignment;
+    private final HybridHyperCubeAssignment _assignment;
     private final List<EmitterDesc> _emitters;
     private List<Integer> _targetTasks;
     private final Map _map;
 
-    public HashHyperCubeGrouping(List<EmitterDesc> emitters, HashHyperCubeAssignment assignment, Map map) {
+    public HybridHyperCubeGrouping(List<EmitterDesc> emitters, HybridHyperCubeAssignment assignment, Map map) {
 	_emitters = emitters;
 	_assignment = assignment;
 	_map = map;
@@ -80,7 +80,7 @@ public class HashHyperCubeGrouping implements CustomStreamGrouping {
     for (EmitterDesc emitter : _emitters) {
     	if (emitter.name.equals(tableName)) {
     		Map<String, Object> colums = new HashMap<String, Object>();
-            List<Integer> regionsID = _assignment.getRegionIDs(createColumns(emitter, stormTuple));
+            List<Integer> regionsID = _assignment.getRegionIDs(tableName, createColumns(emitter, stormTuple));
             tasks = translateIdsToTasks(regionsID);
             break;
     	}
@@ -112,29 +112,5 @@ public class HashHyperCubeGrouping implements CustomStreamGrouping {
 	for (final int id : ids)
 	    converted.add(_targetTasks.get(id));
 	return converted;
-    }
-
-    public static class EmitterDesc implements Serializable {
-    	public String name;
-        public long cardinality;
-    	public String[] columnNames;
-        public boolean random;
-
-    	public EmitterDesc(String name, long cardinality, String[] columnNames) {
-    		this.name = name;
-            this.cardinality = cardinality;
-    		this.columnNames = columnNames;
-    	}
-
-        public EmitterDesc(String name, long cardinality, String[] columnsNames, boolean random) {
-            this(name, cardinality, columnsNames);
-            this.random = random;
-        }
-
-        public String toString() {
-            String tmp = "";
-            for (String s : columnNames) tmp += " " + s;
-            return name + " " + cardinality + "\n" + tmp;
-        }
     }
 }

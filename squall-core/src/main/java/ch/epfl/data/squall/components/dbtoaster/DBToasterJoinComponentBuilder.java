@@ -32,6 +32,7 @@ import ch.epfl.data.squall.types.DoubleType;
 import ch.epfl.data.squall.types.IntegerType;
 import ch.epfl.data.squall.types.LongType;
 import ch.epfl.data.squall.types.Type;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ManualHybridHyperCubeAssignment.Dimension;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.SelectItem;
 
@@ -48,6 +49,7 @@ public class DBToasterJoinComponentBuilder {
     private List<Component> _relations = new LinkedList<Component>();
     private Map<String, Type[]> _relColTypes = new HashMap<String, Type[]>();
     private Map<String, String[]> _relColNames = new HashMap<String, String[]>();
+    private Map<String, Dimension> _dimensions = new HashMap<String, Dimension>();
     private Set<String> _relMultiplicity = new HashSet<String>();
     private Map<String, AggregateStream> _relAggregators = new HashMap<String, AggregateStream>();
     private String _sql;
@@ -117,6 +119,12 @@ public class DBToasterJoinComponentBuilder {
         _relColNames.put(relation.getName(), columnNames);
         
         return addRelationWithMultiplicity(relation, types);
+    }
+
+
+    public DBToasterJoinComponentBuilder addDimension(String name, int size, int index) {
+        _dimensions.put(name, new Dimension(name, size, index));
+        return this;
     }
 
     /**
@@ -253,7 +261,7 @@ public class DBToasterJoinComponentBuilder {
             }
             _name = nameBuilder.toString();
         }
-        return new DBToasterJoinComponent(_relations, _relColTypes, _relColNames, _relMultiplicity, _relAggregators, _sql, _name);
+        return new DBToasterJoinComponent(_relations, _relColTypes, _relColNames, _dimensions, _relMultiplicity, _relAggregators, _sql, _name);
     }
 
 }
