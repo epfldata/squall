@@ -71,8 +71,8 @@ public class HybridHypercubeDBToasterHyracksPlan extends QueryPlan {
         builder.addRelation(relationCustomer, new Type[]{_lc, _sc}, new String[]{"column1", "column2"});
         builder.addRelation(relationOrders, new Type[]{_lc, _lc}, new String[]{"column3", "column1"});
         
-        builder.addDimension("CUSTOMER", SystemParameters.getInt(conf, "CUSTOMER_CARD"), 0);
-        builder.addDimension("column1", SystemParameters.getInt(conf, "ORDERS_CARD"), 1);
+        builder.addDimension("CUSTOMER", SystemParameters.getInt(conf, "CUSTOMER_DIMENSION"), 0);
+        builder.addDimension("column1", SystemParameters.getInt(conf, "column1_DIMENSION"), 1);
 
         builder.setSQL("SELECT CUSTOMER.f1, COUNT(ORDERS.f0) FROM CUSTOMER, ORDERS WHERE CUSTOMER.f0 = ORDERS.f1 GROUP BY CUSTOMER.f1");
 

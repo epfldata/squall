@@ -23,6 +23,9 @@ package ch.epfl.data.squall.thetajoin.matrix_assignment;
 
 import ch.epfl.data.squall.storm_components.hash_hypercube.HashHyperCubeGrouping.EmitterDesc;
 import ch.epfl.data.squall.types.Type;
+
+import org.apache.log4j.Logger;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
@@ -36,6 +39,7 @@ import java.util.Random;
 public class ManualHybridHyperCubeAssignment implements Serializable, HybridHyperCubeAssignment {
 
 	private Random rand;
+    private static Logger LOG = Logger.getLogger(ManualHybridHyperCubeAssignment.class);
 
 	Map<String, Dimension> dimensions;
 	int[] dimensionSizes; 
@@ -96,7 +100,7 @@ public class ManualHybridHyperCubeAssignment implements Serializable, HybridHype
 				Dimension dim = dimensions.get(columnName);
 
 				Object value = c.get(columnName);
-				int hashValue = value.hashCode() % dim.size;
+				int hashValue = Math.abs(value.hashCode()) % dim.size;
 
 				if (value instanceof String) {
 					hashValue = stringHash((String)value, dim.size);
@@ -108,6 +112,8 @@ public class ManualHybridHyperCubeAssignment implements Serializable, HybridHype
 					hashValue = doubleHash((Double)value, dim.size);					
 				}
 
+				LOG.info(dim.index + " " + hashValue);
+				
 				fixedDim.add(dim.index);
 				fixedIndex.add(hashValue);
 			}
@@ -117,6 +123,11 @@ public class ManualHybridHyperCubeAssignment implements Serializable, HybridHype
 			
 		while (gen.hasNext()) {
 			List<Integer> cellIndex = gen.next();
+
+			LOG.info("Region IDs : " + regionIDsMap);
+			LOG.info("Cell Index : " + cellIndex);
+			LOG.info("Region Key : " + mapRegionKey(cellIndex));
+			
 			int regionID = mapRegionID(mapRegionKey(cellIndex));
 			regions.add(regionID);
 		}
@@ -137,15 +148,15 @@ public class ManualHybridHyperCubeAssignment implements Serializable, HybridHype
 
 	// hash functions
 	public int intHash(Integer i, int mod) {
-		return i % mod;
+		return Math.abs(i) % mod;
 	}
 
 	public int longHash(Long l, int mod) {
-		return l.hashCode() % mod;
+		return Math.abs(l.hashCode()) % mod;
 	}
 
 	public int doubleHash(Double d, int mod) {
-		return d.hashCode() % mod;
+		return Math.abs(d.hashCode()) % mod;
 	}
 
 	public int stringHash(String s, int mod) {
@@ -154,7 +165,7 @@ public class ManualHybridHyperCubeAssignment implements Serializable, HybridHype
     		hash = hash * 31 + s.charAt(i);
 		}
 
-		return hash % mod;
+		return Math.abs(hash) % mod;
 	}
 
 	private boolean isRandom(String emitterName) {
@@ -194,7 +205,7 @@ public class ManualHybridHyperCubeAssignment implements Serializable, HybridHype
 		return null;
 	}
 
-	public static class Dimension {
+	public static class Dimension implements Serializable {
 		public String name;
 		public int size;
 		public int index;

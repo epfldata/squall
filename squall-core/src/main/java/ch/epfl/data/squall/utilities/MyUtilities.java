@@ -588,13 +588,14 @@ public class MyUtilities {
     }
 
     public static List<EmitterDesc> getEmitterDesc(List<StormEmitter> emitters, 
-    		Map<String, String[]> emitterColNames, long[] cardinality) {
+    		Map<String, String[]> emitterColNames, List<String> allCompNames, long[] cardinality) {
 
     	List<EmitterDesc> emittersDesc = new ArrayList<EmitterDesc>();
         
         for (int i = 0; i < emitters.size(); i++) {
         	String emitterName = emitters.get(i).getName();
-         	EmitterDesc ed = new EmitterDesc(emitterName, cardinality[i], emitterColNames.get(emitterName));
+        	String emitterIndex = String.valueOf(allCompNames.indexOf(emitters.get(i).getName()));
+         	EmitterDesc ed = new EmitterDesc(emitterName, emitterIndex, cardinality[i], emitterColNames.get(emitterName));
         	emittersDesc.add(ed);       	
         }
 

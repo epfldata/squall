@@ -78,12 +78,19 @@ public class HybridHyperCubeGrouping implements CustomStreamGrouping {
     final String tableName = (String) stormTuple.get(0);
        
     for (EmitterDesc emitter : _emitters) {
-    	if (emitter.name.equals(tableName)) {
+    	if (emitter.index.equals(tableName)) {
     		Map<String, Object> colums = new HashMap<String, Object>();
             List<Integer> regionsID = _assignment.getRegionIDs(tableName, createColumns(emitter, stormTuple));
             tasks = translateIdsToTasks(regionsID);
             break;
     	}
+    }
+
+
+    if (tasks == null) {
+        LOG.info(_emitters);
+        LOG.info("Table Name: " + tableName);
+        LOG.info("WRONG ASSIGNMENT");
     }
 
     return tasks;
@@ -108,6 +115,9 @@ public class HybridHyperCubeGrouping implements CustomStreamGrouping {
     }
 
     private List<Integer> translateIdsToTasks(List<Integer> ids) {
+    LOG.info("IDs : " + ids);
+    LOG.info("_targetTasks" + _targetTasks);
+    
 	final List<Integer> converted = new ArrayList<Integer>();
 	for (final int id : ids)
 	    converted.add(_targetTasks.get(id));

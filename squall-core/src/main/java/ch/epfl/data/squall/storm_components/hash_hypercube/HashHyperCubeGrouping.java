@@ -78,13 +78,21 @@ public class HashHyperCubeGrouping implements CustomStreamGrouping {
     final String tableName = (String) stormTuple.get(0);
        
     for (EmitterDesc emitter : _emitters) {
-    	if (emitter.name.equals(tableName)) {
+    	if (emitter.index.equals(tableName)) {
     		Map<String, Object> colums = new HashMap<String, Object>();
             List<Integer> regionsID = _assignment.getRegionIDs(createColumns(emitter, stormTuple));
             tasks = translateIdsToTasks(regionsID);
             break;
     	}
     }
+
+    if (tasks == null) {
+        // for (int i = 0; i < _emitterIndexes.length; i++)
+        //     LOG.info("First Name: " + _emitterIndexes[i]);
+        LOG.info(_emitters);
+        LOG.info("Table Name: " + tableName);
+        LOG.info("WRONG ASSIGNMENT");
+    }    
 
     return tasks;
     }
@@ -116,25 +124,27 @@ public class HashHyperCubeGrouping implements CustomStreamGrouping {
 
     public static class EmitterDesc implements Serializable {
     	public String name;
+        public String index;
         public long cardinality;
     	public String[] columnNames;
         public boolean random;
 
-    	public EmitterDesc(String name, long cardinality, String[] columnNames) {
+    	public EmitterDesc(String name, String index, long cardinality, String[] columnNames) {
     		this.name = name;
+            this.index = index;
             this.cardinality = cardinality;
     		this.columnNames = columnNames;
     	}
 
-        public EmitterDesc(String name, long cardinality, String[] columnsNames, boolean random) {
-            this(name, cardinality, columnsNames);
+        public EmitterDesc(String name, String index, long cardinality, String[] columnsNames, boolean random) {
+            this(name, index, cardinality, columnsNames);
             this.random = random;
         }
 
         public String toString() {
             String tmp = "";
             for (String s : columnNames) tmp += " " + s;
-            return name + " " + cardinality + "\n" + tmp;
+            return name + " " + index + " " + cardinality + "\n" + tmp;
         }
     }
 }

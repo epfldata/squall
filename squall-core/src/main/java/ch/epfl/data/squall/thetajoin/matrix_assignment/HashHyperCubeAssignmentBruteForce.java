@@ -56,7 +56,7 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 	private void compute() {
 		for (int i = columns.size(); i <= reducers; i++) {
 			int[] best = compute(i);
-			
+
 			if (dimensions == null) {
 				dimensions = new int[best.length];
 				Utilities.copy(best, dimensions);
@@ -122,21 +122,18 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 
 	public long getWorkload(int[] partition) {
 		long workload = 0;
-		LOG.info(emitters);
 		for (EmitterDesc emitter : emitters) {
-			
-			LOG.info(emitter.name);
-			LOG.info(emitter.columnNames);
-			
+
 			Set<String> emitterColumns = new HashSet<String>(Arrays.asList(emitter.columnNames));
+
 			int replicate = 1;
 			for (int i = 0; i < partition.length; i++) {
-				if (!emitterColumns.contains(columns.get(i).name)) {
+				if (emitterColumns.contains(columns.get(i).name)) {
 					replicate *= partition[i];					
 				}
 			}
 
-			workload = replicate * emitter.cardinality;
+			workload += emitter.cardinality / replicate;
 		}
 
 		return workload;
@@ -163,7 +160,8 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 			if (c.containsKey(columns.get(i).name)) {
 				// calculate hash value
 				Object value = c.get(columns.get(i).name);
-				int hashValue = value.hashCode() % dimensions[i];
+				int hashValue = Math.abs(value.hashCode()) % dimensions[i];
+
 
 				if (value instanceof String) {
 					hashValue = stringHash((String)value, dimensions[i]);
@@ -177,6 +175,7 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 
 				fixedDim[index] = i;
 				fixedIndex[index] = hashValue;
+				LOG.info(index + " " + hashValue);
 				index++;
 			}
 		}
@@ -185,24 +184,28 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 			
 		while (gen.hasNext()) {
 			List<Integer> cellIndex = gen.next();
-			int regionID = mapRegionID(mapRegionKey(cellIndex));
+			LOG.info("Region IDs : " + regionIDsMap);
+			LOG.info("Cell Index : " + cellIndex);
+			LOG.info("Region Key : " + mapRegionKey(cellIndex));
+		
+			int regionID = regionIDsMap.get(mapRegionKey(cellIndex));
+
 			regions.add(regionID);
 		}
-
 		return regions;
 	}
 
 	// hash functions
 	public int intHash(Integer i, int mod) {
-		return i % mod;
+		return Math.abs(i) % mod;
 	}
 
 	public int longHash(Long l, int mod) {
-		return l.hashCode() % mod;
+		return Math.abs(l.hashCode()) % mod;
 	}
 
 	public int doubleHash(Double d, int mod) {
-		return d.hashCode() % mod;
+		return Math.abs(d.hashCode()) % mod;
 	}
 
 	public int stringHash(String s, int mod) {
@@ -211,10 +214,8 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
     		hash = hash * 31 + s.charAt(i);
 		}
 
-		return hash % mod;
+		return Math.abs(hash) % mod;
 	}
-
-
 
 	private void createRegionMap() {
 		regionIDsMap = new HashMap<String, Integer>();
@@ -224,10 +225,6 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 			List<Integer> cellIndex = gen.next();
 			regionIDsMap.put(mapRegionKey(cellIndex), i++);
 		}
-	}
-
-	private int mapRegionID(String key) {
-		return regionIDsMap.get(key);
 	}
 
 	private String mapRegionKey(List<Integer> cellIndex) {
@@ -246,9 +243,15 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 
 	@Override
 	public String getMappingDimensions() {
-		return null;
+		StringBuilder sb = new StringBuilder();
+		String prefix = "";
+		for (int r : dimensions) {
+			sb.append(prefix);
+			prefix = "-";
+			sb.append(r);
+		}
+		return sb.toString();
 	}
-
 
 	public static class ColumnDesc implements Serializable {
 		public String name;
@@ -266,6 +269,10 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 			this.type = type;
 			this.size = size;
 			this.dimension = dimension;
+		}
+
+		public String toString() {
+			return name + " " + type + " " + dimension + " " + size;
 		}
 	}
 }

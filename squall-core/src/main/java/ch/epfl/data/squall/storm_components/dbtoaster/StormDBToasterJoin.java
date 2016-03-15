@@ -174,26 +174,31 @@ public class StormDBToasterJoin extends StormBoltComponent {
             case MANUALHYBRIDHYPERCUBE:
                 long[] cardinality = getEmittersCardinality(nonNestedEmitters, conf);
                 List<EmitterDesc> emittersDesc = MyUtilities.getEmitterDesc(
-                        nonNestedEmitters, _emitterColNames, cardinality);
+                        nonNestedEmitters, _emitterColNames, allCompNames, cardinality);
 
-                LOG.info(emittersDesc);
+                LOG.info("cardinalities: " + Arrays.toString(cardinality));
 
                 HybridHyperCubeAssignment _currentHybridHyperCubeMappingAssignment = 
                     new ManualHybridHyperCubeAssignment(_dimensions);
                 
+                LOG.info("assignment: " + _currentHybridHyperCubeMappingAssignment.getMappingDimensions());
+
                 currentBolt = MyUtilities.attachEmitterManualHybridHyperCube(currentBolt, 
                         nonNestedEmitters, _emitterColNames, allCompNames,
                         _currentHybridHyperCubeMappingAssignment, emittersDesc, conf);   
                 break;
             case HASHHYPERCUBE:
                 cardinality = getEmittersCardinality(nonNestedEmitters, conf);
+                LOG.info("cardinalities: " + Arrays.toString(cardinality));
                 List<ColumnDesc> columns = getColumnDesc(cardinality, nonNestedEmitters);
                 emittersDesc = MyUtilities.getEmitterDesc(
-                        nonNestedEmitters, _emitterColNames, cardinality);
+                        nonNestedEmitters, _emitterColNames, allCompNames, cardinality);
 
                 HashHyperCubeAssignment _currentHashHyperCubeMappingAssignment = 
                     new HashHyperCubeAssignmentBruteForce(parallelism, columns, emittersDesc);
                 
+                LOG.info("assignment: " + _currentHashHyperCubeMappingAssignment.getMappingDimensions());
+
                 currentBolt = MyUtilities.attachEmitterHashHyperCube(currentBolt, 
                         nonNestedEmitters, _emitterColNames, _currentHashHyperCubeMappingAssignment, 
                         emittersDesc, conf);
