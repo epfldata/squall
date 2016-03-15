@@ -28,3 +28,12 @@ STORAGE_LOCAL_DIR /tmp/ramdisk
 STORAGE_CLUSTER_DIR /data/squall_zone/storage
 STORAGE_COLD_START true
 STORAGE_MEMORY_SIZE_MB 4096
+
+# Storm metrics report to Graphite
+GRAPHITE_METRICS_CONSUMER_ENABLED false
+GRAPHITE_METRICS_CONSUMER_PARALELISM 1
+metrics.reporter.name com.verisign.storm.metrics.reporters.graphite.GraphiteReporter
+metrics.graphite.host 10.0.2.2
+metrics.graphite.port 2003
+metrics.graphite.prefix storm.test
+metrics.graphite.min-connect-attempt-interval-secs 5
