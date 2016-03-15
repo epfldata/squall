@@ -28,6 +28,7 @@ import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponentBuilder;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.operators.AggregateSumOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
+import ch.epfl.data.squall.operators.RedisOperator;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.types.LongType;
@@ -85,6 +86,10 @@ public class HashHypercubeDBToasterHyracksPlan extends QueryPlan {
                 "COUNTAGG").add(agg);
         _queryBuilder.add(oc);
 
+        RedisOperator redis = new RedisOperator(conf);
+        OperatorComponent pc = new OperatorComponent(oc, "SENDRESULTSTOREDIS").add(redis);
+
+        _queryBuilder.add(pc);
     }
 
     @Override
