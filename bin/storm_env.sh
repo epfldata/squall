@@ -6,8 +6,9 @@ MASTER=datalab@icdataportal3
 BLADES=1-10
 
 STORM_INSTALL_DIR=/data/lab/fromhome/avitorovic/storm
-STORMNAME=storm-0.9.2-incubating
-#STORMNAME=apache-storm-0.9.4
+# THIS IS NOT SUFFICIENT: THE RIGHT VERSION OF STORM NEEDS TO BE ON THE CLASSPATH + ON THE CLUSTER
+#STORMNAME=storm-0.9.2-incubating
+STORMNAME=apache-storm-0.9.4
 STORMPATH=$STORM_INSTALL_DIR/$STORMNAME
 
 STORM_TMP_DIR=/data/lab/storm_tmp
