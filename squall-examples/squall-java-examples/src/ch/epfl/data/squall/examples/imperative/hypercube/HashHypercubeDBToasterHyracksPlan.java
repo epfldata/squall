@@ -82,14 +82,11 @@ public class HashHypercubeDBToasterHyracksPlan extends QueryPlan {
                 new ColumnReference(_lc, 1), conf).setGroupByColumns(Arrays
                 .asList(0));
 
-        OperatorComponent oc = new OperatorComponent(dbToasterComponent,
-                "COUNTAGG").add(agg);
-        _queryBuilder.add(oc);
-
         RedisOperator redis = new RedisOperator(conf);
-        OperatorComponent pc = new OperatorComponent(oc, "SENDRESULTSTOREDIS").add(redis);
 
-        _queryBuilder.add(pc);
+        OperatorComponent oc = new OperatorComponent(dbToasterComponent,
+                "COUNTAGG").add(agg).add(redis);
+        _queryBuilder.add(oc);
     }
 
     @Override
