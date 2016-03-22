@@ -4,7 +4,7 @@ import sys
 import os
 import re
 
-WF_OUTPUT=0.2
+WF_OUTPUT=0.3
 
 # functions
 def get_number(filename, expr):
