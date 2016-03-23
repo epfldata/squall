@@ -21,6 +21,7 @@ package ch.epfl.data.squall.api.scala.operators
 
 import ch.epfl.data.squall.operators.AggregateOperator
 import ch.epfl.data.squall.visitors.OperatorVisitor
+import ch.epfl.data.squall.operators.OneToOneOperator
 import ch.epfl.data.squall.operators.DistinctOperator
 import ch.epfl.data.squall.expressions.ValueExpression
 import ch.epfl.data.squall.operators.ProjectOperator
@@ -142,11 +143,11 @@ class ScalaAggregateOperator[T: SquallType, A: Numeric](val _agg: T => A, val _m
     _storage.getContent();
   }
 
-  override def process(tupleList: java.util.List[String], lineageTimestamp: Long): java.util.List[String] = {
+  override def process(tupleList: java.util.List[String], lineageTimestamp: Long): java.util.List[java.util.List[String]] = {
     _numTuplesProcessed += 1;
     val refinedTuple =
       if (_distinct != null) {
-        val refinedTuple = _distinct.process(tupleList, lineageTimestamp);
+        val refinedTuple = _distinct.processOne(tupleList, lineageTimestamp);
         if (refinedTuple == null)
           return null;
         refinedTuple
@@ -165,7 +166,10 @@ class ScalaAggregateOperator[T: SquallType, A: Numeric](val _agg: T => A, val _m
     val affectedTuple: java.util.List[String] = new ArrayList[String]();
     affectedTuple.add(tupleHash);
     affectedTuple.add(strValue);
-    return affectedTuple;
+
+    val result = new ArrayList[java.util.List[String]]()
+    result.add(affectedTuple)
+    return result;
 
   }
 

@@ -25,8 +25,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
-import ch.epfl.data.squall.utilities.StormDBToasterProvider;
 import org.apache.log4j.Logger;
 
 import backtype.storm.Config;
@@ -40,6 +38,7 @@ import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.StormWrapper;
+import ch.epfl.data.squall.utilities.SquallContext;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class Main {
@@ -112,47 +111,6 @@ public class Main {
 	return queryPlan;
     }
 
-    public static TopologyBuilder createTopology(QueryBuilder qp, Config conf) {
-	TopologyBuilder builder = new TopologyBuilder();
-	TopologyKiller killer = new TopologyKiller(builder);
-
-	List<Component> queryPlan = qp.getPlan();
-	List<String> allCompNames = qp.getComponentNames();
-	Collections.sort(allCompNames);
-
-    List<DBToasterJoinComponent> dbtComponents = new LinkedList<DBToasterJoinComponent>();
-    int planSize = queryPlan.size();
-	for (int i = 0; i < planSize; i++) {
-	    Component component = queryPlan.get(i);
-        if (component instanceof DBToasterJoinComponent) {
-        dbtComponents.add((DBToasterJoinComponent) component);
-        }
-	    Component child = component.getChild();
-	    if (child == null) {
-		// a last component (it might be multiple of them)
-		component.makeBolts(builder, killer, allCompNames, conf,
-			StormComponent.FINAL_COMPONENT);
-	    } else if (child instanceof DummyComponent) {
-		component.makeBolts(builder, killer, allCompNames, conf,
-			StormComponent.NEXT_TO_DUMMY);
-	    } else if (child.getChild() == null
-		    && !(child instanceof AdaptiveThetaJoinComponent)) {
-		// if the child is dynamic, then reshuffler is NEXT_TO_LAST
-		component.makeBolts(builder, killer, allCompNames, conf,
-			StormComponent.NEXT_TO_LAST_COMPONENT);
-	    } else {
-		component.makeBolts(builder, killer, allCompNames, conf,
-			StormComponent.INTERMEDIATE);
-	    }
-	}
-    if (dbtComponents.size() > 0) StormDBToasterProvider.prepare(dbtComponents,
-            SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED"));
-	// printing infoID information and returning the result
-	// printInfoID(killer, queryPlan); commented out because IDs are now
-	// desriptive names
-	return builder;
-    }
-
     public static void main(String[] args) {
 	new Main(args);
     }
@@ -216,8 +174,9 @@ public class Main {
 
 	addVariablesToMap(conf, confPath);
 	putBatchSizes(queryPlan, conf);
-	TopologyBuilder builder = createTopology(queryPlan, conf);
-	StormWrapper.submitTopology(conf, builder);
+        SquallContext context = new SquallContext(conf);
+	TopologyBuilder builder = queryPlan.createTopology(context);
+	StormWrapper.submitTopology(context, builder);
     }
 
     public Main(String[] args) {
@@ -232,7 +191,8 @@ public class Main {
 
 	addVariablesToMap(conf, confPath);
 	putBatchSizes(queryPlan, conf);
-	TopologyBuilder builder = createTopology(queryPlan, conf);
-	StormWrapper.submitTopology(conf, builder);
+        SquallContext context = new SquallContext(conf);
+	TopologyBuilder builder = queryPlan.createTopology(context);
+	StormWrapper.submitTopology(context, builder);
     }
 }

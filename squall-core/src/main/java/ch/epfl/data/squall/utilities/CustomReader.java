@@ -20,8 +20,10 @@
 package ch.epfl.data.squall.utilities;
 
 import java.io.IOException;
+import java.io.Serializable;
+import java.io.InputStream;
 
-public interface CustomReader {
+public interface CustomReader extends Serializable {
 
     public void close();
 

@@ -137,28 +137,29 @@ public class StormSrcStorage extends StormBoltComponent {
 	    }
     }
 
-    private void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> tuple) {
+    private void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> inTuple) {
 	if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
 	    try {
 		_semAgg.acquire();
 	    } catch (final InterruptedException ex) {
 	    }
-	tuple = _operatorChain.process(tuple, 0);
-	if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
+	for (List<String> tuple : _operatorChain.process(inTuple, 0)) {
+          if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
 	    _semAgg.release();
 
-	if (tuple == null)
+          if (tuple == null)
 	    return;
-	_numSentTuples++;
-	printTuple(tuple);
+          _numSentTuples++;
+          printTuple(tuple);
 
-	if (MyUtilities.isSending(getHierarchyPosition(), _batchOutputMillis))
+          if (MyUtilities.isSending(getHierarchyPosition(), _batchOutputMillis))
 	    if (MyUtilities.isCustomTimestampMode(getConf()))
-		tupleSend(tuple, stormTupleRcv, stormTupleRcv.getLong(3));
+              tupleSend(tuple, stormTupleRcv, stormTupleRcv.getLong(3));
 	    else
-		tupleSend(tuple, stormTupleRcv, 0);
-	if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
+              tupleSend(tuple, stormTupleRcv, 0);
+          if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
 	    printTupleLatency(_numSentTuples - 1, stormTupleRcv.getLong(3));
+        }
     }
 
     // from IRichBolt
@@ -227,10 +228,13 @@ public class StormSrcStorage extends StormBoltComponent {
 			outputTuple = MyUtilities.createOutputTuple(firstTuple,
 				secondTuple);
 
-		    if (_preAggProj != null)
-			outputTuple = _preAggProj.process(outputTuple, 0);
-
-		    applyOperatorsAndSend(stormTupleRcv, outputTuple);
+		    if (_preAggProj != null) {
+                      for (List<String> outTuple : _preAggProj.process(outputTuple, 0)) {
+                        applyOperatorsAndSend(stormTupleRcv, outTuple);
+                      }
+                    } else {
+                      applyOperatorsAndSend(stormTupleRcv, outputTuple);
+                    }
 		}
 	}
 	getCollector().ack(stormTupleRcv);
@@ -245,12 +249,6 @@ public class StormSrcStorage extends StormBoltComponent {
     public String getInfoID() {
 	final String str = "SourceStorage " + _full_ID + " has ID: " + getID();
 	return str;
-    }
-
-    @Override
-    protected InterchangingComponent getInterComp() {
-	// should never be invoked
-	return null;
     }
 
     // from StormEmitter interface

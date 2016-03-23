@@ -54,7 +54,6 @@ import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storage.BitVector;
 import ch.epfl.data.squall.storage.TupleStorage;
 import ch.epfl.data.squall.storage.indexes.Index;
-import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormBoltComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
@@ -249,24 +248,25 @@ public class ThetaJoinerAdaptiveAdvisedEpochs extends StormBoltComponent {
     }
 
     protected void applyOperatorsAndSend(Tuple stormTupleRcv,
-	    List<String> tuple, long lineageTimestamp) {
+	    List<String> inTuple, long lineageTimestamp) {
 	if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
 	    try {
 		_semAgg.acquire();
 	    } catch (final InterruptedException ex) {
 	    }
-	tuple = _operatorChain.process(tuple, lineageTimestamp);
-	if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
+	for(List<String> tuple : _operatorChain.process(inTuple, lineageTimestamp)) {
+          if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
 	    _semAgg.release();
-	if (tuple == null)
+          if (tuple == null)
 	    return;
-	_numSentTuples++;
-	printStatistics(SystemParameters.OUTPUT_PRINT);
-	printTuple(tuple);
-	if (MyUtilities.isSending(getHierarchyPosition(), _batchOutputMillis))
+          _numSentTuples++;
+          printStatistics(SystemParameters.OUTPUT_PRINT);
+          printTuple(tuple);
+          if (MyUtilities.isSending(getHierarchyPosition(), _batchOutputMillis))
 	    tupleSend(tuple, stormTupleRcv, 0);
-	if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
+          if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
 	    printTupleLatency(_numSentTuples - 1, lineageTimestamp);
+        }
     }
 
     private void clean(TupleStorage emittingStorage, int beginIndex,
@@ -819,11 +819,6 @@ public class ThetaJoinerAdaptiveAdvisedEpochs extends StormBoltComponent {
 	final String str = "DestinationStorage " + getID() + " has ID: "
 		+ getID();
 	return str;
-    }
-
-    @Override
-    protected InterchangingComponent getInterComp() {
-	throw new RuntimeException("Hm, should not be here!");
     }
 
     @Override

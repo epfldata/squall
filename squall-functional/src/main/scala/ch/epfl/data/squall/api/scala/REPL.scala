@@ -19,18 +19,15 @@
 
 package ch.epfl.data.squall.api.scala
 
-import ch.epfl.data.squall.query_plans.QueryBuilder
 import ch.epfl.data.squall.api.scala.SquallType._
 import ch.epfl.data.squall.api.scala.Stream._
 import ch.epfl.data.squall.api.scala.TPCHSchema._
-
+import ch.epfl.data.squall.query_plans.QueryBuilder
+import ch.epfl.data.squall.utilities.SquallContext
+import ch.qos.logback.classic.{Level, Logger, LoggerContext}
+import org.slf4j.LoggerFactory
 import scala.collection.JavaConversions._
 
-import ch.epfl.data.squall.utilities.StormWrapper
-import ch.epfl.data.squall.utilities.SystemParameters
-import ch.epfl.data.squall.main.Main
-
-import backtype.storm.Config
 
 /** This class does not actually offer a REPL, but instead provides some
   * useful setup and methods to be imported when starting a REPL, for instance
@@ -41,37 +38,12 @@ import backtype.storm.Config
   *
   */
 class REPL(val outdir: String) {
-  // TODO: eventually most of this should be handled by a "context object"
-  // Initialize
-  val conf = new Config
+  System.setProperty("storm.options", "storm.meta.serialization.delegate=ch.epfl.data.squall.utilities.SquallSerializationDelegate," + s"squall.classdir=${outdir}/classes/")
 
-  // Load default values
-  SystemParameters.putInMap(conf, "DIP_TOPOLOGY_NAME_PREFIX", "username")
-  SystemParameters.putInMap(conf, "DIP_EXTENSION", ".tbl")
-  SystemParameters.putInMap(conf, "DIP_READ_SPLIT_DELIMITER", "\\|")
-  SystemParameters.putInMap(conf, "DIP_GLOBAL_ADD_DELIMITER", "|")
-  SystemParameters.putInMap(conf, "DIP_GLOBAL_SPLIT_DELIMITER", "\\|")
-
-  SystemParameters.putInMap(conf, "DIP_KILL_AT_THE_END", "true")
-
-  SystemParameters.putInMap(conf, "STORAGE_LOCAL_DIR", "/tmp/ramdisk")
-  SystemParameters.putInMap(conf, "STORAGE_CLUSTER_DIR", "/data/squall_zone/storage")
-  SystemParameters.putInMap(conf, "STORAGE_COLD_START", "true")
-  SystemParameters.putInMap(conf, "STORAGE_MEMORY_SIZE_MB", "4096")
-
-  // Run in distributed mode
-  SystemParameters.putInMap(conf, "DIP_DISTRIBUTED", "true")
-
-  // Configure for tpch
-  SystemParameters.putInMap(conf, "DIP_DATA_PATH", "/shared/tpch/0.01G/")
-  SystemParameters.putInMap(conf, "CUSTOMER_PAR", "1")
-  SystemParameters.putInMap(conf, "ORDERS_PAR", "1")
-  SystemParameters.putInMap(conf, "LINEITEM_PAR", "1")
-  SystemParameters.putInMap(conf, "CUSTOMER_ORDERS_PAR", "1")
-  SystemParameters.putInMap(conf, "CUSTOMER_ORDERS_LINEITEM_PAR", "1")
+  val context = new SquallContext()
 
   def start() = {
-print("""
+    print("""
  ____   ___  _   _   _    _     _
 / ___| / _ \| | | | / \  | |   | |
 \___ \| | | | | | |/ _ \ | |   | |
@@ -81,6 +53,8 @@ print("""
 Type "help" for Squall related help
 
 """)
+    context.setLocal
+    stopLogging()
   }
 
   // TODO: make a more useful help. Maybe use a Map to define the possible
@@ -94,52 +68,65 @@ Type "help" for Squall related help
     import scala.sys.process._
       (s"cp squall-functional/target/squall-frontend-standalone-0.2.0.jar ${outdir}/repl.jar").!!
       (s"jar uf ${outdir}/repl.jar -C ${outdir}/classes/ .").!!
-    println("Done packing")
+      println("Done packing")
     s"${outdir}/repl.jar"
   }
 
   var count = 0
-  def submit(queryPlan: QueryBuilder) = {
-    val jar = packClasses()
+  def prepareSubmit(): String = {
+    if (context.isDistributed()) {
+      val jar = packClasses()
 
-    ////////////////////////////////////////////////////////////////////////////
-    ////// Here comes the ugly part. We have to trick Storm, as we are doing
-    ////// things that are not really standard.
+      ////// Here comes the ugly part. We have to trick Storm, as we are doing
+      ////// things that are not really standard.
 
-    //// TODO: HACK FOR STORM 0.9.3, if we ever go to 0.9.4 this won't be necessary (I think)
-    // In storm 0.9.3 once one jar is submitted, no other jar can be submitted
-    // as it assumes that it has already been submitted.
-    // We can use Java reflection to hack into StormSubmitter and "reset" it,
-    // so we can use submit multiple topologies during one run.
-    import backtype.storm.StormSubmitter
-    import java.lang.reflect.Field
-    val f : Field = (new StormSubmitter()).getClass().getDeclaredField("submittedJar");
-    f.setAccessible(true);
-    f.set(new StormSubmitter(), null);
+      //// TODO: HACK FOR STORM 0.9.3, if we ever go to 0.9.4 this won't be necessary (I think)
+      // In storm 0.9.3 once one jar is submitted, no other jar can be submitted
+      // as it assumes that it has already been submitted.
+      // We can use Java reflection to hack into StormSubmitter and "reset" it,
+      // so we can use submit multiple topologies during one run.
+      import backtype.storm.StormSubmitter
+      import java.lang.reflect.Field
+      val f : Field = (new StormSubmitter()).getClass().getDeclaredField("submittedJar");
+      f.setAccessible(true);
+      f.set(new StormSubmitter(), null);
 
-    // Now we have to trick storm into thinking we launched with the storm
-    // script. This is easier!
-    import java.util.Properties
-    val p = new Properties(System.getProperties());
-    p.setProperty("storm.jar", jar)
-    System.setProperties(p);
-    ////////////////////////////////////////////////////////////////////////////
-
+      // Now we have to trick storm into thinking we launched with the storm
+      // script. This is easier!
+      System.setProperty("storm.jar", jar);
+      ////////////////////////
+    }
 
     // Configure the query. To easily identify it we use the prefixes repl_0_,
     // repl_1_, repl_2_... Followed by a random number to avoid exceptions
     // telling us that the topology already exists.
-    val tpname = "repl_" + count + "_" + scala.util.Random.nextInt()
-    Main.putBatchSizes(queryPlan, conf)
-    SystemParameters.putInMap(conf, "DIP_QUERY_NAME", "repl_" + count)
-    SystemParameters.putInMap(conf, "DIP_TOPOLOGY_NAME", tpname)
     count = count + 1
-
-    // Create and send the topology
-    val builder = Main.createTopology(queryPlan, conf)
-    StormWrapper.submitTopology(conf, builder)
-    println("Submitted topology as " + tpname)
+    "repl_" + count + "_" + scala.util.Random.nextInt()
   }
+
+
+
+  // If submitting locally we can actually get a result by calling submitLocal
+  def submitLocal(plan: QueryBuilder) = {
+    val tpname = prepareSubmit()
+    context.submitLocal(tpname, plan)
+  }
+
+  def submitDistributed(plan: QueryBuilder) = {
+    val tpname = prepareSubmit()
+    context.submit(tpname, plan)
+  }
+
+  private val loggerContext: LoggerContext = LoggerFactory.getILoggerFactory().asInstanceOf[LoggerContext]
+  def activateLogging() = {
+    loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).setLevel(Level.INFO)
+  }
+
+  def stopLogging() = {
+    loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).setLevel(Level.OFF)
+  }
+
+
 
   // An example query plan
   def createQueryPlan(): QueryBuilder = {
@@ -147,7 +134,7 @@ Type "help" for Squall related help
     val orders = Source[Orders]("orders").map( _.custkey )
     val join = (customers join orders)( _._1 )( x => x )
     val agg = join.groupByKey( x => 1, _._1._2)
-    val plan = agg.execute(conf)
+    val plan = agg.execute(context)
     plan
   }
 

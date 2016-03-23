@@ -86,7 +86,6 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
     protected DateFormat _convDateFormat = new SimpleDateFormat(
 	    "EEE MMM d HH:mm:ss zzz yyyy");
     protected StatisticsUtilities _statsUtils;
-    protected InterchangingComponent _inter = null;
 
     public StormJoinerBoltComponent(StormEmitter firstEmitter,
 	    StormEmitter secondEmitter, ComponentProperties cp,
@@ -133,7 +132,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
     }
 
     protected void applyOperatorsAndSend(Tuple stormTupleRcv,
-	    List<String> tuple, long lineageTimestamp, boolean isLastInBatch) {
+	    List<String> inTuple, long lineageTimestamp, boolean isLastInBatch) {
 	// long timestamp = 0;
 	// if (MyUtilities.isWindowTimestampMode(getConf()))
 	// if (getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
@@ -146,44 +145,45 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 		_semAgg.acquire();
 	    } catch (final InterruptedException ex) {
 	    }
-	tuple = _operatorChain.process(tuple, lineageTimestamp);
-	if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
+	for (List<String> tuple : _operatorChain.process(inTuple, lineageTimestamp)) {
+          if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 	    _semAgg.release();
-	if (tuple == null)
+          if (tuple == null)
 	    return;
-	_numSentTuples++;
-	printTuple(tuple);
-	if (_numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
+          _numSentTuples++;
+          printTuple(tuple);
+          if (_numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
 	    printStatistics(SystemParameters.OUTPUT_PRINT);
-	/*
-	 * Measuring latency from data sources and taking into account only the
-	 * last tuple in the batch
-	 * 
-	 * if (MyUtilities.isSending(getHierarchyPosition(),
-	 * _aggBatchOutputMillis)) { long timestamp = 0; if
-	 * (MyUtilities.isCustomTimestampMode(getConf())) timestamp =
-	 * stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
-	 * tupleSend(tuple, stormTupleRcv, timestamp); } if
-	 * (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
-	 * long timestamp; if (MyUtilities.isManualBatchingMode(getConf())) { if
-	 * (isLastInBatch) { timestamp =
-	 * stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
-	 * printTupleLatency(_numSentTuples - 1, timestamp); } } else {
-	 * timestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
-	 * printTupleLatency(_numSentTuples - 1, timestamp); } }
-	 */
-	// Measuring latency from the previous component, and taking into
-	// account all the tuples in the batch
-	if (MyUtilities
-		.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
-
+          /*
+           * Measuring latency from data sources and taking into account only the
+           * last tuple in the batch
+           * 
+           * if (MyUtilities.isSending(getHierarchyPosition(),
+           * _aggBatchOutputMillis)) { long timestamp = 0; if
+           * (MyUtilities.isCustomTimestampMode(getConf())) timestamp =
+           * stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
+           * tupleSend(tuple, stormTupleRcv, timestamp); } if
+           * (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
+           * long timestamp; if (MyUtilities.isManualBatchingMode(getConf())) { if
+           * (isLastInBatch) { timestamp =
+           * stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
+           * printTupleLatency(_numSentTuples - 1, timestamp); } } else {
+           * timestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
+           * printTupleLatency(_numSentTuples - 1, timestamp); } }
+           */
+          // Measuring latency from the previous component, and taking into
+          // account all the tuples in the batch
+          if (MyUtilities
+              .isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
+            
 	    // TODO Window Semantics
 	    if (!WindowSemanticsManager.sendTupleIfSlidingWindowSemantics(this,
-		    tuple, stormTupleRcv, lineageTimestamp))
-		tupleSend(tuple, stormTupleRcv, lineageTimestamp);
-	}
-	if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
+                                                                          tuple, stormTupleRcv, lineageTimestamp))
+              tupleSend(tuple, stormTupleRcv, lineageTimestamp);
+          }
+          if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
 	    printTupleLatency(_numSentTuples - 1, lineageTimestamp);
+        }
     }
 
     protected void createIndexes() {
@@ -303,11 +303,6 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 	final String str = "DestinationStorage " + getID() + " has ID: "
 		+ getID();
 	return str;
-    }
-
-    @Override
-    protected InterchangingComponent getInterComp() {
-	return _inter;
     }
 
     @Override

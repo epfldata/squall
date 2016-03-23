@@ -26,6 +26,7 @@ import ch.epfl.data.squall.api.scala._
 import ch.epfl.data.squall.api.scala.TPCHSchema._
 import java.util.Date
 import java.text.SimpleDateFormat
+import ch.epfl.data.squall.utilities.SquallContext
 
 /**
  * @author mohamed
@@ -51,7 +52,7 @@ object ScalaTPCH7Plan {
   private val _firstCountryName = "FRANCE"
   private val _secondCountryName = "GERMANY"
 
-  def getQueryPlan(conf: java.util.Map[String, Object]): QueryBuilder = {
+  def getQueryPlan(context: SquallContext): QueryBuilder = {
 
     val nation2 = Source[Nation]("Nation2").
       filter { t => t.name == _firstCountryName || t.name == _secondCountryName }.
@@ -80,7 +81,7 @@ object ScalaTPCH7Plan {
 
     val agg = NCOLSNJoin.groupByKey(_._2._3, x => (x._2._1, x._1._1, x._2._2)).onWindow(20, 5) //List(2,0,3)
 
-    agg.execute(conf)
+    agg.execute(context)
   }
 
 }

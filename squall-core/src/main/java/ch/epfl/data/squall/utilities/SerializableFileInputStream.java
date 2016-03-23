@@ -27,8 +27,7 @@ import java.io.Serializable;
 
 import org.apache.log4j.Logger;
 
-public class SerializableFileInputStream extends InputStream implements
-	Serializable, CustomReader {
+public class SerializableFileInputStream extends InputStream implements CustomReader {
     // self-test
     public static void main(String args[]) throws IOException {
 	final SerializableFileInputStream reader = new SerializableFileInputStream(

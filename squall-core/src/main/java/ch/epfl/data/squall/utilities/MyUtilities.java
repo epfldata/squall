@@ -75,9 +75,9 @@ import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SampleOperator;
+import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
-import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.StormSrcHarmonizer;
@@ -1589,23 +1589,13 @@ public class MyUtilities {
     }
 
     public static void printBlockingResult(String componentName,
-	    AggregateOperator agg, int hierarchyPosition, Map map, Logger log) {
+	    Operator op, int hierarchyPosition, Map map, Logger log) {
 	// just print it, necessary for both modes (in Local mode we might print
 	// other than final components)
-	printPartialResult(componentName, agg.getNumTuplesProcessed(),
-		agg.printContent(), map, log);
+	printPartialResult(componentName, op.getNumTuplesProcessed(),
+		op.printContent(), map, log);
 
-	LocalMergeResults.localCollectFinalResult(agg, hierarchyPosition, map,
-		log);
-    }
-
-    // this method is called when the last operator is not an aggregateOperator
-    public static void printBlockingResult(String componentName,
-	    int numProcessedTuples, String compContent, int hierarchyPosition,
-	    Map map, Logger log) {
-	// just print it, necessary for both modes (in Local mode we might print
-	// other than final components)
-	printPartialResult(componentName, numProcessedTuples, compContent, map,
+	LocalMergeResults.localCollectFinalResult(op, hierarchyPosition, map,
 		log);
     }
 
@@ -1845,55 +1835,6 @@ public class MyUtilities {
 		currentBolt = currentBolt.customGrouping(emitterID, mapping);
 	}
 	return currentBolt;
-    }
-
-    public static InputDeclarer thetaAttachEmitterComponentsWithInterChanging(
-	    InputDeclarer currentBolt, StormEmitter emitter1,
-	    StormEmitter emitter2, List<String> allCompNames,
-	    MatrixAssignment assignment, Map map, InterchangingComponent inter) {
-
-	// MatrixAssignment assignment = new MatrixAssignment(firstRelationSize,
-	// secondRelationSize, parallelism,-1);
-
-	final String firstEmitterIndex = String.valueOf(allCompNames
-		.indexOf(emitter1.getName()));
-	final String secondEmitterIndex = String.valueOf(allCompNames
-		.indexOf(emitter2.getName()));
-
-	final ContentInsensitiveThetaJoinGrouping mapping = new ContentInsensitiveThetaJoinGrouping(
-		firstEmitterIndex, secondEmitterIndex, assignment, map);
-
-	final ArrayList<StormEmitter> emittersList = new ArrayList<StormEmitter>();
-	emittersList.add(inter);
-
-	for (final StormEmitter emitter : emittersList) {
-	    final String[] emitterIDs = emitter.getEmitterIDs();
-	    for (final String emitterID : emitterIDs)
-		currentBolt = currentBolt.customGrouping(emitterID, mapping);
-	}
-	return currentBolt;
-    }
-
-    public static InputDeclarer hypecCubeAttachEmitterComponentsWithInterChanging(
-            InputDeclarer currentBolt, List<StormEmitter> emitters, List<String> allCompNames,
-            HyperCubeAssignment assignment, Map map, InterchangingComponent inter) {
-
-        String[] emitterIndexes = new String[emitters.size()];
-        for (int i = 0; i < emitterIndexes.length; i++)
-            emitterIndexes[i] = String.valueOf(allCompNames
-                    .indexOf(emitters.get(i).getName()));
-
-        final CustomStreamGrouping mapping = new HyperCubeGrouping(emitterIndexes, assignment, map);
-
-        final ArrayList<StormEmitter> emittersList = new ArrayList<StormEmitter>();
-        emittersList.add(inter);
-
-        for (final StormEmitter emitter : emittersList) {
-            final String[] emitterIDs = emitter.getEmitterIDs();
-            for (final String emitterID : emitterIDs)
-                currentBolt = currentBolt.customGrouping(emitterID, mapping);
-        }
-        return currentBolt;
     }
 
     // FIXME

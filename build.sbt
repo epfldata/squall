@@ -1,9 +1,25 @@
-import complete.DefaultParsers._
+/*
+ * Copyright (c) 2011-2015 EPFL DATA Laboratory
+ * Copyright (c) 2014-2015 The Squall Collaboration (see NOTICE)
+ *
+ * All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 scalaVersion := "2.11.6"
 
-lazy val runParser = inputKey[Unit]("Runs the SQL interface with the given configuration.")
-lazy val runPlanner = inputKey[Unit]("Runs the imperative interface with the given configuration.")
+lazy val tempInstallDbtoaster = taskKey[String]("Installs DBToaster in a temporal directory if necessary and returns the DBToaster home")
 
 lazy val commonSettings = Seq(
   name := "squall",
@@ -42,12 +58,20 @@ lazy val commonSettings = Seq(
       }
 )
 
+lazy val SqlTest = config("sql") extend(Test)
+lazy val DbtoasterTest = config("dbtoaster") extend(Test)
+
+def sqlFilter(name: String): Boolean = (name startsWith "ch.epfl.data.squall.test.sql")
+def dbtoasterFilter(name: String): Boolean = (name startsWith "ch.epfl.data.squall.test.dbtoaster")
+def planFilter(name: String): Boolean = !dbtoasterFilter(name) && !sqlFilter(name)
+
 lazy val squall = (project in file("squall-core")).
+  configs(SqlTest).
+  configs(DbtoasterTest).
   settings(commonSettings: _*).
+  settings(inConfig(SqlTest)(Defaults.testTasks): _*).
+  settings(inConfig(DbtoasterTest)(Defaults.testTasks): _*).
   settings(
-    javacOptions ++= Seq(
-      "-target", "1.7",
-      "-source", "1.7"),
     mainClass := Some("ch.epfl.data.squall.main.Main"),
     unmanagedSourceDirectories in Compile += baseDirectory.value / "../squall-examples/squall-java-examples/src/",
     // Don't use scala as a dependency
@@ -73,45 +97,63 @@ lazy val squall = (project in file("squall-core")).
       "junit" % "junit" % "4.12" % Test,
       "com.novocode" % "junit-interface" % "0.11" % Test,
       "org.apache.hadoop" % "hadoop-client" % "2.2.0" exclude("org.slf4j", "slf4j-log4j12"),
-      "org.apache.hadoop" % "hadoop-hdfs" % "2.2.0" exclude("org.slf4j", "slf4j-log4j12")
-      //"com.github.ptgoetz" % "storm-signals" % "0.2.0",
-      //"com.netflix.curator" % "curator-framework" % "1.0.1"
+      "org.apache.hadoop" % "hadoop-hdfs" % "2.2.0" exclude("org.slf4j", "slf4j-log4j12"),
+      "org.apache.storm" % "storm-hdfs" % "0.10.0-beta1"
+        //"com.github.ptgoetz" % "storm-signals" % "0.2.0",
+        //"com.netflix.curator" % "curator-framework" % "1.0.1"
     ),
     // http://www.scala-sbt.org/0.13/docs/Running-Project-Code.html
     // We need to fork the JVM, as storm uses multiple threads
     fork := true,
-    // Running tasks
-    runParser := {
-      val arguments: Seq[String] = spaceDelimited("<arg>").parsed
-      val classpath: Seq[File] = (
-        ((fullClasspath in Compile).value map { _.data }) ++
-          (arguments.tail map { file(_) })
-      )
-      val options = ForkOptions(
-        bootJars = classpath,
-        workingDirectory = Some(file("./bin"))
-      )
-      val mainClass: String = "ch.epfl.data.squall.api.sql.main.ParserMain"
-      val exitCode: Int = Fork.java(options, mainClass +: arguments)
-      sys.exit(exitCode)
-    },
-    runPlanner := {
-      val arguments: Seq[String] = spaceDelimited("<arg>").parsed
-      val classpath: Seq[File] = (
-        ((fullClasspath in Compile).value map { _.data }) ++
-          (arguments.tail map { file(_) })
-      )
-      val options = ForkOptions(
-        bootJars = classpath,
-        workingDirectory = Some(file("./bin"))
-      )
-      val mainClass: String = "ch.epfl.data.squall.main.Main"
-      val exitCode: Int = Fork.java(options, mainClass +: arguments)
-      sys.exit(exitCode)
-    },
+
     // Testing
-    libraryDependencies +=  "org.scalatest" % "scalatest_2.11" % "2.2.4" % Test
+    libraryDependencies +=  "org.scalatest" % "scalatest_2.11" % "2.2.4" % Test,
+    testOptions in Test := Seq(Tests.Filter(planFilter)),
+    testOptions in SqlTest := Seq(Tests.Filter(sqlFilter)),
+    testOptions in DbtoasterTest := Seq(Tests.Filter(dbtoasterFilter)),
+
+    tempInstallDbtoaster := {
+      if (System.getenv("DBTOASTER_HOME") != null && System.getenv("DBTOASTER_HOME") != "") {
+        println("Using DBToaster at " + System.getenv("DBTOASTER_HOME"))
+        System.getenv("DBTOASTER_HOME")
+      } else {
+        // Adapted from Khue bash script
+        import scala.sys.process._
+
+        val installDir = (target / "dbtoaster").value
+        val packagePath = (unmanagedBase / "dbtoaster/dbtoaster-alpha5-release.tar.gz").value
+
+        val OS = System.getProperty("os.name", "generic").toLowerCase();
+        val frontendPath = if ((OS.indexOf("mac") >= 0) || (OS.indexOf("darwin") >= 0)) {
+          (unmanagedBase / "dbtoaster/front_ends/dbtoaster_frontend_macosx").value
+        } else if (OS.indexOf("nux") >= 0) {
+          if (System.getProperty("sun.arch.data.model") == 64) {
+            (unmanagedBase / "dbtoaster/front_ends/dbtoaster_frontend_linux_x86-64").value
+          } else {
+            (unmanagedBase / "dbtoaster/front_ends/dbtoaster_frontend_linux_x86-32").value
+          }
+        } else {
+          throw new Exception("This platform is not supported for DBToaster")
+        }
+
+        println("Installing DBToaster to " + installDir)
+        s"mkdir -p $installDir".!
+        println(s"Extracting $packagePath to $installDir")
+        s"tar -xzf $packagePath -C $installDir --strip-components=1".!
+        s"chmod +x ${installDir}/bin/dbtoaster".!
+        println(s"Select frontend binary $frontendPath")
+        println(s"copy $frontendPath to $installDir/bin/dbtoaster_frontend")
+        s"cp $frontendPath $installDir/bin/dbtoaster_frontend".!
+
+        installDir.getAbsolutePath()
+      }
+    },
+
+
+    envVars in DbtoasterTest := Map("DBTOASTER_HOME" -> tempInstallDbtoaster.value),
+    cleanFiles <+= target / "dbtoaster"
   )
+
 
 // For the macros
 lazy val functional_macros = (project in file("squall-functional")).
@@ -157,6 +199,8 @@ lazy val functional = (project in file("squall-functional")).
     initialCommands in Compile in console += s"""val REPL = new ch.epfl.data.squall.api.scala.REPL(\"${repl_outdir}\");""",
     initialCommands in Compile in console += "import REPL._;",
     initialCommands in Compile in console += "start;",
+    cleanupCommands in Compile in console += "ch.epfl.data.squall.utilities.StormWrapper.shutdown();",
+    cleanupCommands in Compile in console += "println(\"Shutting down...\");",
     console in Compile <<= (console in Compile).dependsOn(assembly)
   )
 

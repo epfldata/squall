@@ -349,8 +349,9 @@ public class PushStatisticCollector {
 
     private static <T> void appendKeys(List<T> keys, ProjectOperator project,
 	    List<String> tuple, Type<T> wrapper) {
-	String key = project.process(tuple, -1).get(0);
+      for(String key : project.process(tuple, -1).get(0)) {
 	keys.add(wrapper.fromString(key));
+      }
     }
 
     private static <T extends Comparable<T>> void fillMatrix(

@@ -30,7 +30,7 @@ import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.visitors.OperatorVisitor;
 
-public class PrintOperator implements Operator {
+public class PrintOperator extends OneToOneOperator {
     private static final long serialVersionUID = 1L;
 
     private int _numTuplesProcessed = 0;
@@ -84,7 +84,7 @@ public class PrintOperator implements Operator {
     }
 
     @Override
-    public List<String> process(List<String> tuple, long lineageTimestamp) {
+    public List<String> processOne(List<String> tuple, long lineageTimestamp) {
 	if (_writer == null) {
 	    try {
 		// if(SystemParameters.getBoolean(_map, "DIP_DISTRIBUTED")){

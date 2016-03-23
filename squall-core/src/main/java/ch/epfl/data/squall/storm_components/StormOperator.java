@@ -56,7 +56,7 @@ public class StormOperator extends StormBoltComponent {
     private PeriodicAggBatchSend _periodicAggBatch;
     private final long _aggBatchOutputMillis;
 
-    public StormOperator(ArrayList<Component> parentEmitters,
+    public StormOperator(Component[] parentEmitters,
 	    ComponentProperties cp, List<String> allCompNames,
 	    int hierarchyPosition, TopologyBuilder builder,
 	    TopologyKiller killer, Config conf) {
@@ -130,7 +130,7 @@ public class StormOperator extends StormBoltComponent {
     }
 
     protected void applyOperatorsAndSend(Tuple stormTupleRcv,
-	    List<String> tuple, boolean isLastInBatch) {
+	    List<String> inTuple, boolean isLastInBatch) {
 	long timestamp = 0;
 	if (MyUtilities.isCustomTimestampMode(getConf())
 		|| MyUtilities.isWindowTimestampMode(getConf()))
@@ -140,35 +140,36 @@ public class StormOperator extends StormBoltComponent {
 		_semAgg.acquire();
 	    } catch (final InterruptedException ex) {
 	    }
-	tuple = _operatorChain.process(tuple, timestamp);
-	if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
+	for (List<String> tuple : _operatorChain.process(inTuple, timestamp)) {
+          if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 	    _semAgg.release();
-
-	if (tuple == null) {
+          
+          if (tuple == null) {
 	    getCollector().ack(stormTupleRcv);
 	    return;
-	}
-	_numSentTuples++;
-	printTuple(tuple);
-
-	if (MyUtilities
-		.isSending(getHierarchyPosition(), _aggBatchOutputMillis)
-		|| MyUtilities.isWindowTimestampMode(getConf())) {
+          }
+          _numSentTuples++;
+          printTuple(tuple);
+          
+          if (MyUtilities
+              .isSending(getHierarchyPosition(), _aggBatchOutputMillis)
+              || MyUtilities.isWindowTimestampMode(getConf())) {
 	    tupleSend(tuple, stormTupleRcv, timestamp);
-	}
-	if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
+          }
+          if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
 	    if (MyUtilities.isManualBatchingMode(getConf())) {
-		if (isLastInBatch) {
-		    timestamp = stormTupleRcv
-			    .getLongByField(StormComponent.TIMESTAMP); // getLong(2);
-		    printTupleLatency(_numSentTuples - 1, timestamp);
-		}
+              if (isLastInBatch) {
+                timestamp = stormTupleRcv
+                  .getLongByField(StormComponent.TIMESTAMP); // getLong(2);
+                printTupleLatency(_numSentTuples - 1, timestamp);
+              }
 	    } else {
-		timestamp = stormTupleRcv
-			.getLongByField(StormComponent.TIMESTAMP); // getLong(3);
-		printTupleLatency(_numSentTuples - 1, timestamp);
+              timestamp = stormTupleRcv
+                .getLongByField(StormComponent.TIMESTAMP); // getLong(3);
+              printTupleLatency(_numSentTuples - 1, timestamp);
 	    }
-	}
+          }
+        }
     }
 
     // from IRichBolt
@@ -247,12 +248,6 @@ public class StormOperator extends StormBoltComponent {
 	final String str = "OperatorComponent " + getID() + " has ID: "
 		+ getID();
 	return str;
-    }
-
-    @Override
-    protected InterchangingComponent getInterComp() {
-	// should never be invoked
-	return null;
     }
 
     @Override

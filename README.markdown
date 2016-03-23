@@ -1,10 +1,8 @@
 
-<!--
-[alt text][logo]
-[logo]: https://raw.githubusercontent.com/epfldata/squall/master/resources/graphics/logo.jpg "Logo Title Text 2"
--->
+<!-- <p> &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;        <img style="float: center" align="middle" src="https://raw.githubusercontent.com/epfldata/squall/master/logo/logo.jpg"> </p> -->
 
-#Squall
+
+#Squall [![Build Status](https://travis-ci.org/epfldata/squall.svg?branch=master)](https://travis-ci.org/epfldata/squall)
 Squall is an online query processing engine built on top of [Storm](https://storm.apache.org/). Similar to how Hive provides SQL syntax on top of Hadoop for doing batch processing, Squall executes SQL queries on top of Storm for doing online processing. Squall supports a wide class of SQL analytics ranging from simple aggregations to more advanced UDF join predicates and adaptive rebalancing of load. It is being actively developed by several contributors from the [EPFL DATA](http://data.epfl.ch/) lab. Squall is undergoing a continuous process of development, currently it supports the following:
 
 - [x] SQL (Select-Project-Join) query processing over continuous streams of data.
@@ -13,7 +11,7 @@ Squall is an online query processing engine built on top of [Storm](https://stor
 - [x] Theta Joins: arbitrary complex join predicates, including inequality, band, and arbitrary UDF join predicates. This gives a more comprehensive support and flexibility to data analytics. For example, [Hive plans](https://cwiki.apache.org/confluence/display/Hive/Theta+Join) to support theta joins in response to user requests.
 - [x] Usability: Squall exposes three interfaces for programming. A **SQL** interface that directly translates a sql query to a running topology, a **functional** interface that leverages the syntactic sugar of Scala, and an **imperative** interface that exposes additional control on toplogy design.
 - [x] Out-of-Core Processing: Can operate efficiently under limited memory resources through efficient disk based datastructures and indexes.
-- [x] Throughput rates of upto Millions of tuples/second and latencies of milliseconds measured on a 16 machine cluster. Scalable to large cluster settings.
+- [x] Throughput rates of up to Millions of tuples/second and latencies of milliseconds measured on a 5-machine cluster. Scalable to large cluster settings.
 - [x] Guarantees: At least-once or at most-once semantics. No support for exactly-once semantics yet, however it is planned for.
 - [ ] Elasticity: Scaling out according to the load.
 - [ ] DashBoard: Integrating support for real time visualizations.
@@ -95,7 +93,7 @@ Squall also provides out-of-the-box functionality for window semantics. That is 
 
 
 ### Documentation
-Detailed documentation can be found on the [Squall wiki](http://github.com/epfldata/squall/wiki).
+White paper is available [here](http://infoscience.epfl.ch/record/217286/files/paper.pdf). Detailed documentation can be found on the [Squall wiki](http://github.com/epfldata/squall/wiki).
 
 ### Contributing to Squall
 We'd love to have your help in making Squall better. If you're interested, please communicate with us your suggestions and get your name to the [Contributors](https://github.com/epfldata/squall/wiki/Contributors) list.

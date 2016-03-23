@@ -24,17 +24,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import org.apache.commons.lang.ArrayUtils;
 
 import ch.epfl.data.squall.storage.BasicStore;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.visitors.OperatorVisitor;
 
-public class MultiAggregateOperator implements AggregateOperator {
+public class MultiAggregateOperator extends OneToOneOperator implements AggregateOperator {
 
-    /**
-	 * 
-	 */
+    private static Logger LOG = Logger.getLogger(MultiAggregateOperator.class);
+
     private static final long serialVersionUID = 1L;
     private final List<AggregateOperator> _opList;
 
@@ -138,28 +139,34 @@ public class MultiAggregateOperator implements AggregateOperator {
 	return sb.toString();
     }
 
+
     @Override
-    public List<String> process(List<String> tuple, long lineageTimestamp) {
+    public List<String> processOne(List<String> tuple, long lineageTimestamp) {
 	// this will work only if they have the same groupBy
 	// otherwise the result of process is not important at all
 	final List<String> result = new ArrayList<String>();
 	int i = 0;
 	for (final AggregateOperator agg : _opList) {
-	    final List<String> current = agg.process(tuple, lineageTimestamp);
+            final List<List<String>> current = agg.process(tuple, lineageTimestamp);
+            // AggregateOperator should return only one tuple
+            if (current.size() != 1) {
+                LOG.warn("The aggregate operator " + agg + " returned zero or more than one tuple:" + current);
+            }
 	    if (i == 0)
-		result.addAll(current);
+                result.addAll(current.get(0));
 	    else {
 		// for all beside the first result we exclude the groupBy
 		// columns
-		// because of preaggragations, there might be multiple groupBy
+		// because of preaggra(gations, there might be multiple groupBy
 		// columns (it's not A-B|res, but A|B|res)
 		// we know that all of them are at the beginning
 		final int numGB = getNumGroupByColumns(agg);
-		result.addAll(current.subList(numGB, current.size()));
+		result.addAll(current.get(0).subList(numGB, current.get(0).size()));
 	    }
 	    i++;
 	}
-	return result;
+
+        return result;
     }
 
     @Override

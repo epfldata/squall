@@ -39,7 +39,7 @@ import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.visitors.OperatorVisitor;
 import ch.epfl.data.squall.window_semantics.WindowSemanticsManager;
 
-public class AggregateAvgOperator implements AggregateOperator<SumCount> {
+public class AggregateAvgOperator extends OneToOneOperator implements AggregateOperator<SumCount> {
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(AggregateAvgOperator.class);
 
@@ -157,10 +157,10 @@ public class AggregateAvgOperator implements AggregateOperator<SumCount> {
 
     // from Operator
     @Override
-    public List<String> process(List<String> tuple, long lineageTimestamp) {
+    public List<String> processOne(List<String> tuple, long lineageTimestamp) {
 	_numTuplesProcessed++;
 	if (_distinct != null) {
-	    tuple = _distinct.process(tuple, lineageTimestamp);
+	    tuple = _distinct.processOne(tuple, lineageTimestamp);
 	    if (tuple == null)
 		return null;
 	}

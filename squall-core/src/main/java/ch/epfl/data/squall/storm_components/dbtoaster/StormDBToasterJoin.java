@@ -33,7 +33,6 @@ import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.AggregateStream;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
-import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormBoltComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
@@ -55,6 +54,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
+import java.net.URL;
+import java.io.File;
+import java.net.URLClassLoader;
+import java.net.MalformedURLException;
 
 public class StormDBToasterJoin extends StormBoltComponent {
 
@@ -199,7 +202,17 @@ public class StormDBToasterJoin extends StormBoltComponent {
     public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
         super.prepare(map, tc, collector);
 
-        dbtoasterEngine = new DBToasterEngine(DBT_GEN_PKG + _dbToasterQueryName);
+        ClassLoader cl;
+        try {
+          String classdir = SystemParameters.getString(map, "squall.dbtoaster.classdir");
+          URL classdirURL = new URL(classdir);
+          cl = new URLClassLoader(new URL[]{classdirURL});
+          LOG.info("Loading DBToaster classes from " + classdir);
+        } catch (MalformedURLException e) {
+          cl = this.getClass().getClassLoader();
+          if (cl == null) cl = ClassLoader.getSystemClassLoader();
+        }
+        dbtoasterEngine = new DBToasterEngine(DBT_GEN_PKG + _dbToasterQueryName, cl);
     }
 
     @Override
@@ -347,45 +360,41 @@ public class StormDBToasterJoin extends StormBoltComponent {
     }
 
     protected void applyOperatorsAndSend(Tuple stormTupleRcv,
-                                         List<String> tuple, long lineageTimestamp, boolean isLastInBatch) {
+                                         List<String> inTuple, long lineageTimestamp, boolean isLastInBatch) {
         if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
             try {
                 _semAgg.acquire();
             } catch (final InterruptedException ex) {
             }
 
-        tuple = _operatorChain.process(tuple, lineageTimestamp);
 
-        if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
+        for (List<String> tuple : _operatorChain.process(inTuple, lineageTimestamp)) {
+          if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
             _semAgg.release();
-        if (tuple == null)
+          if (tuple == null)
             return;
-        _numSentTuples++;
-        printTuple(tuple);
+          _numSentTuples++;
+          printTuple(tuple);
 
-        if (_numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
+          if (_numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
             printStatistics(SystemParameters.OUTPUT_PRINT);
 
-        if (MyUtilities
-                .isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
+          if (MyUtilities
+              .isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
             tupleSend(tuple, stormTupleRcv, lineageTimestamp);
-        }
+          }
 
-        if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
+          if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
             if (!MyUtilities.isManualBatchingMode(getConf()) || isLastInBatch) {
-                printTupleLatency(_numSentTuples - 1, lineageTimestamp);
+              printTupleLatency(_numSentTuples - 1, lineageTimestamp);
             }
+          }
         }
     }
 
     @Override
     public ChainOperator getChainOperator() {
         return _operatorChain;
-    }
-
-    @Override
-    protected InterchangingComponent getInterComp() {
-        return null;
     }
 
     @Override

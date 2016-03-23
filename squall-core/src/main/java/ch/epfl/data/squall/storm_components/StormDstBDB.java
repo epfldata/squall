@@ -118,8 +118,6 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter,
     SimpleDateFormat format = new SimpleDateFormat(
 	    "EEE MMM d HH:mm:ss zzz yyyy");
 
-    private final InterchangingComponent _inter = null;
-
     private final StatisticsUtilities _statsUtils;
 
     public StormDstBDB(StormEmitter firstEmitter, StormEmitter secondEmitter,
@@ -205,39 +203,40 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter,
 	    }
     }
 
-    protected void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> tuple) {
+    protected void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> inTuple) {
 	if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
 	    try {
 		_semAgg.acquire();
 	    } catch (final InterruptedException ex) {
 	    }
-	tuple = _operatorChain.process(tuple, 0);
-	if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
+	for (List<String> tuple : _operatorChain.process(inTuple, 0)) {
+          if (MyUtilities.isAggBatchOutputMode(_batchOutputMillis))
 	    _semAgg.release();
 
-	if (tuple == null)
+          if (tuple == null)
 	    return;
-	_numSentTuples++;
-	printTuple(tuple);
+          _numSentTuples++;
+          printTuple(tuple);
 
-	// TODO
-	if (_statsUtils.isTestMode()
-		&& _numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
+          // TODO
+          if (_statsUtils.isTestMode()
+              && _numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
 	    if (_hierarchyPosition == StormComponent.FINAL_COMPONENT) {
-		_cal = Calendar.getInstance();
-		LOG.info("," + "RESULT," + _thisTaskID + "," + "TimeStamp:,"
-			+ _dateFormat.format(_cal.getTime()) + ",Sent Tuples,"
-			+ _numSentTuples);
-		LOG.info("First Storage: "
-			+ _firstRelationStorage.getStatistics()
-			+ "\nEnd of First Storage");
-		LOG.info("Second Storage: "
-			+ _secondRelationStorage.getStatistics()
-			+ "\nEnd of Second Storage");
+              _cal = Calendar.getInstance();
+              LOG.info("," + "RESULT," + _thisTaskID + "," + "TimeStamp:,"
+                       + _dateFormat.format(_cal.getTime()) + ",Sent Tuples,"
+                       + _numSentTuples);
+              LOG.info("First Storage: "
+                       + _firstRelationStorage.getStatistics()
+                       + "\nEnd of First Storage");
+              LOG.info("Second Storage: "
+                       + _secondRelationStorage.getStatistics()
+                       + "\nEnd of Second Storage");
 	    }
 
-	if (MyUtilities.isSending(_hierarchyPosition, _batchOutputMillis))
+          if (MyUtilities.isSending(_hierarchyPosition, _batchOutputMillis))
 	    tupleSend(tuple, stormTupleRcv, 0);
+        }
     }
 
     // from IRichBolt
@@ -572,11 +571,8 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter,
     public void prepare(Map map, TopologyContext tc, OutputCollector collector) {
 	_collector = collector;
 	createStorage();
-	if (_inter == null)
-	    _numRemainingParents = MyUtilities.getNumParentTasks(tc,
-		    _firstEmitter, _secondEmitter);
-	else
-	    _numRemainingParents = MyUtilities.getNumParentTasks(tc, _inter);
+	_numRemainingParents = MyUtilities.getNumParentTasks(tc,
+                                                             _firstEmitter, _secondEmitter);
 
 	_thisTaskID = tc.getThisTaskId();
 	// TODO
@@ -609,15 +605,9 @@ public class StormDstBDB extends BaseRichBolt implements StormEmitter,
 	if (_printOut)
 	    if ((_operatorChain != null) && _operatorChain.isBlocking()) {
 		final Operator lastOperator = _operatorChain.getLastOperator();
-		if (lastOperator instanceof AggregateOperator)
-		    MyUtilities.printBlockingResult(_ID,
-			    (AggregateOperator) lastOperator,
-			    _hierarchyPosition, _conf, LOG);
-		else
-		    MyUtilities.printBlockingResult(_ID,
-			    lastOperator.getNumTuplesProcessed(),
-			    lastOperator.printContent(), _hierarchyPosition,
-			    _conf, LOG);
+                MyUtilities.printBlockingResult(_ID,
+                                                lastOperator,
+                                                _hierarchyPosition, _conf, LOG);
 	    }
     }
 

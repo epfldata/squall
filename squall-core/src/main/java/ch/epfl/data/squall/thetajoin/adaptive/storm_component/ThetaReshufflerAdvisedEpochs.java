@@ -40,7 +40,6 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.thetajoin.adaptive.advisor.Action;
@@ -97,10 +96,8 @@ public class ThetaReshufflerAdvisedEpochs extends BaseRichBolt {
     private String _currentDimExcDis = "N/A";
     private int _taskPhysicalID;
     private int _taskIDLogicalIndex;
-    private InterchangingComponent _interComp = null;
     private int _currentEpochNumber = 0;
     private List<Integer> _resufflerIndex;
-    public boolean isInterchanging = false;
     private int _currentInterchaningCursor = -1;
 
     /**
@@ -442,10 +439,6 @@ public class ThetaReshufflerAdvisedEpochs extends BaseRichBolt {
 	}
     }
 
-    public InterchangingComponent get_interComp() {
-	return _interComp;
-    }
-
     public InputDeclarer getCurrentBolt() {
 	return _currentBolt;
     }
@@ -499,13 +492,9 @@ public class ThetaReshufflerAdvisedEpochs extends BaseRichBolt {
 	_collector = collector;
 	if (_secondEmitter == null) // this is an interchanging data source
 	    _numParentTasks = 1;
-	else if (_interComp == null)
+	else {
 	    _numParentTasks = MyUtilities.getNumParentTasks(context,
 		    _firstEmitter, _secondEmitter);
-	else {
-	    isInterchanging = true;
-	    _numParentTasks = MyUtilities
-		    .getNumParentTasks(context, _interComp);
 	}
 	_numRemainingParentsForLastAck = _numParentTasks;
     }
@@ -644,10 +633,6 @@ public class ThetaReshufflerAdvisedEpochs extends BaseRichBolt {
 
     }
 
-    public void set_interComp(InterchangingComponent _interComp) {
-	this._interComp = _interComp;
-    }
-
     public void setJoinerID(String _joinerID) {
 	this._joinerID = _joinerID;
     }
@@ -684,20 +669,7 @@ public class ThetaReshufflerAdvisedEpochs extends BaseRichBolt {
 	} else
 	    throw new RuntimeException("Not suitable inputComponentIndex");
 
-	if (_taskIDLogicalIndex == 0) {// FOR ADVISOR ONLY
-	    // ///***********//////////
-	    if (isInterchanging) {
-		if (_currentInterchaningCursor != interchangingIndex) {
-		    LOG.info(_ID + ":" + _taskPhysicalID
-			    + " :Reshuffler INTERCHANGING adding at "
-			    + interchangingIndex + " with epoch number:"
-			    + _currentEpochNumber + " ("
-			    + _mAdvisor.totalRowTuples + ","
-			    + _mAdvisor.totalColumnTuples + ")");
-		    _currentInterchaningCursor = interchangingIndex;
-		}
-	    }
-	    // ///***********//////////
+	if (_taskIDLogicalIndex == 0) {
 	    _mAdvisor.updateTuples(deltaRel1, deltaRel2);
 	}
 

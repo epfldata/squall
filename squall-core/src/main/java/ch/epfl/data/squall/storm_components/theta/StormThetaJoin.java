@@ -30,7 +30,6 @@ import backtype.storm.tuple.Tuple;
 import ch.epfl.data.squall.components.ComponentProperties;
 import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storage.TupleStorage;
-import ch.epfl.data.squall.storm_components.InterchangingComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.StormJoinerBoltComponent;
@@ -55,8 +54,7 @@ public class StormThetaJoin extends StormJoinerBoltComponent {
 	    List<String> allCompNames, Predicate joinPredicate,
 	    boolean isPartitioner, int hierarchyPosition,
 	    TopologyBuilder builder, TopologyKiller killer, Config conf,
-	    InterchangingComponent interComp, boolean isContentSensitive,
-	    Type wrapper) {
+	    boolean isContentSensitive, Type wrapper) {
 	super(firstEmitter, secondEmitter, cp, allCompNames, joinPredicate,
 		hierarchyPosition, builder, killer, isPartitioner, conf);
 	_statsUtils = new StatisticsUtilities(getConf(), LOG);
@@ -79,17 +77,10 @@ public class StormThetaJoin extends StormJoinerBoltComponent {
 	final String dim = _currentMappingAssignment.toString();
 	LOG.info(getID() + " Initial Dimensions is: " + dim);
 
-	if (interComp == null)
-	    currentBolt = MyUtilities.thetaAttachEmitterComponents(currentBolt,
+        currentBolt = MyUtilities.thetaAttachEmitterComponents(currentBolt,
 		    firstEmitter, secondEmitter, allCompNames,
 		    _currentMappingAssignment, conf, wrapper);
-	else {
-	    currentBolt = MyUtilities
-		    .thetaAttachEmitterComponentsWithInterChanging(currentBolt,
-			    firstEmitter, secondEmitter, allCompNames,
-			    _currentMappingAssignment, conf, interComp);
-	    _inter = interComp;
-	}
+
 	if (getHierarchyPosition() == FINAL_COMPONENT
 		&& (!MyUtilities.isAckEveryTuple(conf)))
 	    killer.registerComponent(this, parallelism);

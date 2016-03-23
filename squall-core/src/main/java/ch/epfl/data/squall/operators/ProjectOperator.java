@@ -28,7 +28,7 @@ import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.types.StringType;
 import ch.epfl.data.squall.visitors.OperatorVisitor;
 
-public class ProjectOperator implements Operator {
+public class ProjectOperator extends OneToOneOperator implements Operator {
     private static final long serialVersionUID = 1L;
 
     private List<ValueExpression> _veList = new ArrayList<ValueExpression>();
@@ -83,7 +83,7 @@ public class ProjectOperator implements Operator {
     }
 
     @Override
-    public List<String> process(List<String> tuple, long lineageTimestamp) {
+    public List<String> processOne(List<String> tuple, long lineageTimestamp) {
 	_numTuplesProcessed++;
 	final List<String> projection = new ArrayList<String>();
 	for (final ValueExpression ve : _veList) {

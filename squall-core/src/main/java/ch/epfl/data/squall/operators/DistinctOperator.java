@@ -28,7 +28,7 @@ import ch.epfl.data.squall.storage.ValueStore;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.visitors.OperatorVisitor;
 
-public class DistinctOperator implements Operator {
+public class DistinctOperator extends OneToOneOperator {
 
     private final Map _conf;
     private int _numTuplesProcessed;
@@ -95,9 +95,9 @@ public class DistinctOperator implements Operator {
      * projected tuple
      */
     @Override
-    public List<String> process(List<String> tuple, long lineageTimestamp) {
+    public List<String> processOne(List<String> tuple, long lineageTimestamp) {
 	_numTuplesProcessed++;
-	final List<String> projectedTuple = _projection.process(tuple,
+	final List<String> projectedTuple = _projection.processOne(tuple,
 		lineageTimestamp);
 	final String projectedTupleString = MyUtilities.tupleToString(
 		projectedTuple, _conf);

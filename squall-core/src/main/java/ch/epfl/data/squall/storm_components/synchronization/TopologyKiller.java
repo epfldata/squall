@@ -33,7 +33,6 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-import backtype.storm.utils.Utils;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.utilities.StormWrapper;
 import ch.epfl.data.squall.utilities.SystemParameters;
@@ -52,6 +51,7 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
 
     private final String _ID;
     private int _numberRegisteredTasks;
+    private int _numberFinishedTasks;
     private transient InputDeclarer _inputDeclarer;
     private Map _conf;
     private OutputCollector _collector;
@@ -59,6 +59,7 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
     public TopologyKiller(TopologyBuilder builder) {
 	_ID = "KILLER";
 	_numberRegisteredTasks = 0;
+	_numberFinishedTasks = 0;
 	_inputDeclarer = builder.setBolt(_ID, this);
     }
 
@@ -84,9 +85,9 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
 	LOG.info("TopologyKiller: Received EOF message from componentId: "
 		+ tuple.getSourceComponent() + ", taskId: "
 		+ tuple.getSourceTask());
-	_numberRegisteredTasks--;
-	LOG.info("TopologyKiller: " + _numberRegisteredTasks + " remaining");
-	if (_numberRegisteredTasks == 0) {
+	_numberFinishedTasks++;
+	LOG.info("TopologyKiller: " + (_numberRegisteredTasks - _numberFinishedTasks) + " remaining");
+	if (_numberRegisteredTasks == _numberFinishedTasks) {
 	    LOG.info("TopologyKiller: Received EOF from all the registered tasks. Killing cluster...");
 	    // EVENT WHEN ALL THE SPOUTS FINISHED EMITTING AND ACKED or
 	    // WHEN ALL THE TASKS FROM THE LAST COMPONENTS SENT EOF SIGNAL
@@ -95,12 +96,10 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
 	    _collector.emit(SystemParameters.DUMP_RESULTS_STREAM, new Values(
 		    SystemParameters.DUMP_RESULTS));
 
-	    long timeout = SystemParameters.LOCAL_SLEEP_BEFORE_KILL_MILLIS;
 	    if (SystemParameters.getBoolean(_conf, "DIP_DISTRIBUTED")) {
 		// write down statistics (the same which is shown in Storm UI
 		// web interface)
 		StormWrapper.writeStormStats(_conf);
-		timeout = SystemParameters.CLUSTER_SLEEP_BEFORE_KILL_MILLIS;
 	    }
 	    if (SystemParameters.getBoolean(_conf, "DIP_KILL_AT_THE_END")) {
 		/*
@@ -110,7 +109,6 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
 		 * to other spout (TopologyKiller spout). They use EOF boolean
 		 * to indicate when done.
 		 */
-		Utils.sleep(timeout);
 		StormWrapper.killExecution(_conf);
 	    }
 
@@ -174,6 +172,10 @@ public class TopologyKiller extends BaseRichBolt implements StormComponent {
 	    long timestamp) {
 	throw new UnsupportedOperationException(
 		"These methods are not ment to be invoked for synchronizationStormComponents");
+    }
+
+    public int getNumberRegisteredTasks() {
+      return _numberRegisteredTasks;
     }
 
 }

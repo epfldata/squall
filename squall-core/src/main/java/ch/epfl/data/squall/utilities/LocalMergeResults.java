@@ -32,11 +32,39 @@ import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.operators.AggregateAvgOperator;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.AggregateSumOperator;
+import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.storage.AggregationStorage;
+import ch.epfl.data.squall.storage.BasicStore;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.types.Type;
 
 public class LocalMergeResults {
+    private static Logger LOG = Logger.getLogger(LocalMergeResults.class);
+
+    // for writing the full final result in Local Mode
+    private static int _collectedLastComponents = 0;
+
+    private static int _numTuplesProcessed = 0;
+    // the number of tuples the componentTask is reponsible for (!! not how many
+    // tuples are in storage!!)
+
+    private static AggregateOperator _computedAgg;
+
+    private static AggregateOperator _fileAgg;
+
+    private static Semaphore _semFullResult = new Semaphore(1, true);
+    private static Semaphore _semNumResults = new Semaphore(0, true);
+
+
+  public static void reset() {
+    _collectedLastComponents = 0;
+    _numTuplesProcessed = 0;
+    _computedAgg = null;
+    _fileAgg = null;
+    _semFullResult = new Semaphore(1, true);
+    _semNumResults = new Semaphore(0, true);
+  }
+
     private static void addMoreResults(AggregateOperator lastAgg, Map map) {
 	if (_computedAgg == null) {
 	    // first task of the last component asked to be added
@@ -130,7 +158,7 @@ public class LocalMergeResults {
 	return resultRoot;
     }
 
-    private static String getResultFilePath(Map map) {
+    public static String getResultFilePath(Map map) {
 	final String rootDir = getResultDir(map);
 	final String schemaName = getSchemaName(map);
 	final String dataSize = getDataSizeInfo(map);
@@ -152,7 +180,7 @@ public class LocalMergeResults {
     // comparing the results in Local Mode
     // called on the component task level, when all Spouts fully propagated
     // their tuples
-    public static void localCollectFinalResult(AggregateOperator lastAgg,
+    public static void localCollectFinalResult(Operator lastOperator,
 	    int hierarchyPosition, Map map, Logger log) {
 	if ((!SystemParameters.getBoolean(map, "DIP_DISTRIBUTED"))
 		&& hierarchyPosition == StormComponent.FINAL_COMPONENT)
@@ -161,10 +189,13 @@ public class LocalMergeResults {
 		_semFullResult.acquire();
 
 		_collectedLastComponents++;
-		_numTuplesProcessed += lastAgg.getNumTuplesProcessed();
-		addMoreResults(lastAgg, map);
+		_numTuplesProcessed += lastOperator.getNumTuplesProcessed();
+                if (lastOperator instanceof AggregateOperator) {
+                  addMoreResults((AggregateOperator) lastOperator, map);
+                }
 
 		_semFullResult.release();
+		_semNumResults.release();
 	    } catch (final InterruptedException ex) {
 		throw new RuntimeException(
 			"InterruptedException unexpectedly occured!");
@@ -220,18 +251,16 @@ public class LocalMergeResults {
 	return localCompare(map);
     }
 
-    private static Logger LOG = Logger.getLogger(LocalMergeResults.class);
+    public static BasicStore getResults() {
+      if (_computedAgg != null) {
+      	return _computedAgg.getStorage();
+      } else {
+        return null;
+      }
+    }
 
-    // for writing the full final result in Local Mode
-    private static int _collectedLastComponents = 0;
-
-    private static int _numTuplesProcessed = 0;
-    // the number of tuples the componentTask is reponsible for (!! not how many
-    // tuples are in storage!!)
-
-    private static AggregateOperator _computedAgg;
-
-    private static AggregateOperator _fileAgg;
-
-    private static Semaphore _semFullResult = new Semaphore(1, true);
+    public static void waitForResults(int howMany) throws InterruptedException {
+      _semNumResults.acquire(howMany);
+      //assert(_collectedLastComponents == howMany);
+    }
 }

@@ -24,7 +24,7 @@ import java.util.List;
 import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.visitors.OperatorVisitor;
 
-public class SelectOperator implements Operator {
+public class SelectOperator extends OneToOneOperator implements Operator {
     private static final long serialVersionUID = 1L;
 
     private final Predicate _predicate;
@@ -67,7 +67,7 @@ public class SelectOperator implements Operator {
     }
 
     @Override
-    public List<String> process(List<String> tuple, long lineageTimestamp) {
+    public List<String> processOne(List<String> tuple, long lineageTimestamp) {
 	_numTuplesProcessed++;
 	if (_predicate.test(tuple))
 	    return tuple;

@@ -81,7 +81,6 @@ public class StormHyperCubeJoin extends StormBoltComponent {
     private boolean _firstTime = true;
     private PeriodicAggBatchSend _periodicAggBatch;
     private long _aggBatchOutputMillis;
-    private InterchangingComponent _inter = null;
 
     // for printing statistics for creating graphs
     protected Calendar _cal = Calendar.getInstance();
@@ -92,8 +91,7 @@ public class StormHyperCubeJoin extends StormBoltComponent {
 
     public StormHyperCubeJoin (ArrayList<StormEmitter> emitters, ComponentProperties cp,
                                List<String> allCompNames, Map<String, Predicate> joinPredicates, int hierarchyPosition,
-                               TopologyBuilder builder, TopologyKiller killer, Config conf,
-                               InterchangingComponent interComp, Type wrapper) {
+                               TopologyBuilder builder, TopologyKiller killer, Config conf, Type wrapper) {
 
         super(cp, allCompNames, hierarchyPosition, false, conf);
 
@@ -115,17 +113,9 @@ public class StormHyperCubeJoin extends StormBoltComponent {
             cardinality[i] = SystemParameters.getInt(conf, emitters.get(i).getName() + "_CARD");
         _currentMappingAssignment = new HyperCubeAssignerFactory().getAssigner(parallelism, cardinality);
 
-        if (interComp == null)
-            currentBolt = MyUtilities.attachEmitterHyperCube(currentBolt,
+        currentBolt = MyUtilities.attachEmitterHyperCube(currentBolt,
                     emitters, allCompNames,
                     _currentMappingAssignment, conf);
-        else {
-            currentBolt = MyUtilities.hypecCubeAttachEmitterComponentsWithInterChanging(currentBolt,
-                    emitters, allCompNames,
-                    _currentMappingAssignment, conf, interComp);
-            _inter = interComp;
-        }
-
 
         if (getHierarchyPosition() == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf)))
             killer.registerComponent(this, parallelism);
@@ -169,36 +159,36 @@ public class StormHyperCubeJoin extends StormBoltComponent {
     }
 
     protected void applyOperatorsAndSend(Tuple stormTupleRcv,
-                                         List<String> tuple, long lineageTimestamp, boolean isLastInBatch) {
+                                         List<String> inTuple, long lineageTimestamp, boolean isLastInBatch) {
         if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
             try {
                 _semAgg.acquire();
             } catch (final InterruptedException ex) {
             }
-        tuple = operatorChain.process(tuple, lineageTimestamp);
-        if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
+        for (List<String> tuple : operatorChain.process(inTuple, lineageTimestamp)) {
+          if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
             _semAgg.release();
-        if (tuple == null)
+          if (tuple == null)
             return;
-        numSentTuples++;
-        printTuple(tuple);
-        if (numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
+          numSentTuples++;
+          printTuple(tuple);
+          if (numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
             printStatistics(SystemParameters.OUTPUT_PRINT);
-        if (MyUtilities
-                .isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
+          if (MyUtilities
+              .isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
             long timestamp = 0;
             if (MyUtilities.isCustomTimestampMode(getConf()))
-                if (getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
-                    // A tuple has a non-null timestamp only if the component is
-                    // next to last because we measure the latency of the last
-                    // operator
-                    timestamp = System.currentTimeMillis();
+              if (getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
+                // A tuple has a non-null timestamp only if the component is
+                // next to last because we measure the latency of the last
+                // operator
+                timestamp = System.currentTimeMillis();
             // timestamp = System.nanoTime();
             tupleSend(tuple, stormTupleRcv, timestamp);
-        }
-        if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
+          }
+          if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
             printTupleLatency(numSentTuples - 1, lineageTimestamp);
-
+        }
     }
 
 
@@ -302,11 +292,6 @@ public class StormHyperCubeJoin extends StormBoltComponent {
         final String str = "DestinationStorage " + getID() + " has ID: "
                 + getID();
         return str;
-    }
-
-    @Override
-    protected InterchangingComponent getInterComp() {
-        return _inter;
     }
 
     @Override

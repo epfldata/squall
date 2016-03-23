@@ -18,37 +18,32 @@
  */
 
 package ch.epfl.data.squall.api.scala
-import backtype.storm.tuple._
-import scala.reflect.runtime.universe._
+
 import ch.epfl.data.squall.api.scala.SquallType._
-import ch.epfl.data.squall.api.scala.operators.ScalaAggregateOperator
-import ch.epfl.data.squall.api.scala.operators.ScalaMapOperator
-import ch.epfl.data.squall.query_plans.QueryBuilder
-import ch.epfl.data.squall.query_plans.QueryBuilder
-import ch.epfl.data.squall.operators.Operator
-import ch.epfl.data.squall.components.EquiJoinComponent
-import ch.epfl.data.squall.components.Component
-import ch.epfl.data.squall.components.DataSourceComponent
-import ch.epfl.data.squall.operators.SelectOperator
-import java.beans.MetaData
-import scala.collection.JavaConverters._
 import ch.epfl.data.squall.api.scala.TPCHSchema._
+import ch.epfl.data.squall.api.scala.operators.{ScalaAggregateOperator, ScalaFlatMapOperator, ScalaMapOperator}
 import ch.epfl.data.squall.api.scala.operators.predicates.ScalaPredicate
-import ch.epfl.data.squall.predicates.ComparisonPredicate
-import ch.epfl.data.squall.predicates.Predicate
+import ch.epfl.data.squall.components.{Component, DataSourceComponent, EquiJoinComponent}
 import ch.epfl.data.squall.expressions.ColumnReference
-import ch.epfl.data.squall.predicates.booleanPrimitive
-import ch.epfl.data.squall.predicates.AndPredicate
+import ch.epfl.data.squall.operators.{Operator, SelectOperator}
+import ch.epfl.data.squall.predicates.{AndPredicate, ComparisonPredicate, Predicate, booleanPrimitive}
+import ch.epfl.data.squall.query_plans.QueryBuilder
 import ch.epfl.data.squall.types.IntegerType
+import ch.epfl.data.squall.utilities.SquallContext
+import org.apache.log4j.Logger
+import scala.collection.JavaConverters._
+import scala.reflect.runtime.universe._
 
 /**
  * @author mohamed
  */
 object Stream {
+  val LOG: Logger= Logger.getLogger(Stream.getClass());
 
   case class Source[T: SquallType](name: String) extends Stream[T]
   case class FilteredStream[T: SquallType](Str: Stream[T], fn: T => Boolean) extends Stream[T]
   case class MappedStream[T: SquallType, U: SquallType](Str: Stream[T], fn: T => U) extends Stream[U]
+  case class FlatMappedStream[T: SquallType, U: SquallType](Str: Stream[T], fn: T => Seq[U]) extends Stream[U]
   case class JoinedStream[T: SquallType, U: SquallType, V: SquallType, L: SquallType](Str1: Stream[T], Str2: Stream[U], ind1: T => L, ind2: U => L) extends JoinStream[V] {
     val tpT = implicitly[SquallType[T]]
     val tpU = implicitly[SquallType[U]]
@@ -66,6 +61,7 @@ object Stream {
 
     def filter(fn: T => Boolean): Stream[T] = FilteredStream(this, fn)
     def map[U: SquallType](fn: T => U): Stream[U] = MappedStream[T, U](this, fn)
+    def flatMap[U: SquallType](fn: T => Seq[U]): Stream[U] = FlatMappedStream[T, U](this, fn)
     def join[U: SquallType, L: SquallType](other: Stream[U])(joinIndices1: T => L)(joinIndices2: U => L): JoinStream[Tuple2[T, U]] = JoinedStream[T, U, Tuple2[T, U], L](this, other, joinIndices1, joinIndices2)
     def groupByKey[N: Numeric, U: SquallType](agg: T => N, keyIndices: T => U): TailStream[T, U, N] = GroupedStream[T, U, N](this, agg, keyIndices)
 
@@ -80,9 +76,9 @@ object Stream {
     def onWindow(rangeSize: Int, slideSize: Int) = WindowStream[T, U, N](this, rangeSize, slideSize)
     def onTumblingWindow(rangeSize: Int) = WindowStream[T, U, N](this, rangeSize, -1)
 
-    def execute(map: java.util.Map[String, Object]): QueryBuilder = {
+    def execute(context: SquallContext): QueryBuilder = {
       var metaData = List[Int](-1, -1)
-      mainInterprete[T, U, N](this, metaData, map)
+      mainInterprete[T, U, N](this, metaData, context)
     }
   }
 
@@ -92,13 +88,14 @@ object Stream {
   // 3: Hash Indexes of R2
   // 4: Sliding Window value
   // TODO: why is metadata a tuple?
-  private def interprete[T: SquallType](str: Stream[T], qb: QueryBuilder, metaData: Tuple4[List[Operator], List[Int], List[Int], Int], confmap: java.util.Map[String, Object]): Component = str match {
+  private def interprete[T: SquallType](str: Stream[T], qb: QueryBuilder, metaData: Tuple4[List[Operator], List[Int], List[Int], Int], context: SquallContext): Component = str match {
     case Source(name) => {
-      println("Reached Source")
-      var dataSourceComponent = qb.createDataSource(name, confmap)
+      LOG.debug("Reached Source")
+      var dataSourceComponent = context.createDataSource(name)
+      qb.add(dataSourceComponent)
       val operatorList = metaData._1
       if (operatorList != null) {
-        operatorList.foreach { operator => println("   adding operator: " + operator); dataSourceComponent = dataSourceComponent.add(operator) }
+        operatorList.foreach { operator => LOG.debug("   adding operator: " + operator); dataSourceComponent = dataSourceComponent.add(operator) }
       }
       if (metaData._2 != null)
         dataSourceComponent = dataSourceComponent.setOutputPartKey(metaData._2: _*)
@@ -107,29 +104,34 @@ object Stream {
       dataSourceComponent
     }
     case FilteredStream(parent, fn) => {
-      println("Reached Filtered Stream")
+      LOG.debug("Reached Filtered Stream")
       val filterPredicate = new ScalaPredicate(fn)
       val filterOperator = new SelectOperator(filterPredicate)
-      interprete(parent, qb, Tuple4(filterOperator :: metaData._1, metaData._2, metaData._3, -1), confmap)
+      interprete(parent, qb, Tuple4(filterOperator :: metaData._1, metaData._2, metaData._3, -1), context)
     }
     case MappedStream(parent, fn) => {
-      println("Reached Mapped Stream")
+      LOG.debug("Reached Mapped Stream")
       val mapOp = new ScalaMapOperator(fn)(parent.squalType, str.squalType)
-      interprete(parent, qb, Tuple4(mapOp :: metaData._1, metaData._2, metaData._3, -1), confmap)(parent.squalType)
+      interprete(parent, qb, Tuple4(mapOp :: metaData._1, metaData._2, metaData._3, -1), context)(parent.squalType)
+    }
+    case FlatMappedStream(parent, fn) => {
+      LOG.debug("Reached FlatMapped Stream")
+      val mapOp = new ScalaFlatMapOperator(fn)(parent.squalType, str.squalType)
+      interprete(parent, qb, Tuple4(mapOp :: metaData._1, metaData._2, metaData._3, -1), context)(parent.squalType)
     }
     case j @ JoinedStream(parent1, parent2, ind1, ind2) => {
-      println("Reached Joined Stream")
+      LOG.debug("Reached Joined Stream")
 
       val typeT = j.tpT
       val typeU = j.tpU
       val typeL = j.tpL
       val typeV = j.tpV
 
-      interpJoin(j, qb, metaData, confmap)(typeT, typeU, typeV, typeL)
+      interpJoin(j, qb, metaData, context)(typeT, typeU, typeV, typeL)
     }
 
     case SlideWindowJoinStream(parent, rangeSize) => {
-      interprete(parent, qb, Tuple4(metaData._1, metaData._2, metaData._3, rangeSize), confmap)
+      interprete(parent, qb, Tuple4(metaData._1, metaData._2, metaData._3, rangeSize), context)
     }
 
   }
@@ -142,7 +144,7 @@ object Stream {
     inter.foldLeft(start)((pred1, pred2) => new AndPredicate(pred1, pred2))
   }
 
-  def interpJoin[T: SquallType, U: SquallType, V: SquallType, L: SquallType](j: JoinedStream[T, U, V, L], qb: QueryBuilder, metaData: Tuple4[List[Operator], List[Int], List[Int], Int], confmap: java.util.Map[String, Object]): Component = {
+  def interpJoin[T: SquallType, U: SquallType, V: SquallType, L: SquallType](j: JoinedStream[T, U, V, L], qb: QueryBuilder, metaData: Tuple4[List[Operator], List[Int], List[Int], Int], context: SquallContext): Component = {
     val typeT = j.tpT
     val typeU = j.tpU
     val typeL = j.tpL
@@ -165,8 +167,8 @@ object Stream {
     val indicesL1 = typeL.convertIndexesOfTypeToListOfInt(resT)
     val indicesL2 = typeL.convertIndexesOfTypeToListOfInt(resU)
 
-    val firstComponent = interprete(j.Str1, qb, Tuple4(List(), indicesL1, null, -1), confmap)(j.Str1.squalType)
-    val secondComponent = interprete(j.Str2, qb, Tuple4(List(), null, indicesL2, -1), confmap)(j.Str2.squalType)
+    val firstComponent = interprete(j.Str1, qb, Tuple4(List(), indicesL1, null, -1), context)(j.Str1.squalType)
+    val secondComponent = interprete(j.Str2, qb, Tuple4(List(), null, indicesL2, -1), context)(j.Str2.squalType)
 
     var equijoinComponent = qb.createEquiJoin(firstComponent, secondComponent, false)
     equijoinComponent.setJoinPredicate(createPredicate(indicesL1, indicesL2))
@@ -187,7 +189,7 @@ object Stream {
   private implicit def toIntegerList(lst: List[Int]) =
     seqAsJavaListConverter(lst.map(i => i: java.lang.Integer)).asJava
 
-  private def mainInterprete[T: SquallType, U: SquallType, A: Numeric](str: TailStream[T, U, A], windowMetaData: List[Int], map: java.util.Map[String, Object]): QueryBuilder = str match {
+  private def mainInterprete[T: SquallType, U: SquallType, A: Numeric](str: TailStream[T, U, A], windowMetaData: List[Int], context: SquallContext): QueryBuilder = str match {
     case GroupedStream(parent, agg, ind) => {
       val st1 = implicitly[SquallType[T]]
       val st2 = implicitly[SquallType[U]]
@@ -196,32 +198,32 @@ object Stream {
       val image = st1.convertToIndexesOfTypeT(indexArray)
       val res = ind(image)
       val indices = st2.convertIndexesOfTypeToListOfInt(res)
-      var aggOp = new ScalaAggregateOperator(agg, map).setGroupByColumns(toIntegerList(indices)) //.SetWindowSemantics(10)
+      var aggOp = new ScalaAggregateOperator(agg, context.getConfiguration()).setGroupByColumns(toIntegerList(indices)) //.SetWindowSemantics(10)
       if (windowMetaData.get(0) > 0 && windowMetaData.get(1) <= 0)
         aggOp.SetWindowSemantics(windowMetaData.get(0))
       else if (windowMetaData.get(1) > 0 && windowMetaData.get(0) > windowMetaData.get(1))
         aggOp.SetWindowSemantics(windowMetaData.get(0), windowMetaData.get(1))
       val _queryBuilder = new QueryBuilder();
-      interprete(parent, _queryBuilder, Tuple4(List(aggOp), null, null, -1), map)
+      interprete(parent, _queryBuilder, Tuple4(List(aggOp), null, null, -1), context)
       _queryBuilder
     }
     case WindowStream(parent, rangeSize, slideSize) => {
       //only the last one is effective
       if ((windowMetaData.get(0) < 0 && windowMetaData.get(1) < 0)) {
-        mainInterprete(parent, List(rangeSize, slideSize), map)
-      } else mainInterprete(parent, windowMetaData, map)
+        mainInterprete(parent, List(rangeSize, slideSize), context)
+      } else mainInterprete(parent, windowMetaData, context)
 
     }
   }
 
   def main(args: Array[String]) {
     /*
-   val x=Source[Int]("hello").filter{ x:Int => true }.map[(Int,Int)]{ y:Int => Tuple2(2*y,3*y) };
-   val y = Source[Int]("hello").filter{ x:Int => true }.map[Int]{ y:Int => 2*y };
-   val z = x.join[Int,(Int,Int)](y, List(2),List(2)).reduceByKey(x => 3*x._2, List(1,2))
-   val conf= new java.util.HashMap[String,String]()
-   interp(z,conf)
-   */
+     val x=Source[Int]("hello").filter{ x:Int => true }.map[(Int,Int)]{ y:Int => Tuple2(2*y,3*y) };
+     val y = Source[Int]("hello").filter{ x:Int => true }.map[Int]{ y:Int => 2*y };
+     val z = x.join[Int,(Int,Int)](y, List(2),List(2)).reduceByKey(x => 3*x._2, List(1,2))
+     val conf= new java.util.HashMap[String,String]()
+     interp(z,conf)
+     */
   }
 
 }

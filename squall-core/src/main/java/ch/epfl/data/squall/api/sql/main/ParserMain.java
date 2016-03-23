@@ -98,7 +98,7 @@ public class ParserMain {
 	throw new RuntimeException("Unknown " + optStr + " optimizer!");
     }
 
-    private Map putAckers(QueryBuilder plan, Map map) {
+    public Map putAckers(QueryBuilder plan, Map map) {
 	final int numWorkers = ParserUtil.getTotalParallelism(plan, map);
 	int localAckers, clusterAckers;
 

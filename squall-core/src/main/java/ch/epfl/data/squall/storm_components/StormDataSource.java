@@ -41,6 +41,7 @@ import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.utilities.CustomReader;
+import ch.epfl.data.squall.utilities.ReaderProvider;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.squall.utilities.SerializableFileInputStream;
@@ -51,7 +52,8 @@ public class StormDataSource extends StormSpoutComponent {
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(StormDataSource.class);
 
-    private final String _inputPath;
+    private final String _resourceName;
+    private final ReaderProvider _provider;
     private int _fileSection;
     private final int _fileParts;
     private CustomReader _reader = null;
@@ -75,15 +77,16 @@ public class StormDataSource extends StormSpoutComponent {
     private String _name;
 
     public StormDataSource(ComponentProperties cp, List<String> allCompNames,
-	    String inputPath, int hierarchyPosition, int parallelism,
-	    boolean isPartitioner, TopologyBuilder builder,
-	    TopologyKiller killer, Config conf) {
+                           ReaderProvider provider, String resourceName, int hierarchyPosition, int parallelism,
+                           boolean isPartitioner, TopologyBuilder builder,
+                           TopologyKiller killer, Config conf) {
 
 	super(cp, allCompNames, hierarchyPosition, isPartitioner, conf);
 	_operatorChain = cp.getChainOperator();
 	_name = cp.getName();
 	_aggBatchOutputMillis = cp.getBatchOutputMillis();
-	_inputPath = inputPath;
+	_provider = provider;
+	_resourceName = resourceName;
 	_fileParts = parallelism;
 
 	if (getHierarchyPosition() == FINAL_COMPONENT
@@ -125,7 +128,7 @@ public class StormDataSource extends StormSpoutComponent {
 	    }
     }
 
-    protected void applyOperatorsAndSend(List<String> tuple) {
+    protected void applyOperatorsAndSend(List<String> inTuple) {
 	long timestamp = 0;
 	if ((MyUtilities.isCustomTimestampMode(getConf()) && getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
 		|| MyUtilities.isWindowTimestampMode(getConf()))
@@ -135,25 +138,25 @@ public class StormDataSource extends StormSpoutComponent {
 		_semAgg.acquire();
 	    } catch (final InterruptedException ex) {
 	    }
-	tuple = _operatorChain.process(tuple, timestamp);
-
-	if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
+	for (List<String> tuple : _operatorChain.process(inTuple, timestamp)) {
+          if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 	    _semAgg.release();
 
-	if (tuple == null)
+          if (tuple == null)
 	    return;
 
-	_numSentTuples++;
-	_pendingTuples++;
-	printTuple(tuple);
+          _numSentTuples++;
+          _pendingTuples++;
+          printTuple(tuple);
 
-	if (MyUtilities
-		.isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
+          if (MyUtilities
+              .isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
 	    tupleSend(tuple, null, timestamp);
-	}
-	if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
+          }
+          if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf())) {
 	    printTupleLatency(_numSentTuples - 1, timestamp);
-	}
+          }
+        }
     }
 
     @Override
@@ -271,21 +274,8 @@ public class StormDataSource extends StormSpoutComponent {
     @Override
     public void open(Map map, TopologyContext tc, SpoutOutputCollector collector) {
 	super.open(map, tc, collector);
-	try {
-	    _fileSection = tc.getThisTaskIndex();
-
-	    if (_inputPath.startsWith("hdfs"))
-		_reader = new SerializableHDFSFileInputStream(_inputPath,
-			1 * 1024 * 1024, _fileSection, _fileParts);
-	    else
-		_reader = new SerializableFileInputStream(new File(_inputPath),
-			1 * 1024 * 1024, _fileSection, _fileParts);
-
-	} catch (final Exception e) {
-	    final String error = MyUtilities.getStackTrace(e);
-	    LOG.info(error);
-	    throw new RuntimeException("Filename not found:" + error);
-	}
+        _fileSection = tc.getThisTaskIndex();
+        _reader = _provider.getReaderForName(_resourceName, _fileSection, _fileParts);
     }
 
     // HELPER methods
