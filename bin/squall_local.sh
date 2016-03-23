@@ -16,7 +16,7 @@ fi
 # Reading input paramters
 MODE=$1
 if [[ "$MODE" != "PLAN_RUNNER" && "$MODE" != "SQL" ]]; then
-	MODE=SQL
+	MODE=SQL	
 else
    shift
 fi
