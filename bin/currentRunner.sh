@@ -1,28 +1,7 @@
 #!/bin/bash
 
-./upconf_loop_cluster.sh ../resources/storm-linux_12GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_baseline_wfo_0_1_12G/X4/4GB/
-./upconf_loop_cluster.sh ../resources/storm-linux_12GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_baseline_wfo_0_1_12G/X8/4GB/
-./upconf_loop_cluster.sh ../resources/storm-linux_12GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_baseline_wfo_0_1_12G/X12/4GB/
-./upconf_loop_cluster.sh ../resources/storm-linux_12GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_baseline_wfo_0_1_12G/X16/4GB/
-#./upconf_loop_cluster.sh ../resources/storm-linux_12GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_baseline_wfo_0_1_12G/X20/4GB/
-#./upconf_loop_cluster.sh ../resources/storm-linux_12GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_baseline_wfo_0_1_12G/X24/4GB/
-#./upconf_loop_cluster.sh ../resources/storm-linux_12GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_baseline_wfo_0_1_12G/X28/4GB/
-#./upconf_loop_cluster.sh ../resources/storm-linux_12GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_baseline_wfo_0_1_12G/X32/4GB/
+#cp /home/vitorovi/Desktop/EWHSampleMatrixBolt_inpuCoarsener.java /home/vitorovi/working/installations/storm/squall/squall-core/src/main/java/ch/epfl/data/squall/ewh/storm_components/EWHSampleMatrixBolt.java
+#./upconf_loop_cluster.sh ../resources/storm-linux_16GB.yaml ../experiments/histogram_vldb_2016/b_icd/Xmx16GB_inputCoarsener
+#cp /home/vitorovi/Desktop/EWHSampleMatrixBolt_orig.java /home/vitorovi/working/installations/storm/squall/squall-core/src/main/java/ch/epfl/data/squall/ewh/storm_components/EWHSampleMatrixBolt.java
 
-./upconf_loop_cluster.sh ../resources/storm-linux_12GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_eocd_4params_wf0_1_12G/X4/4GB/
-./upconf_loop_cluster.sh ../resources/storm-linux_12GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_eocd_4params_wf0_1_12G/X8/4GB/
-./upconf_loop_cluster.sh ../resources/storm-linux_12GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_eocd_4params_wf0_1_12G/X12/4GB/
-./upconf_loop_cluster.sh ../resources/storm-linux_12GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_eocd_4params_wf0_1_12G/X16/4GB/
-#./upconf_loop_cluster.sh ../resources/storm-linux_12GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_eocd_4params_wf0_1_12G/X20/4GB/
-#./upconf_loop_cluster.sh ../resources/storm-linux_12GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_eocd_4params_wf0_1_12G/X24/4GB/
-#./upconf_loop_cluster.sh ../resources/storm-linux_12GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_eocd_4params_wf0_1_12G/X28/4GB/
-#./upconf_loop_cluster.sh ../resources/storm-linux_12GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_eocd_4params_wf0_1_12G/X32/4GB/
-
-./upconf_loop_cluster.sh ../resources/storm-linux_8GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_eocd_4params_wf0_1_8G/X4/4GB/
-./upconf_loop_cluster.sh ../resources/storm-linux_8GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_eocd_4params_wf0_1_8G/X8/4GB/
-./upconf_loop_cluster.sh ../resources/storm-linux_8GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_eocd_4params_wf0_1_8G/X12/4GB/
-./upconf_loop_cluster.sh ../resources/storm-linux_8GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_eocd_4params_wf0_1_8G/X16/4GB/
-#./upconf_loop_cluster.sh ../resources/storm-linux_8GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_eocd_4params_wf0_1_8G/X20/4GB/
-#./upconf_loop_cluster.sh ../resources/storm-linux_8GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_eocd_4params_wf0_1_8G/X24/4GB/
-#./upconf_loop_cluster.sh ../resources/storm-linux_8GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_eocd_4params_wf0_1_8G/X28/4GB/
-#./upconf_loop_cluster.sh ../resources/storm-linux_8GB.yaml ../experiments/histogram_sigmod_2015_more/jps/different_widths/EWH_eocd_4params_wf0_1_8G/X32/4GB/
+./upconf_loop_cluster.sh ../resources/storm-linux_4GB.yaml ../experiments/histogram_vldb_2016/e_ocd_scale_32J/Xmx4GB-remains/
