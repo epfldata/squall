@@ -1,6 +1,6 @@
 DIP_DISTRIBUTED false
 DIP_QUERY_NAME hyracks
-DIP_QUERY_PLAN ch.epfl.data.squall.examples.imperative.shj.HyracksPredicatePlan
+DIP_QUERY_PLAN ch.epfl.data.squall.examples.imperative.hypercube.HybridHypercubeDBToasterHyracksPlan
 DIP_TOPOLOGY_NAME_PREFIX username
 DIP_NUM_ACKERS 0
 
@@ -8,10 +8,24 @@ DIP_DATA_PATH ../test/data/tpch/0.01G/
 DIP_RESULT_ROOT ../test/results/
 
 CUSTOMER_PAR 1
-ORDERS_PAR 1
+ORDERS_PAR 2
+CUSTOMER_ORDERS_PAR 4
+COUNTAGG_PAR 1
+SENDRESULTSTOREDIS_PAR 1
 
-CUSTOMER_ORDERS_PAR 1
-#COUNTAGG_PAR 1
+CUSTOMER_CARD 50
+ORDERS_CARD 50
+
+# CUSTOMER_ORDERS_PAR should be equal CUSTOMER_DIMENSION + CUSTOMER_DIMENSION
+CUSTOMER_DIMENSION 2
+column1_DIMENSION 2
+CUSTOMER_ORDERS_PART_SCHEME MANUALHYBRIDHYPERCUBE
+
+# send results to redis
+REDIS_ENABLED true
+REDIS_SERVER localhost
+REDIS_PORT 6379
+REDIS_KEY facebook_topology
 
 #below are unlikely to change
 DIP_EXTENSION .tbl
@@ -28,12 +42,3 @@ STORAGE_LOCAL_DIR /tmp/ramdisk
 STORAGE_CLUSTER_DIR /data/squall_zone/storage
 STORAGE_COLD_START true
 STORAGE_MEMORY_SIZE_MB 4096
-
-# Storm metrics report to Graphite
-GRAPHITE_METRICS_CONSUMER_ENABLED false
-GRAPHITE_METRICS_CONSUMER_PARALELISM 1
-metrics.reporter.name com.verisign.storm.metrics.reporters.graphite.GraphiteReporter
-metrics.graphite.host 10.0.2.2
-metrics.graphite.port 2003
-metrics.graphite.prefix storm.test
-metrics.graphite.min-connect-attempt-interval-secs 5

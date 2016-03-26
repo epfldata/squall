@@ -19,12 +19,31 @@
  *
  */
 
-package ch.epfl.data.squall.utilities;
+package ch.epfl.data.squall.thetajoin.matrix_assignment;
 
-public enum PartitioningScheme {
-	MANUALHYBRIDHYPERCUBE,
-	HASHHYPERCUBE,
-    HYPERCUBE,
-    HASH,
-    STARSCHEMA
+import java.util.Map;
+import java.util.List;
+
+public interface HashHyperCubeAssignment {
+
+	/**
+	 * This method is used to get a list of reducers to which a given tuple must
+	 * be sent.
+	 * 
+	 * @param columns
+	 *            indicate which columns the tuple has.
+	 * @return a list of index of reducers.
+	 */
+	public List<Integer> getRegionIDs(Map<String, Object> columns);
+	
+	/**
+	 * Return the number of region divisions in a given dimension perspective
+	 */
+	public int getNumberOfRegions(String column);
+	
+	/**
+	 * Return the partitioning result across each dimension
+	 */
+	public String getMappingDimensions();
+
 }

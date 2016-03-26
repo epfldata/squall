@@ -24,6 +24,7 @@ import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.DistinctOperator;
 import ch.epfl.data.squall.operators.PrintOperator;
+import ch.epfl.data.squall.operators.RedisOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SampleOperator;
 import ch.epfl.data.squall.operators.SelectOperator;
@@ -38,6 +39,8 @@ public interface OperatorVisitor {
     public void visit(DistinctOperator distinct);
 
     public void visit(PrintOperator printOperator);
+
+    public void visit(RedisOperator redisOperator);
 
     public void visit(ProjectOperator projection);
 

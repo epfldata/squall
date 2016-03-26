@@ -30,6 +30,7 @@ import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.DistinctOperator;
 import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.operators.PrintOperator;
+import ch.epfl.data.squall.operators.RedisOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SampleOperator;
 import ch.epfl.data.squall.operators.SelectOperator;
@@ -105,6 +106,11 @@ public class VECollectVisitor implements OperatorVisitor {
     @Override
     public void visit(PrintOperator printOperator) {
 	// nothing to visit or add
+    }
+
+    @Override
+    public void visit(RedisOperator redisOperator) {
+    	// nothing to visit ot add
     }
 
     @Override
