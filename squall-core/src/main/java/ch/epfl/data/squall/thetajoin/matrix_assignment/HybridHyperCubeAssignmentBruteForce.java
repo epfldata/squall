@@ -22,6 +22,8 @@
 package ch.epfl.data.squall.thetajoin.matrix_assignment;
 
 import ch.epfl.data.squall.storm_components.hash_hypercube.HashHyperCubeGrouping.EmitterDesc;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ManualHybridHyperCubeAssignment.Dimension;
+
 import ch.epfl.data.squall.types.Type;
 
 import org.apache.log4j.Logger;
@@ -36,30 +38,141 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Random;
 
-public class ManualHybridHyperCubeAssignment implements Serializable, HybridHyperCubeAssignment {
+public class HybridHyperCubeAssignmentBruteForce implements Serializable, HybridHyperCubeAssignment {
 
 	private Random rand;
-    private static Logger LOG = Logger.getLogger(ManualHybridHyperCubeAssignment.class);
+    private static Logger LOG = Logger.getLogger(HybridHyperCubeAssignmentBruteForce.class);
 
+	List<EmitterDesc> emitters;
 	Map<String, Dimension> dimensions;
 	int[] dimensionSizes; 
-
+	int reducers;
 	Map<String, Integer> regionIDsMap;
 
-	public ManualHybridHyperCubeAssignment(Map<String, Dimension> dimensions) {
+	public HybridHyperCubeAssignmentBruteForce(List<EmitterDesc> emitters, Map<String, Dimension> dimensions, int reducers) {
 		rand = new Random();
-		this.dimensions = dimensions;
 
+		this.emitters = emitters;
+		this.dimensions = dimensions;
+		this.reducers = reducers;
+
+		compute();
 		createDimensionSizes();
 		createRegionMap();
 	}
 
-	public void createDimensionSizes() {
-		dimensionSizes = new int[dimensions.size()];
+	private void compute() {
+		for (int i = dimensions.size(); i <= reducers; i++) {
+			int[] best = compute(i);
 
+			if (dimensionSizes == null) {
+				dimensionSizes = new int[best.length];
+				Utilities.copy(best, dimensionSizes);
+			}
+
+			// If new assignment is better than the best assignment so far
+			if (compareWorkloads(best, dimensionSizes) < 0) {
+				Utilities.copy(best, dimensionSizes);
+			}
+		}
+	}
+
+	private int[] compute(int r) {
+		int[] partition = new int[dimensions.size()];
+		
+		// Find the prime factors of the r.
+		final List<Integer> primeFactors = Utilities.primeFactors(r);
+
+		// Get the Power Set, and iterate over it...
+		List<List<Integer>> powerSet = new ArrayList<List<Integer>>(Utilities.powerSet(primeFactors));
+
+		SetArrangementIterator generator = new SetArrangementIterator(powerSet, partition.length);
+		int count = 0;
+		int[] rd = new int[dimensions.size()];
+		
+		while (generator.hasNext()) {
+			List<List<Integer>> combination = generator.next();
+			for (int dim = 0; dim < rd.length; dim++) {
+				rd[dim] = Utilities.multiply(combination.get(dim));
+			}
+
+			if (Utilities.multiply(rd) != r)
+				continue;
+
+			if (count == 0) {
+				Utilities.copy(rd, partition);
+			} else {
+				// If new assignment is better than the best assignment so far
+				if (compareWorkloads(rd, partition) < 0) {
+					Utilities.copy(rd, partition);
+				}
+			}
+			count++;
+		}
+
+		return partition;
+	}
+
+	int compareWorkloads(int[] p1, int[] p2) {
+		long workload1 = getWorkload(p1);
+		long workload2 = getWorkload(p2);
+
+		int maxDim1 = getMaxDimension(p1);
+		int maxDim2 = getMaxDimension(p2);
+
+		if (workload1 < workload2)
+			return -1;
+		else if (workload2 < workload1)
+			return 1;
+		else // choose wich has lower maximum dimension size
+			return maxDim1 - maxDim2;
+	}
+	
+	public long getWorkload(int[] partition) {
+		long workload = 0;
+
+		for (EmitterDesc emitter : emitters) {
+
+			Set<String> emitterColumns = new HashSet<String>(Arrays.asList(emitter.columnNames));
+			int replicate = 1;
+
+			// random partitioned relation
+			if (isRandom(emitter.name)) {
+				for (int i = 0; i < partition.length; i++) {
+					if (i != dimensions.get(emitter.name).index) {
+						replicate *= partition[i];
+					}
+				}
+			} else {
+				replicate = Utilities.multiply(partition);
+
+				for (String emitterColumn : emitterColumns) {
+					if (dimensions.containsKey(emitterColumn)) {
+						replicate /= partition[dimensions.get(emitterColumn).index];
+					}
+				}
+			}
+
+			workload += emitter.cardinality / replicate;
+		}
+
+		return workload;
+	}
+
+	public int getMaxDimension(int[] partition) {
+		int max = partition[0];
+
+		for (int i = 0; i < partition.length; i++) {
+			max = Math.max(max, partition[i]);
+		}
+
+		return max;
+	}
+
+	public void createDimensionSizes() {
 		for (String key : dimensions.keySet()) {
 			Dimension d = dimensions.get(key);
-			dimensionSizes[d.index] = d.size;
+			d.size = dimensionSizes[d.index];
 		}
 	}
 
@@ -162,26 +275,5 @@ public class ManualHybridHyperCubeAssignment implements Serializable, HybridHype
 	@Override
 	public String getMappingDimensions() {
 		return null;
-	}
-
-	public static class Dimension implements Serializable {
-		public String name;
-		public int size;
-		public int index;
-
-		public Dimension(String name, int size, int index) {
-			this.name = name;
-			this.size = size;
-			this.index = index;
-		}
-
-		public Dimension(String name, int index) {
-			this.name = name;
-			this.index = index;
-		}
-
-		public String toString() {
-			return name + ", " + size + ", " + index;
-		}
 	}
 }
