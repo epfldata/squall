@@ -49,7 +49,7 @@ public class DBToasterHyracksPlan extends QueryPlan {
         final ProjectOperator projectionCustomer = new ProjectOperator(
                 new int[] { 0, 6 });
         final DataSourceComponent relationCustomer = new DataSourceComponent(
-                "CUSTOMER", dataPath + "customer" + extension).add(
+                "CUSTOMER", dataPath + "customer" + extension, conf).add(
                 projectionCustomer).setOutputPartKey(Arrays.asList(0));
         _queryBuilder.add(relationCustomer);
 
@@ -59,7 +59,7 @@ public class DBToasterHyracksPlan extends QueryPlan {
         final ProjectOperator projectionOrders = new ProjectOperator(
                 new int[] { 0, 1 });
         final DataSourceComponent relationOrders = new DataSourceComponent(
-                "ORDERS", dataPath + "orders" + extension)
+                "ORDERS", dataPath + "orders" + extension, conf)
                 .add(projectionOrders).setOutputPartKey(Arrays.asList(1));
         _queryBuilder.add(relationOrders);
 

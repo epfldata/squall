@@ -61,6 +61,12 @@ public class DataSourceComponent extends AbstractComponent<DataSourceComponent> 
       this(componentName, new FileReaderProvider("."), inputPath);
     }
 
+    public DataSourceComponent(String componentName, String inputPath, Map conf) {
+        this(componentName, 
+          (SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED") ? new FileReaderProvider("") : new FileReaderProvider(".")), 
+          inputPath);
+    }
+
     public DataSourceComponent(String componentName, ReaderProvider provider, String resourceName) {
       super((Component[])null, componentName);
       _provider = provider;
