@@ -127,6 +127,10 @@ public class DBToasterJoinComponentBuilder {
         return this;
     }
 
+    public DBToasterJoinComponentBuilder addDimension(String name, int index) {
+        _dimensions.put(name, new Dimension(name, index));
+        return this;
+    }
     /**
      * <p>
      *     Add relation which is resulted from aggregation.

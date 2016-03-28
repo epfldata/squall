@@ -46,6 +46,7 @@ import ch.epfl.data.squall.thetajoin.matrix_assignment.HyperCubeAssignment;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.ManualHybridHyperCubeAssignment.Dimension;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.HybridHyperCubeAssignment;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.ManualHybridHyperCubeAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HybridHyperCubeAssignmentBruteForce;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.PartitioningScheme;
@@ -183,7 +184,23 @@ public class StormDBToasterJoin extends StormBoltComponent {
                 
                 LOG.info("assignment: " + _currentHybridHyperCubeMappingAssignment.getMappingDimensions());
 
-                currentBolt = MyUtilities.attachEmitterManualHybridHyperCube(currentBolt, 
+                currentBolt = MyUtilities.attachEmitterHybridHyperCube(currentBolt, 
+                        nonNestedEmitters, _emitterColNames, allCompNames,
+                        _currentHybridHyperCubeMappingAssignment, emittersDesc, conf);   
+                break;
+            case BRUTEFORCEHYBRIDHYPERCUBE:
+                cardinality = getEmittersCardinality(nonNestedEmitters, conf);
+                emittersDesc = MyUtilities.getEmitterDesc(
+                        nonNestedEmitters, _emitterColNames, allCompNames, cardinality);
+
+                LOG.info("cardinalities: " + Arrays.toString(cardinality));
+
+                _currentHybridHyperCubeMappingAssignment = 
+                    new HybridHyperCubeAssignmentBruteForce(emittersDesc, _dimensions, parallelism);
+                
+                LOG.info("assignment: " + _currentHybridHyperCubeMappingAssignment.getMappingDimensions());
+
+                currentBolt = MyUtilities.attachEmitterHybridHyperCube(currentBolt, 
                         nonNestedEmitters, _emitterColNames, allCompNames,
                         _currentHybridHyperCubeMappingAssignment, emittersDesc, conf);   
                 break;

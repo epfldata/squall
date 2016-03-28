@@ -22,6 +22,7 @@
 package ch.epfl.data.squall.utilities;
 
 public enum PartitioningScheme {
+	BRUTEFORCEHYBRIDHYPERCUBE,	
 	MANUALHYBRIDHYPERCUBE,
 	HASHHYPERCUBE,
     HYPERCUBE,

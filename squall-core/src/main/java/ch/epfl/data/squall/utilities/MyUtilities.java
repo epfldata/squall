@@ -602,7 +602,7 @@ public class MyUtilities {
         return emittersDesc;
     }
     
-    public static InputDeclarer attachEmitterManualHybridHyperCube(
+    public static InputDeclarer attachEmitterHybridHyperCube(
     		InputDeclarer currentBolt, List<StormEmitter> emitters, 
     		Map<String, String[]> emitterColNames, List<String> allCompNames,
             HybridHyperCubeAssignment assignment, List<EmitterDesc> emittersDesc, Map map) {
