@@ -150,7 +150,7 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 	}
 
 	@Override
-	public List<Integer> getRegionIDs(Map<String, Object> c) {
+	public List<Integer> getRegionIDs(Map<String, String> c) {
 		List<Integer> regions = new ArrayList<Integer>();
 		int[] fixedDim = new int[c.size()];
 		int[] fixedIndex = new int[c.size()];
@@ -159,23 +159,11 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 		for (int i = 0; i < columns.size(); i++) {
 			if (c.containsKey(columns.get(i).name)) {
 				// calculate hash value
-				Object value = c.get(columns.get(i).name);
+				String value = c.get(columns.get(i).name);
 				int hashValue = Math.abs(value.hashCode()) % dimensions[i];
-
-
-				if (value instanceof String) {
-					hashValue = stringHash((String)value, dimensions[i]);
-				} else if (value instanceof Integer) {
-					hashValue = intHash((Integer)value, dimensions[i]);
-				} else if (value instanceof Long) {
-					hashValue = longHash((Long)value, dimensions[i]);
-				} else if (value instanceof Double) {
-					hashValue = doubleHash((Double)value, dimensions[i]);					
-				}
 
 				fixedDim[index] = i;
 				fixedIndex[index] = hashValue;
-				LOG.info(index + " " + hashValue);
 				index++;
 			}
 		}
@@ -184,37 +172,12 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 			
 		while (gen.hasNext()) {
 			List<Integer> cellIndex = gen.next();
-			LOG.info("Region IDs : " + regionIDsMap);
-			LOG.info("Cell Index : " + cellIndex);
-			LOG.info("Region Key : " + mapRegionKey(cellIndex));
 		
 			int regionID = regionIDsMap.get(mapRegionKey(cellIndex));
 
 			regions.add(regionID);
 		}
 		return regions;
-	}
-
-	// hash functions
-	public int intHash(Integer i, int mod) {
-		return Math.abs(i) % mod;
-	}
-
-	public int longHash(Long l, int mod) {
-		return Math.abs(l.hashCode()) % mod;
-	}
-
-	public int doubleHash(Double d, int mod) {
-		return Math.abs(d.hashCode()) % mod;
-	}
-
-	public int stringHash(String s, int mod) {
-		int hash = 7;
-		for (int i = 0; i < s.length(); i++) {
-    		hash = hash * 31 + s.charAt(i);
-		}
-
-		return Math.abs(hash) % mod;
 	}
 
 	private void createRegionMap() {

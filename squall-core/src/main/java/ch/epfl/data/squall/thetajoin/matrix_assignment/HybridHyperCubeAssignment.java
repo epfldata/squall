@@ -34,7 +34,7 @@ public interface HybridHyperCubeAssignment {
 	 *            indicate which columns the tuple has.
 	 * @return a list of index of reducers.
 	 */
-	public List<Integer> getRegionIDs(String emitterName, Map<String, Object> columns);
+	public List<Integer> getRegionIDs(String emitterName, Map<String, String> columns);
 	
 	/**
 	 * Return the number of region divisions in a given dimension perspective

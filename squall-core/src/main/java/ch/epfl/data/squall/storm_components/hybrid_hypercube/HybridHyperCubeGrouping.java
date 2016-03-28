@@ -76,11 +76,11 @@ public class HybridHyperCubeGrouping implements CustomStreamGrouping {
     private List<Integer> chooseTasksNonFinalAck(List<Object> stormTuple) {
     List<Integer> tasks = null;
     final String tableName = (String) stormTuple.get(0);
+    final List<String> tuple = (List<String>) stormTuple.get(1); // TUPLE
        
     for (EmitterDesc emitter : _emitters) {
     	if (emitter.index.equals(tableName)) {
-    		Map<String, Object> colums = new HashMap<String, Object>();
-            List<Integer> regionsID = _assignment.getRegionIDs(tableName, createColumns(emitter, stormTuple));
+            List<Integer> regionsID = _assignment.getRegionIDs(emitter.name, createColumns(emitter, tuple));
             tasks = translateIdsToTasks(regionsID);
             break;
     	}
@@ -97,9 +97,9 @@ public class HybridHyperCubeGrouping implements CustomStreamGrouping {
     }
 
     // Creates <ColumnName, Value> 
-    public Map<String, Object> createColumns(EmitterDesc emitter, List<Object> stormTuple) {
-    	HashMap<String, Object> columns = new HashMap<String, Object>();
-    	int i = 1;
+    public Map<String, String> createColumns(EmitterDesc emitter, List<String> stormTuple) {
+    	HashMap<String, String> columns = new HashMap<String, String>();
+    	int i = 0;
     	for (String columnName : emitter.columnNames) {
     		columns.put(columnName, stormTuple.get(i++));
     	}
@@ -110,14 +110,10 @@ public class HybridHyperCubeGrouping implements CustomStreamGrouping {
     @Override
     public void prepare(WorkerTopologyContext wtc, GlobalStreamId gsi,
 	    List<Integer> targetTasks) {
-	// LOG.info("Number of tasks is : "+numTasks);
 	_targetTasks = targetTasks;
     }
 
-    private List<Integer> translateIdsToTasks(List<Integer> ids) {
-    LOG.info("IDs : " + ids);
-    LOG.info("_targetTasks" + _targetTasks);
-    
+    private List<Integer> translateIdsToTasks(List<Integer> ids) {    
 	final List<Integer> converted = new ArrayList<Integer>();
 	for (final int id : ids)
 	    converted.add(_targetTasks.get(id));

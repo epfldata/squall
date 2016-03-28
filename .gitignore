@@ -36,3 +36,4 @@ contrib-eclipse-missing
 
 # sbt
 target/
+dbtoaster

@@ -91,10 +91,10 @@ public class HybridHypercubeDBToasterHyracksPlan extends QueryPlan {
                 "COUNTAGG").add(agg);
         _queryBuilder.add(oc);
 
-        RedisOperator redis = new RedisOperator(conf);
-        OperatorComponent pc = new OperatorComponent(oc, "SENDRESULTSTOREDIS").add(redis);
+        //RedisOperator redis = new RedisOperator(conf);
+        //OperatorComponent pc = new OperatorComponent(oc, "SENDRESULTSTOREDIS").add(redis);
 
-        _queryBuilder.add(pc);
+        //_queryBuilder.add(pc);
 
     }
 

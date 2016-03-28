@@ -64,7 +64,7 @@ public class ManualHybridHyperCubeAssignment implements Serializable, HybridHype
 	}
 
 	@Override
-	public List<Integer> getRegionIDs(String emitterName, Map<String, Object> c) {
+	public List<Integer> getRegionIDs(String emitterName, Map<String, String> c) {
 		if (isRandom(emitterName)) {
 			return getRandomRegion(emitterName);
 		} else {
@@ -76,9 +76,9 @@ public class ManualHybridHyperCubeAssignment implements Serializable, HybridHype
 		final List<Integer> regionIDs = new ArrayList<Integer>();
 		
 		Dimension dim = dimensions.get(emitterName);
-		final int randomIndex = rand.nextInt(dim.size);
-
-		CellIterator gen = new CellIterator(dimensionSizes, dim.index, randomIndex);
+		final int fixedIndex = rand.nextInt(dim.size);
+		
+		CellIterator gen = new CellIterator(dimensionSizes, dim.index, fixedIndex);
 
 		while (gen.hasNext()) {
 			List<Integer> cellIndex = gen.next();
@@ -89,30 +89,17 @@ public class ManualHybridHyperCubeAssignment implements Serializable, HybridHype
 		return regionIDs;
 	}
 
-	public List<Integer> getHashRegion(Map<String, Object> c) {
+	public List<Integer> getHashRegion(Map<String, String> c) {
 		List<Integer> regions = new ArrayList<Integer>();
 		List<Integer> fixedDim = new ArrayList<Integer>();
 		List<Integer> fixedIndex = new ArrayList<Integer>();
-
 
 		for (String columnName : c.keySet()) {
 			if (dimensions.containsKey(columnName)) {
 				Dimension dim = dimensions.get(columnName);
 
-				Object value = c.get(columnName);
+				String value = c.get(columnName);
 				int hashValue = Math.abs(value.hashCode()) % dim.size;
-
-				if (value instanceof String) {
-					hashValue = stringHash((String)value, dim.size);
-				} else if (value instanceof Integer) {
-					hashValue = intHash((Integer)value, dim.size);
-				} else if (value instanceof Long) {
-					hashValue = longHash((Long)value, dim.size);
-				} else if (value instanceof Double) {
-					hashValue = doubleHash((Double)value, dim.size);					
-				}
-
-				LOG.info(dim.index + " " + hashValue);
 				
 				fixedDim.add(dim.index);
 				fixedIndex.add(hashValue);
@@ -120,14 +107,8 @@ public class ManualHybridHyperCubeAssignment implements Serializable, HybridHype
 		}
 
 		CellIterator gen = new CellIterator(dimensionSizes, toIntArray(fixedDim), toIntArray(fixedIndex));
-			
 		while (gen.hasNext()) {
 			List<Integer> cellIndex = gen.next();
-
-			LOG.info("Region IDs : " + regionIDsMap);
-			LOG.info("Cell Index : " + cellIndex);
-			LOG.info("Region Key : " + mapRegionKey(cellIndex));
-			
 			int regionID = mapRegionID(mapRegionKey(cellIndex));
 			regions.add(regionID);
 		}
@@ -144,28 +125,6 @@ public class ManualHybridHyperCubeAssignment implements Serializable, HybridHype
 		}
 
 		return tmp;
-	}
-
-	// hash functions
-	public int intHash(Integer i, int mod) {
-		return Math.abs(i) % mod;
-	}
-
-	public int longHash(Long l, int mod) {
-		return Math.abs(l.hashCode()) % mod;
-	}
-
-	public int doubleHash(Double d, int mod) {
-		return Math.abs(d.hashCode()) % mod;
-	}
-
-	public int stringHash(String s, int mod) {
-		int hash = 7;
-		for (int i = 0; i < s.length(); i++) {
-    		hash = hash * 31 + s.charAt(i);
-		}
-
-		return Math.abs(hash) % mod;
 	}
 
 	private boolean isRandom(String emitterName) {
@@ -214,6 +173,10 @@ public class ManualHybridHyperCubeAssignment implements Serializable, HybridHype
 			this.name = name;
 			this.size = size;
 			this.index = index;
+		}
+
+		public String toString() {
+			return name + ", " + size + ", " + index;
 		}
 	}
 }
