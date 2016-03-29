@@ -161,7 +161,12 @@ public class ManualHybridHyperCubeAssignment implements Serializable, HybridHype
 
 	@Override
 	public String getMappingDimensions() {
-		return null;
+		StringBuilder sb = new StringBuilder();
+		for (String key : dimensions.keySet()) {
+			sb.append(dimensions.get(key).name).append(" : ").append(dimensions.get(key).size);
+			sb.append("\n");
+		}
+		return sb.toString();
 	}
 
 	public static class Dimension implements Serializable {
