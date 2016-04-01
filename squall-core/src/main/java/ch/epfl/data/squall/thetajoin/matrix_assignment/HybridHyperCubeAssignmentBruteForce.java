@@ -23,6 +23,7 @@ package ch.epfl.data.squall.thetajoin.matrix_assignment;
 
 import ch.epfl.data.squall.storm_components.hash_hypercube.HashHyperCubeGrouping.EmitterDesc;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.ManualHybridHyperCubeAssignment.Dimension;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HashHyperCubeAssignmentBruteForce.ColumnDesc;
 
 import ch.epfl.data.squall.types.Type;
 
@@ -44,16 +45,20 @@ public class HybridHyperCubeAssignmentBruteForce implements Serializable, Hybrid
     private static Logger LOG = Logger.getLogger(HybridHyperCubeAssignmentBruteForce.class);
 
 	List<EmitterDesc> emitters;
-	Map<String, Dimension> dimensions;
+	List<ColumnDesc> columns;
+	Set<String> randomColumns;
 	int[] dimensionSizes; 
 	int reducers;
 	Map<String, Integer> regionIDsMap;
 
-	public HybridHyperCubeAssignmentBruteForce(List<EmitterDesc> emitters, Map<String, Dimension> dimensions, int reducers) {
+	public HybridHyperCubeAssignmentBruteForce(List<EmitterDesc> emitters, List<ColumnDesc> columns, 
+		Set<String> randomColumns, int reducers) {
+		
 		rand = new Random();
 
 		this.emitters = emitters;
-		this.dimensions = dimensions;
+		this.columns = columns;
+		this.randomColumns = randomColumns;
 		this.reducers = reducers;
 
 		compute();
@@ -62,7 +67,6 @@ public class HybridHyperCubeAssignmentBruteForce implements Serializable, Hybrid
 	}
 
 	private void compute() {
-		LOG.info("Dimension is : " + dimensions);
 		for (int i = 1; i <= reducers; i++) {
 			int[] best = compute(i);
 
@@ -80,7 +84,7 @@ public class HybridHyperCubeAssignmentBruteForce implements Serializable, Hybrid
 
 	private int[] compute(int r) {
 		LOG.info("Calulating for : " + r);
-		int[] partition = new int[dimensions.size()];
+		int[] partition = new int[columns.size()];
 		
 		// Find the prime factors of the r.
 		final List<Integer> primeFactors = Utilities.primeFactors(r);
@@ -90,7 +94,7 @@ public class HybridHyperCubeAssignmentBruteForce implements Serializable, Hybrid
 
 		SetArrangementIterator generator = new SetArrangementIterator(powerSet, partition.length);
 		int count = 0;
-		int[] rd = new int[dimensions.size()];
+		int[] rd = new int[columns.size()];
 		
 		while (generator.hasNext()) {
 			List<List<Integer>> combination = generator.next();
@@ -138,27 +142,14 @@ public class HybridHyperCubeAssignmentBruteForce implements Serializable, Hybrid
 	
 	public long getWorkload(int[] partition) {
 		long workload = 0;
-
 		for (EmitterDesc emitter : emitters) {
 
 			Set<String> emitterColumns = new HashSet<String>(Arrays.asList(emitter.columnNames));
+
 			int replicate = 1;
-
-			// random partitioned relation
-			if (isRandom(emitter.name)) {
-				for (int i = 0; i < partition.length; i++) {
-					if (i == dimensions.get(emitter.name).index) {
-						replicate *= partition[i];
-						break;
-					}
-				}
-			} else {
-				replicate = 1;
-
-				for (String emitterColumn : emitterColumns) {
-					if (dimensions.containsKey(emitterColumn)) {
-						replicate *= partition[dimensions.get(emitterColumn).index];
-					}
+			for (int i = 0; i < partition.length; i++) {
+				if (emitterColumns.contains(columns.get(i).name)) {
+					replicate *= partition[i];					
 				}
 			}
 
@@ -179,78 +170,49 @@ public class HybridHyperCubeAssignmentBruteForce implements Serializable, Hybrid
 	}
 
 	public void createDimensionSizes() {
-		for (String key : dimensions.keySet()) {
-			Dimension d = dimensions.get(key);
-			d.size = dimensionSizes[d.index];
+		regionIDsMap = new HashMap<String, Integer>();
+		CellIterator gen = new CellIterator(dimensionSizes);
+		int i = 0;
+		while (gen.hasNext()) {
+			List<Integer> cellIndex = gen.next();
+			regionIDsMap.put(mapRegionKey(cellIndex), i++);
 		}
 	}
 
 	@Override
 	public List<Integer> getRegionIDs(String emitterName, Map<String, String> c) {
-		if (isRandom(emitterName)) {
-			return getRandomRegion(emitterName);
-		} else {
-			return getHashRegion(c);
-		}
-	}
-
-	public List<Integer> getRandomRegion(String emitterName) {
-		final List<Integer> regionIDs = new ArrayList<Integer>();
-		
-		Dimension dim = dimensions.get(emitterName);
-		final int fixedIndex = rand.nextInt(dim.size);
-		
-		CellIterator gen = new CellIterator(dimensionSizes, dim.index, fixedIndex);
-
-		while (gen.hasNext()) {
-			List<Integer> cellIndex = gen.next();
-			int regionID = mapRegionID(mapRegionKey(cellIndex));
-			regionIDs.add(regionID);
-		}
-
-		return regionIDs;
-	}
-
-	public List<Integer> getHashRegion(Map<String, String> c) {
 		List<Integer> regions = new ArrayList<Integer>();
-		List<Integer> fixedDim = new ArrayList<Integer>();
-		List<Integer> fixedIndex = new ArrayList<Integer>();
+		int[] fixedDim = new int[c.size()];
+		int[] fixedIndex = new int[c.size()];
+		int index = 0;
 
-		for (String columnName : c.keySet()) {
-			if (dimensions.containsKey(columnName)) {
-				Dimension dim = dimensions.get(columnName);
+		for (int i = 0; i < columns.size(); i++) {
+			if (c.containsKey(columns.get(i).name)) {
+				// calculate hash value
+				String value = c.get(columns.get(i).name);
 
-				String value = c.get(columnName);
-				int hashValue = Math.abs(value.hashCode()) % dim.size;
-				
-				fixedDim.add(dim.index);
-				fixedIndex.add(hashValue);
+				int hashValue = Math.abs(value.hashCode()) % dimensionSizes[i];
+				// if random 
+				if (randomColumns.contains(columns.get(i).name)) {
+					hashValue = rand.nextInt(dimensionSizes[i]);
+				}
+
+				fixedDim[index] = i;
+				fixedIndex[index] = hashValue;
+				index++;
 			}
 		}
 
-		CellIterator gen = new CellIterator(dimensionSizes, toIntArray(fixedDim), toIntArray(fixedIndex));
+		CellIterator gen = new CellIterator(dimensionSizes, fixedDim, fixedIndex);
+			
 		while (gen.hasNext()) {
 			List<Integer> cellIndex = gen.next();
-			int regionID = mapRegionID(mapRegionKey(cellIndex));
+		
+			int regionID = regionIDsMap.get(mapRegionKey(cellIndex));
+
 			regions.add(regionID);
 		}
-
 		return regions;
-	}
-
-	public int[] toIntArray(List<Integer> list) {
-		int[] tmp = new int[list.size()];
-		int i = 0;
-
-		for (Integer number : list) {
-			tmp[i++] = number;
-		}
-
-		return tmp;
-	}
-
-	private boolean isRandom(String emitterName) {
-		return dimensions.containsKey(emitterName);
 	}
 
 	private void createRegionMap() {
@@ -284,9 +246,11 @@ public class HybridHyperCubeAssignmentBruteForce implements Serializable, Hybrid
 	@Override
 	public String getMappingDimensions() {
 		StringBuilder sb = new StringBuilder();
-		for (String key : dimensions.keySet()) {
-			sb.append(dimensions.get(key).name).append(" : ").append(dimensions.get(key).size);
-			sb.append("\n");
+		String prefix = "";
+		for (int i = 0; i < dimensionSizes.length; i++) {
+			sb.append(prefix);
+			prefix = "-";
+			sb.append("[ ").append(columns.get(i).name).append(" : ").append(dimensionSizes[i]).append(" ]");
 		}
 		return sb.toString();
 	}

@@ -97,6 +97,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
     private Map<String, Type[]> _emitterNamesColTypes; // map between emitter names and types of tuple from the emitter
     private Map<String, String[]> _emitterColNames; // map between emitter name and column names of typle from the emitter
     private Map<String, Dimension> _dimensions; // used in Manual Hybrid Hypercube.
+    private Set<String> _randomColumns; // used in Hybrid Hypercube
     private Set<String> _emittersWithMultiplicity;
     private Map<String, AggregateStream> _emitterAggregators;
 
@@ -105,6 +106,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
                               Map<String, Type[]> emitterNameColTypes,
                               Map<String, String[]> emitterColNames,
                               Map<String, Dimension> dimensions,
+                              Set<String> randomColumns,
                               Set<String> emittersWithMultiplicity,
                               Map<String, AggregateStream> emittersWithAggregator,
                               int hierarchyPosition, TopologyBuilder builder,
@@ -116,6 +118,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
         _emitterNamesColTypes = emitterNameColTypes;
         _emitterColNames = emitterColNames;
         _dimensions = dimensions;
+        _randomColumns = randomColumns;
         _emittersWithMultiplicity = emittersWithMultiplicity;
         _emitterAggregators = emittersWithAggregator;
 
@@ -190,13 +193,15 @@ public class StormDBToasterJoin extends StormBoltComponent {
                 break;
             case BRUTEFORCEHYBRIDHYPERCUBE:
                 cardinality = getEmittersCardinality(nonNestedEmitters, conf);
+                List<ColumnDesc> columns = getColumnDesc(cardinality, nonNestedEmitters);
+
                 emittersDesc = MyUtilities.getEmitterDesc(
                         nonNestedEmitters, _emitterColNames, allCompNames, cardinality);
 
                 LOG.info("cardinalities: " + Arrays.toString(cardinality));
 
                 _currentHybridHyperCubeMappingAssignment = 
-                    new HybridHyperCubeAssignmentBruteForce(emittersDesc, _dimensions, parallelism);
+                    new HybridHyperCubeAssignmentBruteForce(emittersDesc, columns, _randomColumns, parallelism);
                 
                 LOG.info("assignment: " + _currentHybridHyperCubeMappingAssignment.getMappingDimensions());
 
@@ -207,7 +212,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
             case HASHHYPERCUBE:
                 cardinality = getEmittersCardinality(nonNestedEmitters, conf);
                 LOG.info("cardinalities: " + Arrays.toString(cardinality));
-                List<ColumnDesc> columns = getColumnDesc(cardinality, nonNestedEmitters);
+                columns = getColumnDesc(cardinality, nonNestedEmitters);
                 emittersDesc = MyUtilities.getEmitterDesc(
                         nonNestedEmitters, _emitterColNames, allCompNames, cardinality);
 

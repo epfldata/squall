@@ -53,6 +53,7 @@ public class DBToasterJoinComponentBuilder {
     private Map<String, Type[]> _relColTypes = new HashMap<String, Type[]>();
     private Map<String, String[]> _relColNames = new HashMap<String, String[]>();
     private Map<String, Dimension> _dimensions = new HashMap<String, Dimension>();
+    private Set<String> _randomColumns = new HashSet<String>();
     private Set<String> _relMultiplicity = new HashSet<String>();
     private Map<String, AggregateStream> _relAggregators = new HashMap<String, AggregateStream>();
     private String _sql;
@@ -85,11 +86,22 @@ public class DBToasterJoinComponentBuilder {
         return this;
     }
 
-    public DBToasterJoinComponentBuilder addRelation(Component relation, Type[] types, String[] columnNames) {
+    public DBToasterJoinComponentBuilder addRelation(Component relation, 
+        Type[] types, String[] columnNames) {
         _relColNames.put(relation.getName(), columnNames);
         return addRelation(relation, types);
     }
 
+    public DBToasterJoinComponentBuilder addRelation(Component relation, 
+        Type[] types, String[] columnNames, int[] randomColumns) {
+        
+        for(int i : randomColumns) {
+            _randomColumns.add(columnNames[i]);
+        }
+
+        _relColNames.put(relation.getName(), columnNames);
+        return addRelation(relation, types);
+    }
 
     /**
      * <p>
@@ -271,7 +283,7 @@ public class DBToasterJoinComponentBuilder {
             _name = nameBuilder.toString();
         }
         LOG.info("Dimension is : " + _dimensions);
-        return new DBToasterJoinComponent(_relations, _relColTypes, _relColNames, _dimensions, _relMultiplicity, _relAggregators, _sql, _name);
+        return new DBToasterJoinComponent(_relations, _relColTypes, _relColNames, _dimensions, _randomColumns, _relMultiplicity, _relAggregators, _sql, _name);
     }
 
 }

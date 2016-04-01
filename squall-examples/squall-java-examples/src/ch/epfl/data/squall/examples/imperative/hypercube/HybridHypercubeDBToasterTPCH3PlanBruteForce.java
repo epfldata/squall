@@ -127,16 +127,12 @@ public class HybridHypercubeDBToasterTPCH3PlanBruteForce extends QueryPlan {
         
         // ORDERKEY EXTENDEDPRICE DISCOUNT
         dbToasterCompBuilder.addRelation(relationLineitem, new Type[]{_lc, _doubleConv, _doubleConv},
-            new String[]{"ORDERKEY", "EXTENDEDPRICE", "DISCOUNT"});
+            new String[]{"L_ORDERKEY", "EXTENDEDPRICE", "DISCOUNT"}, new int[]{0});
         
         dbToasterCompBuilder.setSQL("SELECT LINEITEM.f0, SUM(LINEITEM.f1 * (1 - LINEITEM.f2)) FROM CUSTOMER, ORDERS, LINEITEM " +
                 "WHERE CUSTOMER.f0 = ORDERS.f1 AND ORDERS.f0 = LINEITEM.f0 " +
                 "GROUP BY LINEITEM.f0, ORDERS.f2, ORDERS.f3");
-
-        dbToasterCompBuilder.addDimension("CUSTKEY", 0);
-        dbToasterCompBuilder.addDimension("ORDERKEY", 1);
-        dbToasterCompBuilder.addDimension("LINEITEM", 2);
-
+        
         DBToasterJoinComponent dbToasterComponent = dbToasterCompBuilder.build();
         dbToasterComponent.setPrintOut(false);
 
