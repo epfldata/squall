@@ -48,8 +48,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class DBToasterTPCH3Plan extends QueryPlan {
-    private static Logger LOG = Logger.getLogger(DBToasterTPCH3Plan.class);
+public class HashHypercubeDBToasterTPCH3Plan extends QueryPlan {
+    private static Logger LOG = Logger.getLogger(HashHypercubeDBToasterTPCH3Plan.class);
 
     private static final String _customerMktSegment = "BUILDING";
     private static final String _dateStr = "1995-03-15";
@@ -64,7 +64,7 @@ public class DBToasterTPCH3Plan extends QueryPlan {
 
     private final QueryBuilder _queryBuilder = new QueryBuilder();
 
-    public DBToasterTPCH3Plan(String dataPath, String extension, Map conf) {
+    public HashHypercubeDBToasterTPCH3Plan(String dataPath, String extension, Map conf) {
 
         // -------------------------------------------------------------------------------------
         final List<Integer> hashCustomer = Arrays.asList(0);
@@ -118,11 +118,17 @@ public class DBToasterTPCH3Plan extends QueryPlan {
 
         // -----------------------------------------------------------------------------------
         DBToasterJoinComponentBuilder dbToasterCompBuilder = new DBToasterJoinComponentBuilder();
-        dbToasterCompBuilder.addRelation(relationCustomer, _lc);
-        dbToasterCompBuilder.addRelation(relationOrders, _lc, _lc,
-                _sc, _lc); // Have to use DateLongConversion instead of DateConversion as DBToaster use Long as Date
-        dbToasterCompBuilder.addRelation(relationLineitem, _lc, _doubleConv,
-                _doubleConv);
+        // CUSTKEY
+        dbToasterCompBuilder.addRelation(relationCustomer, new Type[]{_lc}, new String[]{"CUSTKEY"});
+        
+        // ORDERKEY CUSTKEY ORDERDATE SHIPPRIORITY
+        dbToasterCompBuilder.addRelation(relationOrders, new Type[]{_lc, _lc, _sc, _lc}, 
+            new String[]{"ORDERKEY", "CUSTKEY", "ORDERDATE", "SHIPPRIORITY"}); // Have to use DateLongConversion instead of DateConversion as DBToaster use Long as Date
+        
+        // ORDERKEY EXTENDEDPRICE DISCOUNT
+        dbToasterCompBuilder.addRelation(relationLineitem, new Type[]{_lc, _doubleConv, _doubleConv},
+            new String[]{"ORDERKEY", "EXTENDEDPRICE", "DISCOUNT"});
+        
         dbToasterCompBuilder.setSQL("SELECT LINEITEM.f0, SUM(LINEITEM.f1 * (1 - LINEITEM.f2)) FROM CUSTOMER, ORDERS, LINEITEM " +
                 "WHERE CUSTOMER.f0 = ORDERS.f1 AND ORDERS.f0 = LINEITEM.f0 " +
                 "GROUP BY LINEITEM.f0, ORDERS.f2, ORDERS.f3");

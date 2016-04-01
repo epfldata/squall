@@ -36,6 +36,8 @@ import ch.epfl.data.squall.thetajoin.matrix_assignment.ManualHybridHyperCubeAssi
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.SelectItem;
 
+import org.apache.log4j.Logger;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -46,6 +48,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DBToasterJoinComponentBuilder {
+    private static Logger LOG = Logger.getLogger(DBToasterJoinComponentBuilder.class);
     private List<Component> _relations = new LinkedList<Component>();
     private Map<String, Type[]> _relColTypes = new HashMap<String, Type[]>();
     private Map<String, String[]> _relColNames = new HashMap<String, String[]>();
@@ -129,6 +132,8 @@ public class DBToasterJoinComponentBuilder {
 
     public DBToasterJoinComponentBuilder addDimension(String name, int index) {
         _dimensions.put(name, new Dimension(name, index));
+        LOG.info("Adding : " + name + " , " + index);
+        LOG.info("Dimension is : " + _dimensions);
         return this;
     }
     /**
@@ -265,6 +270,7 @@ public class DBToasterJoinComponentBuilder {
             }
             _name = nameBuilder.toString();
         }
+        LOG.info("Dimension is : " + _dimensions);
         return new DBToasterJoinComponent(_relations, _relColTypes, _relColNames, _dimensions, _relMultiplicity, _relAggregators, _sql, _name);
     }
 

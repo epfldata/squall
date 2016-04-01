@@ -54,7 +54,7 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 	}
 
 	private void compute() {
-		for (int i = columns.size(); i <= reducers; i++) {
+		for (int i = 1; i <= reducers; i++) {
 			int[] best = compute(i);
 
 			if (dimensions == null) {
@@ -206,6 +206,7 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 
 	@Override
 	public String getMappingDimensions() {
+		LOG.info(columns);
 		StringBuilder sb = new StringBuilder();
 		String prefix = "";
 		for (int r : dimensions) {

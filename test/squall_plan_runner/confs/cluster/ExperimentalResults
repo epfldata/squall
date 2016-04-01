@@ -1,0 +1,32 @@
+Hyracks. 1
+Random Hyracs		 |		Hash Hyracs		|   Hybrid Hyracs
+Reassigning happened |	     00:01:37		|	  00:01:33
+
+Hyracks. 2
+Random Hyracks   	 |		Hash Hyracs		|   Hybrid Hyracs
+Reassigning happened |	     00:01:35		|	  00:01:34
+
+
+TPCH3 - Z0
+Sequential two way DBtoaster using hash |        Hash          |   Hybrid
+	00:03:22        		  			|	    00:03:56	   |   00:03:55
+
+10 GB
+TPCH3 Z2
+Sequential two way DBtoaster using hash |        Hash          |   Hybrid
+	     00:04:06  						|	 	00:05:12       |   00:04:08
+
+
+80 GB
+TPCH3 Z2
+Sequential two way DBtoaster using hash |        Hash          |   Hybrid
+
+takes more than 30 minutes it is not practical to run this experiments. 
+
+
+New Experiments
+10 GB
+TPCH3 Z2
+			Random				|        Hash           |   Hybrid
+	     	00:04:17 			|	 	00:03:09    	|     
+	     	00:03:21			|       00:03:00		|   

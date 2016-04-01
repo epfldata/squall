@@ -62,7 +62,8 @@ public class HybridHyperCubeAssignmentBruteForce implements Serializable, Hybrid
 	}
 
 	private void compute() {
-		for (int i = dimensions.size(); i <= reducers; i++) {
+		LOG.info("Dimension is : " + dimensions);
+		for (int i = 1; i <= reducers; i++) {
 			int[] best = compute(i);
 
 			if (dimensionSizes == null) {
@@ -78,6 +79,7 @@ public class HybridHyperCubeAssignmentBruteForce implements Serializable, Hybrid
 	}
 
 	private int[] compute(int r) {
+		LOG.info("Calulating for : " + r);
 		int[] partition = new int[dimensions.size()];
 		
 		// Find the prime factors of the r.
@@ -98,6 +100,12 @@ public class HybridHyperCubeAssignmentBruteForce implements Serializable, Hybrid
 
 			if (Utilities.multiply(rd) != r)
 				continue;
+
+
+			String res = "";
+			for (int i : rd) res += " " + i;
+			LOG.info("For : " + r + " Found : " + res);
+			LOG.info("Workload is  : " + getWorkload(rd));
 
 			if (count == 0) {
 				Utilities.copy(rd, partition);
@@ -139,16 +147,17 @@ public class HybridHyperCubeAssignmentBruteForce implements Serializable, Hybrid
 			// random partitioned relation
 			if (isRandom(emitter.name)) {
 				for (int i = 0; i < partition.length; i++) {
-					if (i != dimensions.get(emitter.name).index) {
+					if (i == dimensions.get(emitter.name).index) {
 						replicate *= partition[i];
+						break;
 					}
 				}
 			} else {
-				replicate = Utilities.multiply(partition);
+				replicate = 1;
 
 				for (String emitterColumn : emitterColumns) {
 					if (dimensions.containsKey(emitterColumn)) {
-						replicate /= partition[dimensions.get(emitterColumn).index];
+						replicate *= partition[dimensions.get(emitterColumn).index];
 					}
 				}
 			}
