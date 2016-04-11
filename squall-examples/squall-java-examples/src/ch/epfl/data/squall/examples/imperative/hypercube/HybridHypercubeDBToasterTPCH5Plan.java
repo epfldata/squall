@@ -51,9 +51,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class DBToasterTPCH5Plan extends QueryPlan {
+public class HybridHypercubeDBToasterTPCH5Plan extends QueryPlan {
 
-    private static Logger LOG = Logger.getLogger(DBToasterTPCH5Plan.class);
+    private static Logger LOG = Logger.getLogger(HybridHypercubeDBToasterTPCH5Plan.class);
 
     private static final Type<Date> _dc = new DateType();
     private static final Type<Long> _lc = new LongType();
@@ -83,7 +83,7 @@ public class DBToasterTPCH5Plan extends QueryPlan {
         // tuple is set to null since we are computing based on constants
     }
 
-    public DBToasterTPCH5Plan(String dataPath, String extension, Map conf) {
+    public HybridHypercubeDBToasterTPCH5Plan(String dataPath, String extension, Map conf) {
         computeDates();
 
         // -------------------------------------------------------------------------------------
@@ -168,17 +168,22 @@ public class DBToasterTPCH5Plan extends QueryPlan {
 
         DBToasterJoinComponentBuilder dbtBuilder = new DBToasterJoinComponentBuilder();
         // Region: regionKey
-        dbtBuilder.addRelation(relationRegion, _lc);
+        dbtBuilder.addRelation(relationRegion, new Type[]{_lc}, new String[]{"regionKey"});
         // Nation: nationKey, name, regionKey
-        dbtBuilder.addRelation(relationNation, _lc, _sc, _lc);
+        dbtBuilder.addRelation(relationNation, new Type[]{_lc, _sc, _lc}, 
+            new String[]{"nationKey", "name", "regionKey"});
         // Supplier: supkey, nationKey
-        dbtBuilder.addRelation(relationSupplier, _lc, _lc);
+        dbtBuilder.addRelation(relationSupplier, new Type[]{_lc, _lc}, 
+            new String[]{"supkey", "nationKey"});
         // Lineitem: orderKey, supKey, extendedPrice, discount
-        dbtBuilder.addRelation(relationLineitem, _lc, _lc, _doubleConv, _doubleConv);
+        dbtBuilder.addRelation(relationLineitem, new Type[]{_lc, _lc, _doubleConv, _doubleConv}, 
+            new String[]{"orderKey", "supKey", "extendedPrice", "discount"});
         // Customer: custKey, nationKey
-        dbtBuilder.addRelation(relationCustomer, _lc, _lc);
+        dbtBuilder.addRelation(relationCustomer, new Type[]{_lc, _lc}, 
+            new String[]{"custKey", "nationKey"});
         // Orders: orderKey, custKey
-        dbtBuilder.addRelation(relationOrders, _lc, _lc);
+        dbtBuilder.addRelation(relationOrders, new Type[]{_lc, _lc}, 
+            new String[]{"orderKey", "custKey"});
 
         dbtBuilder.setSQL("SELECT NATION.f1, SUM(LINEITEM.f2 * (1 - LINEITEM.f3)) " +
                 "FROM CUSTOMER, ORDERS, LINEITEM, SUPPLIER, NATION, REGION " +

@@ -23,12 +23,38 @@ Sequential two way DBtoaster using hash |        Hash          |   Hybrid
 
 takes more than 30 minutes it is not practical to run this experiments. 
 
+****************************************************************************************
 
-New Experiments
 10 GB
 TPCH3 Z2
 			Random				|        Hash           |   Hybrid
 	     	00:04:17 			|	 	00:03:09    	|  00:03:09      
 	     	00:03:21			|       00:03:00		|  00:03:11 
 	     	00:03:31			|		00:03:23		|  00:02:58
+
+
+Capacity sometime becomes 11 > There is huge CPU workload
+Storm fails, so run ./reset_all
+10 GB
+TPCH5 Z2
+			Random				|        Hash           |   Hybrid
+	     	Nil 				|	 	Nil    			|  Nil      
+	     	Nil					|       Nil				|  Nil
+	     	Nil					|		Nil				|  Nil
+
+10 GB
+TPCH9 Z0
+			Random				|        Hash           |   Hybrid
+	     	Nil 				|	 	-    			|  -      
+	     	Nil					|       -				|  -
+	     	Nil					|		-				|  -
+
+10GB
+Hyracks Z1
+			Theta				|       DBtoaster
+			00:01:10(Random) 	|		(Random) 00:01:05
+			00:01:10(Random)	|		(Hash) 00:01:42
+			00:01:01(Random)	|		(Hybrid) 00:01:35
+
+
 

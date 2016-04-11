@@ -67,7 +67,7 @@ public class HybridHyperCubeAssignmentBruteForce implements Serializable, Hybrid
 	}
 
 	private void compute() {
-		for (int i = 1; i <= reducers; i++) {
+		for (int i = reducers; i <= reducers; i++) {
 			int[] best = compute(i);
 
 			if (dimensionSizes == null) {
@@ -83,7 +83,7 @@ public class HybridHyperCubeAssignmentBruteForce implements Serializable, Hybrid
 	}
 
 	private int[] compute(int r) {
-		LOG.info("Calulating for : " + r);
+		//LOG.info("Calulating for : " + r);
 		int[] partition = new int[columns.size()];
 		
 		// Find the prime factors of the r.

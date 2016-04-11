@@ -54,7 +54,7 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 	}
 
 	private void compute() {
-		for (int i = 1; i <= reducers; i++) {
+		for (int i = reducers; i <= reducers; i++) {
 			int[] best = compute(i);
 
 			if (dimensions == null) {

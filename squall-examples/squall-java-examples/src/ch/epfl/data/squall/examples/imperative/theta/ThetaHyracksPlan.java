@@ -53,7 +53,7 @@ public class ThetaHyracksPlan extends QueryPlan {
 		new int[] { 0, 6 });
 	final List<Integer> hashCustomer = Arrays.asList(0);
 	final DataSourceComponent relationCustomer = new DataSourceComponent(
-		"CUSTOMER", dataPath + "customer" + extension).add(
+		"CUSTOMER", dataPath + "customer" + extension, conf).add(
 		projectionCustomer).setOutputPartKey(hashCustomer);
 	_queryBuilder.add(relationCustomer);
 
@@ -62,7 +62,7 @@ public class ThetaHyracksPlan extends QueryPlan {
 		new int[] { 1 });
 	final List<Integer> hashOrders = Arrays.asList(0);
 	final DataSourceComponent relationOrders = new DataSourceComponent(
-		"ORDERS", dataPath + "orders" + extension)
+		"ORDERS", dataPath + "orders" + extension, conf)
 		.add(projectionOrders).setOutputPartKey(hashOrders);
 	_queryBuilder.add(relationOrders);
 
