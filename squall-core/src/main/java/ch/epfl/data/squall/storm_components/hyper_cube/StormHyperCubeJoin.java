@@ -58,6 +58,7 @@ public class StormHyperCubeJoin extends StormBoltComponent {
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(StormHyperCubeJoin.class);
     private List<TupleStorage> relationStorages;
+    private ArrayList<Integer> joinOrders;
     private List<String> emitterIndexes;
     private long numSentTuples = 0;
     private Map<String, Predicate> joinPredicates;
@@ -124,8 +125,11 @@ public class StormHyperCubeJoin extends StormBoltComponent {
             currentBolt.allGrouping(killer.getID(), SystemParameters.DUMP_RESULTS_STREAM);
 
         relationStorages = new ArrayList<TupleStorage>();
-        for (int i = 0; i < emitters.size(); i++)
+        joinOrders = new ArrayList<Integer>();
+        for (int i = 0; i < emitters.size(); i++) {
             relationStorages.add(new TupleStorage());
+            joinOrders.add(i);
+        }
 
 
         if (joinPredicates != null) {
@@ -195,6 +199,9 @@ public class StormHyperCubeJoin extends StormBoltComponent {
     // For each emitter we check is there Predicate between them.
     // If yes, we create Indexes between them and add to firstRelationIndexes and secondRelationIndexes.
     private void createIndexes() {
+        LOG.info("Emitter Indexes : " + emitterIndexes);
+        LOG.info("Predicate : " + joinPredicates);
+
         for (int i = 0; i < emitterIndexes.size(); i++) {
           for (int j = i + 1; j < emitterIndexes.size(); j++) {
               String key = emitterIndexes.get(i) + emitterIndexes.get(j);
@@ -324,7 +331,8 @@ public class StormHyperCubeJoin extends StormBoltComponent {
     // it is dummy function - Patrice is going to change arguments and return paramater.
     // it analyze join graph and returns arraylist for join order
     public ArrayList<Integer> getOrderToJoin(String emitterIndex) {
-        return new ArrayList<Integer>();
+        //return new ArrayList<Integer>();
+        return joinOrders;
     }
 
     // RelationVisited - number of relations already joined from the left
@@ -374,21 +382,22 @@ public class StormHyperCubeJoin extends StormBoltComponent {
     }
 
     private void selectTupleToJoinForMultipleJoin(int firstEmitterIndex, int secondEmitterIndex, List<Integer> tuplesToJoin) {
-        boolean isFromFirstEmitter;
-        List<Index> oppositeIndexes;
+        boolean isFromFirstEmitter = true;
+        List<Index> oppositeIndexes = new ArrayList<Index>();
+        
         String key = emitterIndexes.get(firstEmitterIndex) + emitterIndexes.get(secondEmitterIndex);
         String keyReverse = emitterIndexes.get(secondEmitterIndex) + emitterIndexes.get(firstEmitterIndex);
         if (firstRelationIndexes.containsKey(key)) {
             oppositeIndexes = firstRelationIndexes.get(key);
             isFromFirstEmitter = true;
-        } else {
+        } else if (secondRelationIndexes.containsKey(keyReverse)) {
             oppositeIndexes = secondRelationIndexes.get(keyReverse);
             isFromFirstEmitter = false;
             key = keyReverse;
         }
-        Predicate pr = joinPredicates.get(key);
-        final PredicateCreateIndexesVisitor visitor = new PredicateCreateIndexesVisitor();
-        pr.accept(visitor);
+        // Predicate pr = joinPredicates.get(key);
+        // final PredicateCreateIndexesVisitor visitor = new PredicateCreateIndexesVisitor();
+        // pr.accept(visitor);
         selectTupleToJoin(key, oppositeIndexes, isFromFirstEmitter, tuplesToJoin);
     }
 

@@ -19,15 +19,26 @@
 package ch.epfl.data.squall.components.hyper_cube;
 
 import ch.epfl.data.squall.components.Component;
-import ch.epfl.data.squall.query_plans.QueryBuilder;
+import ch.epfl.data.squall.predicates.Predicate;
 
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 public class HyperCubeJoinComponentFactory {
-    public static Component createHyperCubeJoinOperator(ArrayList<Component> parents, QueryBuilder queryBuilder) {
-        Component result = null;
-        result = new HyperCubeJoinComponent(parents);
-        queryBuilder.add(result);
-        return result;
+    private Map<String, Predicate> joinPredicate;
+	private Component[] parents;
+
+    public HyperCubeJoinComponentFactory(Component[] parents) {
+    	this.parents = parents;
+    	this.joinPredicate = new HashMap<String, Predicate>();
+    }
+
+    public void addPredicate(String key, Predicate pred) {
+    	joinPredicate.put(key, pred);
+    }
+
+    public Component createHyperCubeJoinOperator() {
+        return new HyperCubeJoinComponent(parents, joinPredicate);
     }
 }
