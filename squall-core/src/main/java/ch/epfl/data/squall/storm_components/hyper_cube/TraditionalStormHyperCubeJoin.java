@@ -354,6 +354,8 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
 
                 // output tuple.
             }
+
+            return;
         }
 
         // we have already visited some of realtion and the last one is storageIndex
@@ -389,6 +391,9 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
 
             }
         }
+
+        if (nextEmitterIndex == -1)
+            return;
 
         // select tuples for given relationship
         ArrayList<int[]> newOutputTuples = new ArrayList<>();

@@ -75,6 +75,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
     private final ChainOperator _operatorChain;
 
+    private long _numInputTuples = 0;
     private long _numSentTuples = 0;
 
     // for load-balancing
@@ -379,6 +380,8 @@ public class StormDBToasterJoin extends StormBoltComponent {
     private void processNonLastTuple(List<String> tuple, Tuple stormTupleRcv,
                                      boolean isLastInBatch) {
 
+        _numInputTuples++;
+
         String sourceComponentName = stormTupleRcv.getSourceComponent();
 
         // if the tuple coming from aggregated relation, it will be first applied the corresponding AggregateStream operator first
@@ -393,6 +396,8 @@ public class StormDBToasterJoin extends StormBoltComponent {
             performJoin(sourceComponentName, stormTupleRcv, tuple, isLastInBatch);
         }
 
+        if (_numInputTuples % _statsUtils.getDipInputFreqPrint() == 0)
+            printStatistics(SystemParameters.INPUT_PRINT);
     }
 
     /**
@@ -507,7 +512,8 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
     @Override
     protected void printStatistics(int type) {
-
+        if (type == SystemParameters.INPUT_PRINT)
+            LOG.info(", Executed Input Tuples : " + _numInputTuples);
     }
 
     @Override

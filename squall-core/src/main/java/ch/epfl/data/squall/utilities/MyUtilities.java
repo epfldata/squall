@@ -1346,6 +1346,11 @@ public class MyUtilities {
 	return mode.equalsIgnoreCase("AUTO");
     }
 
+    public static boolean isHypercube(Map conf) {
+	return SystemParameters.isExisting(conf, "HYPERCUBE_ENABLED")
+		&& SystemParameters.getBoolean(conf, "HYPERCUBE_ENABLED");
+    }
+
     public static boolean isBDB(Map conf) {
 	return SystemParameters.isExisting(conf, "DIP_IS_BDB")
 		&& SystemParameters.getBoolean(conf, "DIP_IS_BDB");
