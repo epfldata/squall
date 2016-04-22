@@ -59,6 +59,9 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(TraditionalStormHyperCubeJoin.class);
 
+    private long _numInputTuples = 0;
+    protected StatisticsUtilities _statsUtils;
+
     private ChainOperator operatorChain;
     private long numSentTuples = 0;
     private boolean firstTime = true;
@@ -100,6 +103,8 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
                                TopologyBuilder builder, TopologyKiller killer, Config conf, Type wrapper) {
 
         super(cp, allCompNames, hierarchyPosition, false, conf);
+
+        _statsUtils = new StatisticsUtilities(getConf(), LOG);
 
         this.joinPredicates = joinPredicates;
         aggBatchOutputMillis = cp.getBatchOutputMillis();
@@ -307,6 +312,8 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
                                      List<String> tuple, // these two are the same
                                      Tuple stormTupleRcv, boolean isLastInBatch) {
 
+        _numInputTuples++;
+
         TupleStorage affectedStorage = storages.get(emitterIndexToStorage.get(inputComponentIndex));
         // add the stormTuple to the specific storage
         if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
@@ -319,7 +326,10 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
         if (existIndexes)
             updateIndexes(inputComponentIndex, tuple, row_id);
 
-        performJoin(stormTupleRcv, tuple, row_id, inputComponentIndex, isLastInBatch);        
+        performJoin(stormTupleRcv, tuple, row_id, inputComponentIndex, isLastInBatch);
+
+        if (_numInputTuples % _statsUtils.getDipInputFreqPrint() == 0)
+            printStatistics(SystemParameters.INPUT_PRINT);      
     }
 
     protected void performJoin(Tuple stormTupleRcv, List<String> tuple, int rowID,
@@ -557,6 +567,8 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
 
     @Override
     protected void printStatistics(int type) {
+        if (type == SystemParameters.INPUT_PRINT)
+            LOG.info(", Executed Input Tuples : " + _numInputTuples);
     }
 
     // TODO WINDOW Semantics

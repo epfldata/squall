@@ -19,12 +19,14 @@
  *
  */
 
-package ch.epfl.data.squall.examples.imperative.dbtoaster;
+package ch.epfl.data.squall.examples.imperative.traditional;
 
+import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.OperatorComponent;
 import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
 import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponentBuilder;
+import ch.epfl.data.squall.components.hyper_cube.HyperCubeJoinComponentFactory;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.DateSum;
 import ch.epfl.data.squall.expressions.ValueExpression;
@@ -51,9 +53,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class HybridHypercubeDBToasterTPCH5Plan extends QueryPlan {
+public class TraditionalTPCH3Plan extends QueryPlan {
 
-    private static Logger LOG = Logger.getLogger(HybridHypercubeDBToasterTPCH5Plan.class);
+    private static Logger LOG = Logger.getLogger(TraditionalTPCH3Plan.class);
 
     private static final Type<Date> _dc = new DateType();
     private static final Type<Long> _lc = new LongType();
@@ -83,7 +85,7 @@ public class HybridHypercubeDBToasterTPCH5Plan extends QueryPlan {
         // tuple is set to null since we are computing based on constants
     }
 
-    public HybridHypercubeDBToasterTPCH5Plan(String dataPath, String extension, Map conf) {
+    public TraditionalTPCH3Plan(String dataPath, String extension, Map conf) {
         computeDates();
 
         // -------------------------------------------------------------------------------------
@@ -165,44 +167,13 @@ public class HybridHypercubeDBToasterTPCH5Plan extends QueryPlan {
         _queryBuilder.add(relationOrders);
 
         // -------------------------------------------------------------------------------------
-
-        DBToasterJoinComponentBuilder dbtBuilder = new DBToasterJoinComponentBuilder();
-        // Region: regionKey
-        dbtBuilder.addRelation(relationRegion, new Type[]{_lc}, new String[]{"regionKey"});
-        // Nation: nationKey, name, regionKey
-        dbtBuilder.addRelation(relationNation, new Type[]{_lc, _sc, _lc}, 
-            new String[]{"nationKey", "name", "regionKey"});
-        // Supplier: supkey, nationKey
-        dbtBuilder.addRelation(relationSupplier, new Type[]{_lc, _lc}, 
-            new String[]{"supkey", "nationKey"});
-        // Lineitem: orderKey, supKey, extendedPrice, discount
-        dbtBuilder.addRelation(relationLineitem, new Type[]{_lc, _lc, _doubleConv, _doubleConv}, 
-            new String[]{"L_orderKey", "supKey", "extendedPrice", "discount"},
-            new int[]{0});
-
-        // Customer: custKey, nationKey
-        dbtBuilder.addRelation(relationCustomer, new Type[]{_lc, _lc}, 
-            new String[]{"custKey", "nationKey"});
-        // Orders: orderKey, custKey
-        dbtBuilder.addRelation(relationOrders, new Type[]{_lc, _lc}, 
-            new String[]{"orderKey", "custKey"}, new int[]{0});
-
-        dbtBuilder.setSQL("SELECT NATION.f1, SUM(LINEITEM.f2 * (1 - LINEITEM.f3)) " +
-                "FROM CUSTOMER, ORDERS, LINEITEM, SUPPLIER, NATION, REGION " +
-                "WHERE CUSTOMER.f0 = ORDERS.f1 AND LINEITEM.f0 = ORDERS.f0 AND LINEITEM.f1 = SUPPLIER.f0 " +
-                "AND CUSTOMER.f1 = SUPPLIER.f1 AND SUPPLIER.f1 = NATION.f0 AND NATION.f2 = REGION.f0 " +
-                "GROUP BY NATION.f1");
-
-        DBToasterJoinComponent dbtComp = dbtBuilder.build();
-        dbtComp.setPrintOut(false);
-        _queryBuilder.add(dbtComp);
+        HyperCubeJoinComponentFactory joiner = new HyperCubeJoinComponentFactory(
+            new Component[]{relationRegion, relationNation, relationSupplier, 
+                            relationLineitem, relationCustomer, relationOrders});
 
 
         AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_doubleConv, 1), conf).setGroupByColumns(0);
-
-        OperatorComponent finalComponent = new OperatorComponent(
-                dbtComp, "FINAL_RESULT").add(agg);
-        _queryBuilder.add(finalComponent);
+        _queryBuilder.add(joiner.createHyperCubeJoinOperator().add(agg));
 
     }
 
