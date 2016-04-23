@@ -44,8 +44,8 @@ import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.storage.BPlusTreeStorage;
-import ch.epfl.data.squall.storage.BerkeleyDBStore;
-import ch.epfl.data.squall.storage.BerkeleyDBStoreSkewed;
+//import ch.epfl.data.squall.storage.BerkeleyDBStore;
+//import ch.epfl.data.squall.storage.BerkeleyDBStoreSkewed;
 import ch.epfl.data.squall.storage.TupleStorage;
 import ch.epfl.data.squall.storage.indexes.Index;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
@@ -220,7 +220,8 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 	else
 	    isWindow = false;
 	if (MyUtilities.isBDBUniform(getConf())) {
-	    if (_typeOfValueIndexed.get(0) instanceof Integer) {
+	    throw new RuntimeException("BDB is removed due to licence incompatibilities.");
+/*		if (_typeOfValueIndexed.get(0) instanceof Integer) {
 		_firstRelationStorage = new BerkeleyDBStore(Integer.class,
 			storagePath + "/first/" + this.getName() + _thisTaskID,
 			isWindow, _thisTaskID);
@@ -255,8 +256,9 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 	    } else
 		throw new RuntimeException("non supported type");
 	    LOG.info("Storage with Uniform BDB!");
-	} else if (MyUtilities.isBDBSkewed(getConf())) {
-	    if (_typeOfValueIndexed.get(0) instanceof Integer) {
+*/	} else if (MyUtilities.isBDBSkewed(getConf())) {
+    	throw new RuntimeException("BDB is removed due to licence incompatibilities.");
+/*	    if (_typeOfValueIndexed.get(0) instanceof Integer) {
 		_firstRelationStorage = new BerkeleyDBStoreSkewed(
 			Integer.class, storagePath + "/first", getConf());
 		_secondRelationStorage = new BerkeleyDBStoreSkewed(
@@ -279,14 +281,15 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 	    } else
 		throw new RuntimeException("non supported type");
 	    LOG.info("Storage with Skewed BDB!");
-	} else {
+*/	} else {
 	    throw new RuntimeException("Unsupported BDB type!");
 	}
-	if (_joinPredicate != null)
-	    _existIndexes = true;
-	else
-	    _existIndexes = false;
-    }
+	// UNCOMMENT below
+/*//	if (_joinPredicate != null)
+//	    _existIndexes = true;
+//	else
+//	    _existIndexes = false;
+*/    }
 
     @Override
     public ChainOperator getChainOperator() {

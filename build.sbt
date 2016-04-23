@@ -88,7 +88,7 @@ lazy val squall = (project in file("squall-core")).
       "net.sf.trove4j" % "trove4j" % "3.0.2",
       "net.sf.opencsv" % "opencsv" % "2.3",
       // bdb-je: 5.0.84 -> 5.0.73
-      "com.sleepycat" % "je" % "5.0.73",
+      //"com.sleepycat" % "je" % "5.0.73",
       // storm-core: 0.9.2-incubating -> 0.9.4
       "org.apache.storm" % "storm-core" % "0.9.4" % "provided",
       "org.slf4j" % "log4j-over-slf4j" % "1.7.12",
