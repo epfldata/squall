@@ -159,9 +159,9 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
     // If yes, we create Indexes between them and add to firstRelationIndexes and secondRelationIndexes.
     private void createIndexes() {
         for (int i = 0; i < emitterIndexes.size(); i++) {
-            for (int j = i + 1; j < emitterIndexes.size(); j++) {
+            for (int j = 0; j < emitterIndexes.size(); j++) {
+                
                 String key = emitterNames.get(i) + emitterNames.get(j);
-                String keyReverse = emitterNames.get(j) + emitterNames.get(i);
 
                 if (joinPredicates.containsKey(key)) {
                     Predicate pr = joinPredicates.get(key);
@@ -170,7 +170,7 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
                     pr.accept(visitor);
                   
                     firstRelationIndexes.put(key, new ArrayList<Index>(visitor._firstRelationIndexes));
-                    secondRelationIndexes.put(keyReverse, new ArrayList<Index>(visitor._secondRelationIndexes));
+                    secondRelationIndexes.put(key, new ArrayList<Index>(visitor._secondRelationIndexes));
 
                     operatorForIndexes.put(key, new ArrayList<Integer>(visitor._operatorForIndexes));
                     typeOfValueIndexed.put(key, new ArrayList<Object>(visitor._typeOfValueIndexed));
@@ -185,24 +185,24 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
     private void updateIndexes(String inputComponentIndex, List<String> tuple, int row_id) {
         String emitterName = emitterNames.get(emitterIndexToEmitterName.get(inputComponentIndex));
         for (int i = 0; i < emitterIndexes.size(); i++) {
-            String key = emitterName + emitterNames.get(i);
-            String keyReverse = emitterNames.get(i) + emitterName;
+            String keyAB = emitterName + emitterNames.get(i);
+            String keyBA = emitterNames.get(i) + emitterName;
             
             List<Index> affectedIndexes = null;
             PredicateUpdateIndexesVisitor visitor = null;
             Predicate joinPredicate = null;
 
-            if (firstRelationIndexes.containsKey(key)) {
-                affectedIndexes = firstRelationIndexes.get(key);
+            if (firstRelationIndexes.containsKey(keyAB)) {
+                affectedIndexes = firstRelationIndexes.get(keyAB);
                 visitor = new PredicateUpdateIndexesVisitor(true, tuple);
-                joinPredicate = joinPredicates.get(key);
+                joinPredicate = joinPredicates.get(keyAB);
                 joinPredicate.accept(visitor);
 
-            } else if (firstRelationIndexes.containsKey(keyReverse)) {
-                affectedIndexes = secondRelationIndexes.get(key);
+            } else if (firstRelationIndexes.containsKey(keyBA)) {
+                affectedIndexes = secondRelationIndexes.get(keyBA);
 
                 visitor = new PredicateUpdateIndexesVisitor(false, tuple);
-                joinPredicate = joinPredicates.get(keyReverse);
+                joinPredicate = joinPredicates.get(keyBA);
                 joinPredicate.accept(visitor);
             }
 
@@ -238,73 +238,47 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
         }
     }
 
+
+    protected void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> inTuple, long lineageTimestamp) {
+        for (List<String> tuple : operatorChain.process(inTuple, lineageTimestamp)) {
+          if (tuple == null)
+            return;
+          
+          numSentTuples++;
+          printTuple(tuple);
+
+          if (numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
+            printStatistics(SystemParameters.OUTPUT_PRINT);
+
+          if (MyUtilities.isSending(getHierarchyPosition(), aggBatchOutputMillis)) {
+            tupleSend(tuple, stormTupleRcv, lineageTimestamp);
+          }
+        }
+    }
+
+
     @Override
     public void aggBatchSend() {
     }
 
     @Override
     public void execute(Tuple stormTupleRcv) {
-        if (firstTime
-            && MyUtilities.isAggBatchOutputMode(aggBatchOutputMillis)) {
-            periodicAggBatch = new PeriodicAggBatchSend(aggBatchOutputMillis,
-                this);
-            firstTime = false;
-        }
-
         if (receivedDumpSignal(stormTupleRcv)) {
             MyUtilities.dumpSignal(this, stormTupleRcv, getCollector());
             return;
         }
 
-        if (!MyUtilities.isManualBatchingMode(getConf())) {
-            final String inputComponentIndex = stormTupleRcv
-                .getStringByField(StormComponent.COMP_INDEX); // getString(0);
-            final List<String> tuple = (List<String>) stormTupleRcv
-                .getValueByField(StormComponent.TUPLE); // getValue(1);
-            final String inputTupleHash = stormTupleRcv
-                .getStringByField(StormComponent.HASH);// getString(2);
-            if (processFinalAck(tuple, stormTupleRcv))
+        final String inputComponentIndex = stormTupleRcv.getStringByField(StormComponent.COMP_INDEX); // getString(0);
+        final List<String> tuple = (List<String>) stormTupleRcv.getValueByField(StormComponent.TUPLE); // getValue(1);
+        final String inputTupleHash = stormTupleRcv.getStringByField(StormComponent.HASH);// getString(2);
+        
+        if (processFinalAck(tuple, stormTupleRcv))
             return;
-            final String inputTupleString = MyUtilities.tupleToString(tuple, getConf());
-            processNonLastTuple(inputComponentIndex, inputTupleString, tuple, stormTupleRcv, true);
-        } else {
-            final String inputComponentIndex = stormTupleRcv
-                .getStringByField(StormComponent.COMP_INDEX); // getString(0);
-            final String inputBatch = stormTupleRcv
-                .getStringByField(StormComponent.TUPLE);// getString(1);
-            final String[] wholeTuples = inputBatch
-                .split(SystemParameters.MANUAL_BATCH_TUPLE_DELIMITER);
-            final int batchSize = wholeTuples.length;
-            for (int i = 0; i < batchSize; i++) {
-            // parsing
-            final String currentTuple = new String(wholeTuples[i]);
-            final String[] parts = currentTuple
-                .split(SystemParameters.MANUAL_BATCH_HASH_DELIMITER);
-            String inputTupleHash = null;
-            String inputTupleString = null;
-            if (parts.length == 1)
-                // lastAck
-                inputTupleString = new String(parts[0]);
-            else {
-                inputTupleHash = new String(parts[0]);
-                inputTupleString = new String(parts[1]);
-            }
-            final List<String> tuple = MyUtilities.stringToTuple(
-                inputTupleString, getConf());
-            // final Ack check
-            if (processFinalAck(tuple, stormTupleRcv)) {
-                if (i != batchSize - 1)
-                throw new RuntimeException(
-                    "Should not be here. LAST_ACK is not the last tuple!");
-                return;
-            }
-            // processing a tuple
-            if (i == batchSize - 1)
-                processNonLastTuple(inputComponentIndex, inputTupleString, tuple, stormTupleRcv, true);
-            else
-                processNonLastTuple(inputComponentIndex, inputTupleString, tuple, stormTupleRcv, true);
-            }        
-        }
+            
+        final String inputTupleString = MyUtilities.tupleToString(tuple, getConf());
+        processNonLastTuple(inputComponentIndex, inputTupleString, tuple, stormTupleRcv, true);
+    
+        getCollector().ack(stormTupleRcv);
     }
 
     private void processNonLastTuple(String inputComponentIndex,
@@ -313,15 +287,11 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
                                      Tuple stormTupleRcv, boolean isLastInBatch) {
 
         _numInputTuples++;
+        //LOG.info(inputTupleString);
 
         TupleStorage affectedStorage = storages.get(emitterIndexToStorage.get(inputComponentIndex));
         // add the stormTuple to the specific storage
-        if (MyUtilities.isStoreTimestamp(getConf(), getHierarchyPosition())) {
-            final long incomingTimestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP);
-            inputTupleString = incomingTimestamp
-                    + SystemParameters.STORE_TIMESTAMP_DELIMITER
-                    + inputTupleString;
-        }
+
         final int row_id = affectedStorage.insert(inputTupleString);
         if (existIndexes)
             updateIndexes(inputComponentIndex, tuple, row_id);
@@ -346,30 +316,37 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
 
         outputTuples.add(firstResult);
 
-        visit(storageIndex, visited, 1, outputTuples);
+        visit(stormTupleRcv, storageIndex, visited, 1, outputTuples);
     }
 
-    public void visit(int storageIndex, boolean[] visited, 
+    public void visit(Tuple stormTupleRcv, int storageIndex, boolean[] visited, 
         int numberOfJoinedRelations, ArrayList<int[]> outputTuples) {
         visited[storageIndex] = true;
 
         // return results
         if (numberOfJoinedRelations == visited.length) {
             for (int[] tuplesID : outputTuples) {
-                List<String> result = new ArrayList<String>();
-                
+                List<List<String>> result = new ArrayList<>();
+                boolean foundMissing = false;
                 for (int i = 0; i < tuplesID.length; i++) {
-                    result.add(storages.get(i).get(tuplesID[i]));
+                    if (tuplesID[i] < 0) {
+                        foundMissing = true;
+                        break;
+                    }
+
+                    result.add(MyUtilities.stringToTuple(storages.get(i).get(tuplesID[i]), getConf()));
                 }
 
-                // output tuple.
+                long lineageTimestamp = 0L;
+                if (!foundMissing)
+                    applyOperatorsAndSend(stormTupleRcv, MyUtilities.createOutputTuple(result), lineageTimestamp);
             }
 
             return;
         }
 
         // we have already visited some of realtion and the last one is storageIndex
-        // from all visited relations we need check what we predicate we have with unvisited relations
+        // from all visited relations we need check we predicate we have with unvisited relations
         // and choose the relation with lowest number of tuples - trying to choose low selectivity
         int nextEmitterIndex = -1;
         int lowSelectivity = Integer.MAX_VALUE;
@@ -386,15 +363,17 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
                     continue;
                 }
 
-                String key = emitterNames.get(i) + emitterNames.get(j);
-                String keyReverse = emitterNames.get(j) + emitterNames.get(i);
+                String keyAB = emitterNames.get(i) + emitterNames.get(j);
+                String keyBA = emitterNames.get(j) + emitterNames.get(i);
 
-                if (joinPredicates.containsKey(key) && storages.get(j).size() < lowSelectivity) {
+                //LOG.info("*********** " + keyAB + " - " + keyBA + " ***********");
+
+                if (joinPredicates.containsKey(keyAB) && storages.get(j).size() < lowSelectivity) {
                     lowSelectivity = storages.get(j).size();
                     nextEmitterIndex = j;
                 }
 
-                if (joinPredicates.containsKey(keyReverse) && storages.get(j).size() < lowSelectivity) {
+                if (joinPredicates.containsKey(keyBA) && storages.get(j).size() < lowSelectivity) {
                     lowSelectivity = storages.get(j).size();
                     nextEmitterIndex = j;
                 }
@@ -402,8 +381,10 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
             }
         }
 
-        if (nextEmitterIndex == -1)
-            return;
+        //LOG.info("Emitter Index : " + nextEmitterIndex + " , selectivity : " + lowSelectivity);
+
+        // if (nextEmitterIndex == -1)
+        //     return;
 
         // select tuples for given relationship
         ArrayList<int[]> newOutputTuples = new ArrayList<>();
@@ -413,28 +394,48 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
             boolean firstTime = true;
 
             for (int i = 0; i < tuplesID.length; i++) {
+                // for not visited we would have -1
                 if (tuplesID[i] != -1) {
-                    String key = emitterNames.get(nextEmitterIndex) + emitterNames.get(i);
-                    String keyReverse = emitterNames.get(i) + emitterNames.get(nextEmitterIndex);
+                    String keyAB = emitterNames.get(nextEmitterIndex) + emitterNames.get(i);
+                    String keyBA = emitterNames.get(i) + emitterNames.get(nextEmitterIndex);
                     
                     TIntArrayList rowIds = new TIntArrayList();
+                    boolean isFromFirstEmitter;
 
-                    if (joinPredicates.containsKey(key)) {
+                    if (joinPredicates.containsKey(keyAB)) {
+                        isFromFirstEmitter = false;
+                        final PredicateUpdateIndexesVisitor visitor = new PredicateUpdateIndexesVisitor(
+                            isFromFirstEmitter, MyUtilities.stringToTuple(storages.get(i).get(tuplesID[i]), getConf()));
+                        
+                        joinPredicates.get(keyAB).accept(visitor);
+                        final List<String> valuesToIndex = new ArrayList<String>(visitor._valuesToIndex);
+                        
                         rowIds = selectTupleToJoin(
-                                    key,
+                                    keyAB,
                                     storages.get(nextEmitterIndex), 
-                                    firstRelationIndexes.get(key),
-                                    true,
-                                    MyUtilities.stringToTuple(storages.get(i).get(tuplesID[i]), getConf()));
-                    } else if (joinPredicates.containsKey(keyReverse)) {
+                                    firstRelationIndexes.get(keyAB),
+                                    isFromFirstEmitter,
+                                    valuesToIndex);
+
+                    } else if (joinPredicates.containsKey(keyBA)) {
+                        isFromFirstEmitter = true;
+                        final PredicateUpdateIndexesVisitor visitor = new PredicateUpdateIndexesVisitor(
+                            isFromFirstEmitter, MyUtilities.stringToTuple(storages.get(i).get(tuplesID[i]), getConf()));
+                        
+                        joinPredicates.get(keyBA).accept(visitor);
+                        final List<String> valuesToIndex = new ArrayList<String>(visitor._valuesToIndex);
+                                                
                         rowIds = selectTupleToJoin(
-                                    keyReverse,
+                                    keyBA,
                                     storages.get(nextEmitterIndex), 
-                                    secondRelationIndexes.get(key),
-                                    false,
-                                    MyUtilities.stringToTuple(storages.get(i).get(tuplesID[i]), getConf()));
+                                    secondRelationIndexes.get(keyBA),
+                                    isFromFirstEmitter,
+                                    valuesToIndex);
                     }
 
+                    if (resultID.size() > 0)
+                        LOG.info(".... : " + resultID);
+    
                     if (firstTime) {
                         firstTime = false;
                         resultID.addAll(rowIds);
@@ -451,12 +452,12 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
                     newJoin[j] = tuplesID[j];
                 }
 
-                newJoin[storageIndex] = id;
+                newJoin[nextEmitterIndex] = id;
                 newOutputTuples.add(newJoin);
             }
         }
 
-        visit(nextEmitterIndex, visited, numberOfJoinedRelations + 1, newOutputTuples);
+        visit(stormTupleRcv, nextEmitterIndex, visited, numberOfJoinedRelations + 1, newOutputTuples);
     }
 
     // Specific to TupleStorage
@@ -491,8 +492,9 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
                 currentRowIds = currentOpposIndex.getValues(currentOperator, value);
             // Even if valueIndexed is at first time an integer with
             // precomputation a*col +b, it become a double
-            else if (typeOfValueIndexed.get(key).get(i) instanceof Integer)
+            else if (typeOfValueIndexed.get(key).get(i) instanceof Integer) {
                 currentRowIds = currentOpposIndex.getValues(currentOperator, Integer.parseInt(value));
+            }
             else if (typeOfValueIndexed.get(key).get(i) instanceof Long)
                 currentRowIds = currentOpposIndex.getValues(currentOperator, Long.parseLong(value));
             else if (typeOfValueIndexed.get(key).get(i) instanceof Double)

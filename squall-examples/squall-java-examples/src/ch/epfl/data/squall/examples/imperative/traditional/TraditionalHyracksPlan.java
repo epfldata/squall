@@ -46,8 +46,6 @@ public class TraditionalHyracksPlan extends QueryPlan {
     private static final IntegerType _ic = new IntegerType();
 
     public TraditionalHyracksPlan(String dataPath, String extension, Map conf) {
-	final int Theta_JoinType = ThetaQueryPlansParameters
-		.getThetaJoinType(conf);
 	// -------------------------------------------------------------------------------------
 	// start of query plan filling
 	final ProjectOperator projectionCustomer = new ProjectOperator(
@@ -80,9 +78,7 @@ public class TraditionalHyracksPlan extends QueryPlan {
 	HyperCubeJoinComponentFactory lastJoiner = 
 	new HyperCubeJoinComponentFactory(new Component[]{relationCustomer, relationOrders});
 
-	lastJoiner.addPredicate("0", comp);
-	lastJoiner.addPredicate("2", comp);
-
+	lastJoiner.addPredicate("CUSTOMERORDERS", comp);
 
 	_queryBuilder.add(lastJoiner.createHyperCubeJoinOperator().add(agg).setContentSensitiveThetaJoinWrapper(_ic));
 
