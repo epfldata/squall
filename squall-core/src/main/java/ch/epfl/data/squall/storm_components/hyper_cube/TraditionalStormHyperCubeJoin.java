@@ -40,6 +40,19 @@ import ch.epfl.data.squall.visitors.PredicateUpdateIndexesVisitor;
 import gnu.trove.list.array.TIntArrayList;
 import org.apache.log4j.Logger;
 
+import ch.epfl.data.squall.storm_components.hash_hypercube.HashHyperCubeGrouping.EmitterDesc;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HashHyperCubeAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HashHyperCubeAssignmentBruteForce;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HashHyperCubeAssignmentBruteForce.ColumnDesc;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HyperCubeAssignerFactory;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HyperCubeAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ManualHybridHyperCubeAssignment.Dimension;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HybridHyperCubeAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ManualHybridHyperCubeAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HybridHyperCubeAssignmentBruteForce;
+import ch.epfl.data.squall.types.Type;
+import ch.epfl.data.squall.utilities.PartitioningScheme;
+
 import backtype.storm.Config;
 import backtype.storm.topology.InputDeclarer;
 import backtype.storm.topology.TopologyBuilder;
@@ -73,6 +86,10 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
     private ArrayList<String> emitterIndexes;
     private ArrayList<String> emitterNames;
 
+    private Map<String, String[]> _emitterColNames;
+    private Map<String, Type[]> _emitterNamesColTypes;
+    private Set<String> _randomColumns;
+
     // for fast acces Emitter name and Storage if we know emitter index.
     private HashMap<String, Integer> emitterIndexToEmitterName;
     private HashMap<String, Integer> emitterIndexToStorage;
@@ -98,13 +115,21 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
     protected DateFormat convDateFormat = new SimpleDateFormat(
             "EEE MMM d HH:mm:ss zzz yyyy");    
 
-    public TraditionalStormHyperCubeJoin(ArrayList<StormEmitter> emitters, ComponentProperties cp,
-                               List<String> allCompNames, Map<String, Predicate> joinPredicates, int hierarchyPosition,
-                               TopologyBuilder builder, TopologyKiller killer, Config conf, Type wrapper) {
+    public TraditionalStormHyperCubeJoin(ArrayList<StormEmitter> emitters, Map<String, String[]> emitterColNames,
+                                Map<String, Type[]> emitterNamesColTypes, Set<String> randomColumns,
+                                ComponentProperties cp, List<String> allCompNames, Map<String, Predicate> joinPredicates, 
+                                int hierarchyPosition, TopologyBuilder builder, TopologyKiller killer, 
+                                Config conf, Type wrapper) {
 
         super(cp, allCompNames, hierarchyPosition, false, conf);
 
         _statsUtils = new StatisticsUtilities(getConf(), LOG);
+
+        _emitterColNames = emitterColNames;
+        _emitterNamesColTypes = emitterNamesColTypes;
+        _randomColumns = randomColumns;
+
+        this.emitters = emitters;
 
         this.joinPredicates = joinPredicates;
         aggBatchOutputMillis = cp.getBatchOutputMillis();
@@ -113,15 +138,8 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
         final int parallelism = SystemParameters.getInt(conf, getID() + "_PAR");
         InputDeclarer currentBolt = builder.setBolt(getID(), this, parallelism);
 
-        final HyperCubeAssignment _currentMappingAssignment;
-        long[] cardinality = new long[emitters.size()];
-        for (int i = 0; i < emitters.size(); i++)
-            cardinality[i] = SystemParameters.getInt(conf, emitters.get(i).getName() + "_CARD");
-        _currentMappingAssignment = new HyperCubeAssignerFactory().getAssigner(parallelism, cardinality);
-
-        currentBolt = MyUtilities.attachEmitterHyperCube(currentBolt,
-                    emitters, allCompNames,
-                    _currentMappingAssignment, conf);
+        
+        currentBolt = attachEmitters(conf, currentBolt, allCompNames, parallelism);
 
         if (getHierarchyPosition() == FINAL_COMPONENT && (!MyUtilities.isAckEveryTuple(conf)))
             killer.registerComponent(this, parallelism);
@@ -240,13 +258,16 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
 
 
     protected void applyOperatorsAndSend(Tuple stormTupleRcv, List<String> inTuple, long lineageTimestamp) {
+        //LOG.info(inTuple);
+
         for (List<String> tuple : operatorChain.process(inTuple, lineageTimestamp)) {
           if (tuple == null)
             return;
           
           numSentTuples++;
           printTuple(tuple);
-
+          LOG.info(tuple);
+          
           if (numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
             printStatistics(SystemParameters.OUTPUT_PRINT);
 
@@ -259,6 +280,108 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
 
     @Override
     public void aggBatchSend() {
+    }
+
+   private InputDeclarer attachEmitters(Config conf, InputDeclarer currentBolt,
+                 List<String> allCompNames, int parallelism) {
+
+        switch (getPartitioningScheme(conf)) {
+            case BRUTEFORCEHYBRIDHYPERCUBE:
+                long[] cardinality = getEmittersCardinality(emitters, conf);
+                List<ColumnDesc> columns = getColumnDesc(cardinality, emitters);
+
+                List<EmitterDesc> emittersDesc = MyUtilities.getEmitterDesc(
+                        emitters, _emitterColNames, allCompNames, cardinality);
+
+                LOG.info("cardinalities: " + Arrays.toString(cardinality));
+
+                HybridHyperCubeAssignment _currentHybridHyperCubeMappingAssignment = 
+                    new HybridHyperCubeAssignmentBruteForce(emittersDesc, columns, _randomColumns, parallelism);
+                
+                LOG.info("assignment: " + _currentHybridHyperCubeMappingAssignment.getMappingDimensions());
+
+                currentBolt = MyUtilities.attachEmitterHybridHyperCube(currentBolt, 
+                        emitters, _emitterColNames, allCompNames,
+                        _currentHybridHyperCubeMappingAssignment, emittersDesc, conf);   
+                break;
+            case HASHHYPERCUBE:
+                cardinality = getEmittersCardinality(emitters, conf);
+                LOG.info("cardinalities: " + Arrays.toString(cardinality));
+                
+                columns = getColumnDesc(cardinality, emitters);
+                emittersDesc = MyUtilities.getEmitterDesc(
+                        emitters, _emitterColNames, allCompNames, cardinality);
+
+                HashHyperCubeAssignment _currentHashHyperCubeMappingAssignment = 
+                    new HashHyperCubeAssignmentBruteForce(parallelism, columns, emittersDesc);
+                
+                LOG.info("assignment: " + _currentHashHyperCubeMappingAssignment.getMappingDimensions());
+
+                currentBolt = MyUtilities.attachEmitterHashHyperCube(currentBolt, 
+                        emitters, _emitterColNames, _currentHashHyperCubeMappingAssignment, 
+                        emittersDesc, conf);
+                break;            
+            case HYPERCUBE:
+                cardinality = getEmittersCardinality(emitters, conf);
+                LOG.info("cardinalities: " + Arrays.toString(cardinality));
+                final HyperCubeAssignment _currentHyperCubeMappingAssignment =
+                        new HyperCubeAssignerFactory().getAssigner(parallelism, cardinality);
+
+                LOG.info("assignment: " + _currentHyperCubeMappingAssignment.getMappingDimensions());
+                currentBolt = MyUtilities.attachEmitterHyperCube(currentBolt,
+                        emitters, allCompNames,
+                        _currentHyperCubeMappingAssignment, conf);
+                break;
+        }
+        return currentBolt;
+    }
+
+    private List<ColumnDesc> getColumnDesc(long[] cardinality, List<StormEmitter> emitters) {
+        HashMap<String, ColumnDesc> tmp = new HashMap<String, ColumnDesc>();
+
+        List<ColumnDesc> desc = new ArrayList<ColumnDesc>();
+        
+        for (int i = 0; i < emitters.size(); i++) {
+            String emitterName = emitters.get(i).getName();
+            Type[] columnTypes = _emitterNamesColTypes.get(emitterName);
+            String[] columnNames = _emitterColNames.get(emitterName);
+
+            for (int j = 0; j < columnNames.length; j++) {
+                ColumnDesc cd = new ColumnDesc(columnNames[j], columnTypes[j], cardinality[i]);
+
+                if (tmp.containsKey(cd.name)) {
+                    cd.size += tmp.get(cd.name).size;
+                    tmp.put(cd.name, cd);
+                } else {
+                    tmp.put(cd.name, cd);
+                }
+            }
+        }
+
+        for (String key : tmp.keySet()) {
+            desc.add(tmp.get(key));
+        }
+
+        return desc;
+    }
+
+    private PartitioningScheme getPartitioningScheme(Config conf) {
+        String schemeName = SystemParameters.getString(conf, getName() + "_PART_SCHEME");
+        if (schemeName == null || schemeName.equals("")) {
+            LOG.info("use default Hypercube partitioning scheme");
+            return PartitioningScheme.HYPERCUBE;
+        } else {
+            LOG.info("use partitioning scheme : " + schemeName);
+            return PartitioningScheme.valueOf(schemeName);
+        }
+    }
+
+    private long[] getEmittersCardinality(List<StormEmitter> emitters, Config conf) {
+        long[] cardinality = new long[emitters.size()];
+        for (int i = 0; i < emitters.size(); i++) {
+            cardinality[i] = SystemParameters.getInt(conf, emitters.get(i).getName() + "_CARD");
+        }
+        return cardinality;
     }
 
     @Override
@@ -287,7 +410,6 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
                                      Tuple stormTupleRcv, boolean isLastInBatch) {
 
         _numInputTuples++;
-        //LOG.info(inputTupleString);
 
         TupleStorage affectedStorage = storages.get(emitterIndexToStorage.get(inputComponentIndex));
         // add the stormTuple to the specific storage
@@ -322,6 +444,15 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
     public void visit(Tuple stormTupleRcv, int storageIndex, boolean[] visited, 
         int numberOfJoinedRelations, ArrayList<int[]> outputTuples) {
         visited[storageIndex] = true;
+
+        // LOG.info("****************************");
+        // LOG.info(emitterNames);
+        // LOG.info(Arrays.toString(visited));
+        // for (int[] tuplesID : outputTuples)
+        // {
+        //     LOG.info(Arrays.toString(tuplesID));
+        // }
+        // LOG.info("****************************");
 
         // return results
         if (numberOfJoinedRelations == visited.length) {
@@ -401,8 +532,10 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
                     
                     TIntArrayList rowIds = new TIntArrayList();
                     boolean isFromFirstEmitter;
+                    boolean hasJoinPredicate = false;
 
                     if (joinPredicates.containsKey(keyAB)) {
+                        hasJoinPredicate = true;
                         isFromFirstEmitter = false;
                         final PredicateUpdateIndexesVisitor visitor = new PredicateUpdateIndexesVisitor(
                             isFromFirstEmitter, MyUtilities.stringToTuple(storages.get(i).get(tuplesID[i]), getConf()));
@@ -418,6 +551,7 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
                                     valuesToIndex);
 
                     } else if (joinPredicates.containsKey(keyBA)) {
+                        hasJoinPredicate = true;
                         isFromFirstEmitter = true;
                         final PredicateUpdateIndexesVisitor visitor = new PredicateUpdateIndexesVisitor(
                             isFromFirstEmitter, MyUtilities.stringToTuple(storages.get(i).get(tuplesID[i]), getConf()));
@@ -432,15 +566,18 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
                                     isFromFirstEmitter,
                                     valuesToIndex);
                     }
-
-                    if (resultID.size() > 0)
-                        LOG.info(".... : " + resultID);
     
-                    if (firstTime) {
-                        firstTime = false;
-                        resultID.addAll(rowIds);
-                    } else {
-                        resultID.retainAll(rowIds);
+                    if (hasJoinPredicate) {
+                        //LOG.info("RESULT IS : " + resultID);
+
+                        if (firstTime) {
+                            firstTime = false;
+                            resultID.addAll(rowIds);
+                        } else {
+                            resultID.retainAll(rowIds);
+                        }
+                        //LOG.info("ROW IDS : " + rowIds);
+                        //LOG.info("RESULT IS : " + resultID);
                     }
                 }
             }
@@ -464,7 +601,10 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
     protected TIntArrayList selectTupleToJoin(String key, TupleStorage oppositeStorage,
         List<Index> oppositeIndexes, boolean isFromFirstEmitter,
         List<String> valuesToApplyOnIndex) {
-        
+
+        // LOG.info(key);
+        // LOG.info(valuesToApplyOnIndex);
+
         final TIntArrayList rowIds = new TIntArrayList();
 
         for (int i = 0; i < oppositeIndexes.size(); i++) {
@@ -518,6 +658,7 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
                 return new TIntArrayList();;
         }
 
+        // LOG.info(rowIds);
         return rowIds;
     }
 

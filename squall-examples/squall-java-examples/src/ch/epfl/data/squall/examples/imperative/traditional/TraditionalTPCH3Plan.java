@@ -21,159 +21,141 @@
 
 package ch.epfl.data.squall.examples.imperative.traditional;
 
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.log4j.Logger;
+
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
-import ch.epfl.data.squall.components.OperatorComponent;
-import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
-import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponentBuilder;
 import ch.epfl.data.squall.components.hyper_cube.HyperCubeJoinComponentFactory;
 import ch.epfl.data.squall.expressions.ColumnReference;
-import ch.epfl.data.squall.expressions.DateSum;
+import ch.epfl.data.squall.expressions.Multiplication;
+import ch.epfl.data.squall.expressions.Subtraction;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.AggregateSumOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SelectOperator;
-import ch.epfl.data.squall.predicates.BetweenPredicate;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
+import ch.epfl.data.squall.query_plans.ThetaQueryPlansParameters;
 import ch.epfl.data.squall.types.DateType;
 import ch.epfl.data.squall.types.DoubleType;
-import ch.epfl.data.squall.types.LongType;
+import ch.epfl.data.squall.types.IntegerType;
 import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.types.StringType;
 import ch.epfl.data.squall.types.Type;
-import org.apache.log4j.Logger;
-
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 public class TraditionalTPCH3Plan extends QueryPlan {
-
+    
     private static Logger LOG = Logger.getLogger(TraditionalTPCH3Plan.class);
 
-    private static final Type<Date> _dc = new DateType();
-    private static final Type<Long> _lc = new LongType();
-    private static final Type<String> _sc = new StringType();
+    private static final IntegerType _ic = new IntegerType();
+
+    private static final String _customerMktSegment = "BUILDING";
+    private static final String _dateStr = "1995-03-15";
+
+    private static final Type<Date> _dateConv = new DateType();
     private static final NumericType<Double> _doubleConv = new DoubleType();
+    private static final Type<String> _sc = new StringType();
+    private static final Date _date = _dateConv.fromString(_dateStr);
 
-    private final QueryBuilder _queryBuilder = new QueryBuilder();
-
-    // query variables
-    private static Date _date1, _date2;
-    private static final String REGION_NAME = "ASIA";
-
-    private static void computeDates() {
-        // date2 = date1 + 1 year
-        final String date1Str = "1994-01-01";
-        final int interval = 1;
-        final int unit = Calendar.YEAR;
-
-        // setting _date1
-        _date1 = _dc.fromString(date1Str);
-
-        // setting _date2
-        ValueExpression<Date> date1Ve, date2Ve;
-        date1Ve = new ValueSpecification<Date>(_dc, _date1);
-        date2Ve = new DateSum(date1Ve, unit, interval);
-        _date2 = date2Ve.eval(null);
-        // tuple is set to null since we are computing based on constants
-    }
+    private QueryBuilder _queryBuilder = new QueryBuilder();
 
     public TraditionalTPCH3Plan(String dataPath, String extension, Map conf) {
-        computeDates();
-
         // -------------------------------------------------------------------------------------
-        final List<Integer> hashRegion = Arrays.asList(0);
+        List<Integer> hashCustomer = Arrays.asList(0);
 
-        final SelectOperator selectionRegion = new SelectOperator(
-                new ComparisonPredicate(new ColumnReference(_sc, 1),
-                        new ValueSpecification(_sc, REGION_NAME)));
+        SelectOperator selectionCustomer = new SelectOperator(
+            new ComparisonPredicate(new ColumnReference(_sc, 6),
+                new ValueSpecification(_sc, _customerMktSegment)));
 
-        final ProjectOperator projectionRegion = new ProjectOperator(
-                new int[] { 0 });
+        ProjectOperator projectionCustomer = new ProjectOperator(
+            new int[] { 0 });
 
-        final DataSourceComponent relationRegion = new DataSourceComponent(
-                "REGION", dataPath + "region" + extension, conf)
-                .setOutputPartKey(hashRegion).add(selectionRegion)
-                .add(projectionRegion);
-        _queryBuilder.add(relationRegion);
-
-        // -------------------------------------------------------------------------------------
-        final List<Integer> hashNation = Arrays.asList(2);
-
-        final ProjectOperator projectionNation = new ProjectOperator(new int[] {
-                0, 1, 2 });
-
-        final DataSourceComponent relationNation = new DataSourceComponent(
-                "NATION", dataPath + "nation" + extension, conf).setOutputPartKey(
-                hashNation).add(projectionNation);
-        _queryBuilder.add(relationNation);
-
-        // -------------------------------------------------------------------------------------
-
-        final List<Integer> hashSupplier = Arrays.asList(1);
-
-        final ProjectOperator projectionSupplier = new ProjectOperator(
-                new int[] { 0, 3 });
-
-        final DataSourceComponent relationSupplier = new DataSourceComponent(
-                "SUPPLIER", dataPath + "supplier" + extension, conf)
-                .setOutputPartKey(hashSupplier).add(projectionSupplier);
-        _queryBuilder.add(relationSupplier);
-
-        // -------------------------------------------------------------------------------------
-        final List<Integer> hashLineitem = Arrays.asList(1);
-
-        final ProjectOperator projectionLineitem = new ProjectOperator(
-                new int[] { 0, 2, 5, 6 });
-
-        final DataSourceComponent relationLineitem = new DataSourceComponent(
-                "LINEITEM", dataPath + "lineitem" + extension, conf)
-                .setOutputPartKey(hashLineitem).add(projectionLineitem);
-        _queryBuilder.add(relationLineitem);
-
-        // -------------------------------------------------------------------------------------
-        final List<Integer> hashCustomer = Arrays.asList(0);
-
-        final ProjectOperator projectionCustomer = new ProjectOperator(
-                new int[] { 0, 3 });
-
-        final DataSourceComponent relationCustomer = new DataSourceComponent(
-                "CUSTOMER", dataPath + "customer" + extension, conf)
-                .setOutputPartKey(hashCustomer).add(projectionCustomer);
+        DataSourceComponent relationCustomer = new DataSourceComponent(
+            "CUSTOMER", dataPath + "customer" + extension, conf)
+            .setOutputPartKey(hashCustomer).add(selectionCustomer)
+            .add(projectionCustomer);
         _queryBuilder.add(relationCustomer);
 
         // -------------------------------------------------------------------------------------
-        final List<Integer> hashOrders = Arrays.asList(1);
+        List<Integer> hashOrders = Arrays.asList(1);
 
-        final SelectOperator selectionOrders = new SelectOperator(
-                new BetweenPredicate(new ColumnReference(_dc, 4), true,
-                        new ValueSpecification(_dc, _date1), false,
-                        new ValueSpecification(_dc, _date2)));
+        SelectOperator selectionOrders = new SelectOperator(
+            new ComparisonPredicate(ComparisonPredicate.LESS_OP,
+                new ColumnReference(_dateConv, 4),
+                new ValueSpecification(_dateConv, _date)));
 
-        final ProjectOperator projectionOrders = new ProjectOperator(new int[] {
-                0, 1 });
+        ProjectOperator projectionOrders = new ProjectOperator(new int[] { 0,
+            1, 4, 7 });
 
-        final DataSourceComponent relationOrders = new DataSourceComponent(
-                "ORDERS", dataPath + "orders" + extension, conf)
-                .setOutputPartKey(hashOrders).add(selectionOrders)
-                .add(projectionOrders);
+        DataSourceComponent relationOrders = new DataSourceComponent("ORDERS",
+            dataPath + "orders" + extension, conf).setOutputPartKey(hashOrders)
+            .add(selectionOrders).add(projectionOrders);
         _queryBuilder.add(relationOrders);
 
         // -------------------------------------------------------------------------------------
-        HyperCubeJoinComponentFactory joiner = new HyperCubeJoinComponentFactory(
-            new Component[]{relationRegion, relationNation, relationSupplier, 
-                            relationLineitem, relationCustomer, relationOrders});
+        List<Integer> hashLineitem = Arrays.asList(0);
+
+        SelectOperator selectionLineitem = new SelectOperator(
+            new ComparisonPredicate(ComparisonPredicate.GREATER_OP,
+                new ColumnReference(_dateConv, 10),
+                new ValueSpecification(_dateConv, _date)));
+
+        ProjectOperator projectionLineitem = new ProjectOperator(new int[] { 0,
+            5, 6 });
+
+        DataSourceComponent relationLineitem = new DataSourceComponent(
+            "LINEITEM", dataPath + "lineitem" + extension, conf)
+            .setOutputPartKey(hashLineitem).add(selectionLineitem)
+            .add(projectionLineitem);
+        _queryBuilder.add(relationLineitem);
 
 
-        AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_doubleConv, 1), conf).setGroupByColumns(0);
-        _queryBuilder.add(joiner.createHyperCubeJoinOperator().add(agg));
+        // set up aggregation function on the StormComponent(Bolt) where join is
+        // performed
+        // 1 - discount
+        ValueExpression<Double> substract = new Subtraction(
+            new ValueSpecification(_doubleConv, 1.0), new ColumnReference(
+                _doubleConv, 7));
+         // extendedPrice*(1-discount)
+        ValueExpression<Double> product = new Multiplication(
+            new ColumnReference(_doubleConv, 6), substract);
+        AggregateOperator agg = new AggregateSumOperator(product, conf)
+            .setGroupByColumns(Arrays.asList(5, 3, 4));
+
+       HyperCubeJoinComponentFactory lastJoiner = 
+            new HyperCubeJoinComponentFactory(new Component[]{
+                relationCustomer, 
+                relationOrders,
+                relationLineitem});
+
+        // Predicates
+        ColumnReference colC_CUSTKEY = new ColumnReference(_ic, 0);
+        ColumnReference colO_CUSTKEY = new ColumnReference(_ic, 1);
+        ComparisonPredicate C_O_comp = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP, 
+            colC_CUSTKEY, colO_CUSTKEY);
+
+        lastJoiner.addPredicate("CUSTOMERORDERS", C_O_comp);
+
+
+        ColumnReference colO_ORDERKEY = new ColumnReference(_ic, 0);
+        ColumnReference colL_ORDERKEY = new ColumnReference(_ic, 0);
+        ComparisonPredicate O_L_comp = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP, 
+            colO_ORDERKEY, colL_ORDERKEY);
+
+        lastJoiner.addPredicate("LINEITEMORDERS", O_L_comp);
+
+        _queryBuilder.add(lastJoiner.createHyperCubeJoinOperator().add(agg).setContentSensitiveThetaJoinWrapper(_ic));
+
+        // -------------------------------------------------------------------------------------
+
 
     }
 
