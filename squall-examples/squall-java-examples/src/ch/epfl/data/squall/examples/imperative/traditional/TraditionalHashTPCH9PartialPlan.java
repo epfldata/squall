@@ -53,9 +53,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class TraditionalHybridTPCH9PartialPlan extends QueryPlan {
+public class TraditionalHashTPCH9PartialPlan extends QueryPlan {
 
-    private static Logger LOG = Logger.getLogger(TraditionalHybridTPCH9PartialPlan.class);
+    private static Logger LOG = Logger.getLogger(TraditionalHashTPCH9PartialPlan.class);
 
     private static final IntegerType _ic = new IntegerType();
     private static final Type<Date> _dc = new DateType();
@@ -69,7 +69,7 @@ public class TraditionalHybridTPCH9PartialPlan extends QueryPlan {
     private static final String COLOR = "%green%";
 
 
-    public TraditionalHybridTPCH9PartialPlan(String dataPath, String extension, Map conf) {
+    public TraditionalHashTPCH9PartialPlan(String dataPath, String extension, Map conf) {
         // -------------------------------------------------------------------------------------
         List<Integer> hashPart = Arrays.asList(0);
 
