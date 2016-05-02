@@ -734,7 +734,7 @@ public class MyUtilities {
 	int constant = SystemParameters.getInt(conf,
 		"OUTPUT_SAMPLE_SIZE_CONSTANT");
 	if (mode.equalsIgnoreCase("MULTIPLY")) {
-	    int n_c_s = MyUtilities.getMax(firstNumOfBuckets,
+	    int n_c_s = Math.max(firstNumOfBuckets,
 		    secondNumOfBuckets);
 	    return constant * n_c_s; // the actual output sample size is
 				     // currently upper bounded by the size
@@ -1164,22 +1164,6 @@ public class MyUtilities {
 	} else {
 	    throw new RuntimeException("Unsupported getM " + mDescriptor);
 	}
-    }
-
-    public static int getMax(int first, int second) {
-	return first > second ? first : second;
-    }
-
-    public static long getMax(long first, long second) {
-	return first > second ? first : second;
-    }
-
-    public static int getMin(int first, int second) {
-	return first < second ? first : second;
-    }
-
-    public static long getMin(long first, long second) {
-	return first < second ? first : second;
     }
 
     public static int getNumParentTasks(TopologyContext tc,

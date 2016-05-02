@@ -645,7 +645,7 @@ public class OutputShallowCoarsener extends ShallowCoarsener {
     // the following methods I might want to overload
     // weight = b * output
     protected double computeMaxGridCellWeight() {
-	int minSideLength = MyUtilities.getMin(_numXBuckets, _numYBuckets);
+	int minSideLength = Math.min(_numXBuckets, _numYBuckets);
 
 	// in the worst case, maxGridCellWeight is
 	// * for pxp partitioning, m/p

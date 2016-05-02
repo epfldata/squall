@@ -843,8 +843,8 @@ public class EWHSampleMatrixBolt<JAT extends Number & Comparable<JAT>> extends
 
     // how much intersection between [begin1, end1) and [begin2, end2)
     private static int getOverlaps(int begin1, int end1, int begin2, int end2) {
-	int maxBegin = MyUtilities.getMax(begin1, begin2);
-	int minEnd = MyUtilities.getMin(end1, end2);
+	int maxBegin = Math.max(begin1, begin2);
+	int minEnd = Math.min(end1, end2);
 	return minEnd - maxBegin;
     }
 
