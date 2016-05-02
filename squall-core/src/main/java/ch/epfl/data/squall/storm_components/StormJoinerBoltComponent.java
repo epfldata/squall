@@ -43,7 +43,6 @@ import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.predicates.Predicate;
-import ch.epfl.data.squall.storage.BPlusTreeStorage;
 //import ch.epfl.data.squall.storage.BerkeleyDBStore;
 //import ch.epfl.data.squall.storage.BerkeleyDBStoreSkewed;
 import ch.epfl.data.squall.storage.TupleStorage;
@@ -199,7 +198,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
     }
 
     // Specific to Bplustree
-    protected void createStorage(BPlusTreeStorage _firstRelationStorage,
+/*    protected void createStorage(BPlusTreeStorage _firstRelationStorage,
 	    BPlusTreeStorage _secondRelationStorage, Logger LOG) {
 	final PredicateCreateIndexesVisitor visitor = new PredicateCreateIndexesVisitor();
 	_joinPredicate.accept(visitor);
@@ -221,7 +220,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 	    isWindow = false;
 	if (MyUtilities.isBDBUniform(getConf())) {
 	    throw new RuntimeException("BDB is removed due to licence incompatibilities.");
-/*		if (_typeOfValueIndexed.get(0) instanceof Integer) {
+		if (_typeOfValueIndexed.get(0) instanceof Integer) {
 		_firstRelationStorage = new BerkeleyDBStore(Integer.class,
 			storagePath + "/first/" + this.getName() + _thisTaskID,
 			isWindow, _thisTaskID);
@@ -256,9 +255,9 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 	    } else
 		throw new RuntimeException("non supported type");
 	    LOG.info("Storage with Uniform BDB!");
-*/	} else if (MyUtilities.isBDBSkewed(getConf())) {
+	} else if (MyUtilities.isBDBSkewed(getConf())) {
     	throw new RuntimeException("BDB is removed due to licence incompatibilities.");
-/*	    if (_typeOfValueIndexed.get(0) instanceof Integer) {
+	    if (_typeOfValueIndexed.get(0) instanceof Integer) {
 		_firstRelationStorage = new BerkeleyDBStoreSkewed(
 			Integer.class, storagePath + "/first", getConf());
 		_secondRelationStorage = new BerkeleyDBStoreSkewed(
@@ -281,16 +280,16 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 	    } else
 		throw new RuntimeException("non supported type");
 	    LOG.info("Storage with Skewed BDB!");
-*/	} else {
+	} else {
 	    throw new RuntimeException("Unsupported BDB type!");
 	}
 	// UNCOMMENT below
-/*//	if (_joinPredicate != null)
-//	    _existIndexes = true;
-//	else
-//	    _existIndexes = false;
-*/    }
-
+	if (_joinPredicate != null)
+	    _existIndexes = true;
+	else
+	    _existIndexes = false;
+    }
+*/
     @Override
     public ChainOperator getChainOperator() {
 	return _operatorChain;
@@ -334,7 +333,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
     }
 
     // Specific to BplusTree
-    protected void insertIntoBDBStorage(BPlusTreeStorage affectedStorage,
+/*    protected void insertIntoBDBStorage(BPlusTreeStorage affectedStorage,
 	    String key, String inputTupleString) {
 	if (_typeOfValueIndexed.get(0) instanceof Integer)
 	    affectedStorage.put(Integer.parseInt(key), inputTupleString);
@@ -351,7 +350,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 	    affectedStorage.put(key, inputTupleString);
 	else
 	    throw new RuntimeException("non supported type");
-    }
+    }*/
 
     // Generic: TupleStorage or BplusTree
     protected void join(Tuple stormTuple, List<String> tuple,
@@ -402,14 +401,14 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
     }
 
     // Specific for BplusTrees
-    protected void performJoin(Tuple stormTupleRcv, List<String> tuple,
+/*    protected void performJoin(Tuple stormTupleRcv, List<String> tuple,
 	    boolean isFromFirstEmitter, String keyValue,
 	    BPlusTreeStorage oppositeStorage, boolean isLastInBatch) {
 	final List<String> tuplesToJoin = selectTupleToJoin(oppositeStorage,
 		isFromFirstEmitter, keyValue);
 	join(stormTupleRcv, tuple, isFromFirstEmitter, tuplesToJoin,
 		isLastInBatch);
-    }
+    }*/
 
     // Specific for TupleStorage
     protected void performJoin(Tuple stormTupleRcv, List<String> tuple,
@@ -535,7 +534,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
     }
 
     // Specific for BplusTrees
-    protected void processNonLastTuple(String inputComponentIndex,
+/*    protected void processNonLastTuple(String inputComponentIndex,
 	    List<String> tuple, String inputTupleHash, Tuple stormTupleRcv,
 	    boolean isLastInBatch, BPlusTreeStorage firstRelationStorage,
 	    BPlusTreeStorage secondRelationStorage) {
@@ -577,7 +576,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 	    printStatistics(SystemParameters.INPUT_PRINT);
 	}
     }
-
+*/
     // Specific for TupleStorage
     protected void processNonLastTuple(String inputComponentIndex,
 	    List<String> tuple, String inputTupleHash, Tuple stormTupleRcv,
@@ -625,7 +624,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
     }
 
     // Specific to Bplustree
-    protected List<String> selectTupleToJoin(BPlusTreeStorage oppositeStorage,
+/*    protected List<String> selectTupleToJoin(BPlusTreeStorage oppositeStorage,
 	    boolean isFromFirstEmitter, String keyValue) {
 
 	// If there is atleast one index (so we have single join conditions with
@@ -666,7 +665,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 	else
 	    throw new RuntimeException("non supported type");
     }
-
+*/
     // Specific to TupleStorage
     protected List<String> selectTupleToJoin(TupleStorage oppositeStorage,
 	    List<Index> oppositeIndexes, boolean isFromFirstEmitter,

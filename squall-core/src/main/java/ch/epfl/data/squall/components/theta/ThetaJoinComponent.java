@@ -32,7 +32,6 @@ import ch.epfl.data.squall.storm_components.StormBoltComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.storm_components.theta.StormThetaJoin;
-import ch.epfl.data.squall.storm_components.theta.StormThetaJoinBDB;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 
@@ -85,16 +84,16 @@ public class ThetaJoinComponent extends AbstractJoinerComponent<ThetaJoinCompone
 	}
 
         StormBoltComponent joiner;
-	if (isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)) {
-          joiner = new StormThetaJoinBDB(_firstParent, _secondParent, this,
-                                         allCompNames, getJoinPredicate(), hierarchyPosition, builder,
-                                         killer, conf);
-	} else {
-          joiner = new StormThetaJoin(_firstParent, _secondParent, this,
+//	if (isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)) {
+//          joiner = new StormThetaJoinBDB(_firstParent, _secondParent, this,
+//                                         allCompNames, getJoinPredicate(), hierarchyPosition, builder,
+//                                         killer, conf);
+//	} else {
+    joiner = new StormThetaJoin(_firstParent, _secondParent, this,
                                       allCompNames, getJoinPredicate(), _isPartitioner,
                                       hierarchyPosition, builder, killer, conf,
                                       _isContentSensitive, _contentSensitiveThetaJoinWrapper);
-	}
+
 	if (getSlidingWindow() > 0 || getTumblingWindow() > 0) {
           joiner.setWindowSemantics(getSlidingWindow(), getTumblingWindow());
         }
