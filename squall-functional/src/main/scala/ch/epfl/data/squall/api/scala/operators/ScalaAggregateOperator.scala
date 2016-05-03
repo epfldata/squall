@@ -30,7 +30,7 @@ import scala.reflect.runtime.universe._
 import scala.math.Numeric
 import org.apache.log4j.Logger
 import java.util.Arrays.ArrayList
-import ch.epfl.data.squall.storage.AggregationStorage
+import ch.epfl.data.squall.storage.AggregationStore
 import ch.epfl.data.squall.api.scala.SquallType._
 import java.util.Arrays
 import org.apache.commons.lang.ArrayUtils
@@ -238,7 +238,7 @@ class ScalaAggregateOperator[T: SquallType, A: Numeric](val _agg: T => A, val _m
     WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
     _windowRangeSecs = windowRangeInSeconds;
     _slideRangeSecs = windowSlideInSeconds;
-    _storage = new ScalaWindowAggregationStorage[A](this, _map, true, _windowRangeSecs, _slideRangeSecs);
+    _storage = new ScalaWindowAggregationStore[A](this, _map, true, _windowRangeSecs, _slideRangeSecs);
     if (_groupByColumns != null || _groupByProjection != null)
       _storage.setSingleEntry(false);
     return this;

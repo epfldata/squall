@@ -20,13 +20,13 @@
 package ch.epfl.data.squall.api.scala.operators
 
 import ch.epfl.data.squall.operators.AggregateOperator
-import ch.epfl.data.squall.storage.WindowAggregationStorage
+import ch.epfl.data.squall.storage.WindowAggregationStore
 
 /**
  * @author mohamed
  */
-class ScalaWindowAggregationStorage[A: Numeric](outerAggOp: AggregateOperator[A], map: java.util.Map[_, _],
-                                                singleEntry: Boolean, windowedRange: Int, slidelength: Int) extends WindowAggregationStorage[A](outerAggOp, null, map, singleEntry, windowedRange, slidelength) {
+class ScalaWindowAggregationStore[A: Numeric](outerAggOp: AggregateOperator[A], map: java.util.Map[_, _],
+                                                singleEntry: Boolean, windowedRange: Int, slidelength: Int) extends WindowAggregationStore[A](outerAggOp, null, map, singleEntry, windowedRange, slidelength) {
 
   @Override
   override def getInitialValue(): A = {
