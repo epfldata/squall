@@ -96,7 +96,7 @@ Squall also provides out-of-the-box functionality for window semantics. That is 
 
 * Landmark Window Semantics.
 
-[Here](https://github.com/epfldata/squall/blob/master/frontend/src/main/scala/frontend/functional/scala/queries/ScalaTPCH7Plan.scalaz) is an example of a fully running query with window semantics.
+[Here](https://github.com/epfldata/squall/blob/master/squall-functional/src/main/scala/ch/epfl/data/squall/api/scala/queries/ScalaTPCH7Plan.scala) is an example of a fully running query with window semantics.
 
 
 
