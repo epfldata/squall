@@ -39,15 +39,17 @@ A Functional Scala-interface that leverages the brevity, productivity, convenien
     agg.execute(conf)
 ```
 #### Imperative
-An Imperative Java-interface that facilitates design and construction of online distributed query plans. For example the previous query is represented ([full code](https://github.com/epfldata/squall/blob/master/core/src/main/java/ch/epfl/data/plan_runner/query_plans/HyracksPlan.java)) as follows:
+An Imperative Java-interface that facilitates design and construction of online distributed query plans. For example the previous query is represented ([full code](https://github.com/epfldata/squall/blob/5d8864478bf832ff61da4b3e5d54bd7e06a3fee7/squall-examples/squall-java-examples/src/ch/epfl/data/squall/examples/imperative/shj/HyracksPlan.java)) as follows:
 
 ```java
 Component customer = new DataSourceComponent("customer", conf)
                             .add(new ProjectOperator(0, 6));
 Component orders = new DataSourceComponent("orders", conf)
                             .add(new ProjectOperator(1));
-Component custOrders = new EquiJoinComponent(customer, 0, orders, 0) //key1 (index 0) =key2 (index 0)
-                            .add(new AggregateCountOperator(conf).setGroupByColumns(1));
+// join on CUSTKEY (index 0 from each component)
+Component custOrders = new EquiJoinComponent(customer, 0, orders, 0) 
+                // group by MKTSEGMENT (index 1 on concatenation of fields: customer, orders)
+                .add(new AggregateCountOperator(conf).setGroupByColumns(1)); 
 ```
 
 Queries are mapped to operator trees in the spirit of the query plans
