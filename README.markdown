@@ -28,7 +28,7 @@ GROUP BY C_MKTSEGMENT
 We provide several interfaces for running this query:
 
 #### Declarative
-A Declarative interface that directly parses this SQL query and creates an efficient storm Topology. This module is equipped with a cost-based optimizer. An example of a query is (a directory with pre-bundled SQL queries is [here](https://github.com/epfldata/squall/tree/8762b36a7dfa2282f5cf5de3cf11aec8377fd435/test/squall/sql_queries)): 
+A Declarative interface that directly parses this SQL query and creates an efficient storm Topology. This module is equipped with a cost-based optimizer. An example of a query is (a directory with pre-bundled SQL queries is [here](https://github.com/epfldata/squall/tree/master/test/squall/sql_queries)): 
 ```sql
 SELECT CUSTOMER.MKTSEGMENT, COUNT(ORDERS.ORDERKEY)
 FROM CUSTOMER join ORDERS on CUSTOMER.CUSTKEY=ORDERS.CUSTKEY
