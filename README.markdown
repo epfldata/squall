@@ -28,9 +28,15 @@ GROUP BY C_MKTSEGMENT
 We provide several interfaces for running this query:
 
 #### Declarative
-A Declarative interface that directly parses this SQL query and creates an efficient storm Topology. This module is implicitly equipped with a cost-based optimizer.
+A Declarative interface that directly parses this SQL query and creates an efficient storm Topology. This module is equipped with a cost-based optimizer. An example of a query is (a directory with pre-bundled SQL queries is [here](https://github.com/epfldata/squall/tree/8762b36a7dfa2282f5cf5de3cf11aec8377fd435/test/squall/sql_queries)): 
+```sql
+SELECT CUSTOMER.MKTSEGMENT, COUNT(ORDERS.ORDERKEY)
+FROM CUSTOMER join ORDERS on CUSTOMER.CUSTKEY=ORDERS.CUSTKEY
+GROUP BY CUSTOMER.MKTSEGMENT
+```
+
 #### Functional
-A Functional Scala-interface that leverages the brevity, productivity, convenience, and syntactic sugar of functional programming. For example the previous query is represented ([full code](https://github.com/epfldata/squall/blob/master/frontend/src/main/scala/frontend/functional/scala/queries/ScalaHyracksPlan.scala)) as follows: 
+A Functional Scala-interface that leverages the brevity, productivity, convenience, and syntactic sugar of functional programming. For example the previous query is represented ([full code](https://github.com/epfldata/squall/blob/master/squall-functional/src/main/scala/ch/epfl/data/squall/api/scala/queries/ScalaHyracksPlan.scala)) as follows: 
 ```scala
     val customers = Source[customer]("customer").map { t => Tuple2(t._1, t._7) }
     val orders = Source[orders]("orders").map { t => t._2 }
@@ -38,8 +44,9 @@ A Functional Scala-interface that leverages the brevity, productivity, convenien
     val agg = join.groupByKey(x => 1, k => k._1._2) //count and groupby
     agg.execute(conf)
 ```
+
 #### Imperative
-An Imperative Java-interface that facilitates design and construction of online distributed query plans. For example the previous query is represented ([full code](https://github.com/epfldata/squall/blob/5d8864478bf832ff61da4b3e5d54bd7e06a3fee7/squall-examples/squall-java-examples/src/ch/epfl/data/squall/examples/imperative/shj/HyracksPlan.java)) as follows:
+An Imperative Java-interface that facilitates design and construction of online distributed query plans. For example the previous query is represented ([full code](https://github.com/epfldata/squall/blob/master/squall-examples/squall-java-examples/src/ch/epfl/data/squall/examples/imperative/shj/HyracksPlan.java)) as follows:
 
 ```java
 Component customer = new DataSourceComponent("customer", conf)
