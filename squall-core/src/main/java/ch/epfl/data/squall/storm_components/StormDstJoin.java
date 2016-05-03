@@ -37,7 +37,7 @@ import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.operators.ProjectOperator;
-import ch.epfl.data.squall.storage.AggregationStorage;
+import ch.epfl.data.squall.storage.AggregationStore;
 import ch.epfl.data.squall.storage.BasicStore;
 import ch.epfl.data.squall.storage.KeyValueStore;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
@@ -376,7 +376,7 @@ public class StormDstJoin extends StormBoltComponent {
 
 		List<String> outputTuple;
 		// Before fixing preaggregations, here was instanceof BasicStore
-		if (oppositeStorage instanceof AggregationStorage
+		if (oppositeStorage instanceof AggregationStore
 			|| !_isRemoveIndex) {
 		    // preaggregation
 		    outputTuple = MyUtilities.createOutputTuple(firstTuple,
@@ -541,7 +541,7 @@ public class StormDstJoin extends StormBoltComponent {
 		    + _firstEmitterIndex + " nor " + _secondEmitterIndex + ".");
 
 	// add the stormTuple to the specific storage
-	if (affectedStorage instanceof AggregationStorage)
+	if (affectedStorage instanceof AggregationStore)
 	    // For preaggregations, we have to update the storage, not to insert
 	    // to it
 	    affectedStorage.update(tuple, inputTupleHash);

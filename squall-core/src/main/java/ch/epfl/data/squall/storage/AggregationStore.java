@@ -24,9 +24,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 
@@ -34,24 +32,22 @@ import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
-public class WindowAggregationStorage<V> extends WindowKeyValueStore<Object, V> {
-
+public class AggregationStore<V> extends KeyValueStore<Object, V> {
     private static final long serialVersionUID = 1L;
 
-    private static Logger LOG = Logger
-	    .getLogger(WindowAggregationStorage.class);
+    private static Logger LOG = Logger.getLogger(AggregationStore.class);
 
     private boolean _singleEntry;
     private final Type _wrapper;
     private final AggregateOperator _outerAggOp;
     private static final String SINGLE_ENTRY_KEY = "SEK"; /* Single entry key */
-    private static long _startingTimeStamp = System.currentTimeMillis();
 
-    public WindowAggregationStorage(AggregateOperator outerAggOp, Type wrapper,
-	    Map map, boolean singleEntry, int windowedRange, int slidelength) {
+    // private static final int FINAL_AGGREGATION_TIMEOUT = 10000; /* msecs */
+
+    public AggregationStore(AggregateOperator outerAggOp, Type wrapper,
+	    Map map, boolean singleEntry) {
 	super(singleEntry ? 1 : SystemParameters.getInt(map,
-		"STORAGE_MEMORY_SIZE_MB"), map, _startingTimeStamp,
-		windowedRange, slidelength);
+		"STORAGE_MEMORY_SIZE_MB"), map);
 	_wrapper = wrapper;
 	_outerAggOp = outerAggOp;
 	_singleEntry = singleEntry;
@@ -62,27 +58,24 @@ public class WindowAggregationStorage<V> extends WindowKeyValueStore<Object, V> 
 
     @Override
     public ArrayList<V> access(Object... data) {
-	throw new RuntimeException("Not implemented yet!");
+	return _singleEntry ? super.__access(false, SINGLE_ENTRY_KEY) : super
+		.__access(false, data);
     }
 
-    public void addContent(WindowAggregationStorage storage) {
+    public void addContent(AggregationStore storage) {
 	// Now aggregate
 	final Set keySet = storage.keySet();
 	for (final Iterator it = keySet.iterator(); it.hasNext();) {
 	    final Object key = it.next();
-	    TreeMap<Integer, V> maps = storage.__access(false, key);
-	    for (Entry<Integer, V> entry : maps.entrySet()) {
-		int wid = entry.getKey();
-		V newValue = entry.getValue();
-		final TreeMap<Integer, V> list = super.__access(false, key);
-		if (list == null || list.get(wid) == null)
-		    super.onInsert(key, newValue, wid);
-		else {
-		    final V oldValue = list.get(wid);
-		    newValue = (V) _outerAggOp.runAggregateFunction(oldValue,
-			    newValue);
-		    super.update(key, newValue, wid);
-		}
+	    V newValue = (V) storage.access(key).get(0);
+	    final ArrayList<V> list = super.__access(false, key);
+	    if (list == null)
+		super.onInsert(key, newValue);
+	    else {
+		final V oldValue = list.get(0);
+		newValue = (V) _outerAggOp.runAggregateFunction(oldValue,
+			newValue);
+		super.update(key, oldValue, newValue);
 	    }
 	}
     }
@@ -129,25 +122,20 @@ public class WindowAggregationStorage<V> extends WindowKeyValueStore<Object, V> 
     public V update(Object... data) {
 	final Object obj = data[0];
 	final Object key = _singleEntry ? SINGLE_ENTRY_KEY : data[1];
-	final int[] wids = getWindowIDs((long) data[2]);
-	V value, newValue = null;
-	for (int i = 0; i < wids.length; i++) {
-	    int wid = wids[i];
-	    final TreeMap<Integer, V> list = super.__access(false, key);
-	    if (list == null || list.get(wid) == null) {
-		value = getInitialValue();
-		super.onInsert(key, value, wid);
-	    } else
-		value = list.get(wid);
-	    if (obj instanceof List)
-		newValue = (V) _outerAggOp.runAggregateFunction(value,
-			(List<String>) obj);
-	    else
-		newValue = (V) _outerAggOp.runAggregateFunction(value, obj);
-	    super.__update(false, key, newValue, wid);
-	}
+	V value, newValue;
+	final ArrayList<V> list = super.__access(false, key);
+	if (list == null) {
+	    value = getInitialValue();
+	    super.onInsert(key, value);
+	} else
+	    value = list.get(0);
+	if (obj instanceof List)
+	    newValue = (V) _outerAggOp.runAggregateFunction(value,
+		    (List<String>) obj);
+	else
+	    newValue = (V) _outerAggOp.runAggregateFunction(value, obj);
+	super.__update(false, key, value, newValue);
 	return newValue;
-
     }
 
 }
