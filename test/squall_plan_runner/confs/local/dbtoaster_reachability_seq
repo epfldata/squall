@@ -1,0 +1,37 @@
+DIP_DISTRIBUTED false
+DIP_QUERY_NAME reachability_3
+DIP_QUERY_PLAN ch.epfl.data.squall.examples.imperative.dbtoaster.DBToasterReachabilitySeq
+DIP_TOPOLOGY_NAME_PREFIX username
+DIP_NUM_ACKERS 0
+
+DIP_DATA_PATH ../test/data/link_graph/0.01G/
+DIP_RESULT_ROOT ../test/results/
+
+ARCS1_PAR 1
+ARCS2_PAR 1
+ARCS1_ARCS2_PAR 4
+ARCS3_PAR 1
+ARCS1_ARCS2_ARCS3_PAR 4
+
+COUNTAGG_PAR 1
+
+ARCS1_CARD 204300000
+ARCS2_CARD 204300000
+ARCS3_CARD 204300000
+ARCS1_ARCS2_CARD 2043000000
+
+#below are unlikely to change
+DIP_EXTENSION .txt
+DIP_READ_SPLIT_DELIMITER \t
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_KILL_AT_THE_END true
+
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_CLUSTER_DIR /data/squall_zone/storage
+STORAGE_COLD_START true
+STORAGE_MEMORY_SIZE_MB 4096
