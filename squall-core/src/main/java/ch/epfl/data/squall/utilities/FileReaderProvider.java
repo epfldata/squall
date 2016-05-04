@@ -28,7 +28,8 @@ public class FileReaderProvider extends ReaderProvider {
   private String basePath;
 
   public FileReaderProvider(String basePath) {
-    this.basePath = basePath;
+      if(!basePath.isEmpty()) basePath = basePath + "/";
+      this.basePath = basePath;
   }
 
   public boolean canProvide (SquallContext context, String name) {
@@ -37,7 +38,7 @@ public class FileReaderProvider extends ReaderProvider {
       // plan, so we always try to provide it
       return true;
     } else {
-      String path = basePath + "/" + name;
+      String path = basePath + name;
       File f = new File(path);
       return f.isFile();
     }
@@ -46,7 +47,7 @@ public class FileReaderProvider extends ReaderProvider {
   public CustomReader getReaderForName (String name, int fileSection, int fileParts) {
     CustomReader reader;
     try {
-      String path = basePath + "/" + name;
+      String path = basePath + name;
       reader = new SerializableFileInputStream(new File(path), 1 * 1024 * 1024, fileSection, fileParts);
     } catch (final IOException e) {
       throw new RuntimeException("Filename not found: " + this + " got " + MyUtilities.getStackTrace(e));
