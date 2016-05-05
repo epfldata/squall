@@ -26,24 +26,37 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import ch.epfl.data.squall.components.DataSourceComponent;
+import ch.epfl.data.squall.expressions.ColumnReference;
+import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.ProjectOperator;
+import ch.epfl.data.squall.operators.SelectOperator;
+import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
 import ch.epfl.data.squall.types.IntegerType;
 
-public class HyracksL1Plan extends QueryPlan {
-    private static Logger LOG = Logger.getLogger(HyracksL1Plan.class);
+public class HyracksL1SelectIntPlan extends QueryPlan {
+    private static Logger LOG = Logger.getLogger(HyracksL1SelectIntPlan.class);
 
     private final QueryBuilder _queryBuilder = new QueryBuilder();
 
     private static final IntegerType _ic = new IntegerType();
 
-    public HyracksL1Plan(String dataPath, String extension, Map conf) {
+    public HyracksL1SelectIntPlan(String dataPath, String extension, Map conf) {
 	// -------------------------------------------------------------------------------------
 	// start of query plan filling
+	// the selections are no-ops
+	final SelectOperator selCustomer = new SelectOperator(
+		new ComparisonPredicate(ComparisonPredicate.GREATER_OP,
+			new ColumnReference(_ic, 0), new ValueSpecification(_ic, -1)));
+	final SelectOperator selOrders = new SelectOperator(
+		new ComparisonPredicate(ComparisonPredicate.GREATER_OP,
+			new ColumnReference(_ic, 0), new ValueSpecification(_ic, -1)));
+	
 	final ProjectOperator projectionCustomer = new ProjectOperator(0, 6);
 	final List<Integer> hashCustomer = Arrays.asList(0);
 	DataSourceComponent relationCustomer = new DataSourceComponent("customer", conf)
+		.add(selCustomer)
 		.add(projectionCustomer)
 		.setOutputPartKey(hashCustomer)
 		.setPrintOut(false);
@@ -53,6 +66,7 @@ public class HyracksL1Plan extends QueryPlan {
 	final ProjectOperator projectionOrders = new ProjectOperator(1);
 	final List<Integer> hashOrders = Arrays.asList(0);
 	DataSourceComponent relationOrders = new DataSourceComponent("orders", conf)
+		.add(selOrders)
 		.add(projectionOrders)
 		.setOutputPartKey(hashOrders)
 		.setPrintOut(false);
