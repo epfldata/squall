@@ -447,9 +447,9 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 				+ ", Total:,"
 				+ totalSize
 				+ ", Memory used: ,"
-				+ StatisticsUtilities.bytesToMegabytes(memory)
+				+ StatisticsUtilities.bytesToKBs(memory)
 				+ ","
-				+ StatisticsUtilities.bytesToMegabytes(runtime
+				+ StatisticsUtilities.bytesToKBs(runtime
 					.totalMemory()));
 		    else if (type == SystemParameters.INPUT_PRINT)
 			LOG.info(","
@@ -465,9 +465,9 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 				+ ", Total:,"
 				+ totalSize
 				+ ", Memory used: ,"
-				+ StatisticsUtilities.bytesToMegabytes(memory)
+				+ StatisticsUtilities.bytesToKBs(memory)
 				+ ","
-				+ StatisticsUtilities.bytesToMegabytes(runtime
+				+ StatisticsUtilities.bytesToKBs(runtime
 					.totalMemory()));
 		    else if (type == SystemParameters.OUTPUT_PRINT)
 			LOG.info("," + "RESULT," + _thisTaskID + ","
@@ -491,9 +491,9 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 				+ ", Total:,"
 				+ totalSize
 				+ ", Memory used: ,"
-				+ StatisticsUtilities.bytesToMegabytes(memory)
+				+ StatisticsUtilities.bytesToKBs(memory)
 				+ ","
-				+ StatisticsUtilities.bytesToMegabytes(runtime
+				+ StatisticsUtilities.bytesToKBs(runtime
 					.totalMemory()));
 			LOG.info("," + "RESULT," + _thisTaskID + ","
 				+ "TimeStamp:," + ts + ",Sent Tuples,"
@@ -522,9 +522,9 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 			    + ", Total:,"
 			    + totalSize
 			    + ", Memory used: ,"
-			    + StatisticsUtilities.bytesToMegabytes(memory)
+			    + StatisticsUtilities.bytesToKBs(memory)
 			    + ","
-			    + StatisticsUtilities.bytesToMegabytes(runtime
+			    + StatisticsUtilities.bytesToKBs(runtime
 				    .totalMemory()));
 		    LOG.info("," + "RESULT," + _thisTaskID + ","
 			    + "TimeStamp:," + ts + ",Sent Tuples,"

@@ -430,9 +430,9 @@ public class StormDstJoin extends StormBoltComponent {
 				+ ", Total:,"
 				+ totalSize
 				+ ", Memory used: ,"
-				+ StatisticsUtilities.bytesToMegabytes(memory)
+				+ StatisticsUtilities.bytesToKBs(memory)
 				+ ","
-				+ StatisticsUtilities.bytesToMegabytes(runtime
+				+ StatisticsUtilities.bytesToKBs(runtime
 					.totalMemory()));
 		    else if (type == SystemParameters.INPUT_PRINT)
 			LOG.info(","
@@ -448,9 +448,9 @@ public class StormDstJoin extends StormBoltComponent {
 				+ ", Total:,"
 				+ totalSize
 				+ ", Memory used: ,"
-				+ StatisticsUtilities.bytesToMegabytes(memory)
+				+ StatisticsUtilities.bytesToKBs(memory)
 				+ ","
-				+ StatisticsUtilities.bytesToMegabytes(runtime
+				+ StatisticsUtilities.bytesToKBs(runtime
 					.totalMemory()));
 		    else if (type == SystemParameters.OUTPUT_PRINT)
 			LOG.info("," + "RESULT," + _thisTaskID + ","
@@ -474,9 +474,9 @@ public class StormDstJoin extends StormBoltComponent {
 				+ ", Total:,"
 				+ totalSize
 				+ ", Memory used: ,"
-				+ StatisticsUtilities.bytesToMegabytes(memory)
+				+ StatisticsUtilities.bytesToKBs(memory)
 				+ ","
-				+ StatisticsUtilities.bytesToMegabytes(runtime
+				+ StatisticsUtilities.bytesToKBs(runtime
 					.totalMemory()));
 			LOG.info("," + "RESULT," + _thisTaskID + ","
 				+ "TimeStamp:," + ts + ",Sent Tuples,"
@@ -505,9 +505,9 @@ public class StormDstJoin extends StormBoltComponent {
 			    + ", Total:,"
 			    + totalSize
 			    + ", Memory used: ,"
-			    + StatisticsUtilities.bytesToMegabytes(memory)
+			    + StatisticsUtilities.bytesToKBs(memory)
 			    + ","
-			    + StatisticsUtilities.bytesToMegabytes(runtime
+			    + StatisticsUtilities.bytesToKBs(runtime
 				    .totalMemory()));
 		    LOG.info("," + "RESULT," + _thisTaskID + ","
 			    + "TimeStamp:," + ts + ",Sent Tuples,"
