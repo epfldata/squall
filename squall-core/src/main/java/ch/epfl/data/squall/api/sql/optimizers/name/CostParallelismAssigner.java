@@ -38,6 +38,10 @@ import ch.epfl.data.squall.components.OperatorComponent;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class CostParallelismAssigner {
+    // If StormDstTupleStorageJoin is used instead of StormDstJoin, I should set 0.3 
+    //    (at least according to the Hyracks SQL plan, in which there is no selections on Date)
+    private final static double PARALLELISM_PARENTS = 1.0/8; 
+    
     /*
      * we need separate class from CostParams, because here we want to order
      * them based on cardinality This class will contain all the parallelism for
@@ -251,8 +255,7 @@ public class CostParallelismAssigner {
 		* leftParentParams.getParallelism()
 		+ rightParentParams.getSelectivity()
 		* rightParentParams.getParallelism()
-		+ 1.0
-		/ 8
+		+ PARALLELISM_PARENTS
 		* (leftParentParams.getParallelism() + rightParentParams
 			.getParallelism());
 	int parallelism = (int) dblParallelism;
