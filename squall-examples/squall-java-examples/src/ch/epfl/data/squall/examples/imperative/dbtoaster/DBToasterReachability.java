@@ -30,6 +30,7 @@ import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.AggregateSumOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SelectOperator;
+import ch.epfl.data.squall.operators.SampleOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
@@ -61,21 +62,24 @@ public class DBToasterReachability extends QueryPlan {
 
         // -------------------------------------------------------------------------------------
         // columns : From -> To
+        final SampleOperator samples1 = new SampleOperator(0.005);                
         final DataSourceComponent relationArcs1 = new DataSourceComponent(
-                "ARCS1", dataPath + "arcs" + extension, conf);
+                "ARCS1", dataPath + "sd-arc" + extension, conf).add(samples1);
         _queryBuilder.add(relationArcs1);
 
         // -------------------------------------------------------------------------------------
         // columns : From -> To
+        final SampleOperator samples2 = new SampleOperator(0.005);        
         final DataSourceComponent relationArcs2 = new DataSourceComponent(
-                "ARCS2", dataPath + "arcs" + extension, conf);
+                "ARCS2", dataPath + "sd-arc" + extension, conf).add(samples2);
         _queryBuilder.add(relationArcs2);
 
 
         // -------------------------------------------------------------------------------------
         // columns : From -> To
+        final SampleOperator samples3 = new SampleOperator(0.005);                
         final DataSourceComponent relationArcs3 = new DataSourceComponent(
-                "ARCS3", dataPath + "arcs" + extension, conf);
+                "ARCS3", dataPath + "sd-arc" + extension, conf).add(samples3);
         _queryBuilder.add(relationArcs3);
 
 
@@ -94,15 +98,6 @@ public class DBToasterReachability extends QueryPlan {
         dbToasterComponent.setPrintOut(false);
 
         _queryBuilder.add(dbToasterComponent);
-
-
-        final AggregateSumOperator agg = new AggregateSumOperator(
-                new ColumnReference(_lc, 1), conf).setGroupByColumns(Arrays
-                .asList(0));
-
-        OperatorComponent oc = new OperatorComponent(dbToasterComponent,
-                "COUNTAGG").add(agg);
-        _queryBuilder.add(oc);
     }
 
     public QueryBuilder getQueryPlan() {
