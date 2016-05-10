@@ -95,7 +95,7 @@ public class TradionalHypercubeThetaHyracksPlan extends QueryPlan {
 		.setJoinPredicate(comp)
 		.setContentSensitiveThetaJoinWrapper(_ic);
 
-	// lastJoiner.setPrintOut(false);
+	lastJoiner.setPrintOut(false);
 
 	// -------------------------------------------------------------------------------------
 
