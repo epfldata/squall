@@ -4,9 +4,9 @@ DIP_QUERY_PLAN ch.epfl.data.squall.examples.imperative.dbtoaster.DBToasterHyrack
 DIP_TOPOLOGY_NAME_PREFIX username
 DIP_NUM_ACKERS 0
 
-DIP_DATA_PATH /data/lab/squall_data/tpchdb/Z2/10G/
+DIP_DATA_PATH /data/lab/squall_data/tpchdb/Z0/40G/
 
-CUSTOMER_PAR 2
+CUSTOMER_PAR 3
 ORDERS_PAR 4
 CUSTOMER_ORDERS_PAR 16
 COUNTAGG_PAR 4

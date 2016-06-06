@@ -78,10 +78,11 @@ public class DBToasterTPCH9PartialPlan extends QueryPlan {
                 new ValueSpecification(_sc, COLOR)));
 
         ProjectOperator projectionPart = new ProjectOperator(new int[] { 0 });
-        final SampleOperator samplesPart = new SampleOperator(0.5);
+        //final SampleOperator samplesPart = new SampleOperator(0.5);
 
         DataSourceComponent relationPart = new DataSourceComponent("PART",
-            dataPath + "part" + extension, conf).add(samplesPart).setOutputPartKey(hashPart)
+            dataPath + "part" + extension, conf)//.add(samplesPart)
+            .setOutputPartKey(hashPart)
             .add(selectionPart).add(projectionPart);
         _queryBuilder.add(relationPart);
 
@@ -92,10 +93,10 @@ public class DBToasterTPCH9PartialPlan extends QueryPlan {
         final ProjectOperator projectionLineitem = new ProjectOperator(
                 new int[] { 0, 1, 2, 4, 5, 6 });
 
-        final SampleOperator samplesLineItem = new SampleOperator(0.5);
+        //final SampleOperator samplesLineItem = new SampleOperator(0.5);
 
         final DataSourceComponent relationLineitem = new DataSourceComponent(
-                "LINEITEM", dataPath + "lineitem" + extension, conf).add(samplesLineItem)
+                "LINEITEM", dataPath + "lineitem" + extension, conf)//.add(samplesLineItem)
                 .setOutputPartKey(hashLineitem).add(projectionLineitem);
         _queryBuilder.add(relationLineitem); 
 
@@ -106,10 +107,10 @@ public class DBToasterTPCH9PartialPlan extends QueryPlan {
         ProjectOperator projectionPartsupp = new ProjectOperator(new int[] { 0,
             1, 3 });
 
-        final SampleOperator samplesPartSupp = new SampleOperator(0.5);
+        //final SampleOperator samplesPartSupp = new SampleOperator(0.5);
 
         DataSourceComponent relationPartsupp = new DataSourceComponent(
-            "PARTSUPP", dataPath + "partsupp" + extension, conf).add(samplesPartSupp)
+            "PARTSUPP", dataPath + "partsupp" + extension, conf)//.add(samplesPartSupp)
             .setOutputPartKey(hashPartsupp).add(projectionPartsupp);
         _queryBuilder.add(relationPartsupp);
 

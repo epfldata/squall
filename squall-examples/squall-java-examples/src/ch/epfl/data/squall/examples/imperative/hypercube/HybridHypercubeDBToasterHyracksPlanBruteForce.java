@@ -82,13 +82,13 @@ public class HybridHypercubeDBToasterHyracksPlanBruteForce extends QueryPlan {
 
         // -------------------------------------------------------------------------------------
         
-        final AggregateSumOperator agg = new AggregateSumOperator(
-                new ColumnReference(_lc, 1), conf).setGroupByColumns(Arrays
-                .asList(0));
+        // final AggregateSumOperator agg = new AggregateSumOperator(
+        //         new ColumnReference(_lc, 1), conf).setGroupByColumns(Arrays
+        //         .asList(0));
 
-        OperatorComponent oc = new OperatorComponent(dbToasterComponent,
-                "COUNTAGG").add(agg);
-        _queryBuilder.add(oc);
+        // OperatorComponent oc = new OperatorComponent(dbToasterComponent,
+        //         "COUNTAGG").add(agg);
+        // _queryBuilder.add(oc);
 
         //RedisOperator redis = new RedisOperator(conf);
         //OperatorComponent pc = new OperatorComponent(oc, "SENDRESULTSTOREDIS").add(redis);
