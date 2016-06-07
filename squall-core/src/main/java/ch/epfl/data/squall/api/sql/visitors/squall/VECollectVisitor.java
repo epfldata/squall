@@ -33,6 +33,7 @@ import ch.epfl.data.squall.operators.PrintOperator;
 import ch.epfl.data.squall.operators.RedisOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SampleOperator;
+import ch.epfl.data.squall.operators.CustomSampleOperatorReachGraph;
 import ch.epfl.data.squall.operators.SelectOperator;
 import ch.epfl.data.squall.operators.StoreOperator;
 import ch.epfl.data.squall.predicates.Predicate;
@@ -136,6 +137,11 @@ public class VECollectVisitor implements OperatorVisitor {
 	// nothing to visit or add
     }
 
+    @Override
+    public void visit(CustomSampleOperatorReachGraph sampleOperator) {
+    // nothing to visit or add
+    }
+    
     @Override
     public void visit(SelectOperator selection) {
 	final Predicate predicate = selection.getPredicate();
