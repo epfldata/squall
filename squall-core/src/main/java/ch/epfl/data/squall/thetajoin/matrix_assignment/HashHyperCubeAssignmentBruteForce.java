@@ -162,6 +162,10 @@ public class HashHyperCubeAssignmentBruteForce implements Serializable, HashHype
 				String value = c.get(columns.get(i).name);
 				int hashValue = Math.abs(value.hashCode()) % dimensions[i];
 
+				// if (value.equals("42467638") || value.equals("5325333") || 
+				// 	value.equals("41718572") || value.equals("41410181"))
+				// 	hashValue = 0;
+
 				fixedDim[index] = i;
 				fixedIndex[index] = hashValue;
 				index++;

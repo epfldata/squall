@@ -60,24 +60,24 @@ public class HashHypercubeDBToasterUrlReachability extends QueryPlan {
 
         // -------------------------------------------------------------------------------------
         // columns : From -> To
-        final SampleOperator samples1 = new SampleOperator(0.1);
+        //final SampleOperator samples1 = new SampleOperator(0.1);
         final DataSourceComponent relationArcs1 = new DataSourceComponent(
-                "ARCS1", dataPath + "sd-arc" + extension, conf).add(samples1);
+                "ARCS1", dataPath + "sd-arc" + extension, conf);//.add(samples1);
         _queryBuilder.add(relationArcs1);
 
 
         // -------------------------------------------------------------------------------------
         // columns : From -> To
-        final SampleOperator samples2 = new SampleOperator(0.1);
+        //final SampleOperator samples2 = new SampleOperator(0.1);
         final DataSourceComponent relationArcs2 = new DataSourceComponent(
-                "ARCS2", dataPath + "sd-arc" + extension, conf).add(samples2);
+                "ARCS2", dataPath + "sd-arc" + extension, conf);//.add(samples2);
         _queryBuilder.add(relationArcs2);
 
 
         // // -------------------------------------------------------------------------------------
-        final SampleOperator samples3 = new SampleOperator(0.1);
+        //final SampleOperator samples3 = new SampleOperator(0.1);
         final DataSourceComponent relationIndex = new DataSourceComponent(
-                "INDEX1", dataPath + "sd-index" + extension, conf).add(samples3);
+                "INDEX1", dataPath + "sd-index" + extension, conf);//.add(samples3);
         _queryBuilder.add(relationIndex);
 
 
@@ -86,27 +86,28 @@ public class HashHypercubeDBToasterUrlReachability extends QueryPlan {
         dbToasterCompBuilder.addRelation(relationArcs1, 
             new Type[]{_lc, _lc}, new String[]{"From1", "To1"});
         dbToasterCompBuilder.addRelation(relationArcs2,
-            new Type[]{_lc, _lc}, new String[]{"To1", "From2_rand"}, new int[]{1});
+            new Type[]{_lc, _lc}, new String[]{"To1", "From2"});
         dbToasterCompBuilder.addRelation(relationIndex,
-            new Type[]{_sc, _lc}, new String[]{"URL", "From2"});
+            new Type[]{_sc, _lc}, new String[]{"URL", "From1"});
 
-        dbToasterCompBuilder.setSQL("SELECT ARCS2.f1, INDEX1.f0, COUNT(*) " +
+
+        dbToasterCompBuilder.setSQL("SELECT ARCS1.f1, COUNT(*) " +
                 "FROM ARCS1, ARCS2, INDEX1 " +
-                "WHERE ARCS1.f1 = ARCS2.f0 AND ARCS2.f1 = INDEX1.f1 " + 
-                "GROUP BY ARCS2.f1, INDEX1.f0");
+                "WHERE ARCS1.f1 = ARCS2.f0 AND ARCS1.f0 = INDEX1.f1 " + 
+                "GROUP BY ARCS1.f1 ");
 
         DBToasterJoinComponent dbToasterComponent = dbToasterCompBuilder.build();
         dbToasterComponent.setPrintOut(false);
 
         _queryBuilder.add(dbToasterComponent);
 
+        final AggregateSumOperator agg = new AggregateSumOperator(
+                new ColumnReference(_lc, 1), conf).setGroupByColumns(Arrays
+                .asList(0));;
 
-        // final AggregateSumOperator agg = new AggregateSumOperator(
-        //         new ColumnReference(_lc, 2), conf);
-
-        // OperatorComponent oc = new OperatorComponent(dbToasterComponent,
-        //         "COUNTAGG").add(agg);
-        // _queryBuilder.add(oc);
+        OperatorComponent oc = new OperatorComponent(dbToasterComponent,
+                "COUNTAGG").add(agg);
+        _queryBuilder.add(oc);
     }
 
     public QueryBuilder getQueryPlan() {

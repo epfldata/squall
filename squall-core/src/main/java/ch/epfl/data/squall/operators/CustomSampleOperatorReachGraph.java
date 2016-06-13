@@ -48,48 +48,48 @@ public class CustomSampleOperatorReachGraph extends OneToOneOperator implements 
 
     private void createInDegrees() {
         outDegree.add("5325333");   //      "blogspot.com", 
-        outDegree.add("41718572");  //      "wordpress.com",
-        outDegree.add("42467638");  //      "youtube.com",
-        outDegree.add("41410181");  //      "wikipedia.org",
-        outDegree.add("33878319");  //      "serebella.com",
-        outDegree.add("31674470");  //      "refertus.info",
-        outDegree.add("38484153");  //      "top20directory.com",
-        outDegree.add("39262267");  //      "typepad.com",
-        outDegree.add("5686278");   //      "botw.org",
-        outDegree.add("39095913");  //      "tumblr.com",
-        outDegree.add("10906824");  //      "dmoz.org",
-        outDegree.add("40304803");  //      "vindhetviahier.nl",
-        outDegree.add("19887682");  //      "jcsearch.com",
-        outDegree.add("35748264");  //      "startpagina.nl",
-        outDegree.add("42206842");  //      "yahoo.com",
-        outDegree.add("36992745");  //      "tatu.us",
-        outDegree.add("14602869");  //      "freeseek.org",
-        outDegree.add("22195621");  //      "lap.hu",
-        outDegree.add("5263966");   //      "blau-webkatalog.com",
-        outDegree.add("1903103");   //      "allepaginas.nl"
+        // outDegree.add("41718572");  //      "wordpress.com",
+        // outDegree.add("42467638");  //      "youtube.com",
+        // outDegree.add("41410181");  //      "wikipedia.org",
+        // outDegree.add("33878319");  //      "serebella.com",
+        // outDegree.add("31674470");  //      "refertus.info",
+        // outDegree.add("38484153");  //      "top20directory.com",
+        // outDegree.add("39262267");  //      "typepad.com",
+        // outDegree.add("5686278");   //      "botw.org",
+        // outDegree.add("39095913");  //      "tumblr.com",
+        // outDegree.add("10906824");  //      "dmoz.org",
+        // outDegree.add("40304803");  //      "vindhetviahier.nl",
+        // outDegree.add("19887682");  //      "jcsearch.com",
+        // outDegree.add("35748264");  //      "startpagina.nl",
+        // outDegree.add("42206842");  //      "yahoo.com",
+        // outDegree.add("36992745");  //      "tatu.us",
+        // outDegree.add("14602869");  //      "freeseek.org",
+        // outDegree.add("22195621");  //      "lap.hu",
+        // outDegree.add("5263966");   //      "blau-webkatalog.com",
+        // outDegree.add("1903103");   //      "allepaginas.nl"
     }
 
     private void createOutDegrees() {
-        inDegree.add("41718621"); // wordpress.org
-        inDegree.add("42467638"); // youtube.com
-        inDegree.add("41410181"); // wikipedia.org   1,243,291
-        inDegree.add("15777213"); // gmpg.org    1,156,727
+        // inDegree.add("41718621"); // wordpress.org
+        // inDegree.add("42467638"); // youtube.com
+        // inDegree.add("41410181"); // wikipedia.org   1,243,291
+        // inDegree.add("15777213"); // gmpg.org    1,156,727
         inDegree.add("5325333");  // blogspot.com    1,034,450
-        inDegree.add("15964788"); // google.com  782,660
-        inDegree.add("41718572"); // wordpress.com   710,590
-        inDegree.add("39224483"); // twitter.com 646,239
-        inDegree.add("42206842"); // yahoo.com   554,251
-        inDegree.add("14050903"); // flickr.com  339,231
-        inDegree.add("13237914"); // facebook.com    314,051
-        inDegree.add("2719708");  // apple.com   312,396
-        inDegree.add("25196427"); // miibeian.gov.cn 289,605
-        inDegree.add("40294265"); // vimeo.com   269,003
-        inDegree.add("39095913"); // tumblr.com  226,596
-        inDegree.add("20328765"); // joomla.org  201,863
-        inDegree.add("2150098"); // amazon.com  196,690
-        inDegree.add("40673739"); // w3.org  196,507
-        inDegree.add("27729888"); // nytimes.com 193,907
-        inDegree.add("35243431"); // sourceforge.net 189,663//
+        // inDegree.add("15964788"); // google.com  782,660
+        // inDegree.add("41718572"); // wordpress.com   710,590
+        // inDegree.add("39224483"); // twitter.com 646,239
+        // inDegree.add("42206842"); // yahoo.com   554,251
+        // inDegree.add("14050903"); // flickr.com  339,231
+        // inDegree.add("13237914"); // facebook.com    314,051
+        // inDegree.add("2719708");  // apple.com   312,396
+        // inDegree.add("25196427"); // miibeian.gov.cn 289,605
+        // inDegree.add("40294265"); // vimeo.com   269,003
+        // inDegree.add("39095913"); // tumblr.com  226,596
+        // inDegree.add("20328765"); // joomla.org  201,863
+        // inDegree.add("2150098"); // amazon.com  196,690
+        // inDegree.add("40673739"); // w3.org  196,507
+        // inDegree.add("27729888"); // nytimes.com 193,907
+        // inDegree.add("35243431"); // sourceforge.net 189,663//
     }
 
     @Override

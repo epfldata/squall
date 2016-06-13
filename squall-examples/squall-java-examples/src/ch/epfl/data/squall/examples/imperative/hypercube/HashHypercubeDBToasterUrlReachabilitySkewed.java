@@ -29,6 +29,8 @@ import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.AggregateSumOperator;
 import ch.epfl.data.squall.operators.SampleOperator;
+import ch.epfl.data.squall.operators.SelectOperator;
+import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.operators.CustomSampleOperatorReachGraph;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
@@ -61,22 +63,30 @@ public class HashHypercubeDBToasterUrlReachabilitySkewed extends QueryPlan {
 
         // -------------------------------------------------------------------------------------
         // columns : From -> To
-        final CustomSampleOperatorReachGraph samples1 = new CustomSampleOperatorReachGraph(30, true);
+        // final CustomSampleOperatorReachGraph samples1 = new CustomSampleOperatorReachGraph(30, true);
+        final SelectOperator selectionIndegree = new SelectOperator(
+            new ComparisonPredicate(new ColumnReference(_sc, 1),
+                new ValueSpecification(_sc, "5325333")));
+
         final DataSourceComponent relationArcs1 = new DataSourceComponent(
-                "ARCS1", dataPath + "pld-arc" + extension, conf).add(samples1);
+                "ARCS1", dataPath + "pld-arc" + extension, conf).add(selectionIndegree);
         _queryBuilder.add(relationArcs1);
 
 
         // -------------------------------------------------------------------------------------
         // columns : From -> To
-        final CustomSampleOperatorReachGraph samples2 = new CustomSampleOperatorReachGraph(30, false);
+        // final CustomSampleOperatorReachGraph samples2 = new CustomSampleOperatorReachGraph(30, false);
+        final SelectOperator selectionOutdegree = new SelectOperator(
+            new ComparisonPredicate(new ColumnReference(_sc, 0),
+                new ValueSpecification(_sc, "5325333")));
+
         final DataSourceComponent relationArcs2 = new DataSourceComponent(
-                "ARCS2", dataPath + "pld-arc" + extension, conf).add(samples2);
+                "ARCS2", dataPath + "pld-arc" + extension, conf).add(selectionOutdegree);
         _queryBuilder.add(relationArcs2);
 
 
         // // -------------------------------------------------------------------------------------
-        //final SampleOperator samples3 = new SampleOperator(0.5);
+        //final SampleOperator samples3 = new SampleOperator(0.25);
         final DataSourceComponent relationIndex = new DataSourceComponent(
                 "INDEX1", dataPath + "pld-index" + extension, conf);//.add(samples3);
         _queryBuilder.add(relationIndex);
@@ -90,23 +100,24 @@ public class HashHypercubeDBToasterUrlReachabilitySkewed extends QueryPlan {
             new Type[]{_lc, _lc}, new String[]{"To1", "From2"});
         dbToasterCompBuilder.addRelation(relationIndex,
             new Type[]{_sc, _lc}, new String[]{"URL", "From1"});
-
-        dbToasterCompBuilder.setSQL("SELECT ARCS1.f0, INDEX1.f0, COUNT(*) " +
+        
+        dbToasterCompBuilder.setSQL("SELECT ARCS1.f1, COUNT(*) " +
                 "FROM ARCS1, ARCS2, INDEX1 " +
-                "WHERE ARCS1.f1 = ARCS2.f0 AND ARCS1.f0 = INDEX1.f1 AND ARCS1.f0 = ARCS2.f1 " + 
-                "GROUP BY ARCS1.f0, INDEX1.f0");
+                "WHERE ARCS1.f1 = ARCS2.f0 AND ARCS1.f0 = INDEX1.f1 " + 
+                "GROUP BY ARCS1.f1 ");
 
         DBToasterJoinComponent dbToasterComponent = dbToasterCompBuilder.build();
         dbToasterComponent.setPrintOut(false);
 
         _queryBuilder.add(dbToasterComponent);
 
-        // final AggregateSumOperator agg = new AggregateSumOperator(
-        //         new ColumnReference(_lc, 2), conf);
+        final AggregateSumOperator agg = new AggregateSumOperator(
+                new ColumnReference(_lc, 1), conf).setGroupByColumns(Arrays
+                .asList(0));;
 
-        // OperatorComponent oc = new OperatorComponent(dbToasterComponent,
-        //         "COUNTAGG").add(agg);
-        // _queryBuilder.add(oc);
+        OperatorComponent oc = new OperatorComponent(dbToasterComponent,
+                "COUNTAGG").add(agg);
+        _queryBuilder.add(oc);
     }
 
     public QueryBuilder getQueryPlan() {
