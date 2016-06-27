@@ -35,6 +35,7 @@ import ch.epfl.data.squall.operators.AggregateSumOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SelectOperator;
 import ch.epfl.data.squall.operators.SampleOperator;
+import ch.epfl.data.squall.operators.RedisOperator;
 import ch.epfl.data.squall.predicates.BetweenPredicate;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.predicates.LikePredicate;
@@ -62,6 +63,7 @@ public class HashHypercubeDBToasterTPCH9PartialPlan extends QueryPlan {
     private static final Type<Long> _lc = new LongType();
     private static final Type<String> _sc = new StringType();
     private static final NumericType<Double> _doubleConv = new DoubleType();
+    private static final Type<Double> _double = new DoubleType();
 
     private final QueryBuilder _queryBuilder = new QueryBuilder();
 
@@ -139,6 +141,16 @@ public class HashHypercubeDBToasterTPCH9PartialPlan extends QueryPlan {
         DBToasterJoinComponent dbtComp = dbtBuilder.build();
         dbtComp.setPrintOut(false);
         _queryBuilder.add(dbtComp);        
+
+
+        // Redis stuff
+        AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_double, 0), conf);
+        OperatorComponent finalComponent = new OperatorComponent(dbtComp, "FINAL_RESULT").add(agg);
+        _queryBuilder.add(finalComponent);
+
+        RedisOperator redis = new RedisOperator(conf);
+        OperatorComponent pc = new OperatorComponent(finalComponent, "SENDRESULTSTOREDIS").add(redis);
+        _queryBuilder.add(pc);
 
     }
 

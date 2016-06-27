@@ -38,20 +38,23 @@ import ch.epfl.data.squall.visitors.OperatorVisitor;
 public class RedisOperator extends OneToOneOperator {
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(RedisOperator.class);
-    private static RedisConnection<String, String> redis;
+    private RedisConnection<String, String> redis;
     private int _numTuplesProcessed = 0;
     private Map _map;
 
     public RedisOperator(Map map) {
 		_map = map;
-		try {
-    		RedisClient client = new RedisClient(SystemParameters.getString(_map, "REDIS_SERVER"),
-    				SystemParameters.getInt(_map, "REDIS_PORT"));
-    		redis = client.connect();
-    	}catch (RuntimeException err) {
-    		LOG.error(err);
-    		throw new RuntimeException("Error in Redis Connection\n " + err);
-    	}
+    }
+
+    public void init_redis() {
+        try {
+            RedisClient client = new RedisClient(SystemParameters.getString(_map, "REDIS_SERVER"),
+                    SystemParameters.getInt(_map, "REDIS_PORT"));
+            redis = client.connect();
+        }catch (RuntimeException err) {
+            LOG.error(err);
+            throw new RuntimeException("Error in Redis Connection\n " + err);
+        }
     }
 
     @Override
@@ -93,8 +96,13 @@ public class RedisOperator extends OneToOneOperator {
     @Override
     public List<String> processOne(List<String> tuple, long lineageTimestamp) {
 		_numTuplesProcessed++;
-		String str = MyUtilities.tupleToString(tuple, _map);
-		redis.publish(SystemParameters.getString(_map, "REDIS_KEY"), str);
+		String str = MyUtilities.tupleToString(tuple, _map);        
+        
+        if (redis == null)
+            init_redis();
+
+        redis.publish(SystemParameters.getString(_map, "REDIS_KEY"), str);
+
 		return tuple;
     }
 

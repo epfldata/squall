@@ -102,13 +102,13 @@ public class HashHypercubeDBToasterReachability extends QueryPlan {
         _queryBuilder.add(dbToasterComponent);
 
 
-        // final AggregateSumOperator agg = new AggregateSumOperator(
-        //         new ColumnReference(_lc, 1), conf).setGroupByColumns(Arrays
-        //         .asList(0));
+        final AggregateSumOperator agg = new AggregateSumOperator(
+                new ColumnReference(_lc, 1), conf).setGroupByColumns(Arrays
+                .asList(0));
 
-        // OperatorComponent oc = new OperatorComponent(dbToasterComponent,
-        //         "COUNTAGG").add(agg);
-        // _queryBuilder.add(oc);
+        OperatorComponent oc = new OperatorComponent(dbToasterComponent,
+                "COUNTAGG").add(agg);
+        _queryBuilder.add(oc);
     }
 
     public QueryBuilder getQueryPlan() {
