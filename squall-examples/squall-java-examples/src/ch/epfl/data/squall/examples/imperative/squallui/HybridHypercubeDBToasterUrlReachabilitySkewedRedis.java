@@ -19,7 +19,7 @@
  *
  */
 
-package ch.epfl.data.squall.examples.imperative.dbtoaster;
+package ch.epfl.data.squall.examples.imperative.squallui;
 
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.OperatorComponent;
@@ -28,9 +28,10 @@ import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponentBuilder;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.AggregateSumOperator;
-import ch.epfl.data.squall.operators.ProjectOperator;
-import ch.epfl.data.squall.operators.SelectOperator;
+import ch.epfl.data.squall.operators.CustomSampleOperatorReachGraph;
 import ch.epfl.data.squall.operators.SampleOperator;
+import ch.epfl.data.squall.operators.SelectOperator;
+import ch.epfl.data.squall.operators.RedisOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
@@ -49,8 +50,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class DBToasterReachability extends QueryPlan {
-    private static Logger LOG = Logger.getLogger(DBToasterReachability.class);
+public class HybridHypercubeDBToasterUrlReachabilitySkewedRedis extends QueryPlan {
+    private static Logger LOG = Logger.getLogger(HybridHypercubeDBToasterUrlReachabilitySkewedRedis.class);
 
     private static final Type<String> _sc = new StringType();
     private static final Type<Long> _lc = new LongType();
@@ -58,54 +59,70 @@ public class DBToasterReachability extends QueryPlan {
  
     private final QueryBuilder _queryBuilder = new QueryBuilder();
 
-    public DBToasterReachability(String dataPath, String extension, Map conf) {
+    public HybridHypercubeDBToasterUrlReachabilitySkewedRedis(String dataPath, String extension, Map conf) {
 
         // -------------------------------------------------------------------------------------
         // columns : From -> To
-        final SampleOperator samples1 = new SampleOperator(0.005);                
+        // final CustomSampleOperatorReachGraph samples1 = new CustomSampleOperatorReachGraph(30, true);
+        final SelectOperator selectionIndegree = new SelectOperator(
+            new ComparisonPredicate(new ColumnReference(_sc, 1),
+                new ValueSpecification(_sc, "5325333")));
+
         final DataSourceComponent relationArcs1 = new DataSourceComponent(
-                "ARCS1", dataPath + "sd-arc" + extension, conf).add(samples1);
+                "ARCS1", dataPath + "pld-arc" + extension, conf).add(selectionIndegree);
         _queryBuilder.add(relationArcs1);
 
+
         // -------------------------------------------------------------------------------------
         // columns : From -> To
-        final SampleOperator samples2 = new SampleOperator(0.005);        
+        // final CustomSampleOperatorReachGraph samples2 = new CustomSampleOperatorReachGraph(30, false);
+        final SelectOperator selectionOutdegree = new SelectOperator(
+            new ComparisonPredicate(new ColumnReference(_sc, 0),
+                new ValueSpecification(_sc, "5325333")));
+
         final DataSourceComponent relationArcs2 = new DataSourceComponent(
-                "ARCS2", dataPath + "sd-arc" + extension, conf).add(samples2);
+                "ARCS2", dataPath + "pld-arc" + extension, conf).add(selectionOutdegree);
         _queryBuilder.add(relationArcs2);
 
 
-        // -------------------------------------------------------------------------------------
-        // columns : From -> To
-        final SampleOperator samples3 = new SampleOperator(0.005);                
-        final DataSourceComponent relationArcs3 = new DataSourceComponent(
-                "ARCS3", dataPath + "sd-arc" + extension, conf).add(samples3);
-        _queryBuilder.add(relationArcs3);
+        // // -------------------------------------------------------------------------------------
+        //final SampleOperator samples3 = new SampleOperator(0.25);
+        final DataSourceComponent relationIndex = new DataSourceComponent(
+                "INDEX1", dataPath + "pld-index" + extension, conf);//.add(samples3);
+        _queryBuilder.add(relationIndex);
 
 
         // -----------------------------------------------------------------------------------
         DBToasterJoinComponentBuilder dbToasterCompBuilder = new DBToasterJoinComponentBuilder();
-        dbToasterCompBuilder.addRelation(relationArcs1, _lc, _lc);
-        dbToasterCompBuilder.addRelation(relationArcs2, _lc, _lc);
-        dbToasterCompBuilder.addRelation(relationArcs3, _lc, _lc);
+        dbToasterCompBuilder.addRelation(relationArcs1, 
+            new Type[]{_lc, _lc}, new String[]{"From1", "To1_rand1"}, new int[]{1});
+        dbToasterCompBuilder.addRelation(relationArcs2,
+            new Type[]{_lc, _lc}, new String[]{"To1_rand2", "From2"}, new int[]{0});
+        dbToasterCompBuilder.addRelation(relationIndex,
+            new Type[]{_sc, _lc}, new String[]{"URL", "From1"});
 
-        dbToasterCompBuilder.setSQL("SELECT ARCS1.f0, COUNT(*) " +
-                "FROM ARCS1, ARCS2, ARCS3 " +
-                "WHERE ARCS1.f1 = ARCS2.f0 AND ARCS2.f1 = ARCS3.f0 " + 
-                "GROUP BY ARCS1.f0");
+        dbToasterCompBuilder.setSQL("SELECT ARCS1.f1, COUNT(*) " +
+                "FROM ARCS1, ARCS2, INDEX1 " +
+                "WHERE ARCS1.f1 = ARCS2.f0 AND ARCS1.f0 = INDEX1.f1 " + 
+                "GROUP BY ARCS1.f1 ");
 
         DBToasterJoinComponent dbToasterComponent = dbToasterCompBuilder.build();
         dbToasterComponent.setPrintOut(false);
 
         _queryBuilder.add(dbToasterComponent);
 
-       final AggregateSumOperator agg = new AggregateSumOperator(
+        final AggregateSumOperator agg = new AggregateSumOperator(
                 new ColumnReference(_lc, 1), conf).setGroupByColumns(Arrays
-                .asList(0));
+                .asList(0));;
 
         OperatorComponent oc = new OperatorComponent(dbToasterComponent,
                 "COUNTAGG").add(agg);
-        _queryBuilder.add(oc);        
+        _queryBuilder.add(oc);
+
+      // Redis stuff
+        RedisOperator redis = new RedisOperator(conf);
+        OperatorComponent pc = new OperatorComponent(oc, "SENDRESULTSTOREDIS").add(redis);
+        _queryBuilder.add(pc);        
     }
 
     public QueryBuilder getQueryPlan() {

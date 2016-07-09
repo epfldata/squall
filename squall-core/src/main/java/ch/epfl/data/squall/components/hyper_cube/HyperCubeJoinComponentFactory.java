@@ -70,7 +70,7 @@ public class HyperCubeJoinComponentFactory {
     	joinPredicate.put(key, pred);
     }
 
-    public Component createHyperCubeJoinOperator() {
+    public HyperCubeJoinComponent createHyperCubeJoinOperator() {
         return new HyperCubeJoinComponent(parents, joinPredicate,
             _relColTypes, _relColNames, _randomColumns);
     }

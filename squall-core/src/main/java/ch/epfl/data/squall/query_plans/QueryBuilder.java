@@ -113,8 +113,10 @@ public class QueryBuilder implements Serializable {
 
 	// register metric consumer
 	if (SystemParameters.getBooleanIfExist(conf, "GRAPHITE_METRICS_CONSUMER_ENABLED")) {
-		conf.registerMetricsConsumer(com.verisign.storm.metrics.GraphiteMetricsConsumer.class, 
+	    conf.registerMetricsConsumer(com.verisign.storm.metrics.GraphiteMetricsConsumer.class, 
 			SystemParameters.getInt(conf, "GRAPHITE_METRICS_CONSUMER_PARALELISM"));
+		conf.put(Config.TOPOLOGY_BUILTIN_METRICS_BUCKET_SIZE_SECS, 
+			SystemParameters.getInt(conf, "TOPOLOGY_BUILTIN_METRICS_BUCKET_SIZE_SECS"));
 	}
 
     List<DBToasterJoinComponent> dbtComponents = new LinkedList<DBToasterJoinComponent>();

@@ -19,7 +19,7 @@
  *
  */
 
-package ch.epfl.data.squall.examples.imperative.dbtoaster;
+package ch.epfl.data.squall.examples.imperative.squalui;
 
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.OperatorComponent;
@@ -28,9 +28,8 @@ import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponentBuilder;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.AggregateSumOperator;
-import ch.epfl.data.squall.operators.ProjectOperator;
-import ch.epfl.data.squall.operators.SelectOperator;
 import ch.epfl.data.squall.operators.SampleOperator;
+import ch.epfl.data.squall.operators.RedisOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
@@ -49,8 +48,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class DBToasterReachability extends QueryPlan {
-    private static Logger LOG = Logger.getLogger(DBToasterReachability.class);
+public class HashHypercubeDBToasterReachabilityRedis extends QueryPlan {
+    private static Logger LOG = Logger.getLogger(HashHypercubeDBToasterReachabilityRedis.class);
 
     private static final Type<String> _sc = new StringType();
     private static final Type<Long> _lc = new LongType();
@@ -58,26 +57,27 @@ public class DBToasterReachability extends QueryPlan {
  
     private final QueryBuilder _queryBuilder = new QueryBuilder();
 
-    public DBToasterReachability(String dataPath, String extension, Map conf) {
+    public HashHypercubeDBToasterReachabilityRedis(String dataPath, String extension, Map conf) {
 
         // -------------------------------------------------------------------------------------
         // columns : From -> To
-        final SampleOperator samples1 = new SampleOperator(0.005);                
+        final SampleOperator samples1 = new SampleOperator(0.005);
         final DataSourceComponent relationArcs1 = new DataSourceComponent(
                 "ARCS1", dataPath + "sd-arc" + extension, conf).add(samples1);
         _queryBuilder.add(relationArcs1);
 
+
         // -------------------------------------------------------------------------------------
         // columns : From -> To
-        final SampleOperator samples2 = new SampleOperator(0.005);        
+        final SampleOperator samples2 = new SampleOperator(0.005);
         final DataSourceComponent relationArcs2 = new DataSourceComponent(
                 "ARCS2", dataPath + "sd-arc" + extension, conf).add(samples2);
         _queryBuilder.add(relationArcs2);
 
 
-        // -------------------------------------------------------------------------------------
-        // columns : From -> To
-        final SampleOperator samples3 = new SampleOperator(0.005);                
+        // // -------------------------------------------------------------------------------------
+        // // columns : From -> To
+        final SampleOperator samples3 = new SampleOperator(0.005);
         final DataSourceComponent relationArcs3 = new DataSourceComponent(
                 "ARCS3", dataPath + "sd-arc" + extension, conf).add(samples3);
         _queryBuilder.add(relationArcs3);
@@ -85,9 +85,12 @@ public class DBToasterReachability extends QueryPlan {
 
         // -----------------------------------------------------------------------------------
         DBToasterJoinComponentBuilder dbToasterCompBuilder = new DBToasterJoinComponentBuilder();
-        dbToasterCompBuilder.addRelation(relationArcs1, _lc, _lc);
-        dbToasterCompBuilder.addRelation(relationArcs2, _lc, _lc);
-        dbToasterCompBuilder.addRelation(relationArcs3, _lc, _lc);
+        dbToasterCompBuilder.addRelation(relationArcs1, 
+            new Type[]{_lc, _lc}, new String[]{"From1", "Join1"});
+        dbToasterCompBuilder.addRelation(relationArcs2,
+            new Type[]{_lc, _lc}, new String[]{"Join1", "Join2"});
+        dbToasterCompBuilder.addRelation(relationArcs3,
+            new Type[]{_lc, _lc}, new String[]{"Join2", "To3"});
 
         dbToasterCompBuilder.setSQL("SELECT ARCS1.f0, COUNT(*) " +
                 "FROM ARCS1, ARCS2, ARCS3 " +
@@ -99,13 +102,20 @@ public class DBToasterReachability extends QueryPlan {
 
         _queryBuilder.add(dbToasterComponent);
 
-       final AggregateSumOperator agg = new AggregateSumOperator(
+
+        final AggregateSumOperator agg = new AggregateSumOperator(
                 new ColumnReference(_lc, 1), conf).setGroupByColumns(Arrays
                 .asList(0));
 
         OperatorComponent oc = new OperatorComponent(dbToasterComponent,
                 "COUNTAGG").add(agg);
-        _queryBuilder.add(oc);        
+        _queryBuilder.add(oc);
+
+
+        // Redis stuff
+        RedisOperator redis = new RedisOperator(conf);
+        OperatorComponent pc = new OperatorComponent(oc, "SENDRESULTSTOREDIS").add(redis);
+        _queryBuilder.add(pc);   
     }
 
     public QueryBuilder getQueryPlan() {
