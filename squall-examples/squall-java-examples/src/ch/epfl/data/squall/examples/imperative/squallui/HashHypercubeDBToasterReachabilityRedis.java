@@ -19,7 +19,7 @@
  *
  */
 
-package ch.epfl.data.squall.examples.imperative.squalui;
+package ch.epfl.data.squall.examples.imperative.squallui;
 
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.OperatorComponent;
