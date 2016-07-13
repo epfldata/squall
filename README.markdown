@@ -98,13 +98,7 @@ Squall also provides out-of-the-box functionality for window semantics. That is 
 
 [Here](https://github.com/epfldata/squall/blob/master/squall-functional/src/main/scala/ch/epfl/data/squall/api/scala/queries/ScalaTPCH7Plan.scala) is an example of a fully running query with window semantics.
 
-To run this example, you can simply run the test class for this query through:
-```scala
-    sbt
-    project functional
-    test-only ScalaTPCH7Test
-``` 
-This will fire up a local Storm cluster that runs the entire query. The results, which are printed out, should look something similar to this:
+When running this example, the results, which are printed out, should look something similar to this:
 
 ```
 GERMANY|FRANCE|1995, wid:1, Timestamp: [2016-06-30 19:24:38.853 , 2016-06-30 19:24:58.853]  = 23809.149
