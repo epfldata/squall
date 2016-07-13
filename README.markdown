@@ -104,7 +104,7 @@ To run this example, you can simply run the test class for this query through:
     project functional
     test-only ScalaTPCH7Test
 ``` 
-This will fire up a local heron cluster that runs the entire query. The results, which are printed out, should look something similar to this:
+This will fire up a local Storm cluster that runs the entire query. The results, which are printed out, should look something similar to this:
 
 ```
 GERMANY|FRANCE|1995, wid:1, Timestamp: [2016-06-30 19:24:38.853 , 2016-06-30 19:24:58.853]  = 23809.149
