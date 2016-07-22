@@ -47,7 +47,7 @@ public class HashIndex<KeyType> implements Index<KeyType> {
 
     @Override
     public TIntArrayList getValues(int operator, KeyType key) {
-	LOG.info(_index);
+	//LOG.info(_index);
 	if (operator != ComparisonPredicate.EQUAL_OP)
 	    return null;
 	else

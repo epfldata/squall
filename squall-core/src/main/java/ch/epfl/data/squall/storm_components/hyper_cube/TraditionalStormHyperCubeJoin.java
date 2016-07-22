@@ -266,7 +266,7 @@ public class TraditionalStormHyperCubeJoin extends StormBoltComponent {
           
           numSentTuples++;
           printTuple(tuple);
-          LOG.info(tuple);
+          //LOG.info(tuple);
           
           if (numSentTuples % _statsUtils.getDipOutputFreqPrint() == 0)
             printStatistics(SystemParameters.OUTPUT_PRINT);

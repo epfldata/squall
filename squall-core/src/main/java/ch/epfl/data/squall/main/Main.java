@@ -47,7 +47,7 @@ public class Main {
 	String confFilename = MyUtilities.getPartFromEnd(confPath, 0);
 	String prefix = SystemParameters.getString(map,
 		"DIP_TOPOLOGY_NAME_PREFIX");
-	String topologyName = prefix;// + "_" + confFilename;
+	String topologyName = prefix + "_" + confFilename;
 	SystemParameters.putInMap(map, "DIP_TOPOLOGY_NAME", topologyName);
     }
 

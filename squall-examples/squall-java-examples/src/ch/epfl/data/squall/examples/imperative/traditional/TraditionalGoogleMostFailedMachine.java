@@ -19,15 +19,17 @@
  *
  */
 
-package ch.epfl.data.squall.examples.imperative.dbtoaster;
+package ch.epfl.data.squall.examples.imperative.traditional;
 
+import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.OperatorComponent;
-import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
-import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponentBuilder;
+import ch.epfl.data.squall.components.hyper_cube.HyperCubeJoinComponent;
+import ch.epfl.data.squall.components.hyper_cube.HyperCubeJoinComponentFactory;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.ValueSpecification;
 import ch.epfl.data.squall.operators.AggregateSumOperator;
+import ch.epfl.data.squall.operators.AggregateCountOperator;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SelectOperator;
@@ -49,8 +51,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class DBToasterGoogleMostFailedMachine extends QueryPlan {
-    private static Logger LOG = Logger.getLogger(DBToasterGoogleMostFailedMachine.class);
+public class TraditionalGoogleMostFailedMachine extends QueryPlan {
+    private static Logger LOG = Logger.getLogger(TraditionalGoogleMostFailedMachine.class);
 
     private static final Type<String> _sc = new StringType();
     private static final Type<Long> _lc = new LongType();
@@ -62,7 +64,7 @@ public class DBToasterGoogleMostFailedMachine extends QueryPlan {
 
     private final QueryBuilder _queryBuilder = new QueryBuilder();
 
-    public DBToasterGoogleMostFailedMachine(String dataPath, String extension, Map conf) {
+    public TraditionalGoogleMostFailedMachine(String dataPath, String extension, Map conf) {
 
         // -------------------------------------------------------------------------------------
         // job ID
@@ -106,7 +108,7 @@ public class DBToasterGoogleMostFailedMachine extends QueryPlan {
         final ProjectOperator projectionMachineEvents = new ProjectOperator(
                 new int[]{1, 3});
 
-       SelectOperator selectionNonNullMachines = new SelectOperator(
+        SelectOperator selectionNonNullMachines = new SelectOperator(
                 new ComparisonPredicate(ComparisonPredicate.NONEQUAL_OP,
                     new ColumnReference(_sc, 1), new ValueSpecification(_sc, NULL_MACHINE_IDs)));
 
@@ -118,27 +120,52 @@ public class DBToasterGoogleMostFailedMachine extends QueryPlan {
         _queryBuilder.add(relationMachineEvents);
 
         // -----------------------------------------------------------------------------------
-        DBToasterJoinComponentBuilder dbToasterCompBuilder = new DBToasterJoinComponentBuilder();
-        dbToasterCompBuilder.addRelation(relationJobEvents, new Type[]{_lc}, new String[]{"jobID"});
-        dbToasterCompBuilder.addRelation(relationTaskEvents, new Type[]{_lc, _sc}, new String[]{"jobID", "machineID"});
-        dbToasterCompBuilder.addRelation(relationMachineEvents, new Type[]{_sc, _sc}, new String[]{"machineID", "platform"});
+        HyperCubeJoinComponentFactory lastJoiner = 
+            new HyperCubeJoinComponentFactory(new Component[]{
+                relationJobEvents, 
+                relationTaskEvents,
+                relationMachineEvents});
 
-        dbToasterCompBuilder.setSQL("SELECT MACHINE_EVENTS.f0, COUNT(*) " + 
-                "FROM JOB_EVENTS, TASK_EVENTS, MACHINE_EVENTS " +
-                "WHERE JOB_EVENTS.f0 = TASK_EVENTS.f0 " + 
-                "AND MACHINE_EVENTS.f0 = TASK_EVENTS.f1 " +
-                "GROUP BY MACHINE_EVENTS.f0, MACHINE_EVENTS.f1");
+        lastJoiner.addRelation(relationJobEvents, 
+            new Type[]{_lc}, new String[]{"jobID"});
+        lastJoiner.addRelation(relationTaskEvents,
+            new Type[]{_lc, _sc}, new String[]{"jobID", "machineID"});
+        lastJoiner.addRelation(relationMachineEvents,
+            new Type[]{_sc, _sc}, new String[]{"machineID", "platform"});
 
-        DBToasterJoinComponent dbToasterComponent = dbToasterCompBuilder.build();
-        dbToasterComponent.setPrintOut(false);
+        // Predicates
+        ColumnReference colJobsEvents_JobID = new ColumnReference(_lc, 0);
+        ColumnReference colTaskEvents_JobID = new ColumnReference(_lc, 0);
+        ComparisonPredicate JOB_EVENTS_TASK_EVENTS_comp = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP, 
+            colJobsEvents_JobID, colTaskEvents_JobID);
 
-        _queryBuilder.add(dbToasterComponent);
+        lastJoiner.addPredicate("JOB_EVENTSTASK_EVENTS", JOB_EVENTS_TASK_EVENTS_comp);
 
-        AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_lc, 2), conf)
-        .setGroupByColumns(Arrays.asList(0, 1));
+        ColumnReference colJobsEvents_MachineID = new ColumnReference(_sc, 1);
+        ColumnReference colTaskMachine_MachineID = new ColumnReference(_sc, 0);
+        ComparisonPredicate TASK_EVENTS_MACHINE_EVENTS_comp = new ComparisonPredicate(ComparisonPredicate.EQUAL_OP, 
+            colJobsEvents_MachineID, colTaskMachine_MachineID);
 
-        OperatorComponent finalComponent = new OperatorComponent(dbToasterComponent, "FINAL_RESULT").add(agg);
-        _queryBuilder.add(finalComponent);
+        lastJoiner.addPredicate("TASK_EVENTSMACHINE_EVENTS", TASK_EVENTS_MACHINE_EVENTS_comp);
+
+        final AggregateCountOperator agg = new AggregateCountOperator(conf).
+            setGroupByColumns(Arrays.asList(3, 4));
+
+        HyperCubeJoinComponent hyper_cube = 
+            lastJoiner.createHyperCubeJoinOperator().add(agg).setContentSensitiveThetaJoinWrapper(_ic);
+
+        _queryBuilder.add(hyper_cube);
+    
+        //
+        final AggregateSumOperator agg2 = new AggregateSumOperator(
+            new ColumnReference(_lc, 1), conf).setGroupByColumns(Arrays
+                .asList(0));
+
+        OperatorComponent oc = new OperatorComponent(hyper_cube,
+                "COUNTAGG").add(agg2);
+
+        _queryBuilder.add(oc);
+
     }
 
     public QueryBuilder getQueryPlan() {

@@ -1,0 +1,35 @@
+DIP_DISTRIBUTED true
+DIP_QUERY_NAME hyracks
+DIP_QUERY_PLAN ch.epfl.data.squall.examples.imperative.hypercube.HashHypercubeDBToasterHyracksPlan
+DIP_TOPOLOGY_NAME_PREFIX username
+DIP_NUM_ACKERS 0
+
+DIP_DATA_PATH /data/lab/squall_data/tpchdb/Z0/40G/
+
+CUSTOMER_PAR 3
+ORDERS_PAR 8
+CUSTOMER_ORDERS_PAR 16
+
+COUNTAGG_PAR 1
+SENDRESULTSTOREDIS_PAR 1
+
+CUSTOMER_CARD 1500
+ORDERS_CARD 15000
+
+CUSTOMER_ORDERS_PART_SCHEME HASHHYPERCUBE
+
+#below are unlikely to change
+DIP_EXTENSION .tbl
+DIP_READ_SPLIT_DELIMITER \|
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_KILL_AT_THE_END true
+
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_CLUSTER_DIR /data/squall_zone/storage
+STORAGE_COLD_START true
+STORAGE_MEMORY_SIZE_MB 4096

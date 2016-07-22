@@ -144,13 +144,13 @@ public class HashHypercubeDBToasterTPCH9PartialPlan extends QueryPlan {
 
 
         // Redis stuff
-        AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_double, 0), conf);
-        OperatorComponent finalComponent = new OperatorComponent(dbtComp, "FINAL_RESULT").add(agg);
-        _queryBuilder.add(finalComponent);
+        // AggregateOperator agg = new AggregateSumOperator(new ColumnReference(_double, 0), conf);
+        // OperatorComponent finalComponent = new OperatorComponent(dbtComp, "FINAL_RESULT").add(agg);
+        // _queryBuilder.add(finalComponent);
 
-        RedisOperator redis = new RedisOperator(conf);
-        OperatorComponent pc = new OperatorComponent(finalComponent, "SENDRESULTSTOREDIS").add(redis);
-        _queryBuilder.add(pc);
+        // RedisOperator redis = new RedisOperator(conf);
+        // OperatorComponent pc = new OperatorComponent(finalComponent, "SENDRESULTSTOREDIS").add(redis);
+        // _queryBuilder.add(pc);
 
     }
 
