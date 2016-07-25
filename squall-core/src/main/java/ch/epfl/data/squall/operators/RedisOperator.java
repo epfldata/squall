@@ -40,6 +40,7 @@ public class RedisOperator extends OneToOneOperator {
     private static Logger LOG = Logger.getLogger(RedisOperator.class);
     private RedisConnection<String, String> redis;
     private int _numTuplesProcessed = 0;
+    private int _sampleRate = 1000;
     private Map _map;
 
     public RedisOperator(Map map) {
@@ -101,7 +102,9 @@ public class RedisOperator extends OneToOneOperator {
         if (redis == null)
             init_redis();
 
-        redis.publish(SystemParameters.getString(_map, "REDIS_KEY"), str);
+        if (_numTuplesProcessed % _sampleRate == 1) {
+            redis.publish(SystemParameters.getString(_map, "REDIS_KEY"), str);
+        }
 
 		return tuple;
     }
