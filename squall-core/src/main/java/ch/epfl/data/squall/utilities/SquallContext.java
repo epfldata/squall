@@ -35,15 +35,15 @@ import ch.epfl.data.squall.utilities.StormWrapper;
 import ch.epfl.data.squall.utilities.ReaderProvider;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.operators.StoreOperator;
-import backtype.storm.generated.Nimbus.Client;
-import backtype.storm.generated.ClusterSummary;
-import backtype.storm.generated.TopologySummary;
-import backtype.storm.generated.TopologyInfo;
-import backtype.storm.generated.NotAliveException;
+import org.apache.storm.generated.Nimbus.Client;
+import org.apache.storm.generated.ClusterSummary;
+import org.apache.storm.generated.TopologySummary;
+import org.apache.storm.generated.TopologyInfo;
+import org.apache.storm.generated.NotAliveException;
 
 import org.apache.log4j.Logger;
 
-import backtype.storm.Config;
+import org.apache.storm.Config;
 
 /* This class represents a context of execution. It provides a unified
  * interface for creating and submitting plans or running queries.
@@ -58,7 +58,7 @@ public class SquallContext {
   public SquallContext() {
     this(new Config());
 
-    Map stormConf = backtype.storm.utils.Utils.readStormConfig();
+    Map stormConf = org.apache.storm.utils.Utils.readStormConfig();
     conf.putAll(stormConf);
 
     // Load default values

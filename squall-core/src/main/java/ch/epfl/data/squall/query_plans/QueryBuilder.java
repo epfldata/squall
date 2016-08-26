@@ -33,8 +33,8 @@ import ch.epfl.data.squall.components.theta.AdaptiveThetaJoinComponent;
 import ch.epfl.data.squall.ewh.components.DummyComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
-import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.Config;
+import org.apache.storm.topology.TopologyBuilder;
+import org.apache.storm.Config;
 
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.SquallContext;

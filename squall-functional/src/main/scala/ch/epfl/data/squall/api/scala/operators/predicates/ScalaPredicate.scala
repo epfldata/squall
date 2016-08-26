@@ -23,7 +23,7 @@ import ch.epfl.data.squall.predicates.Predicate
 import ch.epfl.data.squall.visitors.PredicateVisitor
 import scala.collection.JavaConverters._
 import ch.epfl.data.squall.api.scala.SquallType._
-import backtype.storm.clojure.TupleValues
+import org.apache.storm.clojure.TupleValues
 
 class ScalaPredicate[T: SquallType](fn: T => Boolean) extends Predicate {
 

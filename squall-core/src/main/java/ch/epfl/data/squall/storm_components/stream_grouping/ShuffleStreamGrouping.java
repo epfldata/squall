@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import backtype.storm.generated.GlobalStreamId;
-import backtype.storm.grouping.CustomStreamGrouping;
-import backtype.storm.task.WorkerTopologyContext;
+import org.apache.storm.generated.GlobalStreamId;
+import org.apache.storm.grouping.CustomStreamGrouping;
+import org.apache.storm.task.WorkerTopologyContext;
 import ch.epfl.data.squall.utilities.MyUtilities;
 
 /*

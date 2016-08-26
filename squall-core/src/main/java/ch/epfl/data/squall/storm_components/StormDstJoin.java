@@ -28,10 +28,10 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 
-import backtype.storm.Config;
-import backtype.storm.topology.InputDeclarer;
-import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.tuple.Tuple;
+import org.apache.storm.Config;
+import org.apache.storm.topology.InputDeclarer;
+import org.apache.storm.topology.TopologyBuilder;
+import org.apache.storm.tuple.Tuple;
 import ch.epfl.data.squall.components.ComponentProperties;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.ChainOperator;
