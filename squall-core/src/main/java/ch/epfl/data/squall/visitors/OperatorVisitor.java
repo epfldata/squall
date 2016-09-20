@@ -24,8 +24,10 @@ import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.DistinctOperator;
 import ch.epfl.data.squall.operators.PrintOperator;
+import ch.epfl.data.squall.operators.RedisOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.operators.SampleOperator;
+import ch.epfl.data.squall.operators.CustomSampleOperatorReachGraph;
 import ch.epfl.data.squall.operators.SelectOperator;
 import ch.epfl.data.squall.operators.StoreOperator;
 
@@ -39,12 +41,16 @@ public interface OperatorVisitor {
 
     public void visit(PrintOperator printOperator);
 
+    public void visit(RedisOperator redisOperator);
+
     public void visit(ProjectOperator projection);
 
     public void visit(
 	    SampleAsideAndForwardOperator sampleAsideAndForwardOperator);
 
     public void visit(SampleOperator sampleOperator);
+
+    public void visit(CustomSampleOperatorReachGraph sampleOperator);
 
     public void visit(SelectOperator selection);
 

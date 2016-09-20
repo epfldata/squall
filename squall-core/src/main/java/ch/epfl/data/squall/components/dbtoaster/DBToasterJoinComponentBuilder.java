@@ -32,8 +32,11 @@ import ch.epfl.data.squall.types.DoubleType;
 import ch.epfl.data.squall.types.IntegerType;
 import ch.epfl.data.squall.types.LongType;
 import ch.epfl.data.squall.types.Type;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ManualHybridHyperCubeAssignment.Dimension;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.SelectItem;
+
+import org.apache.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,8 +48,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DBToasterJoinComponentBuilder {
+    private static Logger LOG = Logger.getLogger(DBToasterJoinComponentBuilder.class);
     private List<Component> _relations = new LinkedList<Component>();
     private Map<String, Type[]> _relColTypes = new HashMap<String, Type[]>();
+    private Map<String, String[]> _relColNames = new HashMap<String, String[]>();
+    private Map<String, Dimension> _dimensions = new HashMap<String, Dimension>();
+    private Set<String> _randomColumns = new HashSet<String>();
     private Set<String> _relMultiplicity = new HashSet<String>();
     private Map<String, AggregateStream> _relAggregators = new HashMap<String, AggregateStream>();
     private String _sql;
@@ -79,6 +86,23 @@ public class DBToasterJoinComponentBuilder {
         return this;
     }
 
+    public DBToasterJoinComponentBuilder addRelation(Component relation, 
+        Type[] types, String[] columnNames) {
+        _relColNames.put(relation.getName(), columnNames);
+        return addRelation(relation, types);
+    }
+
+    public DBToasterJoinComponentBuilder addRelation(Component relation, 
+        Type[] types, String[] columnNames, int[] randomColumns) {
+        
+        for(int i : randomColumns) {
+            _randomColumns.add(columnNames[i]);
+        }
+
+        _relColNames.put(relation.getName(), columnNames);
+        return addRelation(relation, types);
+    }
+
     /**
      * <p>
      *     Add relation whose tuples have multiplicity fields.
@@ -106,6 +130,24 @@ public class DBToasterJoinComponentBuilder {
         return addRelation(relation, types);
     }
 
+    public DBToasterJoinComponentBuilder addRelationWithMultiplicity(Component relation, Type[] types, String[] columnNames) {
+        _relColNames.put(relation.getName(), columnNames);
+        
+        return addRelationWithMultiplicity(relation, types);
+    }
+
+
+    public DBToasterJoinComponentBuilder addDimension(String name, int size, int index) {
+        _dimensions.put(name, new Dimension(name, size, index));
+        return this;
+    }
+
+    public DBToasterJoinComponentBuilder addDimension(String name, int index) {
+        _dimensions.put(name, new Dimension(name, index));
+        LOG.info("Adding : " + name + " , " + index);
+        LOG.info("Dimension is : " + _dimensions);
+        return this;
+    }
     /**
      * <p>
      *     Add relation which is resulted from aggregation.
@@ -134,6 +176,11 @@ public class DBToasterJoinComponentBuilder {
         _relAggregators.put(relation.getName(), new AggregateSumOperator(new ColumnReference(types[valueCol], valueCol), _conf).setGroupByColumns(groupByCols));
 
         return addRelationWithMultiplicity(relation, types);
+    }
+
+    public DBToasterJoinComponentBuilder addAggregatedRelation(Component relation, Type[] types, String[] columnNames) {
+        _relColNames.put(relation.getName(), columnNames);
+        return addAggregatedRelation(relation, types);
     }
 
     private boolean parentRelationExists(String name) {
@@ -235,7 +282,8 @@ public class DBToasterJoinComponentBuilder {
             }
             _name = nameBuilder.toString();
         }
-        return new DBToasterJoinComponent(_relations, _relColTypes, _relMultiplicity, _relAggregators, _sql, _name);
+        LOG.info("Dimension is : " + _dimensions);
+        return new DBToasterJoinComponent(_relations, _relColTypes, _relColNames, _dimensions, _randomColumns, _relMultiplicity, _relAggregators, _sql, _name);
     }
 
 }

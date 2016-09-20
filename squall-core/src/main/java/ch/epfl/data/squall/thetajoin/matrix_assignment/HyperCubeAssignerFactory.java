@@ -37,7 +37,7 @@ public class HyperCubeAssignerFactory<KeyType> {
 
 	private long randomSeed = -1;
 	private Comparator<Assignment> comparator = new CombineCost();
-	private PartitionStrategy strategy = PartitionStrategy.EQUAL_SIZE;
+	private PartitionStrategy strategy = PartitionStrategy.BRUTE_FORCE;
 
 	public HyperCubeAssignment<KeyType> getAssigner(int r, long... relationSizes) {
 		switch (strategy) {

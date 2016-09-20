@@ -87,6 +87,8 @@ public class DBToasterCodeGen {
                     "-xd", Files.createTempDirectory("dbtoastergen").toAbsolutePath().toString(),
                     "-l", "scala",
                     tmpSQLFile,
+//                    "-d", "HEURISTICS-DECOMPOSE-OVER-TABLES",
+//                    "--depth", "1",
                     "-wa",
                     "-n", queryName,
                     "-o", File.createTempFile(queryName, ".scala").getAbsolutePath(),

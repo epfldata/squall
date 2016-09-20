@@ -37,14 +37,23 @@ import ch.epfl.data.squall.storm_components.StormBoltComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
+import ch.epfl.data.squall.storm_components.hash_hypercube.HashHyperCubeGrouping.EmitterDesc;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HashHyperCubeAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HashHyperCubeAssignmentBruteForce;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HashHyperCubeAssignmentBruteForce.ColumnDesc;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.HyperCubeAssignerFactory;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.HyperCubeAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ManualHybridHyperCubeAssignment.Dimension;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HybridHyperCubeAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ManualHybridHyperCubeAssignment;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.HybridHyperCubeAssignmentBruteForce;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import ch.epfl.data.squall.utilities.PartitioningScheme;
 import ch.epfl.data.squall.utilities.PeriodicAggBatchSend;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.statistics.StatisticsUtilities;
+
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -52,6 +61,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.net.URL;
@@ -65,6 +75,7 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
     private final ChainOperator _operatorChain;
 
+    private long _numInputTuples = 0;
     private long _numSentTuples = 0;
 
     // for load-balancing
@@ -85,12 +96,18 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
     private StormEmitter[] _emitters;
     private Map<String, Type[]> _emitterNamesColTypes; // map between emitter names and types of tuple from the emitter
+    private Map<String, String[]> _emitterColNames; // map between emitter name and column names of typle from the emitter
+    private Map<String, Dimension> _dimensions; // used in Manual Hybrid Hypercube.
+    private Set<String> _randomColumns; // used in Hybrid Hypercube
     private Set<String> _emittersWithMultiplicity;
     private Map<String, AggregateStream> _emitterAggregators;
 
     public StormDBToasterJoin(StormEmitter[] emitters,
                               ComponentProperties cp, List<String> allCompNames,
                               Map<String, Type[]> emitterNameColTypes,
+                              Map<String, String[]> emitterColNames,
+                              Map<String, Dimension> dimensions,
+                              Set<String> randomColumns,
                               Set<String> emittersWithMultiplicity,
                               Map<String, AggregateStream> emittersWithAggregator,
                               int hierarchyPosition, TopologyBuilder builder,
@@ -100,6 +117,9 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
         _emitters = emitters;
         _emitterNamesColTypes = emitterNameColTypes;
+        _emitterColNames = emitterColNames;
+        _dimensions = dimensions;
+        _randomColumns = randomColumns;
         _emittersWithMultiplicity = emittersWithMultiplicity;
         _emitterAggregators = emittersWithAggregator;
 
@@ -156,8 +176,58 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
         // other non-nested emitters follow the specified partitioning scheme
         switch (getPartitioningScheme(conf)) {
-            case HYPERCUBE:
+            case MANUALHYBRIDHYPERCUBE:
                 long[] cardinality = getEmittersCardinality(nonNestedEmitters, conf);
+                List<EmitterDesc> emittersDesc = MyUtilities.getEmitterDesc(
+                        nonNestedEmitters, _emitterColNames, allCompNames, cardinality);
+
+                LOG.info("cardinalities: " + Arrays.toString(cardinality));
+
+                HybridHyperCubeAssignment _currentHybridHyperCubeMappingAssignment = 
+                    new ManualHybridHyperCubeAssignment(_dimensions);
+                
+                LOG.info("assignment: " + _currentHybridHyperCubeMappingAssignment.getMappingDimensions());
+
+                currentBolt = MyUtilities.attachEmitterHybridHyperCube(currentBolt, 
+                        nonNestedEmitters, _emitterColNames, allCompNames,
+                        _currentHybridHyperCubeMappingAssignment, emittersDesc, conf);   
+                break;
+            case BRUTEFORCEHYBRIDHYPERCUBE:
+                cardinality = getEmittersCardinality(nonNestedEmitters, conf);
+                List<ColumnDesc> columns = getColumnDesc(cardinality, nonNestedEmitters);
+
+                emittersDesc = MyUtilities.getEmitterDesc(
+                        nonNestedEmitters, _emitterColNames, allCompNames, cardinality);
+
+                LOG.info("cardinalities: " + Arrays.toString(cardinality));
+
+                _currentHybridHyperCubeMappingAssignment = 
+                    new HybridHyperCubeAssignmentBruteForce(emittersDesc, columns, _randomColumns, parallelism);
+                
+                LOG.info("assignment: " + _currentHybridHyperCubeMappingAssignment.getMappingDimensions());
+
+                currentBolt = MyUtilities.attachEmitterHybridHyperCube(currentBolt, 
+                        nonNestedEmitters, _emitterColNames, allCompNames,
+                        _currentHybridHyperCubeMappingAssignment, emittersDesc, conf);   
+                break;
+            case HASHHYPERCUBE:
+                cardinality = getEmittersCardinality(nonNestedEmitters, conf);
+                LOG.info("cardinalities: " + Arrays.toString(cardinality));
+                columns = getColumnDesc(cardinality, nonNestedEmitters);
+                emittersDesc = MyUtilities.getEmitterDesc(
+                        nonNestedEmitters, _emitterColNames, allCompNames, cardinality);
+
+                HashHyperCubeAssignment _currentHashHyperCubeMappingAssignment = 
+                    new HashHyperCubeAssignmentBruteForce(parallelism, columns, emittersDesc);
+                
+                LOG.info("assignment: " + _currentHashHyperCubeMappingAssignment.getMappingDimensions());
+
+                currentBolt = MyUtilities.attachEmitterHashHyperCube(currentBolt, 
+                        nonNestedEmitters, _emitterColNames, _currentHashHyperCubeMappingAssignment, 
+                        emittersDesc, conf);
+                break;
+            case HYPERCUBE:
+                cardinality = getEmittersCardinality(nonNestedEmitters, conf);
                 LOG.info("cardinalities: " + Arrays.toString(cardinality));
                 final HyperCubeAssignment _currentHyperCubeMappingAssignment =
                         new HyperCubeAssignerFactory().getAssigner(parallelism, cardinality);
@@ -177,6 +247,35 @@ public class StormDBToasterJoin extends StormBoltComponent {
                 break;
         }
         return currentBolt;
+    }
+
+    private List<ColumnDesc> getColumnDesc(long[] cardinality, List<StormEmitter> emitters) {
+        HashMap<String, ColumnDesc> tmp = new HashMap<String, ColumnDesc>();
+
+        List<ColumnDesc> desc = new ArrayList<ColumnDesc>();
+        
+        for (int i = 0; i < emitters.size(); i++) {
+            String emitterName = emitters.get(i).getName();
+            Type[] columnTypes = _emitterNamesColTypes.get(emitterName);
+            String[] columnNames = _emitterColNames.get(emitterName);
+
+            for (int j = 0; j < columnNames.length; j++) {
+                ColumnDesc cd = new ColumnDesc(columnNames[j], columnTypes[j], cardinality[i]);
+
+                if (tmp.containsKey(cd.name)) {
+                    cd.size += tmp.get(cd.name).size;
+                    tmp.put(cd.name, cd);
+                } else {
+                    tmp.put(cd.name, cd);
+                }
+            }
+        }
+
+        for (String key : tmp.keySet()) {
+            desc.add(tmp.get(key));
+        }
+
+        return desc;
     }
 
     private PartitioningScheme getPartitioningScheme(Config conf) {
@@ -281,6 +380,8 @@ public class StormDBToasterJoin extends StormBoltComponent {
     private void processNonLastTuple(List<String> tuple, Tuple stormTupleRcv,
                                      boolean isLastInBatch) {
 
+        _numInputTuples++;
+
         String sourceComponentName = stormTupleRcv.getSourceComponent();
 
         // if the tuple coming from aggregated relation, it will be first applied the corresponding AggregateStream operator first
@@ -295,6 +396,8 @@ public class StormDBToasterJoin extends StormBoltComponent {
             performJoin(sourceComponentName, stormTupleRcv, tuple, isLastInBatch);
         }
 
+        if (_numInputTuples % _statsUtils.getDipInputFreqPrint() == 0)
+            printStatistics(SystemParameters.INPUT_PRINT);
     }
 
     /**
@@ -409,7 +512,8 @@ public class StormDBToasterJoin extends StormBoltComponent {
 
     @Override
     protected void printStatistics(int type) {
-
+        if (type == SystemParameters.INPUT_PRINT)
+            LOG.info(", Executed Input Tuples : " + _numInputTuples);
     }
 
     @Override

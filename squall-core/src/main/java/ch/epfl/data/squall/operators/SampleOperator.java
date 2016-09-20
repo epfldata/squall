@@ -35,6 +35,11 @@ public class SampleOperator extends OneToOneOperator implements Operator {
     private int _numTuplesProcessed = 0;
     private Random _rnd = new Random();
 
+    public SampleOperator(double sampleRate) {
+        _sampleRate = sampleRate;
+        LOG.info("Sample rate is " + _sampleRate);
+    }
+
     public SampleOperator(int relationSize, int numOfBuckets) {
 	_sampleRate = ((double) (numOfBuckets * SystemParameters.TUPLES_PER_BUCKET))
 		/ relationSize;

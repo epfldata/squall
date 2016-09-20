@@ -25,6 +25,9 @@ import java.util.HashMap;
 
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 
+import org.apache.log4j.Logger;
+
+
 /**
  * @author Zervos The Theta-Join Hash index used for equalities. Uses a string
  *         as a key and holds a list of row-id's of TupleStorage that have the
@@ -36,12 +39,15 @@ public class HashIndex<KeyType> implements Index<KeyType> {
 
     private final HashMap<KeyType, TIntArrayList> _index;
 
+    private static Logger LOG = Logger.getLogger(HashIndex.class);
+
     public HashIndex() {
 	_index = new HashMap<KeyType, TIntArrayList>();
     }
 
     @Override
     public TIntArrayList getValues(int operator, KeyType key) {
+	//LOG.info(_index);
 	if (operator != ComparisonPredicate.EQUAL_OP)
 	    return null;
 	else

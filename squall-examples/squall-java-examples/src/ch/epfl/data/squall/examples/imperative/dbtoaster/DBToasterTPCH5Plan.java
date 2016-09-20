@@ -97,7 +97,7 @@ public class DBToasterTPCH5Plan extends QueryPlan {
                 new int[] { 0 });
 
         final DataSourceComponent relationRegion = new DataSourceComponent(
-                "REGION", dataPath + "region" + extension)
+                "REGION", dataPath + "region" + extension, conf)
                 .setOutputPartKey(hashRegion).add(selectionRegion)
                 .add(projectionRegion);
         _queryBuilder.add(relationRegion);
@@ -109,7 +109,7 @@ public class DBToasterTPCH5Plan extends QueryPlan {
                 0, 1, 2 });
 
         final DataSourceComponent relationNation = new DataSourceComponent(
-                "NATION", dataPath + "nation" + extension).setOutputPartKey(
+                "NATION", dataPath + "nation" + extension, conf).setOutputPartKey(
                 hashNation).add(projectionNation);
         _queryBuilder.add(relationNation);
 
@@ -121,7 +121,7 @@ public class DBToasterTPCH5Plan extends QueryPlan {
                 new int[] { 0, 3 });
 
         final DataSourceComponent relationSupplier = new DataSourceComponent(
-                "SUPPLIER", dataPath + "supplier" + extension)
+                "SUPPLIER", dataPath + "supplier" + extension, conf)
                 .setOutputPartKey(hashSupplier).add(projectionSupplier);
         _queryBuilder.add(relationSupplier);
 
@@ -132,7 +132,7 @@ public class DBToasterTPCH5Plan extends QueryPlan {
                 new int[] { 0, 2, 5, 6 });
 
         final DataSourceComponent relationLineitem = new DataSourceComponent(
-                "LINEITEM", dataPath + "lineitem" + extension)
+                "LINEITEM", dataPath + "lineitem" + extension, conf)
                 .setOutputPartKey(hashLineitem).add(projectionLineitem);
         _queryBuilder.add(relationLineitem);
 
@@ -143,7 +143,7 @@ public class DBToasterTPCH5Plan extends QueryPlan {
                 new int[] { 0, 3 });
 
         final DataSourceComponent relationCustomer = new DataSourceComponent(
-                "CUSTOMER", dataPath + "customer" + extension)
+                "CUSTOMER", dataPath + "customer" + extension, conf)
                 .setOutputPartKey(hashCustomer).add(projectionCustomer);
         _queryBuilder.add(relationCustomer);
 
@@ -159,7 +159,7 @@ public class DBToasterTPCH5Plan extends QueryPlan {
                 0, 1 });
 
         final DataSourceComponent relationOrders = new DataSourceComponent(
-                "ORDERS", dataPath + "orders" + extension)
+                "ORDERS", dataPath + "orders" + extension, conf)
                 .setOutputPartKey(hashOrders).add(selectionOrders)
                 .add(projectionOrders);
         _queryBuilder.add(relationOrders);

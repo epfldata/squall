@@ -79,7 +79,7 @@ public class DBToasterTPCH3SequentialJoinPlan extends QueryPlan {
                 new int[] { 0 });
 
         final DataSourceComponent relationCustomer = new DataSourceComponent(
-                "CUSTOMER", dataPath + "customer" + extension)
+                "CUSTOMER", dataPath + "customer" + extension, conf)
                 .setOutputPartKey(hashCustomer).add(selectionCustomer)
                 .add(projectionCustomer);
         _queryBuilder.add(relationCustomer);
@@ -96,7 +96,7 @@ public class DBToasterTPCH3SequentialJoinPlan extends QueryPlan {
                 0, 1, 4, 7 });
 
         final DataSourceComponent relationOrders = new DataSourceComponent(
-                "ORDERS", dataPath + "orders" + extension)
+                "ORDERS", dataPath + "orders" + extension, conf)
                 .setOutputPartKey(hashOrders).add(selectionOrders)
                 .add(projectionOrders);
         _queryBuilder.add(relationOrders);
@@ -126,7 +126,7 @@ public class DBToasterTPCH3SequentialJoinPlan extends QueryPlan {
                 new int[] { 0, 5, 6 });
 
         final DataSourceComponent relationLineitem = new DataSourceComponent(
-                "LINEITEM", dataPath + "lineitem" + extension)
+                "LINEITEM", dataPath + "lineitem" + extension, conf)
                 .setOutputPartKey(hashLineitem).add(selectionLineitem)
                 .add(projectionLineitem);
         _queryBuilder.add(relationLineitem);

@@ -20,6 +20,8 @@
 package ch.epfl.data.squall.components.theta;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -33,6 +35,8 @@ import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.storm_components.theta.StormThetaJoin;
 import ch.epfl.data.squall.storm_components.theta.StormThetaJoinBDB;
+import ch.epfl.data.squall.storm_components.hyper_cube.TradionalTwoWayJoin;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ManualHybridHyperCubeAssignment.Dimension;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
 
@@ -48,15 +52,38 @@ public class ThetaJoinComponent extends AbstractJoinerComponent<ThetaJoinCompone
     private boolean _isContentSensitive;
     private Type _contentSensitiveThetaJoinWrapper = null;
 
+
+    private Map<String, String[]> _relColNames;
+    private Map<String, Dimension> _dimensions;
+    private Set<String> _randomColumns;
+    private Map<String, Type[]> _parentNameColTypes;
+
     // equi-weight histogram
     private boolean _isPartitioner;
 
     public ThetaJoinComponent(Component firstParent, Component secondParent,
-	    boolean isContentSensitive) {
+      boolean isContentSensitive) {
       super(new Component[]{firstParent, secondParent});
-	_firstParent = firstParent;
-	_secondParent = secondParent;
-	_isContentSensitive = isContentSensitive;
+      _firstParent = firstParent;
+      _secondParent = secondParent;
+      _isContentSensitive = isContentSensitive;
+    }
+
+    public ThetaJoinComponent(Component firstParent, Component secondParent,
+	    boolean isContentSensitive, Map<String, Type[]> relationTypes, 
+      Map<String, String[]> relColNames, Map<String, Dimension> dimensions, 
+      Set<String> randomColumns) {
+
+
+      super(new Component[]{firstParent, secondParent});
+    	_firstParent = firstParent;
+    	_secondParent = secondParent;
+    	_isContentSensitive = isContentSensitive;
+
+      _parentNameColTypes = relationTypes;
+      _relColNames = relColNames;
+      _dimensions = dimensions;
+      _randomColumns = randomColumns;
     }
 
     @Override
@@ -84,12 +111,17 @@ public class ThetaJoinComponent extends AbstractJoinerComponent<ThetaJoinCompone
 		    "Please provide joinPredicate if you want to run BDB!");
 	}
 
-        StormBoltComponent joiner;
-	if (isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)) {
+  StormBoltComponent joiner;
+  if (MyUtilities.isHypercube(conf)) {
+          joiner = new TradionalTwoWayJoin(_firstParent, _secondParent, _relColNames, 
+                                        _parentNameColTypes, _randomColumns, this, allCompNames, 
+                                        getJoinPredicate(), _isPartitioner, hierarchyPosition, builder, killer, conf,
+                                      _isContentSensitive, _contentSensitiveThetaJoinWrapper);
+  } else if (isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)) {
           joiner = new StormThetaJoinBDB(_firstParent, _secondParent, this,
                                          allCompNames, getJoinPredicate(), hierarchyPosition, builder,
                                          killer, conf);
-	} else {
+  } else {
           joiner = new StormThetaJoin(_firstParent, _secondParent, this,
                                       allCompNames, getJoinPredicate(), _isPartitioner,
                                       hierarchyPosition, builder, killer, conf,

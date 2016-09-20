@@ -1,0 +1,9 @@
+This directory contains a Google cluster trace generated at 2014-11-18 09:58Z.
+
+For more information see https://code.google.com/p/googleclusterdata/ .
+
+This directory should contain MD5SUM, SHA1SUM, and SHA256SUM files, which can be
+used to verify the contents of this directory.
+
+The other files are gzip compressed CSV files whose fields are described in
+'schema.csv', which should be in this directory.
