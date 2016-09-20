@@ -35,12 +35,10 @@ import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class KeyValueStore<K, V> extends BasicStore<V> {
-
-    /**
-	 * 
-	 */
     private static final long serialVersionUID = 1L;
 
+    private int _msize = 0; // size that we maintain, rather than asking the underlying _memstore 
+    
     private static Logger LOG = Logger.getLogger(KeyValueStore.class);
     private Type _tc = null;
     private HashMap<K, ArrayList<V>> _memstore;
@@ -206,6 +204,7 @@ public class KeyValueStore<K, V> extends BasicStore<V> {
 	    values = this._memstore.get(key);
 	    values.add(value);
 	}
+	_msize++;
     }
 
     @Override
@@ -255,6 +254,7 @@ public class KeyValueStore<K, V> extends BasicStore<V> {
 		}
 	    }
 	    // removed !!!! use DST_TUPLE_STORAGE
+	    // TODO: _msize is not maintained here
 	}
     }
 
@@ -268,13 +268,15 @@ public class KeyValueStore<K, V> extends BasicStore<V> {
     }
 
     public int size() {
-	int size = 0;
-	final Object[] x = _memstore.values().toArray();
-	for (int i = 0; i < x.length; i++) {
-	    final ArrayList<V> entry = (ArrayList<V>) x[i];
-	    size += entry.size();
-	}
-	return size;
+// This piece of code causes 1-2 orders of magnitude slowdown	
+//	int size = 0;
+//	final Object[] x = _memstore.values().toArray();
+//	for (int i = 0; i < x.length; i++) {
+//	    final ArrayList<V> entry = (ArrayList<V>) x[i];
+//	    size += entry.size();
+//	}
+//	return size;
+	return _msize;
     }
 
     @Override
