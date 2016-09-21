@@ -40,7 +40,7 @@ import ch.epfl.data.squall.utilities.SystemParameters;
 public class CostParallelismAssigner {
     // If StormDstTupleStorageJoin is used instead of StormDstJoin, I should set 0.3 
     //    (at least according to the Hyracks SQL plan, in which there is no selections on Date)
-    private final static double PARALLELISM_PARENTS = 1.0/8; 
+    private final static double PARALLELISM_PARENTS = 0.3; // 1.0/8;
     
     /*
      * we need separate class from CostParams, because here we want to order

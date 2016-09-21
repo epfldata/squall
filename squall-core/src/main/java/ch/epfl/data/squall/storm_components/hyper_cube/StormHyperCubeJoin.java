@@ -178,16 +178,15 @@ public class StormHyperCubeJoin extends StormBoltComponent {
               .isSending(getHierarchyPosition(), _aggBatchOutputMillis)) {
             long timestamp = 0;
             if (MyUtilities.isCustomTimestampMode(getConf()))
-              if (getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
-                // A tuple has a non-null timestamp only if the component is
-                // next to last because we measure the latency of the last
-                // operator
-                timestamp = System.currentTimeMillis();
-            // timestamp = System.nanoTime();
+        	// if measuring latency of the last operator only
+                // if (getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
+                //       timestamp = System.currentTimeMillis();
+        	timestamp = stormTupleRcv.getLongByField(StormComponent.TIMESTAMP); // the timestamp of the tuple that comes last
+        	
             tupleSend(tuple, stormTupleRcv, timestamp);
           }
           if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
-            printTupleLatency(numSentTuples - 1, lineageTimestamp);
+            printTupleLatency(numSentTuples - 1, lineageTimestamp); // TODO - this is always 0 in the code
         }
     }
 

@@ -178,7 +178,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 	    // TODO Window Semantics
 	    if (!WindowSemanticsManager.sendTupleIfSlidingWindowSemantics(this,
                                                                           tuple, stormTupleRcv, lineageTimestamp))
-              tupleSend(tuple, stormTupleRcv, lineageTimestamp);
+              tupleSend(tuple, stormTupleRcv, lineageTimestamp); // TODO - lineage timestamp is for windows (Timestamp in StormDstTupleStorageJoin and StormThetaJoin would not work)
           }
           if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
 	    printTupleLatency(_numSentTuples - 1, lineageTimestamp);
