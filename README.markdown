@@ -98,6 +98,18 @@ Squall also provides out-of-the-box functionality for window semantics. That is 
 
 [Here](https://github.com/epfldata/squall/blob/master/squall-functional/src/main/scala/ch/epfl/data/squall/api/scala/queries/ScalaTPCH7Plan.scala) is an example of a fully running query with window semantics.
 
+When running this example, the results, which are printed out, should look something similar to this:
+
+```
+GERMANY|FRANCE|1995, wid:1, Timestamp: [2016-06-30 19:24:38.853 , 2016-06-30 19:24:58.853]  = 23809.149
+GERMANY|FRANCE|1995, wid:2, Timestamp: [2016-06-30 19:24:43.853 , 2016-06-30 19:25:03.853]  = 621159.4881999999
+GERMANY|FRANCE|1995, wid:3, Timestamp: [2016-06-30 19:24:48.853 , 2016-06-30 19:25:08.853]  = 621159.4881999999
+...
+GERMANY|FRANCE|1996, wid:1, Timestamp: [2016-06-30 19:24:38.853 , 2016-06-30 19:24:58.853]  = 40579.659
+GERMANY|FRANCE|1996, wid:2, Timestamp: [2016-06-30 19:24:43.853 , 2016-06-30 19:25:03.853]  = 379095.8854
+GERMANY|FRANCE|1996, wid:3, Timestamp: [2016-06-30 19:24:48.853 , 2016-06-30 19:25:08.853]  = 379095.8854
+```
+Where the first, second and third columns refer to the group-key, window-id, and Timestamp Interval of each window-id respectively.
 
 
 
