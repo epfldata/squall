@@ -15,10 +15,10 @@ import java.util.Map.Entry;
 import org.apache.log4j.Logger;
 
 import scala.Array;
-import backtype.storm.spout.SpoutOutputCollector;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.utils.Utils;
+import org.apache.storm.spout.SpoutOutputCollector;
+import org.apache.storm.task.TopologyContext;
+import org.apache.storm.topology.OutputFieldsDeclarer;
+import org.apache.storm.utils.Utils;
 import ch.epfl.data.squall.components.signal_components.storm.BaseSignalSpout;
 import ch.epfl.data.squall.components.signal_components.storm.SignalClient;
 

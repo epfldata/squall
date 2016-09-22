@@ -29,12 +29,12 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 
-import backtype.storm.Config;
-import backtype.storm.spout.SpoutOutputCollector;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.tuple.Values;
-import backtype.storm.utils.Utils;
+import org.apache.storm.Config;
+import org.apache.storm.spout.SpoutOutputCollector;
+import org.apache.storm.task.TopologyContext;
+import org.apache.storm.topology.TopologyBuilder;
+import org.apache.storm.tuple.Values;
+import org.apache.storm.utils.Utils;
 import ch.epfl.data.squall.components.ComponentProperties;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.ChainOperator;

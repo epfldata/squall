@@ -26,29 +26,29 @@ import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
-import org.apache.thrift7.TException;
-import org.apache.thrift7.transport.TTransportException;
 
-import backtype.storm.Config;
-import backtype.storm.LocalCluster;
-import backtype.storm.StormSubmitter;
-import backtype.storm.generated.AlreadyAliveException;
-import backtype.storm.generated.ClusterSummary;
-import backtype.storm.generated.ErrorInfo;
-import backtype.storm.generated.ExecutorInfo;
-import backtype.storm.generated.ExecutorSpecificStats;
-import backtype.storm.generated.ExecutorStats;
-import backtype.storm.generated.ExecutorSummary;
-import backtype.storm.generated.GlobalStreamId;
-import backtype.storm.generated.Nimbus.Client;
-import backtype.storm.generated.NotAliveException;
-import backtype.storm.generated.TopologyInfo;
-import backtype.storm.generated.TopologySummary;
-import backtype.storm.generated.StormTopology;
-import backtype.storm.generated.KillOptions;
-import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.utils.NimbusClient;
-import backtype.storm.utils.Utils;
+import org.apache.storm.Config;
+import org.apache.storm.LocalCluster;
+import org.apache.storm.StormSubmitter;
+import org.apache.storm.generated.AlreadyAliveException;
+import org.apache.storm.generated.ClusterSummary;
+import org.apache.storm.generated.ErrorInfo;
+import org.apache.storm.generated.ExecutorInfo;
+import org.apache.storm.generated.ExecutorSpecificStats;
+import org.apache.storm.generated.ExecutorStats;
+import org.apache.storm.generated.ExecutorSummary;
+import org.apache.storm.generated.GlobalStreamId;
+import org.apache.storm.generated.Nimbus.Client;
+import org.apache.storm.generated.NotAliveException;
+import org.apache.storm.generated.TopologyInfo;
+import org.apache.storm.generated.TopologySummary;
+import org.apache.storm.generated.StormTopology;
+import org.apache.storm.generated.KillOptions;
+import org.apache.storm.thrift.TException;
+import org.apache.storm.thrift.transport.TTransportException;
+import org.apache.storm.topology.TopologyBuilder;
+import org.apache.storm.utils.NimbusClient;
+import org.apache.storm.utils.Utils;
 
 import ch.epfl.data.squall.storage.BasicStore;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
@@ -89,7 +89,7 @@ public class StormWrapper {
 	    try {
 		Map<String, String> securityMap = new HashMap<String, String>();
 		securityMap.put("storm.thrift.transport",
-			"backtype.storm.security.auth.SimpleTransportPlugin");
+			"org.apache.storm.security.auth.SimpleTransportPlugin");
 		nimbus = new NimbusClient(securityMap, nimbusHost,
 			nimbusThriftPort);
 	    } catch (TTransportException e) {
@@ -365,12 +365,12 @@ public class StormWrapper {
 
 	    final String strStats = sb.toString();
 	    LOG.info(strStats);
-	} catch (final TException ex) {
-	    LOG.info("writeStats:" + MyUtilities.getStackTrace(ex));
 	} catch (final NotAliveException ex) {
 	    LOG.info(MyUtilities.getStackTrace(ex));
+	} catch (final TException ex) {
+	    LOG.info("writeStats:" + MyUtilities.getStackTrace(ex));
 	}
-    }
+		}
 
     public static ClusterSummary getClusterInfo(boolean local, Map conf) {
       if (local) {

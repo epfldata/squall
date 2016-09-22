@@ -9,7 +9,7 @@ import org.apache.storm.curator.retry.RetryNTimes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import backtype.storm.utils.Utils;
+import org.apache.storm.utils.Utils;
 
 public class StormSignalConnection extends AbstractSignalConnection {
     private static final Logger LOG = LoggerFactory

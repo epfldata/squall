@@ -25,9 +25,9 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import backtype.storm.generated.GlobalStreamId;
-import backtype.storm.grouping.CustomStreamGrouping;
-import backtype.storm.task.WorkerTopologyContext;
+import org.apache.storm.generated.GlobalStreamId;
+import org.apache.storm.grouping.CustomStreamGrouping;
+import org.apache.storm.task.WorkerTopologyContext;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.MatrixAssignment;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.MatrixAssignment.Dimension;
 import ch.epfl.data.squall.utilities.MyUtilities;

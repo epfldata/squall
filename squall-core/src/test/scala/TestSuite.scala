@@ -20,16 +20,16 @@
 package ch.epfl.data.squall.test
 
 import ch.epfl.data.squall.main.Main
-import ch.epfl.data.squall.query_plans.QueryBuilder
 import ch.epfl.data.squall.storage.{BasicStore, KeyValueStore}
-import ch.epfl.data.squall.utilities.{LocalMergeResults, StormWrapper, SystemParameters, SquallContext}
-import ch.qos.logback.classic.{Logger, LoggerContext}
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder
-import ch.qos.logback.classic.spi.ILoggingEvent
-import ch.qos.logback.core.FileAppender
+import ch.epfl.data.squall.utilities.{LocalMergeResults, SquallContext, StormWrapper, SystemParameters}
 import java.io._
+
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.core.{Appender, Logger, LoggerContext}
+import org.apache.logging.log4j.core.appender.FileAppender
+import org.apache.logging.log4j.core.config.Configuration
+import org.apache.logging.log4j.core.layout.PatternLayout
 import org.scalatest._
-import org.slf4j.LoggerFactory
 
 class TestSuite extends FunSuite with BeforeAndAfterAll {
 
@@ -57,43 +57,48 @@ class TestSuite extends FunSuite with BeforeAndAfterAll {
   }
 
   object Logging {
-    var fileAppender: FileAppender[ILoggingEvent] = null;
-    var logbackLogger: Logger = null;
+    var fileAppender: FileAppender = _
+    var log4j2Logger: Logger = _
 
     def beginLog(confName: String) = {
-      // http://stackoverflow.com/questions/7824620/logback-set-log-file-name-programatically
-      val loggerContext: LoggerContext = LoggerFactory.getILoggerFactory().asInstanceOf[LoggerContext]
-      logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)
+      val loggerContext: LoggerContext = LogManager.getContext(false).asInstanceOf[LoggerContext]
 
-      val encoder: PatternLayoutEncoder = new PatternLayoutEncoder()
-      encoder.setContext(loggerContext)
-      encoder.setPattern("%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n")
-      encoder.start()
+      log4j2Logger = loggerContext.getLogger(LogManager.ROOT_LOGGER_NAME)
+      val configuration: Configuration = loggerContext.getConfiguration
 
-      val verbosity = System.getenv("SQUALL_LOG_VERBOSE")
+      val verbosity = Option(System.getenv("SQUALL_LOG_VERBOSE")).getOrElse("FALSE")
       if (verbosity != "TRUE") {
-        logbackLogger.detachAppender("STDOUT")
+        val appender: Appender = log4j2Logger.getAppenders.get("STDOUT")
+        if (appender != null) {
+          log4j2Logger.removeAppender(appender)
+        }
       }
 
-      fileAppender = new FileAppender()
-      fileAppender.setContext(loggerContext)
-      fileAppender.setName(confName)
-      // set the file name
       val tempFile = File.createTempFile(confName, ".log")
-      println("\tWriting test output to " + tempFile.getAbsolutePath())
-      fileAppender.setFile(tempFile.getAbsolutePath())
-      fileAppender.setEncoder(encoder)
+      println("\tWriting test output to " + tempFile.getAbsolutePath)
+
+      val layout: PatternLayout = PatternLayout
+        .newBuilder()
+        .withConfiguration(configuration)
+        .withPattern("%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n")
+        .build()
+
+      fileAppender = FileAppender.createAppender(tempFile.getAbsolutePath, "false", "false",
+        confName, "true", "true", "true", "8192", layout, null, "true", null,
+        configuration)
       fileAppender.start()
 
-      logbackLogger.addAppender(fileAppender)
+      log4j2Logger.addAppender(fileAppender)
 
-      // OPTIONAL: print logback internal status messages
-      //  StatusPrinter.print(loggerContext)
+      loggerContext.updateLoggers()
     }
 
     def endLog() = {
-      logbackLogger.detachAppender(fileAppender)
+      val loggerContext: LoggerContext = LogManager.getContext(false).asInstanceOf[LoggerContext]
+
+      log4j2Logger.removeAppender(fileAppender)
       fileAppender.stop()
+      loggerContext.updateLoggers()
     }
   }
 
@@ -104,7 +109,7 @@ class TestSuite extends FunSuite with BeforeAndAfterAll {
     val queryPlan = Main.chooseQueryPlan(conf)
 
     SystemParameters.putInMap(conf, "DIP_TOPOLOGY_NAME", confName)
-    val context = new SquallContext(conf);
+    val context = new SquallContext(conf)
 
     val builder = queryPlan.createTopology(context)
 
@@ -123,7 +128,7 @@ class TestSuite extends FunSuite with BeforeAndAfterAll {
     val queryPlan = parser.generatePlan(conf)
     parser.putAckers(queryPlan, conf)
     SystemParameters.putInMap(conf, "DIP_TOPOLOGY_NAME", confName)
-    val context = new SquallContext(conf);
+    val context = new SquallContext(conf)
 
     val builder = queryPlan.createTopology(context)
     val result = StormWrapper.localSubmitAndWait(context, queryPlan)

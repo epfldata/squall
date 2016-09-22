@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import backtype.storm.tuple.Tuple;
+import org.apache.storm.tuple.Tuple;
 
 public class ThetaJoinUtilities {
     public static boolean assertDimensions(String inputDim, String originalDim,

@@ -22,8 +22,8 @@ package ch.epfl.data.squall.components;
 import java.io.Serializable;
 import java.util.List;
 
-import backtype.storm.Config;
-import backtype.storm.topology.TopologyBuilder;
+import org.apache.storm.Config;
+import org.apache.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.storm_components.StormEmitter;

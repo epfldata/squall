@@ -27,8 +27,8 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import backtype.storm.Config;
-import backtype.storm.utils.Utils;
+import org.apache.storm.Config;
+import org.apache.storm.utils.Utils;
 
 public class SystemParameters {
     // histogram types for building the partitioning scheme in our algorithm

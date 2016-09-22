@@ -21,7 +21,7 @@ package ch.epfl.data.squall.storm_components;
 
 import java.util.List;
 
-import backtype.storm.tuple.Tuple;
+import org.apache.storm.tuple.Tuple;
 
 public interface StormComponent {
 

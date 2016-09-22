@@ -24,8 +24,8 @@ import ch.epfl.data.squall.api.scala.Stream._
 import ch.epfl.data.squall.api.scala.TPCHSchema._
 import ch.epfl.data.squall.query_plans.QueryBuilder
 import ch.epfl.data.squall.utilities.SquallContext
-import ch.qos.logback.classic.{Level, Logger, LoggerContext}
-import org.slf4j.LoggerFactory
+import org.apache.logging.log4j.core.LoggerContext
+import org.apache.logging.log4j.{Level, LogManager}
 import scala.collection.JavaConversions._
 
 
@@ -75,21 +75,10 @@ Type "help" for Squall related help
   var count = 0
   def prepareSubmit(): String = {
     if (context.isDistributed()) {
-      val jar = packClasses()
-
       ////// Here comes the ugly part. We have to trick Storm, as we are doing
       ////// things that are not really standard.
 
-      //// TODO: HACK FOR STORM 0.9.3, if we ever go to 0.9.4 this won't be necessary (I think)
-      // In storm 0.9.3 once one jar is submitted, no other jar can be submitted
-      // as it assumes that it has already been submitted.
-      // We can use Java reflection to hack into StormSubmitter and "reset" it,
-      // so we can use submit multiple topologies during one run.
-      import backtype.storm.StormSubmitter
-      import java.lang.reflect.Field
-      val f : Field = (new StormSubmitter()).getClass().getDeclaredField("submittedJar");
-      f.setAccessible(true);
-      f.set(new StormSubmitter(), null);
+      val jar = packClasses()
 
       // Now we have to trick storm into thinking we launched with the storm
       // script. This is easier!
@@ -117,13 +106,17 @@ Type "help" for Squall related help
     context.submit(tpname, plan)
   }
 
-  private val loggerContext: LoggerContext = LoggerFactory.getILoggerFactory().asInstanceOf[LoggerContext]
+  private val loggerContext: LoggerContext = LogManager.getContext(false).asInstanceOf[LoggerContext]
   def activateLogging() = {
-    loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).setLevel(Level.INFO)
+    val loggerConfig = loggerContext.getConfiguration().getLoggerConfig(LogManager.ROOT_LOGGER_NAME);
+    loggerConfig.setLevel(Level.INFO)
+    loggerContext.updateLoggers()
   }
 
   def stopLogging() = {
-    loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).setLevel(Level.OFF)
+    val loggerConfig = loggerContext.getConfiguration().getLoggerConfig(LogManager.ROOT_LOGGER_NAME);
+    loggerConfig.setLevel(Level.OFF)
+    loggerContext.updateLoggers()
   }
 
 

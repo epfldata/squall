@@ -21,7 +21,7 @@ package ch.epfl.data.squall.window_semantics;
 
 import java.util.List;
 
-import backtype.storm.tuple.Tuple;
+import org.apache.storm.tuple.Tuple;
 import ch.epfl.data.squall.storm_components.StormBoltComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.utilities.MyUtilities;

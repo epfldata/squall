@@ -19,21 +19,18 @@
 
 package ch.epfl.data.squall.utilities;
 
-import backtype.storm.serialization.DefaultSerializationDelegate;
-
-import java.net.URLClassLoader;
-import java.net.MalformedURLException;
-import java.net.URL;
 import org.apache.commons.io.input.ClassLoaderObjectInputStream;
-import java.io.File;
+import org.apache.log4j.Logger;
+import org.apache.storm.serialization.DefaultSerializationDelegate;
+
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Map;
-
-import org.apache.log4j.Logger;
 
 
 /*
@@ -64,9 +61,9 @@ public class SquallSerializationDelegate extends DefaultSerializationDelegate {
   }
 
   @Override
-  public Object deserialize(byte[] bytes) {
+  public <T> T deserialize(byte[] bytes, Class<T> clazz) {
     try {
-      return super.deserialize(bytes);
+      return super.deserialize(bytes, clazz);
     } catch (RuntimeException e) {
       try {
         if (classdir == null) throw e;
@@ -79,7 +76,7 @@ public class SquallSerializationDelegate extends DefaultSerializationDelegate {
         ObjectInputStream ois = new ClassLoaderObjectInputStream(classloader, bis);
         Object ret = ois.readObject();
         ois.close();
-        return ret;
+        return (T) ret;
       } catch (ClassNotFoundException error) {
         throw new RuntimeException(error);
       } catch (IOException error) {

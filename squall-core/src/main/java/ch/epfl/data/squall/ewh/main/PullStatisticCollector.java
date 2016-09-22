@@ -31,7 +31,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import backtype.storm.Config;
+import org.apache.storm.Config;
 import ch.epfl.data.squall.ewh.data_structures.JoinMatrix;
 import ch.epfl.data.squall.ewh.data_structures.Region;
 import ch.epfl.data.squall.ewh.data_structures.UJMPAdapterByteMatrix;

@@ -27,9 +27,9 @@ import java.util.Random;
 
 import org.apache.log4j.Logger;
 
-import backtype.storm.spout.SpoutOutputCollector;
-import backtype.storm.task.OutputCollector;
-import backtype.storm.tuple.Values;
+import org.apache.storm.spout.SpoutOutputCollector;
+import org.apache.storm.task.OutputCollector;
+import org.apache.storm.tuple.Values;
 import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.operators.OneToOneOperator;
 import ch.epfl.data.squall.utilities.MyUtilities;

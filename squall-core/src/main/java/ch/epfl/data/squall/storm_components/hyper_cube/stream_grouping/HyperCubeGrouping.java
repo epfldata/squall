@@ -1,8 +1,8 @@
 package ch.epfl.data.squall.storm_components.hyper_cube.stream_grouping;
 
-import backtype.storm.generated.GlobalStreamId;
-import backtype.storm.grouping.CustomStreamGrouping;
-import backtype.storm.task.WorkerTopologyContext;
+import org.apache.storm.generated.GlobalStreamId;
+import org.apache.storm.grouping.CustomStreamGrouping;
+import org.apache.storm.task.WorkerTopologyContext;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.HyperCubeAssignment;
 import ch.epfl.data.squall.utilities.MyUtilities;
 import org.apache.log4j.Logger;
