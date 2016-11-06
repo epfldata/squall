@@ -19,15 +19,14 @@
 
 package ch.epfl.data.squall.api.scala.operators
 
-import ch.epfl.data.squall.storage.AggregationStore
 import ch.epfl.data.squall.operators.AggregateOperator
-import Numeric.Implicits._
+import ch.epfl.data.squall.storage.WindowAggregationStore
 
 /**
  * @author mohamed
  */
-class ScalaAggregationStorage[A: Numeric](outerAggOp: AggregateOperator[A], map: java.util.Map[_, _],
-                                          singleEntry: Boolean) extends AggregationStore[A](outerAggOp, null, map, singleEntry) {
+class ScalaWindowAggregationStore[A: Numeric](outerAggOp: AggregateOperator[A], map: java.util.Map[_, _],
+                                                singleEntry: Boolean, windowedRange: Int, slidelength: Int) extends WindowAggregationStore[A](outerAggOp, null, map, singleEntry, windowedRange, slidelength) {
 
   @Override
   override def getInitialValue(): A = {

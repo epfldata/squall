@@ -33,7 +33,7 @@ import ch.epfl.data.squall.operators.AggregateAvgOperator;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.AggregateSumOperator;
 import ch.epfl.data.squall.operators.Operator;
-import ch.epfl.data.squall.storage.AggregationStorage;
+import ch.epfl.data.squall.storage.AggregationStore;
 import ch.epfl.data.squall.storage.BasicStore;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.types.Type;
@@ -75,10 +75,10 @@ public class LocalMergeResults {
 	    fillAggFromResultFile(map);
 	}
 
-	if (_computedAgg.getStorage() instanceof AggregationStorage) {
-	    AggregationStorage stor = (AggregationStorage) _computedAgg
+	if (_computedAgg.getStorage() instanceof AggregationStore) {
+	    AggregationStore stor = (AggregationStore) _computedAgg
 		    .getStorage();
-	    stor.addContent((AggregationStorage) (lastAgg.getStorage()));
+	    stor.addContent((AggregationStore) (lastAgg.getStorage()));
 	}
 	/*
 	 * if (_computedAgg.getStorage() instanceof WindowAggregationStorage) {

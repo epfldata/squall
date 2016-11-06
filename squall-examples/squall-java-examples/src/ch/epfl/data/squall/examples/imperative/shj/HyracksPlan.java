@@ -41,15 +41,15 @@ public class HyracksPlan extends QueryPlan {
     public Component createQueryPlan(String dataPath, String extension, Map conf) {
         // -------------------------------------------------------------------------------------
         Component customer = new DataSourceComponent("customer", conf)
-                .add(new ProjectOperator(0, 6));
+                .add(new ProjectOperator(0, 6)); // CUSTKEY, MKTSEGMENT
 
         // -------------------------------------------------------------------------------------
         Component orders = new DataSourceComponent("orders", conf)
-                .add(new ProjectOperator(1));
+                .add(new ProjectOperator(1)); // CUSTKEY 
 
         // -------------------------------------------------------------------------------------
-        Component custOrders = new EquiJoinComponent(customer, 0, orders, 0)
-                .add(new AggregateCountOperator(conf).setGroupByColumns(1));
+        Component custOrders = new EquiJoinComponent(customer, 0, orders, 0) // join on CUSTKEY (index 0 from each component)
+                .add(new AggregateCountOperator(conf).setGroupByColumns(1)); // group by MKTSEGMENT (index 1 on concatenation of fields: customer, orders) 
         return custOrders;
         // -------------------------------------------------------------------------------------
     }

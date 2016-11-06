@@ -143,7 +143,7 @@ public abstract class StormBoltComponent extends BaseRichBolt implements
 		_targetTimestamps[dstIndex] = timestamp;
 	    else
 		// on a bolt, tuples might arrive out of order wrt timestamps
-		_targetTimestamps[dstIndex] = MyUtilities.getMin(timestamp,
+		_targetTimestamps[dstIndex] = Math.min(timestamp,
 			_targetTimestamps[dstIndex]);
 	_targetBuffers[dstIndex].append(tupleHash)
 		.append(SystemParameters.MANUAL_BATCH_HASH_DELIMITER)

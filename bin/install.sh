@@ -2,6 +2,7 @@
 
 . ./storm_env.sh
 
+# The following is needed only if we use DBToaster operators
 # On Linux machines, we need to install Scala (at least 2.10)
 # wget http://www.scala-lang.org/files/archive/scala-2.10.4.deb
 # sudo dpkg -i scala-2.10.4.deb
@@ -24,6 +25,3 @@ sbt assemblyPackageDependency
 cd $CURR_DIR
 # The following is used only for the Cluster Mode
 cp ../squall-core/target/squall-dependencies-0.2.0.jar ../$STORMNAME/lib/
-
-# Installation of dbtoaster
-./install_dbtoaster.sh

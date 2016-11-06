@@ -27,12 +27,11 @@ import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.predicates.Predicate;
-import ch.epfl.data.squall.storage.AggregationStorage;
+import ch.epfl.data.squall.storage.AggregationStore;
 import ch.epfl.data.squall.storage.BasicStore;
 import ch.epfl.data.squall.storage.KeyValueStore;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.StormDstJoin;
-import ch.epfl.data.squall.storm_components.StormDstTupleStorageBDB;
 import ch.epfl.data.squall.storm_components.StormDstTupleStorageJoin;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.utilities.MyUtilities;
@@ -104,11 +103,12 @@ public class EquiJoinComponent extends AbstractJoinerComponent<EquiJoinComponent
 	}
 
 	// TODO: what is with the if condition
-	if (isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)) {
-          setStormEmitter(new StormDstTupleStorageBDB(_firstParent, _secondParent,
-                                                      this, allCompNames, joinPredicate, hierarchyPosition,
-                                                      builder, killer, conf));
-	} else if (joinPredicate != null) {
+//	if (isBDB && (hierarchyPosition == StormComponent.FINAL_COMPONENT)) {
+//          setStormEmitter(new StormDstTupleStorageBDB(_firstParent, _secondParent,
+//                                                      this, allCompNames, joinPredicate, hierarchyPosition,
+//                                                      builder, killer, conf));
+//	} else
+	if (joinPredicate != null) {
 	  setStormEmitter(new StormDstTupleStorageJoin(_firstParent, _secondParent,
                                                        this, allCompNames, joinPredicate, hierarchyPosition,
                                                        builder, killer, conf));
@@ -129,7 +129,7 @@ public class EquiJoinComponent extends AbstractJoinerComponent<EquiJoinComponent
 
     // next four methods are for Preaggregation
     public EquiJoinComponent setFirstPreAggStorage(
-	    AggregationStorage firstPreAggStorage) {
+	    AggregationStore firstPreAggStorage) {
 	_firstStorage = firstPreAggStorage;
 	return this;
     }
@@ -142,7 +142,7 @@ public class EquiJoinComponent extends AbstractJoinerComponent<EquiJoinComponent
     }
 
     public EquiJoinComponent setSecondPreAggStorage(
-	    AggregationStorage secondPreAggStorage) {
+	    AggregationStore secondPreAggStorage) {
 	_secondStorage = secondPreAggStorage;
 	return this;
     }

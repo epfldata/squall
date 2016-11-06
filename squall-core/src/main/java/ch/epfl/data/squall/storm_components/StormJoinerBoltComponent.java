@@ -43,9 +43,8 @@ import ch.epfl.data.squall.operators.ChainOperator;
 import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.predicates.Predicate;
-import ch.epfl.data.squall.storage.BPlusTreeStorage;
-import ch.epfl.data.squall.storage.BerkeleyDBStore;
-import ch.epfl.data.squall.storage.BerkeleyDBStoreSkewed;
+//import ch.epfl.data.squall.storage.BerkeleyDBStore;
+//import ch.epfl.data.squall.storage.BerkeleyDBStoreSkewed;
 import ch.epfl.data.squall.storage.TupleStorage;
 import ch.epfl.data.squall.storage.indexes.Index;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
@@ -179,7 +178,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 	    // TODO Window Semantics
 	    if (!WindowSemanticsManager.sendTupleIfSlidingWindowSemantics(this,
                                                                           tuple, stormTupleRcv, lineageTimestamp))
-              tupleSend(tuple, stormTupleRcv, lineageTimestamp);
+              tupleSend(tuple, stormTupleRcv, lineageTimestamp); // TODO - lineage timestamp is for windows (Timestamp in StormDstTupleStorageJoin and StormThetaJoin would not work)
           }
           if (MyUtilities.isPrintLatency(getHierarchyPosition(), getConf()))
 	    printTupleLatency(_numSentTuples - 1, lineageTimestamp);
@@ -199,7 +198,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
     }
 
     // Specific to Bplustree
-    protected void createStorage(BPlusTreeStorage _firstRelationStorage,
+/*    protected void createStorage(BPlusTreeStorage _firstRelationStorage,
 	    BPlusTreeStorage _secondRelationStorage, Logger LOG) {
 	final PredicateCreateIndexesVisitor visitor = new PredicateCreateIndexesVisitor();
 	_joinPredicate.accept(visitor);
@@ -220,7 +219,8 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 	else
 	    isWindow = false;
 	if (MyUtilities.isBDBUniform(getConf())) {
-	    if (_typeOfValueIndexed.get(0) instanceof Integer) {
+	    throw new RuntimeException("BDB is removed due to licence incompatibilities.");
+		if (_typeOfValueIndexed.get(0) instanceof Integer) {
 		_firstRelationStorage = new BerkeleyDBStore(Integer.class,
 			storagePath + "/first/" + this.getName() + _thisTaskID,
 			isWindow, _thisTaskID);
@@ -256,6 +256,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 		throw new RuntimeException("non supported type");
 	    LOG.info("Storage with Uniform BDB!");
 	} else if (MyUtilities.isBDBSkewed(getConf())) {
+    	throw new RuntimeException("BDB is removed due to licence incompatibilities.");
 	    if (_typeOfValueIndexed.get(0) instanceof Integer) {
 		_firstRelationStorage = new BerkeleyDBStoreSkewed(
 			Integer.class, storagePath + "/first", getConf());
@@ -282,12 +283,13 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 	} else {
 	    throw new RuntimeException("Unsupported BDB type!");
 	}
+	// UNCOMMENT below
 	if (_joinPredicate != null)
 	    _existIndexes = true;
 	else
 	    _existIndexes = false;
     }
-
+*/
     @Override
     public ChainOperator getChainOperator() {
 	return _operatorChain;
@@ -331,7 +333,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
     }
 
     // Specific to BplusTree
-    protected void insertIntoBDBStorage(BPlusTreeStorage affectedStorage,
+/*    protected void insertIntoBDBStorage(BPlusTreeStorage affectedStorage,
 	    String key, String inputTupleString) {
 	if (_typeOfValueIndexed.get(0) instanceof Integer)
 	    affectedStorage.put(Integer.parseInt(key), inputTupleString);
@@ -348,7 +350,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 	    affectedStorage.put(key, inputTupleString);
 	else
 	    throw new RuntimeException("non supported type");
-    }
+    }*/
 
     // Generic: TupleStorage or BplusTree
     protected void join(Tuple stormTuple, List<String> tuple,
@@ -399,14 +401,14 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
     }
 
     // Specific for BplusTrees
-    protected void performJoin(Tuple stormTupleRcv, List<String> tuple,
+/*    protected void performJoin(Tuple stormTupleRcv, List<String> tuple,
 	    boolean isFromFirstEmitter, String keyValue,
 	    BPlusTreeStorage oppositeStorage, boolean isLastInBatch) {
 	final List<String> tuplesToJoin = selectTupleToJoin(oppositeStorage,
 		isFromFirstEmitter, keyValue);
 	join(stormTupleRcv, tuple, isFromFirstEmitter, tuplesToJoin,
 		isLastInBatch);
-    }
+    }*/
 
     // Specific for TupleStorage
     protected void performJoin(Tuple stormTupleRcv, List<String> tuple,
@@ -445,9 +447,9 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 				+ ", Total:,"
 				+ totalSize
 				+ ", Memory used: ,"
-				+ StatisticsUtilities.bytesToMegabytes(memory)
+				+ StatisticsUtilities.bytesToKBs(memory)
 				+ ","
-				+ StatisticsUtilities.bytesToMegabytes(runtime
+				+ StatisticsUtilities.bytesToKBs(runtime
 					.totalMemory()));
 		    else if (type == SystemParameters.INPUT_PRINT)
 			LOG.info(","
@@ -463,9 +465,9 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 				+ ", Total:,"
 				+ totalSize
 				+ ", Memory used: ,"
-				+ StatisticsUtilities.bytesToMegabytes(memory)
+				+ StatisticsUtilities.bytesToKBs(memory)
 				+ ","
-				+ StatisticsUtilities.bytesToMegabytes(runtime
+				+ StatisticsUtilities.bytesToKBs(runtime
 					.totalMemory()));
 		    else if (type == SystemParameters.OUTPUT_PRINT)
 			LOG.info("," + "RESULT," + _thisTaskID + ","
@@ -489,9 +491,9 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 				+ ", Total:,"
 				+ totalSize
 				+ ", Memory used: ,"
-				+ StatisticsUtilities.bytesToMegabytes(memory)
+				+ StatisticsUtilities.bytesToKBs(memory)
 				+ ","
-				+ StatisticsUtilities.bytesToMegabytes(runtime
+				+ StatisticsUtilities.bytesToKBs(runtime
 					.totalMemory()));
 			LOG.info("," + "RESULT," + _thisTaskID + ","
 				+ "TimeStamp:," + ts + ",Sent Tuples,"
@@ -520,9 +522,9 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 			    + ", Total:,"
 			    + totalSize
 			    + ", Memory used: ,"
-			    + StatisticsUtilities.bytesToMegabytes(memory)
+			    + StatisticsUtilities.bytesToKBs(memory)
 			    + ","
-			    + StatisticsUtilities.bytesToMegabytes(runtime
+			    + StatisticsUtilities.bytesToKBs(runtime
 				    .totalMemory()));
 		    LOG.info("," + "RESULT," + _thisTaskID + ","
 			    + "TimeStamp:," + ts + ",Sent Tuples,"
@@ -532,7 +534,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
     }
 
     // Specific for BplusTrees
-    protected void processNonLastTuple(String inputComponentIndex,
+/*    protected void processNonLastTuple(String inputComponentIndex,
 	    List<String> tuple, String inputTupleHash, Tuple stormTupleRcv,
 	    boolean isLastInBatch, BPlusTreeStorage firstRelationStorage,
 	    BPlusTreeStorage secondRelationStorage) {
@@ -574,7 +576,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 	    printStatistics(SystemParameters.INPUT_PRINT);
 	}
     }
-
+*/
     // Specific for TupleStorage
     protected void processNonLastTuple(String inputComponentIndex,
 	    List<String> tuple, String inputTupleHash, Tuple stormTupleRcv,
@@ -622,7 +624,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
     }
 
     // Specific to Bplustree
-    protected List<String> selectTupleToJoin(BPlusTreeStorage oppositeStorage,
+/*    protected List<String> selectTupleToJoin(BPlusTreeStorage oppositeStorage,
 	    boolean isFromFirstEmitter, String keyValue) {
 
 	// If there is atleast one index (so we have single join conditions with
@@ -663,7 +665,7 @@ public abstract class StormJoinerBoltComponent extends StormBoltComponent {
 	else
 	    throw new RuntimeException("non supported type");
     }
-
+*/
     // Specific to TupleStorage
     protected List<String> selectTupleToJoin(TupleStorage oppositeStorage,
 	    List<Index> oppositeIndexes, boolean isFromFirstEmitter,

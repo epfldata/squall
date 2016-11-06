@@ -28,9 +28,9 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import ch.epfl.data.squall.expressions.ValueExpression;
-import ch.epfl.data.squall.storage.AggregationStorage;
+import ch.epfl.data.squall.storage.AggregationStore;
 import ch.epfl.data.squall.storage.BasicStore;
-import ch.epfl.data.squall.storage.WindowAggregationStorage;
+import ch.epfl.data.squall.storage.WindowAggregationStore;
 import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.types.SumCount;
 import ch.epfl.data.squall.types.SumCountType;
@@ -67,7 +67,7 @@ public class AggregateAvgOperator extends OneToOneOperator implements AggregateO
     public AggregateAvgOperator(ValueExpression ve, Map map) {
 	_ve = ve;
 	_map = map;
-	_storage = new AggregationStorage<SumCount>(this, _wrapper, _map, true);
+	_storage = new AggregationStore<SumCount>(this, _wrapper, _map, true);
     }
 
     @Override
@@ -275,7 +275,7 @@ public class AggregateAvgOperator extends OneToOneOperator implements AggregateO
 	isWindowSemantics = true;
 	_windowRangeSecs = windowRangeInSeconds;
 	_slideRangeSecs = windowSlideInSeconds;
-	_storage = new WindowAggregationStorage<>(this, _wrapper, _map, true,
+	_storage = new WindowAggregationStore<>(this, _wrapper, _map, true,
 		_windowRangeSecs, _slideRangeSecs);
 	if (_groupByColumns != null || _groupByProjection != null)
 	    _storage.setSingleEntry(false);

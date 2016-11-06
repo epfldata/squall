@@ -1207,9 +1207,9 @@ public class BSPAlgorithm implements TilingAlgorithm {
 			continue;
 		    }
 		}
-		int mostLeft = MyUtilities.getMin(ep1.getMostLeft(),
+		int mostLeft = Math.min(ep1.getMostLeft(),
 			ep2.getMostLeft());
-		int mostRight = MyUtilities.getMax(ep1.getMostRight(),
+		int mostRight = Math.max(ep1.getMostRight(),
 			ep2.getMostRight());
 
 		// adding multi-line segments
@@ -1283,7 +1283,7 @@ public class BSPAlgorithm implements TilingAlgorithm {
 		int bottomLineMostLeft = epBottom.getMostLeft();
 
 		for (int p = mostLeft; p <= topLineMostRight; p++) {
-		    for (int q = MyUtilities.getMax(p, bottomLineMostLeft); q <= mostRight; q++) {
+		    for (int q = Math.max(p, bottomLineMostLeft); q <= mostRight; q++) {
 			// cx1, cx2 already exists, cy1 = p, cy2 = q
 			Region coarsened = new Region(cx1, p, cx2, q);
 			int halfPerimeter = coarsened.getHalfPerimeter();

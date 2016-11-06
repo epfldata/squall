@@ -8,7 +8,7 @@ DIP_TOPOLOGY_NAME_PREFIX username
 # DIP_NUM_WORKERS 2
 # DIP_NUM_ACKERS 0
 
-DIP_DATA_PATH /data/lab/squall_data/tpchdb/Z1/10G/
+DIP_DATA_PATH /data/lab/squall_data/tpchdb/Z0/10G/
 
 CUSTOMER_PAR 8
 ORDERS_PAR 8

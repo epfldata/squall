@@ -39,9 +39,6 @@ import backtype.storm.Config;
 import ch.epfl.data.squall.utilities.SystemParameters;
 import ch.epfl.data.squall.utilities.SquallContext;
 
-import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
-import ch.epfl.data.squall.utilities.StormDBToasterProvider;
-
 
 public class QueryBuilder implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -110,22 +107,18 @@ public class QueryBuilder implements Serializable {
 	List<Component> queryPlan = this.getPlan();
 	List<String> allCompNames = this.getComponentNames();
 	Collections.sort(allCompNames);
-
-	// register metric consumer
 	if (SystemParameters.getBooleanIfExist(conf, "GRAPHITE_METRICS_CONSUMER_ENABLED")) {
 	    conf.registerMetricsConsumer(com.verisign.storm.metrics.GraphiteMetricsConsumer.class, 
 			SystemParameters.getInt(conf, "GRAPHITE_METRICS_CONSUMER_PARALELISM"));
 		conf.put(Config.TOPOLOGY_BUILTIN_METRICS_BUCKET_SIZE_SECS, 
 			SystemParameters.getInt(conf, "TOPOLOGY_BUILTIN_METRICS_BUCKET_SIZE_SECS"));
 	}
-
     List<DBToasterJoinComponent> dbtComponents = new LinkedList<DBToasterJoinComponent>();
+
     int planSize = queryPlan.size();
 	for (int i = 0; i < planSize; i++) {
 	    Component component = queryPlan.get(i);
-        if (component instanceof DBToasterJoinComponent) {
-        dbtComponents.add((DBToasterJoinComponent) component);
-        }
+        
 	    Component child = component.getChild();
 	    if (child == null) {
 		// a last component (it might be multiple of them)
@@ -144,11 +137,13 @@ public class QueryBuilder implements Serializable {
 			StormComponent.INTERMEDIATE);
 	    }
 	}
-        if (dbtComponents.size() > 0) StormDBToasterProvider.prepare(context, dbtComponents,
-            SystemParameters.getBoolean(conf, "DIP_DISTRIBUTED"));
+	
+	// NEED TO UNCOMMENT FOR DBTOASTER TO WORK
+	//QueryBuilderDBToaster.createDBToasterTopology(queryPlan, context, conf);
+	
 	// printing infoID information and returning the result
 	// printInfoID(killer, queryPlan); commented out because IDs are now
-	// desriptive names
+	// descriptive names
 	return builder;
     }
 

@@ -50,15 +50,16 @@ public class DataSourceComponent extends AbstractComponent<DataSourceComponent> 
     private boolean _isPartitioner;
 
     // invoked from the new Interface (QueryPlan not QueryBuilder)
+    //   be careful if there are aliases of the same table
     public DataSourceComponent(String tableName, Map conf) {
-      this(tableName.toUpperCase(),
+	this(tableName.toUpperCase(),
            // dataPath + tableName + extension);
            new FileReaderProvider(SystemParameters.getString(conf, "DIP_DATA_PATH")),
            tableName + SystemParameters.getString(conf, "DIP_EXTENSION"));
     }
 
     public DataSourceComponent(String componentName, String inputPath) {
-      this(componentName, new FileReaderProvider("."), inputPath);
+	this(componentName, new FileReaderProvider(""), inputPath);
     }
 
     public DataSourceComponent(String componentName, String inputPath, Map conf) {
@@ -68,9 +69,9 @@ public class DataSourceComponent extends AbstractComponent<DataSourceComponent> 
     }
 
     public DataSourceComponent(String componentName, ReaderProvider provider, String resourceName) {
-      super((Component[])null, componentName);
-      _provider = provider;
-      _resourceName = resourceName;
+        super((Component[])null, componentName);
+        _provider = provider;
+        _resourceName = resourceName;
     }
 
     @Override

@@ -1,20 +1,18 @@
 DIP_DISTRIBUTED true
 DIP_QUERY_NAME hyracks
-#DIP_QUERY_PLAN ch.epfl.data.squall.examples.imperative.shj.HyracksPlan
-DIP_QUERY_PLAN ch.epfl.data.squall.examples.imperative.shj.HyracksPredicatePlan
+DIP_QUERY_PLAN ch.epfl.data.squall.examples.imperative.dbtoaster.DBToasterHyracksPlan
 DIP_TOPOLOGY_NAME_PREFIX username
-
-# the following two are optional, by default they use topology.workers and topology.ackers from storm.yaml
-# DIP_NUM_WORKERS 2
-# DIP_NUM_ACKERS 0
+DIP_NUM_ACKERS 0
 
 DIP_DATA_PATH /data/lab/squall_data/tpchdb/Z1/10G/
 
 CUSTOMER_PAR 8
 ORDERS_PAR 8
-
 CUSTOMER_ORDERS_PAR 16
+COUNTAGG_PAR 16
 
+CUSTOMER_CARD 50
+ORDERS_CARD 50
 
 DIP_OUTPUT_FREQ_PRINT 200000
 

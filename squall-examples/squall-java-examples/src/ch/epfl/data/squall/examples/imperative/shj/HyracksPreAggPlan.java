@@ -35,7 +35,7 @@ import ch.epfl.data.squall.operators.AggregateSumOperator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.query_plans.QueryPlan;
-import ch.epfl.data.squall.storage.AggregationStorage;
+import ch.epfl.data.squall.storage.AggregationStore;
 import ch.epfl.data.squall.types.DoubleType;
 import ch.epfl.data.squall.types.LongType;
 import ch.epfl.data.squall.types.StringType;
@@ -74,7 +74,7 @@ public class HyracksPreAggPlan extends QueryPlan {
 		new ColumnReference(_sc, 1), new ValueSpecification(_sc, "1"));
 	final ProjectOperator projSecondOut = new ProjectOperator(new int[] {
 		1, 2 });
-	final AggregationStorage secondJoinStorage = new AggregationStorage(
+	final AggregationStore secondJoinStorage = new AggregationStore(
 		new AggregateCountOperator(conf).setGroupByColumns(Arrays
 			.asList(0)), _lc, conf, false);
 

@@ -130,9 +130,13 @@ public class StormDataSource extends StormSpoutComponent {
 
     protected void applyOperatorsAndSend(List<String> inTuple) {
 	long timestamp = 0;
-	if ((MyUtilities.isCustomTimestampMode(getConf()) && getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT)
-		|| MyUtilities.isWindowTimestampMode(getConf()))
+	
+//	// Old version: If you want latency only for the last component (but it needs additional processing downstream due to 0s (code missing)); windows
+//	if ((MyUtilities.isCustomTimestampMode(getConf()) && getHierarchyPosition() == StormComponent.NEXT_TO_LAST_COMPONENT) || MyUtilities.isWindowTimestampMode(getConf()))
+//	    timestamp = System.currentTimeMillis();
+	if (MyUtilities.isCustomTimestampMode(getConf()) || MyUtilities.isWindowTimestampMode(getConf()))
 	    timestamp = System.currentTimeMillis();
+	
 	if (MyUtilities.isAggBatchOutputMode(_aggBatchOutputMillis))
 	    try {
 		_semAgg.acquire();

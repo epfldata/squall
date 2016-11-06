@@ -39,7 +39,7 @@ import ch.epfl.data.squall.operators.Operator;
 import ch.epfl.data.squall.operators.ProjectOperator;
 import ch.epfl.data.squall.predicates.ComparisonPredicate;
 import ch.epfl.data.squall.predicates.Predicate;
-import ch.epfl.data.squall.storage.AggregationStorage;
+import ch.epfl.data.squall.storage.AggregationStore;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.types.NumericType;
@@ -271,7 +271,7 @@ public class EWHSampleMatrixComponent implements Component {
     }
 
     public EWHSampleMatrixComponent setSecondPreAggStorage(
-	    AggregationStorage secondPreAggStorage) {
+	    AggregationStore secondPreAggStorage) {
 	throw new RuntimeException("Should not be here!");
     }
 

@@ -31,7 +31,7 @@ import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.utilities.SystemParameters;
 
 public class StatisticsUtilities implements Serializable {
-    public static double bytesToMegabytes(long bytes) {
+    public static double bytesToKBs(long bytes) {
 	return bytes / 1024;
     }
 
@@ -91,8 +91,8 @@ public class StatisticsUtilities implements Serializable {
 		+ ", Total:,"
 		+ (firstRelationSize + secondRelationSize
 			+ firstTaggedRelationSize + secondTaggedRelationSize)
-		+ ", Memory used: ," + bytesToMegabytes(memory) + ","
-		+ bytesToMegabytes(runtime.totalMemory()));
+		+ ", Memory used: ," + bytesToKBs(memory) + ","
+		+ bytesToKBs(runtime.totalMemory()));
     }
 
     public void printMemoryStats(int heirarchyPosition, Logger LOG,
@@ -117,9 +117,9 @@ public class StatisticsUtilities implements Serializable {
 			+ ", Total:,"
 			+ (numberOfTuplesMemory)
 			+ ", Memory used: ,"
-			+ StatisticsUtilities.bytesToMegabytes(memory)
+			+ StatisticsUtilities.bytesToKBs(memory)
 			+ ","
-			+ StatisticsUtilities.bytesToMegabytes(runtime
+			+ StatisticsUtilities.bytesToKBs(runtime
 				.totalMemory()));
 	    }
     }

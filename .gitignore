@@ -2,20 +2,17 @@
 *.class
 *.swp
 
-
 # Paths
 .idea
+cbin
+dbtoaster
 eclipse
-deploy
+resources
+experiments
 storm-0*
 apache-storm-*
-
-bin/extract_constants
-bin/old
-experiments
 test/squall_plan_runner/confs/special_purpose
 contrib/0.2.5
-resources/storm-linux_*
 
 test/m_bucket
 test/data/tpch/small
@@ -31,8 +28,6 @@ test/data/tpch/10G
 test/data/tpch/50G
 test/results/tpch/10G
 test/results/tpch/50G
-
-contrib-eclipse-missing
 
 # sbt
 target/

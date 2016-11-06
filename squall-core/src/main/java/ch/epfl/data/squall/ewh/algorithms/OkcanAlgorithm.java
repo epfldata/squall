@@ -407,8 +407,8 @@ public abstract class OkcanAlgorithm implements TilingAlgorithm {
 	    ExtremePositions epc = _columnExtremes.get(column);
 	    int firstCandRow = epc.getMostLeft();
 	    int lastCandRow = epc.getMostRight();
-	    firstRow = MyUtilities.getMax(firstRow, firstCandRow);
-	    lastRow = MyUtilities.getMin(lastRow, lastCandRow);
+	    firstRow = Math.max(firstRow, firstCandRow);
+	    lastRow = Math.min(lastRow, lastCandRow);
 	    Region region = null;
 	    boolean isCandidate = false;
 

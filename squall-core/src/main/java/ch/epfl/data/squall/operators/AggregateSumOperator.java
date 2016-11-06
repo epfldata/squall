@@ -31,9 +31,9 @@ import org.apache.log4j.Logger;
 import ch.epfl.data.squall.expressions.Addition;
 import ch.epfl.data.squall.expressions.ValueExpression;
 import ch.epfl.data.squall.expressions.ValueSpecification;
-import ch.epfl.data.squall.storage.AggregationStorage;
+import ch.epfl.data.squall.storage.AggregationStore;
 import ch.epfl.data.squall.storage.BasicStore;
-import ch.epfl.data.squall.storage.WindowAggregationStorage;
+import ch.epfl.data.squall.storage.WindowAggregationStore;
 import ch.epfl.data.squall.types.NumericType;
 import ch.epfl.data.squall.types.Type;
 import ch.epfl.data.squall.utilities.MyUtilities;
@@ -69,7 +69,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> extends OneT
 	_wrapper = (NumericType) ve.getType();
 	_ve = ve;
 	_map = map;
-	_storage = new AggregationStorage<T>(this, _wrapper, _map, true);
+	_storage = new AggregationStore<T>(this, _wrapper, _map, true);
     }
 
     @Override
@@ -328,7 +328,7 @@ public class AggregateSumOperator<T extends Number & Comparable<T>> extends OneT
 	WindowSemanticsManager._IS_WINDOW_SEMANTICS = true;
 	_windowRangeSecs = windowRangeInSeconds;
 	_slideRangeSecs = windowSlideInSeconds;
-	_storage = new WindowAggregationStorage<>(this, _wrapper, _map, true,
+	_storage = new WindowAggregationStore<>(this, _wrapper, _map, true,
 		_windowRangeSecs, _slideRangeSecs);
 	if (_groupByColumns != null || _groupByProjection != null)
 	    _storage.setSingleEntry(false);

@@ -1,5 +1,5 @@
 
-<p> &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;        <img style="float: center" align="middle" src="https://raw.githubusercontent.com/epfldata/squall/master/logo/logo.jpg"> </p>
+<!-- <p> &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;        <img style="float: center" align="middle" src="https://raw.githubusercontent.com/epfldata/squall/master/logo/logo.jpg"> </p> -->
 
 
 #Squall [![Build Status](https://travis-ci.org/epfldata/squall.svg?branch=master)](https://travis-ci.org/epfldata/squall)
@@ -28,9 +28,15 @@ GROUP BY C_MKTSEGMENT
 We provide several interfaces for running this query:
 
 #### Declarative
-A Declarative interface that directly parses this SQL query and creates an efficient storm Topology. This module is implicitly equipped with a cost-based optimizer.
+A Declarative interface that directly parses this SQL query and creates an efficient storm Topology. This module is equipped with a cost-based optimizer. An example of a query is (a directory with pre-bundled SQL queries is [here](https://github.com/epfldata/squall/tree/master/test/squall/sql_queries)): 
+```sql
+SELECT CUSTOMER.MKTSEGMENT, COUNT(ORDERS.ORDERKEY)
+FROM CUSTOMER join ORDERS on CUSTOMER.CUSTKEY=ORDERS.CUSTKEY
+GROUP BY CUSTOMER.MKTSEGMENT
+```
+
 #### Functional
-A Functional Scala-interface that leverages the brevity, productivity, convenience, and syntactic sugar of functional programming. For example the previous query is represented ([full code](https://github.com/epfldata/squall/blob/master/frontend/src/main/scala/frontend/functional/scala/queries/ScalaHyracksPlan.scala)) as follows: 
+A Functional Scala-interface that leverages the brevity, productivity, convenience, and syntactic sugar of functional programming. For example the previous query is represented ([full code](https://github.com/epfldata/squall/blob/master/squall-functional/src/main/scala/ch/epfl/data/squall/api/scala/queries/ScalaHyracksPlan.scala)) as follows: 
 ```scala
     val customers = Source[customer]("customer").map { t => Tuple2(t._1, t._7) }
     val orders = Source[orders]("orders").map { t => t._2 }
@@ -38,16 +44,19 @@ A Functional Scala-interface that leverages the brevity, productivity, convenien
     val agg = join.groupByKey(x => 1, k => k._1._2) //count and groupby
     agg.execute(conf)
 ```
+
 #### Imperative
-An Imperative Java-interface that facilitates design and construction of online distributed query plans. For example the previous query is represented ([full code](https://github.com/epfldata/squall/blob/master/core/src/main/java/ch/epfl/data/plan_runner/query_plans/HyracksPlan.java)) as follows:
+An Imperative Java-interface that facilitates design and construction of online distributed query plans. For example the previous query is represented ([full code](https://github.com/epfldata/squall/blob/master/squall-examples/squall-java-examples/src/ch/epfl/data/squall/examples/imperative/shj/HyracksPlan.java)) as follows:
 
 ```java
 Component customer = new DataSourceComponent("customer", conf)
                             .add(new ProjectOperator(0, 6));
 Component orders = new DataSourceComponent("orders", conf)
                             .add(new ProjectOperator(1));
-Component custOrders = new EquiJoinComponent(customer, 0, orders, 0) //key1 (index 0) =key2 (index 0)
-                            .add(new AggregateCountOperator(conf).setGroupByColumns(1));
+// join on CUSTKEY (index 0 from each component)
+Component custOrders = new EquiJoinComponent(customer, 0, orders, 0) 
+                // group by MKTSEGMENT (index 1 on concatenation of fields: customer, orders)
+                .add(new AggregateCountOperator(conf).setGroupByColumns(1)); 
 ```
 
 Queries are mapped to operator trees in the spirit of the query plans
@@ -87,13 +96,25 @@ Squall also provides out-of-the-box functionality for window semantics. That is 
 
 * Landmark Window Semantics.
 
-[Here](https://github.com/epfldata/squall/blob/master/frontend/src/main/scala/frontend/functional/scala/queries/ScalaTPCH7Plan.scalaz) is an example of a fully running query with window semantics.
+[Here](https://github.com/epfldata/squall/blob/master/squall-functional/src/main/scala/ch/epfl/data/squall/api/scala/queries/ScalaTPCH7Plan.scala) is an example of a fully running query with window semantics.
 
+When running this example, the results, which are printed out, should look something similar to this:
+
+```
+GERMANY|FRANCE|1995, wid:1, Timestamp: [2016-06-30 19:24:38.853 , 2016-06-30 19:24:58.853]  = 23809.149
+GERMANY|FRANCE|1995, wid:2, Timestamp: [2016-06-30 19:24:43.853 , 2016-06-30 19:25:03.853]  = 621159.4881999999
+GERMANY|FRANCE|1995, wid:3, Timestamp: [2016-06-30 19:24:48.853 , 2016-06-30 19:25:08.853]  = 621159.4881999999
+...
+GERMANY|FRANCE|1996, wid:1, Timestamp: [2016-06-30 19:24:38.853 , 2016-06-30 19:24:58.853]  = 40579.659
+GERMANY|FRANCE|1996, wid:2, Timestamp: [2016-06-30 19:24:43.853 , 2016-06-30 19:25:03.853]  = 379095.8854
+GERMANY|FRANCE|1996, wid:3, Timestamp: [2016-06-30 19:24:48.853 , 2016-06-30 19:25:08.853]  = 379095.8854
+```
+Where the first, second and third columns refer to the group-key, window-id, and Timestamp Interval of each window-id respectively.
 
 
 
 ### Documentation
-Detailed documentation can be found on the [Squall wiki](http://github.com/epfldata/squall/wiki).
+White paper is available [here](http://infoscience.epfl.ch/record/217286/files/paper.pdf). Detailed documentation can be found on the [Squall wiki](http://github.com/epfldata/squall/wiki).
 
 ### Contributing to Squall
 We'd love to have your help in making Squall better. If you're interested, please communicate with us your suggestions and get your name to the [Contributors](https://github.com/epfldata/squall/wiki/Contributors) list.

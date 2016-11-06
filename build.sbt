@@ -88,12 +88,12 @@ lazy val squall = (project in file("squall-core")).
       "net.sf.trove4j" % "trove4j" % "3.0.2",
       "net.sf.opencsv" % "opencsv" % "2.3",
       // bdb-je: 5.0.84 -> 5.0.73
-      "com.sleepycat" % "je" % "5.0.73",
-      // storm-core: 0.9.2-incubating -> 0.9.3
-      "org.apache.storm" % "storm-core" % "0.9.3" % "provided",
+      //"com.sleepycat" % "je" % "5.0.73",
+      // storm-core: 0.9.2-incubating -> 0.9.4
+      "org.apache.storm" % "storm-core" % "0.9.4" % "provided",
       "org.slf4j" % "log4j-over-slf4j" % "1.7.12",
       //"io.dropwizard" % "dropwizard-metrics" % "0.8.1",
-      //"org.apache.storm" % "storm-starter" % "0.9.3",
+      //"org.apache.storm" % "storm-starter" % "0.9.4",
       "junit" % "junit" % "4.12" % Test,
       "com.novocode" % "junit-interface" % "0.11" % Test,
       "org.apache.hadoop" % "hadoop-client" % "2.2.0" exclude("org.slf4j", "slf4j-log4j12"),
@@ -184,7 +184,7 @@ lazy val functional = (project in file("squall-functional")).
         (test in Test).value
     },
     name := "squall-frontend",
-    libraryDependencies += "org.apache.storm" % "storm-core" % "0.9.3" % "provided",
+    libraryDependencies += "org.apache.storm" % "storm-core" % "0.9.4" % "provided",
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
     libraryDependencies +=  "org.scalatest" % "scalatest_2.11" % "2.2.4" % Test,
     // Interactive mode
