@@ -126,8 +126,9 @@ public class ThetaJoinComponent extends AbstractJoinerComponent<ThetaJoinCompone
                                       allCompNames, getJoinPredicate(), _isPartitioner,
                                       hierarchyPosition, builder, killer, conf,
                                       _isContentSensitive, _contentSensitiveThetaJoinWrapper);
-
-	if (getSlidingWindow() > 0 || getTumblingWindow() > 0) {
+        }
+	
+        if (getSlidingWindow() > 0 || getTumblingWindow() > 0) {
           joiner.setWindowSemantics(getSlidingWindow(), getTumblingWindow());
         }
 
