@@ -42,7 +42,6 @@ import backtype.storm.topology.InputDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Tuple;
 import ch.epfl.data.squall.components.ComponentProperties;
-import ch.epfl.data.squall.dbtoaster.DBToasterEngine;
 import ch.epfl.data.squall.operators.AggregateOperator;
 import ch.epfl.data.squall.operators.AggregateStream;
 import ch.epfl.data.squall.operators.ChainOperator;

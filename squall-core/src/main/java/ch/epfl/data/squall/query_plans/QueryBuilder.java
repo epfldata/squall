@@ -113,7 +113,7 @@ public class QueryBuilder implements Serializable {
 		conf.put(Config.TOPOLOGY_BUILTIN_METRICS_BUCKET_SIZE_SECS, 
 			SystemParameters.getInt(conf, "TOPOLOGY_BUILTIN_METRICS_BUCKET_SIZE_SECS"));
 	}
-    List<DBToasterJoinComponent> dbtComponents = new LinkedList<DBToasterJoinComponent>();
+    //List<DBToasterJoinComponent> dbtComponents = new LinkedList<DBToasterJoinComponent>();
 
     int planSize = queryPlan.size();
 	for (int i = 0; i < planSize; i++) {

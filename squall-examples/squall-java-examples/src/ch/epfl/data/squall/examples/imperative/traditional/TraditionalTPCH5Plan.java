@@ -24,8 +24,6 @@ package ch.epfl.data.squall.examples.imperative.traditional;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.DataSourceComponent;
 import ch.epfl.data.squall.components.OperatorComponent;
-import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponent;
-import ch.epfl.data.squall.components.dbtoaster.DBToasterJoinComponentBuilder;
 import ch.epfl.data.squall.components.hyper_cube.HyperCubeJoinComponentFactory;
 import ch.epfl.data.squall.expressions.ColumnReference;
 import ch.epfl.data.squall.expressions.DateSum;

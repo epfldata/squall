@@ -34,7 +34,6 @@ import ch.epfl.data.squall.storm_components.StormBoltComponent;
 import ch.epfl.data.squall.storm_components.StormComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
 import ch.epfl.data.squall.storm_components.theta.StormThetaJoin;
-import ch.epfl.data.squall.storm_components.theta.StormThetaJoinBDB;
 import ch.epfl.data.squall.storm_components.hyper_cube.TradionalTwoWayJoin;
 import ch.epfl.data.squall.thetajoin.matrix_assignment.ManualHybridHyperCubeAssignment.Dimension;
 import ch.epfl.data.squall.types.Type;
