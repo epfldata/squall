@@ -1,0 +1,53 @@
+DIP_DISTRIBUTED true
+DIP_QUERY_NAME tpch9_partial
+DIP_QUERY_PLAN ch.epfl.data.squall.examples.imperative.squallui.DBToasterTPCH9PartialPlanRedis
+DIP_TOPOLOGY_NAME_PREFIX tpch9_partial
+DIP_NUM_ACKERS 0
+
+DIP_DATA_PATH /data/lab/squall_data/tpchdb/Z2/10G/
+
+LINEITEM_CARD 59986060
+PART_CARD 106280
+PARTSUPP_CARD 8000000
+
+PART_PAR 1
+LINEITEM_PAR 4
+PARTSUPP_PAR 1
+PART_LINEITEM_PARTSUPP_PAR 8
+
+FINAL_RESULT_PAR 1
+SENDRESULTSTOREDIS_PAR 1
+
+DIP_INPUT_FREQ_PRINT 200000
+
+# send results to redis
+REDIS_ENABLED true
+REDIS_SERVER master3
+REDIS_PORT 6379
+REDIS_KEY tpch9_partial_topology
+
+# Storm metrics report to Graphite
+GRAPHITE_METRICS_CONSUMER_ENABLED true
+GRAPHITE_METRICS_CONSUMER_PARALELISM 1
+TOPOLOGY_BUILTIN_METRICS_BUCKET_SIZE_SECS 1
+metrics.reporter.name com.verisign.storm.metrics.reporters.graphite.GraphiteReporter
+metrics.graphite.host master3
+metrics.graphite.port 2003
+metrics.graphite.prefix storm.test
+metrics.graphite.min-connect-attempt-interval-secs 5
+
+#below are unlikely to change
+DIP_EXTENSION .tbl
+DIP_READ_SPLIT_DELIMITER \|
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_KILL_AT_THE_END true
+
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_CLUSTER_DIR /data/squall_zone/storage 
+STORAGE_COLD_START true
+STORAGE_MEMORY_SIZE_MB 4096

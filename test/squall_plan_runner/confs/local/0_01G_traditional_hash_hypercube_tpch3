@@ -1,0 +1,36 @@
+DIP_DISTRIBUTED false
+DIP_QUERY_NAME tpch3
+DIP_QUERY_PLAN ch.epfl.data.squall.examples.imperative.traditional.TraditionalHashTPCH3Plan
+DIP_TOPOLOGY_NAME_PREFIX username
+DIP_NUM_ACKERS 0
+
+DIP_DATA_PATH ../test/data/tpch/0.01G/
+DIP_RESULT_ROOT ../test/results/
+
+CUSTOMER_PAR 1
+ORDERS_PAR 1
+LINEITEM_PAR 1
+CUSTOMER_ORDERS_LINEITEM_PAR 1
+COUNTAGG_PAR 1
+
+CUSTOMER_CARD 1500
+ORDERS_CARD 15000
+LINEITEM_CARD 60175
+
+CUSTOMER_ORDERS_LINEITEM_PART_SCHEME HASHHYPERCUBE
+
+#below are unlikely to change
+DIP_EXTENSION .tbl
+DIP_READ_SPLIT_DELIMITER \|
+DIP_GLOBAL_ADD_DELIMITER |
+DIP_GLOBAL_SPLIT_DELIMITER \|
+
+DIP_KILL_AT_THE_END true
+
+# Storage manager parameters
+# Storage directory for local runs
+STORAGE_LOCAL_DIR /tmp/ramdisk
+# Storage directory for cluster runs
+STORAGE_CLUSTER_DIR /data/squall_zone/storage
+STORAGE_COLD_START true
+STORAGE_MEMORY_SIZE_MB 4096

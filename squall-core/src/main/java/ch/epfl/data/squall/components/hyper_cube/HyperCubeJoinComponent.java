@@ -21,15 +21,20 @@ package ch.epfl.data.squall.components.hyper_cube;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import ch.epfl.data.squall.storm_components.StormEmitter;
 import ch.epfl.data.squall.storm_components.hyper_cube.StormHyperCubeJoin;
+import ch.epfl.data.squall.storm_components.hyper_cube.TraditionalStormHyperCubeJoin;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ManualHybridHyperCubeAssignment.Dimension;
 import ch.epfl.data.squall.storm_components.theta.StormThetaJoin;
 import ch.epfl.data.squall.types.Type;
 import org.apache.log4j.Logger;
 
 import backtype.storm.Config;
 import backtype.storm.topology.TopologyBuilder;
+import ch.epfl.data.squall.predicates.Predicate;
 import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.AbstractJoinerComponent;
 import ch.epfl.data.squall.storm_components.synchronization.TopologyKiller;
@@ -43,9 +48,22 @@ public class HyperCubeJoinComponent extends AbstractJoinerComponent<HyperCubeJoi
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(HyperCubeJoinComponent.class);
     private Type contentSensitiveThetaJoinWrapper = null;
+    private Map<String, Predicate> joinPredicate = null;
 
-    public HyperCubeJoinComponent(ArrayList<Component> parents) {
+    private Map<String, String[]> _relColNames;
+    private Set<String> _randomColumns;
+    private Map<String, Type[]> _parentNameColTypes;
+
+    public HyperCubeJoinComponent(Component[] parents,
+        Map<String, Predicate> joinPredicate, Map<String, Type[]> relationTypes, 
+      Map<String, String[]> relColNames, Set<String> randomColumns) {
       super(parents);
+
+      _parentNameColTypes = relationTypes;
+      _relColNames = relColNames;
+      _randomColumns = randomColumns;
+
+      this.joinPredicate = joinPredicate;
     }
 
     @Override
@@ -57,21 +75,16 @@ public class HyperCubeJoinComponent extends AbstractJoinerComponent<HyperCubeJoi
     @Override
     public void makeBolts(TopologyBuilder builder, TopologyKiller killer,
                           List<String> allCompNames, Config conf, int hierarchyPosition) {
-      MyUtilities.checkBatchOutput(getBatchOutputMillis(),
+        MyUtilities.checkBatchOutput(getBatchOutputMillis(),
                                      getChainOperator().getAggregation(), conf);
-
-        // _joiner = new StormThetaJoin();
         ArrayList<StormEmitter> emitters = new ArrayList<StormEmitter>();
         for (StormEmitter se : getParents())
             emitters.add(se);
 
-//        joiner = new NaiveJoiner(emitters.get(0), emitters.get(1), this,
-//                allCompNames, joinPredicate, false,
-//                hierarchyPosition, builder, killer, conf, interComp,
-//                false, contentSensitiveThetaJoinWrapper);
-//        joiner = new StormHyperCubeJoin(emitters, this, allCompNames, joinPredicate,
-//                hierarchyPosition, builder, killer, conf, interComp, contentSensitiveThetaJoinWrapper);
-
+        
+        setStormEmitter(new TraditionalStormHyperCubeJoin(emitters, _relColNames, 
+            _parentNameColTypes, _randomColumns, this, allCompNames, joinPredicate,
+            hierarchyPosition, builder, killer, conf, contentSensitiveThetaJoinWrapper));
     }
 
     // list of distinct keys, used for direct stream grouping and load-balancing

@@ -23,8 +23,65 @@ import ch.epfl.data.squall.components.Component;
 import ch.epfl.data.squall.components.JoinerComponent;
 import ch.epfl.data.squall.query_plans.QueryBuilder;
 import ch.epfl.data.squall.utilities.SystemParameters;
+import ch.epfl.data.squall.types.Type;
+import ch.epfl.data.squall.thetajoin.matrix_assignment.ManualHybridHyperCubeAssignment.Dimension;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.List;
+import java.util.LinkedList;
 
 public class ThetaJoinComponentFactory {
+
+    private List<Component> _relations = new LinkedList<Component>();
+    private Map<String, Type[]> _relColTypes = new HashMap<String, Type[]>();
+    private Map<String, String[]> _relColNames = new HashMap<String, String[]>();
+    private Map<String, Dimension> _dimensions = new HashMap<String, Dimension>();
+    private Set<String> _randomColumns = new HashSet<String>();
+    private Map _conf;
+
+
+    public ThetaJoinComponentFactory(Map conf) {
+    	_conf = conf;
+    }
+
+    public ThetaJoinComponentFactory() {
+
+    }
+
+    public void addRelation(Component relation, Type... types) {
+        _relations.add(relation);
+        _relColTypes.put(relation.getName(), types);
+    }
+
+    public void addRelation(Component relation, Type[] types, String[] columnNames) {
+        _relColNames.put(relation.getName(), columnNames);
+        addRelation(relation, types);
+    }
+
+    public void addRelation(Component relation, 
+        Type[] types, String[] columnNames, int[] randomColumns) {
+        
+        for(int i : randomColumns) {
+            _randomColumns.add(columnNames[i]);
+        }
+
+        _relColNames.put(relation.getName(), columnNames);
+        addRelation(relation, types);
+    }
+
+	public JoinerComponent createThetaJoinOperator(Component firstParent, Component secondParent,
+	    QueryBuilder queryBuilder) {
+        JoinerComponent result = new ThetaJoinComponent(firstParent, secondParent, false, 
+			_relColTypes, _relColNames, _dimensions, _randomColumns);
+
+        queryBuilder.add(result);
+
+        return result;
+	}
+
 
     public static JoinerComponent createThetaJoinOperator(int thetaJoinType,
 	    Component firstParent, Component secondParent,

@@ -97,7 +97,9 @@ public class CubeNAssignmentBruteForce<KeyType> implements Serializable, HyperCu
 		int[] rd = new int[_rd.length];
 
 		// Find the prime factors of the _r.
-		final int r = findBestR(_r, 0.5); // Maximum 50% of machines not used
+		//final int r = findBestR(_r, 0.5); // Maximum 50% of machines not used
+		final int r = _r;
+		
 		final List<Integer> primeFactors = Utilities.primeFactors(r);
 
 		// Get the Power Set, and iterate over it...

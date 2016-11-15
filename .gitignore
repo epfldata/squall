@@ -31,3 +31,6 @@ test/results/tpch/50G
 
 # sbt
 target/
+cbin
+dbtoaster
+

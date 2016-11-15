@@ -35,7 +35,7 @@ import java.util.List;
 public class CellIterator implements Iterator<List<Integer>>{
 	
 	private final int[] _limits;
-	private final int _pivot;
+	private final int[] _pivots;
 	private int[] _pos;
 	private boolean _hasNext = true;
 	
@@ -55,12 +55,19 @@ public class CellIterator implements Iterator<List<Integer>>{
 	 * @param fixedIndex the index of the fixed dimension
 	 */
 	public CellIterator(int[] limits, int fixedDim, int fixedIndex){
+		this(limits, new int[]{fixedDim}, new int[]{fixedIndex});
+	}
+
+	public CellIterator(int[] limits, int[] fixedDim, int[] fixedIndex){
 		_limits = limits;
 		_pos = new int[limits.length];
 		Arrays.fill(_pos, 0);
-		_pivot = fixedDim;
-		if (_pivot >= 0 && _pivot < _pos.length){
-			_pos[_pivot] = fixedIndex;
+		_pivots = fixedDim;
+		
+		for (int i = 0; i < fixedDim.length; i++) {
+			if (_pivots[i] >= 0 && _pivots[i] < _pos.length) {
+				_pos[_pivots[i]] = fixedIndex[i];
+			}
 		}
 	}
 
@@ -77,10 +84,16 @@ public class CellIterator implements Iterator<List<Integer>>{
 		}
 		
 		for (int i = 0; i < _pos.length; i++){
-			if (i == _pivot) {
-				if (i == _pos.length - 1) _hasNext = false;
-				continue;
+			boolean fixed = false;
+			for (int j = 0; j < _pivots.length; j++) {
+				if (i == _pivots[j])  {
+					if (i == _pos.length - 1) _hasNext = false;
+					fixed = true;
+					break;
+				}
 			}
+
+			if (fixed) continue;
 			
 			if (_pos[i] == _limits[i] - 1){
 				if (i == _pos.length - 1) _hasNext = false;
@@ -104,6 +117,7 @@ public class CellIterator implements Iterator<List<Integer>>{
 		testcase2();
 		testcase3();
 		testcase4();
+		testcase5();
 	}
 	
 	public static void testcase1(){
@@ -152,6 +166,18 @@ public class CellIterator implements Iterator<List<Integer>>{
 			System.out.println(combination.toString());
 		}
 		assert count == 100;
+	}
+
+	public static void testcase5(){
+		int[] rd = {2,5,2};
+		CellIterator me = new CellIterator(rd, new int[]{0, 2}, new int[]{1, 0});
+		int count = 0;
+		while (me.hasNext()){
+			count++;
+			List<Integer> combination = me.next();
+			System.out.println(combination.toString());
+		}
+		assert count == 5;
 	}
 
 }
