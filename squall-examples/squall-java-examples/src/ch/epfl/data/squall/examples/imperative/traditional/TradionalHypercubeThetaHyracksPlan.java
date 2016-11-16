@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package ch.epfl.data.squall.examples.imperative.theta;
+package ch.epfl.data.squall.examples.imperative.traditional;
 
 import java.util.Arrays;
 import java.util.List;
