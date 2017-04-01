@@ -1159,7 +1159,7 @@ public class MyUtilities {
     public static Type getDominantNumericType(List<ValueExpression> veList) {
 	Type wrapper = veList.get(0).getType();
 	for (int i = 1; i < veList.size(); i++) {
-	    final Type currentType = veList.get(1).getType();
+	    final Type currentType = veList.get(i).getType();
 	    if (isDominant(currentType, wrapper))
 		wrapper = currentType;
 	}
