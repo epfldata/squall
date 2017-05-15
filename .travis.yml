@@ -2,3 +2,6 @@ language: scala
 
 scala:
    - 2.11.6
+   
+before_script:
+  - sudo chmod +x /usr/local/bin/sbt
